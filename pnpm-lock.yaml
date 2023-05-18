@@ -28,12 +28,18 @@ importers:
       '@aws-sdk/client-eventbridge':
         specifier: ^3.325.0
         version: 3.325.0
+      '@aws-sdk/client-lambda':
+        specifier: ^3.332.0
+        version: 3.332.0
       '@aws-sdk/client-s3':
         specifier: ^3.326.0
         version: 3.326.0(@aws-sdk/signature-v4-crt@3.310.0)
       '@aws-sdk/client-sts':
         specifier: ^3.321.1
         version: 3.321.1
+      '@aws-sdk/middleware-retry':
+        specifier: ^3.329.0
+        version: 3.329.0
       '@octokit/rest':
         specifier: ^19.0.7
         version: 19.0.7
@@ -273,7 +279,7 @@ packages:
       '@aws-crypto/ie11-detection': 3.0.0
       '@aws-crypto/supports-web-crypto': 3.0.0
       '@aws-crypto/util': 3.0.0
-      '@aws-sdk/types': 3.310.0
+      '@aws-sdk/types': 3.329.0
       '@aws-sdk/util-locate-window': 3.310.0
       '@aws-sdk/util-utf8-browser': 3.259.0
       tslib: 1.14.1

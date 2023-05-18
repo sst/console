@@ -18,12 +18,14 @@ export function Events({ stack }: StackContext) {
       function: {
         handler: "packages/functions/src/events/redriver.handler",
         permissions: ["lambda"],
+        enableLiveDev: false,
       },
     },
   });
 
   const onFailure = new Function(stack, `bus-onFailure`, {
     handler: "packages/functions/src/events/dlq.handler",
+    enableLiveDev: false,
     bind: [redriver],
   });
 

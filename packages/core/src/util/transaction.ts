@@ -19,15 +19,24 @@ const TransactionContext = Context.create<{
 export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
   try {
     const { tx } = TransactionContext.use();
-    return callback(tx);
+    try {
+      return callback(tx);
+    } catch (err) {
+      throw err;
+    }
   } catch {
     return db.transaction(
       async (tx) => {
         const effects: (() => void | Promise<void>)[] = [];
         TransactionContext.provide({ tx, effects: effects });
-        const result = await callback(tx);
-        await Promise.all(effects.map((x) => x()));
-        return result;
+        try {
+          const result = await callback(tx);
+          await Promise.all(effects.map((x) => x()));
+          return result;
+        } catch (err) {
+          console.error(err);
+          throw err;
+        }
       },
       {
         isolationLevel: "serializable",

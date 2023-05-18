@@ -132,11 +132,20 @@ export const handler = ApiHandler(async () => {
           key: `/aws_account/${item.id}`,
           value: item,
         })),
-        ...resources.map((item) => ({
-          op: "put",
-          key: `/resource/${item.id}`,
-          value: item,
-        }))
+        ...resources.map((item) => {
+          const key = `/resource/${item.id}`;
+          if (item.timeDeleted) {
+            return {
+              op: "del",
+              key,
+            };
+          }
+          return {
+            op: "put",
+            key,
+            value: item,
+          };
+        })
       );
       result.lastSync =
         result.patch

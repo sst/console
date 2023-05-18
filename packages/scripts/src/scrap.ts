@@ -5,11 +5,11 @@ import { User } from "@console/core/user";
 provideActor({
   type: "system",
   properties: {
-    workspaceID: "a8hf2o91zf79zbnt6wodqxq0",
+    workspaceID: "vah29vy1z2hg0go77055dm34",
   },
 });
 
 await Stage.Events.Connected.publish({
-  stageID: "vdapvhs9olt0fdzsfja99x5t",
+  stageID: "ef0c9s6awgusanoeh6rl79mi",
 });
 // const result = await App.Stage.syncMetadata("vdapvhs9olt0fdzsfja99x5t");

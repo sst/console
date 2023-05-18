@@ -6,7 +6,7 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
 import { awsAccount } from "../aws/aws.sql";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { AWS } from "../aws";
 import {
   GetObjectCommand,
@@ -14,6 +14,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Bus, createEvent } from "../bus";
+import { Enrichers } from "./resource";
 
 export * as Stage from "./stage";
 
@@ -72,7 +73,7 @@ export const connect = zod(
         .execute()
         .then((x) => x[0]!);
       createTransactionEffect(() =>
-        Bus.publish("app.stage.connected", {
+        Events.Connected.publish({
           stageID: insertID,
         })
       );
@@ -115,6 +116,19 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) =>
       })
     );
     console.log("found", list.Contents?.length, "resources");
+    await tx
+      .update(resource)
+      .set({
+        timeDeleted: sql`current_timestamp()`,
+      })
+      .where(
+        and(
+          eq(resource.stageID, stageID),
+          eq(resource.workspaceID, useWorkspace())
+        )
+      )
+      .execute();
+    console.log("marked existing resources as deleted");
     await Promise.all(
       list.Contents?.map(async (obj) => {
         const stackID = obj.Key?.split("/").pop()!;
@@ -125,16 +139,16 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) =>
           })
         );
         const body = await result.Body!.transformToString();
-        await tx
-          .delete(resource)
-          .where(
-            and(
-              eq(resource.stackID, stackID),
-              eq(resource.workspaceID, useWorkspace())
-            )
-          )
-          .execute();
         for (let res of JSON.parse(body)) {
+          const { type } = res;
+          const enrichment =
+            type in Enrichers
+              ? await Enrichers[type as keyof typeof Enrichers](
+                  res.data,
+                  credentials,
+                  row.region
+                )
+              : {};
           await tx
             .insert(resource)
             .values({
@@ -146,7 +160,7 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) =>
               id: createId(),
               type: res.type,
               metadata: res.data,
-              enrichment: {},
+              enrichment,
             })
             .execute();
         }
