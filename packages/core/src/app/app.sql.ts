@@ -49,7 +49,8 @@ export const resource = mysqlTable(
     cfnID: varchar("cfn_id", { length: 255 }).notNull(),
     stageID: cuid("stage_id").notNull(),
     addr: varchar("addr", { length: 255 }).notNull(),
-    data: json("data").notNull(),
+    metadata: json("data").notNull(),
+    enrichment: json("data").notNull(),
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),

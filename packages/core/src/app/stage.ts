@@ -115,43 +115,42 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) =>
       })
     );
     console.log("found", list.Contents?.length, "resources");
-    useTransaction(async (tx) => {
-      await Promise.all(
-        list.Contents?.map(async (obj) => {
-          const stackID = obj.Key?.split("/").pop()!;
-          const result = await s3.send(
-            new GetObjectCommand({
-              Key: obj.Key!,
-              Bucket: bucket,
-            })
-          );
-          const body = await result.Body!.transformToString();
-          await tx
-            .delete(resource)
-            .where(
-              and(
-                eq(resource.stackID, stackID),
-                eq(resource.workspaceID, useWorkspace())
-              )
+    await Promise.all(
+      list.Contents?.map(async (obj) => {
+        const stackID = obj.Key?.split("/").pop()!;
+        const result = await s3.send(
+          new GetObjectCommand({
+            Key: obj.Key!,
+            Bucket: bucket,
+          })
+        );
+        const body = await result.Body!.transformToString();
+        await tx
+          .delete(resource)
+          .where(
+            and(
+              eq(resource.stackID, stackID),
+              eq(resource.workspaceID, useWorkspace())
             )
+          )
+          .execute();
+        for (let res of JSON.parse(body)) {
+          await tx
+            .insert(resource)
+            .values({
+              workspaceID: useWorkspace(),
+              cfnID: res.id,
+              addr: res.addr,
+              stackID,
+              stageID,
+              id: createId(),
+              type: res.type,
+              metadata: res.data,
+              enrichment: {},
+            })
             .execute();
-          for (let res of JSON.parse(body)) {
-            await tx
-              .insert(resource)
-              .values({
-                workspaceID: useWorkspace(),
-                cfnID: res.id,
-                addr: res.addr,
-                stackID,
-                stageID,
-                id: createId(),
-                type: res.type,
-                data: res.data,
-              })
-              .execute();
-          }
-        }) || []
-      );
-    });
+        }
+      }) || []
+    );
   })
 );
