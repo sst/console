@@ -25,6 +25,7 @@ export function Connect() {
                   {(user) => {
                     const workspace = createSubscription(
                       () => WorkspaceStore.fromID(user.workspaceID),
+                      null,
                       () => entry.replicache
                     );
                     return (

@@ -14,8 +14,8 @@ importers:
         specifier: 10.1.156
         version: 10.1.156
       sst:
-        specifier: 2.8.26
-        version: 2.8.26
+        specifier: 2.8.27
+        version: 2.8.27
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -63,8 +63,8 @@ importers:
         specifier: 0.17.6-76e73f3
         version: 0.17.6-76e73f3
       sst:
-        specifier: 2.8.26
-        version: 2.8.26
+        specifier: 2.8.27
+        version: 2.8.27
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -100,8 +100,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.8.26
-        version: 2.8.26
+        specifier: 2.8.27
+        version: 2.8.27
 
   packages/scripts:
     dependencies:
@@ -109,8 +109,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       sst:
-        specifier: 2.8.26
-        version: 2.8.26
+        specifier: 2.8.27
+        version: 2.8.27
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -146,8 +146,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.8.26
-        version: 2.8.26
+        specifier: 2.8.27
+        version: 2.8.27
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -459,6 +459,50 @@ packages:
       - '@aws-sdk/signature-v4-crt'
       - aws-crt
     dev: false
+
+  /@aws-sdk/client-iam@3.332.0:
+    resolution: {integrity: sha512-V8vbA0o2+uHIyXnaSCFkZCPX13Gbqom4AdPjn7izf8cCTTW6CInjckZGQczqohEXxOx46RGxKlmulftplQ80Og==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@aws-crypto/sha256-browser': 3.0.0
+      '@aws-crypto/sha256-js': 3.0.0
+      '@aws-sdk/client-sts': 3.332.0
+      '@aws-sdk/config-resolver': 3.329.0
+      '@aws-sdk/credential-provider-node': 3.332.0
+      '@aws-sdk/fetch-http-handler': 3.329.0
+      '@aws-sdk/hash-node': 3.329.0
+      '@aws-sdk/invalid-dependency': 3.329.0
+      '@aws-sdk/middleware-content-length': 3.329.0
+      '@aws-sdk/middleware-endpoint': 3.329.0
+      '@aws-sdk/middleware-host-header': 3.329.0
+      '@aws-sdk/middleware-logger': 3.329.0
+      '@aws-sdk/middleware-recursion-detection': 3.329.0
+      '@aws-sdk/middleware-retry': 3.329.0
+      '@aws-sdk/middleware-serde': 3.329.0
+      '@aws-sdk/middleware-signing': 3.329.0
+      '@aws-sdk/middleware-stack': 3.329.0
+      '@aws-sdk/middleware-user-agent': 3.332.0
+      '@aws-sdk/node-config-provider': 3.329.0
+      '@aws-sdk/node-http-handler': 3.329.0
+      '@aws-sdk/protocol-http': 3.329.0
+      '@aws-sdk/smithy-client': 3.329.0
+      '@aws-sdk/types': 3.329.0
+      '@aws-sdk/url-parser': 3.329.0
+      '@aws-sdk/util-base64': 3.310.0
+      '@aws-sdk/util-body-length-browser': 3.310.0
+      '@aws-sdk/util-body-length-node': 3.310.0
+      '@aws-sdk/util-defaults-mode-browser': 3.329.0
+      '@aws-sdk/util-defaults-mode-node': 3.329.0
+      '@aws-sdk/util-endpoints': 3.332.0
+      '@aws-sdk/util-retry': 3.329.0
+      '@aws-sdk/util-user-agent-browser': 3.329.0
+      '@aws-sdk/util-user-agent-node': 3.329.0
+      '@aws-sdk/util-utf8': 3.310.0
+      '@aws-sdk/util-waiter': 3.329.0
+      fast-xml-parser: 4.1.2
+      tslib: 2.5.0
+    transitivePeerDependencies:
+      - aws-crt
 
   /@aws-sdk/client-iot-data-plane@3.319.0:
     resolution: {integrity: sha512-Lpeug5dB950j9j0EVFdizACVFD9Aws+BdpIY1+v66tehaS2y4qizLe/LlWxewSsx2Ild0kr2wqZU0scdzazh4A==}
@@ -7556,8 +7600,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.8.26:
-    resolution: {integrity: sha512-rQ8jLo4NsMlJ7qxPOxSoVuIMYc+LFyGe8FS1ur0cYjIX80eQESXAh3HzOWLP7uA0pcQcCvX+ryWoit3MXN1ewg==}
+  /sst@2.8.27:
+    resolution: {integrity: sha512-K9w/K6rrLVS6hEVoTRs+AOBPL0Eu4n3V+yZUPGtBz7tsy2gl6YqO12ODHX2J2pFwldMRB77YjTjGuormwH/bNA==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0
@@ -7572,6 +7616,7 @@ packages:
       '@aws-cdk/cloudformation-diff': 2.72.1
       '@aws-cdk/cx-api': 2.72.1(@aws-cdk/cloud-assembly-schema@2.72.1)
       '@aws-sdk/client-cloudformation': 3.326.0
+      '@aws-sdk/client-iam': 3.332.0
       '@aws-sdk/client-iot': 3.319.0
       '@aws-sdk/client-iot-data-plane': 3.319.0
       '@aws-sdk/client-lambda': 3.332.0
