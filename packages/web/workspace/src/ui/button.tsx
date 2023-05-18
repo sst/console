@@ -19,17 +19,16 @@ export const Button = styled("button", {
   variants: {
     color: {
       danger: {
-        backgroundColor: theme.color.danger.surface,
-        borderColor: theme.color.danger.border,
-        boxShadow: theme.color.danger.shadow,
-        color: theme.color.danger.foreground,
+        backgroundColor: theme.color.button.danger.background,
+        borderColor: theme.color.button.danger.border,
+        boxShadow: theme.color.shadow.button.danger,
+        color: theme.color.text.primary.danger,
         ":hover": {
-          borderColor: theme.color.danger.hover.border,
-          backgroundColor: theme.color.danger.hover.surface,
+          borderColor: theme.color.button.danger.borderHover,
+          backgroundColor: theme.color.button.danger.backgroundHover,
         },
         ":active": {
-          borderColor: theme.color.danger.active.border,
-          backgroundColor: theme.color.danger.active.surface,
+          backgroundColor: theme.color.button.danger.backgroundActive,
           transform: "translateY(1px)",
           boxShadow: "none",
         },

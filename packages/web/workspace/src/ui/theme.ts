@@ -1,169 +1,217 @@
-import { createTheme, createGlobalTheme } from "@macaron-css/core";
+import { createTheme } from "@macaron-css/core";
 
-const base = {
-  brand: "13, 88%",
-  white: "0, 0%",
-  black: "240, 28%",
-  blue: "198, 39%",
-  red: "2, 84%",
-};
-
-const light_base = {
-  brand: `${base.brand}, 60%`,
-  white: `${base.white}, 100%`,
-  black: `${base.black}, 14%`,
-  blue: `${base.blue}, 51%`,
-  red: `${base.red}, 55%`,
-};
-
-const light_brand = {
-  d4: `${light_base.brand}, 36%`,
-  d3: `${light_base.brand}, 42%`,
-  d2: `${light_base.brand}, 48%`,
-  d1: `${light_base.brand}, 54%`,
-  l1: `${light_base.brand}, 66%`,
-  l2: `${light_base.brand}, 72%`,
-};
-
-const light_black = {
-  d1: `${light_base.black}, 10%`,
-};
-
-const light_red = {
-  d4: `${light_base.red}, 31%`,
-  d3: `${light_base.red}, 37%`,
-  d2: `${light_base.red}, 43%`,
-  d1: `${light_base.red}, 49%`,
-  l1: `${light_base.red}, 61%`,
-  l2: `${light_base.red}, 67%`,
-};
-
-const light_accent = `hsla(${light_brand.l2}, 100%)`;
-
-const light_background = {
-  base: `hsla(${light_base.white}, 100%)`,
-  hover: `hsla(${light_base.black}, 4%)`,
-  surface: `hsla(${light_base.black}, 3%)`,
-};
-
-const light_divider = {
-  base: `hsla(${light_base.black}, 8%)`,
-  surface: `hsla(${light_base.black}, 6%)`,
-};
-const light_text = {
-  primary: {
-    base: `hsla(${light_base.black}, 93%)`,
-    surface: `hsla(${light_base.black}, 78%)`,
-    accent: `hsla(${light_base.white}, 93%)`,
-    danger: `hsla(${light_base.white}, 93%)`,
+const color = {
+  base: {
+    brand: "13, 88%",
+    white: "0, 0%",
+    black: "240, 28%",
+    blue: "198, 39%",
+    red: "2, 84%",
   },
-  secondary: `hsla(${light_base.black}, 60%)`,
-  dimmed: `hsla(${light_base.black}, 38%)`,
 };
 
-const light_link_primary = `hsla(${light_base.blue}, 100%)`;
-
-const light_button_primary = {
-  background: light_accent,
-  hover: `hsla(${light_brand.l1}, 100%)`,
-  active: `hsla(${light_brand.d1}, 100%)`,
-  disabledOpacity: `0.6`,
-  border: `hsla(${light_brand.d2}, 100%)`,
-  borderHover: `hsla(${light_brand.d1}, 100%)`,
+const light = {
+  accent: "",
+  base: {
+    brand: "",
+    white: "",
+    black: "",
+    blue: "",
+    red: "",
+  },
+  brand: {
+    d4: "",
+    d3: "",
+    d2: "",
+    d1: "",
+    l1: "",
+    l2: "",
+  },
+  black: {
+    d1: "",
+  },
+  red: {
+    d4: "",
+    d3: "",
+    d2: "",
+    d1: "",
+    l1: "",
+    l2: "",
+  },
+  background: {
+    base: "",
+    hover: "",
+    surface: "",
+  },
+  divider: {},
+  text: {
+    primary: {
+      base: "",
+      surface: "",
+      accent: "",
+      danger: "",
+    },
+    secondary: "",
+    dimmed: "",
+  },
+  link: {
+    primary: "",
+  },
+  button: {
+    primary: {},
+    secondary: {},
+    danger: {
+      background: "",
+      backgroundHover: "",
+      backgroundActive: "",
+      disabledOpacity: "",
+      border: "",
+      borderHover: "",
+    },
+  },
+  shadow: {
+    inset: {
+      surface: "",
+      accent: "",
+      danger: "",
+    },
+    drop: {
+      layer2: "",
+      layer210: "",
+      layer10: "",
+    },
+    on: {
+      surface2: "",
+      accent210: "",
+      danger210: "",
+    },
+    button: {
+      base: "",
+      accent: "",
+      danger: "",
+    },
+  },
 };
 
-const light_button_secondary = {
-  background: light_background.surface,
-  hover: `hsla(${light_base.black}, 3%)`,
-  active: `hsla(${light_base.black}, 8%)`,
-  disabledOpacity: `0.6`,
-  border: `hsla(${light_base.black}, 5%)`,
-  borderHover: `hsla(${light_base.black}, 7%)`,
+const dark: typeof light = JSON.parse(JSON.stringify(light));
+
+light.base = {
+  brand: `${color.base.brand}, 60%`,
+  white: `${color.base.white}, 100%`,
+  black: `${color.base.black}, 14%`,
+  blue: `${color.base.blue}, 51%`,
+  red: `${color.base.red}, 55%`,
 };
 
-const light_button_danger = {
-  background: `hsla(${light_base.red}, 100%)`,
-  hover: `hsla(${light_red.l1}, 100%)`,
-  active: `hsla(${light_red.d1}, 100%)`,
+light.brand = {
+  d4: `${light.base.brand}, 36%`,
+  d3: `${light.base.brand}, 42%`,
+  d2: `${light.base.brand}, 48%`,
+  d1: `${light.base.brand}, 54%`,
+  l1: `${light.base.brand}, 66%`,
+  l2: `${light.base.brand}, 72%`,
+};
+
+light.black = {
+  d1: `${light.base.black}, 10%`,
+};
+
+light.red = {
+  d4: `${light.base.red}, 31%`,
+  d3: `${light.base.red}, 37%`,
+  d2: `${light.base.red}, 43%`,
+  d1: `${light.base.red}, 49%`,
+  l1: `${light.base.red}, 61%`,
+  l2: `${light.base.red}, 67%`,
+};
+
+light.accent = `hsla(${light.brand}, 100%)`;
+light.background = {
+  base: `hsla(${light.base.white}, 100%)`,
+  hover: `hsla(${light.base.black}, 4%)`,
+  surface: `hsla(${light.base.black}, 3%)`,
+};
+light.divider = {
+  base: `hsla(${light.base.black}, 8%)`,
+  surface: `hsla(${light.base.black}, 6%)`,
+};
+light.text = {
+  primary: {
+    base: `hsla(${light.base.black}, 93%)`,
+    surface: `hsla(${light.base.black}, 78%)`,
+    accent: `hsla(${light.base.white}, 93%)`,
+    danger: `hsla(${light.base.white}, 93%)`,
+  },
+  secondary: `hsla(${light.base.black}, 60%)`,
+  dimmed: `hsla(${light.base.black}, 38%)`,
+};
+
+light.link.primary = `hsla(${light.base.blue}, 100%)`;
+
+light.button.primary = {
+  background: light.accent,
+  hover: `hsla(${light.brand.l1}, 100%)`,
+  active: `hsla(${light.brand.d1}, 100%)`,
+  disabledOpacity: 0.65,
+  border: `hsla(${light.brand.d2}, 100%)`,
+  borderHover: `hsla(${light.brand.d1}, 100%)`,
+};
+
+light.button.secondary = {
+  background: light.background.surface,
+  hover: `hsla(${light.base.black}, 3%)`,
+  active: `hsla(${light.base.black}, 8%)`,
+  disabledOpacity: 0.6,
+  border: `hsla(${light.base.black}, 5%)`,
+  borderHover: `hsla(${light.base.black}, 7%)`,
+};
+
+light.button.danger = {
+  background: `hsla(${light.base.red}, 100%)`,
+  backgroundHover: `hsla(${light.red.l1}, 100%)`,
+  backgroundActive: `hsla(${light.red.d1}, 100%)`,
   disabledOpacity: `0.65`,
-  border: `hsla(${light_red.d2}, 100%)`,
-  borderHover: `hsla(${light_red.d1}, 100%)`,
+  border: `hsla(${light.red.d2}, 100%)`,
+  borderHover: `hsla(${light.red.d1}, 100%)`,
 };
 
-const light_shadow_inset = {
-  surface: `0 1px 0 inset hsla(${light_base.white}, 54%)`,
-  accent: `0 1px 0 inset hsla(${light_brand.l2}, 80%)`,
-  danger: `0 1px 0 inset hsla(${light_red.l2}, 80%)`,
+light.shadow.inset = {
+  surface: `0 1px 0 inset hsla(${light.base.white}, 54%)`,
+  accent: `0 1px 0 inset hsla(${light.brand.l2}, 80%)`,
+  danger: `0 1px 0 inset hsla(${light.red.l2}, 80%)`,
 };
 
-const light_shadow_drop = {
-  layer2: `0 1px 1px hsla(${light_black.d1}, 0.03),
-      0 2px 2px hsla(${light_black.d1}, 0.03)`,
-  layer210: `0 1px 1px hsla(${light_black.d1}, 0.1),
-        0 2px 2px hsla(${light_black.d1}, 0.1)`,
-  layer10: `0 1px 1px hsla(${light_black.d1}, 0.01),
-    0 2px 2px hsla(${light_black.d1}, 0.01),
-    0 4px 4px hsla(${light_black.d1}, 0.01),
-    0 8px 8px hsla(${light_black.d1}, 0.01),
-    0 10px 10px hsla(${light_black.d1}, 0.01)
+light.shadow.drop = {
+  layer2: `0 1px 1px hsla(${light.black.d1}, 0.03),
+      0 2px 2px hsla(${light.black.d1}, 0.03)`,
+  layer210: `0 1px 1px hsla(${light.black.d1}, 0.1),
+        0 2px 2px hsla(${light.black.d1}, 0.1)`,
+  layer10: `0 1px 1px hsla(${light.black.d1}, 0.01),
+    0 2px 2px hsla(${light.black.d1}, 0.01),
+    0 4px 4px hsla(${light.black.d1}, 0.01),
+    0 8px 8px hsla(${light.black.d1}, 0.01),
+    0 10px 10px hsla(${light.black.d1}, 0.01)
     `,
 };
 
-const light_shadow_on = {
-  surface2: `${light_shadow_inset.surface}, ${light_shadow_drop.layer2}`,
-  accent210: ` ${light_shadow_inset.accent}, ${light_shadow_drop.layer210}`,
-  danger210: ` ${light_shadow_inset.danger}, ${light_shadow_drop.layer210}`,
+light.shadow.on = {
+  surface2: `${light.shadow.inset.surface}, ${light.shadow.drop.layer2}`,
+  accent210: ` ${light.shadow.inset.accent}, ${light.shadow.drop.layer210}`,
+  danger210: ` ${light.shadow.inset.danger}, ${light.shadow.drop.layer210}`,
 };
 
-const light_shadow_button = {
-  base: light_shadow_on.surface2,
-  accent: light_shadow_on.accent210,
-  danger: light_shadow_on.danger210,
+light.shadow.button = {
+  base: light.shadow.on.surface2,
+  accent: light.shadow.on.accent210,
+  danger: light.shadow.on.danger210,
 };
 
-export const root = createGlobalTheme(":root", {
+export const [lightClass, theme] = createTheme({
+  color: light,
   fonts: {
     heading: '"IBM Plex Mono", monospace',
     body: "Rubik, sans-serif",
     code: '"IBM Plex Mono", monospace',
-  },
-  brand: light_brand,
-});
-
-export const [lightClass, theme] = createTheme({
-  color: {
-    light: {
-      accent: light_accent,
-      base: light_base,
-      brand: light_brand,
-      black: light_black,
-      red: light_red,
-      background: light_background,
-      divider: light_divider,
-      text: light_text,
-      link: {
-        primary: light_link_primary,
-      },
-      button: {
-        primary: light_button_primary,
-        secondary: light_button_secondary,
-        danger: light_button_danger,
-      },
-      shadow: {
-        inset: light_shadow_inset,
-        drop: light_shadow_drop,
-        on: light_shadow_on,
-        button: light_shadow_button,
-      },
-    },
-    dark: {
-      brand: {},
-      black: {},
-      red: {},
-    },
-  },
-  fonts: {
-    ...root.fonts,
   },
   space: {
     px: "1px",

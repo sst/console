@@ -1,7 +1,6 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 
-import "./index.css";
 import "modern-normalize/modern-normalize.css";
 import { App } from "./App";
 
