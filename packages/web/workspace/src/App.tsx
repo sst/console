@@ -1,3 +1,4 @@
+import "@fontsource/rubik";
 import "@fontsource/ibm-plex-mono/latin.css";
 
 import { Component, For } from "solid-js";
@@ -11,14 +12,21 @@ import { Connect } from "./pages/connect";
 import { Debug } from "./pages/debug";
 import { styled } from "@macaron-css/solid";
 import { globalStyle } from "@macaron-css/core";
-import { lightClass } from "./ui/theme";
+import { theme, root, lightClass } from "./ui/theme";
 
 console.log(import.meta.env.VITE_API_URL);
+
 const Root = styled("div", {
   base: {
     inset: 0,
     position: "fixed",
   },
+});
+
+globalStyle("body", {
+  lineHeight: 1.625,
+  fontFamily: root.fonts.body,
+  background: `hsla(${root.brand.d1})`,
 });
 
 globalStyle("*:focus", {

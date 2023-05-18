@@ -126,6 +126,9 @@ importers:
       '@fontsource/ibm-plex-mono':
         specifier: ^4.5.13
         version: 4.5.13
+      '@fontsource/rubik':
+        specifier: ^4.5.14
+        version: 4.5.14
       '@macaron-css/core':
         specifier: ^1.2.0
         version: 1.2.0
@@ -3811,6 +3814,10 @@ packages:
 
   /@fontsource/ibm-plex-mono@4.5.13:
     resolution: {integrity: sha512-KAE7X2LgCV4X6p7vj1h2phRnhPX4YUa8FBAB0Jj9xW7Q+p+k2ce4HEAMJJ2RFHI075ClgQx+KZuDBNuiKgp5yw==}
+    dev: false
+
+  /@fontsource/rubik@4.5.14:
+    resolution: {integrity: sha512-EvMK3kkeAgKkk8qAeT4PjpyAYyu72pIlJm+SXJ5vR/xhCX2yj2xoq3+YS38rPmPcCAnrAVONoQ3ezLxVm6jhBA==}
     dev: false
 
   /@graphql-tools/executor@0.0.18(graphql@16.6.0):

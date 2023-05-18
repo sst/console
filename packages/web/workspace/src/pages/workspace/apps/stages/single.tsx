@@ -41,6 +41,7 @@ export function Single() {
         </SidebarHeader>
       </Sidebar>
       <div>
+        test
         <Button color="danger">Delete</Button>
       </div>
     </Root>

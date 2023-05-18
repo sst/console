@@ -10,7 +10,7 @@ export const Button = styled("button", {
     fontSize: `0.8125rem`,
     fontWeight: 500,
     lineHeight: 1,
-    fontFamily: theme.font.mono,
+    fontFamily: theme.fonts.code,
     transitionDelay: "0s, 0s",
     transitionDuration: "0.2s, 0.2s",
     transitionProperty: "background-color, border",

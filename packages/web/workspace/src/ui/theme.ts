@@ -1,8 +1,205 @@
-import {
-  createGlobalTheme,
-  createThemeContract,
-  createTheme,
-} from "@macaron-css/core";
+import { createTheme, createGlobalTheme } from "@macaron-css/core";
+
+const color = {
+  base: {
+    brand: "13, 88%",
+    white: "0, 0%",
+    black: "240, 28%",
+    blue: "198, 39%",
+    red: "2, 84%",
+  },
+  light: {
+    accent: "",
+    base: {
+      brand: "",
+      white: "",
+      black: "",
+      blue: "",
+      red: "",
+    },
+    brand: {
+      d4: "",
+      d3: "",
+      d2: "",
+      d1: "",
+      l1: "",
+      l2: "",
+    },
+    black: {
+      d1: "",
+    },
+    red: {
+      d4: "",
+      d3: "",
+      d2: "",
+      d1: "",
+      l1: "",
+      l2: "",
+    },
+    background: {
+      base: "",
+      hover: "",
+      surface: "",
+    },
+    divider: {},
+    text: {
+      primary: {},
+      secondary: "",
+      dimmed: "",
+    },
+    link: {
+      primary: "",
+    },
+    button: {
+      primary: {},
+      secondary: {},
+      danger: {},
+    },
+    shadow: {
+      inset: {
+        surface: "",
+        accent: "",
+        danger: "",
+      },
+      drop: {
+        layer2: "",
+        layer210: "",
+        layer10: "",
+      },
+      on: {
+        surface2: "",
+        accent210: "",
+        danger210: "",
+      },
+      button: {},
+    },
+  },
+  dark: {
+    brand: {},
+    black: {},
+    red: {},
+  },
+};
+
+color.light.base = {
+  brand: `${color.base.brand}, 60%`,
+  white: `${color.base.white}, 100%`,
+  black: `${color.base.black}, 14%`,
+  blue: `${color.base.blue}, 51%`,
+  red: `${color.base.red}, 55%`,
+};
+
+color.light.brand = {
+  d4: `${color.light.base.brand}, 36%`,
+  d3: `${color.light.base.brand}, 42%`,
+  d2: `${color.light.base.brand}, 48%`,
+  d1: `${color.light.base.brand}, 54%`,
+  l1: `${color.light.base.brand}, 66%`,
+  l2: `${color.light.base.brand}, 72%`,
+};
+
+color.light.black = {
+  d1: `${color.light.base.black}, 10%`,
+};
+
+color.light.red = {
+  d4: `${color.light.base.red}, 31%`,
+  d3: `${color.light.base.red}, 37%`,
+  d2: `${color.light.base.red}, 43%`,
+  d1: `${color.light.base.red}, 49%`,
+  l1: `${color.light.base.red}, 61%`,
+  l2: `${color.light.base.red}, 67%`,
+};
+
+color.light.accent = `hsla(${color.light.brand}, 100%)`;
+color.light.background = {
+  base: `hsla(${color.light.base.white}, 100%)`,
+  hover: `hsla(${color.light.base.black}, 4%)`,
+  surface: `hsla(${color.light.base.black}, 3%)`,
+};
+color.light.divider = {
+  base: `hsla(${color.light.base.black}, 8%)`,
+  surface: `hsla(${color.light.base.black}, 6%)`,
+};
+color.light.text = {
+  primary: {
+    base: `hsla(${color.light.base.black}, 93%)`,
+    surface: `hsla(${color.light.base.black}, 78%)`,
+    accent: `hsla(${color.light.base.white}, 93%)`,
+    danger: `hsla(${color.light.base.white}, 93%)`,
+  },
+  secondary: `hsla(${color.light.base.black}, 60%)`,
+  dimmed: `hsla(${color.light.base.black}, 38%)`,
+};
+
+color.light.link.primary = `hsla(${color.light.base.blue}, 100%)`;
+
+color.light.button.primary = {
+  background: color.light.accent,
+  hover: `hsla(${color.light.brand.l1}, 100%)`,
+  active: `hsla(${color.light.brand.d1}, 100%)`,
+  disabledOpacity: 0.65,
+  border: `hsla(${color.light.brand.d2}, 100%)`,
+  borderHover: `hsla(${color.light.brand.d1}, 100%)`,
+};
+
+color.light.button.secondary = {
+  background: color.light.background.surface,
+  hover: `hsla(${color.light.base.black}, 3%)`,
+  active: `hsla(${color.light.base.black}, 8%)`,
+  disabledOpacity: 0.6,
+  border: `hsla(${color.light.base.black}, 5%)`,
+  borderHover: `hsla(${color.light.base.black}, 7%)`,
+};
+
+color.light.button.danger = {
+  background: `hsla(${color.light.base.red}, 100%)`,
+  hover: `hsla(${color.light.red.l1}, 100%)`,
+  active: `hsla(${color.light.red.d1}, 100%)`,
+  disabledOpacity: 0.65,
+  border: `hsla(${color.light.red.d2}, 100%)`,
+  borderHover: `hsla(${color.light.red.d1}, 100%)`,
+};
+
+color.light.shadow.inset = {
+  surface: `0 1px 0 inset hsla(${color.light.base.white}, 54%)`,
+  accent: `0 1px 0 inset hsla(${color.light.brand.l2}, 80%)`,
+  danger: `0 1px 0 inset hsla(${color.light.red.l2}, 80%)`,
+};
+
+color.light.shadow.drop = {
+  layer2: `0 1px 1px hsla(${color.light.black.d1}, 0.03),
+      0 2px 2px hsla(${color.light.black.d1}, 0.03)`,
+  layer210: `0 1px 1px hsla(${color.light.black.d1}, 0.1),
+        0 2px 2px hsla(${color.light.black.d1}, 0.1)`,
+  layer10: `0 1px 1px hsla(${color.light.black.d1}, 0.01),
+    0 2px 2px hsla(${color.light.black.d1}, 0.01),
+    0 4px 4px hsla(${color.light.black.d1}, 0.01),
+    0 8px 8px hsla(${color.light.black.d1}, 0.01),
+    0 10px 10px hsla(${color.light.black.d1}, 0.01)
+    `,
+};
+
+color.light.shadow.on = {
+  surface2: `${color.light.shadow.inset.surface}, ${color.light.shadow.drop.layer2}`,
+  accent210: ` ${color.light.shadow.inset.accent}, ${color.light.shadow.drop.layer210}`,
+  danger210: ` ${color.light.shadow.inset.danger}, ${color.light.shadow.drop.layer210}`,
+};
+
+color.light.shadow.button = {
+  base: color.light.shadow.on.surface2,
+  accent: color.light.shadow.on.accent210,
+  danger: color.light.shadow.on.danger210,
+};
+
+export const root = createGlobalTheme(":root", {
+  fonts: {
+    heading: '"IBM Plex Mono", monospace',
+    body: "Rubik, sans-serif",
+    code: '"IBM Plex Mono", monospace',
+  },
+  brand: color.light.brand,
+});
 
 export const [lightClass, theme] = createTheme({
   color: {
@@ -22,8 +219,8 @@ export const [lightClass, theme] = createTheme({
       },
     },
   },
-  font: {
-    mono: "IBM Plex Mono",
+  fonts: {
+    ...root.fonts,
   },
   space: {
     px: "1px",
