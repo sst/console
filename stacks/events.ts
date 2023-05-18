@@ -50,6 +50,7 @@ export function Events({ stack }: StackContext) {
 
   subscribe("aws.account.created", {
     handler: "packages/functions/src/events/aws-account-created.handler",
+    bind: [...Object.values(secrets.database)],
   });
 
   subscribe("app.stage.connected", {
