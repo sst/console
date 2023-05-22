@@ -154,11 +154,7 @@ light.red = {
   l2: `${color.base.red}, 67%`,
 };
 
-<<<<<<< Updated upstream
 light.accent = `hsla(${light.base.brand}, 100%)`;
-=======
-light.accent = `hsla(${light.brand.d1}, 100%)`;
->>>>>>> Stashed changes
 light.background = {
   base: `hsla(${light.base.white}, 100%)`,
   hover: `hsla(${light.base.black}, 4%)`,
