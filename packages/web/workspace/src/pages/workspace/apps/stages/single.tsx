@@ -3,6 +3,10 @@ import patrick from "./patrick.jpg";
 import { styled } from "@macaron-css/solid";
 import { Button } from "../../../../ui/button";
 import { theme } from "../../../../ui/theme";
+import { createSubscription } from "../../../../data/replicache";
+import { useParams } from "@solidjs/router";
+import { StageStore } from "../../../../data/stage";
+import { AppStore } from "../../../../data/app";
 
 const Root = styled("div", {
   base: {
@@ -160,6 +164,9 @@ const SidebarAvatar = styled("div", {
   },
 });
 export function Single() {
+  const params = useParams();
+  const stage = createSubscription(() => StageStore.fromID(params.stageID));
+  const app = createSubscription(() => AppStore.fromID(params.appID));
   return (
     <Root>
       <Navbar>
@@ -169,8 +176,8 @@ export function Single() {
           </SwitcherAppButton>
           <SwitcherText>
             <SwitcherBreadcrumb>
-              <SwitcherBreadcrumbText>my-sst-app</SwitcherBreadcrumbText>
-              <SwitcherBreadcrumbText>prod</SwitcherBreadcrumbText>
+              <SwitcherBreadcrumbText>{app()?.name}</SwitcherBreadcrumbText>
+              <SwitcherBreadcrumbText>{stage()?.name}</SwitcherBreadcrumbText>
             </SwitcherBreadcrumb>
             <SwitcherIcon>
               <SwitcherSvg
