@@ -1,7 +1,7 @@
 import "@fontsource/rubik/latin.css";
 import "@fontsource/ibm-plex-mono/latin.css";
 
-import { Component, For } from "solid-js";
+import { Component, For, createSignal, createEffect } from "solid-js";
 import { Link, Route, Router, Routes } from "@solidjs/router";
 import { AuthProvider, useAuth } from "./data/auth";
 import { createSubscription } from "./data/replicache";
@@ -12,10 +12,16 @@ import { Connect } from "./pages/connect";
 import { Debug } from "./pages/debug";
 import { styled } from "@macaron-css/solid";
 import { globalStyle } from "@macaron-css/core";
-import { theme, lightClass } from "./ui/theme";
+import { theme, darkClass, lightClass } from "./ui/theme";
 import { CommandBar } from "./pages/workspace/command-bar";
 
 console.log(import.meta.env.VITE_API_URL);
+
+const initializeTheme = () => {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+};
 
 const Root = styled("div", {
   base: {
@@ -47,8 +53,24 @@ globalStyle("input", {
 });
 
 export const App: Component = () => {
+  const [theme, setTheme] = createSignal<string>(initializeTheme());
+
+  createEffect(() => {
+    const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const setColorScheme = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? "dark" : "light");
+    };
+
+    darkMode.addEventListener("change", setColorScheme);
+
+    return () => {
+      darkMode.removeEventListener("change", setColorScheme);
+    };
+  });
+
   return (
-    <Root class={lightClass}>
+    <Root class={theme() === "light" ? lightClass : darkClass}>
       <AuthProvider>
         <Router>
           <Routes>

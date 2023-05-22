@@ -106,8 +106,8 @@ const light = {
     },
     drop: {
       layer2: "",
-      layer210: "",
-      layer10: "",
+      layer2d: "",
+      layer5: "",
     },
     on: {
       surface2: "",
@@ -155,6 +155,7 @@ light.red = {
 };
 
 light.accent = `hsla(${light.base.brand}, 100%)`;
+
 light.background = {
   base: `hsla(${light.base.white}, 100%)`,
   hover: `hsla(${light.base.black}, 4%)`,
@@ -225,9 +226,9 @@ light.shadow.inset = {
 light.shadow.drop = {
   layer2: `0 1px 1px hsla(${light.black.d1}, 0.03),
       0 2px 2px hsla(${light.black.d1}, 0.03)`,
-  layer210: `0 1px 1px hsla(${light.black.d1}, 0.1),
+  layer2d: `0 1px 1px hsla(${light.black.d1}, 0.1),
         0 2px 2px hsla(${light.black.d1}, 0.1)`,
-  layer10: `0 1px 1px hsla(${light.black.d1}, 0.01),
+  layer5: `0 1px 1px hsla(${light.black.d1}, 0.01),
     0 2px 2px hsla(${light.black.d1}, 0.01),
     0 4px 4px hsla(${light.black.d1}, 0.01),
     0 8px 8px hsla(${light.black.d1}, 0.01),
@@ -237,8 +238,8 @@ light.shadow.drop = {
 
 light.shadow.on = {
   surface2: `${light.shadow.inset.surface}, ${light.shadow.drop.layer2}`,
-  accent210: ` ${light.shadow.inset.accent}, ${light.shadow.drop.layer210}`,
-  danger210: ` ${light.shadow.inset.danger}, ${light.shadow.drop.layer210}`,
+  accent210: ` ${light.shadow.inset.accent}, ${light.shadow.drop.layer2d}`,
+  danger210: ` ${light.shadow.inset.danger}, ${light.shadow.drop.layer2d}`,
 };
 
 light.shadow.button = {
@@ -247,13 +248,128 @@ light.shadow.button = {
   danger: light.shadow.on.danger210,
 };
 
-export const [lightClass, theme] = createTheme({
-  color: light,
-  fonts: {
-    heading: '"IBM Plex Mono", monospace',
-    body: "Rubik, sans-serif",
-    code: '"IBM Plex Mono", monospace',
+dark.base = {
+  brand: `${color.base.brand}, 62%`,
+  white: `${color.base.white}, 100%`,
+  black: `${color.base.black}, 14%`,
+  blue: `${color.base.blue}, 61%`,
+  red: `${color.base.red}, 60%`,
+};
+
+dark.brand = {
+  d4: `${color.base.brand}, 38%`,
+  d3: `${color.base.brand}, 44%`,
+  d2: `${color.base.brand}, 50%`,
+  d1: `${color.base.brand}, 56%`,
+  l1: `${color.base.brand}, 71%`,
+  l2: `${color.base.brand}, 77%`,
+};
+
+dark.black = {
+  d1: `${color.base.black}, 10%`,
+};
+
+dark.red = {
+  d4: `${color.base.red}, 36%`,
+  d3: `${color.base.red}, 42%`,
+  d2: `${color.base.red}, 48%`,
+  d1: `${color.base.red}, 54%`,
+  l1: `${color.base.red}, 68%`,
+  l2: `${color.base.red}, 74%`,
+};
+
+dark.accent = `hsla(${dark.base.brand}, 100%)`;
+
+dark.background = {
+  base: `hsla(${dark.base.black}, 100%)`,
+  hover: `hsla(${dark.base.white}, 4%)`,
+  surface: `hsla(${dark.base.white}, 5%)`,
+};
+
+dark.divider = {
+  base: `hsla(${dark.base.white}, 6%)`,
+  surface: `hsla(${dark.base.white}, 8%)`,
+};
+
+dark.text = {
+  primary: {
+    base: `hsla(${dark.base.white}, 87%)`,
+    surface: `hsla(${dark.base.white}, 80%)`,
+    accent: `hsla(${dark.base.white}, 87%)`,
+    danger: `hsla(${dark.base.white}, 87%)`,
   },
+  secondary: `hsla(${dark.base.white}, 60%)`,
+  dimmed: `hsla(${dark.base.white}, 38%)`,
+};
+
+dark.link.primary = `hsla(${dark.base.blue}, 100%)`;
+
+dark.button.primary = {
+  color: dark.accent,
+  active: `hsla(${dark.brand.d1}, 100%)`,
+  border: `hsla(${dark.brand.d2}, 100%)`,
+  hover: {
+    color: `hsla(${dark.brand.l1}, 100%)`,
+    border: `hsla(${dark.brand.d1}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+};
+
+dark.button.secondary = {
+  color: dark.background.surface,
+  active: `hsla(${dark.base.white}, 4%)`,
+  border: `hsla(${dark.base.white}, 4%)`,
+  hover: {
+    color: `hsla(${dark.base.white}, 9%)`,
+    border: `hsla(${dark.base.white}, 3%)`,
+  },
+  disabled: {
+    opacity: "0.6",
+  },
+};
+
+dark.button.danger = {
+  color: `hsla(${dark.base.red}, 100%)`,
+  active: `hsla(${dark.red.d1}, 100%)`,
+  border: `hsla(${dark.red.d2}, 100%)`,
+  hover: {
+    color: `hsla(${dark.red.l1}, 100%)`,
+    border: `hsla(${dark.base.red}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+};
+
+dark.shadow.drop = {
+  layer2: `0 1px 1px hsla(${dark.black.d1}, 0.4),
+    0 2px 2px hsla(${dark.black.d1}, 0.4)`,
+  layer2d: `0 1px 1px hsla(${dark.black.d1}, 80%),
+    0 2px 2px hsla(${dark.black.d1}, 80%)`,
+  layer5: `0 1px 1px hsla(${dark.black.d1}, 0.075),
+    0 2px 2px hsla(${dark.black.d1}, 0.075),
+    0 4px 4px hsla(${dark.black.d1}, 0.075),
+    0 8px 8px hsla(${dark.black.d1}, 0.075),
+    0 10px 10px hsla(${dark.black.d1}, 0.075)`,
+};
+
+dark.shadow.button = {
+  base: dark.shadow.drop.layer2,
+  accent: dark.shadow.drop.layer2d,
+  danger: "",
+};
+
+const fonts = {
+  heading: '"IBM Plex Mono", monospace',
+  body: "Rubik, sans-serif",
+  code: '"IBM Plex Mono", monospace',
+};
+
+export const [lightClass, theme] = createTheme({
+  fonts,
+  color: light,
   space: {
     px: "1px",
     0: "0px",
@@ -295,4 +411,6 @@ export const [lightClass, theme] = createTheme({
 
 export const darkClass = createTheme(theme, {
   ...theme,
+  fonts,
+  color: dark,
 });

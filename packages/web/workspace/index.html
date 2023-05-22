@@ -10,25 +10,6 @@
 
     <link rel="shortcut icon" type="image/ico" href="/src/assets/favicon.ico" />
     <title>Console</title>
-    <script>
-      // TODO: Implement proper switch
-      // https://web.dev/building-a-theme-switch-component/
-      function setPreference(theme) {
-        document.firstElementChild.setAttribute('data-theme', theme);
-      }
-
-      setPreference(
-        window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light'
-      );
-
-      window
-        .matchMedia('(prefers-color-scheme: dark)')
-        .addEventListener('change', ({matches: isDark}) => {
-          setPreference(isDark ? 'dark' : 'light')
-        });
-    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
