@@ -22,7 +22,6 @@ const Root = styled("div", {
     position: "fixed",
     lineHeight: 1,
     fontFamily: theme.fonts.body,
-    background: `hsla(${theme.color.brand.d1})`,
     fontSynthesis: "none",
     textRendering: "geometricPrecision",
   },

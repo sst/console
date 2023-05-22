@@ -58,15 +58,41 @@ const light = {
     primary: "",
   },
   button: {
-    primary: {},
-    secondary: {},
-    danger: {
-      background: "",
-      backgroundHover: "",
-      backgroundActive: "",
-      disabledOpacity: "",
+    primary: {
+      color: "",
+      active: "",
       border: "",
-      borderHover: "",
+      hover: {
+        color: "",
+        border: "",
+      },
+      disabled: {
+        opacity: "",
+      },
+    },
+    secondary: {
+      color: "",
+      active: "",
+      border: "",
+      hover: {
+        color: "",
+        border: "",
+      },
+      disabled: {
+        opacity: "",
+      },
+    },
+    danger: {
+      color: "",
+      active: "",
+      border: "",
+      hover: {
+        color: "",
+        border: "",
+      },
+      disabled: {
+        opacity: "",
+      },
     },
   },
   shadow: {
@@ -104,28 +130,28 @@ light.base = {
 };
 
 light.brand = {
-  d4: `${light.base.brand}, 36%`,
-  d3: `${light.base.brand}, 42%`,
-  d2: `${light.base.brand}, 48%`,
-  d1: `${light.base.brand}, 54%`,
-  l1: `${light.base.brand}, 66%`,
-  l2: `${light.base.brand}, 72%`,
+  d4: `${color.base.brand}, 36%`,
+  d3: `${color.base.brand}, 42%`,
+  d2: `${color.base.brand}, 48%`,
+  d1: `${color.base.brand}, 54%`,
+  l1: `${color.base.brand}, 66%`,
+  l2: `${color.base.brand}, 72%`,
 };
 
 light.black = {
-  d1: `${light.base.black}, 10%`,
+  d1: `${color.base.black}, 10%`,
 };
 
 light.red = {
-  d4: `${light.base.red}, 31%`,
-  d3: `${light.base.red}, 37%`,
-  d2: `${light.base.red}, 43%`,
-  d1: `${light.base.red}, 49%`,
-  l1: `${light.base.red}, 61%`,
-  l2: `${light.base.red}, 67%`,
+  d4: `${color.base.red}, 31%`,
+  d3: `${color.base.red}, 37%`,
+  d2: `${color.base.red}, 43%`,
+  d1: `${color.base.red}, 49%`,
+  l1: `${color.base.red}, 61%`,
+  l2: `${color.base.red}, 67%`,
 };
 
-light.accent = `hsla(${light.brand}, 100%)`;
+light.accent = `hsla(${light.base.brand}, 100%)`;
 light.background = {
   base: `hsla(${light.base.white}, 100%)`,
   hover: `hsla(${light.base.black}, 4%)`,
@@ -149,30 +175,42 @@ light.text = {
 light.link.primary = `hsla(${light.base.blue}, 100%)`;
 
 light.button.primary = {
-  background: light.accent,
-  hover: `hsla(${light.brand.l1}, 100%)`,
+  color: light.accent,
   active: `hsla(${light.brand.d1}, 100%)`,
-  disabledOpacity: 0.65,
   border: `hsla(${light.brand.d2}, 100%)`,
-  borderHover: `hsla(${light.brand.d1}, 100%)`,
+  hover: {
+    color: `hsla(${light.brand.l1}, 100%)`,
+    border: `hsla(${light.brand.d1}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
 };
 
 light.button.secondary = {
-  background: light.background.surface,
-  hover: `hsla(${light.base.black}, 3%)`,
+  color: light.background.surface,
   active: `hsla(${light.base.black}, 8%)`,
-  disabledOpacity: 0.6,
   border: `hsla(${light.base.black}, 5%)`,
-  borderHover: `hsla(${light.base.black}, 7%)`,
+  hover: {
+    color: `hsla(${light.base.black}, 3%)`,
+    border: `hsla(${light.base.black}, 5%)`,
+  },
+  disabled: {
+    opacity: "0.6",
+  },
 };
 
 light.button.danger = {
-  background: `hsla(${light.base.red}, 100%)`,
-  backgroundHover: `hsla(${light.red.l1}, 100%)`,
-  backgroundActive: `hsla(${light.red.d1}, 100%)`,
-  disabledOpacity: `0.65`,
+  color: `hsla(${light.base.red}, 100%)`,
+  active: `hsla(${light.red.d1}, 100%)`,
   border: `hsla(${light.red.d2}, 100%)`,
-  borderHover: `hsla(${light.red.d1}, 100%)`,
+  hover: {
+    color: `hsla(${light.red.l1}, 100%)`,
+    border: `hsla(${light.red.d1}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
 };
 
 light.shadow.inset = {
