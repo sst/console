@@ -354,7 +354,7 @@ export function CommandBar() {
         <Filter>
           <FilterInput
             onBlur={(e) => {
-              // control.hide();
+              control.hide();
             }}
             autofocus
             placeholder="Type to search"
