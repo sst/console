@@ -1,5 +1,27 @@
 import { createTheme } from "@macaron-css/core";
 
+const fonts = {
+  heading: '"IBM Plex Mono", monospace',
+  body: "Rubik, sans-serif",
+  code: '"IBM Plex Mono", monospace',
+};
+
+const navbarPadding = "0.75rem";
+
+const constants = {
+  colorFadeDuration: "0.20s",
+
+  spacing: "1rem",
+  borderRadius: "4px",
+
+  textBoldWeight: "600",
+
+  navbarPadding,
+  contentPadding: navbarPadding,
+
+  iconOpacity: "0.85",
+};
+
 const color = {
   base: {
     brand: "13, 88%",
@@ -361,13 +383,8 @@ dark.shadow.button = {
   danger: "",
 };
 
-const fonts = {
-  heading: '"IBM Plex Mono", monospace',
-  body: "Rubik, sans-serif",
-  code: '"IBM Plex Mono", monospace',
-};
-
 export const [lightClass, theme] = createTheme({
+  ...constants,
   fonts,
   color: light,
   space: {
@@ -411,6 +428,7 @@ export const [lightClass, theme] = createTheme({
 
 export const darkClass = createTheme(theme, {
   ...theme,
+  ...constants,
   fonts,
   color: dark,
 });
