@@ -14,11 +14,12 @@ import { styled } from "@macaron-css/solid";
 import { useReplicache } from "../../data/replicache";
 import { AppStore } from "../../data/app";
 import { theme } from "src/ui/theme";
-import { groupBy, pipe } from "remeda";
+import { filter, groupBy, pipe } from "remeda";
 import { globalStyle } from "@macaron-css/core";
 import { createShortcut, useKeyDownEvent } from "@solid-primitives/keyboard";
 import { useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "../../data/stage";
+import { ResourceStore } from "../../data/resource";
 
 interface Action {
   icon: string;
@@ -93,6 +94,21 @@ const StageProvider: ActionProvider = async (filter) => {
   }));
 };
 
+const ResourceProvider: ActionProvider = async (filter) => {
+  if (!filter) return [];
+  const stageId = location.pathname.split("/")[6];
+  console.log(stageId);
+  if (!stageId) return [];
+  const rep = useReplicache()();
+  const resources = await rep.query(ResourceStore.forStage(stageId));
+  return resources.map((resource) => ({
+    icon: "",
+    category: resource.type,
+    title: `Go to "${resource.cfnID}"`,
+    run: (control) => {},
+  }));
+};
+
 const AccountProvider: ActionProvider = async () => {
   return [
     {
@@ -115,6 +131,7 @@ const AccountProvider: ActionProvider = async () => {
 };
 
 const providers = [
+  ResourceProvider,
   StageProvider,
   AppProvider,
   WorkspaceProvider,
@@ -233,7 +250,7 @@ function createControl() {
     batch(() => {
       setProvider(undefined);
       setVisible(true);
-      actionsControl.refetch();
+      setInput("");
     });
     control.input().focus();
   }
@@ -250,28 +267,34 @@ function createControl() {
     hide();
   });
 
-  const [actions, actionsControl] = createResource(
-    () => [provider()],
-    async ([provider]) => {
-      if (provider) return provider("");
-      const actions = await Promise.all(
-        providers.map(async (provider) => {
-          const actions = await provider("");
-          return actions;
-        })
-      ).then((x) => x.flat());
-      return actions;
+  const [actions, setActions] = createSignal<Action[]>([]);
+  const [input, setInput] = createSignal("");
+  createEffect(async () => {
+    const p = provider();
+    if (p) {
+      setActions(await p(input()));
+      return;
     }
-  );
+    const actions = await Promise.all(
+      providers.map(async (provider) => {
+        const actions = await provider(input());
+        return actions;
+      })
+    ).then((x) => x.flat());
+    setActions(actions);
+  });
 
   const groups = createMemo(() => {
     return pipe(
       actions() || [],
+      filter((action) =>
+        action.title.toLowerCase().includes(input().toLowerCase())
+      ),
       groupBy((a) => a.category)
     );
   });
 
-  createEffect(() => console.log(actions()));
+  createEffect(() => console.log("actions", actions()));
 
   const control = {
     root: undefined as unknown as HTMLElement,
@@ -330,6 +353,10 @@ function createControl() {
     bind(root: HTMLElement) {
       control.root = root;
     },
+    get input() {
+      return input();
+    },
+    setInput,
     setActive: control.setActive,
     get groups() {
       return groups();
@@ -353,6 +380,8 @@ export function CommandBar() {
       <Modal>
         <Filter>
           <FilterInput
+            onInput={(e) => control.setInput(e.target.value)}
+            value={control.input}
             onBlur={(e) => {
               control.hide();
             }}
