@@ -138,12 +138,18 @@ importers:
       '@paralleldrive/cuid2':
         specifier: ^2.2.0
         version: 2.2.0
+      '@solid-primitives/keyboard':
+        specifier: ^1.2.3
+        version: 1.2.3(solid-js@1.7.3)
       '@solidjs/router':
         specifier: ^0.8.2
         version: 0.8.2(solid-js@1.7.3)
       modern-normalize:
         specifier: ^1.1.0
         version: 1.1.0
+      remeda:
+        specifier: ^1.17.1
+        version: 1.17.1
       replicache:
         specifier: ^12.2.1
         version: 12.2.1
@@ -4154,6 +4160,43 @@ packages:
   /@repeaterjs/repeater@3.0.4:
     resolution: {integrity: sha512-AW8PKd6iX3vAZ0vA43nOUOnbq/X5ihgU+mSXXqunMkeQADGiqw/PY0JNeYtD5sr0PAy51YPgAPbDoeapv9r8WA==}
 
+  /@solid-primitives/event-listener@2.2.13(solid-js@1.7.3):
+    resolution: {integrity: sha512-8GtVEq0ECZoa5Klo1jjfGPfwg0zVJ8TNnNkWu8FqRkh0CkhbhCVJAKwjleem9K/qL6zUDfJihLjhqGBTBbb+8w==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': 6.2.0(solid-js@1.7.3)
+      solid-js: 1.7.3
+    dev: false
+
+  /@solid-primitives/keyboard@1.2.3(solid-js@1.7.3):
+    resolution: {integrity: sha512-8EBUk1lARIXVhSs9H2t0rclCuyX1y56Kf9J8VVmlPDSh1L+nSIU0wcDGVeVy3HWG6W8pRoRD7kwlQvXhdW2LAQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/event-listener': 2.2.13(solid-js@1.7.3)
+      '@solid-primitives/rootless': 1.4.1(solid-js@1.7.3)
+      '@solid-primitives/utils': 6.2.0(solid-js@1.7.3)
+      solid-js: 1.7.3
+    dev: false
+
+  /@solid-primitives/rootless@1.4.1(solid-js@1.7.3):
+    resolution: {integrity: sha512-h7VBUk8usD76Eh1a4wT17PcGtIRxGPlLuJ4Mf7roCNu46W5cc9DAoz8M6XebuZWVKeUkML/JuPMZQSV0mLo2Fw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': 6.2.0(solid-js@1.7.3)
+      solid-js: 1.7.3
+    dev: false
+
+  /@solid-primitives/utils@6.2.0(solid-js@1.7.3):
+    resolution: {integrity: sha512-T62WlLwKkbmicsw/xpwMQyv9MmZRSaVyutXfS5icc9v0cb8qGMUxRxr5LVvZHYQCZ9DEFboZB0r711xsbVBbeA==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      solid-js: 1.7.3
+    dev: false
+
   /@solidjs/router@0.8.2(solid-js@1.7.3):
     resolution: {integrity: sha512-gUKW+LZqxtX6y/Aw6JKyy4gQ9E7dLqp513oB9pSYJR1HM5c56Pf7eijzyXX+b3WuXig18Cxqah4tMtF0YGu80w==}
     peerDependencies:
@@ -7380,8 +7423,8 @@ packages:
   /reinterval@1.1.0:
     resolution: {integrity: sha512-QIRet3SYrGp0HUHO88jVskiG6seqUGC5iAG7AwI/BV4ypGcuqk9Du6YQBUOUqm9c8pw1eyLoIaONifRua1lsEQ==}
 
-  /remeda@1.14.0:
-    resolution: {integrity: sha512-AFPpCRtlYAcSzW4cI8sOw+x+BtbvX6tIwL3lhRxUO9YuPXRe06N1woIMPq/O1cNNy5n4a0TwbIHIciqnswkaQg==}
+  /remeda@1.17.1:
+    resolution: {integrity: sha512-hWXiHrf3bdq/l0V6ovPUpDlrCzVKIDgxEz0j9QMu+JxU9JmxJJlpiHDf+xeS5nU58+4RIwCqEAT+D3SkIj0YEg==}
 
   /replicache@12.2.1:
     resolution: {integrity: sha512-IQSAorWVgaEpGuI3HEGDmnBT4oQq7OYteWH0ZNp5U6g8gDTNLvsO/16aBgQdHhHGHJRx2ULoxjovyJGlu+NYjg==}
@@ -7678,7 +7721,7 @@ packages:
       openid-client: 5.4.2
       ora: 6.3.0
       react: 18.2.0
-      remeda: 1.14.0
+      remeda: 1.17.1
       sst-aws-cdk: 2.62.2-3
       tree-kill: 1.2.2
       undici: 5.22.0

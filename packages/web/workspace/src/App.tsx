@@ -13,6 +13,7 @@ import { Debug } from "./pages/debug";
 import { styled } from "@macaron-css/solid";
 import { globalStyle } from "@macaron-css/core";
 import { theme, lightClass } from "./ui/theme";
+import { CommandBar } from "./pages/workspace/command-bar";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -35,6 +36,14 @@ globalStyle("html", {
 globalStyle("*:focus", {
   border: 0,
   outline: 0,
+});
+
+globalStyle("*", {
+  cursor: "default",
+});
+
+globalStyle("input", {
+  cursor: "text",
 });
 
 export const App: Component = () => {

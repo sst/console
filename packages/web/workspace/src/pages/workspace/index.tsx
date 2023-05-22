@@ -1,9 +1,8 @@
-import { Link, Navigate, Route, Routes, useParams } from "@solidjs/router";
-import { ReplicacheProvider, createSubscription } from "../../data/replicache";
+import { Navigate, Route, Routes, useParams } from "@solidjs/router";
+import { ReplicacheProvider } from "../../data/replicache";
 import { Connect } from "./connect";
 import { Apps } from "./apps";
-import { AppStore } from "../../data/app";
-import { For } from "solid-js";
+import { CommandBar } from "./command-bar";
 
 export function Workspace() {
   const params = useParams();
@@ -18,6 +17,7 @@ export function Workspace() {
         <Route path="apps/*" component={Apps} />
         <Route path="*" element={<Navigate href="apps" />} />
       </Routes>
+      <CommandBar />
     </ReplicacheProvider>
   );
 }
