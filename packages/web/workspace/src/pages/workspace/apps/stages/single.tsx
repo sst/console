@@ -411,6 +411,21 @@ export function Single() {
             </Item>
           </ul>
         </Resource>
+        <div>
+          test
+          <Button color="danger">Delete</Button>
+          <Button color="primary">Enable</Button>
+          <Button color="secondary">Settings</Button>
+          <Button disabled color="danger">
+            Delete
+          </Button>
+          <Button disabled color="primary">
+            Enable
+          </Button>
+          <Button disabled color="secondary">
+            Settings
+          </Button>
+        </div>
         <Resource>
           <div class="title">
             <h1>

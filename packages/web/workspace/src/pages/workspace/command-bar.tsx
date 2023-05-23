@@ -158,13 +158,14 @@ const Root = styled("div", {
     position: "fixed",
     background: "rgba(0, 0, 0, 0.2)",
     backdropFilter: "blur(0px)",
+    WebkitBackdropFilter: "blur(0px)",
     opacity: 0,
     inset: 0,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     pointerEvents: "none",
-    transition: "backdropFilter 300ms all",
+    transition: "backdropFilter 300ms all, WebkitBackdropFilter 300ms all",
   },
   variants: {
     show: {
@@ -172,6 +173,7 @@ const Root = styled("div", {
         opacity: 1,
         pointerEvents: "all",
         backdropFilter: "blur(5px)",
+        WebkitBackdropFilter: "blur(5px)",
       },
     },
   },
@@ -183,7 +185,9 @@ const Modal = styled("div", {
     borderRadius: 8,
     flexShrink: 0,
     boxShadow: `rgb(0 0 0 / 50%) 0px 16px 70px`,
-    background: "white",
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
+    background: "rgba(255, 255, 255, 0.8)",
   },
 });
 
@@ -198,6 +202,7 @@ const FilterInput = styled("input", {
   base: {
     flexGrow: 1,
     border: 0,
+    background: "transparent",
   },
 });
 
