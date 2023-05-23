@@ -6,6 +6,7 @@ import {
   createMemo,
   createResource,
   createSignal,
+  onCleanup,
 } from "solid-js";
 import { useAuth } from "../../data/auth";
 import { UserStore } from "../../data/user";
@@ -101,12 +102,26 @@ const ResourceProvider: ActionProvider = async (filter) => {
   if (!stageId) return [];
   const rep = useReplicache()();
   const resources = await rep.query(ResourceStore.forStage(stageId));
-  return resources.map((resource) => ({
-    icon: "",
-    category: resource.type,
-    title: `Go to "${resource.cfnID}"`,
-    run: (control) => {},
-  }));
+  return resources.flatMap((resource) => {
+    if (resource.type === "Api") {
+      return resource.metadata.routes.map((rt) => ({
+        icon: "",
+        category: "API Route",
+        title: `Go to ${rt.route}`,
+        run: () => {},
+      }));
+    }
+
+    if (resource.type === "EventBus") {
+      return resource.metadata.rules.map((rule) => ({
+        icon: "",
+        category: "Event Bus Subscriptions",
+        title: `Go to ${rule.key}`,
+        run: () => {},
+      }));
+    }
+    return [];
+  });
 };
 
 const AccountProvider: ActionProvider = async () => {
@@ -116,7 +131,7 @@ const AccountProvider: ActionProvider = async () => {
       category: "Account",
       title: "Switch workspaces...",
       run: (control) => {
-        control.setProvider(() => WorkspaceProvider);
+        control.show(WorkspaceProvider);
       },
     },
     {
@@ -124,7 +139,7 @@ const AccountProvider: ActionProvider = async () => {
       category: "Account",
       title: "Switch apps...",
       run: (control) => {
-        control.setProvider(() => AppProvider);
+        control.show(AppProvider);
       },
     },
   ];
@@ -245,14 +260,17 @@ const ActionRowTitle = styled("div", {
 function createControl() {
   const [provider, setProvider] = createSignal<ActionProvider>();
   const [visible, setVisible] = createSignal(false);
+  const [actions, setActions] = createSignal<Action[]>([]);
+  const [input, setInput] = createSignal("");
 
-  function show() {
+  function show(provider?: ActionProvider) {
     batch(() => {
-      setProvider(undefined);
+      setProvider(() => provider);
       setVisible(true);
       setInput("");
     });
     control.input().focus();
+    control.setActive(control.actions()[0]);
   }
 
   function hide() {
@@ -263,12 +281,6 @@ function createControl() {
     show();
   });
 
-  createShortcut(["Escape"], () => {
-    hide();
-  });
-
-  const [actions, setActions] = createSignal<Action[]>([]);
-  const [input, setInput] = createSignal("");
   createEffect(async () => {
     const p = provider();
     if (p) {
@@ -296,6 +308,12 @@ function createControl() {
 
   createEffect(() => console.log("actions", actions()));
 
+  const observer = new MutationObserver(() => {
+    control.reset();
+  });
+
+  onCleanup(() => observer.disconnect());
+
   const control = {
     root: undefined as unknown as HTMLElement,
     input() {
@@ -303,6 +321,9 @@ function createControl() {
     },
     actions() {
       return [...control.root.querySelectorAll("[data-element='action']")];
+    },
+    reset() {
+      control.setActive(control.actions()[0]);
     },
     active() {
       return control.root.querySelector(
@@ -336,14 +357,6 @@ function createControl() {
     },
   };
 
-  createShortcut(["ArrowDown"], () => {
-    control.next();
-  });
-
-  createShortcut(["ArrowUp"], () => {
-    control.back();
-  });
-
   createShortcut(["Enter"], () => {
     const current = control.active();
     if (current) current.click();
@@ -352,6 +365,25 @@ function createControl() {
   return {
     bind(root: HTMLElement) {
       control.root = root;
+      const input = root.querySelector("input")!;
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown") {
+          control.next();
+          e.preventDefault();
+        }
+        if (e.key === "ArrowUp") {
+          control.back();
+          e.preventDefault();
+        }
+      });
+
+      input.addEventListener("blur", (e) => {
+        hide();
+      });
+
+      observer.observe(root.querySelector(`[data-element="results"]`)!, {
+        childList: true,
+      });
     },
     get input() {
       return input();
@@ -361,8 +393,9 @@ function createControl() {
     get groups() {
       return groups();
     },
-    setProvider,
-    visible,
+    get visible() {
+      return visible();
+    },
     show,
     hide,
   };
@@ -371,25 +404,20 @@ function createControl() {
 type Control = ReturnType<typeof createControl>;
 
 export function CommandBar() {
-  const location = useLocation();
-
   const control = createControl();
 
   return (
-    <Root show={control.visible()} ref={control.bind}>
+    <Root show={control.visible} ref={control.bind}>
       <Modal>
         <Filter>
           <FilterInput
-            onInput={(e) => control.setInput(e.target.value)}
             value={control.input}
-            onBlur={(e) => {
-              control.hide();
-            }}
+            onInput={(e) => control.setInput(e.target.value)}
             autofocus
             placeholder="Type to search"
           />
         </Filter>
-        <Results>
+        <Results data-element="results">
           <For each={Object.entries(control.groups)}>
             {([category, actions]) => (
               <>
