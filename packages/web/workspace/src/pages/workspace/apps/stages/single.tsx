@@ -68,69 +68,47 @@ const Switcher = styled("div", {
   },
 });
 
-const SwitcherAppButton = styled("button", {
-  base: {
-    flex: "0 0 auto",
-    padding: `0 ${theme.navbarPadding} 0 0`,
-    border: "0",
-    borderRadius: "4px",
-    backgroundColor: "transparent",
-    transition: `border ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      borderColor: theme.color.button.secondary.hover.border,
-    },
-  },
+globalStyle(`${Switcher} > button`, {
+  flex: "0 0 auto",
+  padding: `0 ${theme.navbarPadding} 0 0`,
+  border: "none",
+  borderRadius: "4px",
+  backgroundColor: "transparent",
+  transition: `border ${theme.colorFadeDuration} ease-out`,
 });
 
-const SwitcherAppIcon = styled("img", {
-  base: {
-    display: "block",
-    borderRadius: theme.borderRadius,
-  },
+globalStyle(`${Switcher} > button > img`, {
+  display: "block",
+  borderRadius: theme.borderRadius,
 });
 
-const SwitcherText = styled("div", {
-  base: {
-    flex: "1 1 auto",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: `0 0 0 ${theme.navbarPadding}`,
-    borderLeft: `1px solid ${theme.color.divider.base}`,
-    ":hover": {
-      cursor: "pointer",
-    },
-  },
+globalStyle(`${Switcher} > div`, {
+  flex: "1 1 auto",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: `0 0 0 ${theme.navbarPadding}`,
+  borderLeft: `1px solid ${theme.color.divider.base}`,
 });
 
-const SwitcherBreadcrumb = styled("div", {
-  base: {
-    marginRight: "7px",
-  },
+globalStyle(`${Switcher} div.breadcrumb`, {
+  marginRight: "7px",
 });
 
-const SwitcherBreadcrumbText = styled("div", {
-  base: {
-    font: theme.fonts.heading,
-    color: theme.color.text.secondary,
-    ":first-child": {
-      fontWeight: "500",
-    },
-    ":last-child": {
-      marginTop: "5px",
-      fontSize: "0.875rem",
-      color: theme.color.text.dimmed,
-    },
-  },
+globalStyle(`${Switcher} div.breadcrumb > div`, {
+  font: theme.fonts.heading,
+  color: theme.color.text.secondary,
 });
 
-const SwitcherSvg = styled("svg", {
-  base: {
-    display: "block",
-    width: "20px",
-    height: "20px",
-    color: theme.color.base.black,
-  },
+globalStyle(`${Switcher} div.breadcrumb > div:first-child`, {
+  fontWeight: "500",
+});
+
+globalStyle(`${Switcher} div.breadcrumb > div:last-child`, {
+  marginTop: "5px",
+  fontSize: "0.875rem",
+  color: theme.color.text.dimmed,
 });
 
 const SwitcherIcon = styled("span", {
@@ -143,17 +121,24 @@ const SwitcherIcon = styled("span", {
       color ${theme.colorFadeDuration} ease-out,
       background-color ${theme.colorFadeDuration} ease-out`,
     selectors: {
-      [`${SwitcherText}:hover > &`]: {
+      [`${Switcher} > div:hover > &`]: {
         color: theme.color.text.secondary,
       },
-      [`${SwitcherText}:active > &`]: {
+      [`${Switcher} > div:active > &`]: {
         backgroundColor: theme.color.button.secondary.active,
       },
     },
   },
 });
 
-const Card = styled("div", {
+globalStyle(`${SwitcherIcon} svg`, {
+  display: "block",
+  width: "20px",
+  height: "20px",
+  color: theme.color.base.black,
+});
+
+const Resource = styled("div", {
   base: {
     marginBottom: theme.space[4],
     borderRadius: theme.borderRadius,
@@ -170,28 +155,26 @@ const Card = styled("div", {
   },
 });
 
-const CardTitle = styled("div", {
-  base: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: `calc(${theme.space[4]} - 2px) calc(${theme.space[4]} + 4px)`,
-    borderBottom: `1px solid ${theme.color.divider.surface}`,
-  },
+globalStyle(`${Resource} > div.title`, {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: `calc(${theme.space[4]} - 2px) calc(${theme.space[4]} + 4px)`,
+  borderBottom: `1px solid ${theme.color.divider.surface}`,
 });
 
-globalStyle(`${CardTitle} h1`, {
+globalStyle(`${Resource} > div.title h1`, {
   display: "flex",
   alignItems: "baseline",
 });
 
-globalStyle(`${CardTitle} h1 span`, {
+globalStyle(`${Resource} > div.title span`, {
   fontWeight: "500",
   fontFamily: theme.fonts.body,
   fontSize: "0.875rem",
 });
 
-globalStyle(`${CardTitle} svg`, {
+globalStyle(`${Resource} > div.title svg`, {
   marginRight: "5px",
   padding: "1px 0",
   width: "16px",
@@ -200,31 +183,27 @@ globalStyle(`${CardTitle} svg`, {
   opacity: theme.iconOpacity,
 });
 
-const CardTitleDesc = styled("span", {
-  base: {
-    marginLeft: "8px",
-    fontWeight: "400",
-    fontSize: "0.8125rem",
-    color: theme.color.text.secondary,
-  },
+globalStyle(`${Resource} > div.title span.desc`, {
+  marginLeft: "8px",
+  fontWeight: "400",
+  fontSize: "0.8125rem",
+  color: theme.color.text.secondary,
 });
 
-globalStyle(`${CardTitle} h6`, {
+globalStyle(`${Resource} > div.title h6`, {
   fontSize: "0.8125rem",
   fontWeight: "400",
   textTransform: "none",
   color: theme.color.text.secondary,
 });
 
-const Functions = styled("ul", {
-  base: {
-    margin: "0",
-    padding: "0",
-    listStyleType: "none",
-  },
+globalStyle(`${Resource} > ul`, {
+  margin: "0",
+  padding: "0",
+  listStyleType: "none",
 });
 
-const Function = styled("li", {
+const Item = styled("li", {
   base: {
     margin: `0 calc(${theme.space[4]} + 4px)`,
     padding: "13px 0",
@@ -240,68 +219,44 @@ const Function = styled("li", {
   },
 });
 
-const Output = styled("li", {
-  base: {
-    margin: `0 calc(${theme.space[4]} + 4px)`,
-    padding: "13px 0",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottom: `1px solid ${theme.color.divider.surface}`,
-    selectors: {
-      "&:last-child": {
-        border: "none",
-      },
-    },
-  },
-});
-
-const FunctionCopy = styled("span", {
-  base: {
-    fontFamily: theme.fonts.code,
-    fontSize: "0.8125rem",
-    lineHeight: "1",
-  },
-});
-
-globalStyle(`${Function} > .left, ${Function} > .right, ${Output} > .right`, {
+globalStyle(`${Item} > .left, ${Item} > .right`, {
   display: "flex",
   alignItems: "center",
 });
 
-globalStyle(`${Function} > .right span`, {
+globalStyle(`${Item} > .right span`, {
   marginLeft: `calc(${theme.space[4]} / 1.5)`,
 });
 
-globalStyle(`${Output} .name`, {
+globalStyle(`${Item} .name`, {
   marginRight: theme.space[4],
   fontSize: "0.875rem",
 });
 
-globalStyle(`${Function} .method`, {
+globalStyle(`${Item} .method`, {
   margin: "0 10px 0 0",
-  width: "48px",
+  width: "50px",
   textAlign: "center",
   color: theme.color.text.secondary,
   fontSize: "0.5625rem",
-  fontWeight: "500",
   textTransform: "uppercase",
   border: `1px solid ${theme.color.divider.base}`,
   padding: "4px 4px",
-  lineHeight: "1.1",
   borderRadius: theme.borderRadius,
 });
 
-globalStyle(`${Function} .route`, {
+globalStyle(`${Item} .route`, {
   fontFamily: theme.fonts.code,
   fontSize: "0.875rem",
 });
 
-globalStyle(`${Function} .size`, {
+globalStyle(`${Item} .size`, {
   color: theme.color.text.secondary,
+  fontSize: "0.8125rem",
+  fontFamily: theme.fonts.code,
 });
 
-globalStyle(`${Function} .runtime svg`, {
+globalStyle(`${Item} .runtime svg`, {
   marginLeft: "10px",
   width: "16px",
   height: "16px",
@@ -310,14 +265,15 @@ globalStyle(`${Function} .runtime svg`, {
   verticalAlign: "middle",
 });
 
-globalStyle(`${Function} .region`, {
+globalStyle(`${Item} .region`, {
   marginLeft: "7px",
   color: theme.color.text.dimmed,
   fontSize: "0.625rem",
   textTransform: "uppercase",
+  fontFamily: theme.fonts.code,
 });
 
-globalStyle(`${Output} .value`, {
+globalStyle(`${Item} .value`, {
   color: theme.color.text.secondary,
   fontFamily: theme.fonts.code,
   fontSize: "0.8125rem",
@@ -351,28 +307,24 @@ export function Single() {
     <Root>
       <Navbar>
         <Switcher>
-          <SwitcherAppButton>
-            <SwitcherAppIcon width="32px" src={sst} />
-          </SwitcherAppButton>
-          <SwitcherText>
-            <SwitcherBreadcrumb>
-              <SwitcherBreadcrumbText>{app()?.name}</SwitcherBreadcrumbText>
-              <SwitcherBreadcrumbText>{stage()?.name}</SwitcherBreadcrumbText>
-            </SwitcherBreadcrumb>
+          <button>
+            <img width="32px" src={sst} />
+          </button>
+          <div>
+            <div class="breadcrumb">
+              <div>{app()?.name}</div>
+              <div>{stage()?.name}</div>
+            </div>
             <SwitcherIcon>
-              <SwitcherSvg
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path
                   fill-rule="evenodd"
                   d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
                   clip-rule="evenodd"
                 ></path>
-              </SwitcherSvg>
+              </svg>
             </SwitcherIcon>
-          </SwitcherText>
+          </div>
         </Switcher>
         <User>
           <UserImage width="28px" src={patrick} />
@@ -394,8 +346,8 @@ export function Single() {
             Settings
           </Button>
         </div>
-        <Card>
-          <CardTitle>
+        <Resource>
+          <div class="title">
             <h1>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <g fill="none">
@@ -413,17 +365,17 @@ export function Single() {
                 </g>
               </svg>
               <span>site</span>
-              <CardTitleDesc>my-sst-app.com</CardTitleDesc>
+              <span class="desc">my-sst-app.com</span>
             </h1>
             <h6>NextjsSite</h6>
-          </CardTitle>
-          <Functions>
-            <Function>
+          </div>
+          <ul>
+            <Item>
               <div class="left">
                 <a class="name">Server Function</a>
               </div>
               <div class="right">
-                <FunctionCopy class="size">11.2 MB</FunctionCopy>
+                <span class="size">11.2 MB</span>
                 <span title="Node.js 18.x" class="runtime">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path
@@ -436,15 +388,15 @@ export function Single() {
                     />
                   </svg>
                 </span>
-                <FunctionCopy class="region">us-east-1</FunctionCopy>
+                <span class="region">us-east-1</span>
               </div>
-            </Function>
-            <Function>
+            </Item>
+            <Item>
               <div class="left">
                 <a class="name">Image Function</a>
               </div>
               <div class="right">
-                <FunctionCopy class="size">34.8 MB</FunctionCopy>
+                <span class="size">34.8 MB</span>
                 <span title="Python 3.10" class="runtime">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15">
                     <path
@@ -454,13 +406,13 @@ export function Single() {
                     />
                   </svg>
                 </span>
-                <FunctionCopy class="region">us-east-1</FunctionCopy>
+                <span class="region">us-east-1</span>
               </div>
-            </Function>
-          </Functions>
-        </Card>
-        <Card>
-          <CardTitle>
+            </Item>
+          </ul>
+        </Resource>
+        <Resource>
+          <div class="title">
             <h1>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path
@@ -473,12 +425,12 @@ export function Single() {
                 />
               </svg>
               <span>api</span>
-              <CardTitleDesc>api.my-sst-app.com</CardTitleDesc>
+              <span class="desc">api.my-sst-app.com</span>
             </h1>
             <h6>Api</h6>
-          </CardTitle>
-          <Functions>
-            <Function>
+          </div>
+          <ul>
+            <Item>
               <div class="left">
                 <span class="method">GET</span>
                 <a class="route">/notes</a>
@@ -499,8 +451,8 @@ export function Single() {
                 </span>
                 <span class="region">us-east-1</span>
               </div>
-            </Function>
-            <Function>
+            </Item>
+            <Item>
               <div class="left">
                 <span class="method">OPTIONS</span>
                 <a class="route">/notes/settings</a>
@@ -521,17 +473,17 @@ export function Single() {
                 </span>
                 <span class="region">us-east-1</span>
               </div>
-            </Function>
-          </Functions>
-        </Card>
-        <Card type="outputs">
-          <CardTitle>
+            </Item>
+          </ul>
+        </Resource>
+        <Resource type="outputs">
+          <div class="title">
             <h1>
               <span>Outputs</span>
             </h1>
-          </CardTitle>
-          <Functions>
-            <Output>
+          </div>
+          <ul>
+            <Item>
               <div class="left">
                 <span class="name">ApiEndpoint</span>
               </div>
@@ -552,8 +504,8 @@ export function Single() {
                   </svg>
                 </CopyButton>
               </div>
-            </Output>
-            <Output>
+            </Item>
+            <Item>
               <div class="left">
                 <span class="name">ServerlessDeploymentBucketName</span>
               </div>
@@ -574,8 +526,8 @@ export function Single() {
                   </svg>
                 </CopyButton>
               </div>
-            </Output>
-            <Output>
+            </Item>
+            <Item>
               <div class="left">
                 <span class="name">HelloLambdaFunctionQualifiedArn</span>
               </div>
@@ -596,9 +548,9 @@ export function Single() {
                   </svg>
                 </CopyButton>
               </div>
-            </Output>
-          </Functions>
-        </Card>
+            </Item>
+          </ul>
+        </Resource>
       </Content>
     </Root>
   );

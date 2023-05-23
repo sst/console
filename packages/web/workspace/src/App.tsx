@@ -31,6 +31,7 @@ const Root = styled("div", {
     fontFamily: theme.fonts.body,
     fontSynthesis: "none",
     textRendering: "geometricPrecision",
+    backgroundColor: theme.color.background.base,
   },
 });
 
