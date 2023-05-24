@@ -12,7 +12,7 @@ import { WorkspaceStore } from "../../data/workspace";
 import { styled } from "@macaron-css/solid";
 import { useReplicache } from "../../data/replicache";
 import { AppStore } from "../../data/app";
-import { theme } from "src/ui/theme";
+import { theme } from "$/ui/theme";
 import { filter, groupBy, pipe } from "remeda";
 import { globalStyle } from "@macaron-css/core";
 import { createShortcut } from "@solid-primitives/keyboard";
@@ -154,7 +154,7 @@ const providers = [
 const Root = styled("div", {
   base: {
     position: "fixed",
-    background: "rgba(0, 0, 0, 0.2)",
+    backgroundColor: `hsla(${theme.color.base.black}, 20%)`,
     opacity: 0,
     inset: 0,
     display: "flex",
@@ -168,8 +168,8 @@ const Root = styled("div", {
       true: {
         opacity: 1,
         pointerEvents: "all",
-        backdropFilter: "blur(5px)",
-        WebkitBackdropFilter: "blur(5px)",
+        backdropFilter: "blur(3px)",
+        WebkitBackdropFilter: "blur(3px)",
       },
     },
   },
@@ -210,7 +210,7 @@ const FilterInput = styled("input", {
 
 const Results = styled("div", {
   base: {
-    borderTop: `1px solid ${theme.color.divider.base}`,
+    borderTop: `1px solid ${theme.color.divider.surface}`,
     maxHeight: 320,
     padding: theme.space[2],
     overflowY: "auto",
@@ -242,6 +242,10 @@ const ActionRow = styled("div", {
     borderRadius: 4,
     fontSize: 12,
     gap: theme.space[4],
+    transitionDelay: "0s",
+    transitionDuration: "0.2s",
+    transitionProperty: "background-color",
+    transitionTimingFunction: "ease-out",
   },
 });
 
