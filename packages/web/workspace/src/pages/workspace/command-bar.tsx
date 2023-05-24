@@ -1,10 +1,8 @@
-import { useLocation, useMatch } from "@solidjs/router";
 import {
   For,
   batch,
   createEffect,
   createMemo,
-  createResource,
   createSignal,
   onCleanup,
 } from "solid-js";
@@ -17,7 +15,7 @@ import { AppStore } from "../../data/app";
 import { theme } from "src/ui/theme";
 import { filter, groupBy, pipe } from "remeda";
 import { globalStyle } from "@macaron-css/core";
-import { createShortcut, useKeyDownEvent } from "@solid-primitives/keyboard";
+import { createShortcut } from "@solid-primitives/keyboard";
 import { useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "../../data/stage";
 import { ResourceStore } from "../../data/resource";
@@ -32,7 +30,7 @@ interface Action {
 
 type ActionProvider = (filter: string) => Promise<Action[]>;
 
-const WorkspaceProvider: ActionProvider = async (filter) => {
+const WorkspaceProvider: ActionProvider = async () => {
   const workspaces = await Promise.all(
     Object.values(useAuth()).map(async (account) => {
       const workspaces = await account.replicache.query(async (tx) => {
@@ -59,7 +57,7 @@ const WorkspaceProvider: ActionProvider = async (filter) => {
   }));
 };
 
-const AppProvider: ActionProvider = async (filter) => {
+const AppProvider: ActionProvider = async () => {
   const rep = useReplicache()();
   const apps = await rep.query(AppStore.list());
   return apps.map((app) => ({
@@ -75,7 +73,7 @@ const AppProvider: ActionProvider = async (filter) => {
   }));
 };
 
-const StageProvider: ActionProvider = async (filter) => {
+const StageProvider: ActionProvider = async () => {
   const appID = location.pathname.split("/")[4];
   if (!appID) return [];
   const rep = useReplicache()();
@@ -157,15 +155,13 @@ const Root = styled("div", {
   base: {
     position: "fixed",
     background: "rgba(0, 0, 0, 0.2)",
-    backdropFilter: "blur(0px)",
-    WebkitBackdropFilter: "blur(0px)",
     opacity: 0,
     inset: 0,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     pointerEvents: "none",
-    transition: "backdropFilter 300ms all, WebkitBackdropFilter 300ms all",
+    transition: "200ms opacity",
   },
   variants: {
     show: {
@@ -188,7 +184,13 @@ const Modal = styled("div", {
     backdropFilter: "blur(8px)",
     WebkitBackdropFilter: "blur(8px)",
     background: "rgba(255, 255, 255, 0.8)",
+    transform: "scale(0.95)",
+    transition: "200ms all",
   },
+});
+
+globalStyle(`${Root.selector({ show: true })} ${Modal}`, {
+  transform: "initial",
 });
 
 const Filter = styled("div", {
