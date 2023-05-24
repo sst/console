@@ -15,6 +15,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { Bus, createEvent } from "../bus";
 import { Enrichers } from "./resource";
+import { db } from "../drizzle";
 
 export * as Stage from "./stage";
 
@@ -82,40 +83,40 @@ export const connect = zod(
   }
 );
 
-export const syncMetadata = zod(Info.shape.id, async (stageID) =>
-  useTransaction(async (tx) => {
-    console.log("syncing metadata", stageID);
-    const row = await tx
-      .select({
-        app: app.name,
-        accountID: awsAccount.accountID,
-        stage: stage.name,
-        region: stage.region,
-      })
-      .from(stage)
-      .innerJoin(app, eq(stage.appID, app.id))
-      .innerJoin(awsAccount, eq(stage.awsAccountID, awsAccount.id))
-      .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
-      .execute()
-      .then((x) => x[0]);
-    if (!row) {
-      return;
-    }
-    console.log(row.app, row.stage, row.region, row.accountID);
-    const credentials = await AWS.assumeRole(row.accountID);
-    const { bucket } = await AWS.Account.bootstrap(credentials);
-    const s3 = new S3Client({
-      credentials,
-      region: row.region,
-    });
-    const key = `stackMetadata/app.${row.app}/stage.${row.stage}/`;
-    const list = await s3.send(
-      new ListObjectsV2Command({
-        Prefix: key,
-        Bucket: bucket,
-      })
-    );
-    console.log("found", list.Contents?.length, "resources");
+export const syncMetadata = zod(Info.shape.id, async (stageID) => {
+  console.log("syncing metadata", stageID);
+  const row = await db
+    .select({
+      app: app.name,
+      accountID: awsAccount.accountID,
+      stage: stage.name,
+      region: stage.region,
+    })
+    .from(stage)
+    .innerJoin(app, eq(stage.appID, app.id))
+    .innerJoin(awsAccount, eq(stage.awsAccountID, awsAccount.id))
+    .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
+    .execute()
+    .then((x) => x[0]);
+  if (!row) {
+    return;
+  }
+  console.log(row.app, row.stage, row.region, row.accountID);
+  const credentials = await AWS.assumeRole(row.accountID);
+  const { bucket } = await AWS.Account.bootstrap(credentials);
+  const s3 = new S3Client({
+    credentials,
+    region: row.region,
+  });
+  const key = `stackMetadata/app.${row.app}/stage.${row.stage}/`;
+  const list = await s3.send(
+    new ListObjectsV2Command({
+      Prefix: key,
+      Bucket: bucket,
+    })
+  );
+  console.log("found", list.Contents?.length, "resources");
+  return useTransaction(async (tx) => {
     await tx
       .update(resource)
       .set({
@@ -166,5 +167,5 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) =>
         }
       }) || []
     );
-  })
-);
+  });
+});

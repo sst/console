@@ -19,7 +19,7 @@ import {
   IconNodeRuntime,
   IconPythonRuntime,
 } from "$/ui/icons/custom";
-import { For, Match, Switch, createMemo, createResource } from "solid-js";
+import { For, Match, Show, Switch, createMemo, createResource } from "solid-js";
 import { ResourceStore } from "$/data/resource";
 import type { Resource } from "@console/core/app/resource";
 
@@ -456,15 +456,17 @@ export function Single() {
                                 </a>
                               </Row>
                               <Row space="3" vertical="center">
-                                <ResourceChildDetail>
-                                  {fn().enrichment.size / 1024} kb
-                                </ResourceChildDetail>
+                                <Show when={fn().enrichment.size}>
+                                  {(value) => (
+                                    <ResourceChildDetail>
+                                      {Math.ceil(value() / 1024)} KB
+                                    </ResourceChildDetail>
+                                  )}
+                                </Show>
                                 <ResourceChildIcon>
                                   <IconNodeRuntime />
                                 </ResourceChildIcon>
-                                <ResourceChildExtra>
-                                  us-east-1
-                                </ResourceChildExtra>
+                                <ResourceChildExtra></ResourceChildExtra>
                               </Row>
                             </ResourceChild>
                           );

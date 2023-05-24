@@ -6,6 +6,6 @@ export const handler = EventHandler(
   Stage.Events.Connected,
   async (properties, actor) => {
     provideActor(actor);
-    Stage.syncMetadata(properties.stageID);
+    await Stage.syncMetadata(properties.stageID);
   }
 );

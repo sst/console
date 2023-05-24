@@ -41,7 +41,7 @@ export const Enrichers = {
           ) {
             return true;
           }
-
+          console.error("not retrying", e);
           return false;
         },
         delayDecider: (_, attempts) => {
@@ -62,6 +62,7 @@ export const Enrichers = {
         FunctionName: metadata.arn,
       })
     );
+    console.log(info.Configuration);
     return {
       size: info.Configuration?.CodeSize,
     };
