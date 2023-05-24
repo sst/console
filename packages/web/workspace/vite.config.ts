@@ -15,6 +15,7 @@ export default defineConfig({
     alias: {
       "@console/functions": path.resolve(__dirname, "../../functions/src"),
       "@console/core": path.resolve(__dirname, "../../core/src"),
+      $: path.resolve(__dirname, "./src"),
     },
   },
 });

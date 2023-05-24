@@ -41,3 +41,49 @@ export const Stack = styled("div", {
     },
   },
 });
+
+export const Row = styled("div", {
+  base: {
+    display: "flex",
+  },
+  variants: {
+    space: (() => {
+      const result = {} as Record<`${keyof (typeof theme)["space"]}`, any>;
+      for (const key in theme.space) {
+        const value = theme.space[key as keyof typeof theme.space];
+        result[key as keyof typeof theme.space] = {
+          gap: value,
+        };
+      }
+      return result;
+    })(),
+    vertical: {
+      center: {
+        alignItems: "center",
+      },
+      start: {
+        alignItems: "flex-start",
+      },
+      end: {
+        alignItems: "flex-end",
+      },
+    },
+    horizontal: {
+      center: {
+        justifyContent: "center",
+      },
+      start: {
+        justifyContent: "flex-start",
+      },
+      end: {
+        justifyContent: "flex-end",
+      },
+    },
+  },
+});
+
+export const Grower = styled("div", {
+  base: {
+    flexGrow: 1,
+  },
+});

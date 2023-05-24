@@ -10,14 +10,10 @@ const navbarPadding = "0.75rem";
 
 const constants = {
   colorFadeDuration: "0.20s",
-
   borderRadius: "4px",
-
   textBoldWeight: "600",
-
   navbarPadding,
   contentPadding: navbarPadding,
-
   iconOpacity: "0.85",
 };
 

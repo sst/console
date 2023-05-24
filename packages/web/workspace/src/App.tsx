@@ -32,6 +32,7 @@ const Root = styled("div", {
     fontSynthesis: "none",
     textRendering: "geometricPrecision",
     backgroundColor: theme.color.background.base,
+    overflowY: "auto",
   },
 });
 

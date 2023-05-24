@@ -14,7 +14,8 @@
     "baseUrl": ".",
     "paths": {
       "@console/functions/*": ["../../functions/src/*"],
-      "@console/core/*": ["../../core/src/*"]
+      "@console/core/*": ["../../core/src/*"],
+      "$/*": ["./src/*"]
     }
 
   }
