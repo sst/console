@@ -57,13 +57,11 @@ export const Enrichers = {
         },
       }),
     });
-    const info = await client
-      .send(
-        new GetFunctionCommand({
-          FunctionName: metadata.arn,
-        })
-      )
-      .catch(console.error);
+    const info = await client.send(
+      new GetFunctionCommand({
+        FunctionName: metadata.arn,
+      })
+    );
     return {
       size: info.Configuration?.CodeSize,
     };

@@ -1,5 +1,6 @@
 import { JSX } from "solid-js"
 // heroicons
+
 export function IconAcademicCap(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   return (
     <svg

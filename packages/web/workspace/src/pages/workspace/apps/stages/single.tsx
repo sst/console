@@ -19,8 +19,9 @@ import {
   IconNodeRuntime,
   IconPythonRuntime,
 } from "$/ui/icons/custom";
-import { For, Match, Switch } from "solid-js";
+import { For, Match, Switch, createMemo, createResource } from "solid-js";
 import { ResourceStore } from "$/data/resource";
+import type { Resource } from "@console/core/app/resource";
 
 const Content = styled("div", {
   base: {
@@ -114,7 +115,7 @@ const SwitcherIcon = styled(IconChevronUpDown, {
   },
 });
 
-const Resource = styled("div", {
+const ResourceCard = styled("div", {
   base: {
     borderRadius: 4,
     backgroundColor: theme.color.background.surface,
@@ -266,7 +267,7 @@ export function Single() {
         </User>
       </Header>
       <Content>
-        <Resource>
+        <ResourceCard>
           <ResourceHeader>
             <Row space="2" vertical="center">
               <IconNext width={16} />
@@ -305,8 +306,8 @@ export function Single() {
               </Row>
             </ResourceChild>
           </ResourceChildren>
-        </Resource>
-        <Resource>
+        </ResourceCard>
+        <ResourceCard>
           <ResourceHeader>
             <Row space="2" vertical="center">
               <IconAPI width={16} />
@@ -347,9 +348,9 @@ export function Single() {
               </Row>
             </ResourceChild>
           </ResourceChildren>
-        </Resource>
+        </ResourceCard>
 
-        <Resource type="outputs">
+        <ResourceCard type="outputs">
           <ResourceHeader>
             <Row space="2" vertical="center">
               <ResourceName>Outputs</ResourceName>
@@ -385,7 +386,7 @@ export function Single() {
               )}
             </For>
           </ResourceChildren>
-        </Resource>
+        </ResourceCard>
 
         <For
           each={resources().filter(
@@ -393,7 +394,7 @@ export function Single() {
           )}
         >
           {(resource) => (
-            <Resource>
+            <ResourceCard>
               <ResourceHeader>
                 <Row space="2" vertical="center">
                   <Switch>
@@ -422,8 +423,58 @@ export function Single() {
                     </Switch>
                   </ResourceDescription>
                 </Row>
+                <ResourceType>{resource.type}</ResourceType>
               </ResourceHeader>
-            </Resource>
+              <ResourceChildren>
+                <Switch>
+                  <Match when={resource.type === "Api" && resource}>
+                    {(resource) => (
+                      <For each={resource().metadata.routes}>
+                        {(route) => {
+                          const fn = createMemo(
+                            () =>
+                              resources().find(
+                                (r) =>
+                                  r.type === "Function" &&
+                                  r.addr === route.fn?.node
+                              ) as Extract<Resource.Info, { type: "Function" }>
+                          );
+                          const method = createMemo(
+                            () => route.route.split(" ")[0]
+                          );
+                          const path = createMemo(
+                            () => route.route.split(" ")[1]
+                          );
+                          return (
+                            <ResourceChild>
+                              <Row space="2" vertical="center">
+                                <ResourceChildTag>{method()}</ResourceChildTag>
+                                <a>
+                                  <ResourceChildTitle>
+                                    {path()}
+                                  </ResourceChildTitle>
+                                </a>
+                              </Row>
+                              <Row space="3" vertical="center">
+                                <ResourceChildDetail>
+                                  {fn().enrichment.size / 1024} kb
+                                </ResourceChildDetail>
+                                <ResourceChildIcon>
+                                  <IconNodeRuntime />
+                                </ResourceChildIcon>
+                                <ResourceChildExtra>
+                                  us-east-1
+                                </ResourceChildExtra>
+                              </Row>
+                            </ResourceChild>
+                          );
+                        }}
+                      </For>
+                    )}
+                  </Match>
+                </Switch>
+              </ResourceChildren>
+            </ResourceCard>
           )}
         </For>
       </Content>
