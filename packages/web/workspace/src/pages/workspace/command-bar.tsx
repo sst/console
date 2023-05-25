@@ -154,7 +154,7 @@ const providers = [
 const Root = styled("div", {
   base: {
     position: "fixed",
-    backgroundColor: `hsla(${theme.color.base.black}, 20%)`,
+    backgroundColor: theme.color.background.overlay,
     opacity: 0,
     inset: 0,
     display: "flex",
@@ -168,8 +168,8 @@ const Root = styled("div", {
       true: {
         opacity: 1,
         pointerEvents: "all",
-        backdropFilter: "blur(3px)",
-        WebkitBackdropFilter: "blur(3px)",
+        backdropFilter: "blur(2px)",
+        WebkitBackdropFilter: "blur(2px)",
       },
     },
   },
@@ -180,10 +180,10 @@ const Modal = styled("div", {
     width: 640,
     borderRadius: 8,
     flexShrink: 0,
-    boxShadow: `rgb(0 0 0 / 50%) 0px 16px 70px`,
-    backdropFilter: "blur(8px)",
-    WebkitBackdropFilter: "blur(8px)",
-    background: "rgba(255, 255, 255, 0.8)",
+    boxShadow: theme.color.shadow.drop.long,
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    background: theme.color.background.modal,
     transform: "scale(0.95)",
     transition: "200ms all",
   },
@@ -210,7 +210,7 @@ const FilterInput = styled("input", {
 
 const Results = styled("div", {
   base: {
-    borderTop: `1px solid ${theme.color.divider.surface}`,
+    borderTop: `1px solid ${theme.color.divider.base}`,
     maxHeight: 320,
     padding: theme.space[2],
     overflowY: "auto",

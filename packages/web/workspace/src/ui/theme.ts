@@ -73,6 +73,7 @@ const light = {
     black: "",
     blue: "",
     red: "",
+    gray: "",
   },
   brand: {
     d4: "",
@@ -97,6 +98,8 @@ const light = {
     base: "",
     hover: "",
     surface: "",
+    modal: "",
+    overlay: "",
   },
   divider: {
     base: ``,
@@ -160,9 +163,10 @@ const light = {
       danger: "",
     },
     drop: {
-      layer2: "",
-      layer2d: "",
-      layer5: "",
+      short: "",
+      shortDark: "",
+      medium: "",
+      long: "",
     },
     on: {
       surface2: "",
@@ -185,6 +189,7 @@ light.base = {
   black: `${color.base.black}, 14%`,
   blue: `${color.base.blue}, 51%`,
   red: `${color.base.red}, 55%`,
+  gray: `${color.base.white}, 97%`,
 };
 
 light.brand = {
@@ -215,6 +220,8 @@ light.background = {
   base: `hsla(${light.base.white}, 100%)`,
   hover: `hsla(${light.base.black}, 4%)`,
   surface: `hsla(${light.base.black}, 3%)`,
+  modal: `hsla(${light.base.gray}, 80%)`,
+  overlay: `hsla(${light.base.black}, 3%)`,
 };
 light.divider = {
   base: `hsla(${light.base.black}, 8%)`,
@@ -279,22 +286,30 @@ light.shadow.inset = {
 };
 
 light.shadow.drop = {
-  layer2: `0 1px 1px hsla(${light.black.d1}, 0.03),
+  short: `0 1px 1px hsla(${light.black.d1}, 0.03),
       0 2px 2px hsla(${light.black.d1}, 0.03)`,
-  layer2d: `0 1px 1px hsla(${light.black.d1}, 0.1),
+  shortDark: `0 1px 1px hsla(${light.black.d1}, 0.1),
         0 2px 2px hsla(${light.black.d1}, 0.1)`,
-  layer5: `0 1px 1px hsla(${light.black.d1}, 0.01),
+  medium: `0 1px 1px hsla(${light.black.d1}, 0.01),
     0 2px 2px hsla(${light.black.d1}, 0.01),
     0 4px 4px hsla(${light.black.d1}, 0.01),
     0 8px 8px hsla(${light.black.d1}, 0.01),
     0 10px 10px hsla(${light.black.d1}, 0.01)
     `,
+  long: `
+    0 2px 4px hsla(${light.black.d1}, 0.05),
+    0 4px 8px hsla(${light.black.d1}, 0.05),
+    0 8px 16px hsla(${light.black.d1}, 0.07),
+    0 16px 32px hsla(${light.black.d1}, 0.07),
+    0 32px 64px hsla(${light.black.d1}, 0.07),
+    0 48px 96px hsla(${light.black.d1}, 0.07)
+  `,
 };
 
 light.shadow.on = {
-  surface2: `${light.shadow.inset.surface}, ${light.shadow.drop.layer2}`,
-  accent210: ` ${light.shadow.inset.accent}, ${light.shadow.drop.layer2d}`,
-  danger210: ` ${light.shadow.inset.danger}, ${light.shadow.drop.layer2d}`,
+  surface2: `${light.shadow.inset.surface}, ${light.shadow.drop.short}`,
+  accent210: ` ${light.shadow.inset.accent}, ${light.shadow.drop.shortDark}`,
+  danger210: ` ${light.shadow.inset.danger}, ${light.shadow.drop.shortDark}`,
 };
 
 light.shadow.button = {
@@ -309,6 +324,7 @@ dark.base = {
   black: `${color.base.black}, 14%`,
   blue: `${color.base.blue}, 61%`,
   red: `${color.base.red}, 60%`,
+  gray: `240, 19%, 18%`,
 };
 
 dark.brand = {
@@ -339,6 +355,8 @@ dark.background = {
   base: `hsla(${dark.base.black}, 100%)`,
   hover: `hsla(${dark.base.white}, 4%)`,
   surface: `hsla(${dark.base.white}, 5%)`,
+  modal: `hsla(${dark.base.gray}, 90%)`,
+  overlay: `hsla(${dark.base.black}, 50%)`,
 };
 
 dark.divider = {
@@ -399,20 +417,27 @@ dark.button.danger = {
 };
 
 dark.shadow.drop = {
-  layer2: `0 1px 1px hsla(${dark.black.d1}, 0.4),
+  short: `0 1px 1px hsla(${dark.black.d1}, 0.4),
     0 2px 2px hsla(${dark.black.d1}, 0.4)`,
-  layer2d: `0 1px 1px hsla(${dark.black.d1}, 80%),
+  shortDark: `0 1px 1px hsla(${dark.black.d1}, 80%),
     0 2px 2px hsla(${dark.black.d1}, 80%)`,
-  layer5: `0 1px 1px hsla(${dark.black.d1}, 0.075),
+  medium: `0 1px 1px hsla(${dark.black.d1}, 0.075),
     0 2px 2px hsla(${dark.black.d1}, 0.075),
     0 4px 4px hsla(${dark.black.d1}, 0.075),
     0 8px 8px hsla(${dark.black.d1}, 0.075),
     0 10px 10px hsla(${dark.black.d1}, 0.075)`,
+  long: `
+    0 2px 10px rgba(0, 0, 0, 0.1),
+    0 8px 20px rgba(0, 0, 0, 0.1),
+    0 16px 40px rgba(0, 0, 0, 0.1),
+    0 32px 80px rgba(0, 0, 0, 0.15),
+    0 48px 120px rgba(0, 0, 0, 0.15)
+  `,
 };
 
 dark.shadow.button = {
-  base: dark.shadow.drop.layer2,
-  accent: dark.shadow.drop.layer2d,
+  base: dark.shadow.drop.short,
+  accent: dark.shadow.drop.shortDark,
   danger: "",
 };
 
