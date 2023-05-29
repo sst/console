@@ -16,6 +16,7 @@ export function API({ stack }: StackContext) {
     },
     routes: {
       "GET /": "packages/functions/src/lambda.handler",
+      "GET /foo": "packages/functions/src/lambda.handler",
       "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
     },
@@ -23,6 +24,7 @@ export function API({ stack }: StackContext) {
 
   stack.addOutputs({
     ApiEndpoint: api.url,
+    Output: "",
   });
 
   return api;

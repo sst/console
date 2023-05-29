@@ -6,6 +6,10 @@ const sqs = new SQSClient({});
 export async function handler(evt: any) {
   console.log("event failure", JSON.stringify(evt, null, 4));
   const attempt = (evt.requestPayload.attempts || 0) + 1;
+  if (attempt > 20) {
+    console.log(`giving up after ${attempt} retries`);
+    return;
+  }
   evt.requestPayload.attempts = attempt;
   const seconds = delay(attempt, 1, 60 * 15, 1);
   console.log("delaying retry by ", seconds, "seconds");

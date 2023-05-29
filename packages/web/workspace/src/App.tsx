@@ -13,7 +13,6 @@ import { Debug } from "./pages/debug";
 import { styled } from "@macaron-css/solid";
 import { globalStyle } from "@macaron-css/core";
 import { theme, darkClass, lightClass } from "./ui/theme";
-import { CommandBar } from "./pages/workspace/command-bar";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -86,7 +85,7 @@ export const App: Component = () => {
   });
 
   return (
-    <Root class={theme() === "light" ? lightClass : darkClass}>
+    <Root class={theme() === "light" ? lightClass : darkClass} id="styled">
       <AuthProvider>
         <Router>
           <Routes>

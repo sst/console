@@ -19,9 +19,23 @@ import {
   IconNodeRuntime,
   IconPythonRuntime,
 } from "$/ui/icons/custom";
-import { For, Match, Show, Switch, createMemo, createResource } from "solid-js";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createResource,
+} from "solid-js";
 import { ResourceStore } from "$/data/resource";
 import type { Resource } from "@console/core/app/resource";
+import {
+  AppProvider,
+  StageProvider,
+  WorkspaceProvider,
+  useCommandBar,
+} from "../../command-bar";
 
 const Content = styled("div", {
   base: {
@@ -39,7 +53,6 @@ const Header = styled("div", {
     justifyContent: "space-between",
     backdropFilter: "blur(8px)",
     WebkitBackdropFilter: "blur(8px)",
-    zIndex: "10",
     borderBottom: `1px solid ${theme.color.divider.base}`,
     padding: theme.space[3],
   },
@@ -249,12 +262,16 @@ export function Single() {
     []
   );
 
+  createEffect(() => console.log(resources()));
+
+  const bar = useCommandBar();
+
   return (
     <>
       <Header>
         <Row space="4">
           <OrgSwitcher src={sst} />
-          <StageSwitcher>
+          <StageSwitcher onClick={() => bar.show(StageProvider, AppProvider)}>
             <Stack space="1">
               <SwitcherApp>{app()?.name}</SwitcherApp>
               <SwitcherStage>{stage()?.name}</SwitcherStage>
@@ -267,6 +284,135 @@ export function Single() {
         </User>
       </Header>
       <Content>
+        <For
+          each={resources().filter(
+            (r) => r.type === "Api" || r.type === "StaticSite"
+          )}
+        >
+          {(resource) => (
+            <ResourceCard>
+              <ResourceHeader>
+                <Row space="2" vertical="center">
+                  <Switch>
+                    <Match when={resource.type === "Api"}>
+                      <IconAPI width={16} />
+                    </Match>
+                    <Match when={resource.type === "StaticSite"}>
+                      <IconGlobeAmericas width={16} />
+                    </Match>
+                  </Switch>
+                  <ResourceName>{resource.cfnID}</ResourceName>
+                  <ResourceDescription>
+                    <Switch>
+                      <Match when={resource.type === "Api" && resource}>
+                        {(resource) =>
+                          resource().metadata.customDomainUrl ||
+                          resource().metadata.url
+                        }
+                      </Match>
+                      <Match when={resource.type === "StaticSite" && resource}>
+                        {(resource) =>
+                          resource().metadata.customDomainUrl ||
+                          resource().metadata.path
+                        }
+                      </Match>
+                    </Switch>
+                  </ResourceDescription>
+                </Row>
+                <ResourceType>{resource.type}</ResourceType>
+              </ResourceHeader>
+              <ResourceChildren>
+                <Switch>
+                  <Match when={resource.type === "Api" && resource}>
+                    {(resource) => (
+                      <For each={resource().metadata.routes}>
+                        {(route) => {
+                          const fn = createMemo(
+                            () =>
+                              resources().find(
+                                (r) =>
+                                  r.type === "Function" &&
+                                  r.addr === route.fn?.node
+                              ) as Extract<Resource.Info, { type: "Function" }>
+                          );
+                          const method = createMemo(
+                            () => route.route.split(" ")[0]
+                          );
+                          const path = createMemo(
+                            () => route.route.split(" ")[1]
+                          );
+                          return (
+                            <ResourceChild>
+                              <Row space="2" vertical="center">
+                                <ResourceChildTag>{method()}</ResourceChildTag>
+                                <a>
+                                  <ResourceChildTitle>
+                                    {path()}
+                                  </ResourceChildTitle>
+                                </a>
+                              </Row>
+                              <Row space="3" vertical="center">
+                                <Show when={fn() && fn().enrichment.size}>
+                                  {(value) => (
+                                    <ResourceChildDetail>
+                                      {Math.ceil(value() / 1024)} KB
+                                    </ResourceChildDetail>
+                                  )}
+                                </Show>
+                                <ResourceChildIcon>
+                                  <IconNodeRuntime />
+                                </ResourceChildIcon>
+                                <ResourceChildExtra></ResourceChildExtra>
+                              </Row>
+                            </ResourceChild>
+                          );
+                        }}
+                      </For>
+                    )}
+                  </Match>
+                </Switch>
+              </ResourceChildren>
+            </ResourceCard>
+          )}
+        </For>
+        <ResourceCard type="outputs">
+          <ResourceHeader>
+            <Row space="2" vertical="center">
+              <ResourceName>Outputs</ResourceName>
+            </Row>
+          </ResourceHeader>
+          <ResourceChildren>
+            <For
+              each={[
+                [
+                  "ApiEndpoint",
+                  "https://mwismf5e9l.execute-api.us-east-1.amazonaws.com/prod",
+                ],
+                [
+                  "ServerlessDeploymentBucketName",
+                  "mono-repo-sls-groups-pro-serverlessdeploymentbuck-1kmkojwrhblsj",
+                ],
+                [
+                  "HelloLambdaFunctionQualifiedArn",
+                  "arn:aws:lambda:us-east-1:087220554750:function:mono-repo-sls-groups-prod-hello:3",
+                ],
+              ]}
+            >
+              {([key, value]) => (
+                <ResourceChild>
+                  <ResourceChildTitle>{key}</ResourceChildTitle>
+                  <Row vertical="center" space="2">
+                    <ResourceChildDetail>{value}</ResourceChildDetail>
+                    <ResourceChildIcon>
+                      <IconClipboard />
+                    </ResourceChildIcon>
+                  </Row>
+                </ResourceChild>
+              )}
+            </For>
+          </ResourceChildren>
+        </ResourceCard>
+
         <ResourceCard>
           <ResourceHeader>
             <Row space="2" vertical="center">
@@ -349,136 +495,6 @@ export function Single() {
             </ResourceChild>
           </ResourceChildren>
         </ResourceCard>
-
-        <ResourceCard type="outputs">
-          <ResourceHeader>
-            <Row space="2" vertical="center">
-              <ResourceName>Outputs</ResourceName>
-            </Row>
-          </ResourceHeader>
-          <ResourceChildren>
-            <For
-              each={[
-                [
-                  "ApiEndpoint",
-                  "https://mwismf5e9l.execute-api.us-east-1.amazonaws.com/prod",
-                ],
-                [
-                  "ServerlessDeploymentBucketName",
-                  "mono-repo-sls-groups-pro-serverlessdeploymentbuck-1kmkojwrhblsj",
-                ],
-                [
-                  "HelloLambdaFunctionQualifiedArn",
-                  "arn:aws:lambda:us-east-1:087220554750:function:mono-repo-sls-groups-prod-hello:3",
-                ],
-              ]}
-            >
-              {([key, value]) => (
-                <ResourceChild>
-                  <ResourceChildTitle>{key}</ResourceChildTitle>
-                  <Row vertical="center" space="2">
-                    <ResourceChildDetail>{value}</ResourceChildDetail>
-                    <ResourceChildIcon>
-                      <IconClipboard />
-                    </ResourceChildIcon>
-                  </Row>
-                </ResourceChild>
-              )}
-            </For>
-          </ResourceChildren>
-        </ResourceCard>
-
-        <For
-          each={resources().filter(
-            (r) => r.type === "Api" || r.type === "StaticSite"
-          )}
-        >
-          {(resource) => (
-            <ResourceCard>
-              <ResourceHeader>
-                <Row space="2" vertical="center">
-                  <Switch>
-                    <Match when={resource.type === "Api"}>
-                      <IconAPI width={16} />
-                    </Match>
-                    <Match when={resource.type === "StaticSite"}>
-                      <IconGlobeAmericas width={16} />
-                    </Match>
-                  </Switch>
-                  <ResourceName>{resource.cfnID}</ResourceName>
-                  <ResourceDescription>
-                    <Switch>
-                      <Match when={resource.type === "Api" && resource}>
-                        {(resource) =>
-                          resource().metadata.customDomainUrl ||
-                          resource().metadata.url
-                        }
-                      </Match>
-                      <Match when={resource.type === "StaticSite" && resource}>
-                        {(resource) =>
-                          resource().metadata.customDomainUrl ||
-                          resource().metadata.path
-                        }
-                      </Match>
-                    </Switch>
-                  </ResourceDescription>
-                </Row>
-                <ResourceType>{resource.type}</ResourceType>
-              </ResourceHeader>
-              <ResourceChildren>
-                <Switch>
-                  <Match when={resource.type === "Api" && resource}>
-                    {(resource) => (
-                      <For each={resource().metadata.routes}>
-                        {(route) => {
-                          const fn = createMemo(
-                            () =>
-                              resources().find(
-                                (r) =>
-                                  r.type === "Function" &&
-                                  r.addr === route.fn?.node
-                              ) as Extract<Resource.Info, { type: "Function" }>
-                          );
-                          const method = createMemo(
-                            () => route.route.split(" ")[0]
-                          );
-                          const path = createMemo(
-                            () => route.route.split(" ")[1]
-                          );
-                          return (
-                            <ResourceChild>
-                              <Row space="2" vertical="center">
-                                <ResourceChildTag>{method()}</ResourceChildTag>
-                                <a>
-                                  <ResourceChildTitle>
-                                    {path()}
-                                  </ResourceChildTitle>
-                                </a>
-                              </Row>
-                              <Row space="3" vertical="center">
-                                <Show when={fn().enrichment.size}>
-                                  {(value) => (
-                                    <ResourceChildDetail>
-                                      {Math.ceil(value() / 1024)} KB
-                                    </ResourceChildDetail>
-                                  )}
-                                </Show>
-                                <ResourceChildIcon>
-                                  <IconNodeRuntime />
-                                </ResourceChildIcon>
-                                <ResourceChildExtra></ResourceChildExtra>
-                              </Row>
-                            </ResourceChild>
-                          );
-                        }}
-                      </For>
-                    )}
-                  </Match>
-                </Switch>
-              </ResourceChildren>
-            </ResourceCard>
-          )}
-        </For>
       </Content>
     </>
   );

@@ -23,12 +23,26 @@ export const Events = {
   Connected: createEvent("app.stage.connected", {
     stageID: z.string().nonempty(),
   }),
+  Updated: createEvent("app.stage.updated", {
+    stageID: z.string().nonempty(),
+  }),
 };
 
 export const Info = createSelectSchema(stage, {
   id: (schema) => schema.id.cuid2(),
 });
 export type Info = z.infer<typeof Info>;
+
+export const fromID = zod(Info.shape.id, async (stageID) =>
+  useTransaction((tx) =>
+    tx
+      .select()
+      .from(stage)
+      .where(and(eq(stage.workspaceID, useWorkspace()), eq(stage.id, stageID)))
+      .execute()
+      .then((x) => x[0])
+  )
+);
 
 export const connect = zod(
   Info.pick({
@@ -103,7 +117,10 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
   }
   console.log(row.app, row.stage, row.region, row.accountID);
   const credentials = await AWS.assumeRole(row.accountID);
-  const { bucket } = await AWS.Account.bootstrap(credentials);
+  const { bucket } = await AWS.Account.bootstrap({
+    credentials,
+    region: row.region,
+  });
   const s3 = new S3Client({
     credentials,
     region: row.region,
@@ -116,6 +133,37 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
     })
   );
   console.log("found", list.Contents?.length, "resources");
+  const results = await Promise.all(
+    list.Contents?.map(async (obj) => {
+      const stackID = obj.Key?.split("/").pop()!;
+      const result = await s3.send(
+        new GetObjectCommand({
+          Key: obj.Key!,
+          Bucket: bucket,
+        })
+      );
+      const body = await result.Body!.transformToString();
+      const r = [];
+      for (let res of JSON.parse(body)) {
+        const { type } = res;
+        const enrichment =
+          type in Enrichers
+            ? await Enrichers[type as keyof typeof Enrichers](
+                res.data,
+                credentials,
+                row.region
+              )
+            : {};
+        r.push({
+          ...res,
+          enrichment,
+          stackID,
+        });
+      }
+      return r;
+    }) || []
+  ).then((x) => x.flat());
+
   return useTransaction(async (tx) => {
     await tx
       .update(resource)
@@ -130,42 +178,21 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
       )
       .execute();
     console.log("marked existing resources as deleted");
-    await Promise.all(
-      list.Contents?.map(async (obj) => {
-        const stackID = obj.Key?.split("/").pop()!;
-        const result = await s3.send(
-          new GetObjectCommand({
-            Key: obj.Key!,
-            Bucket: bucket,
-          })
-        );
-        const body = await result.Body!.transformToString();
-        for (let res of JSON.parse(body)) {
-          const { type } = res;
-          const enrichment =
-            type in Enrichers
-              ? await Enrichers[type as keyof typeof Enrichers](
-                  res.data,
-                  credentials,
-                  row.region
-                )
-              : {};
-          await tx
-            .insert(resource)
-            .values({
-              workspaceID: useWorkspace(),
-              cfnID: res.id,
-              addr: res.addr,
-              stackID,
-              stageID,
-              id: createId(),
-              type: res.type,
-              metadata: res.data,
-              enrichment,
-            })
-            .execute();
-        }
-      }) || []
-    );
+    for (const res of results) {
+      await tx
+        .insert(resource)
+        .values({
+          workspaceID: useWorkspace(),
+          cfnID: res.id,
+          addr: res.addr,
+          stackID: res.stackID,
+          stageID,
+          id: createId(),
+          type: res.type,
+          metadata: res.data,
+          enrichment: res.enrichment,
+        })
+        .execute();
+    }
   });
 });

@@ -42,6 +42,7 @@ export function createEvent<
   Properties = z.infer<ZodObject<Shape, "strip", ZodAny>>
 >(type: Type, properties: Shape) {
   async function publish(properties: Properties) {
+    console.log("publishing", type, properties);
     await client.send(
       new PutEventsCommand({
         Entries: [

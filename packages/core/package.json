@@ -16,6 +16,8 @@
   "dependencies": {
     "@aws-sdk/client-cloudformation": "^3.326.0",
     "@aws-sdk/client-eventbridge": "^3.325.0",
+    "@aws-sdk/client-iam": "^3.338.0",
+    "@aws-sdk/client-iot": "^3.338.0",
     "@aws-sdk/client-lambda": "^3.332.0",
     "@aws-sdk/client-s3": "^3.326.0",
     "@aws-sdk/client-sts": "^3.321.1",

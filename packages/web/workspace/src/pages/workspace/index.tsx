@@ -12,12 +12,13 @@ export function Workspace() {
       accountID={params.accountID}
       workspaceID={params.workspaceID}
     >
-      <Routes>
-        <Route path="connect" component={Connect} />
-        <Route path="apps/*" component={Apps} />
-        <Route path="*" element={<Navigate href="apps" />} />
-      </Routes>
-      <CommandBar />
+      <CommandBar>
+        <Routes>
+          <Route path="connect" component={Connect} />
+          <Route path="apps/*" component={Apps} />
+          <Route path="*" element={<Navigate href="apps" />} />
+        </Routes>
+      </CommandBar>
     </ReplicacheProvider>
   );
 }

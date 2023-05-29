@@ -6,6 +6,7 @@ import { resource } from "./app.sql";
 import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
 import type { AWS } from "../aws";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
+import { createEvent } from "../bus";
 
 type Model = InferModel<typeof resource>;
 
@@ -62,7 +63,6 @@ export const Enrichers = {
         FunctionName: metadata.arn,
       })
     );
-    console.log(info.Configuration);
     return {
       size: info.Configuration?.CodeSize,
     };

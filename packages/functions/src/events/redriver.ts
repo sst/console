@@ -1,5 +1,5 @@
 import { Handler } from "sst/context";
-import { Lambda, LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 const lambda = new LambdaClient({});
 export const handler = Handler("sqs", async (evt) => {

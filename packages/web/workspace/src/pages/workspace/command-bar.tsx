@@ -1,10 +1,13 @@
 import {
   For,
+  ParentProps,
   batch,
+  createContext,
   createEffect,
   createMemo,
   createSignal,
   onCleanup,
+  useContext,
 } from "solid-js";
 import { useAuth } from "../../data/auth";
 import { UserStore } from "../../data/user";
@@ -19,6 +22,9 @@ import { createShortcut } from "@solid-primitives/keyboard";
 import { useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "../../data/stage";
 import { ResourceStore } from "../../data/resource";
+import { Portal } from "solid-js/web";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createMutationObserver } from "@solid-primitives/mutation-observer";
 
 interface Action {
   icon: string;
@@ -30,7 +36,7 @@ interface Action {
 
 type ActionProvider = (filter: string) => Promise<Action[]>;
 
-const WorkspaceProvider: ActionProvider = async () => {
+export const WorkspaceProvider: ActionProvider = async () => {
   const workspaces = await Promise.all(
     Object.values(useAuth()).map(async (account) => {
       const workspaces = await account.replicache.query(async (tx) => {
@@ -57,7 +63,7 @@ const WorkspaceProvider: ActionProvider = async () => {
   }));
 };
 
-const AppProvider: ActionProvider = async () => {
+export const AppProvider: ActionProvider = async () => {
   const rep = useReplicache()();
   const apps = await rep.query(AppStore.list());
   return apps.map((app) => ({
@@ -73,7 +79,7 @@ const AppProvider: ActionProvider = async () => {
   }));
 };
 
-const StageProvider: ActionProvider = async () => {
+export const StageProvider: ActionProvider = async () => {
   const appID = location.pathname.split("/")[4];
   if (!appID) return [];
   const rep = useReplicache()();
@@ -83,8 +89,8 @@ const StageProvider: ActionProvider = async () => {
     category: "Stage",
     title: `Switch to "${stage.name}" stage`,
     run: (control) => {
-      const nav = useNavigate();
       const params = useParams();
+      const nav = useNavigate();
       nav(
         `/${params.accountID}/${params.workspaceID}/apps/${stage.appID}/stages/${stage.id}`
       );
@@ -93,10 +99,9 @@ const StageProvider: ActionProvider = async () => {
   }));
 };
 
-const ResourceProvider: ActionProvider = async (filter) => {
+export const ResourceProvider: ActionProvider = async (filter) => {
   if (!filter) return [];
   const stageId = location.pathname.split("/")[6];
-  console.log(stageId);
   if (!stageId) return [];
   const rep = useReplicache()();
   const resources = await rep.query(ResourceStore.forStage(stageId));
@@ -122,7 +127,7 @@ const ResourceProvider: ActionProvider = async (filter) => {
   });
 };
 
-const AccountProvider: ActionProvider = async () => {
+export const AccountProvider: ActionProvider = async () => {
   return [
     {
       icon: "",
@@ -143,7 +148,7 @@ const AccountProvider: ActionProvider = async () => {
   ];
 };
 
-const providers = [
+const DEFAULT_PROVIDERS = [
   ResourceProvider,
   StageProvider,
   AppProvider,
@@ -159,9 +164,10 @@ const Root = styled("div", {
     inset: 0,
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "start",
     pointerEvents: "none",
     transition: "200ms opacity",
+    paddingTop: "10vh",
   },
   variants: {
     show: {
@@ -218,6 +224,9 @@ const Results = styled("div", {
       "&::-webkit-scrollbar": {
         display: "none",
       },
+      "&:empty": {
+        display: "none",
+      },
     },
   },
 });
@@ -269,14 +278,15 @@ const ActionRowTitle = styled("div", {
 });
 
 function createControl() {
-  const [provider, setProvider] = createSignal<ActionProvider>();
+  const [providers, setProviders] = createSignal<ActionProvider[]>([]);
   const [visible, setVisible] = createSignal(false);
   const [actions, setActions] = createSignal<Action[]>([]);
   const [input, setInput] = createSignal("");
+  const [root, setRoot] = createSignal<HTMLElement>();
 
-  function show(provider?: ActionProvider) {
+  function show(...providers: ActionProvider[]) {
     batch(() => {
-      setProvider(() => provider);
+      setProviders(providers);
       setVisible(true);
       setInput("");
     });
@@ -293,13 +303,9 @@ function createControl() {
   });
 
   createEffect(async () => {
-    const p = provider();
-    if (p) {
-      setActions(await p(input()));
-      return;
-    }
+    const p = providers().length ? providers() : DEFAULT_PROVIDERS;
     const actions = await Promise.all(
-      providers.map(async (provider) => {
+      p.map(async (provider) => {
         const actions = await provider(input());
         return actions;
       })
@@ -317,16 +323,18 @@ function createControl() {
     );
   });
 
-  createEffect(() => console.log("actions", actions()));
-
-  const observer = new MutationObserver(() => {
-    control.reset();
-  });
-
-  onCleanup(() => observer.disconnect());
+  createMutationObserver(
+    () => root()?.querySelector(`[data-element="results"]`)!,
+    { childList: true },
+    () => control.reset()
+  );
 
   const control = {
-    root: undefined as unknown as HTMLElement,
+    get root() {
+      const r = root();
+      if (!r) throw new Error("Root not set");
+      return r;
+    },
     input() {
       return control.root.querySelector("input") as HTMLInputElement;
     },
@@ -342,6 +350,7 @@ function createControl() {
       ) as HTMLElement;
     },
     setActive(el: Element) {
+      if (!el) return;
       const current = control.active();
       if (current) current.classList.remove("active");
       el.classList.add("active");
@@ -373,29 +382,30 @@ function createControl() {
     if (current) current.click();
   });
 
+  createEventListener(window, "keydown", (e) => {
+    if (!visible()) return;
+    if (e.key === "ArrowDown") {
+      control.next();
+      e.preventDefault();
+    }
+
+    if (e.key === "ArrowUp") {
+      control.back();
+      e.preventDefault();
+    }
+
+    if (e.key === "Escape") {
+      hide();
+    }
+  });
+
+  createEventListener(root, "click", (e) => {
+    const el = e.target as HTMLElement;
+    const closest = el.closest<HTMLElement>("[data-element='action']");
+  });
+
   return {
-    bind(root: HTMLElement) {
-      control.root = root;
-      const input = root.querySelector("input")!;
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowDown") {
-          control.next();
-          e.preventDefault();
-        }
-        if (e.key === "ArrowUp") {
-          control.back();
-          e.preventDefault();
-        }
-      });
-
-      input.addEventListener("blur", (e) => {
-        hide();
-      });
-
-      observer.observe(root.querySelector(`[data-element="results"]`)!, {
-        childList: true,
-      });
-    },
+    bind: setRoot,
     get input() {
       return input();
     },
@@ -414,44 +424,58 @@ function createControl() {
 
 type Control = ReturnType<typeof createControl>;
 
-export function CommandBar() {
+const CommandbarContext = createContext<Control>();
+
+export function CommandBar(props: ParentProps) {
   const control = createControl();
 
   return (
-    <Root show={control.visible} ref={control.bind}>
-      <Modal>
-        <Filter>
-          <FilterInput
-            value={control.input}
-            onInput={(e) => control.setInput(e.target.value)}
-            autofocus
-            placeholder="Type to search"
-          />
-        </Filter>
-        <Results data-element="results">
-          <For each={Object.entries(control.groups)}>
-            {([category, actions]) => (
-              <>
-                <Category>{category}</Category>
-                <For each={actions}>
-                  {(action) => (
-                    <ActionRow
-                      onClick={() => {
-                        action.run(control);
-                      }}
-                      onMouseEnter={(e) => control.setActive(e.currentTarget)}
-                      data-element="action"
-                    >
-                      <ActionRowIcon />
-                      <ActionRowTitle>{action.title}</ActionRowTitle>
-                    </ActionRow>
-                  )}
-                </For>
-              </>
-            )}
-          </For>
-        </Results>
-      </Modal>
-    </Root>
+    <CommandbarContext.Provider value={control}>
+      {props.children}
+      <Portal mount={document.getElementById("styled")!}>
+        <Root show={control.visible} ref={control.bind}>
+          <Modal>
+            <Filter>
+              <FilterInput
+                value={control.input}
+                onInput={(e) => control.setInput(e.target.value)}
+                autofocus
+                placeholder="Type to search"
+              />
+            </Filter>
+            <Results data-element="results">
+              <For each={Object.entries(control.groups)}>
+                {([category, actions]) => (
+                  <>
+                    <Category>{category}</Category>
+                    <For each={actions}>
+                      {(action) => (
+                        <ActionRow
+                          data-element="action"
+                          onClick={() => {
+                            const nav = useNavigate();
+                            console.log(nav);
+                            action.run(control);
+                          }}
+                        >
+                          <ActionRowIcon />
+                          <ActionRowTitle>{action.title}</ActionRowTitle>
+                        </ActionRow>
+                      )}
+                    </For>
+                  </>
+                )}
+              </For>
+            </Results>
+          </Modal>
+        </Root>
+      </Portal>
+    </CommandbarContext.Provider>
   );
+}
+
+export function useCommandBar() {
+  const ctx = useContext(CommandbarContext);
+  if (!ctx) throw new Error("No commandbar context");
+  return ctx;
 }
