@@ -3,7 +3,7 @@ import type { Config } from "drizzle-kit";
 const connection = {
   user: process.env["SST_Secret_value_PLANETSCALE_USERNAME"],
   password: process.env["SST_Secret_value_PLANETSCALE_PASSWORD"],
-  host: process.env["SST_Secret_value_PLANETSCALE_HOST"],
+  host: "aws.connect.psdb.cloud",
 };
 export default {
   out: "./migrations/",

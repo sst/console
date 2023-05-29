@@ -345,7 +345,11 @@ export function Single() {
                             <ResourceChild>
                               <Row space="2" vertical="center">
                                 <ResourceChildTag>{method()}</ResourceChildTag>
-                                <a>
+                                <a
+                                  href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
+                                    fn().metadata.arn.split("function:")[1]
+                                  }`}
+                                >
                                   <ResourceChildTitle>
                                     {path()}
                                   </ResourceChildTitle>

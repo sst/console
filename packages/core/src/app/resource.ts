@@ -63,6 +63,7 @@ export const Enrichers = {
         FunctionName: metadata.arn,
       })
     );
+    info.Configuration.log
     return {
       size: info.Configuration?.CodeSize,
     };

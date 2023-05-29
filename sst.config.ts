@@ -4,16 +4,23 @@ import { Web } from "./stacks/web";
 import { Auth } from "./stacks/auth";
 import { Secrets } from "./stacks/secrets";
 import { Events } from "./stacks/events";
+import { DNS } from "./stacks/dns";
 
 export default {
-  config(_input) {
+  config(input) {
     return {
       name: "console",
       region: "us-east-1",
-      profile: "sst-dev",
+      profile: input.stage === "production" ? "sst-production" : "sst-dev",
     };
   },
   stacks(app) {
-    app.stack(Secrets).stack(Auth).stack(Events).stack(API).stack(Web);
+    app
+      .stack(DNS)
+      .stack(Secrets)
+      .stack(Auth)
+      .stack(Events)
+      .stack(API)
+      .stack(Web);
   },
 } satisfies SSTConfig;

@@ -4,7 +4,7 @@ import { Config } from "sst/node/config";
 import { fetch } from "undici";
 
 const connection = connect({
-  host: Config.PLANETSCALE_HOST,
+  host: "aws.connect.psdb.cloud",
   username: Config.PLANETSCALE_USERNAME,
   password: Config.PLANETSCALE_PASSWORD,
   fetch,
