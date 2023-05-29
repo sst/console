@@ -53,6 +53,7 @@ const Header = styled("div", {
     justifyContent: "space-between",
     backdropFilter: "blur(8px)",
     WebkitBackdropFilter: "blur(8px)",
+    backgroundColor: theme.color.background.navbar,
     borderBottom: `1px solid ${theme.color.divider.base}`,
     padding: theme.space[3],
   },

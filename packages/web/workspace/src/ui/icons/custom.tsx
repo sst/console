@@ -61,3 +61,14 @@ export function IconPythonRuntime(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function IconSubRight(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path
+        fill="currentColor"
+        d="m14 21l-1.4-1.425L16.175 16H5V4h2v10h9.175l-3.6-3.6L14 8.975L20 15l-6 6Z"
+      />
+    </svg>
+  );
+}

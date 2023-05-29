@@ -100,6 +100,7 @@ const light = {
     surface: "",
     modal: "",
     overlay: "",
+    navbar: "",
   },
   divider: {
     base: ``,
@@ -222,6 +223,7 @@ light.background = {
   surface: `hsla(${light.base.black}, 3%)`,
   modal: `hsla(${light.base.gray}, 80%)`,
   overlay: `hsla(${light.base.black}, 3%)`,
+  navbar: `hsla(${light.base.white}, 80%)`,
 };
 light.divider = {
   base: `hsla(${light.base.black}, 8%)`,
@@ -357,6 +359,7 @@ dark.background = {
   surface: `hsla(${dark.base.white}, 5%)`,
   modal: `hsla(${dark.base.gray}, 90%)`,
   overlay: `hsla(${dark.base.black}, 50%)`,
+  navbar: `hsla(${light.base.black}, 75%)`,
 };
 
 dark.divider = {

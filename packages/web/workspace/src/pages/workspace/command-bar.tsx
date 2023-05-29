@@ -1,5 +1,6 @@
 import {
   For,
+  JSX,
   ParentProps,
   batch,
   createContext,
@@ -9,6 +10,14 @@ import {
   onCleanup,
   useContext,
 } from "solid-js";
+import { IconSubRight } from "$/ui/icons/custom";
+import {
+  IconServer,
+  IconDocument,
+  IconServerStack,
+  IconChevronRight,
+  IconBuildingOffice,
+} from "$/ui/icons";
 import { useAuth } from "../../data/auth";
 import { UserStore } from "../../data/user";
 import { WorkspaceStore } from "../../data/workspace";
@@ -27,7 +36,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { createMutationObserver } from "@solid-primitives/mutation-observer";
 
 interface Action {
-  icon: string;
+  icon: () => JSX.Element;
   title: string;
   category?: string;
   hotkeys?: string[];
@@ -52,9 +61,9 @@ export const WorkspaceProvider: ActionProvider = async () => {
     })
   ).then((x) => x.flat());
   return workspaces.map((w) => ({
-    title: "Switch to workspace " + w.workspace.slug,
+    title: `Switch to "${w.workspace.slug}" workspace`,
     category: "Workspace",
-    icon: "",
+    icon: IconBuildingOffice,
     run: (control) => {
       const nav = useNavigate();
       nav(`/${w.account.token.accountID}/${w.workspace.id}`);
@@ -67,7 +76,7 @@ export const AppProvider: ActionProvider = async () => {
   const rep = useReplicache()();
   const apps = await rep.query(AppStore.list());
   return apps.map((app) => ({
-    icon: "",
+    icon: IconServerStack,
     category: "App",
     title: `Switch to "${app.name}" app`,
     run: (control) => {
@@ -85,7 +94,7 @@ export const StageProvider: ActionProvider = async () => {
   const rep = useReplicache()();
   const stages = await rep.query(StageStore.forApp(appID));
   return stages.map((stage) => ({
-    icon: "",
+    icon: IconServer,
     category: "Stage",
     title: `Switch to "${stage.name}" stage`,
     run: (control) => {
@@ -108,7 +117,7 @@ export const ResourceProvider: ActionProvider = async (filter) => {
   return resources.flatMap((resource) => {
     if (resource.type === "Api") {
       return resource.metadata.routes.map((rt) => ({
-        icon: "",
+        icon: IconDocument,
         category: "API Route",
         title: `Go to ${rt.route}`,
         run: () => {},
@@ -117,7 +126,7 @@ export const ResourceProvider: ActionProvider = async (filter) => {
 
     if (resource.type === "EventBus") {
       return resource.metadata.rules.map((rule) => ({
-        icon: "",
+        icon: IconDocument,
         category: "Event Bus Subscriptions",
         title: `Go to ${rule.key}`,
         run: () => {},
@@ -130,7 +139,7 @@ export const ResourceProvider: ActionProvider = async (filter) => {
 export const AccountProvider: ActionProvider = async () => {
   return [
     {
-      icon: "",
+      icon: IconSubRight,
       category: "Account",
       title: "Switch workspaces...",
       run: (control) => {
@@ -138,7 +147,7 @@ export const AccountProvider: ActionProvider = async () => {
       },
     },
     {
-      icon: "",
+      icon: IconSubRight,
       category: "Account",
       title: "Switch apps...",
       run: (control) => {
@@ -184,7 +193,7 @@ const Root = styled("div", {
 const Modal = styled("div", {
   base: {
     width: 640,
-    borderRadius: 8,
+    borderRadius: 10,
     flexShrink: 0,
     boxShadow: theme.color.shadow.drop.long,
     backdropFilter: "blur(10px)",
@@ -201,7 +210,7 @@ globalStyle(`${Root.selector({ show: true })} ${Modal}`, {
 
 const Filter = styled("div", {
   base: {
-    padding: `${theme.space[4]}`,
+    padding: `${theme.space[4]} ${theme.space[5]}`,
     display: "flex",
   },
 });
@@ -218,7 +227,7 @@ const Results = styled("div", {
   base: {
     borderTop: `1px solid ${theme.color.divider.base}`,
     maxHeight: 320,
-    padding: theme.space[2],
+    padding: `${theme.space[2]} ${theme.space[2]}`,
     overflowY: "auto",
     selectors: {
       "&::-webkit-scrollbar": {
@@ -234,23 +243,25 @@ const Results = styled("div", {
 const Category = styled("div", {
   base: {
     display: "flex",
-    padding: theme.space[2],
-    fontSize: 12,
+    padding: `${theme.space[2]} ${theme.space[3]}`,
+    fontFamily: theme.fonts.heading,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    fontSize: "0.75rem",
     alignItems: "center",
-    fontWeight: 500,
-    color: theme.color.text.primary.surface,
+    fontWeight: theme.textBoldWeight,
+    color: theme.color.text.dimmed,
   },
 });
 
 const ActionRow = styled("div", {
   base: {
-    height: 40,
-    padding: `0 ${theme.space[3]}`,
+    padding: `${theme.space[3]} ${theme.space[3]}`,
     display: "flex",
     alignItems: "center",
     borderRadius: 4,
-    fontSize: 12,
-    gap: theme.space[4],
+    fontSize: "0.8125rem",
+    gap: theme.space[2],
     transitionDelay: "0s",
     transitionDuration: "0.2s",
     transitionProperty: "background-color",
@@ -266,9 +277,16 @@ const ActionRowIcon = styled("div", {
   base: {
     width: 16,
     height: 16,
-    background: "black",
-    borderRadius: 4,
   },
+});
+
+globalStyle(`${ActionRowIcon} svg`, {
+  color: theme.color.text.secondary,
+  opacity: theme.iconOpacity,
+});
+
+globalStyle(`${ActionRow}.active ${ActionRowIcon} svg`, {
+  color: theme.color.text.primary.surface,
 });
 
 const ActionRowTitle = styled("div", {
@@ -458,7 +476,9 @@ export function CommandBar(props: ParentProps) {
                             action.run(control);
                           }}
                         >
-                          <ActionRowIcon />
+                          <ActionRowIcon>
+                            <action.icon />
+                          </ActionRowIcon>
                           <ActionRowTitle>{action.title}</ActionRowTitle>
                         </ActionRow>
                       )}
