@@ -331,6 +331,10 @@ function createControl() {
     show();
   });
 
+  createShortcut(["Meta", "K"], () => {
+    show();
+  });
+
   createEffect(async () => {
     const p = providers().length ? providers() : DEFAULT_PROVIDERS;
     const actions = await Promise.all(
