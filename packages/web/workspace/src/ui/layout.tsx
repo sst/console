@@ -45,6 +45,9 @@ export const Stack = styled("div", {
 export const Row = styled("div", {
   base: {
     display: "flex",
+    // For overflow hidden
+    // https://dfmcphee.com/flex-items-and-min-width-0/
+    minWidth: 0,
   },
   variants: {
     space: (() => {

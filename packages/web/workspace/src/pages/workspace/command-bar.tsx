@@ -61,7 +61,7 @@ export const WorkspaceProvider: ActionProvider = async () => {
     })
   ).then((x) => x.flat());
   return workspaces.map((w) => ({
-    title: `Switch to "${w.workspace.slug}" workspace`,
+    title: `Switch to ${w.workspace.slug} workspace`,
     category: "Workspace",
     icon: IconBuildingOffice,
     run: (control) => {

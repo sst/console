@@ -83,6 +83,9 @@ const light = {
     l1: "",
     l2: "",
   },
+  blue: {
+    d1: "",
+  },
   black: {
     d1: "",
   },
@@ -117,7 +120,10 @@ const light = {
     dimmed: "",
   },
   link: {
-    primary: "",
+    primary: {
+      base: "",
+      hover: "",
+    },
   },
   button: {
     primary: {
@@ -202,6 +208,10 @@ light.brand = {
   l2: `${color.base.brand}, 72%`,
 };
 
+light.blue = {
+  d1: `${color.base.blue}, 46%`,
+};
+
 light.black = {
   d1: `${color.base.black}, 10%`,
 };
@@ -240,7 +250,10 @@ light.text = {
   dimmed: `hsla(${light.base.black}, 38%)`,
 };
 
-light.link.primary = `hsla(${light.base.blue}, 100%)`;
+light.link.primary = {
+  base: `hsla(${light.base.blue}, 100%)`,
+  hover: `hsla(${light.blue.d1}, 100%)`,
+};
 
 light.button.primary = {
   color: light.accent,
@@ -338,6 +351,10 @@ dark.brand = {
   l2: `${color.base.brand}, 77%`,
 };
 
+dark.blue = {
+  d1: `${color.base.blue}, 55%`,
+};
+
 dark.black = {
   d1: `${color.base.black}, 10%`,
 };
@@ -378,7 +395,10 @@ dark.text = {
   dimmed: `hsla(${dark.base.white}, 38%)`,
 };
 
-dark.link.primary = `hsla(${dark.base.blue}, 100%)`;
+dark.link.primary = {
+  base: `hsla(${dark.base.blue}, 100%)`,
+  hover: `hsla(${dark.blue.d1}, 100%)`,
+};
 
 dark.button.primary = {
   color: dark.accent,

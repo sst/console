@@ -186,7 +186,7 @@ const ResourceChildren = styled("div", {
   },
 });
 
-const ResourceChild = styled("div", {
+export const ResourceChild = styled("div", {
   base: {
     padding: `${theme.space[4]} 0`,
     display: "flex",
@@ -202,13 +202,13 @@ const ResourceChild = styled("div", {
   },
 });
 
-const ResourceChildTitle = styled("span", {
+export const ResourceChildTitle = styled("span", {
   base: {
     fontSize: "0.875rem",
   },
 });
 
-const ResourceChildDetail = styled("span", {
+export const ResourceChildDetail = styled("span", {
   base: {
     color: theme.color.text.secondary,
     fontSize: "0.8125rem",
@@ -216,18 +216,21 @@ const ResourceChildDetail = styled("span", {
     textOverflow: "ellipsis",
     textAlign: "right",
     overflow: "hidden",
+    lineHeight: "normal",
+    whiteSpace: "nowrap",
   },
 });
-const ResourceChildExtra = styled("span", {
+export const ResourceChildExtra = styled("span", {
   base: {
     color: theme.color.text.dimmed,
     fontSize: "0.625rem",
     textTransform: "uppercase",
     fontFamily: theme.fonts.code,
+    whiteSpace: "nowrap",
   },
 });
 
-const ResourceChildIcon = styled("div", {
+export const ResourceChildIcon = styled("div", {
   base: {
     flexShrink: 0,
     width: 16,
@@ -239,8 +242,9 @@ const ResourceChildIcon = styled("div", {
   },
 });
 
-const ResourceChildTag = styled("div", {
+export const ResourceChildTag = styled("div", {
   base: {
+    flex: "0 0 auto",
     width: "50px",
     height: "20px",
     display: "flex",

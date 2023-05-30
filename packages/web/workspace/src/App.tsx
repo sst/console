@@ -10,6 +10,7 @@ import { WorkspaceStore } from "./data/workspace";
 import { Workspace } from "./pages/workspace";
 import { Connect } from "./pages/connect";
 import { Debug } from "./pages/debug";
+import { Design } from "./pages/design";
 import { styled } from "@macaron-css/solid";
 import { globalStyle } from "@macaron-css/core";
 import { theme, darkClass, lightClass } from "./ui/theme";
@@ -46,12 +47,11 @@ globalStyle("h1, h2, h3, h4, h5, h6, p", {
 
 globalStyle("a", {
   textDecoration: "none",
-  color: theme.color.link.primary,
+  color: theme.color.link.primary.base,
 });
 
 globalStyle("a:hover", {
-  textDecoration: "underline",
-  textUnderlineOffset: "3px",
+  color: theme.color.link.primary.hover,
 });
 
 globalStyle("*:focus", {
@@ -91,6 +91,7 @@ export const App: Component = () => {
           <Routes>
             <Route path="" component={Header} />
             <Route path="debug" component={Debug} />
+            <Route path="design" component={Design} />
             <Route path="connect" component={Connect} />
             <Route path=":accountID/:workspaceID/*" component={Workspace} />
           </Routes>
