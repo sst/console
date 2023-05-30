@@ -17,7 +17,7 @@ export function EventHandler<
       { properties: z.infer<Event["shape"]>; actor: Actor }
     >
   ) => {
-    console.log(event);
+    console.log("received", event);
     await cb(event.detail.properties, event.detail.actor);
   };
 }

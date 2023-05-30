@@ -1,5 +1,4 @@
 import { EventHandler } from "./handler";
+import { Events } from "@console/core/test";
 
-export const handler = EventHandler("test.event", async (properties, actor) => {
-  console.log("event", properties, actor);
-});
+export const handler = EventHandler(Events.Test, async () => {});

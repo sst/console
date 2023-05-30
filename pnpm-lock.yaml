@@ -14,8 +14,8 @@ importers:
         specifier: 10.1.156
         version: 10.1.156
       sst:
-        specifier: 2.10.2
-        version: 2.10.2
+        specifier: 0.0.0-20230529222242
+        version: 0.0.0-20230529222242
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -75,8 +75,8 @@ importers:
         specifier: 0.17.6-76e73f3
         version: 0.17.6-76e73f3
       sst:
-        specifier: 2.10.2
-        version: 2.10.2
+        specifier: 0.0.0-20230529222242
+        version: 0.0.0-20230529222242
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -112,8 +112,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.10.2
-        version: 2.10.2
+        specifier: 0.0.0-20230529222242
+        version: 0.0.0-20230529222242
 
   packages/scripts:
     dependencies:
@@ -121,8 +121,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       sst:
-        specifier: 2.10.2
-        version: 2.10.2
+        specifier: 0.0.0-20230529222242
+        version: 0.0.0-20230529222242
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -173,8 +173,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.10.2
-        version: 2.10.2
+        specifier: 0.0.0-20230529222242
+        version: 0.0.0-20230529222242
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -8211,8 +8211,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.10.2:
-    resolution: {integrity: sha512-h6ZBR4h4qflBoMe9icqAww/S19nr8Wm45jo4glVc0YRFY1Y5EvDWpecwfuws6iOYZiJKj1jaNCrBiyI0cHbPpg==}
+  /sst@0.0.0-20230529222242:
+    resolution: {integrity: sha512-Q+BrTDddFlUyViX8Ic7Z8VvcAn/wgQaNgTV0dcrWtrgsMhF1WXcy9mpGLktGMIuY69fWAYEE9Dcce1bA2LsMag==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

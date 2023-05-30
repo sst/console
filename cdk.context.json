@@ -6,5 +6,9 @@
   "hosted-zone:account=917397401067:domainName=dev.sst.dev:region=us-east-1": {
     "Id": "/hostedzone/Z09881375TCA2UZ3XW2R",
     "Name": "dev.sst.dev."
+  },
+  "hosted-zone:account=226609089145:domainName=production.sst.dev:region=us-east-1": {
+    "Id": "/hostedzone/Z030584024UZPNEEMWU4M",
+    "Name": "production.sst.dev."
   }
 }
