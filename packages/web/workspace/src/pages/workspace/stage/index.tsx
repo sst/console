@@ -270,7 +270,7 @@ export function Stage() {
     []
   );
 
-  createEffect(() => console.log(resources()));
+  createEffect(() => console.log({ ...params }));
 
   const bar = useCommandBar();
 
@@ -293,9 +293,9 @@ export function Stage() {
       </Header>
       <Content>
         <For
-          each={resources().filter(
-            (r) => r.type === "Api" || r.type === "StaticSite"
-          )}
+          each={resources()
+            .filter((r) => r.type === "Api" || r.type === "StaticSite")
+            .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
         >
           {(resource) => (
             <ResourceCard>
@@ -350,31 +350,35 @@ export function Stage() {
                             () => route.route.split(" ")[1]
                           );
                           return (
-                            <ResourceChild>
-                              <Row space="2" vertical="center">
-                                <ResourceChildTag>{method()}</ResourceChildTag>
-                                <ResourceChildTitleLink
-                                  href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
-                                    fn().metadata.arn.split("function:")[1]
-                                  }`}
-                                >
-                                  {path()}
-                                </ResourceChildTitleLink>
-                              </Row>
-                              <Row shrink={false} space="3" vertical="center">
-                                <Show when={fn() && fn().enrichment.size}>
-                                  {(value) => (
-                                    <ResourceChildDetail>
-                                      {Math.ceil(value() / 1024)} KB
-                                    </ResourceChildDetail>
-                                  )}
-                                </Show>
-                                <ResourceChildIcon>
-                                  <IconNodeRuntime />
-                                </ResourceChildIcon>
-                                <ResourceChildExtra></ResourceChildExtra>
-                              </Row>
-                            </ResourceChild>
+                            <Show when={fn()}>
+                              <ResourceChild>
+                                <Row space="2" vertical="center">
+                                  <ResourceChildTag>
+                                    {method()}
+                                  </ResourceChildTag>
+                                  <ResourceChildTitleLink
+                                    href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
+                                      fn().metadata.arn.split("function:")[1]
+                                    }`}
+                                  >
+                                    {path()}
+                                  </ResourceChildTitleLink>
+                                </Row>
+                                <Row shrink={false} space="3" vertical="center">
+                                  <Show when={fn() && fn().enrichment.size}>
+                                    {(value) => (
+                                      <ResourceChildDetail>
+                                        {Math.ceil(value() / 1024)} KB
+                                      </ResourceChildDetail>
+                                    )}
+                                  </Show>
+                                  <ResourceChildIcon>
+                                    <IconNodeRuntime />
+                                  </ResourceChildIcon>
+                                  <ResourceChildExtra></ResourceChildExtra>
+                                </Row>
+                              </ResourceChild>
+                            </Show>
                           );
                         }}
                       </For>
@@ -422,81 +426,6 @@ export function Stage() {
                 </ResourceChild>
               )}
             </For>
-          </ResourceChildren>
-        </ResourceCard>
-
-        <ResourceCard>
-          <ResourceHeader>
-            <Row space="2" vertical="center">
-              <IconNext width={16} />
-              <ResourceName>site</ResourceName>
-              <ResourceDescription>my-sst-app.com</ResourceDescription>
-            </Row>
-            <ResourceType>NextjsSite</ResourceType>
-          </ResourceHeader>
-          <ResourceChildren>
-            <ResourceChild>
-              <Row space="2" vertical="center">
-                <ResourceChildTitleLink>Server Function</ResourceChildTitleLink>
-              </Row>
-              <Row shrink={false} space="3" vertical="center">
-                <ResourceChildDetail>11.2 MB</ResourceChildDetail>
-                <ResourceChildIcon>
-                  <IconNodeRuntime />
-                </ResourceChildIcon>
-                <ResourceChildExtra>us-east-1</ResourceChildExtra>
-              </Row>
-            </ResourceChild>
-            <ResourceChild>
-              <Row space="2" vertical="center">
-                <ResourceChildTitleLink>Image Function</ResourceChildTitleLink>
-              </Row>
-              <Row shrink={false} space="3" vertical="center">
-                <ResourceChildDetail>34.8 MB</ResourceChildDetail>
-                <ResourceChildIcon>
-                  <IconPythonRuntime />
-                </ResourceChildIcon>
-                <ResourceChildExtra>us-east-1</ResourceChildExtra>
-              </Row>
-            </ResourceChild>
-          </ResourceChildren>
-        </ResourceCard>
-        <ResourceCard>
-          <ResourceHeader>
-            <Row space="2" vertical="center">
-              <IconAPI width={16} />
-              <ResourceName>api</ResourceName>
-              <ResourceDescription>api.my-sst-app.com</ResourceDescription>
-            </Row>
-            <ResourceType>Api</ResourceType>
-          </ResourceHeader>
-          <ResourceChildren>
-            <ResourceChild>
-              <Row space="2" vertical="center">
-                <ResourceChildTag>GET</ResourceChildTag>
-                <ResourceChildTitleLink>/notes</ResourceChildTitleLink>
-              </Row>
-              <Row shrink={false} space="3" vertical="center">
-                <ResourceChildDetail>3.4 MB</ResourceChildDetail>
-                <ResourceChildIcon>
-                  <IconNodeRuntime />
-                </ResourceChildIcon>
-                <ResourceChildExtra>us-east-1</ResourceChildExtra>
-              </Row>
-            </ResourceChild>
-            <ResourceChild>
-              <Row space="2" vertical="center">
-                <ResourceChildTag>OPTIONS</ResourceChildTag>
-                <ResourceChildTitleLink>/notes/settings</ResourceChildTitleLink>
-              </Row>
-              <Row shrink={false} space="3" vertical="center">
-                <ResourceChildDetail>11.2 MB</ResourceChildDetail>
-                <ResourceChildIcon>
-                  <IconNodeRuntime />
-                </ResourceChildIcon>
-                <ResourceChildExtra>us-east-1</ResourceChildExtra>
-              </Row>
-            </ResourceChild>
           </ResourceChildren>
         </ResourceCard>
       </Content>
