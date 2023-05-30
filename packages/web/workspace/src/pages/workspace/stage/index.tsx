@@ -19,23 +19,14 @@ import {
   IconNodeRuntime,
   IconPythonRuntime,
 } from "$/ui/icons/custom";
-import {
-  For,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createResource,
-} from "solid-js";
+import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import { ResourceStore } from "$/data/resource";
 import type { Resource } from "@console/core/app/resource";
 import {
   AppProvider,
   StageProvider,
-  WorkspaceProvider,
   useCommandBar,
-} from "../../command-bar";
+} from "$/pages/workspace/command-bar";
 
 const Content = styled("div", {
   base: {
@@ -270,7 +261,7 @@ export const ResourceChildTag = styled("div", {
   },
 });
 
-export function Single() {
+export function Stage() {
   const params = useParams();
   const stage = createSubscription(() => StageStore.fromID(params.stageID));
   const app = createSubscription(() => AppStore.fromID(params.appID));

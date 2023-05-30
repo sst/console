@@ -153,6 +153,9 @@ importers:
       '@solid-primitives/mutation-observer':
         specifier: ^1.1.13
         version: 1.1.13(solid-js@1.7.3)
+      '@solid-primitives/storage':
+        specifier: ^1.3.11
+        version: 1.3.11(solid-js@1.7.3)
       '@solidjs/router':
         specifier: ^0.8.2
         version: 0.8.2(solid-js@1.7.3)
@@ -4729,6 +4732,15 @@ packages:
 
   /@solid-primitives/rootless@1.4.1(solid-js@1.7.3):
     resolution: {integrity: sha512-h7VBUk8usD76Eh1a4wT17PcGtIRxGPlLuJ4Mf7roCNu46W5cc9DAoz8M6XebuZWVKeUkML/JuPMZQSV0mLo2Fw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': 6.2.0(solid-js@1.7.3)
+      solid-js: 1.7.3
+    dev: false
+
+  /@solid-primitives/storage@1.3.11(solid-js@1.7.3):
+    resolution: {integrity: sha512-PpQWR3TaTxHIJFbI9ZssYTM4Aa67g1vJIgps4TPhcXzHqqomrPAIveFC2FG7SDQoi9YQia8FVBjigELziJpfIg==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:

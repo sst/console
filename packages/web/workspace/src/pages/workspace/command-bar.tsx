@@ -7,7 +7,6 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  onCleanup,
   useContext,
 } from "solid-js";
 import { IconSubRight } from "$/ui/icons/custom";
@@ -15,7 +14,6 @@ import {
   IconServer,
   IconDocument,
   IconServerStack,
-  IconChevronRight,
   IconBuildingOffice,
 } from "$/ui/icons";
 import { useAuth } from "../../data/auth";
@@ -34,9 +32,10 @@ import { ResourceStore } from "../../data/resource";
 import { Portal } from "solid-js/web";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createMutationObserver } from "@solid-primitives/mutation-observer";
+import { setAccount } from "$/data/storage";
 
 interface Action {
-  icon: () => JSX.Element;
+  icon: (props: any) => JSX.Element;
   title: string;
   category?: string;
   hotkeys?: string[];
@@ -60,16 +59,20 @@ export const WorkspaceProvider: ActionProvider = async () => {
       return workspaces;
     })
   ).then((x) => x.flat());
-  return workspaces.map((w) => ({
-    title: `Switch to ${w.workspace.slug} workspace`,
-    category: "Workspace",
-    icon: IconBuildingOffice,
-    run: (control) => {
-      const nav = useNavigate();
-      nav(`/${w.account.token.accountID}/${w.workspace.id}`);
-      control.hide();
-    },
-  }));
+  const splits = location.pathname.split("/");
+  return workspaces
+    .filter((w) => w.workspace.id !== splits[1])
+    .map((w) => ({
+      title: `Switch to ${w.workspace.slug} workspace`,
+      category: "Workspace",
+      icon: IconBuildingOffice,
+      run: (control) => {
+        const nav = useNavigate();
+        setAccount(w.account.token.accountID);
+        nav(`/${w.workspace.id}`);
+        control.hide();
+      },
+    }));
 };
 
 export const AppProvider: ActionProvider = async () => {
@@ -79,38 +82,42 @@ export const AppProvider: ActionProvider = async () => {
     icon: IconServerStack,
     category: "App",
     title: `Switch to "${app.name}" app`,
-    run: (control) => {
+    run: async (control) => {
       const nav = useNavigate();
       const params = useParams();
-      nav(`/${params.accountID}/${params.workspaceID}/apps/${app.id}`);
+      const rep = useReplicache();
+      const stages = await rep().query(StageStore.forApp(app.id));
+      nav(`/${params.workspaceID}/${app.id}/${stages[0].id}`);
       control.hide();
     },
   }));
 };
 
 export const StageProvider: ActionProvider = async () => {
-  const appID = location.pathname.split("/")[4];
+  const splits = location.pathname.split("/");
+  const appID = splits[2];
   if (!appID) return [];
   const rep = useReplicache()();
   const stages = await rep.query(StageStore.forApp(appID));
-  return stages.map((stage) => ({
-    icon: IconServer,
-    category: "Stage",
-    title: `Switch to "${stage.name}" stage`,
-    run: (control) => {
-      const params = useParams();
-      const nav = useNavigate();
-      nav(
-        `/${params.accountID}/${params.workspaceID}/apps/${stage.appID}/stages/${stage.id}`
-      );
-      control.hide();
-    },
-  }));
+  return stages
+    .filter((stage) => stage.id !== splits[3])
+    .map((stage) => ({
+      icon: IconServer,
+      category: "Stage",
+      title: `Switch to "${stage.name}" stage`,
+      run: (control) => {
+        const params = useParams();
+        const nav = useNavigate();
+        nav(`/${params.workspaceID}/${stage.appID}/${stage.id}`);
+        control.hide();
+      },
+    }));
 };
 
 export const ResourceProvider: ActionProvider = async (filter) => {
   if (!filter) return [];
-  const stageId = location.pathname.split("/")[6];
+  const splits = location.pathname.split("/");
+  const stageId = splits[3];
   if (!stageId) return [];
   const rep = useReplicache()();
   const resources = await rep.query(ResourceStore.forStage(stageId));

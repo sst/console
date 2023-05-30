@@ -1,13 +1,8 @@
-import { Row, Stack } from "$/ui/layout";
+import { Row } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { IconClipboard } from "$/ui/icons";
-import {
-  IconAPI,
-  IconNext,
-  IconNodeRuntime,
-  IconPythonRuntime,
-} from "$/ui/icons/custom";
+import { IconNodeRuntime } from "$/ui/icons/custom";
 import {
   ResourceChild,
   ResourceChildDetail,
@@ -16,7 +11,7 @@ import {
   ResourceChildTag,
   ResourceChildTitle,
   ResourceChildTitleLink,
-} from "../workspace/apps/stages/single";
+} from "$/pages//workspace/stage";
 
 const Component = styled("div", {
   base: {

@@ -1,8 +1,8 @@
 import "@fontsource/rubik/latin.css";
 import "@fontsource/ibm-plex-mono/latin.css";
 
-import { Component, For, createSignal, createEffect } from "solid-js";
-import { Link, Route, Router, Routes } from "@solidjs/router";
+import { Component, For, createSignal, createEffect, Show } from "solid-js";
+import { Link, Navigate, Route, Router, Routes } from "@solidjs/router";
 import { AuthProvider, useAuth } from "./data/auth";
 import { createSubscription } from "./data/replicache";
 import { UserStore } from "./data/user";
@@ -14,6 +14,7 @@ import { Design } from "./pages/design";
 import { styled } from "@macaron-css/solid";
 import { globalStyle } from "@macaron-css/core";
 import { theme, darkClass, lightClass } from "./ui/theme";
+import { account, setAccount } from "./data/storage";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -89,11 +90,32 @@ export const App: Component = () => {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="" component={Header} />
             <Route path="debug" component={Debug} />
             <Route path="design" component={Design} />
             <Route path="connect" component={Connect} />
-            <Route path=":accountID/:workspaceID/*" component={Workspace} />
+            <Route path=":workspaceID/*" component={Workspace} />
+            <Route
+              path="*"
+              component={() => {
+                const auth = useAuth();
+                let existing = account();
+                if (!existing || !auth[existing]) {
+                  existing = Object.keys(auth)[0];
+                  setAccount(existing);
+                }
+                const users = createSubscription(
+                  UserStore.list,
+                  [],
+                  () => auth[existing].replicache
+                );
+
+                return (
+                  <Show when={users().length > 0}>
+                    <Navigate href={`/${users()[0].workspaceID}`} />
+                  </Show>
+                );
+              }}
+            />
           </Routes>
         </Router>
       </AuthProvider>

@@ -61,7 +61,7 @@ export function ReplicacheProvider(
   const tokens = useAuth();
   const token = createMemo(() => tokens[props.accountID]?.token.token);
 
-  const rep = createMemo(() => {
+  const rep = createMemo((prev) => {
     return createReplicache(props.workspaceID, token()!);
   });
 
