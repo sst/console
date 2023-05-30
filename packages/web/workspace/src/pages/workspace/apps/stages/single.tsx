@@ -202,8 +202,20 @@ export const ResourceChild = styled("div", {
   },
 });
 
+export const ResourceChildTitleLink = styled("a", {
+  base: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    fontSize: "0.875rem",
+  },
+});
+
 export const ResourceChildTitle = styled("span", {
   base: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
     fontSize: "0.875rem",
   },
 });
@@ -350,17 +362,15 @@ export function Single() {
                             <ResourceChild>
                               <Row space="2" vertical="center">
                                 <ResourceChildTag>{method()}</ResourceChildTag>
-                                <a
+                                <ResourceChildTitleLink
                                   href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
                                     fn().metadata.arn.split("function:")[1]
                                   }`}
                                 >
-                                  <ResourceChildTitle>
-                                    {path()}
-                                  </ResourceChildTitle>
-                                </a>
+                                  {path()}
+                                </ResourceChildTitleLink>
                               </Row>
-                              <Row space="3" vertical="center">
+                              <Row shrink={false} space="3" vertical="center">
                                 <Show when={fn() && fn().enrichment.size}>
                                   {(value) => (
                                     <ResourceChildDetail>
@@ -409,7 +419,9 @@ export function Single() {
             >
               {([key, value]) => (
                 <ResourceChild>
-                  <ResourceChildTitle>{key}</ResourceChildTitle>
+                  <Row shrink={false}>
+                    <ResourceChildTitle>{key}</ResourceChildTitle>
+                  </Row>
                   <Row vertical="center" space="2">
                     <ResourceChildDetail>{value}</ResourceChildDetail>
                     <ResourceChildIcon>
@@ -434,11 +446,9 @@ export function Single() {
           <ResourceChildren>
             <ResourceChild>
               <Row space="2" vertical="center">
-                <a>
-                  <ResourceChildTitle>Server Function</ResourceChildTitle>
-                </a>
+                <ResourceChildTitleLink>Server Function</ResourceChildTitleLink>
               </Row>
-              <Row space="3" vertical="center">
+              <Row shrink={false} space="3" vertical="center">
                 <ResourceChildDetail>11.2 MB</ResourceChildDetail>
                 <ResourceChildIcon>
                   <IconNodeRuntime />
@@ -448,11 +458,9 @@ export function Single() {
             </ResourceChild>
             <ResourceChild>
               <Row space="2" vertical="center">
-                <a>
-                  <ResourceChildTitle>Image Function</ResourceChildTitle>
-                </a>
+                <ResourceChildTitleLink>Image Function</ResourceChildTitleLink>
               </Row>
-              <Row space="3" vertical="center">
+              <Row shrink={false} space="3" vertical="center">
                 <ResourceChildDetail>34.8 MB</ResourceChildDetail>
                 <ResourceChildIcon>
                   <IconPythonRuntime />
@@ -475,11 +483,9 @@ export function Single() {
             <ResourceChild>
               <Row space="2" vertical="center">
                 <ResourceChildTag>GET</ResourceChildTag>
-                <a>
-                  <ResourceChildTitle>/notes</ResourceChildTitle>
-                </a>
+                <ResourceChildTitleLink>/notes</ResourceChildTitleLink>
               </Row>
-              <Row space="3" vertical="center">
+              <Row shrink={false} space="3" vertical="center">
                 <ResourceChildDetail>3.4 MB</ResourceChildDetail>
                 <ResourceChildIcon>
                   <IconNodeRuntime />
@@ -490,11 +496,9 @@ export function Single() {
             <ResourceChild>
               <Row space="2" vertical="center">
                 <ResourceChildTag>OPTIONS</ResourceChildTag>
-                <a>
-                  <ResourceChildTitle>/notes/settings</ResourceChildTitle>
-                </a>
+                <ResourceChildTitleLink>/notes/settings</ResourceChildTitleLink>
               </Row>
-              <Row space="3" vertical="center">
+              <Row shrink={false} space="3" vertical="center">
                 <ResourceChildDetail>11.2 MB</ResourceChildDetail>
                 <ResourceChildIcon>
                   <IconNodeRuntime />

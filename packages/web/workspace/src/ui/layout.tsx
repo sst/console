@@ -60,6 +60,14 @@ export const Row = styled("div", {
       }
       return result;
     })(),
+    shrink: {
+      true: {
+        flex: 1,
+      },
+      false: {
+        flex: "none",
+      },
+    },
     vertical: {
       center: {
         alignItems: "center",

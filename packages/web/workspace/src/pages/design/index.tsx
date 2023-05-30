@@ -15,6 +15,7 @@ import {
   ResourceChildIcon,
   ResourceChildTag,
   ResourceChildTitle,
+  ResourceChildTitleLink,
 } from "../workspace/apps/stages/single";
 
 const Component = styled("div", {
@@ -25,7 +26,8 @@ const Component = styled("div", {
 
 const ComponentName = styled("h1", {
   base: {
-    fontSize: "1.25rem",
+    fontSize: "0.9375rem",
+    textTransform: "uppercase",
     paddingBottom: theme.space[6],
     fontFamily: theme.fonts.heading,
   },
@@ -39,7 +41,8 @@ const Variant = styled("div", {
 
 const VariantName = styled("h2", {
   base: {
-    fontSize: "1rem",
+    fontSize: "0.8125rem",
+    textTransform: "uppercase",
     paddingBottom: theme.space[4],
     fontFamily: theme.fonts.heading,
   },
@@ -64,11 +67,9 @@ export function Design() {
             <ResourceChild>
               <Row space="2" vertical="center">
                 <ResourceChildTag>OPTIONS</ResourceChildTag>
-                <a>
-                  <ResourceChildTitle>/notes/settings</ResourceChildTitle>
-                </a>
+                <ResourceChildTitleLink>/notes/settings</ResourceChildTitleLink>
               </Row>
-              <Row space="3" vertical="center">
+              <Row shrink={false} space="3" vertical="center">
                 <ResourceChildDetail>11.2 MB</ResourceChildDetail>
                 <ResourceChildIcon>
                   <IconNodeRuntime />
@@ -84,13 +85,11 @@ export function Design() {
             <ResourceChild>
               <Row space="2" vertical="center">
                 <ResourceChildTag>OPTIONS</ResourceChildTag>
-                <a href="/">
-                  <ResourceChildTitle>
-                    /notes/settings/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long
-                  </ResourceChildTitle>
-                </a>
+                <ResourceChildTitleLink>
+                  /notes/settings/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long
+                </ResourceChildTitleLink>
               </Row>
-              <Row space="3" vertical="center">
+              <Row shrink={false} space="3" vertical="center">
                 <ResourceChildDetail>11.2 MB</ResourceChildDetail>
                 <ResourceChildIcon>
                   <IconNodeRuntime />
@@ -107,7 +106,9 @@ export function Design() {
           <VariantName>Default</VariantName>
           <VariantContent>
             <ResourceChild>
-              <ResourceChildTitle>ApiEndpoint</ResourceChildTitle>
+              <Row shrink={false}>
+                <ResourceChildTitle>ApiEndpoint</ResourceChildTitle>
+              </Row>
               <Row vertical="center" space="2">
                 <ResourceChildDetail>
                   https://mwismf5e9l.execute-api.us-east-1.amazonaws.com/prod
@@ -123,7 +124,9 @@ export function Design() {
           <VariantName>Overflow</VariantName>
           <VariantContent>
             <ResourceChild>
-              <ResourceChildTitle>ApiEndpoint</ResourceChildTitle>
+              <Row shrink={false}>
+                <ResourceChildTitle>ApiEndpoint</ResourceChildTitle>
+              </Row>
               <Row vertical="center" space="2">
                 <ResourceChildDetail>
                   https://mwismf5e9l.execute-api.us-east-1.amazonaws.com/prod/with/an/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long

@@ -283,6 +283,10 @@ const ActionRowIcon = styled("div", {
 globalStyle(`${ActionRowIcon} svg`, {
   color: theme.color.text.secondary,
   opacity: theme.iconOpacity,
+  transitionDelay: "0s",
+  transitionDuration: "0.2s",
+  transitionProperty: "color",
+  transitionTimingFunction: "ease-out",
 });
 
 globalStyle(`${ActionRow}.active ${ActionRowIcon} svg`, {
