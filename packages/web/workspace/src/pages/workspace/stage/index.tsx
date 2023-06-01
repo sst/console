@@ -263,10 +263,14 @@ export const ResourceChildTag = styled("div", {
 
 export function Stage() {
   const params = useParams();
-  const stage = createSubscription(() => StageStore.fromID(params.stageID));
-  const app = createSubscription(() => AppStore.fromID(params.appID));
+  const app = createSubscription(() => AppStore.fromName(params.appName));
+  const stage = createSubscription(() =>
+    app()
+      ? StageStore.fromName(app()!.id, params.stageName)
+      : async () => undefined
+  );
   const resources = createSubscription(
-    () => ResourceStore.forStage(params.stageID),
+    () => (stage() ? ResourceStore.forStage(stage()!.id) : async () => []),
     []
   );
 
@@ -375,7 +379,6 @@ export function Stage() {
                                   <ResourceChildIcon>
                                     <IconNodeRuntime />
                                   </ResourceChildIcon>
-                                  <ResourceChildExtra></ResourceChildExtra>
                                 </Row>
                               </ResourceChild>
                             </Show>

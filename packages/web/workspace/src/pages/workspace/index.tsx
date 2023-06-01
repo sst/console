@@ -9,37 +9,51 @@ import { CommandBar } from "./command-bar";
 import { account } from "$/data/storage";
 import { Stage } from "./stage";
 import { AppStore } from "$/data/app";
-import { Show, createMemo } from "solid-js";
+import { Accessor, Show, createContext, createMemo } from "solid-js";
 import { StageStore } from "$/data/stage";
+import { WorkspaceStore } from "$/data/workspace";
+import { useAuth } from "$/data/auth";
+
+const WorkspaceContext = createContext<Accessor<WorkspaceStore.Info>>();
 
 export function Workspace() {
   const params = useParams();
+  const auth = useAuth();
+  const workspace = createSubscription(
+    () => WorkspaceStore.fromSlug(params.workspaceSlug),
+    undefined,
+    () => auth[account()].replicache
+  );
 
   return (
-    <ReplicacheProvider accountID={account()} workspaceID={params.workspaceID}>
-      <CommandBar>
-        <Routes>
-          <Route path="connect" component={Connect} />
-          <Route path=":appID/:stageID" component={Stage} />
-          <Route
-            path="*"
-            component={() => {
-              const apps = createSubscription(AppStore.list, []);
-              const appID = createMemo(() => apps()[0]?.id);
-              const stages = createSubscription(
-                () => StageStore.forApp(appID()),
-                []
-              );
-              const stageID = createMemo(() => stages()[0]?.id);
-              return (
-                <Show when={appID() && stageID()}>
-                  <Navigate href={`${appID()}/${stageID()}`} />
-                </Show>
-              );
-            }}
-          />
-        </Routes>
-      </CommandBar>
-    </ReplicacheProvider>
+    <Show when={workspace()}>
+      <ReplicacheProvider accountID={account()} workspaceID={workspace()!.id}>
+        <WorkspaceContext.Provider value={() => workspace()!}>
+          <CommandBar>
+            <Routes>
+              <Route path="connect" component={Connect} />
+              <Route path=":appName/:stageName" component={Stage} />
+              <Route
+                path="*"
+                component={() => {
+                  const apps = createSubscription(AppStore.list, []);
+                  const app = createMemo(() => apps()[0]);
+                  const stages = createSubscription(
+                    () => StageStore.forApp(app()?.id),
+                    []
+                  );
+                  const stageName = createMemo(() => stages()[0]?.name);
+                  return (
+                    <Show when={app() && stageName()}>
+                      <Navigate href={`${app().name}/${stageName()}`} />
+                    </Show>
+                  );
+                }}
+              />
+            </Routes>
+          </CommandBar>
+        </WorkspaceContext.Provider>
+      </ReplicacheProvider>
+    </Show>
   );
 }

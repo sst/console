@@ -87,7 +87,7 @@ export const AppProvider: ActionProvider = async () => {
       const params = useParams();
       const rep = useReplicache();
       const stages = await rep().query(StageStore.forApp(app.id));
-      nav(`/${params.workspaceID}/${app.id}/${stages[0].id}`);
+      nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
       control.hide();
     },
   }));
@@ -95,10 +95,11 @@ export const AppProvider: ActionProvider = async () => {
 
 export const StageProvider: ActionProvider = async () => {
   const splits = location.pathname.split("/");
-  const appID = splits[2];
-  if (!appID) return [];
+  const appName = splits[2];
+  if (!appName) return [];
   const rep = useReplicache()();
-  const stages = await rep.query(StageStore.forApp(appID));
+  const app = await rep.query(AppStore.fromName(appName));
+  const stages = await rep.query(StageStore.forApp(app!.id));
   return stages
     .filter((stage) => stage.id !== splits[3])
     .map((stage) => ({
@@ -108,7 +109,7 @@ export const StageProvider: ActionProvider = async () => {
       run: (control) => {
         const params = useParams();
         const nav = useNavigate();
-        nav(`/${params.workspaceID}/${stage.appID}/${stage.id}`);
+        nav(`/${params.workspaceSlug}/${app!.name}/${stage.name}`);
         control.hide();
       },
     }));

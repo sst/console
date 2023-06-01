@@ -14,8 +14,8 @@ importers:
         specifier: 10.1.156
         version: 10.1.156
       sst:
-        specifier: 2.11.7
-        version: 2.11.7
+        specifier: 2.11.12
+        version: 2.11.12
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -75,8 +75,8 @@ importers:
         specifier: 0.17.6-76e73f3
         version: 0.17.6-76e73f3
       sst:
-        specifier: 2.11.7
-        version: 2.11.7
+        specifier: 2.11.12
+        version: 2.11.12
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -112,8 +112,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.11.7
-        version: 2.11.7
+        specifier: 2.11.12
+        version: 2.11.12
 
   packages/scripts:
     dependencies:
@@ -121,8 +121,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       sst:
-        specifier: 2.11.7
-        version: 2.11.7
+        specifier: 2.11.12
+        version: 2.11.12
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -176,8 +176,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.11.7
-        version: 2.11.7
+        specifier: 2.11.12
+        version: 2.11.12
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -4111,7 +4111,6 @@ packages:
   /@babel/helper-plugin-utils@7.20.2:
     resolution: {integrity: sha512-8RvlJG2mj4huQ4pZ+rU9lqKi9ZKiRmuvGuM2HlWmkmgOhbs6zEAw6IEiJ5cQqGbDzGZOhwuOQNtZMi/ENLjZoQ==}
     engines: {node: '>=6.9.0'}
-    dev: true
 
   /@babel/helper-replace-supers@7.20.7:
     resolution: {integrity: sha512-vujDMtB6LVfNW13jhlCrp48QNslK6JXi7lQG736HVbHz/mbf4Dc7tIRh1Xf5C0rF7BP8iiSxGMCmY6Ci1ven3A==}
@@ -4201,7 +4200,6 @@ packages:
     dependencies:
       '@babel/core': 7.21.4
       '@babel/helper-plugin-utils': 7.20.2
-    dev: true
 
   /@babel/plugin-transform-modules-commonjs@7.21.2(@babel/core@7.21.4):
     resolution: {integrity: sha512-Cln+Yy04Gxua7iPdj6nOV96smLGjpElir5YwzF0LBPKoPlLDNJePNlrGGaybAJkd0zKRnOVXOgizSqPYMNYkzA==}
@@ -8795,8 +8793,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.11.7:
-    resolution: {integrity: sha512-vLzLocynspxtpaXHWzptmVqnHSln3FW82N7M4TxhCRnLg+hck+iX80/rOm9lTNeJ7ASReDB0TxN+dz2WPD65BA==}
+  /sst@2.11.12:
+    resolution: {integrity: sha512-qEhRuPSjiMvy3TowHUtbJeuw83pFdPW/x63PWQfnzVaFb9FaSPh0zNj0O6IivfFUd8eb/RAZFEdahXsk9puEUg==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0
@@ -8828,6 +8826,7 @@ packages:
       '@aws-sdk/smithy-client': 3.342.0
       '@babel/core': 7.21.4
       '@babel/generator': 7.21.4
+      '@babel/plugin-syntax-typescript': 7.21.4(@babel/core@7.21.4)
       '@trpc/server': 9.16.0
       adm-zip: 0.5.10
       aws-cdk-lib: 2.79.1(constructs@10.1.156)

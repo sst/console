@@ -22,4 +22,13 @@ export function forApp(appID: string) {
   };
 }
 
+export function fromName(appID: string, stageName: string) {
+  return async (tx: ReadTransaction) => {
+    const all = await list()(tx);
+    return all.find(
+      (stage) => stage.appID === appID && stage.name === stageName
+    );
+  };
+}
+
 export * as StageStore from "./stage";

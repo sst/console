@@ -93,7 +93,7 @@ export const App: Component = () => {
             <Route path="debug" component={Debug} />
             <Route path="design" component={Design} />
             <Route path="connect" component={Connect} />
-            <Route path=":workspaceID/*" component={Workspace} />
+            <Route path=":workspaceSlug/*" component={Workspace} />
             <Route
               path="*"
               component={() => {
@@ -103,15 +103,15 @@ export const App: Component = () => {
                   existing = Object.keys(auth)[0];
                   setAccount(existing);
                 }
-                const users = createSubscription(
-                  UserStore.list,
+                const workspaces = createSubscription(
+                  WorkspaceStore.list,
                   [],
                   () => auth[existing].replicache
                 );
 
                 return (
-                  <Show when={users().length > 0}>
-                    <Navigate href={`/${users()[0].workspaceID}`} />
+                  <Show when={workspaces().length > 0}>
+                    <Navigate href={`/${workspaces()![0].slug}`} />
                   </Show>
                 );
               }}
