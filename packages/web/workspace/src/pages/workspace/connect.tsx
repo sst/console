@@ -1,30 +1,32 @@
-import { useParams, useSearchParams } from "@solidjs/router";
-import { useReplicache } from "../../data/replicache";
-import { createId } from "@paralleldrive/cuid2";
+import { AppStore } from "$/data/app";
+import { createSubscription, useReplicache } from "$/data/replicache";
+import { StageStore } from "$/data/stage";
+import { Navigate, useSearchParams } from "@solidjs/router";
+import { Match, Show, Switch, createMemo } from "solid-js";
 
 export function Connect() {
-  const params = useParams();
-  const replicache = useReplicache();
+  const rep = useReplicache();
   const [query] = useSearchParams();
+  rep().mutate.connect({
+    aws_account_id: query.aws_account_id!,
+    app: query.app!,
+    stage: query.stage!,
+    region: query.region!,
+  });
+
+  const app = createSubscription(() => AppStore.fromName(query.app!));
+  const stages = createSubscription(
+    () => StageStore.forApp(app()?.id || "unknown"),
+    []
+  );
+  const stage = createMemo(() => stages().find((s) => s.name === query.stage));
 
   return (
-    <div>
-      <div>Account: {query.aws_account_id}</div>
-      <div>App: {query.app}</div>
-      <div>Stage: {query.stage}</div>
-      <div>Region: {query.region}</div>
-      <button
-        onClick={async () => {
-          await replicache().mutate.connect({
-            aws_account_id: query.aws_account_id,
-            app: query.app,
-            stage: query.stage,
-            region: query.region,
-          });
-        }}
-      >
-        Connect
-      </button>
-    </div>
+    <Show
+      when={stage()}
+      fallback={`Connecting ${query.app}/${query.stage} to aws...`}
+    >
+      <Navigate href={`../${app()?.id}/${stage()?.id}`} />
+    </Show>
   );
 }

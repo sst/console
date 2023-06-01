@@ -23,7 +23,12 @@ export function Events({ stack }: StackContext) {
       },
       targets: {
         handler: {
-          function: fn,
+          function: {
+            handler:
+              "packages/functions/src/events/stack-updated-external.handler",
+            bind: [bus, ...Object.values(secrets.database)],
+            permissions: ["sts"],
+          },
         },
       },
     },
@@ -48,10 +53,6 @@ export function Events({ stack }: StackContext) {
     handler: "packages/functions/src/events/app-stage-updated.handler",
     bind: [...Object.values(secrets.database)],
     permissions: ["sts"],
-  });
-
-  bus.subscribe("test", {
-    handler: "packages/functions/src/events/test.handler",
   });
 
   return bus;

@@ -6,7 +6,6 @@ import { AWS } from "@console/core/aws";
 export const handler = EventHandler(
   Stage.Events.Connected,
   async (properties, actor) => {
-  throw new Error("foo");
     provideActor(actor);
     const stage = await Stage.fromID(properties.stageID);
     const account = await AWS.Account.fromID(stage!.awsAccountID);
