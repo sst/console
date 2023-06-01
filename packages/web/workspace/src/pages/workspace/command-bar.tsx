@@ -486,8 +486,6 @@ export function CommandBar(props: ParentProps) {
                         <ActionRow
                           data-element="action"
                           onClick={() => {
-                            const nav = useNavigate();
-                            console.log(nav);
                             action.run(control);
                           }}
                         >
