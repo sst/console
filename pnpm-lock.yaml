@@ -14,8 +14,8 @@ importers:
         specifier: 10.1.156
         version: 10.1.156
       sst:
-        specifier: 2.11.6
-        version: 2.11.6
+        specifier: 2.11.7
+        version: 2.11.7
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -75,8 +75,8 @@ importers:
         specifier: 0.17.6-76e73f3
         version: 0.17.6-76e73f3
       sst:
-        specifier: 2.11.5
-        version: 2.11.5
+        specifier: 2.11.7
+        version: 2.11.7
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -112,8 +112,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.11.5
-        version: 2.11.5
+        specifier: 2.11.7
+        version: 2.11.7
 
   packages/scripts:
     dependencies:
@@ -121,8 +121,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       sst:
-        specifier: 2.11.5
-        version: 2.11.5
+        specifier: 2.11.7
+        version: 2.11.7
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -176,8 +176,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.11.5
-        version: 2.11.5
+        specifier: 2.11.7
+        version: 2.11.7
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -8795,94 +8795,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.11.5:
-    resolution: {integrity: sha512-wIf5XAqf4/LXR8mq0Lxn5r0yBZvioaU1JhCtcQ+LF7fpHPCYI4wbuURhPSExt3sHpmrz2Xkx0C3TnMw4/eQz3g==}
-    hasBin: true
-    peerDependencies:
-      '@sls-next/lambda-at-edge': ^3.7.0
-    peerDependenciesMeta:
-      '@sls-next/lambda-at-edge':
-        optional: true
-    dependencies:
-      '@aws-cdk/aws-apigatewayv2-alpha': 2.79.1-alpha.0(aws-cdk-lib@2.79.1)(constructs@10.1.156)
-      '@aws-cdk/aws-apigatewayv2-authorizers-alpha': 2.79.1-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.79.1-alpha.0)(aws-cdk-lib@2.79.1)(constructs@10.1.156)
-      '@aws-cdk/aws-apigatewayv2-integrations-alpha': 2.79.1-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.79.1-alpha.0)(aws-cdk-lib@2.79.1)(constructs@10.1.156)
-      '@aws-cdk/cloud-assembly-schema': 2.79.1
-      '@aws-cdk/cloudformation-diff': 2.79.1
-      '@aws-cdk/cx-api': 2.79.1(@aws-cdk/cloud-assembly-schema@2.79.1)
-      '@aws-sdk/client-cloudformation': 3.326.0
-      '@aws-sdk/client-eventbridge': 3.342.0(@aws-sdk/signature-v4-crt@3.310.0)
-      '@aws-sdk/client-iam': 3.338.0
-      '@aws-sdk/client-iot': 3.338.0
-      '@aws-sdk/client-iot-data-plane': 3.319.0
-      '@aws-sdk/client-lambda': 3.332.0
-      '@aws-sdk/client-rds-data': 3.319.0
-      '@aws-sdk/client-s3': 3.326.0(@aws-sdk/signature-v4-crt@3.310.0)
-      '@aws-sdk/client-ssm': 3.319.0
-      '@aws-sdk/client-sts': 3.338.0
-      '@aws-sdk/config-resolver': 3.338.0
-      '@aws-sdk/credential-providers': 3.319.0
-      '@aws-sdk/middleware-retry': 3.338.0
-      '@aws-sdk/middleware-signing': 3.338.0
-      '@aws-sdk/signature-v4-crt': 3.310.0
-      '@aws-sdk/smithy-client': 3.338.0
-      '@babel/core': 7.21.4
-      '@babel/generator': 7.21.4
-      '@trpc/server': 9.16.0
-      adm-zip: 0.5.10
-      aws-cdk-lib: 2.79.1(constructs@10.1.156)
-      aws-iot-device-sdk: 2.2.12
-      aws-sdk: 2.1384.0
-      builtin-modules: 3.2.0
-      cdk-assets: 2.79.1
-      chalk: 5.2.0
-      chokidar: 3.5.3
-      ci-info: 3.8.0
-      colorette: 2.0.20
-      conf: 10.2.0
-      constructs: 10.1.156
-      cross-spawn: 7.0.3
-      dendriform-immer-patch-optimiser: 2.1.3(immer@9.0.21)
-      dotenv: 16.0.3
-      esbuild: 0.16.13
-      express: 4.18.2
-      fast-jwt: 1.7.2
-      get-port: 6.1.2
-      glob: 8.1.0
-      graphql: 16.6.0
-      graphql-yoga: 3.9.1(graphql@16.6.0)
-      immer: 9.0.21
-      ink: 4.2.0(react@18.2.0)
-      ink-spinner: 5.0.0(ink@4.2.0)(react@18.2.0)
-      kysely: 0.23.5
-      kysely-codegen: 0.10.0(kysely@0.23.5)
-      kysely-data-api: 0.2.1(@aws-sdk/client-rds-data@3.319.0)(kysely@0.23.5)
-      minimatch: 6.2.0
-      openid-client: 5.4.2
-      ora: 6.3.0
-      react: 18.2.0
-      remeda: 1.17.1
-      sst-aws-cdk: 2.62.2-3
-      tree-kill: 1.2.2
-      undici: 5.22.0
-      uuid: 9.0.0
-      ws: 8.13.0
-      yargs: 17.7.1
-      zod: 3.21.4
-    transitivePeerDependencies:
-      - '@types/react'
-      - aws-crt
-      - better-sqlite3
-      - bufferutil
-      - debug
-      - mysql2
-      - pg
-      - react-devtools-core
-      - supports-color
-      - utf-8-validate
-
-  /sst@2.11.6:
-    resolution: {integrity: sha512-0QjvRnLzIjz+g+6ULw5+rbAsGFOAp7oGjvUBpWeLqD43pHa1TrIkWqeIiDhxBWvdjrdsY1t2hmDXab8gbCqHaA==}
+  /sst@2.11.7:
+    resolution: {integrity: sha512-vLzLocynspxtpaXHWzptmVqnHSln3FW82N7M4TxhCRnLg+hck+iX80/rOm9lTNeJ7ASReDB0TxN+dz2WPD65BA==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0
@@ -8966,7 +8880,6 @@ packages:
       - react-devtools-core
       - supports-color
       - utf-8-validate
-    dev: true
 
   /stack-utils@2.0.6:
     resolution: {integrity: sha512-XlkWvfIm6RmsWtNJx+uqtKLS8eqFbxUg0ZzLXqY0caEy9l7hruX8IpiDnjsLavoBgqCCR71TqWO8MaXYheJ3RQ==}
