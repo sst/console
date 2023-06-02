@@ -61,7 +61,7 @@ export const WorkspaceProvider: ActionProvider = async () => {
   ).then((x) => x.flat());
   const splits = location.pathname.split("/");
   return workspaces
-    .filter((w) => w.workspace.id !== splits[1])
+    .filter((w) => w.workspace.slug !== splits[1])
     .map((w) => ({
       title: `Switch to ${w.workspace.slug} workspace`,
       category: "Workspace",
@@ -101,7 +101,7 @@ export const StageProvider: ActionProvider = async () => {
   const app = await rep.query(AppStore.fromName(appName));
   const stages = await rep.query(StageStore.forApp(app!.id));
   return stages
-    .filter((stage) => stage.id !== splits[3])
+    .filter((stage) => stage.name !== splits[3])
     .map((stage) => ({
       icon: IconServer,
       category: "Stage",
@@ -118,10 +118,15 @@ export const StageProvider: ActionProvider = async () => {
 export const ResourceProvider: ActionProvider = async (filter) => {
   if (!filter) return [];
   const splits = location.pathname.split("/");
-  const stageId = splits[3];
-  if (!stageId) return [];
+  const appName = splits[2];
+  const stageName = splits[3];
+  if (!stageName || !appName) return [];
   const rep = useReplicache()();
-  const resources = await rep.query(ResourceStore.forStage(stageId));
+  const app = await rep.query(AppStore.fromName(appName));
+  if (!app) return [];
+  const stage = await rep.query(StageStore.fromName(app!.id, stageName));
+  if (!stage) return [];
+  const resources = await rep.query(ResourceStore.forStage(stage.id));
   return resources.flatMap((resource) => {
     if (resource.type === "Api") {
       return resource.metadata.routes.map((rt) => ({
@@ -133,12 +138,17 @@ export const ResourceProvider: ActionProvider = async (filter) => {
     }
 
     if (resource.type === "EventBus") {
-      return resource.metadata.rules.map((rule) => ({
-        icon: IconDocument,
-        category: "Event Bus Subscriptions",
-        title: `Go to ${rule.key}`,
-        run: () => {},
-      }));
+      return resource.metadata.rules.flatMap((rule) =>
+        rule.targets.filter(Boolean).map((t) => ({
+          icon: IconDocument,
+          category: "Event Bus Subscriptions",
+          title: `Go to ${
+            // @ts-expect-error
+            resources.find((r) => r.addr === t!.node)?.metadata["handler"]
+          }`,
+          run: () => {},
+        }))
+      );
     }
     return [];
   });

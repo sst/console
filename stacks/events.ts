@@ -44,7 +44,6 @@ export function Events({ stack }: StackContext) {
     bind: [...Object.values(secrets.database)],
     permissions: ["sts"],
     environment: {
-      STACK_UPDATED_EXTERNAL_ARN: fn.functionArn,
       EVENT_BUS_ARN: bus.eventBusArn,
     },
   });

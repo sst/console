@@ -6,7 +6,7 @@ import {
   IconClipboard,
   IconGlobeAmericas,
 } from "$/ui/icons";
-import { createSubscription } from "$/data/replicache";
+import { createSubscription, useReplicache } from "$/data/replicache";
 import { useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
@@ -54,6 +54,9 @@ const User = styled("a", {
   base: {
     color: theme.color.text.secondary,
     flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: theme.space[4],
     cursor: "pointer",
     fontSize: "0.875rem",
     opacity: "0.8",
@@ -277,6 +280,7 @@ export function Stage() {
   createEffect(() => console.log({ ...params }));
 
   const bar = useCommandBar();
+  const rep = useReplicache();
 
   return (
     <>
@@ -292,13 +296,21 @@ export function Stage() {
           </StageSwitcher>
         </Row>
         <User>
+          <div onClick={() => rep().mutate.app_stage_sync(stage()!.id)}>
+            resync
+          </div>
           <UserImage src={patrick} />
         </User>
       </Header>
       <Content>
         <For
           each={resources()
-            .filter((r) => r.type === "Api" || r.type === "StaticSite")
+            .filter(
+              (r) =>
+                r.type === "Api" ||
+                r.type === "StaticSite" ||
+                r.type === "EventBus"
+            )
             .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
         >
           {(resource) => (
@@ -384,6 +396,54 @@ export function Stage() {
                             </Show>
                           );
                         }}
+                      </For>
+                    )}
+                  </Match>
+                  <Match when={resource.type === "EventBus" && resource}>
+                    {(bus) => (
+                      <For each={bus().metadata.rules}>
+                        {(rule) => (
+                          <For each={rule.targets}>
+                            {(target, index) => {
+                              const fn = createMemo(
+                                () =>
+                                  resources().find(
+                                    (r) =>
+                                      r.type === "Function" &&
+                                      r.addr === target?.node
+                                  ) as Extract<
+                                    Resource.Info,
+                                    { type: "Function" }
+                                  >
+                              );
+                              return (
+                                <ResourceChild>
+                                  <Row space="2" vertical="center">
+                                    <ResourceChildTitleLink>
+                                      {fn().metadata.handler}
+                                    </ResourceChildTitleLink>
+                                  </Row>
+                                  <Row
+                                    shrink={false}
+                                    space="3"
+                                    vertical="center"
+                                  >
+                                    <Show when={fn() && fn().enrichment.size}>
+                                      {(value) => (
+                                        <ResourceChildDetail>
+                                          {Math.ceil(value() / 1024)} KB
+                                        </ResourceChildDetail>
+                                      )}
+                                    </Show>
+                                    <ResourceChildIcon>
+                                      <IconNodeRuntime />
+                                    </ResourceChildIcon>
+                                  </Row>
+                                </ResourceChild>
+                              );
+                            }}
+                          </For>
+                        )}
                       </For>
                     )}
                   </Match>

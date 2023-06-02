@@ -14,8 +14,8 @@ importers:
         specifier: 10.1.156
         version: 10.1.156
       sst:
-        specifier: 2.11.12
-        version: 2.11.12
+        specifier: 2.11.13
+        version: link:../sst/packages/sst/dist
       typescript:
         specifier: ^5.0.4
         version: 5.0.4

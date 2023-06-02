@@ -1,4 +1,4 @@
-import { z, ZodAny, ZodObject, ZodRawShape, ZodSchema } from "zod";
+import { z, ZodAny, ZodObject, ZodRawShape, ZodSchema, ZodType } from "zod";
 import { WriteTransaction } from "replicache";
 
 interface Mutation<Name extends string = string, Input = any> {
@@ -36,21 +36,17 @@ export class Server<Mutations> {
 
   public expose<
     Name extends string,
-    Shape extends ZodRawShape,
-    Args = z.infer<ZodObject<Shape, "strip", ZodAny>>
+    Shape extends ZodSchema,
+    Args = z.infer<Shape>
   >(
     name: Name,
-    fn: ((
-      input: z.infer<ZodObject<Shape, "strip", ZodAny>>
-    ) => Promise<any>) & {
-      schema: {
-        shape: Shape;
-      };
+    fn: ((input: Args) => Promise<any>) & {
+      schema: ZodSchema;
     }
   ): Server<Mutations & { [key in Name]: Mutation<Name, Args> }> {
     this.mutations.set(name as string, {
       fn,
-      input: z.object(fn.schema.shape),
+      input: fn.schema,
     });
     return this;
   }
