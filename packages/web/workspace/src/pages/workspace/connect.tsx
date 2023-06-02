@@ -26,7 +26,7 @@ export function Connect() {
       when={stage()}
       fallback={`Connecting ${query.app}/${query.stage} to aws...`}
     >
-      <Navigate href={`../${app()?.id}/${stage()?.id}`} />
+      <Navigate href={`../${app()?.name}/${stage()?.name}`} />
     </Show>
   );
 }

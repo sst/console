@@ -69,7 +69,7 @@ export const WorkspaceProvider: ActionProvider = async () => {
       run: (control) => {
         const nav = useNavigate();
         setAccount(w.account.token.accountID);
-        nav(`/${w.workspace.id}`);
+        nav(`/${w.workspace.slug}`);
         control.hide();
       },
     }));
