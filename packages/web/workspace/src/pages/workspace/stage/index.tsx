@@ -296,7 +296,11 @@ export function Stage() {
           </StageSwitcher>
         </Row>
         <User>
-          <div onClick={() => rep().mutate.app_stage_sync(stage()!.id)}>
+          <div
+            onClick={() =>
+              rep().mutate.app_stage_sync({ stageID: stage()!.id })
+            }
+          >
             resync
           </div>
           <UserImage src={patrick} />

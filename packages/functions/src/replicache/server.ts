@@ -1,7 +1,6 @@
 import { Server } from "./framework";
 import { App } from "@console/core/app";
 import { AWS } from "@console/core/aws";
-import { User } from "@console/core/user";
 import { z } from "zod";
 
 export const server = new Server()
@@ -34,5 +33,9 @@ export const server = new Server()
       });
     }
   )
-  .expose("app_stage_sync", App.Stage.syncMetadata);
+  .mutation(
+    "app_stage_sync",
+    { stageID: z.string() },
+    async (input) => await App.Stage.Events.Updated.publish(input)
+  );
 export type ServerType = typeof server;

@@ -14,8 +14,8 @@ importers:
         specifier: 10.1.156
         version: 10.1.156
       sst:
-        specifier: 2.11.13
-        version: link:../sst/packages/sst/dist
+        specifier: 2.11.14
+        version: 2.11.14
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -75,8 +75,8 @@ importers:
         specifier: 0.17.6-76e73f3
         version: 0.17.6-76e73f3
       sst:
-        specifier: 2.11.12
-        version: 2.11.12
+        specifier: 2.11.14
+        version: 2.11.14
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -98,6 +98,9 @@ importers:
       fast-jwt:
         specifier: ^2.2.1
         version: 2.2.1
+      remeda:
+        specifier: ^1.17.1
+        version: 1.17.1
       replicache:
         specifier: ^12.2.1
         version: 12.2.1
@@ -112,8 +115,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.11.12
-        version: 2.11.12
+        specifier: 2.11.14
+        version: 2.11.14
 
   packages/scripts:
     dependencies:
@@ -121,8 +124,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       sst:
-        specifier: 2.11.12
-        version: 2.11.12
+        specifier: 2.11.14
+        version: 2.11.14
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -176,8 +179,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.11.12
-        version: 2.11.12
+        specifier: 2.11.14
+        version: 2.11.14
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -8793,8 +8796,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.11.12:
-    resolution: {integrity: sha512-qEhRuPSjiMvy3TowHUtbJeuw83pFdPW/x63PWQfnzVaFb9FaSPh0zNj0O6IivfFUd8eb/RAZFEdahXsk9puEUg==}
+  /sst@2.11.14:
+    resolution: {integrity: sha512-1MvtWLDPvp8/Itjs7FpJPMOdBpdlI4crFe+xJjdGxpQv7+7DJGOkU1BGCfD/i+1dX11PORAuVKTgksyfz2i6yw==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

@@ -4,12 +4,15 @@ import { user } from "@console/core/user/user.sql";
 import { useTransaction } from "@console/core/util/transaction";
 import { useApiAuth } from "src/api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, inArray } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
+import { replicache_cvr } from "@console/core/replicache/replicache.sql";
+import { createId } from "@console/core/util/sql";
+import { mapValues } from "remeda";
 
-const VERSION = 1;
+const VERSION = 2;
 export const handler = ApiHandler(async () => {
   await useApiAuth();
   const actor = useActor();
@@ -21,142 +24,124 @@ export const handler = ApiHandler(async () => {
   }
 
   const body = useJsonBody();
+  console.log("cookie", body.cookie);
   const lastSync =
     body.cookie && body.cookie.version === VERSION
       ? body.cookie.lastSync
       : new Date(0).toISOString();
+  const oldCvrID =
+    body.cookie && body.cookie.version === VERSION ? body.cookie.cvr : "";
   console.log("lastSync", lastSync);
+  console.log("oldCvrID", oldCvrID);
   const result = {
     patch: [] as any[],
     lastSync,
+    cvr: oldCvrID,
   };
-
-  if (new Date(lastSync).getTime() === 0) {
-    result.patch.push({
-      op: "clear",
-    });
-  }
 
   return await useTransaction(async (tx) => {
     const client = await Replicache.fromID(body.clientID);
+    const oldCvr =
+      (await tx
+        .select({ data: replicache_cvr.data })
+        .from(replicache_cvr)
+        .where(eq(replicache_cvr.id, oldCvrID))
+        .execute()
+        .then((rows) => rows[0]?.data ?? {})) || {};
 
     if (actor.type === "user") {
       const workspaceID = useWorkspace();
       console.log("syncing user", actor.properties);
-      const [workspaces, users, awsAccounts, apps, stages, resources] =
-        await Promise.all([
-          await tx
-            .select()
-            .from(workspace)
-            .where(
-              and(
-                eq(workspace.id, useWorkspace()),
-                gt(workspace.timeUpdated, lastSync)
+      if (!oldCvrID) {
+        result.patch.push({
+          op: "clear",
+        });
+      }
+      const tables = { workspace, user, awsAccount, app, stage, resource };
+      const results: [string, { id: string; time_updated: string }[]][] = [];
+      for (const [name, table] of Object.entries(tables)) {
+        const rows = await tx
+          .select({ id: table.id, time_updated: table.timeUpdated })
+          .from(table)
+          .where(
+            and(
+              eq(
+                "workspaceID" in table ? table.workspaceID : table.id,
+                workspaceID
               )
             )
-            .execute(),
-          await tx
-            .select()
-            .from(user)
-            .where(
-              and(
-                eq(user.workspaceID, useWorkspace()),
-                gt(user.timeUpdated, lastSync)
-              )
-            )
-            .execute(),
-          await tx
-            .select()
-            .from(awsAccount)
-            .where(
-              and(
-                eq(awsAccount.workspaceID, workspaceID),
-                gt(awsAccount.timeUpdated, lastSync)
-              )
-            )
-            .execute(),
-          await tx
-            .select()
-            .from(app)
-            .where(
-              and(
-                eq(app.workspaceID, workspaceID),
-                gt(app.timeUpdated, lastSync)
-              )
-            )
-            .execute(),
-          await tx
-            .select()
-            .from(stage)
-            .where(
-              and(
-                eq(stage.workspaceID, workspaceID),
-                gt(stage.timeUpdated, lastSync)
-              )
-            )
-            .execute(),
-          await tx
-            .select()
-            .from(resource)
-            .where(
-              and(
-                eq(resource.workspaceID, workspaceID),
-                gt(resource.timeUpdated, lastSync)
-              )
-            )
-            .execute(),
-        ]);
-      result.patch.push(
-        ...users.map((item) => ({
-          op: "put",
-          key: `/user/${item.id}`,
-          value: item,
-        })),
-        ...workspaces.map((item) => ({
-          op: "put",
-          key: `/workspace/${item.id}`,
-          value: item,
-        })),
-        ...apps.map((item) => ({
-          op: "put",
-          key: `/app/${item.id}`,
-          value: item,
-        })),
-        ...stages.map((item) => ({
-          op: "put",
-          key: `/stage/${item.id}`,
-          value: item,
-        })),
-        ...awsAccounts.map((item) => ({
-          op: "put",
-          key: `/aws_account/${item.id}`,
-          value: item,
-        })),
-        ...resources.map((item) => {
-          const key = `/resource/${item.id}`;
-          if (item.timeDeleted) {
-            return {
-              op: "del",
-              key,
-            };
+          )
+          .execute();
+        results.push([name, rows]);
+      }
+
+      const toPut: Record<string, string[]> = {};
+      const nextCvr: Record<string, string> = {};
+      for (const [name, rows] of results) {
+        const arr = [] as string[];
+        for (const row of rows) {
+          const key = `/${name}/${row.id}`;
+          if (oldCvr[key] !== row.time_updated) {
+            arr.push(row.id);
           }
-          return {
-            op: "put",
-            key,
-            value: item,
-          };
-        })
+          delete oldCvr[key];
+          nextCvr[key] = row.time_updated;
+        }
+        toPut[name] = arr;
+      }
+      console.log(
+        "toPut",
+        mapValues(toPut, (value) => value.length)
       );
-      result.lastSync =
-        result.patch
-          .filter((x) => x.op === "put")
-          .sort((a, b) =>
-            (b.value.timeUpdated || "") > (a.value.timeUpdated || "") ? 1 : -1
-          )[0]?.value?.timeUpdated || lastSync;
+      console.log("toDel", oldCvr);
+
+      // new data
+      for (const [name, ids] of Object.entries(toPut)) {
+        if (!ids.length) continue;
+        const table = tables[name as keyof typeof tables];
+        const rows = await tx
+          .select()
+          .from(table)
+          .where(inArray(table.id, ids))
+          .execute();
+        for (const row of rows) {
+          result.patch.push({
+            op: "put",
+            key: `/${name}/${row.id}`,
+            value: row,
+          });
+        }
+      }
+
+      // remove deleted data
+      for (const [key] of Object.entries(oldCvr)) {
+        result.patch.push({
+          op: "del",
+          key,
+        });
+      }
+
+      if (result.patch.length > 0) {
+        const nextCvrID = createId();
+        await tx
+          .insert(replicache_cvr)
+          .values({
+            id: nextCvrID,
+            data: nextCvr,
+            actor,
+          })
+          .execute();
+        result.cvr = nextCvrID;
+      }
     }
 
     if (actor.type === "account") {
       console.log("syncing account", actor.properties);
+      if (new Date(lastSync).getTime() === 0) {
+        result.patch.push({
+          op: "clear",
+        });
+      }
       const [users] = await Promise.all([
         await tx
           .select()
@@ -230,6 +215,7 @@ export const handler = ApiHandler(async () => {
         cookie: {
           version: VERSION,
           lastSync: result.lastSync,
+          cvr: result.cvr,
         },
       }),
     };

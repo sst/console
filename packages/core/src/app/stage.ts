@@ -166,10 +166,7 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
 
   return useTransaction(async (tx) => {
     await tx
-      .update(resource)
-      .set({
-        timeDeleted: sql`current_timestamp()`,
-      })
+      .delete(resource)
       .where(
         and(
           eq(resource.stageID, stageID),
