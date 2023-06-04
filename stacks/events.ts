@@ -27,18 +27,12 @@ export function Events({ stack }: StackContext) {
             handler:
               "packages/functions/src/events/stack-updated-external.handler",
             bind: [bus, ...Object.values(secrets.database)],
-            permissions: ["sts"],
           },
         },
       },
     },
   });
 
-  bus.subscribe("aws.account.created", {
-    handler: "packages/functions/src/events/aws-account-created.handler",
-    bind: [...Object.values(secrets.database), fn],
-    permissions: ["sts"],
-  });
   bus.subscribe("app.stage.connected", {
     handler: "packages/functions/src/events/app-stage-connected.handler",
     bind: [...Object.values(secrets.database)],

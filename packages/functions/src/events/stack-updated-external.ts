@@ -1,10 +1,8 @@
 import { provideActor } from "@console/core/actor";
 import { Stage } from "@console/core/app";
 import { app, stage } from "@console/core/app/app.sql";
-import { AWS } from "@console/core/aws";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { db } from "@console/core/drizzle";
-import { EventBridgeHandler } from "aws-lambda";
 import { and, eq } from "drizzle-orm";
 
 interface Events {
