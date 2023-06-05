@@ -4,14 +4,14 @@ import { theme } from "$/ui/theme";
 import { IconClipboard } from "$/ui/icons";
 import { IconNodeRuntime } from "$/ui/icons/custom";
 import {
-  ResourceChild,
-  ResourceChildDetail,
-  ResourceChildExtra,
-  ResourceChildIcon,
-  ResourceChildTag,
-  ResourceChildTitle,
-  ResourceChildTitleLink,
-} from "$/pages//workspace/stage";
+  Child,
+  ChildDetail,
+  ChildExtra,
+  ChildIcon,
+  ChildTag,
+  ChildTitle,
+  ChildTitleLink,
+} from "$/pages//workspace/stage/resources";
 
 const Component = styled("div", {
   base: {
@@ -59,39 +59,39 @@ export function Design() {
         <Variant>
           <VariantName>Default</VariantName>
           <VariantContent>
-            <ResourceChild>
+            <Child>
               <Row space="2" vertical="center">
-                <ResourceChildTag>OPTIONS</ResourceChildTag>
-                <ResourceChildTitleLink>/notes/settings</ResourceChildTitleLink>
+                <ChildTag>OPTIONS</ChildTag>
+                <ChildTitleLink>/notes/settings</ChildTitleLink>
               </Row>
               <Row shrink={false} space="3" vertical="center">
-                <ResourceChildDetail>11.2 MB</ResourceChildDetail>
-                <ResourceChildIcon>
+                <ChildDetail>11.2 MB</ChildDetail>
+                <ChildIcon>
                   <IconNodeRuntime />
-                </ResourceChildIcon>
-                <ResourceChildExtra>us-east-1</ResourceChildExtra>
+                </ChildIcon>
+                <ChildExtra>us-east-1</ChildExtra>
               </Row>
-            </ResourceChild>
+            </Child>
           </VariantContent>
         </Variant>
         <Variant>
           <VariantName>Overflow</VariantName>
           <VariantContent>
-            <ResourceChild>
+            <Child>
               <Row space="2" vertical="center">
-                <ResourceChildTag>OPTIONS</ResourceChildTag>
-                <ResourceChildTitleLink>
+                <ChildTag>OPTIONS</ChildTag>
+                <ChildTitleLink>
                   /notes/settings/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long
-                </ResourceChildTitleLink>
+                </ChildTitleLink>
               </Row>
               <Row shrink={false} space="3" vertical="center">
-                <ResourceChildDetail>11.2 MB</ResourceChildDetail>
-                <ResourceChildIcon>
+                <ChildDetail>11.2 MB</ChildDetail>
+                <ChildIcon>
                   <IconNodeRuntime />
-                </ResourceChildIcon>
-                <ResourceChildExtra>us-east-1</ResourceChildExtra>
+                </ChildIcon>
+                <ChildExtra>us-east-1</ChildExtra>
               </Row>
-            </ResourceChild>
+            </Child>
           </VariantContent>
         </Variant>
       </Component>
@@ -100,37 +100,37 @@ export function Design() {
         <Variant>
           <VariantName>Default</VariantName>
           <VariantContent>
-            <ResourceChild>
+            <Child>
               <Row shrink={false}>
-                <ResourceChildTitle>ApiEndpoint</ResourceChildTitle>
+                <ChildTitle>ApiEndpoint</ChildTitle>
               </Row>
               <Row vertical="center" space="2">
-                <ResourceChildDetail>
+                <ChildDetail>
                   https://mwismf5e9l.execute-api.us-east-1.amazonaws.com/prod
-                </ResourceChildDetail>
-                <ResourceChildIcon>
+                </ChildDetail>
+                <ChildIcon>
                   <IconClipboard />
-                </ResourceChildIcon>
+                </ChildIcon>
               </Row>
-            </ResourceChild>
+            </Child>
           </VariantContent>
         </Variant>
         <Variant>
           <VariantName>Overflow</VariantName>
           <VariantContent>
-            <ResourceChild>
+            <Child>
               <Row shrink={false}>
-                <ResourceChildTitle>ApiEndpoint</ResourceChildTitle>
+                <ChildTitle>ApiEndpoint</ChildTitle>
               </Row>
               <Row vertical="center" space="2">
-                <ResourceChildDetail>
+                <ChildDetail>
                   https://mwismf5e9l.execute-api.us-east-1.amazonaws.com/prod/with/an/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long
-                </ResourceChildDetail>
-                <ResourceChildIcon>
+                </ChildDetail>
+                <ChildIcon>
                   <IconClipboard />
-                </ResourceChildIcon>
+                </ChildIcon>
               </Row>
-            </ResourceChild>
+            </Child>
           </VariantContent>
         </Variant>
       </Component>
