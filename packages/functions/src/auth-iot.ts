@@ -1,16 +1,9 @@
-import {
-  AccountActor,
-  assertActor,
-  provideActor,
-  useWorkspace,
-} from "@console/core/actor";
+import { assertActor, provideActor } from "@console/core/actor";
 import { Config } from "sst/node/config";
 import { Session } from "sst/node/future/auth";
-import { useApiAuth } from "./api";
-import { useTransaction } from "@console/core/util/transaction";
 import { db } from "@console/core/drizzle";
 import { user } from "@console/core/user/user.sql";
-import { eq, and, gt, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export async function handler(evt: any) {
   const tokens = Buffer.from(evt.protocolData.mqtt.password, "base64")

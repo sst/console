@@ -10,7 +10,7 @@ export function RealtimeProvider() {
   const auth = useAuth();
 
   createEffect(async () => {
-    const url = "a39w1dev1zzfpb-ats.iot.us-east-1.amazonaws.com";
+    const url = import.meta.env.VITE_IOT_HOST;
     const tokens = Object.values(auth)
       .map((account) => account.token.token)
       .join(";");
