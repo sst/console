@@ -1,11 +1,15 @@
 import { useSession } from "sst/node/future/auth";
-import { assertActor, provideActor } from "@console/core/actor";
+import { assertActor, provideActor, useActor } from "@console/core/actor";
 import { useHeader } from "sst/node/api";
 import { User } from "@console/core/user";
 
 export async function useApiAuth() {
-  const session = useSession();
-  provideActor(session);
+  try {
+    useActor();
+  } catch {
+    const session = useSession();
+    provideActor(session);
+  }
 
   const workspaceID = useHeader("x-sst-workspace");
   if (workspaceID) {

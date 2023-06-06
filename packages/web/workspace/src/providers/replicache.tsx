@@ -12,6 +12,7 @@ import { createStore, reconcile } from "solid-js/store";
 import { useAuth } from "./auth";
 import type { ServerType } from "@console/functions/replicache/server";
 import { Client } from "../../../../functions/src/replicache/framework";
+import { bus } from "./bus";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async (tx, input) => {})
@@ -28,7 +29,7 @@ function createReplicache(workspaceID: string, token: string) {
     licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
     pullURL: import.meta.env.VITE_API_URL + "/replicache/pull",
     pushURL: import.meta.env.VITE_API_URL + "/replicache/push",
-    pullInterval: 10 * 1000,
+    pullInterval: 60 * 1000,
     mutators,
   });
 
@@ -64,6 +65,11 @@ export function ReplicacheProvider(
 
   const rep = createMemo((prev) => {
     return createReplicache(props.workspaceID, token()!);
+  });
+
+  bus.on("poke", (properties) => {
+    if (properties.workspaceID !== props.workspaceID) return;
+    rep().pull();
   });
 
   onCleanup(() => {

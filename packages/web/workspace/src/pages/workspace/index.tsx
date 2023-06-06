@@ -1,9 +1,5 @@
 import { Navigate, Route, Routes, useParams } from "@solidjs/router";
-import {
-  ReplicacheProvider,
-  createSubscription,
-  useReplicache,
-} from "../../data/replicache";
+import { ReplicacheProvider, createSubscription } from "$/providers/replicache";
 import { Connect } from "./connect";
 import { CommandBar } from "./command-bar";
 import { account } from "$/data/storage";
@@ -12,7 +8,7 @@ import { AppStore } from "$/data/app";
 import { Accessor, Show, createContext, createMemo } from "solid-js";
 import { StageStore } from "$/data/stage";
 import { WorkspaceStore } from "$/data/workspace";
-import { useAuth } from "$/data/auth";
+import { useAuth } from "$/providers/auth";
 
 const WorkspaceContext = createContext<Accessor<WorkspaceStore.Info>>();
 

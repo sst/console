@@ -1,4 +1,4 @@
-import { createSubscription } from "$/data/replicache";
+import { createSubscription } from "$/providers/replicache";
 import { createContext, useContext } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";

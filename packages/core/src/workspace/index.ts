@@ -40,13 +40,3 @@ export const fromID = zod(Info.shape.id, async (id) =>
       .then((rows) => rows[0]);
   })
 );
-
-export const forBusiness = zod(Info.shape.businessID, async (businessID) =>
-  db.transaction(async (tx) => {
-    return tx
-      .select()
-      .from(workspace)
-      .where(eq(workspace.businessID, businessID))
-      .execute();
-  })
-);

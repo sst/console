@@ -2,7 +2,7 @@ import sst from "./sst.png";
 import patrick from "./patrick.jpg";
 import { styled } from "@macaron-css/solid";
 import { IconChevronUpDown } from "$/ui/icons";
-import { createSubscription, useReplicache } from "$/data/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Route, Routes, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";

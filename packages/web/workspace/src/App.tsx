@@ -3,8 +3,8 @@ import "@fontsource/ibm-plex-mono/latin.css";
 
 import { Component, For, createSignal, createEffect, Show } from "solid-js";
 import { Link, Navigate, Route, Router, Routes } from "@solidjs/router";
-import { AuthProvider, useAuth } from "./data/auth";
-import { createSubscription } from "./data/replicache";
+import { AuthProvider, useAuth } from "$/providers/auth";
+import { createSubscription } from "$/providers/replicache";
 import { UserStore } from "./data/user";
 import { WorkspaceStore } from "./data/workspace";
 import { Workspace } from "./pages/workspace";
@@ -15,6 +15,7 @@ import { styled } from "@macaron-css/solid";
 import { globalStyle } from "@macaron-css/core";
 import { theme, darkClass, lightClass } from "./ui/theme";
 import { account, setAccount } from "./data/storage";
+import { RealtimeProvider } from "./providers/realtime";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -88,6 +89,7 @@ export const App: Component = () => {
   return (
     <Root class={theme() === "light" ? lightClass : darkClass} id="styled">
       <AuthProvider>
+        <RealtimeProvider />
         <Router>
           <Routes>
             <Route path="debug" component={Debug} />

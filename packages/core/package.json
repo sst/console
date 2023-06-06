@@ -10,7 +10,7 @@
   "devDependencies": {
     "@types/node": "^18.16.0",
     "drizzle-kit": "0.17.6-76e73f3",
-    "sst": "2.11.14",
+    "sst": "2.11.17",
     "vitest": "^0.25.3"
   },
   "dependencies": {
@@ -18,6 +18,7 @@
     "@aws-sdk/client-eventbridge": "^3.325.0",
     "@aws-sdk/client-iam": "^3.338.0",
     "@aws-sdk/client-iot": "^3.338.0",
+    "@aws-sdk/client-iot-data-plane": "^3.345.0",
     "@aws-sdk/client-lambda": "^3.332.0",
     "@aws-sdk/client-s3": "^3.326.0",
     "@aws-sdk/client-sts": "^3.321.1",

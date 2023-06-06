@@ -1,11 +1,9 @@
-import { Route, Routes, Navigate } from "@solidjs/router";
-import { useReplicache } from "../../data/replicache";
+import { Route, Routes } from "@solidjs/router";
 
 export function Auth() {
   return (
     <Routes>
       <Route path="" component={Provider} />
-      <Route path="workspaces" component={Workspaces} />
     </Routes>
   );
 }
@@ -35,16 +33,4 @@ function Provider() {
       </li>
     </ol>
   );
-}
-
-function Workspaces() {
-  const params = new URLSearchParams(location.hash.slice(1));
-  const replicache = useReplicache();
-  const access_token = params.get("access_token");
-  if (!access_token) return <Navigate href="/auth" />;
-  replicache.auth = access_token;
-  location.hash = "";
-  replicache.pull();
-
-  return <h1>Workspaces</h1>;
 }

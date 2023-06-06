@@ -1,4 +1,4 @@
-import { createSubscription } from "$/data/replicache";
+import { createSubscription } from "$/providers/replicache";
 import { ResourceStore } from "$/data/resource";
 import { For, JSX, Match, Show, Switch, createMemo } from "solid-js";
 import { useStageContext } from "./context";
@@ -341,7 +341,7 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
           props.resource.metadata.path
         }
       />
-      <Children></Children>
+      <Children />
     </>
   );
 }

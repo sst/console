@@ -4,6 +4,7 @@ import { useTransaction } from "@console/core/util/transaction";
 import { Replicache } from "@console/core/replicache";
 import { server } from "./server";
 import { useActor } from "@console/core/actor";
+import { Realtime } from "@console/core/realtime";
 
 export const handler = ApiHandler(async () => {
   await useApiAuth();
@@ -48,7 +49,7 @@ export const handler = ApiHandler(async () => {
       mutationID,
     });
   });
-
+  await Realtime.publish("poke", {});
   return {
     statusCode: 200,
   };

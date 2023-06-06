@@ -5,6 +5,7 @@ import { Auth } from "./stacks/auth";
 import { Secrets } from "./stacks/secrets";
 import { Events } from "./stacks/events";
 import { DNS } from "./stacks/dns";
+import { Realtime } from "./stacks/realtime";
 
 export default {
   config(input) {
@@ -21,6 +22,7 @@ export default {
       .stack(Auth)
       .stack(Events)
       .stack(API)
+      .stack(Realtime)
       .stack(Web);
   },
 } satisfies SSTConfig;

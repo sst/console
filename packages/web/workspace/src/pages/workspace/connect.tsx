@@ -1,5 +1,5 @@
 import { AppStore } from "$/data/app";
-import { createSubscription, useReplicache } from "$/data/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import { StageStore } from "$/data/stage";
 import { Navigate, useSearchParams } from "@solidjs/router";
 import { Match, Show, Switch, createMemo } from "solid-js";

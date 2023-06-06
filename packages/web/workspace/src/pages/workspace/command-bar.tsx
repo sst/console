@@ -16,11 +16,11 @@ import {
   IconServerStack,
   IconBuildingOffice,
 } from "$/ui/icons";
-import { useAuth } from "../../data/auth";
+import { useAuth } from "$/providers/auth";
 import { UserStore } from "../../data/user";
 import { WorkspaceStore } from "../../data/workspace";
 import { styled } from "@macaron-css/solid";
-import { useReplicache } from "../../data/replicache";
+import { useReplicache } from "$/providers/replicache";
 import { AppStore } from "../../data/app";
 import { theme } from "$/ui/theme";
 import { filter, groupBy, pipe } from "remeda";

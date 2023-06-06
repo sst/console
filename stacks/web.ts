@@ -19,6 +19,7 @@ export function Web({ stack }: StackContext) {
     environment: {
       VITE_API_URL: api.customDomainUrl || api.url,
       VITE_AUTH_URL: auth.url,
+      VITE_STAGE: stack.stage,
     },
   });
 

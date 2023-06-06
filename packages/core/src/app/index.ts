@@ -10,13 +10,6 @@ import { db } from "../drizzle";
 import { eq, and } from "drizzle-orm";
 import { useTransaction } from "../util/transaction";
 import { useWorkspace } from "../actor";
-import { AWS } from "../aws";
-import {
-  GetObjectCommand,
-  ListObjectsV2Command,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { awsAccount } from "../aws/aws.sql";
 
 export const Info = createSelectSchema(app, {
   id: (schema) => schema.id.cuid2(),

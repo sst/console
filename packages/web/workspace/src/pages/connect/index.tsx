@@ -1,6 +1,6 @@
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import { createSubscription } from "$/data/replicache";
-import { useAuth } from "../../data/auth";
+import { createSubscription } from "$/providers/replicache";
+import { useAuth } from "$/providers/auth";
 import { For } from "solid-js";
 import { UserStore } from "../../data/user";
 import { WorkspaceStore } from "../../data/workspace";
