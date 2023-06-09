@@ -14,6 +14,7 @@ export function API({ stack }: StackContext) {
     defaults: {
       function: {
         bind: [auth, ...Object.values(secrets.database), bus],
+        permissions: ["iot"],
       },
     },
     routes: {

@@ -1,4 +1,10 @@
-import { bigint, char, json, mysqlTable } from "drizzle-orm/mysql-core";
+import {
+  bigint,
+  char,
+  json,
+  mysqlTable,
+  primaryKey,
+} from "drizzle-orm/mysql-core";
 import { timestamps, id } from "../util/sql";
 import { Actor } from "../actor";
 
@@ -12,9 +18,15 @@ export const replicache_client = mysqlTable("replicache_client", {
   ...timestamps,
 });
 
-export const replicache_cvr = mysqlTable("replicache_cvr", {
-  ...id,
-  ...timestamps,
-  actor: json("actor").$type<Actor>(),
-  data: json("data").$type<Record<string, string>>(),
-});
+export const replicache_cvr = mysqlTable(
+  "replicache_cvr",
+  {
+    ...id,
+    ...timestamps,
+    actor: json("actor").$type<Actor>(),
+    data: json("data").$type<Record<string, string>>(),
+  },
+  (table) => ({
+    primary: primaryKey(table.id),
+  })
+);

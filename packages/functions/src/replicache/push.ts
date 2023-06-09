@@ -35,6 +35,7 @@ export const handler = ApiHandler(async () => {
       }
 
       const { args, name } = mutation;
+      console.log("processing", name);
       try {
         await server.execute(name, args);
       } catch (ex) {
