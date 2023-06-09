@@ -8,7 +8,6 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
 import { and, eq } from "drizzle-orm";
-import { Bus, createEvent } from "../bus";
 import { assumeRole } from ".";
 import {
   CloudFormationClient,
@@ -30,7 +29,7 @@ import {
   IAMClient,
   PutRolePolicyCommand,
 } from "@aws-sdk/client-iam";
-import { EventBus } from "sst/node/event-bus";
+import { event } from "../event";
 
 export const Info = createSelectSchema(awsAccount, {
   id: (schema) => schema.id.cuid2(),
@@ -39,7 +38,7 @@ export const Info = createSelectSchema(awsAccount, {
 export type Info = z.infer<typeof Info>;
 
 export const Events = {
-  Created: createEvent("aws.account.created", {
+  Created: event("aws.account.created", {
     awsAccountID: z.string(),
   }),
 };

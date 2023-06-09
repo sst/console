@@ -35,7 +35,6 @@ export const create = zod(
       });
       await Workspace.create({
         slug: "",
-        businessID: id,
       });
       return id;
     });

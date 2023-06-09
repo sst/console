@@ -10,12 +10,6 @@ export function Events({ stack }: StackContext) {
 
   const secrets = use(Secrets);
 
-  const fn = new Function(stack, "stack-updated-external", {
-    handler: "packages/functions/src/events/stack-updated-external.handler",
-    bind: [bus, ...Object.values(secrets.database)],
-    permissions: ["sts"],
-  });
-
   bus.addRules(stack, {
     "cross-account": {
       pattern: {

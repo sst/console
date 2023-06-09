@@ -13,18 +13,18 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { Bus, createEvent } from "../bus";
 import { Enrichers } from "./resource";
 import { db } from "../drizzle";
 import { Realtime } from "../realtime";
+import { event } from "../event";
 
 export * as Stage from "./stage";
 
 export const Events = {
-  Connected: createEvent("app.stage.connected", {
+  Connected: event("app.stage.connected", {
     stageID: z.string().nonempty(),
   }),
-  Updated: createEvent("app.stage.updated", {
+  Updated: event("app.stage.updated", {
     stageID: z.string().nonempty(),
   }),
 };
