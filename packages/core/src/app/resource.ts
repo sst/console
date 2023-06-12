@@ -15,7 +15,7 @@ export type Info = {
     metadata: Extract<Metadata, { type: key }>["data"];
     enrichment: key extends keyof typeof Enrichers
       ? Awaited<ReturnType<(typeof Enrichers)[key]>>
-      : never;
+      : {};
   };
 }[Metadata["type"]];
 

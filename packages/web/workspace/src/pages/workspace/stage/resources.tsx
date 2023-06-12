@@ -9,6 +9,8 @@ import { Row } from "$/ui/layout";
 import { IconAPI, IconNodeRuntime } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { IconEnvelope, IconGlobeAmericas } from "$/ui/icons";
+import { useSearchParams } from "@solidjs/router";
+import { DUMMY_RESOURCES } from "./resources-dummy";
 
 const Card = styled("div", {
   base: {
@@ -182,8 +184,14 @@ export function Header(props: HeaderProps) {
 
 export function Resources() {
   const { stage } = useStageContext();
+  const [query] = useSearchParams();
   const resources = createSubscription(
-    () => ResourceStore.forStage(stage.id),
+    () =>
+      query.dummy
+        ? async (): Promise<Resource.Info[]> => {
+            return DUMMY_RESOURCES;
+          }
+        : ResourceStore.forStage(stage.id),
     []
   );
   return (
