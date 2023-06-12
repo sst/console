@@ -1,30 +1,31 @@
 import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
+import { CSSProperties } from "@macaron-css/core";
 
-const primaryHover = {
+const primaryHover: CSSProperties = {
   borderColor: theme.color.button.primary.hover.border,
   backgroundColor: theme.color.button.primary.hover.color,
 };
-const primaryActive = {
+const primaryActive: CSSProperties = {
   backgroundColor: theme.color.button.primary.active,
   transform: "translateY(1px)",
   borderColor: "transparent",
   boxShadow: "none",
 };
-const secondaryHover = {
+const secondaryHover: CSSProperties = {
   borderColor: theme.color.button.secondary.hover.border,
   backgroundColor: theme.color.button.secondary.hover.color,
 };
-const secoondaryActive = {
+const secoondaryActive: CSSProperties = {
   backgroundColor: theme.color.button.secondary.active,
   transform: "translateY(1px)",
   boxShadow: "none",
 };
-const dangerHover = {
+const dangerHover: CSSProperties = {
   borderColor: theme.color.button.danger.hover.border,
   backgroundColor: theme.color.button.danger.hover.color,
 };
-const dangerActive = {
+const dangerActive: CSSProperties = {
   backgroundColor: theme.color.button.danger.active,
   transform: "translateY(1px)",
   borderColor: "transparent",

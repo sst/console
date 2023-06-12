@@ -66,6 +66,9 @@ export const Enrichers = {
       size: info.Configuration?.CodeSize,
     };
   },
+  async StaticSite() {
+    return { cloudfrontUrl: "" };
+  },
 } satisfies {
   [key in Metadata["type"]]?: (
     metadata: Extract<Metadata, { type: key }>["data"],

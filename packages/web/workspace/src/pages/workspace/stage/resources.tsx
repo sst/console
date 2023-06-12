@@ -34,7 +34,7 @@ const HeaderRoot = styled("div", {
     alignItems: "center",
     justifyContent: "space-between",
     padding: `${theme.space[3]} ${theme.space[3]}`,
-    borderBottom: `1px solid ${theme.color.divider.surface}`,
+    gap: theme.space[4],
   },
 });
 
@@ -57,8 +57,11 @@ const HeaderName = styled("div", {
 
 const HeaderDescription = styled("div", {
   base: {
+    ...utility.textLine(),
+    maxWidth: "500px",
     fontWeight: "400",
     fontSize: "0.8125rem",
+    lineHeight: "normal",
     color: theme.color.text.secondary,
   },
 });
@@ -75,6 +78,7 @@ const Children = styled("div", {
   base: {
     ...utility.stack(0),
     padding: `0 ${theme.space[3]}`,
+    borderTop: `1px solid ${theme.color.divider.surface}`,
   },
 });
 
@@ -96,32 +100,28 @@ export const Child = styled("div", {
 
 export const ChildTitleLink = styled("a", {
   base: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    ...utility.textLine(),
     fontSize: "0.875rem",
+    lineHeight: "normal",
+    fontFamily: theme.fonts.code,
   },
 });
 
 export const ChildTitle = styled("span", {
   base: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    ...utility.textLine(),
     fontSize: "0.875rem",
   },
 });
 
 export const ChildDetail = styled("span", {
   base: {
+    ...utility.textLine(),
     color: theme.color.text.secondary,
     fontSize: "0.8125rem",
     fontFamily: theme.fonts.code,
-    textOverflow: "ellipsis",
     textAlign: "right",
-    overflow: "hidden",
     lineHeight: "normal",
-    whiteSpace: "nowrap",
   },
 });
 export const ChildExtra = styled("span", {
@@ -165,7 +165,7 @@ export const ChildTag = styled("div", {
 interface HeaderProps {
   resource: Resource.Info;
   icon?: (props: any) => JSX.Element;
-  description: string;
+  description?: string;
 }
 export function Header(props: HeaderProps) {
   return (
@@ -245,75 +245,30 @@ export function ApiCard(props: CardProps<"Api">) {
           ""
         }
       />
-      <Children>
-        <For each={props.resource.metadata.routes}>
-          {(route) => {
-            const fn = createMemo(
-              () =>
-                props.all.find(
-                  (r) => r.type === "Function" && r.addr === route.fn?.node
-                ) as Extract<Resource.Info, { type: "Function" }>
-            );
-            const method = createMemo(() => route.route.split(" ")[0]);
-            const path = createMemo(() => route.route.split(" ")[1]);
-            return (
-              <Show when={fn()}>
-                <Child>
-                  <Row space="2" vertical="center">
-                    <ChildTag>{method()}</ChildTag>
-                    <ChildTitleLink
-                      href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
-                        fn().metadata.arn.split("function:")[1]
-                      }`}
-                    >
-                      {path()}
-                    </ChildTitleLink>
-                  </Row>
-                  <Row shrink={false} space="3" vertical="center">
-                    <Show when={fn() && fn().enrichment.size}>
-                      {(value) => (
-                        <ChildDetail>
-                          {Math.ceil(value() / 1024)} KB
-                        </ChildDetail>
-                      )}
-                    </Show>
-                    <ChildIcon>
-                      <IconNodeRuntime />
-                    </ChildIcon>
-                  </Row>
-                </Child>
-              </Show>
-            );
-          }}
-        </For>
-      </Children>
-    </>
-  );
-}
-
-export function EventBusCard(props: CardProps<"EventBus">) {
-  return (
-    <>
-      <Header
-        icon={IconEnvelope}
-        resource={props.resource}
-        description={props.resource.metadata.eventBusName}
-      />
-      <Children>
-        <For each={props.resource.metadata.rules}>
-          {(rule) => (
-            <For each={rule.targets}>
-              {(target) => {
-                const fn = createMemo(
-                  () =>
-                    props.all.find(
-                      (r) => r.type === "Function" && r.addr === target?.node
-                    ) as Extract<Resource.Info, { type: "Function" }>
-                );
-                return (
+      {props.resource.metadata.routes.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.routes}>
+            {(route) => {
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) => r.type === "Function" && r.addr === route.fn?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              const method = createMemo(() => route.route.split(" ")[0]);
+              const path = createMemo(() => route.route.split(" ")[1]);
+              return (
+                <Show when={fn()}>
                   <Child>
                     <Row space="2" vertical="center">
-                      <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                      <ChildTag>{method()}</ChildTag>
+                      <ChildTitleLink
+                        href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
+                          fn().metadata.arn.split("function:")[1]
+                        }`}
+                      >
+                        {path()}
+                      </ChildTitleLink>
                     </Row>
                     <Row shrink={false} space="3" vertical="center">
                       <Show when={fn() && fn().enrichment.size}>
@@ -328,12 +283,57 @@ export function EventBusCard(props: CardProps<"EventBus">) {
                       </ChildIcon>
                     </Row>
                   </Child>
-                );
-              }}
-            </For>
-          )}
-        </For>
-      </Children>
+                </Show>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+
+export function EventBusCard(props: CardProps<"EventBus">) {
+  return (
+    <>
+      <Header icon={IconEnvelope} resource={props.resource} />
+      {props.resource.metadata.rules.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.rules}>
+            {(rule) => (
+              <For each={rule.targets}>
+                {(target, i) => {
+                  const fn = createMemo(
+                    () =>
+                      props.all.find(
+                        (r) => r.type === "Function" && r.addr === target?.node
+                      ) as Extract<Resource.Info, { type: "Function" }>
+                  );
+                  return (
+                    <Child>
+                      <Row space="2" vertical="center">
+                        <ChildTitleLink>{rule.key}</ChildTitleLink>
+                      </Row>
+                      <Row shrink={false} space="3" vertical="center">
+                        <Show when={fn() && fn().enrichment.size}>
+                          {(value) => (
+                            <ChildDetail>
+                              {Math.ceil(value() / 1024)} KB
+                            </ChildDetail>
+                          )}
+                        </Show>
+                        <ChildIcon>
+                          <IconNodeRuntime />
+                        </ChildIcon>
+                      </Row>
+                    </Child>
+                  );
+                }}
+              </For>
+            )}
+          </For>
+        </Children>
+      )}
     </>
   );
 }
@@ -346,10 +346,9 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.metadata.path
+          props.resource.enrichment.cloudfrontUrl
         }
       />
-      <Children />
     </>
   );
 }

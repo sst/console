@@ -52,12 +52,73 @@ export const DUMMY_RESOURCES = [
       {
         route: "GET /",
         type: "function",
-        fn: ref("my-func"),
+        fn: ref("index"),
+      },
+      {
+        route: "GET /notes",
+        type: "function",
+        fn: ref("notes_get"),
+      },
+      {
+        route:
+          "POST /with/an/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long",
+        type: "function",
+        fn: ref("notes_post"),
       },
     ],
     graphql: false,
     httpApiId: "someapi",
     customDomainUrl: "https://example.com",
   }),
-  func("my-func", "packages/function.handler"),
+  resource("Api", "long-api", {
+    url: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+    routes: [
+      {
+        route: "GET /",
+        type: "function",
+        fn: ref("index"),
+      },
+    ],
+    graphql: false,
+    httpApiId: "someapi",
+    customDomainUrl: undefined,
+  }),
+  resource("Api", "no-routes", {
+    url: "https://api.com",
+    routes: [],
+    graphql: false,
+    httpApiId: "someapi",
+    customDomainUrl: undefined,
+  }),
+  resource("EventBus", "event-bus", {
+    eventBusName: "event-bus",
+    rules: [
+      {
+        key: "rule-1",
+        targets: [
+          {
+            node: "index",
+            stack: "stack",
+          },
+        ],
+        targetNames: ["app_stage_connected_1_rule"],
+      },
+    ],
+  }),
+  resource(
+    "StaticSite",
+    "web",
+    {
+      path: "packages/web/workspace",
+      customDomainUrl: undefined,
+      environment: {},
+    },
+    {
+      cloudfrontUrl:
+        "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+    }
+  ),
+  func("index", "packages/function.handler"),
+  func("notes_get", "packages/notes.handler"),
+  func("notes_post", "packages/notes.handler"),
 ];
