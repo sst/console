@@ -302,7 +302,7 @@ export function EventBusCard(props: CardProps<"EventBus">) {
           <For each={props.resource.metadata.rules}>
             {(rule) => (
               <For each={rule.targets}>
-                {(target, i) => {
+                {(target) => {
                   const fn = createMemo(
                     () =>
                       props.all.find(
@@ -312,7 +312,7 @@ export function EventBusCard(props: CardProps<"EventBus">) {
                   return (
                     <Child>
                       <Row space="2" vertical="center">
-                        <ChildTitleLink>{rule.key}</ChildTitleLink>
+                        <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
                       </Row>
                       <Row shrink={false} space="3" vertical="center">
                         <Show when={fn() && fn().enrichment.size}>
