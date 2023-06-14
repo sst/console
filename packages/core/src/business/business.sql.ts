@@ -6,6 +6,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { timestamps, id } from "../util/sql";
 
+/*
 export const business = mysqlTable(
   "business",
   {
@@ -19,6 +20,7 @@ export const business = mysqlTable(
     namespace: uniqueIndex("namespace").on(table.namespace),
   })
 );
+*/
 
 // name: StatMuse
 // namespace: statmuse

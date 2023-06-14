@@ -17,6 +17,7 @@ import {
 } from "$/pages/workspace/command-bar";
 import { StageContext, createStageContext } from "./context";
 import { Resources } from "./resources";
+import { Logs } from "./logs";
 
 const Content = styled("div", {
   base: {
@@ -157,6 +158,7 @@ export function Stage() {
         <Content>
           <Routes>
             <Route path="" component={Resources} />
+            <Route path="logs/:resourceID/*" component={Logs} />
           </Routes>
         </Content>
       </StageContext.Provider>

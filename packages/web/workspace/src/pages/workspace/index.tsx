@@ -28,7 +28,7 @@ export function Workspace() {
           <CommandBar>
             <Routes>
               <Route path="connect" component={Connect} />
-              <Route path=":appName/:stageName" component={Stage} />
+              <Route path=":appName/:stageName/*" component={Stage} />
               <Route
                 path="*"
                 component={() => {

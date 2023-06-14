@@ -1,4 +1,4 @@
-import { createSubscription } from "$/providers/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import { ResourceStore } from "$/data/resource";
 import { For, JSX, Match, Show, Switch, createMemo } from "solid-js";
 import { useStageContext } from "./context";
@@ -9,7 +9,7 @@ import { Row } from "$/ui/layout";
 import { IconAPI, IconNodeRuntime } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { IconEnvelope, IconGlobeAmericas } from "$/ui/icons";
-import { useSearchParams } from "@solidjs/router";
+import { Link, useSearchParams } from "@solidjs/router";
 import { DUMMY_RESOURCES } from "./resources-dummy";
 
 const Card = styled("div", {
@@ -98,7 +98,7 @@ export const Child = styled("div", {
   },
 });
 
-export const ChildTitleLink = styled("a", {
+export const ChildTitleLink = styled(Link, {
   base: {
     ...utility.textLine(),
     fontSize: "0.875rem",
@@ -262,11 +262,7 @@ export function ApiCard(props: CardProps<"Api">) {
                   <Child>
                     <Row space="2" vertical="center">
                       <ChildTag>{method()}</ChildTag>
-                      <ChildTitleLink
-                        href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
-                          fn().metadata.arn.split("function:")[1]
-                        }`}
-                      >
+                      <ChildTitleLink href={`logs/${fn().id}`}>
                         {path()}
                       </ChildTitleLink>
                     </Row>
@@ -312,7 +308,9 @@ export function EventBusCard(props: CardProps<"EventBus">) {
                   return (
                     <Child>
                       <Row space="2" vertical="center">
-                        <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                        <ChildTitleLink href={`./logs/${fn().id}`}>
+                          {fn().metadata.handler}
+                        </ChildTitleLink>
                       </Row>
                       <Row shrink={false} space="3" vertical="center">
                         <Show when={fn() && fn().enrichment.size}>

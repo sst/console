@@ -63,6 +63,8 @@ export function RealtimeProvider() {
       const parsed = JSON.parse(message);
       if (topic === "poke") {
         bus.emit("poke", { workspaceID });
+      } else {
+        bus.emit(topic as any, parsed.properties);
       }
       console.log("Got message", topic, parsed);
     });

@@ -17,6 +17,7 @@ import { bus } from "./bus";
 const mutators = new Client<ServerType>()
   .mutation("connect", async (tx, input) => {})
   .mutation("app_stage_sync", async (tx, input) => {})
+  .mutation("log_poller_subscribe", async (tx, input) => {})
   .build();
 
 const ReplicacheContext =

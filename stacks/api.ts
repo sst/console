@@ -23,7 +23,8 @@ export function API({ stack }: StackContext) {
   const pollerFetchStep = new LambdaInvoke(stack, "pollerFetchStep", {
     lambdaFunction: Function.fromDefinition(stack, "log-poller-fetch", {
       handler: "packages/functions/src/poller/fetch.handler",
-      permissions: ["logs"],
+      bind: [...Object.values(secrets.database)],
+      permissions: ["logs", "sts", "iot"],
     }),
     payloadResponseOnly: true,
     resultPath: "$.status",
@@ -47,6 +48,9 @@ export function API({ stack }: StackContext) {
       function: {
         bind: [auth, ...Object.values(secrets.database), bus],
         permissions: ["iot"],
+        environment: {
+          LOG_POLLER_ARN: poller.stateMachineArn,
+        },
       },
     },
     routes: {

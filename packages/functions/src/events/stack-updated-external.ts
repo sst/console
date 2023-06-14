@@ -25,6 +25,7 @@ type Payload = {
 }[keyof Events];
 
 export const handler = async (evt: Payload) => {
+  console.log(evt);
   if (evt["detail-type"] === "Object Created") {
     if (!evt.detail.object.key.startsWith("stackMetadata")) return;
     const [, appHint, stageHint] = evt.detail.object.key.split("/");

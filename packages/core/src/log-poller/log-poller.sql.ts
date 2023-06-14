@@ -1,15 +1,27 @@
-import { mysqlTable, primaryKey, uniqueIndex } from "drizzle-orm/mysql-core";
+import {
+  mysqlTable,
+  primaryKey,
+  text,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/mysql-core";
 import { cuid, timestamps, workspaceID } from "../util/sql";
 
 export const log_poller = mysqlTable(
   "log_poller",
   {
+    ...workspaceID,
     ...timestamps,
-    id: cuid("id").notNull().primaryKey(),
-    logGroup: cuid("log_group").notNull(),
+    stageID: cuid("stage_id").notNull(),
+    logGroup: varchar("log_group", { length: 512 }).notNull(),
   },
   (table) => ({
-    logGroup: uniqueIndex("log_group").on(table.logGroup),
+    primary: primaryKey(table.id, table.workspaceID),
+    logGroup: uniqueIndex("log_group").on(
+      table.workspaceID,
+      table.stageID,
+      table.logGroup
+    ),
   })
 );
 

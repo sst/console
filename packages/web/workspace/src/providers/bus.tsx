@@ -4,4 +4,8 @@ export const bus = createEmitter<{
   poke: {
     workspaceID: string;
   };
+  log: {
+    logGroup: string;
+    event: any;
+  };
 }>();

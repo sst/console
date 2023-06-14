@@ -1,9 +1,11 @@
 import { Server } from "./framework";
 import { App } from "@console/core/app";
+import { LogPoller } from "@console/core/log-poller";
 import { AWS } from "@console/core/aws";
 import { z } from "zod";
 
 export const server = new Server()
+  .expose("log_poller_subscribe", LogPoller.subscribe)
   .mutation(
     "connect",
     {
