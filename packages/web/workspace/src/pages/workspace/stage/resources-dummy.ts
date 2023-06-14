@@ -50,7 +50,7 @@ export const DUMMY_RESOURCES = [
     url: "https://example.com",
     routes: [
       {
-        route: "GET /",
+        route: "GET /todo",
         type: "function",
         fn: ref("index"),
       },
