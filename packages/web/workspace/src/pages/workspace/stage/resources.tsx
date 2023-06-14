@@ -6,9 +6,26 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { Row } from "$/ui/layout";
-import { IconAPI, IconNodeRuntime } from "$/ui/icons/custom";
+import {
+  IconCron,
+  IconBuckets,
+  IconEventBus,
+  IconNodeRuntime,
+} from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
-import { IconEnvelope, IconGlobeAmericas } from "$/ui/icons";
+import {
+  IconLink,
+  IconGlobeAlt,
+  IconClipboard,
+  IconLockClosed,
+  IconTableCells,
+  IconUserCircle,
+  IconCircleStack,
+  IconGlobeAmericas,
+  IconDeviceTablet,
+  IconArrowsRightLeft,
+  IconArrowsPointingOut,
+} from "$/ui/icons";
 import { Link, useSearchParams } from "@solidjs/router";
 import { DUMMY_RESOURCES } from "./resources-dummy";
 
@@ -43,6 +60,7 @@ const HeaderIcon = styled("div", {
     flexShrink: 0,
     width: 16,
     height: 16,
+    opacity: theme.iconOpacity,
   },
 });
 
@@ -199,7 +217,21 @@ export function Resources() {
       each={resources()
         .filter(
           (r) =>
-            r.type === "Api" || r.type === "StaticSite" || r.type === "EventBus"
+            r.type === "Api" ||
+            r.type === "RDS" ||
+            r.type === "Cron" ||
+            r.type === "Table" ||
+            r.type === "Queue" ||
+            r.type === "Topic" ||
+            r.type === "Bucket" ||
+            r.type === "Cognito" ||
+            r.type === "AppSync" ||
+            r.type === "EventBus" ||
+            r.type === "StaticSite" ||
+            r.type === "NextjsSite" ||
+            r.type === "WebSocketApi" ||
+            r.type === "KinesisStream" ||
+            r.type === "ApiGatewayV1Api"
         )
         .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
     >
@@ -211,14 +243,74 @@ export function Resources() {
                 <ApiCard resource={resource()} all={resources()} />
               )}
             </Match>
+            <Match when={resource.type === "ApiGatewayV1Api" && resource}>
+              {(resource) => (
+                <ApiGatewayV1ApiCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "AppSync" && resource}>
+              {(resource) => (
+                <AppSyncCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "WebSocketApi" && resource}>
+              {(resource) => (
+                <WebSocketApiCard resource={resource()} all={resources()} />
+              )}
+            </Match>
             <Match when={resource.type === "EventBus" && resource}>
               {(resource) => (
                 <EventBusCard resource={resource()} all={resources()} />
               )}
             </Match>
+            <Match when={resource.type === "NextjsSite" && resource}>
+              {(resource) => (
+                <NextjsSiteCard resource={resource()} all={resources()} />
+              )}
+            </Match>
             <Match when={resource.type === "StaticSite" && resource}>
               {(resource) => (
                 <StaticSiteCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "RDS" && resource}>
+              {(resource) => (
+                <RDSCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "Topic" && resource}>
+              {(resource) => (
+                <TopicCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "KinesisStream" && resource}>
+              {(resource) => (
+                <KinesisStreamCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "Queue" && resource}>
+              {(resource) => (
+                <QueueCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "Bucket" && resource}>
+              {(resource) => (
+                <BucketCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "Cognito" && resource}>
+              {(resource) => (
+                <CognitoCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "Cron" && resource}>
+              {(resource) => (
+                <CronCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "Table" && resource}>
+              {(resource) => (
+                <TableCard resource={resource()} all={resources()} />
               )}
             </Match>
           </Switch>
@@ -237,7 +329,127 @@ export function ApiCard(props: CardProps<"Api">) {
   return (
     <>
       <Header
-        icon={IconAPI}
+        icon={IconGlobeAlt}
+        resource={props.resource}
+        description={
+          props.resource.metadata.customDomainUrl ||
+          props.resource.metadata.url ||
+          ""
+        }
+      />
+      {props.resource.metadata.routes.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.routes}>
+            {(route) => {
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) => r.type === "Function" && r.addr === route.fn?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              const method = createMemo(() => route.route.split(" ")[0]);
+              const path = createMemo(() => route.route.split(" ")[1]);
+              return (
+                <Show when={fn()}>
+                  <Child>
+                    <Row space="2" vertical="center">
+                      <ChildTag>{method()}</ChildTag>
+                      <ChildTitleLink
+                        href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
+                          fn().metadata.arn.split("function:")[1]
+                        }`}
+                      >
+                        {path()}
+                      </ChildTitleLink>
+                    </Row>
+                    <Row shrink={false} space="3" vertical="center">
+                      <Show when={fn() && fn().enrichment.size}>
+                        {(value) => (
+                          <ChildDetail>
+                            {Math.ceil(value() / 1024)} KB
+                          </ChildDetail>
+                        )}
+                      </Show>
+                      <ChildIcon>
+                        <IconNodeRuntime />
+                      </ChildIcon>
+                    </Row>
+                  </Child>
+                </Show>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+
+export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
+  return (
+    <>
+      <Header
+        icon={IconLink}
+        resource={props.resource}
+        description={
+          props.resource.metadata.customDomainUrl ||
+          props.resource.metadata.httpApiId ||
+          ""
+        }
+      />
+      {props.resource.metadata.routes.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.routes}>
+            {(route) => {
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) => r.type === "Function" && r.addr === route.fn?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              const method = createMemo(() => route.route.split(" ")[0]);
+              const path = createMemo(() => route.route.split(" ")[1]);
+              return (
+                <Show when={fn()}>
+                  <Child>
+                    <Row space="2" vertical="center">
+                      <ChildTag>{method()}</ChildTag>
+                      <ChildTitleLink
+                        href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
+                          fn().metadata.arn.split("function:")[1]
+                        }`}
+                      >
+                        {path()}
+                      </ChildTitleLink>
+                    </Row>
+                    <Row shrink={false} space="3" vertical="center">
+                      <Show when={fn() && fn().enrichment.size}>
+                        {(value) => (
+                          <ChildDetail>
+                            {Math.ceil(value() / 1024)} KB
+                          </ChildDetail>
+                        )}
+                      </Show>
+                      <ChildIcon>
+                        <IconNodeRuntime />
+                      </ChildIcon>
+                    </Row>
+                  </Child>
+                </Show>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+
+export function ApiGatewayV1ApiCard(props: CardProps<"ApiGatewayV1Api">) {
+  return (
+    <>
+      <Header
+        icon={IconGlobeAmericas}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -292,7 +504,7 @@ export function ApiCard(props: CardProps<"Api">) {
 export function EventBusCard(props: CardProps<"EventBus">) {
   return (
     <>
-      <Header icon={IconEnvelope} resource={props.resource} />
+      <Header icon={IconEventBus} resource={props.resource} />
       {props.resource.metadata.rules.length > 0 && (
         <Children>
           <For each={props.resource.metadata.rules}>
@@ -336,16 +548,403 @@ export function EventBusCard(props: CardProps<"EventBus">) {
   );
 }
 
+export function TopicCard(props: CardProps<"Topic">) {
+  return (
+    <>
+      <Header icon={IconClipboard} resource={props.resource} />
+      {props.resource.metadata.subscribers.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.subscribers}>
+            {(subscriber) => {
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) => r.type === "Function" && r.addr === subscriber?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              return (
+                <Child>
+                  <Row space="2" vertical="center">
+                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                  </Row>
+                  <Row shrink={false} space="3" vertical="center">
+                    <Show when={fn() && fn().enrichment.size}>
+                      {(value) => (
+                        <ChildDetail>
+                          {Math.ceil(value() / 1024)} KB
+                        </ChildDetail>
+                      )}
+                    </Show>
+                    <ChildIcon>
+                      <IconNodeRuntime />
+                    </ChildIcon>
+                  </Row>
+                </Child>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+export function BucketCard(props: CardProps<"Bucket">) {
+  return (
+    <>
+      <Header icon={IconBuckets} resource={props.resource} />
+      {props.resource.metadata.notifications.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.notifications}>
+            {(notification) => {
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) =>
+                      r.type === "Function" && r.addr === notification?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              return (
+                <Child>
+                  <Row space="2" vertical="center">
+                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                  </Row>
+                  <Row shrink={false} space="3" vertical="center">
+                    <Show when={fn() && fn().enrichment.size}>
+                      {(value) => (
+                        <ChildDetail>
+                          {Math.ceil(value() / 1024)} KB
+                        </ChildDetail>
+                      )}
+                    </Show>
+                    <ChildIcon>
+                      <IconNodeRuntime />
+                    </ChildIcon>
+                  </Row>
+                </Child>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+
+export function KinesisStreamCard(props: CardProps<"KinesisStream">) {
+  return (
+    <>
+      <Header icon={IconArrowsPointingOut} resource={props.resource} />
+      {props.resource.metadata.consumers.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.consumers}>
+            {(consumer) => {
+              if (consumer.fn === undefined) {
+                return;
+              }
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) => r.type === "Function" && r.addr === consumer.fn?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              return (
+                <Child>
+                  <Row space="2" vertical="center">
+                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                  </Row>
+                  <Row shrink={false} space="3" vertical="center">
+                    <Show when={fn() && fn().enrichment.size}>
+                      {(value) => (
+                        <ChildDetail>
+                          {Math.ceil(value() / 1024)} KB
+                        </ChildDetail>
+                      )}
+                    </Show>
+                    <ChildIcon>
+                      <IconNodeRuntime />
+                    </ChildIcon>
+                  </Row>
+                </Child>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+
+export function AppSyncCard(props: CardProps<"AppSync">) {
+  return (
+    <>
+      <Header
+        icon={IconUserCircle}
+        resource={props.resource}
+        description={
+          props.resource.metadata.customDomainUrl || props.resource.metadata.url
+        }
+      />
+      {props.resource.metadata.dataSources.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.dataSources}>
+            {(dataSource) => {
+              if (dataSource.fn === undefined) {
+                return;
+              }
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) =>
+                      r.type === "Function" && r.addr === dataSource.fn?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              return (
+                <Child>
+                  <Row space="2" vertical="center">
+                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                  </Row>
+                  <Row shrink={false} space="3" vertical="center">
+                    <Show when={fn() && fn().enrichment.size}>
+                      {(value) => (
+                        <ChildDetail>
+                          {Math.ceil(value() / 1024)} KB
+                        </ChildDetail>
+                      )}
+                    </Show>
+                    <ChildIcon>
+                      <IconNodeRuntime />
+                    </ChildIcon>
+                  </Row>
+                </Child>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+export function TableCard(props: CardProps<"Table">) {
+  return (
+    <>
+      <Header icon={IconTableCells} resource={props.resource} />
+      {props.resource.metadata.consumers.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.consumers}>
+            {(consumer) => {
+              if (consumer.fn === undefined) {
+                return;
+              }
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) => r.type === "Function" && r.addr === consumer.fn?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              return (
+                <Child>
+                  <Row space="2" vertical="center">
+                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                  </Row>
+                  <Row shrink={false} space="3" vertical="center">
+                    <Show when={fn() && fn().enrichment.size}>
+                      {(value) => (
+                        <ChildDetail>
+                          {Math.ceil(value() / 1024)} KB
+                        </ChildDetail>
+                      )}
+                    </Show>
+                    <ChildIcon>
+                      <IconNodeRuntime />
+                    </ChildIcon>
+                  </Row>
+                </Child>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+
+export function CognitoCard(props: CardProps<"Cognito">) {
+  return (
+    <>
+      <Header icon={IconLockClosed} resource={props.resource} />
+      {props.resource.metadata.triggers.length > 0 && (
+        <Children>
+          <For each={props.resource.metadata.triggers}>
+            {(trigger) => {
+              const fn = createMemo(
+                () =>
+                  props.all.find(
+                    (r) => r.type === "Function" && r.addr === trigger.fn?.node
+                  ) as Extract<Resource.Info, { type: "Function" }>
+              );
+              return (
+                <Child>
+                  <Row space="2" vertical="center">
+                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                  </Row>
+                  <Row shrink={false} space="3" vertical="center">
+                    <Show when={fn() && fn().enrichment.size}>
+                      {(value) => (
+                        <ChildDetail>
+                          {Math.ceil(value() / 1024)} KB
+                        </ChildDetail>
+                      )}
+                    </Show>
+                    <ChildIcon>
+                      <IconNodeRuntime />
+                    </ChildIcon>
+                  </Row>
+                </Child>
+              );
+            }}
+          </For>
+        </Children>
+      )}
+    </>
+  );
+}
+
+export function CronCard(props: CardProps<"Cron">) {
+  return (
+    <>
+      <Header
+        icon={IconCron}
+        resource={props.resource}
+        description={props.resource.metadata.schedule}
+      />
+      <Show when={props.resource.metadata.job}>
+        {(job) => {
+          const fn = props.all.find(
+            (r) => r.type === "Function" && r.addr === job().node
+          ) as Extract<Resource.Info, { type: "Function" }>;
+          return (
+            <Children>
+              <Child>
+                <Row space="2" vertical="center">
+                  <ChildTitleLink>{fn.metadata.handler}</ChildTitleLink>
+                </Row>
+                <Row shrink={false} space="3" vertical="center">
+                  <Show when={fn && fn.enrichment.size}>
+                    {(value) => (
+                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+                    )}
+                  </Show>
+                  <ChildIcon>
+                    <IconNodeRuntime />
+                  </ChildIcon>
+                </Row>
+              </Child>
+            </Children>
+          );
+        }}
+      </Show>
+    </>
+  );
+}
+
+export function QueueCard(props: CardProps<"Queue">) {
+  return (
+    <>
+      <Header icon={IconArrowsRightLeft} resource={props.resource} />
+      <Show when={props.resource.metadata.consumer}>
+        {(consumer) => {
+          const fn = props.all.find(
+            (r) => r.type === "Function" && r.addr === consumer().node
+          ) as Extract<Resource.Info, { type: "Function" }>;
+          return (
+            <Children>
+              <Child>
+                <Row space="2" vertical="center">
+                  <ChildTitleLink>{fn.metadata.handler}</ChildTitleLink>
+                </Row>
+                <Row shrink={false} space="3" vertical="center">
+                  <Show when={fn && fn.enrichment.size}>
+                    {(value) => (
+                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+                    )}
+                  </Show>
+                  <ChildIcon>
+                    <IconNodeRuntime />
+                  </ChildIcon>
+                </Row>
+              </Child>
+            </Children>
+          );
+        }}
+      </Show>
+    </>
+  );
+}
+
 export function StaticSiteCard(props: CardProps<"StaticSite">) {
   return (
     <>
       <Header
-        icon={IconGlobeAmericas}
+        icon={IconDeviceTablet}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.enrichment.cloudfrontUrl
         }
+      />
+    </>
+  );
+}
+
+export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
+  return (
+    <>
+      <Header
+        icon={IconGlobeAlt}
+        resource={props.resource}
+        description={
+          props.resource.metadata.customDomainUrl ||
+          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.path
+        }
+      />
+      <Show when={props.resource.metadata.server}>
+        {(server) => {
+          const fn = props.all.find(
+            (r) => r.type === "Function" && r.metadata.arn === server()
+          ) as Extract<Resource.Info, { type: "Function" }>;
+          return (
+            <Children>
+              <Child>
+                <Row space="2" vertical="center">
+                  <ChildTitleLink>{fn.metadata.handler}</ChildTitleLink>
+                </Row>
+                <Row shrink={false} space="3" vertical="center">
+                  <Show when={fn && fn.enrichment.size}>
+                    {(value) => (
+                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+                    )}
+                  </Show>
+                  <ChildIcon>
+                    <IconNodeRuntime />
+                  </ChildIcon>
+                </Row>
+              </Child>
+            </Children>
+          );
+        }}
+      </Show>
+    </>
+  );
+}
+
+export function RDSCard(props: CardProps<"RDS">) {
+  return (
+    <>
+      <Header
+        icon={IconCircleStack}
+        resource={props.resource}
+        description={props.resource.metadata.defaultDatabaseName}
       />
     </>
   );

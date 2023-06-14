@@ -103,8 +103,8 @@ function Variant(props: VariantProps) {
 const OverflowSpan = styled("span", {
   base: {
     overflow: "hidden",
-    textOverflow: "ellipsis",
     whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
   },
 });
 
@@ -174,6 +174,72 @@ export function Design() {
               <span>us-east-1</span>
             </Row>
           </Row>
+        </Variant>
+      </Component>
+      <Component name="Resources">
+        <Variant name="Default">
+          <Child>
+            <Row space="2" vertical="center">
+              <ChildTag>OPTIONS</ChildTag>
+              <ChildTitleLink>/notes/settings</ChildTitleLink>
+            </Row>
+            <Row shrink={false} space="3" vertical="center">
+              <ChildDetail>11.2 MB</ChildDetail>
+              <ChildIcon>
+                <IconNodeRuntime />
+              </ChildIcon>
+              <ChildExtra>us-east-1</ChildExtra>
+            </Row>
+          </Child>
+        </Variant>
+        <Variant name="Overflow">
+          <Child>
+            <Row space="2" vertical="center">
+              <ChildTag>OPTIONS</ChildTag>
+              <ChildTitleLink>
+                /notes/settings/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long
+              </ChildTitleLink>
+            </Row>
+            <Row shrink={false} space="3" vertical="center">
+              <ChildDetail>11.2 MB</ChildDetail>
+              <ChildIcon>
+                <IconNodeRuntime />
+              </ChildIcon>
+              <ChildExtra>us-east-1</ChildExtra>
+            </Row>
+          </Child>
+        </Variant>
+      </Component>
+      <Component name="Outputs">
+        <Variant name="Default">
+          <Child>
+            <Row shrink={false}>
+              <ChildTitle>ApiEndpoint</ChildTitle>
+            </Row>
+            <Row vertical="center" space="2">
+              <ChildDetail>
+                https://mwismf5e9l.execute-api.us-east-1.amazonaws.com/prod
+              </ChildDetail>
+              <ChildIcon>
+                <IconClipboard />
+              </ChildIcon>
+            </Row>
+          </Child>
+        </Variant>
+        <Variant name="Overflow">
+          <Child>
+            <Row shrink={false}>
+              <ChildTitle>ApiEndpoint</ChildTitle>
+            </Row>
+            <Row vertical="center" space="2">
+              <ChildDetail>
+                https://mwismf5e9l.execute-api.us-east-1.amazonaws.com/prod/with/an/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long
+              </ChildDetail>
+              <ChildIcon>
+                <IconClipboard />
+              </ChildIcon>
+            </Row>
+          </Child>
         </Variant>
       </Component>
     </>

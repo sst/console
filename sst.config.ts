@@ -1,6 +1,7 @@
 import { SSTConfig } from "sst";
 import { API } from "./stacks/api";
 import { Web } from "./stacks/web";
+import { Dummy } from "./stacks/dummy";
 import { Auth } from "./stacks/auth";
 import { Secrets } from "./stacks/secrets";
 import { Events } from "./stacks/events";
@@ -16,7 +17,11 @@ export default {
     };
   },
   stacks(app) {
+    if (app.stage !== "production") {
+      app.setDefaultRemovalPolicy("destroy");
+    }
     app
+      .stack(Dummy)
       .stack(DNS)
       .stack(Secrets)
       .stack(Auth)

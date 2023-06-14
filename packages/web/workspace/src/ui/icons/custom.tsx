@@ -20,21 +20,6 @@ export function IconNext(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   );
 }
 
-export function IconAPI(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path
-        fill="none"
-        stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M4 13h5m3 3V8h3a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-3m8-5v8M9 16v-5.5a2.5 2.5 0 0 0-5 0V16"
-      />
-    </svg>
-  );
-}
-
 export function IconNodeRuntime(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -68,6 +53,45 @@ export function IconSubRight(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
       <path
         fill="currentColor"
         d="m14 21l-1.4-1.425L16.175 16H5V4h2v10h9.175l-3.6-3.6L14 8.975L20 15l-6 6Z"
+      />
+    </svg>
+  );
+}
+
+export function IconBuckets(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <g
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+      >
+        <path d="M4 7a8 4 0 1 0 16 0A8 4 0 1 0 4 7" />
+        <path d="M4 7c0 .664.088 1.324.263 1.965L7 19c.5 1.5 2.239 2 5 2s4.5-.5 5-2c.333-1 1.246-4.345 2.737-10.035A7.45 7.45 0 0 0 20 7" />
+      </g>
+    </svg>
+  );
+}
+
+export function IconEventBus(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+      <path
+        fill="currentColor"
+        d="M6.942 3.132a.5.5 0 0 1-.208.675a7.034 7.034 0 0 0-2.927 2.927a.5.5 0 1 1-.884-.467a8.034 8.034 0 0 1 3.344-3.344a.5.5 0 0 1 .675.209Zm6.116 0a.5.5 0 0 1 .676-.209a8.034 8.034 0 0 1 3.343 3.344a.5.5 0 0 1-.884.467a7.033 7.033 0 0 0-2.926-2.927a.5.5 0 0 1-.209-.675Zm-9.926 9.926a.5.5 0 0 1 .675.209a7.033 7.033 0 0 0 2.927 2.926a.5.5 0 1 1-.467.884a8.034 8.034 0 0 1-3.344-3.343a.5.5 0 0 1 .209-.676Zm13.737 0a.5.5 0 0 1 .208.676a8.034 8.034 0 0 1-3.343 3.343a.5.5 0 0 1-.467-.884a7.033 7.033 0 0 0 2.926-2.926a.5.5 0 0 1 .676-.209ZM10 5.5a4.56 4.56 0 0 0-.45.023a.5.5 0 0 1-.1-.996a5.502 5.502 0 0 1 5.798 3.823a.5.5 0 1 1-.954.3A4.502 4.502 0 0 0 10 5.5Zm-2.6.2a.5.5 0 0 1-.1.7A4.492 4.492 0 0 0 5.5 10c0 .82.22 1.589.602 2.25a.5.5 0 1 1-.866.5A5.477 5.477 0 0 1 4.5 10c0-1.8.865-3.397 2.2-4.4a.5.5 0 0 1 .7.1Zm7.521 5.323a.5.5 0 0 1 .327.627a5.502 5.502 0 0 1-7.998 3.114a.5.5 0 1 1 .5-.865a4.502 4.502 0 0 0 6.544-2.548a.5.5 0 0 1 .627-.328ZM8.001 10a2 2 0 1 1 4 0a2 2 0 0 1-4 0Zm2-3a3 3 0 1 0 0 6a3 3 0 0 0 0-6Z"
+      />
+    </svg>
+  );
+}
+
+export function IconCron(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path
+        fill="currentColor"
+        d="M8 14q.425 0 .713-.288T9 13q0-.425-.288-.713T8 12q-.425 0-.713.288T7 13q0 .425.288.713T8 14Zm4 0q.425 0 .713-.288T13 13q0-.425-.288-.713T12 12q-.425 0-.713.288T11 13q0 .425.288.713T12 14Zm4 0q.425 0 .713-.288T17 13q0-.425-.288-.713T16 12q-.425 0-.713.288T15 13q0 .425.288.713T16 14Zm-4 8q-1.875 0-3.513-.713t-2.85-1.924q-1.212-1.213-1.924-2.85T3 13q0-1.875.713-3.513t1.924-2.85q1.213-1.212 2.85-1.924T12 4q1.875 0 3.513.713t2.85 1.925q1.212 1.212 1.925 2.85T21 13q0 1.875-.713 3.513t-1.924 2.85q-1.213 1.212-2.85 1.925T12 22Zm0-9ZM5.6 2.35L7 3.75L2.75 8l-1.4-1.4L5.6 2.35Zm12.8 0l4.25 4.25l-1.4 1.4L17 3.75l1.4-1.4ZM12 20q2.925 0 4.963-2.038T19 13q0-2.925-2.038-4.963T12 6Q9.075 6 7.037 8.038T5 13q0 2.925 2.038 4.963T12 20Z"
       />
     </svg>
   );

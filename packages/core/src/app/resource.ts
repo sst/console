@@ -69,6 +69,21 @@ export const Enrichers = {
   async StaticSite() {
     return { cloudfrontUrl: "" };
   },
+  async NextjsSite() {
+    return { cloudfrontUrl: "" };
+  },
+  async SvelteKitSite() {
+    return { cloudfrontUrl: "" };
+  },
+  async RemixSite() {
+    return { cloudfrontUrl: "" };
+  },
+  async AstroSite() {
+    return { cloudfrontUrl: "" };
+  },
+  async SolidStartSite() {
+    return { cloudfrontUrl: "" };
+  },
 } satisfies {
   [key in Metadata["type"]]?: (
     metadata: Extract<Metadata, { type: key }>["data"],
