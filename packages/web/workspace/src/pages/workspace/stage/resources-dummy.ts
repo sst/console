@@ -148,78 +148,60 @@ export const DUMMY_RESOURCES = [
         "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
     }
   ),
-  resource(
-    "NextjsSite",
-    "nextjs-site-local-no-custom-domain",
-    {
-      customDomainUrl: undefined,
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
-      path: "packages/nextjs-site",
-    },
-    {
-      cloudfrontUrl: undefined,
-    }
-  ),
-  resource(
-    "NextjsSite",
-    "nextjs-site",
-    {
-      customDomainUrl: "https://nextjs-site.com",
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
-      path: "packages/nextjs-site",
-    },
-    {
-      cloudfrontUrl: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
-    }
-  ),
-  resource(
-    "SvelteKitSite",
-    "svelte-site",
-    {
-      customDomainUrl: "https://svelte-site.com",
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
-      path: "packages/svelte-site",
-    },
-    {
-      cloudfrontUrl: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
-    }
-  ),
-  resource(
-    "RemixSite",
-    "remix-site",
-    {
-      customDomainUrl: "https://remix-site.com",
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
-      path: "packages/remix-site",
-    },
-    {
-      cloudfrontUrl: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
-    }
-  ),
-  resource(
-    "AstroSite",
-    "astro-site",
-    {
-      customDomainUrl: "https://astro-site.com",
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
-      path: "packages/astro-site",
-    },
-    {
-      cloudfrontUrl: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
-    }
-  ),
-  resource(
-    "SolidStartSite",
-    "solid-site",
-    {
-      customDomainUrl: "https://solid-site.com",
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
-      path: "packages/solid-site",
-    },
-    {
-      cloudfrontUrl: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
-    }
-  ),
+  resource("NextjsSite", "nextjs-site-local-no-custom-domain", {
+    customDomainUrl: undefined,
+    server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+    path: "packages/nextjs-site",
+    edge: false,
+    mode: "deployed",
+    secrets: [],
+    url: "",
+  }),
+  resource("NextjsSite", "nextjs-site", {
+    customDomainUrl: "https://nextjs-site.com",
+    server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+    path: "packages/nextjs-site",
+    edge: false,
+    mode: "deployed",
+    secrets: [],
+    url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+  }),
+  resource("SvelteKitSite", "svelte-site", {
+    customDomainUrl: "https://svelte-site.com",
+    server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+    path: "packages/svelte-site",
+    edge: false,
+    mode: "deployed",
+    secrets: [],
+    url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+  }),
+  resource("RemixSite", "remix-site", {
+    customDomainUrl: "https://remix-site.com",
+    server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+    path: "packages/remix-site",
+    edge: false,
+    mode: "deployed",
+    secrets: [],
+    url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+  }),
+  resource("AstroSite", "astro-site", {
+    customDomainUrl: "https://astro-site.com",
+    server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+    path: "packages/astro-site",
+    edge: false,
+    mode: "deployed",
+    secrets: [],
+    url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+  }),
+  resource("SolidStartSite", "solid-site", {
+    customDomainUrl: "https://solid-site.com",
+    server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+    path: "packages/solid-site",
+    edge: false,
+    mode: "deployed",
+    secrets: [],
+    url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+  }),
   resource("Cognito", "cognito-auth", {
     identityPoolId: "someid",
     userPoolId: "someid",

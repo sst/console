@@ -1,4 +1,4 @@
-import { createSubscription, useReplicache } from "$/providers/replicache";
+import { createSubscription } from "$/providers/replicache";
 import { ResourceStore } from "$/data/resource";
 import { For, JSX, Match, Show, Switch, createMemo } from "solid-js";
 import { useStageContext } from "./context";
@@ -8,7 +8,6 @@ import { utility } from "$/ui/utility";
 import { Row } from "$/ui/layout";
 import {
   IconCron,
-  IconLambda,
   IconBuckets,
   IconEventBus,
   IconNodeRuntime,
@@ -943,7 +942,7 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.url ||
           props.resource.metadata.path
         }
       />
@@ -959,7 +958,7 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.url ||
           props.resource.metadata.path
         }
       />
@@ -1004,7 +1003,7 @@ export function SvelteKitSiteCard(props: CardProps<"SvelteKitSite">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.url ||
           props.resource.metadata.path
         }
       />
@@ -1049,7 +1048,7 @@ export function RemixSiteCard(props: CardProps<"RemixSite">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.url ||
           props.resource.metadata.path
         }
       />
@@ -1094,7 +1093,7 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.url ||
           props.resource.metadata.path
         }
       />
@@ -1139,7 +1138,7 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.url ||
           props.resource.metadata.path
         }
       />
