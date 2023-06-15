@@ -46,7 +46,6 @@ function ref(id: string) {
 }
 
 export const DUMMY_RESOURCES = [
-  /*
   resource("Api", "api", {
     url: "https://example.com",
     routes: [
@@ -161,8 +160,6 @@ export const DUMMY_RESOURCES = [
       cloudfrontUrl: undefined,
     }
   ),
-  */
-  /*
   resource(
     "NextjsSite",
     "nextjs-site",
@@ -322,7 +319,6 @@ export const DUMMY_RESOURCES = [
     types: undefined,
     migrator: undefined,
   }),
-  */
   func("index", "packages/function.handler"),
   func("notes_get", "packages/notes.handler"),
   func("notes_post", "packages/notes.handler"),

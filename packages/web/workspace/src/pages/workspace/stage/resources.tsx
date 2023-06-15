@@ -354,11 +354,7 @@ export function ApiCard(props: CardProps<"Api">) {
                   <Child>
                     <Row space="2" vertical="center">
                       <ChildTag>{method()}</ChildTag>
-                      <ChildTitleLink
-                        href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
-                          fn().metadata.arn.split("function:")[1]
-                        }`}
-                      >
+                      <ChildTitleLink href={`./logs/${fn().id}`}>
                         {path()}
                       </ChildTitleLink>
                     </Row>
@@ -414,11 +410,7 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
                   <Child>
                     <Row space="2" vertical="center">
                       <ChildTag>{method()}</ChildTag>
-                      <ChildTitleLink
-                        href={`https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${
-                          fn().metadata.arn.split("function:")[1]
-                        }`}
-                      >
+                      <ChildTitleLink href={`logs/${fn().id}`}>
                         {path()}
                       </ChildTitleLink>
                     </Row>
@@ -565,7 +557,9 @@ export function TopicCard(props: CardProps<"Topic">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
-                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                    <ChildTitleLink href={`./logs/${fn().id}`}>
+                      {fn().metadata.handler}
+                    </ChildTitleLink>
                   </Row>
                   <Row shrink={false} space="3" vertical="center">
                     <Show when={fn() && fn().enrichment.size}>
@@ -606,7 +600,9 @@ export function BucketCard(props: CardProps<"Bucket">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
-                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                    <ChildTitleLink href={`./logs/${fn().id}`}>
+                      {fn().metadata.handler}
+                    </ChildTitleLink>
                   </Row>
                   <Row shrink={false} space="3" vertical="center">
                     <Show when={fn() && fn().enrichment.size}>
@@ -650,7 +646,9 @@ export function KinesisStreamCard(props: CardProps<"KinesisStream">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
-                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                    <ChildTitleLink href={`./logs/${fn().id}`}>
+                      {fn().metadata.handler}
+                    </ChildTitleLink>
                   </Row>
                   <Row shrink={false} space="3" vertical="center">
                     <Show when={fn() && fn().enrichment.size}>
@@ -701,7 +699,9 @@ export function AppSyncCard(props: CardProps<"AppSync">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
-                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                    <ChildTitleLink href={`./logs/${fn().id}`}>
+                      {fn().metadata.handler}
+                    </ChildTitleLink>
                   </Row>
                   <Row shrink={false} space="3" vertical="center">
                     <Show when={fn() && fn().enrichment.size}>
@@ -744,7 +744,9 @@ export function TableCard(props: CardProps<"Table">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
-                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                    <ChildTitleLink href={`./logs/${fn().id}`}>
+                      {fn().metadata.handler}
+                    </ChildTitleLink>
                   </Row>
                   <Row shrink={false} space="3" vertical="center">
                     <Show when={fn() && fn().enrichment.size}>
@@ -785,7 +787,9 @@ export function CognitoCard(props: CardProps<"Cognito">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
-                    <ChildTitleLink>{fn().metadata.handler}</ChildTitleLink>
+                    <ChildTitleLink href={`./logs/${fn().id}`}>
+                      {fn().metadata.handler}
+                    </ChildTitleLink>
                   </Row>
                   <Row shrink={false} space="3" vertical="center">
                     <Show when={fn() && fn().enrichment.size}>
@@ -826,7 +830,9 @@ export function CronCard(props: CardProps<"Cron">) {
             <Children>
               <Child>
                 <Row space="2" vertical="center">
-                  <ChildTitleLink>{fn.metadata.handler}</ChildTitleLink>
+                  <ChildTitleLink href={`logs/${fn.id}`}>
+                    {fn.metadata.handler}
+                  </ChildTitleLink>
                 </Row>
                 <Row shrink={false} space="3" vertical="center">
                   <Show when={fn && fn.enrichment.size}>
@@ -860,7 +866,9 @@ export function QueueCard(props: CardProps<"Queue">) {
             <Children>
               <Child>
                 <Row space="2" vertical="center">
-                  <ChildTitleLink>{fn.metadata.handler}</ChildTitleLink>
+                  <ChildTitleLink href={`logs/${fn.id}`}>
+                    {fn.metadata.handler}
+                  </ChildTitleLink>
                 </Row>
                 <Row shrink={false} space="3" vertical="center">
                   <Show when={fn && fn.enrichment.size}>
@@ -917,7 +925,9 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
             <Children>
               <Child>
                 <Row space="2" vertical="center">
-                  <ChildTitleLink>{fn.metadata.handler}</ChildTitleLink>
+                  <ChildTitleLink href={`logs/${fn.id}`}>
+                    {fn.metadata.handler}
+                  </ChildTitleLink>
                 </Row>
                 <Row shrink={false} space="3" vertical="center">
                   <Show when={fn && fn.enrichment.size}>
