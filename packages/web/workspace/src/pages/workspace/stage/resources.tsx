@@ -69,7 +69,7 @@ const HeaderIcon = styled("div", {
     flexShrink: 0,
     width: 14,
     height: 14,
-    color: theme.color.text.secondary,
+    color: theme.color.icon.secondary,
   },
 });
 
@@ -165,10 +165,7 @@ export const ChildIcon = styled("div", {
   base: {
     flexShrink: 0,
     width: 16,
-    color: theme.color.text.dimmed,
-    ":hover": {
-      color: theme.color.text.secondary,
-    },
+    color: theme.color.icon.dimmed,
   },
 });
 

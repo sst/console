@@ -119,6 +119,11 @@ const light = {
     secondary: "",
     dimmed: "",
   },
+  icon: {
+    primary: "",
+    secondary: "",
+    dimmed: "",
+  },
   link: {
     primary: {
       base: "",
@@ -248,6 +253,12 @@ light.text = {
   },
   secondary: `hsla(${light.base.black}, 60%)`,
   dimmed: `hsla(${light.base.black}, 38%)`,
+};
+
+light.icon = {
+  primary: `hsla(${light.base.black}, 91%)`,
+  secondary: `hsla(${light.base.black}, 51%)`,
+  dimmed: `hsla(${light.base.black}, 32%)`,
 };
 
 light.link.primary = {
@@ -393,6 +404,12 @@ dark.text = {
   },
   secondary: `hsla(${dark.base.white}, 60%)`,
   dimmed: `hsla(${dark.base.white}, 38%)`,
+};
+
+dark.icon = {
+  primary: `hsla(${dark.base.white}, 74%)`,
+  secondary: `hsla(${dark.base.white}, 51%)`,
+  dimmed: `hsla(${dark.base.white}, 32%)`,
 };
 
 dark.link.primary = {
