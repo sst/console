@@ -67,10 +67,8 @@ const HeaderRoot = styled("div", {
 const HeaderIcon = styled("div", {
   base: {
     flexShrink: 0,
-    zIndex: -1,
     width: 14,
     height: 14,
-    opacity: theme.iconOpacity,
     color: theme.color.text.secondary,
   },
 });
@@ -167,9 +165,7 @@ export const ChildIcon = styled("div", {
   base: {
     flexShrink: 0,
     width: 16,
-    zIndex: -1,
     color: theme.color.text.dimmed,
-    opacity: theme.iconOpacity,
     ":hover": {
       color: theme.color.text.secondary,
     },
