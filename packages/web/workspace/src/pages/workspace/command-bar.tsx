@@ -9,13 +9,15 @@ import {
   createSignal,
   useContext,
 } from "solid-js";
-import { IconSubRight } from "$/ui/icons/custom";
 import {
-  IconServer,
-  IconDocument,
-  IconServerStack,
-  IconBuildingOffice,
-} from "$/ui/icons";
+  IconApi,
+  IconApp,
+  IconStage,
+  IconSubRight,
+  IconEventBus,
+  IconConstruct,
+} from "$/ui/icons/custom";
+import { IconBuildingOffice } from "$/ui/icons";
 import { useAuth } from "$/providers/auth";
 import { UserStore } from "../../data/user";
 import { WorkspaceStore } from "../../data/workspace";
@@ -79,7 +81,7 @@ export const AppProvider: ActionProvider = async () => {
   const rep = useReplicache()();
   const apps = await rep.query(AppStore.list());
   return apps.map((app) => ({
-    icon: IconServerStack,
+    icon: IconApp,
     category: "App",
     title: `Switch to "${app.name}" app`,
     run: async (control) => {
@@ -103,7 +105,7 @@ export const StageProvider: ActionProvider = async () => {
   return stages
     .filter((stage) => stage.name !== splits[3])
     .map((stage) => ({
-      icon: IconServer,
+      icon: IconStage,
       category: "Stage",
       title: `Switch to "${stage.name}" stage`,
       run: (control) => {
@@ -130,8 +132,8 @@ export const ResourceProvider: ActionProvider = async (filter) => {
   return resources.flatMap((resource) => {
     if (resource.type === "Api") {
       return resource.metadata.routes.map((rt) => ({
-        icon: IconDocument,
-        category: "API Route",
+        icon: IconApi,
+        category: "API Routes",
         title: `Go to ${rt.route}`,
         run: (control) => {
           const params = useParams();
@@ -148,8 +150,8 @@ export const ResourceProvider: ActionProvider = async (filter) => {
     if (resource.type === "EventBus") {
       return resource.metadata.rules.flatMap((rule) =>
         rule.targets.filter(Boolean).map((t) => ({
-          icon: IconDocument,
-          category: "Event Bus Subscriptions",
+          icon: IconEventBus,
+          category: "EventBus Subscriptions",
           title: `Go to ${
             // @ts-expect-error
             resources.find((r) => r.addr === t!.node)?.metadata["handler"]
