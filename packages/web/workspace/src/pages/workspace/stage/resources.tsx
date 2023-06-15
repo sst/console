@@ -212,7 +212,9 @@ export function Header(props: HeaderProps) {
     <HeaderRoot>
       <Row space="2" vertical="center">
         <Show when={props.icon}>
-          {(icon) => <HeaderIcon>{icon()({})}</HeaderIcon>}
+          {(icon) => (
+            <HeaderIcon title={props.resource.type}>{icon()({})}</HeaderIcon>
+          )}
         </Show>
         <HeaderName>{props.resource.cfnID}</HeaderName>
         <HeaderDescription>{props.description}</HeaderDescription>
