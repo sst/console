@@ -8,6 +8,7 @@ import { utility } from "$/ui/utility";
 import { Row } from "$/ui/layout";
 import {
   IconApi,
+  IconRDS,
   IconJob,
   IconAuth,
   IconCron,
@@ -22,6 +23,7 @@ import {
   IconEventBus,
   IconAstroSite,
   IconConstruct,
+  IconRemixSite,
   IconStaticSite,
   IconNextjsSite,
   IconNodeRuntime,
@@ -1056,7 +1058,7 @@ export function RemixSiteCard(props: CardProps<"RemixSite">) {
   return (
     <>
       <Header
-        icon={IconConstruct}
+        icon={IconRemixSite}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1191,7 +1193,7 @@ export function RDSCard(props: CardProps<"RDS">) {
   return (
     <>
       <Header
-        icon={IconConstruct}
+        icon={IconRDS}
         resource={props.resource}
         description={props.resource.metadata.defaultDatabaseName}
       />
