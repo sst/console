@@ -22,5 +22,4 @@ export async function publish(topic: string, properties: any) {
       ),
       topic: `console/${Config.STAGE}/${workspaceID}/${topic}`,
     })
-  );
-}
+  ); }

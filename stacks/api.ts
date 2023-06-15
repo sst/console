@@ -24,6 +24,7 @@ export function API({ stack }: StackContext) {
     lambdaFunction: Function.fromDefinition(stack, "log-poller-fetch", {
       handler: "packages/functions/src/poller/fetch.handler",
       bind: [...Object.values(secrets.database)],
+      timeout: "60 seconds",
       permissions: ["logs", "sts", "iot"],
     }),
     payloadResponseOnly: true,

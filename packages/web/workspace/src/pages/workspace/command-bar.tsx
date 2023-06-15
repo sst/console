@@ -133,7 +133,15 @@ export const ResourceProvider: ActionProvider = async (filter) => {
         icon: IconDocument,
         category: "API Route",
         title: `Go to ${rt.route}`,
-        run: () => {},
+        run: (control) => {
+          const params = useParams();
+          useNavigate()(
+            `/${params.workspaceSlug}/${appName}/${stageName}/logs/${
+              resources.find((r) => r.addr === rt.fn?.node)?.id
+            }`
+          );
+          control.hide();
+        },
       }));
     }
 
@@ -146,7 +154,14 @@ export const ResourceProvider: ActionProvider = async (filter) => {
             // @ts-expect-error
             resources.find((r) => r.addr === t!.node)?.metadata["handler"]
           }`,
-          run: () => {},
+          run: (control) => {
+            const params = useParams();
+            const id = resources.find((r) => r.addr === t?.node)?.id;
+            useNavigate()(
+              `/${params.workspaceSlug}/${appName}/${stageName}/logs/${id}`
+            );
+            control.hide();
+          },
         }))
       );
     }

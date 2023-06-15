@@ -15,7 +15,8 @@ interface State {
   stageID: string;
   logGroup: string;
   status?: {
-    timestamp: number;
+    offset: number;
+    start: number;
     done: boolean;
     attempts: number;
   };
@@ -23,7 +24,8 @@ interface State {
 
 export async function handler(input: State) {
   const attempts = input.status?.attempts || 0;
-  const timestamp = input.status?.timestamp || Date.now();
+  const start = input.status?.start || Date.now();
+  const offset = input.status?.offset || -30 * 1000;
   if (attempts === 100) {
     await LogPoller.clear(input.pollerID);
     return {
@@ -44,6 +46,7 @@ export async function handler(input: State) {
   const account = await AWS.Account.fromID(stage!.awsAccountID);
   const credentials = await AWS.assumeRole(account!.accountID);
   const client = new CloudWatchLogsClient({
+    region: stage!.region,
     credentials,
   });
 
@@ -109,16 +112,44 @@ export async function handler(input: State) {
     if (streams.length === 100) break;
   }
 
-  for await (const event of fetchEvents(input.logGroup, timestamp, streams)) {
-    await Realtime.publish("log", {
-      logGroup: input.logGroup,
-      event,
-    });
+  let count = 0;
+  console.log("fetching since", offset);
+  for await (const event of fetchEvents(
+    input.logGroup,
+    start + offset,
+    streams
+  )) {
+    count++;
+    const tabs = (event.message || "").split("\t");
+
+    if (tabs[0]?.startsWith("START")) {
+      const splits = tabs[0].split(" ");
+      await Realtime.publish("log.start", {
+        t: event.timestamp,
+        l: input.logGroup,
+        r: splits[2],
+      });
+      continue;
+    }
+
+    if (tabs[0]?.length === 24) {
+      await Realtime.publish("log.entry", {
+        t: event.timestamp,
+        l: input.logGroup,
+        r: tabs[1],
+        k: tabs[2],
+        m: tabs[3],
+        i: event.eventId,
+      });
+      continue;
+    }
   }
+  console.log("published", count, "events");
 
   return {
     attempts: attempts + 1,
-    timestamp: Date.now(),
+    offset: Date.now() - start - 30 * 1000,
+    start,
     done: false,
   } satisfies State["status"];
 }

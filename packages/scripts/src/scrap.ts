@@ -4,7 +4,7 @@ import { provideActor } from "@console/core/actor";
 
 {
   const workspaceID = await Workspace.create({
-    slug: "bumi",
+    slug: "goodvisit",
   });
 
   provideActor({
