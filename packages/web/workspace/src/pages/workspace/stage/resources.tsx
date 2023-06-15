@@ -943,7 +943,8 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.enrichment.cloudfrontUrl
+          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.path
         }
       />
     </>
