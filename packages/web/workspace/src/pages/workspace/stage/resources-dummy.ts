@@ -83,7 +83,7 @@ export const DUMMY_RESOURCES = [
     httpApiId: "someapi",
     customDomainUrl: undefined,
   }),
-  resource("ApiGatewayV1Api", "another-api", {
+  resource("ApiGatewayV1Api", "apiv1-api", {
     url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com/jayair/",
     routes: [
       {
@@ -294,6 +294,18 @@ export const DUMMY_RESOURCES = [
     routes: [
       {
         route: "$connect",
+        fn: ref("index"),
+      },
+      {
+        route: "$default",
+        fn: ref("index"),
+      },
+      {
+        route: "$disconnect",
+        fn: ref("index"),
+      },
+      {
+        route: "$sendMessage",
         fn: ref("index"),
       },
     ],

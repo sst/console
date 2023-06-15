@@ -66,6 +66,9 @@ export const Enrichers = {
       size: info.Configuration?.CodeSize,
     };
   },
+  async WebSocketApi() {
+    return { cloudfrontUrl: "" };
+  },
   async StaticSite() {
     return { cloudfrontUrl: "" };
   },

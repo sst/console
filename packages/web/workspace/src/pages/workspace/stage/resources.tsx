@@ -8,6 +8,7 @@ import { utility } from "$/ui/utility";
 import { Row } from "$/ui/layout";
 import {
   IconCron,
+  IconLambda,
   IconBuckets,
   IconEventBus,
   IconNodeRuntime,
@@ -157,7 +158,7 @@ export const ChildIcon = styled("div", {
     flexShrink: 0,
     width: 16,
     color: theme.color.text.dimmed,
-    opacity: 0.85,
+    opacity: theme.iconOpacity,
     ":hover": {
       color: theme.color.text.secondary,
     },
@@ -167,16 +168,30 @@ export const ChildIcon = styled("div", {
 export const ChildTag = styled("div", {
   base: {
     flex: "0 0 auto",
-    width: "50px",
-    height: "20px",
+    padding: "5px 8px 4px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: theme.color.text.secondary,
+    color: theme.color.text.dimmed,
     fontSize: "0.5625rem",
     textTransform: "uppercase",
     border: `1px solid ${theme.color.divider.base}`,
     borderRadius: theme.borderRadius,
+  },
+  variants: {
+    size: {
+      large: {
+        paddingLeft: 0,
+        paddingRight: 0,
+        width: "85px",
+      },
+      small: {
+        paddingLeft: 0,
+        paddingRight: 0,
+        width: "50px",
+      },
+      auto: {},
+    },
   },
 });
 
@@ -227,10 +242,14 @@ export function Resources() {
             r.type === "Cognito" ||
             r.type === "AppSync" ||
             r.type === "EventBus" ||
+            r.type === "AstroSite" ||
+            r.type === "RemixSite" ||
             r.type === "StaticSite" ||
             r.type === "NextjsSite" ||
             r.type === "WebSocketApi" ||
             r.type === "KinesisStream" ||
+            r.type === "SvelteKitSite" ||
+            r.type === "SolidStartSite" ||
             r.type === "ApiGatewayV1Api"
         )
         .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
@@ -266,6 +285,26 @@ export function Resources() {
             <Match when={resource.type === "NextjsSite" && resource}>
               {(resource) => (
                 <NextjsSiteCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "SvelteKitSite" && resource}>
+              {(resource) => (
+                <SvelteKitSiteCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "AstroSite" && resource}>
+              {(resource) => (
+                <AstroSiteCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "RemixSite" && resource}>
+              {(resource) => (
+                <RemixSiteCard resource={resource()} all={resources()} />
+              )}
+            </Match>
+            <Match when={resource.type === "SolidStartSite" && resource}>
+              {(resource) => (
+                <SolidStartSiteCard resource={resource()} all={resources()} />
               )}
             </Match>
             <Match when={resource.type === "StaticSite" && resource}>
@@ -353,7 +392,7 @@ export function ApiCard(props: CardProps<"Api">) {
                 <Show when={fn()}>
                   <Child>
                     <Row space="2" vertical="center">
-                      <ChildTag>{method()}</ChildTag>
+                      <ChildTag size="small">{method()}</ChildTag>
                       <ChildTitleLink href={`./logs/${fn().id}`}>
                         {path()}
                       </ChildTitleLink>
@@ -389,8 +428,7 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
-          props.resource.metadata.httpApiId ||
-          ""
+          props.resource.enrichment.cloudfrontUrl
         }
       />
       {props.resource.metadata.routes.length > 0 && (
@@ -403,15 +441,14 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
                     (r) => r.type === "Function" && r.addr === route.fn?.node
                   ) as Extract<Resource.Info, { type: "Function" }>
               );
-              const method = createMemo(() => route.route.split(" ")[0]);
-              const path = createMemo(() => route.route.split(" ")[1]);
+              const method = createMemo(() => route.route.slice(1));
               return (
                 <Show when={fn()}>
                   <Child>
                     <Row space="2" vertical="center">
-                      <ChildTag>{method()}</ChildTag>
+                      <ChildTag size="large">{method()}</ChildTag>
                       <ChildTitleLink href={`logs/${fn().id}`}>
-                        {path()}
+                        {fn().metadata.handler}
                       </ChildTitleLink>
                     </Row>
                     <Row shrink={false} space="3" vertical="center">
@@ -465,7 +502,7 @@ export function ApiGatewayV1ApiCard(props: CardProps<"ApiGatewayV1Api">) {
                 <Show when={fn()}>
                   <Child>
                     <Row space="2" vertical="center">
-                      <ChildTag>{method()}</ChildTag>
+                      <ChildTag size="small">{method()}</ChildTag>
                       <ChildTitleLink href={`logs/${fn().id}`}>
                         {path()}
                       </ChildTitleLink>
@@ -512,6 +549,7 @@ export function EventBusCard(props: CardProps<"EventBus">) {
                   return (
                     <Child>
                       <Row space="2" vertical="center">
+                        <ChildTag>Rule</ChildTag>
                         <ChildTitleLink href={`./logs/${fn().id}`}>
                           {fn().metadata.handler}
                         </ChildTitleLink>
@@ -557,6 +595,7 @@ export function TopicCard(props: CardProps<"Topic">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
+                    <ChildTag>Subscriber</ChildTag>
                     <ChildTitleLink href={`./logs/${fn().id}`}>
                       {fn().metadata.handler}
                     </ChildTitleLink>
@@ -600,6 +639,7 @@ export function BucketCard(props: CardProps<"Bucket">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
+                    <ChildTag>Notification</ChildTag>
                     <ChildTitleLink href={`./logs/${fn().id}`}>
                       {fn().metadata.handler}
                     </ChildTitleLink>
@@ -646,6 +686,7 @@ export function KinesisStreamCard(props: CardProps<"KinesisStream">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
+                    <ChildTag>Consumer</ChildTag>
                     <ChildTitleLink href={`./logs/${fn().id}`}>
                       {fn().metadata.handler}
                     </ChildTitleLink>
@@ -699,6 +740,7 @@ export function AppSyncCard(props: CardProps<"AppSync">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
+                    <ChildTag>Source</ChildTag>
                     <ChildTitleLink href={`./logs/${fn().id}`}>
                       {fn().metadata.handler}
                     </ChildTitleLink>
@@ -744,6 +786,7 @@ export function TableCard(props: CardProps<"Table">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
+                    <ChildTag>Consumer</ChildTag>
                     <ChildTitleLink href={`./logs/${fn().id}`}>
                       {fn().metadata.handler}
                     </ChildTitleLink>
@@ -787,6 +830,7 @@ export function CognitoCard(props: CardProps<"Cognito">) {
               return (
                 <Child>
                   <Row space="2" vertical="center">
+                    <ChildTag>Trigger</ChildTag>
                     <ChildTitleLink href={`./logs/${fn().id}`}>
                       {fn().metadata.handler}
                     </ChildTitleLink>
@@ -830,6 +874,7 @@ export function CronCard(props: CardProps<"Cron">) {
             <Children>
               <Child>
                 <Row space="2" vertical="center">
+                  <ChildTag>Job</ChildTag>
                   <ChildTitleLink href={`logs/${fn.id}`}>
                     {fn.metadata.handler}
                   </ChildTitleLink>
@@ -866,6 +911,7 @@ export function QueueCard(props: CardProps<"Queue">) {
             <Children>
               <Child>
                 <Row space="2" vertical="center">
+                  <ChildTag>Consumer</ChildTag>
                   <ChildTitleLink href={`logs/${fn.id}`}>
                     {fn.metadata.handler}
                   </ChildTitleLink>
@@ -925,6 +971,187 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
             <Children>
               <Child>
                 <Row space="2" vertical="center">
+                  <ChildTag>Server</ChildTag>
+                  <ChildTitleLink href={`logs/${fn.id}`}>
+                    {fn.metadata.handler}
+                  </ChildTitleLink>
+                </Row>
+                <Row shrink={false} space="3" vertical="center">
+                  <Show when={fn && fn.enrichment.size}>
+                    {(value) => (
+                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+                    )}
+                  </Show>
+                  <ChildIcon>
+                    <IconNodeRuntime />
+                  </ChildIcon>
+                </Row>
+              </Child>
+            </Children>
+          );
+        }}
+      </Show>
+    </>
+  );
+}
+
+export function SvelteKitSiteCard(props: CardProps<"SvelteKitSite">) {
+  return (
+    <>
+      <Header
+        icon={IconGlobeAlt}
+        resource={props.resource}
+        description={
+          props.resource.metadata.customDomainUrl ||
+          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.path
+        }
+      />
+      <Show when={props.resource.metadata.server}>
+        {(server) => {
+          const fn = props.all.find(
+            (r) => r.type === "Function" && r.metadata.arn === server()
+          ) as Extract<Resource.Info, { type: "Function" }>;
+          return (
+            <Children>
+              <Child>
+                <Row space="2" vertical="center">
+                  <ChildTag>Server</ChildTag>
+                  <ChildTitleLink href={`logs/${fn.id}`}>
+                    {fn.metadata.handler}
+                  </ChildTitleLink>
+                </Row>
+                <Row shrink={false} space="3" vertical="center">
+                  <Show when={fn && fn.enrichment.size}>
+                    {(value) => (
+                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+                    )}
+                  </Show>
+                  <ChildIcon>
+                    <IconNodeRuntime />
+                  </ChildIcon>
+                </Row>
+              </Child>
+            </Children>
+          );
+        }}
+      </Show>
+    </>
+  );
+}
+
+export function RemixSiteCard(props: CardProps<"RemixSite">) {
+  return (
+    <>
+      <Header
+        icon={IconGlobeAlt}
+        resource={props.resource}
+        description={
+          props.resource.metadata.customDomainUrl ||
+          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.path
+        }
+      />
+      <Show when={props.resource.metadata.server}>
+        {(server) => {
+          const fn = props.all.find(
+            (r) => r.type === "Function" && r.metadata.arn === server()
+          ) as Extract<Resource.Info, { type: "Function" }>;
+          return (
+            <Children>
+              <Child>
+                <Row space="2" vertical="center">
+                  <ChildTag>Server</ChildTag>
+                  <ChildTitleLink href={`logs/${fn.id}`}>
+                    {fn.metadata.handler}
+                  </ChildTitleLink>
+                </Row>
+                <Row shrink={false} space="3" vertical="center">
+                  <Show when={fn && fn.enrichment.size}>
+                    {(value) => (
+                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+                    )}
+                  </Show>
+                  <ChildIcon>
+                    <IconNodeRuntime />
+                  </ChildIcon>
+                </Row>
+              </Child>
+            </Children>
+          );
+        }}
+      </Show>
+    </>
+  );
+}
+
+export function AstroSiteCard(props: CardProps<"AstroSite">) {
+  return (
+    <>
+      <Header
+        icon={IconGlobeAlt}
+        resource={props.resource}
+        description={
+          props.resource.metadata.customDomainUrl ||
+          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.path
+        }
+      />
+      <Show when={props.resource.metadata.server}>
+        {(server) => {
+          const fn = props.all.find(
+            (r) => r.type === "Function" && r.metadata.arn === server()
+          ) as Extract<Resource.Info, { type: "Function" }>;
+          return (
+            <Children>
+              <Child>
+                <Row space="2" vertical="center">
+                  <ChildTag>Server</ChildTag>
+                  <ChildTitleLink href={`logs/${fn.id}`}>
+                    {fn.metadata.handler}
+                  </ChildTitleLink>
+                </Row>
+                <Row shrink={false} space="3" vertical="center">
+                  <Show when={fn && fn.enrichment.size}>
+                    {(value) => (
+                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+                    )}
+                  </Show>
+                  <ChildIcon>
+                    <IconNodeRuntime />
+                  </ChildIcon>
+                </Row>
+              </Child>
+            </Children>
+          );
+        }}
+      </Show>
+    </>
+  );
+}
+
+export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
+  return (
+    <>
+      <Header
+        icon={IconGlobeAlt}
+        resource={props.resource}
+        description={
+          props.resource.metadata.customDomainUrl ||
+          props.resource.enrichment.cloudfrontUrl ||
+          props.resource.metadata.path
+        }
+      />
+      <Show when={props.resource.metadata.server}>
+        {(server) => {
+          const fn = props.all.find(
+            (r) => r.type === "Function" && r.metadata.arn === server()
+          ) as Extract<Resource.Info, { type: "Function" }>;
+          return (
+            <Children>
+              <Child>
+                <Row space="2" vertical="center">
+                  <ChildTag>Server</ChildTag>
                   <ChildTitleLink href={`logs/${fn.id}`}>
                     {fn.metadata.handler}
                   </ChildTitleLink>
