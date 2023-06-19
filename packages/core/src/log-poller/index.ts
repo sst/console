@@ -53,7 +53,7 @@ export const subscribe = zod(
           await sfn.send(
             new StartExecutionCommand({
               stateMachineArn: process.env.LOG_POLLER_ARN,
-              name: input.logGroup,
+              name: existing!,
               input: JSON.stringify({
                 ...input,
                 workspaceID: useWorkspace(),
