@@ -25,8 +25,9 @@ export const handler = async (evt: any) => {
     });
     return;
   }
+
   await LogPoller.remove(input.pollerID);
-  if (["SUCCEEDED"].includes(evt.detail.status)) return;
-  const restarted = await LogPoller.subscribe(input);
-  console.log("restarted", restarted);
+  // if (["SUCCEEDED"].includes(evt.detail.status)) return;
+  // const restarted = await LogPoller.subscribe(input);
+  // console.log("restarted", restarted);
 };
