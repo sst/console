@@ -26,6 +26,9 @@ import {
   IconRemixSite,
   IconStaticSite,
   IconNextjsSite,
+  IconJavaRuntime,
+  IconDotNetRuntime,
+  IconGoRuntime,
   IconNodeRuntime,
   IconWebSocketApi,
   IconSvelteKitSite,
@@ -164,7 +167,8 @@ export const ChildExtra = styled("span", {
 export const ChildIcon = styled("div", {
   base: {
     flexShrink: 0,
-    width: 16,
+    height: 14,
+    width: 14,
     color: theme.color.icon.dimmed,
   },
 });
@@ -412,7 +416,7 @@ export function ApiCard(props: CardProps<"Api">) {
                         )}
                       </Show>
                       <ChildIcon>
-                        <IconNodeRuntime />
+                        <IconDotNetRuntime />
                       </ChildIcon>
                     </Row>
                   </Child>
