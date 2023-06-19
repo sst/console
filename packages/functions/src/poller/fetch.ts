@@ -23,7 +23,6 @@ interface State {
 }
 
 export async function handler(input: State) {
-  throw "lol";
   const attempts = input.status?.attempts || 0;
   const start = input.status?.start || Date.now();
   const offset = input.status?.offset || -30 * 1000;
