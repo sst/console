@@ -6,15 +6,16 @@ import {
   Wait,
   WaitTime,
 } from "aws-cdk-lib/aws-stepfunctions";
+import * as events from "aws-cdk-lib/aws-events";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
-import { StackContext, Api, use, Function } from "sst/constructs";
+import { StackContext, Api, use, Function, EventBus } from "sst/constructs";
 import { Auth } from "./auth";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { DNS } from "./dns";
 import { Duration } from "aws-cdk-lib/core";
 
-export function API({ stack }: StackContext) {
+export function API({ stack, app }: StackContext) {
   const auth = use(Auth);
   const secrets = use(Secrets);
   const bus = use(Events);
@@ -42,6 +43,31 @@ export function API({ stack }: StackContext) {
         )
         .otherwise(new Pass(stack, "done"))
     ),
+  });
+
+  new EventBus(stack, "defaultBus", {
+    cdk: {
+      eventBus: events.EventBus.fromEventBusName(stack, "default", "default"),
+    },
+  }).addRules(stack, {
+    "log-poller-status": {
+      pattern: {
+        detailType: ["Step Functions Execution Status Change"],
+        source: ["aws.states"],
+      },
+      targets: {
+        handler: {
+          function: {
+            handler: "packages/functions/src/events/log-poller-status.handler",
+            bind: [bus, ...Object.values(secrets.database)],
+            permissions: ["states"],
+            environment: {
+              LOG_POLLER_ARN: poller.stateMachineArn,
+            },
+          },
+        },
+      },
+    },
   });
 
   const api = new Api(stack, "api", {

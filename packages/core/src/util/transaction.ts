@@ -28,10 +28,11 @@ export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
     return db.transaction(
       async (tx) => {
         const effects: (() => void | Promise<void>)[] = [];
-        TransactionContext.provide({ tx, effects: effects });
+        TransactionContext.provide({ tx, effects });
         try {
           const result = await callback(tx);
           await Promise.all(effects.map((x) => x()));
+          TransactionContext.reset();
           return result;
         } catch (err) {
           console.error(err);
@@ -47,5 +48,6 @@ export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
 
 export function createTransactionEffect(effect: () => void | Promise<void>) {
   const { effects } = TransactionContext.use();
+  console.log("pushing effects", effect);
   effects.push(effect);
 }

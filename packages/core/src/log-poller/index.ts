@@ -19,7 +19,7 @@ export const subscribe = zod(
     stageID: true,
     logGroup: true,
   }),
-  async (input) =>
+  (input) =>
     useTransaction(async (tx) => {
       let existing = await tx
         .select({
@@ -47,7 +47,7 @@ export const subscribe = zod(
           })
           .execute();
         createTransactionEffect(async () => {
-          await sfn.send(
+          const result = await sfn.send(
             new StartExecutionCommand({
               stateMachineArn: process.env.LOG_POLLER_ARN,
               input: JSON.stringify({
@@ -58,7 +58,9 @@ export const subscribe = zod(
             })
           );
         });
+        return true;
       }
+      return false;
     })
 );
 
@@ -72,6 +74,37 @@ export const fromID = zod(Info.shape.id, async (id) =>
       )
       .then((rows) => rows[0])
   )
+);
+
+export const remove = zod(Info.shape.id, async (id) =>
+  useTransaction((tx) =>
+    tx
+      .delete(log_poller)
+      .where(
+        and(eq(log_poller.id, id), eq(log_poller.workspaceID, useWorkspace()))
+      )
+  )
+);
+
+export const setExecution = zod(
+  Info.pick({
+    id: true,
+    executionARN: true,
+  }),
+  async (input) =>
+    useTransaction((tx) =>
+      tx
+        .update(log_poller)
+        .set({
+          executionARN: input.executionARN,
+        })
+        .where(
+          and(
+            eq(log_poller.id, input.id),
+            eq(log_poller.workspaceID, useWorkspace())
+          )
+        )
+    )
 );
 
 export const clear = zod(Info.shape.id, async (id) =>

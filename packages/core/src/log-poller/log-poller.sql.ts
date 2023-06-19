@@ -14,6 +14,7 @@ export const log_poller = mysqlTable(
     ...timestamps,
     stageID: cuid("stage_id").notNull(),
     logGroup: varchar("log_group", { length: 512 }).notNull(),
+    executionARN: text("execution_arn"),
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),

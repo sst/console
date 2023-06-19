@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -18,8 +18,8 @@ importers:
         specifier: 10.1.156
         version: 10.1.156
       sst:
-        specifier: 2.13.5
-        version: 2.13.5
+        specifier: 2.13.8
+        version: 2.13.8
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -85,8 +85,8 @@ importers:
         specifier: 0.17.6-76e73f3
         version: 0.17.6-76e73f3
       sst:
-        specifier: 2.13.5
-        version: 2.13.5
+        specifier: 2.13.8
+        version: 2.13.8
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -128,8 +128,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.13.5
-        version: 2.13.5
+        specifier: 2.13.8
+        version: 2.13.8
 
   packages/scripts:
     dependencies:
@@ -137,8 +137,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       sst:
-        specifier: 2.13.5
-        version: 2.13.5
+        specifier: 2.13.8
+        version: 2.13.8
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -198,8 +198,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.13.5
-        version: 2.13.5
+        specifier: 2.13.8
+        version: 2.13.8
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -9683,8 +9683,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.13.5:
-    resolution: {integrity: sha512-RQ11+yluu8LTwzYawOnemSbLjS4M0VCaDTUdvWGP5PxW5OAd9ijZqe8QxNWv3lv5YlhhK+Bn3R56tXv77V9Adg==}
+  /sst@2.13.8:
+    resolution: {integrity: sha512-3cxrnp06GfDuNjlr7qtqIP2yj0lXvfMYqMN1SexfOjE4cq22Zc90JtyUF5pEsYYS7wNqNyBwa6/PVkjHNwJMUg==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

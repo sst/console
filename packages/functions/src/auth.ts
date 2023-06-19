@@ -31,7 +31,7 @@ export const handler = AuthHandler({
       solid: "",
     };
   },
-  onSuccess: async (input) => {
+  onSuccess: async (input, response) => {
     let email: string | undefined;
 
     if (input.provider === "github") {
@@ -69,13 +69,13 @@ export const handler = AuthHandler({
       });
     }
 
-    return {
+    return response.session({
       type: "account",
       properties: {
         accountID: accountID!,
         email: email!,
       },
-    };
+    });
   },
   onError: async () => ({
     statusCode: 401,

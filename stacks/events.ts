@@ -1,5 +1,7 @@
 import { EventBus, StackContext, Function, use } from "sst/constructs";
 import { Secrets } from "./secrets";
+import * as events from "aws-cdk-lib/aws-events";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 
 export function Events({ stack }: StackContext) {
   const bus = new EventBus(stack, "bus", {
