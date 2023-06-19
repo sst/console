@@ -27,7 +27,6 @@ export async function handler(input: State) {
   const start = input.status?.start || Date.now();
   const offset = input.status?.offset || -30 * 1000;
   if (attempts === 100) {
-    await LogPoller.clear(input.pollerID);
     return {
       done: true,
     };
