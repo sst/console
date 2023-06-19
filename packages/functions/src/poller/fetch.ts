@@ -23,6 +23,7 @@ interface State {
 }
 
 export async function handler(input: State) {
+  throw "lol";
   const attempts = input.status?.attempts || 0;
   const start = input.status?.start || Date.now();
   const offset = input.status?.offset || -30 * 1000;
@@ -54,21 +55,25 @@ export async function handler(input: State) {
     console.log("fetching streams for", logGroup);
 
     while (true) {
-      const response = await client.send(
-        new DescribeLogStreamsCommand({
-          logGroupIdentifier: logGroup,
-          nextToken: nextToken,
-          orderBy: "LastEventTime",
-          descending: true,
-        })
-      );
+      try {
+        const response = await client.send(
+          new DescribeLogStreamsCommand({
+            logGroupIdentifier: logGroup,
+            nextToken: nextToken,
+            orderBy: "LastEventTime",
+            descending: true,
+          })
+        );
 
-      for (const logStream of response.logStreams || []) {
-        yield logStream;
-      }
+        for (const logStream of response.logStreams || []) {
+          yield logStream;
+        }
 
-      nextToken = response.nextToken;
-      if (!nextToken) {
+        nextToken = response.nextToken;
+        if (!nextToken) {
+          break;
+        }
+      } catch (e) {
         break;
       }
     }

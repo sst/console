@@ -1,5 +1,6 @@
 import { provideActor } from "@console/core/actor";
 import { LogPoller } from "@console/core/log-poller";
+import { Realtime } from "@console/core/realtime";
 
 export const handler = async (evt: any) => {
   console.log(evt);
@@ -30,4 +31,6 @@ export const handler = async (evt: any) => {
   // if (["SUCCEEDED"].includes(evt.detail.status)) return;
   // const restarted = await LogPoller.subscribe(input);
   // console.log("restarted", restarted);
+
+  await Realtime.publish("poke", {});
 };

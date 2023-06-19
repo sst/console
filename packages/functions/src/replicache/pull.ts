@@ -11,6 +11,7 @@ import { awsAccount } from "@console/core/aws/aws.sql";
 import { replicache_cvr } from "@console/core/replicache/replicache.sql";
 import { createId } from "@console/core/util/sql";
 import { mapValues } from "remeda";
+import { log_poller } from "@console/core/log-poller/log-poller.sql";
 
 const VERSION = 2;
 export const handler = ApiHandler(async () => {
@@ -57,7 +58,15 @@ export const handler = ApiHandler(async () => {
           op: "clear",
         });
       }
-      const tables = { workspace, user, awsAccount, app, stage, resource };
+      const tables = {
+        workspace,
+        user,
+        awsAccount,
+        app,
+        stage,
+        resource,
+        log_poller,
+      };
       const results: [string, { id: string; time_updated: string }[]][] = [];
       for (const [name, table] of Object.entries(tables)) {
         const rows = await tx

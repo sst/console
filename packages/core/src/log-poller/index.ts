@@ -8,10 +8,12 @@ import cuid2 from "@paralleldrive/cuid2";
 import { and, eq } from "drizzle-orm";
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
 import { useWorkspace } from "../actor";
+import { z } from "zod";
 
 export const Info = createSelectSchema(log_poller, {
   id: (schema) => schema.id.cuid2(),
 });
+export type Info = z.infer<typeof Info>;
 
 const sfn = new SFNClient({});
 export const subscribe = zod(
@@ -36,6 +38,7 @@ export const subscribe = zod(
         .execute()
         .then((rows) => rows[0]?.id);
       if (!existing) {
+        console.log("log poller", "starting new execution");
         existing = cuid2.createId();
         await tx
           .insert(log_poller)
@@ -47,7 +50,7 @@ export const subscribe = zod(
           })
           .execute();
         createTransactionEffect(async () => {
-          const result = await sfn.send(
+          await sfn.send(
             new StartExecutionCommand({
               stateMachineArn: process.env.LOG_POLLER_ARN,
               input: JSON.stringify({
