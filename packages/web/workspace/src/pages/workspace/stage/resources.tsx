@@ -1,7 +1,5 @@
-import { createSubscription } from "$/providers/replicache";
-import { ResourceStore } from "$/data/resource";
 import { For, JSX, Match, Show, Switch, createMemo } from "solid-js";
-import { useStageContext } from "./context";
+import { useResourcesContext } from "./context";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
@@ -9,20 +7,15 @@ import { Row } from "$/ui/layout";
 import {
   IconApi,
   IconRDS,
-  IconJob,
-  IconAuth,
   IconCron,
   IconTopic,
   IconTable,
   IconQueue,
-  IconConfig,
-  IconScript,
   IconBucket,
   IconAppSync,
   IconCognito,
   IconEventBus,
   IconAstroSite,
-  IconConstruct,
   IconRemixSite,
   IconStaticSite,
   IconNextjsSite,
@@ -32,14 +25,12 @@ import {
   IconNodeRuntime,
   IconWebSocketApi,
   IconSvelteKitSite,
-  IconPythonRuntime,
   IconKinesisStream,
   IconSolidStartSite,
   IconApiGatewayV1Api,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
-import { Link, useSearchParams } from "@solidjs/router";
-import { DUMMY_RESOURCES } from "./resources-dummy";
+import { Link } from "@solidjs/router";
 
 const Card = styled("div", {
   base: {
@@ -109,6 +100,9 @@ const Children = styled("div", {
     ...utility.stack(0),
     padding: `0 ${theme.space[3]}`,
     borderTop: `1px solid ${theme.color.divider.surface}`,
+    ":empty": {
+      display: "none",
+    },
   },
 });
 
@@ -226,17 +220,7 @@ export function Header(props: HeaderProps) {
 }
 
 export function Resources() {
-  const { stage } = useStageContext();
-  const [query] = useSearchParams();
-  const resources = createSubscription(
-    () =>
-      query.dummy
-        ? async (): Promise<Resource.Info[]> => {
-            return DUMMY_RESOURCES;
-          }
-        : ResourceStore.forStage(stage.id),
-    []
-  );
+  const resources = useResourcesContext();
   return (
     <For
       each={resources()
@@ -268,99 +252,61 @@ export function Resources() {
         <Card>
           <Switch>
             <Match when={resource.type === "Api" && resource}>
-              {(resource) => (
-                <ApiCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <ApiCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "ApiGatewayV1Api" && resource}>
-              {(resource) => (
-                <ApiGatewayV1ApiCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <ApiGatewayV1ApiCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "AppSync" && resource}>
-              {(resource) => (
-                <AppSyncCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <AppSyncCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "WebSocketApi" && resource}>
-              {(resource) => (
-                <WebSocketApiCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <WebSocketApiCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "EventBus" && resource}>
-              {(resource) => (
-                <EventBusCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <EventBusCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "NextjsSite" && resource}>
-              {(resource) => (
-                <NextjsSiteCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <NextjsSiteCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "SvelteKitSite" && resource}>
-              {(resource) => (
-                <SvelteKitSiteCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <SvelteKitSiteCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "AstroSite" && resource}>
-              {(resource) => (
-                <AstroSiteCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <AstroSiteCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "RemixSite" && resource}>
-              {(resource) => (
-                <RemixSiteCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <RemixSiteCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "SolidStartSite" && resource}>
-              {(resource) => (
-                <SolidStartSiteCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <SolidStartSiteCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "StaticSite" && resource}>
-              {(resource) => (
-                <StaticSiteCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <StaticSiteCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "RDS" && resource}>
-              {(resource) => (
-                <RDSCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <RDSCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "Topic" && resource}>
-              {(resource) => (
-                <TopicCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <TopicCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "KinesisStream" && resource}>
-              {(resource) => (
-                <KinesisStreamCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <KinesisStreamCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "Queue" && resource}>
-              {(resource) => (
-                <QueueCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <QueueCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "Bucket" && resource}>
-              {(resource) => (
-                <BucketCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <BucketCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "Cognito" && resource}>
-              {(resource) => (
-                <CognitoCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <CognitoCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "Cron" && resource}>
-              {(resource) => (
-                <CronCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <CronCard resource={resource()} />}
             </Match>
             <Match when={resource.type === "Table" && resource}>
-              {(resource) => (
-                <TableCard resource={resource()} all={resources()} />
-              )}
+              {(resource) => <TableCard resource={resource()} />}
             </Match>
           </Switch>
         </Card>
@@ -371,7 +317,6 @@ export function Resources() {
 
 interface CardProps<Type extends Resource.Info["type"]> {
   resource: Extract<Resource.Info, { type: Type }>;
-  all: Resource.Info[];
 }
 
 export function ApiCard(props: CardProps<"Api">) {
@@ -390,37 +335,14 @@ export function ApiCard(props: CardProps<"Api">) {
         <Children>
           <For each={props.resource.metadata.routes}>
             {(route) => {
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) => r.type === "Function" && r.addr === route.fn?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
               const method = createMemo(() => route.route.split(" ")[0]);
               const path = createMemo(() => route.route.split(" ")[1]);
               return (
-                <Show when={fn()}>
-                  <Child>
-                    <Row space="2" vertical="center">
-                      <ChildTag size="small">{method()}</ChildTag>
-                      <ChildTitleLink href={`./logs/${fn().id}`}>
-                        {path()}
-                      </ChildTitleLink>
-                    </Row>
-                    <Row shrink={false} space="3" vertical="center">
-                      <Show when={fn() && fn().enrichment.size}>
-                        {(value) => (
-                          <ChildDetail>
-                            {Math.ceil(value() / 1024)} KB
-                          </ChildDetail>
-                        )}
-                      </Show>
-                      <ChildIcon>
-                        <IconDotNetRuntime />
-                      </ChildIcon>
-                    </Row>
-                  </Child>
-                </Show>
+                <FunctionChild
+                  tag={method()}
+                  title={path()}
+                  id={route.fn?.node}
+                />
               );
             }}
           </For>
@@ -441,45 +363,21 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
           props.resource.enrichment.cloudfrontUrl
         }
       />
-      {props.resource.metadata.routes.length > 0 && (
-        <Children>
-          <For each={props.resource.metadata.routes}>
-            {(route) => {
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) => r.type === "Function" && r.addr === route.fn?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
-              const method = createMemo(() => route.route.slice(1));
-              return (
-                <Show when={fn()}>
-                  <Child>
-                    <Row space="2" vertical="center">
-                      <ChildTag size="large">{method()}</ChildTag>
-                      <ChildTitleLink href={`logs/${fn().id}`}>
-                        {fn().metadata.handler}
-                      </ChildTitleLink>
-                    </Row>
-                    <Row shrink={false} space="3" vertical="center">
-                      <Show when={fn() && fn().enrichment.size}>
-                        {(value) => (
-                          <ChildDetail>
-                            {Math.ceil(value() / 1024)} KB
-                          </ChildDetail>
-                        )}
-                      </Show>
-                      <ChildIcon>
-                        <IconNodeRuntime />
-                      </ChildIcon>
-                    </Row>
-                  </Child>
-                </Show>
-              );
-            }}
-          </For>
-        </Children>
-      )}
+      <Children>
+        <For each={props.resource.metadata.routes}>
+          {(route) => {
+            const method = createMemo(() => route.route.split(" ")[0]);
+            const path = createMemo(() => route.route.split(" ")[1]);
+            return (
+              <FunctionChild
+                tag={method()}
+                title={path()}
+                id={route.fn?.node}
+              />
+            );
+          }}
+        </For>
+      </Children>
     </>
   );
 }
@@ -496,46 +394,21 @@ export function ApiGatewayV1ApiCard(props: CardProps<"ApiGatewayV1Api">) {
           ""
         }
       />
-      {props.resource.metadata.routes.length > 0 && (
-        <Children>
-          <For each={props.resource.metadata.routes}>
-            {(route) => {
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) => r.type === "Function" && r.addr === route.fn?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
-              const method = createMemo(() => route.route.split(" ")[0]);
-              const path = createMemo(() => route.route.split(" ")[1]);
-              return (
-                <Show when={fn()}>
-                  <Child>
-                    <Row space="2" vertical="center">
-                      <ChildTag size="small">{method()}</ChildTag>
-                      <ChildTitleLink href={`logs/${fn().id}`}>
-                        {path()}
-                      </ChildTitleLink>
-                    </Row>
-                    <Row shrink={false} space="3" vertical="center">
-                      <Show when={fn() && fn().enrichment.size}>
-                        {(value) => (
-                          <ChildDetail>
-                            {Math.ceil(value() / 1024)} KB
-                          </ChildDetail>
-                        )}
-                      </Show>
-                      <ChildIcon>
-                        <IconNodeRuntime />
-                      </ChildIcon>
-                    </Row>
-                  </Child>
-                </Show>
-              );
-            }}
-          </For>
-        </Children>
-      )}
+      <Children>
+        <For each={props.resource.metadata.routes}>
+          {(route) => {
+            const method = createMemo(() => route.route.split(" ")[0]);
+            const path = createMemo(() => route.route.split(" ")[1]);
+            return (
+              <FunctionChild
+                tag={method()}
+                title={path()}
+                id={route.fn?.node}
+              />
+            );
+          }}
+        </For>
+      </Children>
     </>
   );
 }
@@ -544,46 +417,17 @@ export function EventBusCard(props: CardProps<"EventBus">) {
   return (
     <>
       <Header icon={IconEventBus} resource={props.resource} />
-      {props.resource.metadata.rules.length > 0 && (
-        <Children>
-          <For each={props.resource.metadata.rules}>
-            {(rule) => (
-              <For each={rule.targets}>
-                {(target) => {
-                  const fn = createMemo(
-                    () =>
-                      props.all.find(
-                        (r) => r.type === "Function" && r.addr === target?.node
-                      ) as Extract<Resource.Info, { type: "Function" }>
-                  );
-                  return (
-                    <Child>
-                      <Row space="2" vertical="center">
-                        <ChildTag>Subscription</ChildTag>
-                        <ChildTitleLink href={`./logs/${fn().id}`}>
-                          {fn().metadata.handler}
-                        </ChildTitleLink>
-                      </Row>
-                      <Row shrink={false} space="3" vertical="center">
-                        <Show when={fn() && fn().enrichment.size}>
-                          {(value) => (
-                            <ChildDetail>
-                              {Math.ceil(value() / 1024)} KB
-                            </ChildDetail>
-                          )}
-                        </Show>
-                        <ChildIcon>
-                          <IconNodeRuntime />
-                        </ChildIcon>
-                      </Row>
-                    </Child>
-                  );
-                }}
-              </For>
-            )}
-          </For>
-        </Children>
-      )}
+      <Children>
+        <For each={props.resource.metadata.rules}>
+          {(rule) => (
+            <For each={rule.targets}>
+              {(target) => (
+                <FunctionChild id={target?.node} tag="Subscription" />
+              )}
+            </For>
+          )}
+        </For>
+      </Children>
     </>
   );
 }
@@ -592,42 +436,11 @@ export function TopicCard(props: CardProps<"Topic">) {
   return (
     <>
       <Header icon={IconTopic} resource={props.resource} />
-      {props.resource.metadata.subscribers.length > 0 && (
-        <Children>
-          <For each={props.resource.metadata.subscribers}>
-            {(subscriber) => {
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) => r.type === "Function" && r.addr === subscriber?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
-              return (
-                <Child>
-                  <Row space="2" vertical="center">
-                    <ChildTag>Subscriber</ChildTag>
-                    <ChildTitleLink href={`./logs/${fn().id}`}>
-                      {fn().metadata.handler}
-                    </ChildTitleLink>
-                  </Row>
-                  <Row shrink={false} space="3" vertical="center">
-                    <Show when={fn() && fn().enrichment.size}>
-                      {(value) => (
-                        <ChildDetail>
-                          {Math.ceil(value() / 1024)} KB
-                        </ChildDetail>
-                      )}
-                    </Show>
-                    <ChildIcon>
-                      <IconNodeRuntime />
-                    </ChildIcon>
-                  </Row>
-                </Child>
-              );
-            }}
-          </For>
-        </Children>
-      )}
+      <Children>
+        <For each={props.resource.metadata.subscribers}>
+          {(sub) => <FunctionChild id={sub?.node} tag="Subscriber" />}
+        </For>
+      </Children>
     </>
   );
 }
@@ -638,37 +451,9 @@ export function BucketCard(props: CardProps<"Bucket">) {
       {props.resource.metadata.notifications.length > 0 && (
         <Children>
           <For each={props.resource.metadata.notifications}>
-            {(notification) => {
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) =>
-                      r.type === "Function" && r.addr === notification?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
-              return (
-                <Child>
-                  <Row space="2" vertical="center">
-                    <ChildTag>Notification</ChildTag>
-                    <ChildTitleLink href={`./logs/${fn().id}`}>
-                      {fn().metadata.handler}
-                    </ChildTitleLink>
-                  </Row>
-                  <Row shrink={false} space="3" vertical="center">
-                    <Show when={fn() && fn().enrichment.size}>
-                      {(value) => (
-                        <ChildDetail>
-                          {Math.ceil(value() / 1024)} KB
-                        </ChildDetail>
-                      )}
-                    </Show>
-                    <ChildIcon>
-                      <IconNodeRuntime />
-                    </ChildIcon>
-                  </Row>
-                </Child>
-              );
-            }}
+            {(notification) => (
+              <FunctionChild id={notification?.node} tag="Notification" />
+            )}
           </For>
         </Children>
       )}
@@ -680,45 +465,13 @@ export function KinesisStreamCard(props: CardProps<"KinesisStream">) {
   return (
     <>
       <Header icon={IconKinesisStream} resource={props.resource} />
-      {props.resource.metadata.consumers.length > 0 && (
-        <Children>
-          <For each={props.resource.metadata.consumers}>
-            {(consumer) => {
-              if (consumer.fn === undefined) {
-                return;
-              }
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) => r.type === "Function" && r.addr === consumer.fn?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
-              return (
-                <Child>
-                  <Row space="2" vertical="center">
-                    <ChildTag>Consumer</ChildTag>
-                    <ChildTitleLink href={`./logs/${fn().id}`}>
-                      {fn().metadata.handler}
-                    </ChildTitleLink>
-                  </Row>
-                  <Row shrink={false} space="3" vertical="center">
-                    <Show when={fn() && fn().enrichment.size}>
-                      {(value) => (
-                        <ChildDetail>
-                          {Math.ceil(value() / 1024)} KB
-                        </ChildDetail>
-                      )}
-                    </Show>
-                    <ChildIcon>
-                      <IconNodeRuntime />
-                    </ChildIcon>
-                  </Row>
-                </Child>
-              );
-            }}
-          </For>
-        </Children>
-      )}
+      <Children>
+        <For each={props.resource.metadata.consumers}>
+          {(consumer) => (
+            <FunctionChild id={consumer.fn?.node} tag="Consumer" />
+          )}
+        </For>
+      </Children>
     </>
   );
 }
@@ -733,46 +486,11 @@ export function AppSyncCard(props: CardProps<"AppSync">) {
           props.resource.metadata.customDomainUrl || props.resource.metadata.url
         }
       />
-      {props.resource.metadata.dataSources.length > 0 && (
-        <Children>
-          <For each={props.resource.metadata.dataSources}>
-            {(dataSource) => {
-              if (dataSource.fn === undefined) {
-                return;
-              }
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) =>
-                      r.type === "Function" && r.addr === dataSource.fn?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
-              return (
-                <Child>
-                  <Row space="2" vertical="center">
-                    <ChildTag>Source</ChildTag>
-                    <ChildTitleLink href={`./logs/${fn().id}`}>
-                      {fn().metadata.handler}
-                    </ChildTitleLink>
-                  </Row>
-                  <Row shrink={false} space="3" vertical="center">
-                    <Show when={fn() && fn().enrichment.size}>
-                      {(value) => (
-                        <ChildDetail>
-                          {Math.ceil(value() / 1024)} KB
-                        </ChildDetail>
-                      )}
-                    </Show>
-                    <ChildIcon>
-                      <IconNodeRuntime />
-                    </ChildIcon>
-                  </Row>
-                </Child>
-              );
-            }}
-          </For>
-        </Children>
-      )}
+      <Children>
+        <For each={props.resource.metadata.dataSources}>
+          {(source) => <FunctionChild id={source.fn?.node} tag="Source" />}
+        </For>
+      </Children>
     </>
   );
 }
@@ -780,45 +498,13 @@ export function TableCard(props: CardProps<"Table">) {
   return (
     <>
       <Header icon={IconTable} resource={props.resource} />
-      {props.resource.metadata.consumers.length > 0 && (
-        <Children>
-          <For each={props.resource.metadata.consumers}>
-            {(consumer) => {
-              if (consumer.fn === undefined) {
-                return;
-              }
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) => r.type === "Function" && r.addr === consumer.fn?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
-              return (
-                <Child>
-                  <Row space="2" vertical="center">
-                    <ChildTag>Consumer</ChildTag>
-                    <ChildTitleLink href={`./logs/${fn().id}`}>
-                      {fn().metadata.handler}
-                    </ChildTitleLink>
-                  </Row>
-                  <Row shrink={false} space="3" vertical="center">
-                    <Show when={fn() && fn().enrichment.size}>
-                      {(value) => (
-                        <ChildDetail>
-                          {Math.ceil(value() / 1024)} KB
-                        </ChildDetail>
-                      )}
-                    </Show>
-                    <ChildIcon>
-                      <IconNodeRuntime />
-                    </ChildIcon>
-                  </Row>
-                </Child>
-              );
-            }}
-          </For>
-        </Children>
-      )}
+      <Children>
+        <For each={props.resource.metadata.consumers}>
+          {(consumer) => (
+            <FunctionChild id={consumer.fn?.node} tag="Consumer" />
+          )}
+        </For>
+      </Children>
     </>
   );
 }
@@ -827,42 +513,11 @@ export function CognitoCard(props: CardProps<"Cognito">) {
   return (
     <>
       <Header icon={IconCognito} resource={props.resource} />
-      {props.resource.metadata.triggers.length > 0 && (
-        <Children>
-          <For each={props.resource.metadata.triggers}>
-            {(trigger) => {
-              const fn = createMemo(
-                () =>
-                  props.all.find(
-                    (r) => r.type === "Function" && r.addr === trigger.fn?.node
-                  ) as Extract<Resource.Info, { type: "Function" }>
-              );
-              return (
-                <Child>
-                  <Row space="2" vertical="center">
-                    <ChildTag>Trigger</ChildTag>
-                    <ChildTitleLink href={`./logs/${fn().id}`}>
-                      {fn().metadata.handler}
-                    </ChildTitleLink>
-                  </Row>
-                  <Row shrink={false} space="3" vertical="center">
-                    <Show when={fn() && fn().enrichment.size}>
-                      {(value) => (
-                        <ChildDetail>
-                          {Math.ceil(value() / 1024)} KB
-                        </ChildDetail>
-                      )}
-                    </Show>
-                    <ChildIcon>
-                      <IconNodeRuntime />
-                    </ChildIcon>
-                  </Row>
-                </Child>
-              );
-            }}
-          </For>
-        </Children>
-      )}
+      <Children>
+        <For each={props.resource.metadata.triggers}>
+          {(trigger) => <FunctionChild id={trigger.fn?.node} tag="Trigger" />}
+        </For>
+      </Children>
     </>
   );
 }
@@ -875,35 +530,9 @@ export function CronCard(props: CardProps<"Cron">) {
         resource={props.resource}
         description={props.resource.metadata.schedule}
       />
-      <Show when={props.resource.metadata.job}>
-        {(job) => {
-          const fn = props.all.find(
-            (r) => r.type === "Function" && r.addr === job().node
-          ) as Extract<Resource.Info, { type: "Function" }>;
-          return (
-            <Children>
-              <Child>
-                <Row space="2" vertical="center">
-                  <ChildTag>Job</ChildTag>
-                  <ChildTitleLink href={`logs/${fn.id}`}>
-                    {fn.metadata.handler}
-                  </ChildTitleLink>
-                </Row>
-                <Row shrink={false} space="3" vertical="center">
-                  <Show when={fn && fn.enrichment.size}>
-                    {(value) => (
-                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
-                    )}
-                  </Show>
-                  <ChildIcon>
-                    <IconNodeRuntime />
-                  </ChildIcon>
-                </Row>
-              </Child>
-            </Children>
-          );
-        }}
-      </Show>
+      <Children>
+        <FunctionChild id={props.resource.metadata.job?.node} tag="Job" />
+      </Children>
     </>
   );
 }
@@ -912,35 +541,12 @@ export function QueueCard(props: CardProps<"Queue">) {
   return (
     <>
       <Header icon={IconQueue} resource={props.resource} />
-      <Show when={props.resource.metadata.consumer}>
-        {(consumer) => {
-          const fn = props.all.find(
-            (r) => r.type === "Function" && r.addr === consumer().node
-          ) as Extract<Resource.Info, { type: "Function" }>;
-          return (
-            <Children>
-              <Child>
-                <Row space="2" vertical="center">
-                  <ChildTag>Consumer</ChildTag>
-                  <ChildTitleLink href={`logs/${fn.id}`}>
-                    {fn.metadata.handler}
-                  </ChildTitleLink>
-                </Row>
-                <Row shrink={false} space="3" vertical="center">
-                  <Show when={fn && fn.enrichment.size}>
-                    {(value) => (
-                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
-                    )}
-                  </Show>
-                  <ChildIcon>
-                    <IconNodeRuntime />
-                  </ChildIcon>
-                </Row>
-              </Child>
-            </Children>
-          );
-        }}
-      </Show>
+      <Children>
+        <FunctionChild
+          id={props.resource.metadata.consumer?.node}
+          tag="Consumer"
+        />
+      </Children>
     </>
   );
 }
@@ -973,35 +579,9 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
           props.resource.metadata.path
         }
       />
-      <Show when={props.resource.metadata.server}>
-        {(server) => {
-          const fn = props.all.find(
-            (r) => r.type === "Function" && r.metadata.arn === server()
-          ) as Extract<Resource.Info, { type: "Function" }>;
-          return (
-            <Children>
-              <Child>
-                <Row space="2" vertical="center">
-                  <ChildTag>Server</ChildTag>
-                  <ChildTitleLink href={`logs/${fn.id}`}>
-                    {fn.metadata.handler}
-                  </ChildTitleLink>
-                </Row>
-                <Row shrink={false} space="3" vertical="center">
-                  <Show when={fn && fn.enrichment.size}>
-                    {(value) => (
-                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
-                    )}
-                  </Show>
-                  <ChildIcon>
-                    <IconNodeRuntime />
-                  </ChildIcon>
-                </Row>
-              </Child>
-            </Children>
-          );
-        }}
-      </Show>
+      <Children>
+        <FunctionChild id={props.resource.metadata.server} tag="Server" />
+      </Children>
     </>
   );
 }
@@ -1018,35 +598,9 @@ export function SvelteKitSiteCard(props: CardProps<"SvelteKitSite">) {
           props.resource.metadata.path
         }
       />
-      <Show when={props.resource.metadata.server}>
-        {(server) => {
-          const fn = props.all.find(
-            (r) => r.type === "Function" && r.metadata.arn === server()
-          ) as Extract<Resource.Info, { type: "Function" }>;
-          return (
-            <Children>
-              <Child>
-                <Row space="2" vertical="center">
-                  <ChildTag>Server</ChildTag>
-                  <ChildTitleLink href={`logs/${fn.id}`}>
-                    {fn.metadata.handler}
-                  </ChildTitleLink>
-                </Row>
-                <Row shrink={false} space="3" vertical="center">
-                  <Show when={fn && fn.enrichment.size}>
-                    {(value) => (
-                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
-                    )}
-                  </Show>
-                  <ChildIcon>
-                    <IconNodeRuntime />
-                  </ChildIcon>
-                </Row>
-              </Child>
-            </Children>
-          );
-        }}
-      </Show>
+      <Children>
+        <FunctionChild id={props.resource.metadata.server} tag="Server" />
+      </Children>
     </>
   );
 }
@@ -1063,35 +617,9 @@ export function RemixSiteCard(props: CardProps<"RemixSite">) {
           props.resource.metadata.path
         }
       />
-      <Show when={props.resource.metadata.server}>
-        {(server) => {
-          const fn = props.all.find(
-            (r) => r.type === "Function" && r.metadata.arn === server()
-          ) as Extract<Resource.Info, { type: "Function" }>;
-          return (
-            <Children>
-              <Child>
-                <Row space="2" vertical="center">
-                  <ChildTag>Server</ChildTag>
-                  <ChildTitleLink href={`logs/${fn.id}`}>
-                    {fn.metadata.handler}
-                  </ChildTitleLink>
-                </Row>
-                <Row shrink={false} space="3" vertical="center">
-                  <Show when={fn && fn.enrichment.size}>
-                    {(value) => (
-                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
-                    )}
-                  </Show>
-                  <ChildIcon>
-                    <IconNodeRuntime />
-                  </ChildIcon>
-                </Row>
-              </Child>
-            </Children>
-          );
-        }}
-      </Show>
+      <Children>
+        <FunctionChild id={props.resource.metadata.server} tag="Server" />
+      </Children>
     </>
   );
 }
@@ -1108,35 +636,9 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
           props.resource.metadata.path
         }
       />
-      <Show when={props.resource.metadata.server}>
-        {(server) => {
-          const fn = props.all.find(
-            (r) => r.type === "Function" && r.metadata.arn === server()
-          ) as Extract<Resource.Info, { type: "Function" }>;
-          return (
-            <Children>
-              <Child>
-                <Row space="2" vertical="center">
-                  <ChildTag>Server</ChildTag>
-                  <ChildTitleLink href={`logs/${fn.id}`}>
-                    {fn.metadata.handler}
-                  </ChildTitleLink>
-                </Row>
-                <Row shrink={false} space="3" vertical="center">
-                  <Show when={fn && fn.enrichment.size}>
-                    {(value) => (
-                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
-                    )}
-                  </Show>
-                  <ChildIcon>
-                    <IconNodeRuntime />
-                  </ChildIcon>
-                </Row>
-              </Child>
-            </Children>
-          );
-        }}
-      </Show>
+      <Children>
+        <FunctionChild id={props.resource.metadata.server} tag="Server" />
+      </Children>
     </>
   );
 }
@@ -1153,35 +655,9 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
           props.resource.metadata.path
         }
       />
-      <Show when={props.resource.metadata.server}>
-        {(server) => {
-          const fn = props.all.find(
-            (r) => r.type === "Function" && r.metadata.arn === server()
-          ) as Extract<Resource.Info, { type: "Function" }>;
-          return (
-            <Children>
-              <Child>
-                <Row space="2" vertical="center">
-                  <ChildTag>Server</ChildTag>
-                  <ChildTitleLink href={`logs/${fn.id}`}>
-                    {fn.metadata.handler}
-                  </ChildTitleLink>
-                </Row>
-                <Row shrink={false} space="3" vertical="center">
-                  <Show when={fn && fn.enrichment.size}>
-                    {(value) => (
-                      <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
-                    )}
-                  </Show>
-                  <ChildIcon>
-                    <IconNodeRuntime />
-                  </ChildIcon>
-                </Row>
-              </Child>
-            </Children>
-          );
-        }}
-      </Show>
+      <Children>
+        <FunctionChild id={props.resource.metadata.server} tag="Server" />
+      </Children>
     </>
   );
 }
@@ -1195,5 +671,49 @@ export function RDSCard(props: CardProps<"RDS">) {
         description={props.resource.metadata.defaultDatabaseName}
       />
     </>
+  );
+}
+
+function FunctionChild(props: {
+  id: string | undefined;
+  tag?: string;
+  title?: string;
+}) {
+  const resources = useResourcesContext();
+  const fn = createMemo(
+    () =>
+      resources().find(
+        (r) =>
+          r.type === "Function" &&
+          (r.addr === props.id || r.metadata.arn === props.id)
+      ) as Extract<Resource.Info, { type: "Function" }> | undefined
+  );
+  return (
+    <Show when={fn()}>
+      {(exists) => (
+        <Child>
+          <Row space="2" vertical="center">
+            <Show when={props.tag}>
+              <ChildTag size="small">{props.tag!}</ChildTag>
+            </Show>
+            <ChildTitleLink href={`./logs/${exists().id}`}>
+              <Show when={props.title} fallback={exists().metadata.handler}>
+                {props.title}
+              </Show>
+            </ChildTitleLink>
+          </Row>
+          <Row shrink={false} space="3" vertical="center">
+            <Show when={fn() && fn()!.enrichment.size}>
+              {(value) => (
+                <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+              )}
+            </Show>
+            <ChildIcon>
+              <IconNodeRuntime />
+            </ChildIcon>
+          </Row>
+        </Child>
+      )}
+    </Show>
   );
 }

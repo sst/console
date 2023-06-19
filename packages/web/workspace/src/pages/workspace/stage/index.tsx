@@ -15,7 +15,7 @@ import {
   StageProvider,
   useCommandBar,
 } from "$/pages/workspace/command-bar";
-import { StageContext, createStageContext } from "./context";
+import { ResourcesProvider, StageContext, createStageContext } from "./context";
 import { Resources } from "./resources";
 import { Logs } from "./logs";
 
@@ -133,34 +133,38 @@ export function Stage() {
   return (
     <Show when={stageContext.app && stageContext.stage}>
       <StageContext.Provider value={stageContext}>
-        <Header>
-          <Row space="4">
-            <OrgSwitcher src={sst} />
-            <StageSwitcher onClick={() => bar.show(StageProvider, AppProvider)}>
-              <Stack space="1">
-                <SwitcherApp>{stageContext.app.name}</SwitcherApp>
-                <SwitcherStage>{stageContext.stage.name}</SwitcherStage>
-              </Stack>
-              <SwitcherIcon />
-            </StageSwitcher>
-          </Row>
-          <User>
-            <div
-              onClick={() =>
-                rep().mutate.app_stage_sync({ stageID: stage()!.id })
-              }
-            >
-              resync
-            </div>
-            <UserImage src={patrick} />
-          </User>
-        </Header>
-        <Content>
-          <Routes>
-            <Route path="" component={Resources} />
-            <Route path="logs/:resourceID/*" component={Logs} />
-          </Routes>
-        </Content>
+        <ResourcesProvider>
+          <Header>
+            <Row space="4">
+              <OrgSwitcher src={sst} />
+              <StageSwitcher
+                onClick={() => bar.show(StageProvider, AppProvider)}
+              >
+                <Stack space="1">
+                  <SwitcherApp>{stageContext.app.name}</SwitcherApp>
+                  <SwitcherStage>{stageContext.stage.name}</SwitcherStage>
+                </Stack>
+                <SwitcherIcon />
+              </StageSwitcher>
+            </Row>
+            <User>
+              <div
+                onClick={() =>
+                  rep().mutate.app_stage_sync({ stageID: stage()!.id })
+                }
+              >
+                resync
+              </div>
+              <UserImage src={patrick} />
+            </User>
+          </Header>
+          <Content>
+            <Routes>
+              <Route path="" component={Resources} />
+              <Route path="logs/:resourceID/*" component={Logs} />
+            </Routes>
+          </Content>
+        </ResourcesProvider>
       </StageContext.Provider>
     </Show>
   );
