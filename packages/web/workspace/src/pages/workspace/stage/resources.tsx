@@ -138,14 +138,22 @@ export const ChildTitle = styled("span", {
   },
 });
 
-export const ChildDetail = styled("span", {
+export const ChildDetail = styled("div", {
   base: {
     ...utility.textLine(),
+    display: "flex",
+    alignItems: "baseline",
     color: theme.color.text.secondary,
     fontSize: "0.8125rem",
     fontFamily: theme.fonts.code,
     textAlign: "right",
     lineHeight: "normal",
+  },
+});
+export const ChildDetailUnit = styled("span", {
+  base: {
+    paddingLeft: "1px",
+    fontSize: "0.5rem",
   },
 });
 export const ChildExtra = styled("span", {
@@ -183,6 +191,10 @@ export const ChildTag = styled("div", {
     minWidth: 50,
   },
 });
+
+function cleanFilepath(path: string) {
+  return path.replace(/^\.?\//, "");
+}
 
 interface HeaderProps {
   resource: Resource.Info;
@@ -547,7 +559,7 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
-          props.resource.metadata.path
+          cleanFilepath(props.resource.metadata.path)
         }
       />
     </>
@@ -563,7 +575,7 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
-          props.resource.metadata.path
+          cleanFilepath(props.resource.metadata.path)
         }
       />
       <Children>
@@ -582,7 +594,7 @@ export function SvelteKitSiteCard(props: CardProps<"SvelteKitSite">) {
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
-          props.resource.metadata.path
+          cleanFilepath(props.resource.metadata.path)
         }
       />
       <Children>
@@ -601,7 +613,7 @@ export function RemixSiteCard(props: CardProps<"RemixSite">) {
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
-          props.resource.metadata.path
+          cleanFilepath(props.resource.metadata.path)
         }
       />
       <Children>
@@ -620,7 +632,7 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
-          props.resource.metadata.path
+          cleanFilepath(props.resource.metadata.path)
         }
       />
       <Children>
@@ -639,7 +651,7 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
-          props.resource.metadata.path
+          cleanFilepath(props.resource.metadata.path)
         }
       />
       <Children>
@@ -692,7 +704,10 @@ function FunctionChild(props: {
           <Row shrink={false} space="3" vertical="center">
             <Show when={fn() && fn()!.enrichment.size}>
               {(value) => (
-                <ChildDetail>{Math.ceil(value() / 1024)} KB</ChildDetail>
+                <ChildDetail>
+                  {Math.ceil(value() / 1024)}
+                  <ChildDetailUnit>KB</ChildDetailUnit>
+                </ChildDetail>
               )}
             </Show>
             <ChildIcon>

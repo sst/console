@@ -135,23 +135,16 @@ export const DUMMY_RESOURCES = [
       },
     ],
   }),
-  resource(
-    "StaticSite",
-    "web",
-    {
-      path: "packages/web/workspace",
-      customDomainUrl: undefined,
-      environment: {},
-    },
-    {
-      cloudfrontUrl:
-        "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
-    }
-  ),
+  resource("StaticSite", "web", {
+    path: "./packages/web/workspace",
+    customDomainUrl: undefined,
+    environment: {},
+    url: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+  }),
   resource("NextjsSite", "nextjs-site-local-no-custom-domain", {
     customDomainUrl: undefined,
     server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
-    path: "packages/nextjs-site",
+    path: "./packages/nextjs-site",
     edge: false,
     mode: "deployed",
     secrets: [],
