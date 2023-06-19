@@ -170,7 +170,8 @@ export const ChildIcon = styled("div", {
 export const ChildTag = styled("div", {
   base: {
     flex: "0 0 auto",
-    padding: "5px 8px 4px",
+    padding: "0 8px",
+    height: 22,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -179,21 +180,7 @@ export const ChildTag = styled("div", {
     textTransform: "uppercase",
     border: `1px solid ${theme.color.divider.base}`,
     borderRadius: theme.borderRadius,
-  },
-  variants: {
-    size: {
-      large: {
-        paddingLeft: 0,
-        paddingRight: 0,
-        width: "85px",
-      },
-      small: {
-        paddingLeft: 0,
-        paddingRight: 0,
-        width: "50px",
-      },
-      auto: {},
-    },
+    minWidth: 50,
   },
 });
 
@@ -694,7 +681,7 @@ function FunctionChild(props: {
         <Child>
           <Row space="2" vertical="center">
             <Show when={props.tag}>
-              <ChildTag size="small">{props.tag!}</ChildTag>
+              <ChildTag>{props.tag!}</ChildTag>
             </Show>
             <ChildTitleLink href={`./logs/${exists().id}`}>
               <Show when={props.title} fallback={exists().metadata.handler}>
