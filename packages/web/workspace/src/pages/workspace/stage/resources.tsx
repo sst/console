@@ -1,4 +1,12 @@
-import { For, JSX, Match, Show, Switch, createMemo } from "solid-js";
+import {
+  For,
+  JSX,
+  Match,
+  Show,
+  Switch,
+  createMemo,
+  ComponentProps,
+} from "solid-js";
 import { useResourcesContext } from "./context";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
@@ -178,8 +186,7 @@ export const ChildIcon = styled("div", {
 export const ChildTag = styled("div", {
   base: {
     flex: "0 0 auto",
-    padding: "0 8px",
-    height: 22,
+    padding: "5px 8px 4px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -188,7 +195,21 @@ export const ChildTag = styled("div", {
     textTransform: "uppercase",
     border: `1px solid ${theme.color.divider.base}`,
     borderRadius: theme.borderRadius,
-    minWidth: 50,
+  },
+  variants: {
+    size: {
+      large: {
+        paddingLeft: 0,
+        paddingRight: 0,
+        width: 85,
+      },
+      small: {
+        paddingLeft: 0,
+        paddingRight: 0,
+        width: 50,
+      },
+      auto: {},
+    },
   },
 });
 
@@ -340,6 +361,7 @@ export function ApiCard(props: CardProps<"Api">) {
                 <FunctionChild
                   tag={method()}
                   title={path()}
+                  tagSize="small"
                   id={route.fn?.node}
                 />
               );
@@ -365,12 +387,13 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
       <Children>
         <For each={props.resource.metadata.routes}>
           {(route) => {
-            const method = createMemo(() => route.route.split(" ")[0]);
+            const method = createMemo(() => route.route.slice(1));
             const path = createMemo(() => route.route.split(" ")[1]);
             return (
               <FunctionChild
                 tag={method()}
                 title={path()}
+                tagSize="large"
                 id={route.fn?.node}
               />
             );
@@ -402,6 +425,7 @@ export function ApiGatewayV1ApiCard(props: CardProps<"ApiGatewayV1Api">) {
               <FunctionChild
                 tag={method()}
                 title={path()}
+                tagSize="small"
                 id={route.fn?.node}
               />
             );
@@ -677,6 +701,7 @@ function FunctionChild(props: {
   id: string | undefined;
   tag?: string;
   title?: string;
+  tagSize?: ComponentProps<typeof ChildTag>["size"];
 }) {
   const resources = useResourcesContext();
   const fn = createMemo(
@@ -693,7 +718,7 @@ function FunctionChild(props: {
         <Child>
           <Row space="2" vertical="center">
             <Show when={props.tag}>
-              <ChildTag>{props.tag!}</ChildTag>
+              <ChildTag size={props.tagSize}>{props.tag!}</ChildTag>
             </Show>
             <ChildTitleLink href={`./logs/${exists().id}`}>
               <Show when={props.title} fallback={exists().metadata.handler}>
