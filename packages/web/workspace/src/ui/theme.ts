@@ -168,6 +168,16 @@ const light = {
       },
     },
   },
+  tag: {
+    info: {
+      color: "",
+      text: "",
+    },
+    danger: {
+      color: "",
+      text: "",
+    },
+  },
   shadow: {
     inset: {
       surface: "",
@@ -303,6 +313,16 @@ light.button.danger = {
   disabled: {
     opacity: "0.65",
   },
+};
+
+light.tag.info = {
+  color: light.background.surface,
+  text: light.text.dimmed,
+};
+
+light.tag.danger = {
+  color: `hsla(${light.base.red}, 25%)`,
+  text: `hsla(${light.red.l2}, 100%)`,
 };
 
 light.shadow.inset = {
@@ -454,6 +474,16 @@ dark.button.danger = {
   disabled: {
     opacity: "0.65",
   },
+};
+
+dark.tag.info = {
+  color: dark.background.surface,
+  text: dark.text.dimmed,
+};
+
+dark.tag.danger = {
+  color: `hsla(${dark.base.red}, 25%)`,
+  text: `hsla(${dark.red.l2}, 100%)`,
 };
 
 dark.shadow.drop = {

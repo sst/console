@@ -2,9 +2,11 @@ import { Row } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { IconClipboard } from "$/ui/icons";
+import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
 import { IconNodeRuntime } from "$/ui/icons/custom";
-import { JSX } from "solid-js";
+import { JSX, ComponentProps } from "solid-js";
+import { prop } from "remeda";
 
 const ComponentRoot = styled("div", {
   base: {
@@ -63,7 +65,7 @@ const VariantThemes = styled("div", {
   },
 });
 
-interface ComponentProps {
+interface ComponentTypeProps {
   name: string;
   children: JSX.Element;
 }
@@ -74,7 +76,7 @@ interface VariantProps {
   children: JSX.Element;
 }
 
-function Component(props: ComponentProps) {
+function ComponentType(props: ComponentTypeProps) {
   return (
     <ComponentRoot>
       <ComponentName>{props.name}</ComponentName>
@@ -102,7 +104,7 @@ const OverflowSpan = styled("span", {
 export function Design() {
   return (
     <>
-      <Component name="Button">
+      <ComponentType name="Button">
         <Variant name="Primary">
           <Button color="primary">Button</Button>
           <Button data-state-hover color="primary">
@@ -139,8 +141,26 @@ export function Design() {
             Button
           </Button>
         </Variant>
-      </Component>
-      <Component name="Row">
+      </ComponentType>
+      <ComponentType name="Tag">
+        <Variant name="Solid">
+          <Tag style="solid" level="info">
+            Tag
+          </Tag>
+          <Tag style="solid" level="danger">
+            Tag
+          </Tag>
+        </Variant>
+        <Variant name="Outline">
+          <Tag style="outline" level="info">
+            Tag
+          </Tag>
+          <Tag style="outline" level="danger">
+            Tag
+          </Tag>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Row">
         <Variant name="Default">
           <Row space="1">
             <span>Label</span>
@@ -166,7 +186,76 @@ export function Design() {
             </Row>
           </Row>
         </Variant>
-      </Component>
+      </ComponentType>
+      <ComponentType name="Log">
+        <Variant name="Default">
+          <Log
+            level="info"
+            duration={112873.27}
+            start={Date.now()}
+            message="Hello world"
+            link="https://google.com"
+            entries={[]}
+          />
+        </Variant>
+      </ComponentType>
     </>
+  );
+}
+
+function formatTime(milliseconds: number) {
+  return milliseconds < 1000
+    ? milliseconds.toFixed(2) + "ms"
+    : (milliseconds / 1000).toFixed(2) + "s";
+}
+
+function LogLevel(props: { level?: string }) {
+  const level = props.level || "info";
+  return <Tag level={level === "error" ? "danger" : "info"}>{level}</Tag>;
+}
+
+interface LogProps {
+  level?: "info" | "error";
+  duration?: number;
+  start: number;
+  message: string;
+  entries: string[];
+  link: string;
+  coldStart?: boolean;
+  expanded?: boolean;
+}
+function Log(props: LogProps) {
+  const shortDateOptions: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+  };
+  const longDateOptions: Intl.DateTimeFormatOptions = {
+    ...shortDateOptions,
+    year: "numeric",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  };
+  const shortDate = new Intl.DateTimeFormat("en-US", shortDateOptions)
+    .format(props.start)
+    .replace(" at ", ", ");
+  const longDate = new Intl.DateTimeFormat("en-US", longDateOptions).format(
+    props.start
+  );
+
+  const formattedDuration =
+    props.duration === undefined ? "-" : formatTime(props.duration);
+
+  return (
+    <Row space="1">
+      <LogLevel level={props.level} />
+      <span title={longDate}>{shortDate}</span>
+      {formattedDuration}
+      {props.coldStart ? "cold" : "warm"}
+      {props.link}
+      {props.message}
+    </Row>
   );
 }

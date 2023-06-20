@@ -12,6 +12,7 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { Row } from "$/ui/layout";
+import { Tag } from "$/ui/tag";
 import {
   IconApi,
   IconRDS,
@@ -36,6 +37,7 @@ import {
   IconKinesisStream,
   IconSolidStartSite,
   IconApiGatewayV1Api,
+  IconPythonRuntime,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { Link } from "@solidjs/router";
@@ -160,8 +162,9 @@ export const ChildDetail = styled("div", {
 });
 export const ChildDetailUnit = styled("span", {
   base: {
-    paddingLeft: "1px",
-    fontSize: "0.5rem",
+    fontWeight: 600,
+    paddingLeft: 2,
+    fontSize: "0.5625rem",
   },
 });
 export const ChildExtra = styled("span", {
@@ -180,36 +183,6 @@ export const ChildIcon = styled("div", {
     height: 14,
     width: 14,
     color: theme.color.icon.dimmed,
-  },
-});
-
-export const ChildTag = styled("div", {
-  base: {
-    flex: "0 0 auto",
-    padding: "5px 8px 4px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: theme.color.text.dimmed,
-    fontSize: "0.5625rem",
-    textTransform: "uppercase",
-    border: `1px solid ${theme.color.divider.base}`,
-    borderRadius: theme.borderRadius,
-  },
-  variants: {
-    size: {
-      large: {
-        paddingLeft: 0,
-        paddingRight: 0,
-        width: 85,
-      },
-      small: {
-        paddingLeft: 0,
-        paddingRight: 0,
-        width: 50,
-      },
-      auto: {},
-    },
   },
 });
 
@@ -701,7 +674,7 @@ function FunctionChild(props: {
   id: string | undefined;
   tag?: string;
   title?: string;
-  tagSize?: ComponentProps<typeof ChildTag>["size"];
+  tagSize?: ComponentProps<typeof Tag>["size"];
 }) {
   const resources = useResourcesContext();
   const fn = createMemo(
@@ -718,7 +691,9 @@ function FunctionChild(props: {
         <Child>
           <Row space="2" vertical="center">
             <Show when={props.tag}>
-              <ChildTag size={props.tagSize}>{props.tag!}</ChildTag>
+              <Tag style="outline" size={props.tagSize}>
+                {props.tag!}
+              </Tag>
             </Show>
             <ChildTitleLink href={`./logs/${exists().id}`}>
               <Show when={props.title} fallback={exists().metadata.handler}>
