@@ -1,11 +1,13 @@
-import { Row } from "$/ui/layout";
+import { globalStyle } from "@macaron-css/core";
+import { Grower, Row } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { IconClipboard } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
-import { IconNodeRuntime } from "$/ui/icons/custom";
-import { JSX, ComponentProps } from "solid-js";
+import { utility } from "$/ui/utility";
+import { IconCaretRight, IconNodeRuntime } from "$/ui/icons/custom";
+import { JSX, ComponentProps, Show, For } from "solid-js";
 import { prop } from "remeda";
 
 const ComponentRoot = styled("div", {
@@ -189,14 +191,100 @@ export function Design() {
       </ComponentType>
       <ComponentType name="Log">
         <Variant name="Default">
-          <Log
-            level="info"
-            duration={112873.27}
-            start={Date.now()}
-            message="Hello world"
-            link="https://google.com"
-            entries={[]}
-          />
+          <Grower>
+            <Log
+              level="info"
+              duration={112873.27}
+              start={Date.now()}
+              message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
+              link="https://google.com"
+              entries={[]}
+            />
+          </Grower>
+        </Variant>
+        <Variant name="Expanded">
+          <Grower>
+            <Log
+              expanded
+              level="info"
+              duration={112873.27}
+              start={Date.now()}
+              message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
+              link="https://google.com"
+              entries={[
+                "START RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 Version: $LATEST",
+                "2023-06-21T13:57:53.802Z 3c8b6e33-3800-4b3d-acf2-e49e132c2197 INFO Lambda invoked ",
+                "2023-06-21T13:57:53.827Z 3c8b6e33-3800-4b3d-acf2-e49e132c2197 INFO Lambda processing started ",
+                "END RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 ",
+                "REPORT RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 Duration: 80.54 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB",
+              ]}
+            />
+          </Grower>
+        </Variant>
+        <Variant name="Error">
+          <Grower>
+            <Log
+              level="error"
+              duration={112873.27}
+              start={Date.now()}
+              message="ERROR: Variable 's' is not defined"
+              link="https://google.com"
+              entries={[]}
+            />
+          </Grower>
+        </Variant>
+        <Variant name="Cold Start">
+          <Grower>
+            <Log
+              coldStart
+              level="info"
+              duration={112873.27}
+              start={Date.now()}
+              message="Hello world"
+              link="https://google.com"
+              entries={[]}
+            />
+          </Grower>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="LogList">
+        <Variant name="Default">
+          <Grower>
+            <LogList>
+              <Log
+                coldStart
+                level="info"
+                duration={112873.27}
+                start={Date.now()}
+                message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
+                link="https://google.com"
+                entries={[]}
+              />
+              <Log
+                expanded
+                level="error"
+                duration={112873.27}
+                start={Date.now()}
+                message="Variable 's' is not defined"
+                link="https://google.com"
+                entries={[
+                  "START RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 Version: $LATEST",
+                  "2023-06-21T13:57:53.802Z 3c8b6e33-3800-4b3d-acf2-e49e132c2197 INFO Lambda invoked ",
+                  "2023-06-21T13:57:53.827Z 3c8b6e33-3800-4b3d-acf2-e49e132c2197 INFO Lambda processing started ",
+                  "END RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 ",
+                  "REPORT RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 Duration: 80.54 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB, RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 Duration: 80.54 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB",
+                ]}
+              />
+              <Log
+                level="info"
+                duration={112873.27}
+                start={Date.now()}
+                message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
+                link="https://google.com"
+                entries={[]}
+              />
+            </LogList>
+          </Grower>
         </Variant>
       </ComponentType>
     </>
@@ -209,10 +297,192 @@ function formatTime(milliseconds: number) {
     : (milliseconds / 1000).toFixed(2) + "s";
 }
 
+const LogList = styled("div", {
+  base: {
+    border: `1px solid ${theme.color.divider.base}`,
+    borderRadius: theme.borderRadius,
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+const LogContainer = styled("div", {
+  base: {
+    borderTop: `1px solid ${theme.color.divider.base}`,
+  },
+  variants: {
+    expanded: {
+      true: {},
+      false: {},
+    },
+    level: {
+      info: {},
+      error: {},
+    },
+  },
+  defaultVariants: {
+    expanded: false,
+    level: "info",
+  },
+});
+
+const LogSummary = styled(Row, {
+  base: {
+    borderStyle: "solid",
+    borderColor: theme.color.divider.base,
+    borderWidth: 0,
+    padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
+    selectors: {
+      [`${LogContainer.selector({ expanded: true })} &`]: {
+        borderBottomWidth: 1,
+      },
+    },
+  },
+});
+
+globalStyle(`${LogSummary} *`, {
+  cursor: "pointer",
+});
+
+const LogText = styled("div", {
+  base: {
+    ...utility.textLine(),
+    fontFamily: theme.fonts.code,
+    fontSize: "0.75rem",
+  },
+});
+
+const LogDate = styled(LogText, {
+  base: {
+    flexShrink: 0,
+    fontSize: "0.75rem",
+    paddingLeft: theme.space[2],
+  },
+});
+
+const LogDuration = styled(LogText, {
+  base: {
+    flexShrink: 0,
+    minWidth: 70,
+    textAlign: "right",
+    fontSize: "0.75rem",
+    color: theme.color.text.secondary,
+  },
+  variants: {
+    coldStart: {
+      true: {
+        color: `hsla(${theme.color.base.blue}, 100%)`,
+      },
+      false: {},
+    },
+  },
+  defaultVariants: {
+    coldStart: false,
+  },
+});
+
+const LogMessage = styled(LogText, {
+  base: {
+    flexGrow: 1,
+    lineHeight: "normal",
+    fontSize: "0.875rem",
+    paddingLeft: theme.space[2],
+    selectors: {
+      [`${LogContainer.selector({ level: "error" })} &`]: {
+        color: `hsla(${theme.color.base.red}, 100%)`,
+      },
+    },
+  },
+});
+
 function LogLevel(props: { level?: string }) {
   const level = props.level || "info";
-  return <Tag level={level === "error" ? "danger" : "info"}>{level}</Tag>;
+  return (
+    <Tag size="small" level={level === "error" ? "danger" : "info"}>
+      {level}
+    </Tag>
+  );
 }
+
+const CaretIcon = styled("div", {
+  base: {
+    width: 15,
+    height: 15,
+    flexShrink: 0,
+    lineHeight: 0,
+    color: theme.color.text.dimmed,
+    opacity: theme.iconOpacity,
+    transition: "transform 0.2s ease-out",
+    selectors: {
+      [`${LogContainer.selector({ expanded: true })} &`]: {
+        transform: "rotate(90deg)",
+      },
+    },
+  },
+});
+
+const LogDetail = styled("div", {
+  base: {
+    padding: theme.space[2.5],
+  },
+});
+
+const LogDetailHeader = styled("div", {
+  base: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: theme.space[2.5],
+  },
+});
+
+const LogDetailHeaderTitle = styled("h6", {
+  base: {
+    paddingLeft: 1,
+    fontSize: "0.75rem",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    fontFamily: theme.fonts.heading,
+    color: theme.color.text.dimmed,
+    fontWeight: 500,
+  },
+});
+
+const LogLink = styled("a", {
+  base: {
+    fontSize: "0.75rem",
+    paddingRight: 1,
+  },
+});
+
+const LogEntries = styled("div", {
+  base: {
+    borderRadius: theme.borderRadius,
+    paddingLeft: theme.space[3],
+    paddingRight: theme.space[3],
+    backgroundColor: theme.color.background.surface,
+  },
+});
+
+const LogEntry = styled("div", {
+  base: {
+    borderTop: `1px solid ${theme.color.divider.surface}`,
+    paddingTop: theme.space[2.5],
+    paddingBottom: theme.space[2.5],
+    fontFamily: theme.fonts.code,
+    fontSize: "0.75rem",
+    lineHeight: 1.6,
+    color: theme.color.text.primary.surface,
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
 
 interface LogProps {
   level?: "info" | "error";
@@ -229,14 +499,15 @@ function Log(props: LogProps) {
     month: "short",
     day: "numeric",
     hour: "numeric",
+    hour12: false,
     minute: "numeric",
     second: "numeric",
+    timeZoneName: "short",
   };
   const longDateOptions: Intl.DateTimeFormatOptions = {
     ...shortDateOptions,
-    year: "numeric",
     timeZone: "UTC",
-    timeZoneName: "short",
+    year: "numeric",
   };
   const shortDate = new Intl.DateTimeFormat("en-US", shortDateOptions)
     .format(props.start)
@@ -249,13 +520,36 @@ function Log(props: LogProps) {
     props.duration === undefined ? "-" : formatTime(props.duration);
 
   return (
-    <Row space="1">
-      <LogLevel level={props.level} />
-      <span title={longDate}>{shortDate}</span>
-      {formattedDuration}
-      {props.coldStart ? "cold" : "warm"}
-      {props.link}
-      {props.message}
-    </Row>
+    <LogContainer expanded={props.expanded} level={props.level}>
+      <LogSummary space="1" vertical="center">
+        <CaretIcon>
+          <IconCaretRight />
+        </CaretIcon>
+        <LogLevel level={props.level} />
+        <LogDate title={longDate}>{shortDate}</LogDate>
+        <LogDuration
+          coldStart={props.coldStart}
+          title={props.coldStart ? "Cold start" : ""}
+        >
+          {formattedDuration}
+        </LogDuration>
+        <LogMessage>{props.message}</LogMessage>
+      </LogSummary>
+      <Show when={props.expanded}>
+        <LogDetail>
+          <LogDetailHeader>
+            <LogDetailHeaderTitle>Details</LogDetailHeaderTitle>
+            <LogLink href={props.link} target="_blank" rel="noreferrer">
+              Link
+            </LogLink>
+          </LogDetailHeader>
+          <LogEntries>
+            {props.entries.map((entry) => (
+              <LogEntry>{entry}</LogEntry>
+            ))}
+          </LogEntries>
+        </LogDetail>
+      </Show>
+    </LogContainer>
   );
 }

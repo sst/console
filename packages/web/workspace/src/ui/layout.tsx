@@ -96,5 +96,6 @@ export const Row = styled("div", {
 export const Grower = styled("div", {
   base: {
     flexGrow: 1,
+    minWidth: 0,
   },
 });
