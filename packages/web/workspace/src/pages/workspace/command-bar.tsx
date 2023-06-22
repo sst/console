@@ -63,9 +63,9 @@ export const WorkspaceProvider: ActionProvider = async () => {
   ).then((x) => x.flat());
   const splits = location.pathname.split("/");
   return workspaces
-    .filter((w) => w.workspace.slug !== splits[1])
+    .filter((w) => w.workspace?.slug !== splits[1])
     .map((w) => ({
-      title: `Switch to ${w.workspace.slug} workspace`,
+      title: `Switch to ${w.workspace?.slug} workspace`,
       category: "Workspace",
       icon: IconBuildingOffice,
       run: (control) => {

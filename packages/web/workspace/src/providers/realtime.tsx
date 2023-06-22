@@ -66,7 +66,6 @@ export function RealtimeProvider() {
       } else {
         bus.emit(topic as any, parsed.properties);
       }
-      console.log("Got message", topic, parsed);
     });
     connection.on("disconnect", console.log);
     await connection.connect();

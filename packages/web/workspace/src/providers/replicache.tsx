@@ -34,15 +34,6 @@ function createReplicache(workspaceID: string, token: string) {
     mutators,
   });
 
-  replicache.subscribe(
-    (tx) => {
-      return tx.scan({ prefix: "" }).entries().toArray();
-    },
-    {
-      onData: console.log,
-    }
-  );
-
   const oldPuller = replicache.puller;
   replicache.puller = (opts) => {
     opts.headers.append("x-sst-workspace", workspaceID);
