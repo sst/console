@@ -74,5 +74,6 @@ export const Tag = styled("div", {
   defaultVariants: {
     size: "auto",
     level: "info",
+    style: "solid",
   },
 });

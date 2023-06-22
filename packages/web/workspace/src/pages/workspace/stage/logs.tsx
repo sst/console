@@ -136,8 +136,7 @@ const CaretIcon = styled("div", {
     height: 15,
     flexShrink: 0,
     lineHeight: 0,
-    color: theme.color.text.dimmed,
-    opacity: theme.iconOpacity,
+    color: theme.color.icon.dimmed,
     transition: "transform 0.2s ease-out",
     selectors: {
       [`${LogContainer.selector({ expanded: true })} &`]: {
@@ -213,7 +212,7 @@ const LogLoadingIndicator = styled("div", {
     alignItems: "center",
     padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
     borderTop: `1px solid ${theme.color.divider.base}`,
-    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+    borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
   },
 });
 
@@ -358,7 +357,11 @@ export function Logs() {
 function LogLevel(props: { level?: string }) {
   props = mergeProps({ level: "info" }, props);
   return (
-    <Tag size="small" level={props.level === "error" ? "danger" : "info"}>
+    <Tag
+      size="small"
+      style="solid"
+      level={props.level === "error" ? "danger" : "info"}
+    >
       {props.level}
     </Tag>
   );

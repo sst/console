@@ -29,6 +29,7 @@ const Content = styled("div", {
 const Header = styled("div", {
   base: {
     top: "0",
+    zIndex: 1,
     position: "sticky",
     display: "flex",
     alignItems: "center",
