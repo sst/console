@@ -9,7 +9,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.114",
     "@types/node": "^18.16.0",
-    "sst": "2.13.8"
+    "sst": "2.15.0"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.352.0",

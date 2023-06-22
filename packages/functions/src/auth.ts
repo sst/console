@@ -1,4 +1,9 @@
-import { AuthHandler, GithubAdapter, useSession } from "sst/node/future/auth";
+import {
+  AuthHandler,
+  CodeAdapter,
+  GithubAdapter,
+  useSession,
+} from "sst/node/future/auth";
 import { Config } from "sst/node/config";
 import { Octokit } from "@octokit/rest";
 import { Account } from "@console/core/account";
