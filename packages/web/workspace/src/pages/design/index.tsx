@@ -198,6 +198,7 @@ export function Design() {
               start={Date.now()}
               message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
               link="https://google.com"
+              requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
               entries={[]}
             />
           </Grower>
@@ -211,6 +212,7 @@ export function Design() {
               start={Date.now()}
               message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
               link="https://google.com"
+              requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
               entries={[
                 "START RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 Version: $LATEST",
                 "2023-06-21T13:57:53.802Z 3c8b6e33-3800-4b3d-acf2-e49e132c2197 INFO Lambda invoked ",
@@ -229,6 +231,7 @@ export function Design() {
               start={Date.now()}
               message="ERROR: Variable 's' is not defined"
               link="https://google.com"
+              requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
               entries={[]}
             />
           </Grower>
@@ -242,6 +245,7 @@ export function Design() {
               start={Date.now()}
               message="Hello world"
               link="https://google.com"
+              requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
               entries={[]}
             />
           </Grower>
@@ -257,6 +261,7 @@ export function Design() {
                 duration={112873.27}
                 start={Date.now()}
                 message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
+                requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
                 link="https://google.com"
                 entries={[]}
               />
@@ -267,6 +272,7 @@ export function Design() {
                 start={Date.now()}
                 message="Variable 's' is not defined"
                 link="https://google.com"
+                requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
                 entries={[
                   "START RequestId: 3c8b6e33-3800-4b3d-acf2-e49e132c2197 Version: $LATEST",
                   "2023-06-21T13:57:53.802Z 3c8b6e33-3800-4b3d-acf2-e49e132c2197 INFO Lambda invoked ",
@@ -281,6 +287,7 @@ export function Design() {
                 start={Date.now()}
                 message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
                 link="https://google.com"
+                requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
                 entries={[]}
               />
             </LogList>
@@ -381,6 +388,16 @@ const LogDuration = styled(LogText, {
   },
   defaultVariants: {
     coldStart: false,
+  },
+});
+
+const LogRequestId = styled(LogText, {
+  base: {
+    paddingLeft: theme.space[2],
+    flexShrink: 0,
+    lineHeight: "normal",
+    fontSize: "0.75rem",
+    color: theme.color.text.secondary,
   },
 });
 
@@ -493,6 +510,7 @@ interface LogProps {
   link: string;
   coldStart?: boolean;
   expanded?: boolean;
+  requestId: string;
 }
 function Log(props: LogProps) {
   const shortDateOptions: Intl.DateTimeFormatOptions = {
@@ -533,6 +551,7 @@ function Log(props: LogProps) {
         >
           {formattedDuration}
         </LogDuration>
+        <LogRequestId title="Request Id">{props.requestId}</LogRequestId>
         <LogMessage>{props.message}</LogMessage>
       </LogSummary>
       <Show when={props.expanded}>
