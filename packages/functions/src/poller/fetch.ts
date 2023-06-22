@@ -117,6 +117,7 @@ export async function handler(input: State) {
 
   let count = 0;
   console.log("fetching since", offset);
+  const cold = new Set<string>();
   for await (const event of fetchEvents(
     input.logGroup,
     start + offset,
@@ -125,12 +126,37 @@ export async function handler(input: State) {
     count++;
     const tabs = (event.message || "").split("\t");
 
+    if (tabs[0]?.startsWith("INIT_START")) {
+      cold.add(event.logStreamName!);
+      continue;
+    }
     if (tabs[0]?.startsWith("START")) {
       const splits = tabs[0].split(" ");
       await Realtime.publish("log.start", {
         t: event.timestamp,
         l: input.logGroup,
         r: splits[2],
+        c: cold.has(event.logStreamName!),
+      });
+      cold.delete(event.logStreamName!);
+      continue;
+    }
+    if (tabs[0]?.startsWith("END")) {
+      const splits = tabs[0].split(" ");
+      await Realtime.publish("log.end", {
+        t: event.timestamp,
+        l: input.logGroup,
+        r: splits[2],
+      });
+      continue;
+    }
+
+    if (tabs[0]?.startsWith("REPORT")) {
+      await Realtime.publish("log.report", {
+        t: event.timestamp,
+        l: input.logGroup,
+        r: tabs[0].split(" ")[2],
+        d: parseInt(tabs[2]?.split(" ")[2] || "0"),
       });
       continue;
     }
@@ -141,11 +167,12 @@ export async function handler(input: State) {
         l: input.logGroup,
         r: tabs[1],
         k: tabs[2],
-        m: tabs[3],
+        m: tabs.slice(3).join("\t"),
         i: event.eventId,
       });
       continue;
     }
+    console.log("unhandled log line", tabs);
   }
   console.log("published", count, "events");
 

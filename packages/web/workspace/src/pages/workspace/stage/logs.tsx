@@ -3,14 +3,22 @@ import { LogPollerStore } from "$/data/log-poller";
 import { ResourceStore } from "$/data/resource";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag } from "$/ui";
+import { IconBoltSolid } from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
-import { globalStyle } from "@macaron-css/core";
+import { globalKeyframes, globalStyle } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { useParams } from "@solidjs/router";
-import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import {
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  mergeProps,
+} from "solid-js";
 
 const LogList = styled("div", {
   base: {
@@ -41,9 +49,10 @@ const LogContainer = styled("div", {
   },
 });
 
-const LogSummary = styled(Row, {
+const LogSummary = styled("div", {
   base: {
-    gap: theme.space[1.5],
+    ...utility.row(1.5),
+    alignItems: "center",
     borderStyle: "solid",
     borderColor: theme.color.divider.base,
     borderWidth: 0,
@@ -111,7 +120,7 @@ const LogMessage = styled(LogText, {
   base: {
     flexGrow: 1,
     lineHeight: "normal",
-    fontSize: "0.875rem",
+    fontSize: "0.75rem",
     paddingLeft: theme.space[2],
     selectors: {
       [`${LogContainer.selector({ level: "error" })} &`]: {
@@ -197,6 +206,45 @@ const LogEntry = styled("div", {
     },
   },
 });
+
+const LogLoadingIndicator = styled("div", {
+  base: {
+    ...utility.row(1.5),
+    alignItems: "center",
+    padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+  },
+});
+
+const LogLoadingIndicatorIcon = styled("div", {
+  base: {
+    width: 15,
+    height: 15,
+    color: theme.color.text.dimmed,
+    opacity: theme.iconOpacity,
+    animation: "pulse 1.5s linear infinite",
+  },
+});
+
+const LogLoadingIndicatorCopy = styled("div", {
+  base: {
+    color: theme.color.text.dimmed,
+    fontSize: "0.8125rem",
+  },
+});
+
+globalKeyframes("pulse", {
+  "0%": {
+    opacity: 0.3,
+  },
+  "50%": {
+    opacity: 1,
+  },
+  "100%": {
+    opacity: 0.3,
+  },
+});
 export function Logs() {
   const params = useParams();
   const resource = createSubscription(() =>
@@ -222,7 +270,6 @@ export function Logs() {
   );
 
   createEffect(() => {
-    console.log(poller());
     if (!logGroup()) return;
     if (poller()) return;
     if (!resource()) return;
@@ -251,29 +298,27 @@ export function Logs() {
               )
             );
 
-            const formattedDuration = createMemo(() => formatTime(0));
             return (
-              <LogContainer expanded={expanded()} level="info">
-                <LogSummary
-                  space="1"
-                  vertical="center"
-                  onClick={() => setExpanded((r) => !r)}
-                >
+              <LogContainer
+                expanded={expanded()}
+                level={invocation.error ? "error" : "info"}
+              >
+                <LogSummary onClick={() => setExpanded((r) => !r)}>
                   <CaretIcon>
                     <IconCaretRight />
                   </CaretIcon>
-                  <LogLevel level="info" />
+                  <LogLevel level={invocation.error ? "error" : "info"} />
                   <LogDate title={longDate()}>{shortDate()}</LogDate>
                   <LogDuration
-                    coldStart={false}
-                    title={false ? "Cold start" : ""}
+                    coldStart={invocation.cold}
+                    title={invocation.cold ? "Cold start" : ""}
                   >
-                    {formattedDuration()}
+                    {formatTime(invocation.duration || 0)}
                   </LogDuration>
                   <LogRequestId title="Request Id">
                     {invocation.id}
                   </LogRequestId>
-                  <LogMessage>LOL</LogMessage>
+                  <LogMessage></LogMessage>
                 </LogSummary>
                 <Show when={expanded()}>
                   <LogDetail>
@@ -286,7 +331,8 @@ export function Logs() {
                     <LogEntries>
                       {invocation.logs.map((entry) => (
                         <LogEntry>
-                          {invocation.start.toISOString()} {entry.message}
+                          {invocation.start.toLocaleTimeString()}{" "}
+                          {entry.message}
                         </LogEntry>
                       ))}
                     </LogEntries>
@@ -296,25 +342,31 @@ export function Logs() {
             );
           }}
         </For>
+        <LogLoadingIndicator>
+          <LogLoadingIndicatorIcon>
+            <IconBoltSolid />
+          </LogLoadingIndicatorIcon>
+          <LogLoadingIndicatorCopy>
+            Tailing logs&hellip;
+          </LogLoadingIndicatorCopy>
+        </LogLoadingIndicator>
       </LogList>
     </>
   );
 }
 
 function LogLevel(props: { level?: string }) {
+  props = mergeProps({ level: "info" }, props);
   return (
-    <Tag
-      size="small"
-      level={(props.level || "info") === "error" ? "danger" : "info"}
-    >
-      {props.level || "info"}
+    <Tag size="small" level={props.level === "error" ? "danger" : "info"}>
+      {props.level}
     </Tag>
   );
 }
 
 function formatTime(milliseconds: number) {
   return milliseconds < 1000
-    ? milliseconds.toFixed(2) + "ms"
+    ? milliseconds.toFixed(0) + "ms"
     : (milliseconds / 1000).toFixed(2) + "s";
 }
 

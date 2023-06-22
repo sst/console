@@ -346,8 +346,10 @@ const LogList = styled("div", {
   },
 });
 
-const LogLoadingIndicator = styled(Row, {
+const LogLoadingIndicator = styled("div", {
   base: {
+    ...utility.row(1.5),
+    alignItems: "center",
     padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
     borderTop: `1px solid ${theme.color.divider.base}`,
     borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
