@@ -16,6 +16,7 @@ interface Invocation {
 }
 
 interface Log {
+  id: string;
   timestamp: Date;
   message: string;
 }
@@ -48,6 +49,7 @@ bus.on("log.entry", (e) => {
   setLogStore(
     produce((state) => {
       const log: Log = {
+        id: e.i,
         timestamp: new Date(e.t),
         message: e.m,
       };
@@ -57,7 +59,7 @@ bus.on("log.entry", (e) => {
         logs = pendingEntries.get(e.r);
         if (!logs) pendingEntries.set(e.r, (logs = []));
       }
-      if (logs.find((l) => l.timestamp === log.timestamp)) return;
+      if (logs.find((l) => l.id === log.id)) return;
       logs.push(log);
       console.log(e, invocation);
       if (invocation && e.k === "ERROR") invocation.error = true;
