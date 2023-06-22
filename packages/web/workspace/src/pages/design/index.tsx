@@ -1,8 +1,8 @@
-import { globalStyle } from "@macaron-css/core";
+import { globalStyle, globalKeyframes } from "@macaron-css/core";
 import { Grower, Row } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
-import { IconClipboard } from "$/ui/icons";
+import { IconBoltSolid } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
 import { utility } from "$/ui/utility";
@@ -290,6 +290,14 @@ export function Design() {
                 requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
                 entries={[]}
               />
+              <LogLoadingIndicator space="1.5" vertical="center">
+                <LogLoadingIndicatorIcon>
+                  <IconBoltSolid />
+                </LogLoadingIndicatorIcon>
+                <LogLoadingIndicatorCopy>
+                  Tailing logs&hellip;
+                </LogLoadingIndicatorCopy>
+              </LogLoadingIndicator>
             </LogList>
           </Grower>
         </Variant>
@@ -310,6 +318,43 @@ const LogList = styled("div", {
     borderColor: theme.color.divider.base,
     borderWidth: "0 1px 1px",
     borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
+  },
+});
+
+const LogLoadingIndicator = styled(Row, {
+  base: {
+    padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+  },
+});
+
+const LogLoadingIndicatorIcon = styled("div", {
+  base: {
+    width: 15,
+    height: 15,
+    color: theme.color.text.dimmed,
+    opacity: theme.iconOpacity,
+    animation: "pulse 1.5s linear infinite",
+  },
+});
+
+const LogLoadingIndicatorCopy = styled("div", {
+  base: {
+    color: theme.color.text.dimmed,
+    fontSize: "0.8125rem",
+  },
+});
+
+globalKeyframes("pulse", {
+  "0%": {
+    opacity: 0.3,
+  },
+  "50%": {
+    opacity: 1,
+  },
+  "100%": {
+    opacity: 0.3,
   },
 });
 
@@ -335,6 +380,7 @@ const LogContainer = styled("div", {
 
 const LogSummary = styled(Row, {
   base: {
+    gap: theme.space[1.5],
     borderStyle: "solid",
     borderColor: theme.color.divider.base,
     borderWidth: 0,
