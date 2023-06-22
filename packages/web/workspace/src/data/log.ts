@@ -33,7 +33,7 @@ bus.on("log.start", (e) => {
       if (!group) state[e.l] = group = [];
       const pending = pendingEntries.get(e.r) || [];
       pendingEntries.delete(e.r);
-      group.push({
+      group.unshift({
         id: e.r,
         start: new Date(e.t),
         cold: e.c,

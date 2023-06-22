@@ -283,6 +283,14 @@ export function Logs() {
     <>
       <div>Logs for {resource()?.cfnID}</div>
       <LogList>
+        <LogLoadingIndicator>
+          <LogLoadingIndicatorIcon>
+            <IconBoltSolid />
+          </LogLoadingIndicatorIcon>
+          <LogLoadingIndicatorCopy>
+            Tailing logs&hellip;
+          </LogLoadingIndicatorCopy>
+        </LogLoadingIndicator>
         <For each={LogStore[logGroup()] || []}>
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
@@ -342,14 +350,6 @@ export function Logs() {
             );
           }}
         </For>
-        <LogLoadingIndicator>
-          <LogLoadingIndicatorIcon>
-            <IconBoltSolid />
-          </LogLoadingIndicatorIcon>
-          <LogLoadingIndicatorCopy>
-            Tailing logs&hellip;
-          </LogLoadingIndicatorCopy>
-        </LogLoadingIndicator>
       </LogList>
     </>
   );
