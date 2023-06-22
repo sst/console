@@ -1,14 +1,19 @@
 import { globalStyle, globalKeyframes } from "@macaron-css/core";
-import { Grower, Row } from "$/ui/layout";
+import { Grower, Stack, Row } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
-import { IconBoltSolid } from "$/ui/icons";
+import { IconChevronLeft, IconBoltSolid } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
 import { utility } from "$/ui/utility";
-import { IconCaretRight, IconNodeRuntime } from "$/ui/icons/custom";
+import {
+  IconCaretRight,
+  IconEventBus,
+  IconNodeRuntime,
+} from "$/ui/icons/custom";
 import { JSX, ComponentProps, Show, For } from "solid-js";
 import { prop } from "remeda";
+import { Logs } from "../workspace/stage/logs";
 
 const ComponentRoot = styled("div", {
   base: {
@@ -106,6 +111,26 @@ const OverflowSpan = styled("span", {
 export function Design() {
   return (
     <>
+      <ComponentType name="LogsEmptyLoadingIndicator">
+        <Variant name="Default">
+          <Grower>
+            <LogsEmptyLoadingIndicator />
+          </Grower>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="LogsHeader">
+        <Variant name="Default">
+          <Grower>
+            <LogsHeader
+              handler="packages/functions/src/events/app-stage-updated.handler"
+              construct="EventBus"
+              constructName="bus"
+              event="subscription"
+              route="/replicache/push"
+            />
+          </Grower>
+        </Variant>
+      </ComponentType>
       <ComponentType name="Button">
         <Variant name="Primary">
           <Button color="primary">Button</Button>
@@ -290,7 +315,7 @@ export function Design() {
                 requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
                 entries={[]}
               />
-              <LogLoadingIndicator space="1.5" vertical="center">
+              <LogLoadingIndicator border space="1.5" vertical="center">
                 <LogLoadingIndicatorIcon>
                   <IconBoltSolid />
                 </LogLoadingIndicatorIcon>
@@ -326,6 +351,17 @@ const LogLoadingIndicator = styled(Row, {
     padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
     borderTop: `1px solid ${theme.color.divider.base}`,
     borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+  },
+  variants: {
+    border: {
+      true: {},
+      false: {
+        borderTopWidth: 0,
+      },
+    },
+  },
+  defaultVariants: {
+    border: false,
   },
 });
 
@@ -613,5 +649,121 @@ function Log(props: LogProps) {
         </LogDetail>
       </Show>
     </LogContainer>
+  );
+}
+
+const BackButton = styled("button", {
+  base: {
+    border: "none",
+    background: "none",
+    color: theme.color.text.dimmed,
+    opacity: theme.iconOpacity,
+    width: 42,
+    height: 42,
+    lineHeight: 0,
+    padding: `0 ${theme.space[2]} 0 0`,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      "&:hover": {
+        color: theme.color.text.secondary,
+      },
+    },
+  },
+});
+
+const BackButtonIcon = styled(IconChevronLeft, {
+  base: {
+    cursor: "pointer",
+  },
+});
+
+function Back() {
+  return (
+    <BackButton>
+      <BackButtonIcon />
+    </BackButton>
+  );
+}
+
+const LogsHeaderTitle = styled("h1", {
+  base: {
+    fontSize: "1.25rem",
+    fontWeight: 500,
+  },
+});
+
+const ConstructIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    color: theme.color.icon.secondary,
+    width: 13,
+    height: 13,
+  },
+});
+
+const ConstructName = styled("div", {
+  base: {
+    fontSize: "0.8125rem",
+    color: theme.color.text.secondary,
+  },
+});
+
+const EventRoute = styled("div", {
+  base: {
+    fontSize: "0.75rem",
+    color: theme.color.text.secondary,
+    fontFamily: theme.fonts.code,
+  },
+});
+
+interface LogsHeaderProps {
+  handler: string;
+  construct: string;
+  constructName: string;
+  event: string;
+  route?: string;
+}
+function LogsHeader(props: LogsHeaderProps) {
+  return (
+    <Row space="0" vertical="center">
+      <Back />
+      <Stack space="2">
+        <LogsHeaderTitle>{props.handler}</LogsHeaderTitle>
+        <Row space="3.5" vertical="center">
+          <Tag style="outline">{props.event}</Tag>
+          <Row title={props.construct} space="1.5" vertical="center">
+            <ConstructIcon>
+              <IconEventBus />
+            </ConstructIcon>
+            <ConstructName>{props.constructName}</ConstructName>
+          </Row>
+          <EventRoute>{props.route}</EventRoute>
+        </Row>
+      </Stack>
+    </Row>
+  );
+}
+
+const LogsEmptyContainer = styled("div", {
+  base: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 300,
+    borderRadius: theme.borderRadius,
+    border: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+function LogsEmptyLoadingIndicator() {
+  return (
+    <LogsEmptyContainer>
+      <LogLoadingIndicator space="1.5" vertical="center">
+        <LogLoadingIndicatorIcon>
+          <IconBoltSolid />
+        </LogLoadingIndicatorIcon>
+        <LogLoadingIndicatorCopy>Tailing logs&hellip;</LogLoadingIndicatorCopy>
+      </LogLoadingIndicator>
+    </LogsEmptyContainer>
   );
 }
