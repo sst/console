@@ -317,7 +317,7 @@ const LogList = styled("div", {
     borderStyle: "solid",
     borderColor: theme.color.divider.base,
     borderWidth: "0 1px 1px",
-    borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
+    borderRadius: theme.borderRadius,
   },
 });
 
