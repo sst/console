@@ -281,7 +281,7 @@ export function Logs() {
 
   return (
     <>
-      <div>Logs for {resource()?.cfnID}</div>
+      <div>Logs for {resource()?.metadata.handler}</div>
       <LogList>
         <LogLoadingIndicator>
           <LogLoadingIndicatorIcon>
