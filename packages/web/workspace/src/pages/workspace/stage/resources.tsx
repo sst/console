@@ -159,9 +159,9 @@ export const ChildDetail = styled("div", {
 });
 export const ChildDetailUnit = styled("span", {
   base: {
-    fontWeight: 600,
+    fontWeight: 400,
     paddingLeft: 2,
-    fontSize: "0.5625rem",
+    fontSize: "0.6875rem",
   },
 });
 export const ChildExtra = styled("span", {
@@ -696,6 +696,19 @@ export function RDSCard(props: CardProps<"RDS">) {
   );
 }
 
+function formatBytes(bytes: number, decimals = 2) {
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return {
+    unit: sizes[i],
+    value: parseFloat((bytes / Math.pow(k, i)).toFixed(dm)),
+  };
+}
+
 function FunctionChild(props: {
   id: string | undefined;
   tag?: string;
@@ -731,12 +744,15 @@ function FunctionChild(props: {
           </Row>
           <Row shrink={false} space="3" vertical="center">
             <Show when={fn() && fn()!.enrichment.size}>
-              {(value) => (
-                <ChildDetail>
-                  {Math.ceil(value() / 1024)}
-                  <ChildDetailUnit>KB</ChildDetailUnit>
-                </ChildDetail>
-              )}
+              {(value) => {
+                const formattedSize = formatBytes(value());
+                return (
+                  <ChildDetail>
+                    {formattedSize.value}
+                    <ChildDetailUnit>{formattedSize.unit}</ChildDetailUnit>
+                  </ChildDetail>
+                );
+              }}
             </Show>
             <ChildIcon>
               <IconNodeRuntime />

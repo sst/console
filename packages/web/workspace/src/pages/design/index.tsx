@@ -111,6 +111,13 @@ const OverflowSpan = styled("span", {
 export function Design() {
   return (
     <>
+      <ComponentType name="FormNewWorkspace">
+        <Variant name="Default">
+          <Grower>
+            <FormNewWorkspace />
+          </Grower>
+        </Variant>
+      </ComponentType>
       <ComponentType name="LogsEmptyLoadingIndicator">
         <Variant name="Default">
           <Grower>
@@ -767,5 +774,29 @@ function LogsEmptyLoadingIndicator() {
         <LogLoadingIndicatorCopy>Tailing logs&hellip;</LogLoadingIndicatorCopy>
       </LogLoadingIndicator>
     </LogsEmptyContainer>
+  );
+}
+
+const Input = styled("input", {
+  base: {
+    border: `1px solid ${theme.color.divider.base}`,
+    fontSize: "0.875rem",
+    borderRadius: theme.borderRadius,
+    padding: `${theme.space[2]} ${theme.space[3]}`,
+  },
+});
+
+function FormNewWorkspace() {
+  return (
+    <form>
+      <label>
+        <p>Workspace Name</p>
+        <Input placeholder="Acme Inc." type="text" />
+      </label>
+      <label>
+        <p>Workspace Slug</p>
+        <Input placeholder="acme" type="text" />
+      </label>
+    </form>
   );
 }

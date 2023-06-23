@@ -22,7 +22,7 @@ function resource<Type extends Resource.Info["type"]>(
   };
 }
 
-function func(id: string, handler: string) {
+function func(id: string, handler: string, size?: number) {
   return resource(
     "Function",
     id,
@@ -33,7 +33,7 @@ function func(id: string, handler: string) {
       handler,
     },
     {
-      size: 2048,
+      size: size || 2048,
     }
   );
 }
@@ -307,6 +307,6 @@ export const DUMMY_RESOURCES = [
     migrator: undefined,
   }),
   func("index", "packages/function.handler"),
-  func("notes_get", "packages/notes.handler"),
-  func("notes_post", "packages/notes.handler"),
+  func("notes_get", "packages/notes.handler", 20400800000),
+  func("notes_post", "packages/notes.handler", 2048000),
 ];
