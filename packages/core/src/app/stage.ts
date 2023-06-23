@@ -17,6 +17,7 @@ import { Enrichers } from "./resource";
 import { db } from "../drizzle";
 import { Realtime } from "../realtime";
 import { event } from "../event";
+import { Replicache } from "../replicache";
 
 export * as Stage from "./stage";
 
@@ -166,7 +167,7 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
   ).then((x) => x.flat());
 
   return useTransaction(async (tx) => {
-    createTransactionEffect(() => Realtime.publish("poke", {}));
+    createTransactionEffect(() => Replicache.poke());
     await tx
       .delete(resource)
       .where(

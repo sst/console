@@ -50,7 +50,7 @@ export const handler = ApiHandler(async () => {
       mutationID,
     });
   });
-  await Realtime.publish("poke", {});
+  await Replicache.poke();
   return {
     statusCode: 200,
   };

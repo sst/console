@@ -1,6 +1,6 @@
 import { provideActor } from "@console/core/actor";
 import { LogPoller } from "@console/core/log-poller";
-import { Realtime } from "@console/core/realtime";
+import { Replicache } from "@console/core/replicache";
 
 export const handler = async (evt: any) => {
   console.log(evt);
@@ -32,5 +32,5 @@ export const handler = async (evt: any) => {
   // const restarted = await LogPoller.subscribe(input);
   // console.log("restarted", restarted);
 
-  await Realtime.publish("poke", {});
+  await Replicache.poke();
 };

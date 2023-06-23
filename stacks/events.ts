@@ -32,7 +32,7 @@ export function Events({ stack }: StackContext) {
   bus.subscribe("app.stage.connected", {
     handler: "packages/functions/src/events/app-stage-connected.handler",
     bind: [...Object.values(secrets.database)],
-    permissions: ["sts"],
+    permissions: ["sts", "iot"],
     environment: {
       EVENT_BUS_ARN: bus.eventBusArn,
     },
@@ -41,7 +41,7 @@ export function Events({ stack }: StackContext) {
   bus.subscribe("app.stage.updated", {
     handler: "packages/functions/src/events/app-stage-updated.handler",
     bind: [...Object.values(secrets.database)],
-    permissions: ["sts"],
+    permissions: ["sts", "iot"],
   });
 
   return bus;

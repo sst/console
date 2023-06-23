@@ -62,6 +62,7 @@ export const Enrichers = {
         FunctionName: metadata.arn,
       })
     );
+    console.log("done enriching");
     return {
       size: info.Configuration?.CodeSize,
     };

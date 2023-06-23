@@ -7,7 +7,7 @@ import {
   createMemo,
   ComponentProps,
 } from "solid-js";
-import { useResourcesContext } from "./context";
+import { useFunctionsContext, useResourcesContext } from "./context";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
@@ -28,16 +28,13 @@ import {
   IconRemixSite,
   IconStaticSite,
   IconNextjsSite,
-  IconJavaRuntime,
-  IconDotNetRuntime,
-  IconGoRuntime,
   IconNodeRuntime,
   IconWebSocketApi,
   IconSvelteKitSite,
   IconKinesisStream,
   IconSolidStartSite,
   IconApiGatewayV1Api,
-  IconPythonRuntime,
+  IconFunction,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { Link } from "@solidjs/router";
@@ -215,96 +212,99 @@ export function Header(props: HeaderProps) {
 export function Resources() {
   const resources = useResourcesContext();
   return (
-    <For
-      each={resources()
-        .filter(
-          (r) =>
-            r.type === "Api" ||
-            r.type === "RDS" ||
-            r.type === "Cron" ||
-            r.type === "Table" ||
-            r.type === "Queue" ||
-            r.type === "Topic" ||
-            r.type === "Bucket" ||
-            r.type === "Cognito" ||
-            r.type === "AppSync" ||
-            r.type === "EventBus" ||
-            r.type === "AstroSite" ||
-            r.type === "RemixSite" ||
-            r.type === "StaticSite" ||
-            r.type === "NextjsSite" ||
-            r.type === "WebSocketApi" ||
-            r.type === "KinesisStream" ||
-            r.type === "SvelteKitSite" ||
-            r.type === "SolidStartSite" ||
-            r.type === "ApiGatewayV1Api"
-        )
-        .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
-    >
-      {(resource) => (
-        <Card>
-          <Switch>
-            <Match when={resource.type === "Api" && resource}>
-              {(resource) => <ApiCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "ApiGatewayV1Api" && resource}>
-              {(resource) => <ApiGatewayV1ApiCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "AppSync" && resource}>
-              {(resource) => <AppSyncCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "WebSocketApi" && resource}>
-              {(resource) => <WebSocketApiCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "EventBus" && resource}>
-              {(resource) => <EventBusCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "NextjsSite" && resource}>
-              {(resource) => <NextjsSiteCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "SvelteKitSite" && resource}>
-              {(resource) => <SvelteKitSiteCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "AstroSite" && resource}>
-              {(resource) => <AstroSiteCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "RemixSite" && resource}>
-              {(resource) => <RemixSiteCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "SolidStartSite" && resource}>
-              {(resource) => <SolidStartSiteCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "StaticSite" && resource}>
-              {(resource) => <StaticSiteCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "RDS" && resource}>
-              {(resource) => <RDSCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "Topic" && resource}>
-              {(resource) => <TopicCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "KinesisStream" && resource}>
-              {(resource) => <KinesisStreamCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "Queue" && resource}>
-              {(resource) => <QueueCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "Bucket" && resource}>
-              {(resource) => <BucketCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "Cognito" && resource}>
-              {(resource) => <CognitoCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "Cron" && resource}>
-              {(resource) => <CronCard resource={resource()} />}
-            </Match>
-            <Match when={resource.type === "Table" && resource}>
-              {(resource) => <TableCard resource={resource()} />}
-            </Match>
-          </Switch>
-        </Card>
-      )}
-    </For>
+    <>
+      <For
+        each={resources()
+          .filter(
+            (r) =>
+              r.type === "Api" ||
+              r.type === "RDS" ||
+              r.type === "Cron" ||
+              r.type === "Table" ||
+              r.type === "Queue" ||
+              r.type === "Topic" ||
+              r.type === "Bucket" ||
+              r.type === "Cognito" ||
+              r.type === "AppSync" ||
+              r.type === "EventBus" ||
+              r.type === "AstroSite" ||
+              r.type === "RemixSite" ||
+              r.type === "StaticSite" ||
+              r.type === "NextjsSite" ||
+              r.type === "WebSocketApi" ||
+              r.type === "KinesisStream" ||
+              r.type === "SvelteKitSite" ||
+              r.type === "SolidStartSite" ||
+              r.type === "ApiGatewayV1Api"
+          )
+          .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
+      >
+        {(resource) => (
+          <Card>
+            <Switch>
+              <Match when={resource.type === "Api" && resource}>
+                {(resource) => <ApiCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "ApiGatewayV1Api" && resource}>
+                {(resource) => <ApiGatewayV1ApiCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "AppSync" && resource}>
+                {(resource) => <AppSyncCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "WebSocketApi" && resource}>
+                {(resource) => <WebSocketApiCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "EventBus" && resource}>
+                {(resource) => <EventBusCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "NextjsSite" && resource}>
+                {(resource) => <NextjsSiteCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "SvelteKitSite" && resource}>
+                {(resource) => <SvelteKitSiteCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "AstroSite" && resource}>
+                {(resource) => <AstroSiteCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "RemixSite" && resource}>
+                {(resource) => <RemixSiteCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "SolidStartSite" && resource}>
+                {(resource) => <SolidStartSiteCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "StaticSite" && resource}>
+                {(resource) => <StaticSiteCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "RDS" && resource}>
+                {(resource) => <RDSCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "Topic" && resource}>
+                {(resource) => <TopicCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "KinesisStream" && resource}>
+                {(resource) => <KinesisStreamCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "Queue" && resource}>
+                {(resource) => <QueueCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "Bucket" && resource}>
+                {(resource) => <BucketCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "Cognito" && resource}>
+                {(resource) => <CognitoCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "Cron" && resource}>
+                {(resource) => <CronCard resource={resource()} />}
+              </Match>
+              <Match when={resource.type === "Table" && resource}>
+                {(resource) => <TableCard resource={resource()} />}
+              </Match>
+            </Switch>
+          </Card>
+        )}
+      </For>
+      <OrphanFunctionsCard />
+    </>
   );
 }
 
@@ -658,6 +658,32 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
   );
 }
 
+export function OrphanFunctionsCard() {
+  const functions = useFunctionsContext();
+  const orphans = createMemo(() =>
+    [...functions().entries()]
+      .filter(([_, values]) => !values.length)
+      .map(([key]) => key)
+  );
+
+  return (
+    <Card>
+      <HeaderRoot>
+        <Row space="2" vertical="center">
+          <HeaderIcon title="Functions">
+            <IconFunction />
+          </HeaderIcon>
+          <HeaderName>Other functions</HeaderName>
+        </Row>
+        <HeaderType>Function</HeaderType>
+      </HeaderRoot>
+      <Children>
+        <For each={orphans()}>{(orphan) => <FunctionChild id={orphan} />}</For>
+      </Children>
+    </Card>
+  );
+}
+
 export function RDSCard(props: CardProps<"RDS">) {
   return (
     <>
@@ -682,7 +708,9 @@ function FunctionChild(props: {
       resources().find(
         (r) =>
           r.type === "Function" &&
-          (r.addr === props.id || r.metadata.arn === props.id)
+          (r.id === props.id ||
+            r.addr === props.id ||
+            r.metadata.arn === props.id)
       ) as Extract<Resource.Info, { type: "Function" }> | undefined
   );
   return (
