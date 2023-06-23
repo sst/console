@@ -226,7 +226,6 @@ export function Design() {
           <Grower>
             <Log
               level="info"
-              duration={112873.27}
               start={Date.now()}
               message="RequestId: b77ebfc5-3b84-4b3b-8936-e4c2e266dced Duration: 80.97 ms Billed Duration: 81 ms Memory Size: 1024 MB Max Memory Used: 231 MB"
               link="https://google.com"
@@ -623,7 +622,7 @@ function Log(props: LogProps) {
   );
 
   const formattedDuration =
-    props.duration === undefined ? "-" : formatTime(props.duration);
+    props.duration === undefined ? "- ms" : formatTime(props.duration);
 
   return (
     <LogContainer expanded={props.expanded} level={props.level}>

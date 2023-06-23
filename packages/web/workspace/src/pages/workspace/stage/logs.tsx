@@ -320,7 +320,9 @@ export function Logs() {
                     coldStart={invocation.cold}
                     title={invocation.cold ? "Cold start" : ""}
                   >
-                    {formatTime(invocation.duration || 0)}
+                    {invocation.duration
+                      ? formatTime(invocation.duration)
+                      : "- ms"}
                   </LogDuration>
                   <LogRequestId title="Request Id">
                     {invocation.id}
