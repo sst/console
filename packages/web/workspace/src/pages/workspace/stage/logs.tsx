@@ -68,10 +68,6 @@ const LogSummary = styled("div", {
   },
 });
 
-globalStyle(`${LogSummary} *`, {
-  cursor: "pointer",
-});
-
 const LogText = styled("div", {
   base: {
     ...utility.textLine(),

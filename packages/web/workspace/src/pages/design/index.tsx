@@ -431,10 +431,6 @@ const LogSummary = styled(Row, {
   },
 });
 
-globalStyle(`${LogSummary} *`, {
-  cursor: "pointer",
-});
-
 const LogText = styled("div", {
   base: {
     ...utility.textLine(),
@@ -674,9 +670,7 @@ const BackButton = styled("button", {
 });
 
 const BackButtonIcon = styled(IconChevronLeft, {
-  base: {
-    cursor: "pointer",
-  },
+  base: {},
 });
 
 function Back() {
@@ -773,7 +767,6 @@ function LogsEmptyLoadingIndicator() {
 const LinkButton = styled("span", {
   base: {
     fontWeight: 500,
-    cursor: "pointer",
     fontSize: "0.8125rem",
     fontFamily: theme.font.family.code,
     color: theme.color.link.primary.base,

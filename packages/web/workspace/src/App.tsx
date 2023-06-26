@@ -47,12 +47,7 @@ globalStyle("h1, h2, h3, h4, h5, h6, p", {
   margin: 0,
 });
 
-globalStyle("button", {
-  cursor: "pointer",
-});
-
 globalStyle("a", {
-  cursor: "pointer",
   textDecoration: "none",
   color: theme.color.link.primary.base,
   transition: `color ${theme.colorFadeDuration} ease-out`,
@@ -60,6 +55,10 @@ globalStyle("a", {
 
 globalStyle("a:hover", {
   color: theme.color.link.primary.hover,
+});
+
+globalStyle(`a[href^="http"]`, {
+  cursor: "pointer",
 });
 
 globalStyle("*:focus", {

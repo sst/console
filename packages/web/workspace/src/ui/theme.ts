@@ -7,8 +7,11 @@ const font = {
     code: '"IBM Plex Mono", monospace',
   },
   size: {
+    mono_xs: "0.6875rem",
     xs: "0.75rem",
+    mono_sm: "0.8125rem",
     sm: "0.875rem",
+    mono_base: "0.9375rem",
     base: "1rem",
     lg: "1.125rem",
     xl: "1.25rem",
@@ -23,14 +26,10 @@ const font = {
   },
 };
 
-const navbarPadding = "0.75rem";
-
 const constants = {
   colorFadeDuration: "0.20s",
   borderRadius: "4px",
   textBoldWeight: "600",
-  navbarPadding,
-  contentPadding: navbarPadding,
   iconOpacity: "0.85",
 };
 

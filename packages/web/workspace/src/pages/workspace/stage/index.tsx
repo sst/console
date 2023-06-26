@@ -21,7 +21,7 @@ import { Logs } from "./logs";
 
 const Content = styled("div", {
   base: {
-    padding: theme.space[6],
+    padding: theme.space[4],
     ...utility.stack(4),
   },
 });
@@ -38,8 +38,8 @@ const Header = styled("div", {
     WebkitBackdropFilter: "blur(8px)",
     backgroundColor: theme.color.background.navbar,
     borderBottom: `1px solid ${theme.color.divider.base}`,
-    padding: `0 ${theme.space[6]}`,
-    height: 60,
+    padding: `0 ${theme.space[4]}`,
+    height: 68,
   },
 });
 
@@ -50,7 +50,6 @@ const User = styled("a", {
     display: "flex",
     alignItems: "center",
     gap: theme.space[4],
-    cursor: "pointer",
     opacity: "0.8",
     transition: `opacity ${theme.colorFadeDuration} ease-out`,
     ":hover": {
@@ -75,8 +74,8 @@ const OrgSwitcher = styled("img", {
     flexShrink: 0,
     padding: 0,
     border: "none",
-    borderRadius: "4px",
     backgroundColor: "transparent",
+    borderRadius: theme.borderRadius,
     transition: `border ${theme.colorFadeDuration} ease-out`,
   },
 });
@@ -98,7 +97,7 @@ const StageSwitcher = styled("div", {
 const SwitcherApp = styled("div", {
   base: {
     fontSize: theme.font.size.lg,
-    fontWeight: "500",
+    fontWeight: 500,
   },
 });
 const SwitcherStage = styled("div", {
@@ -142,7 +141,7 @@ export function Stage() {
               <StageSwitcher
                 onClick={() => bar.show(StageProvider, AppProvider)}
               >
-                <Stack space="1">
+                <Stack space="1.5">
                   <SwitcherApp>{stageContext.app.name}</SwitcherApp>
                   <SwitcherStage>{stageContext.stage.name}</SwitcherStage>
                 </Stack>

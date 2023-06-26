@@ -69,8 +69,8 @@ const HeaderRoot = styled("div", {
 const HeaderIcon = styled("div", {
   base: {
     flexShrink: 0,
-    width: 20,
-    height: 20,
+    width: 16,
+    height: 16,
     color: theme.color.icon.secondary,
   },
 });
@@ -97,6 +97,8 @@ const HeaderDescription = styled("div", {
 const HeaderType = styled("div", {
   base: {
     color: theme.color.text.secondary,
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
   },
 });
 
@@ -148,6 +150,7 @@ export const ChildDetail = styled("div", {
     alignItems: "baseline",
     color: theme.color.text.secondary,
     fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
     textAlign: "right",
     lineHeight: "normal",
   },
@@ -155,7 +158,7 @@ export const ChildDetail = styled("div", {
 export const ChildDetailUnit = styled("span", {
   base: {
     fontWeight: 500,
-    paddingLeft: 2,
+    paddingLeft: 3,
     fontSize: theme.font.size.xs,
   },
 });
@@ -163,8 +166,8 @@ export const ChildDetailUnit = styled("span", {
 export const ChildIcon = styled("div", {
   base: {
     flexShrink: 0,
-    height: 20,
-    width: 20,
+    height: 16,
+    width: 16,
     color: theme.color.icon.dimmed,
   },
 });
@@ -182,12 +185,14 @@ export function Header(props: HeaderProps) {
   return (
     <HeaderRoot>
       <Row space="3" vertical="center">
-        <Show when={props.icon}>
-          {(icon) => (
-            <HeaderIcon title={props.resource.type}>{icon()({})}</HeaderIcon>
-          )}
-        </Show>
-        <HeaderName>{props.resource.cfnID}</HeaderName>
+        <Row space="2" vertical="center">
+          <Show when={props.icon}>
+            {(icon) => (
+              <HeaderIcon title={props.resource.type}>{icon()({})}</HeaderIcon>
+            )}
+          </Show>
+          <HeaderName>{props.resource.cfnID}</HeaderName>
+        </Row>
         <HeaderDescription>{props.description}</HeaderDescription>
       </Row>
       <HeaderType>{props.resource.type}</HeaderType>
@@ -659,7 +664,7 @@ export function OrphanFunctionsCard() {
           <HeaderIcon title="Functions">
             <IconFunction />
           </HeaderIcon>
-          <HeaderName>Other Functions</HeaderName>
+          <HeaderName>Functions</HeaderName>
         </Row>
         <HeaderType>Function</HeaderType>
       </HeaderRoot>

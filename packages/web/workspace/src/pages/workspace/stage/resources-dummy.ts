@@ -311,4 +311,5 @@ export const DUMMY_RESOURCES = [
   func("index", "packages/function.handler"),
   func("notes_get", "packages/notes.handler", 20400800000),
   func("notes_post", "packages/notes.handler", 2048000),
+  func("other_func", "packages/others/func.handler", 2048000),
 ];
