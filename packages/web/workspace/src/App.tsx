@@ -30,7 +30,7 @@ const Root = styled("div", {
     inset: 0,
     position: "fixed",
     lineHeight: 1,
-    fontFamily: theme.fonts.body,
+    fontFamily: theme.font.family.body,
     fontSynthesis: "none",
     textRendering: "geometricPrecision",
     backgroundColor: theme.color.background.base,

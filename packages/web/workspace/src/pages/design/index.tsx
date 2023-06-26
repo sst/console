@@ -6,14 +6,8 @@ import { IconChevronLeft, IconBoltSolid } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
 import { utility } from "$/ui/utility";
-import {
-  IconCaretRight,
-  IconEventBus,
-  IconNodeRuntime,
-} from "$/ui/icons/custom";
-import { JSX, ComponentProps, Show, For } from "solid-js";
-import { prop } from "remeda";
-import { Logs } from "../workspace/stage/logs";
+import { IconCaretRight, IconEventBus } from "$/ui/icons/custom";
+import { JSX, Show } from "solid-js";
 
 const ComponentRoot = styled("div", {
   base: {
@@ -26,7 +20,7 @@ const ComponentName = styled("h1", {
     fontSize: "0.9375rem",
     textTransform: "uppercase",
     paddingBottom: theme.space[6],
-    fontFamily: theme.fonts.heading,
+    fontFamily: theme.font.family.heading,
   },
 });
 
@@ -50,7 +44,7 @@ const VariantName = styled("h2", {
   base: {
     fontSize: "0.8125rem",
     textTransform: "uppercase",
-    fontFamily: theme.fonts.heading,
+    fontFamily: theme.font.family.heading,
   },
 });
 
@@ -321,7 +315,7 @@ export function Design() {
                 requestId="3c8b6e33-3800-4b3d-acf2-e49e132c2197"
                 entries={[]}
               />
-              <LogLoadingIndicator border space="1.5" vertical="center">
+              <LogLoadingIndicator border>
                 <LogLoadingIndicatorIcon>
                   <IconBoltSolid />
                 </LogLoadingIndicatorIcon>
@@ -444,7 +438,7 @@ globalStyle(`${LogSummary} *`, {
 const LogText = styled("div", {
   base: {
     ...utility.textLine(),
-    fontFamily: theme.fonts.code,
+    fontFamily: theme.font.family.code,
     fontSize: "0.75rem",
   },
 });
@@ -549,7 +543,7 @@ const LogDetailHeaderTitle = styled("h6", {
     fontSize: "0.75rem",
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    fontFamily: theme.fonts.heading,
+    fontFamily: theme.font.family.heading,
     color: theme.color.text.dimmed,
     fontWeight: 500,
   },
@@ -576,7 +570,7 @@ const LogEntry = styled("div", {
     borderTop: `1px solid ${theme.color.divider.surface}`,
     paddingTop: theme.space[2.5],
     paddingBottom: theme.space[2.5],
-    fontFamily: theme.fonts.code,
+    fontFamily: theme.font.family.code,
     fontSize: "0.75rem",
     lineHeight: 1.6,
     color: theme.color.text.primary.surface,
@@ -720,7 +714,7 @@ const EventRoute = styled("div", {
   base: {
     fontSize: "0.75rem",
     color: theme.color.text.secondary,
-    fontFamily: theme.fonts.code,
+    fontFamily: theme.font.family.code,
   },
 });
 
@@ -766,7 +760,7 @@ const LogsEmptyContainer = styled("div", {
 function LogsEmptyLoadingIndicator() {
   return (
     <LogsEmptyContainer>
-      <LogLoadingIndicator space="1.5" vertical="center">
+      <LogLoadingIndicator>
         <LogLoadingIndicatorIcon>
           <IconBoltSolid />
         </LogLoadingIndicatorIcon>

@@ -6,7 +6,8 @@
     "start": "vite",
     "dev": "sst bind vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "typecheck": "tsc --noEmit --incremental"
   },
   "license": "MIT",
   "devDependencies": {

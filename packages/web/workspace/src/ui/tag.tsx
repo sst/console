@@ -5,9 +5,13 @@ export const Tag = styled("div", {
   base: {
     flex: "0 0 auto",
     letterSpacing: 0.5,
+    justifyContent: "center",
     textAlign: "center",
-    fontSize: "0.5625rem",
-    padding: "5px 8px 4px",
+    fontSize: theme.font.size.xs,
+    padding: `0 ${theme.space[3]}`,
+    height: 28,
+    display: "flex",
+    alignItems: "center",
     textTransform: "uppercase",
     borderRadius: theme.borderRadius,
     boxSizing: "border-box",
@@ -37,14 +41,10 @@ export const Tag = styled("div", {
     },
     size: {
       large: {
-        paddingLeft: 0,
-        paddingRight: 0,
-        width: 85,
+        width: 120,
       },
       small: {
-        paddingLeft: 0,
-        paddingRight: 0,
-        width: 50,
+        width: 85,
       },
       auto: {},
     },

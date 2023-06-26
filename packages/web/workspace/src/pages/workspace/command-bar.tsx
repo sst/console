@@ -15,7 +15,6 @@ import {
   IconStage,
   IconSubRight,
   IconEventBus,
-  IconConstruct,
 } from "$/ui/icons/custom";
 import { IconBuildingOffice } from "$/ui/icons";
 import { useAuth } from "$/providers/auth";
@@ -35,6 +34,7 @@ import { Portal } from "solid-js/web";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createMutationObserver } from "@solid-primitives/mutation-observer";
 import { setAccount } from "$/data/storage";
+import { utility } from "$/ui/utility";
 
 interface Action {
   icon: (props: any) => JSX.Element;
@@ -279,10 +279,10 @@ const Category = styled("div", {
   base: {
     display: "flex",
     padding: `${theme.space[2]} ${theme.space[3]}`,
-    fontFamily: theme.fonts.heading,
+    fontFamily: theme.font.family.heading,
     textTransform: "uppercase",
     letterSpacing: 1,
-    fontSize: "0.75rem",
+    fontSize: theme.font.size.sm,
     alignItems: "center",
     fontWeight: theme.textBoldWeight,
     color: theme.color.text.dimmed,
@@ -291,12 +291,12 @@ const Category = styled("div", {
 
 const ActionRow = styled("div", {
   base: {
-    padding: `${theme.space[3]} ${theme.space[3]}`,
-    display: "flex",
+    ...utility.row(3),
+    padding: `0 ${theme.space[3]}`,
+    height: 48,
     alignItems: "center",
     borderRadius: 4,
-    fontSize: "0.8125rem",
-    gap: theme.space[2],
+    fontSize: theme.font.size.base,
     transitionDelay: "0s",
     transitionDuration: "0.2s",
     transitionProperty: "background-color",
@@ -310,8 +310,8 @@ globalStyle(`${ActionRow}.active`, {
 
 const ActionRowIcon = styled("div", {
   base: {
-    width: 16,
-    height: 16,
+    width: 20,
+    height: 20,
   },
 });
 

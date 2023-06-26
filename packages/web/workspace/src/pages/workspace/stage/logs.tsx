@@ -5,7 +5,6 @@ import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag } from "$/ui";
 import { IconBoltSolid } from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
-import { Row, Stack } from "$/ui/layout";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, globalStyle } from "@macaron-css/core";
@@ -51,12 +50,14 @@ const LogContainer = styled("div", {
 
 const LogSummary = styled("div", {
   base: {
-    ...utility.row(1.5),
+    ...utility.row(3),
+    height: 48,
+    fontSize: theme.font.size.sm,
     alignItems: "center",
     borderStyle: "solid",
     borderColor: theme.color.divider.base,
     borderWidth: 0,
-    padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
+    padding: `0 ${theme.space[3]}`,
     selectors: {
       [`${LogContainer.selector({ expanded: true })} &`]: {
         borderBottomWidth: 1,
@@ -72,15 +73,13 @@ globalStyle(`${LogSummary} *`, {
 const LogText = styled("div", {
   base: {
     ...utility.textLine(),
-    fontFamily: theme.fonts.code,
-    fontSize: "0.75rem",
+    fontFamily: theme.font.family.code,
   },
 });
 
 const LogDate = styled(LogText, {
   base: {
     flexShrink: 0,
-    fontSize: "0.75rem",
     paddingLeft: theme.space[2],
   },
 });
@@ -90,7 +89,6 @@ const LogDuration = styled(LogText, {
     flexShrink: 0,
     minWidth: 70,
     textAlign: "right",
-    fontSize: "0.75rem",
     color: theme.color.text.secondary,
   },
   variants: {
@@ -111,7 +109,6 @@ const LogRequestId = styled(LogText, {
     paddingLeft: theme.space[2],
     flexShrink: 0,
     lineHeight: "normal",
-    fontSize: "0.75rem",
     color: theme.color.text.secondary,
   },
 });
@@ -120,7 +117,6 @@ const LogMessage = styled(LogText, {
   base: {
     flexGrow: 1,
     lineHeight: "normal",
-    fontSize: "0.75rem",
     paddingLeft: theme.space[2],
     selectors: {
       [`${LogContainer.selector({ level: "error" })} &`]: {
@@ -132,8 +128,8 @@ const LogMessage = styled(LogText, {
 
 const CaretIcon = styled("div", {
   base: {
-    width: 15,
-    height: 15,
+    width: 20,
+    height: 20,
     flexShrink: 0,
     lineHeight: 0,
     color: theme.color.icon.dimmed,
@@ -148,43 +144,40 @@ const CaretIcon = styled("div", {
 
 const LogDetail = styled("div", {
   base: {
-    padding: theme.space[2.5],
+    padding: theme.space[3],
+    ...utility.stack(3),
   },
 });
 
 const LogDetailHeader = styled("div", {
   base: {
     display: "flex",
+    fontSize: theme.font.size.sm,
+    padding: `0 ${theme.space.px}`,
     alignItems: "center",
     justifyContent: "space-between",
-    paddingBottom: theme.space[2.5],
   },
 });
 
-const LogDetailHeaderTitle = styled("h6", {
+const LogDetailHeaderTitle = styled("div", {
   base: {
-    paddingLeft: 1,
-    fontSize: "0.75rem",
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    fontFamily: theme.fonts.heading,
+    fontFamily: theme.font.family.heading,
     color: theme.color.text.dimmed,
     fontWeight: 500,
   },
 });
 
 const LogLink = styled("a", {
-  base: {
-    fontSize: "0.75rem",
-    paddingRight: 1,
-  },
+  base: {},
 });
 
 const LogEntries = styled("div", {
   base: {
     borderRadius: theme.borderRadius,
-    paddingLeft: theme.space[3],
-    paddingRight: theme.space[3],
+    padding: `0 ${theme.space[3]}`,
+    fontSize: theme.font.size.sm,
     backgroundColor: theme.color.background.surface,
   },
 });
@@ -194,8 +187,7 @@ const LogEntry = styled("div", {
     borderTop: `1px solid ${theme.color.divider.surface}`,
     paddingTop: theme.space[2.5],
     paddingBottom: theme.space[2.5],
-    fontFamily: theme.fonts.code,
-    fontSize: "0.75rem",
+    fontFamily: theme.font.family.code,
     lineHeight: 1.6,
     color: theme.color.text.primary.surface,
     selectors: {
@@ -210,7 +202,8 @@ const LogLoadingIndicator = styled("div", {
   base: {
     ...utility.row(1.5),
     alignItems: "center",
-    padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
+    padding: `0 ${theme.space[3]}`,
+    height: 48,
     borderTop: `1px solid ${theme.color.divider.base}`,
     borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
   },
@@ -218,8 +211,8 @@ const LogLoadingIndicator = styled("div", {
 
 const LogLoadingIndicatorIcon = styled("div", {
   base: {
-    width: 15,
-    height: 15,
+    width: 20,
+    height: 20,
     color: theme.color.text.dimmed,
     opacity: theme.iconOpacity,
     animation: "pulse 1.5s linear infinite",
@@ -229,7 +222,7 @@ const LogLoadingIndicatorIcon = styled("div", {
 const LogLoadingIndicatorCopy = styled("div", {
   base: {
     color: theme.color.text.dimmed,
-    fontSize: "0.8125rem",
+    fontSize: theme.font.size.base,
   },
 });
 

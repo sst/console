@@ -266,6 +266,7 @@ export const DUMMY_RESOURCES = [
     appSyncApiKey: "da2-g63kqnmio5eyhbbv4dz6fk2x4y",
   }),
   resource("WebSocketApi", "ws-api-custom-domain", {
+    url: "",
     routes: [
       {
         route: "$connect",
@@ -288,6 +289,7 @@ export const DUMMY_RESOURCES = [
     httpApiId: "someapi",
   }),
   resource("WebSocketApi", "ws-api", {
+    url: "",
     routes: [
       {
         route: "$connect",

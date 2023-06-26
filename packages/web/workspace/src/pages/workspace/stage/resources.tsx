@@ -60,16 +60,17 @@ const HeaderRoot = styled("div", {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `${theme.space[3]} ${theme.space[3]}`,
-    gap: theme.space[4],
+    padding: `0 ${theme.space[4]}`,
+    height: 50,
+    gap: theme.space[6],
   },
 });
 
 const HeaderIcon = styled("div", {
   base: {
     flexShrink: 0,
-    width: 14,
-    height: 14,
+    width: 20,
+    height: 20,
     color: theme.color.icon.secondary,
   },
 });
@@ -77,9 +78,9 @@ const HeaderIcon = styled("div", {
 const HeaderName = styled("div", {
   base: {
     fontWeight: "500",
-    fontFamily: theme.fonts.body,
+    fontFamily: theme.font.family.body,
     flexShrink: 0,
-    fontSize: "0.875rem",
+    fontSize: theme.font.size.base,
   },
 });
 
@@ -87,8 +88,7 @@ const HeaderDescription = styled("div", {
   base: {
     ...utility.textLine(),
     maxWidth: "500px",
-    fontWeight: "400",
-    fontSize: "0.8125rem",
+    fontSize: theme.font.size.base,
     lineHeight: "normal",
     color: theme.color.text.secondary,
   },
@@ -96,8 +96,6 @@ const HeaderDescription = styled("div", {
 
 const HeaderType = styled("div", {
   base: {
-    fontSize: "0.8125rem",
-    fontWeight: "400",
     color: theme.color.text.secondary,
   },
 });
@@ -132,16 +130,13 @@ export const Child = styled("div", {
 export const ChildTitleLink = styled(Link, {
   base: {
     ...utility.textLine(),
-    fontSize: "0.875rem",
-    lineHeight: "normal",
-    fontFamily: theme.fonts.code,
+    fontFamily: theme.font.family.code,
   },
 });
 
 export const ChildTitle = styled("span", {
   base: {
     ...utility.textLine(),
-    fontSize: "0.875rem",
   },
 });
 
@@ -151,8 +146,7 @@ export const ChildDetail = styled("div", {
     display: "flex",
     alignItems: "baseline",
     color: theme.color.text.secondary,
-    fontSize: "0.8125rem",
-    fontFamily: theme.fonts.code,
+    fontFamily: theme.font.family.code,
     textAlign: "right",
     lineHeight: "normal",
   },
@@ -161,24 +155,15 @@ export const ChildDetailUnit = styled("span", {
   base: {
     fontWeight: 400,
     paddingLeft: 2,
-    fontSize: "0.6875rem",
-  },
-});
-export const ChildExtra = styled("span", {
-  base: {
-    color: theme.color.text.dimmed,
-    fontSize: "0.625rem",
-    textTransform: "uppercase",
-    fontFamily: theme.fonts.code,
-    whiteSpace: "nowrap",
+    fontSize: theme.font.size.xs,
   },
 });
 
 export const ChildIcon = styled("div", {
   base: {
     flexShrink: 0,
-    height: 14,
-    width: 14,
+    height: 20,
+    width: 20,
     color: theme.color.icon.dimmed,
   },
 });
@@ -195,7 +180,7 @@ interface HeaderProps {
 export function Header(props: HeaderProps) {
   return (
     <HeaderRoot>
-      <Row space="2" vertical="center">
+      <Row space="3" vertical="center">
         <Show when={props.icon}>
           {(icon) => (
             <HeaderIcon title={props.resource.type}>{icon()({})}</HeaderIcon>
@@ -730,7 +715,7 @@ function FunctionChild(props: {
     <Show when={fn()}>
       {(exists) => (
         <Child>
-          <Row space="2" vertical="center">
+          <Row space="3" vertical="center">
             <Show when={props.tag}>
               <Tag style="outline" size={props.tagSize}>
                 {props.tag!}

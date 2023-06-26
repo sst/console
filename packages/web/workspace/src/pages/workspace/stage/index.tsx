@@ -21,7 +21,7 @@ import { Logs } from "./logs";
 
 const Content = styled("div", {
   base: {
-    padding: theme.contentPadding,
+    padding: theme.space[6],
     ...utility.stack(4),
   },
 });
@@ -38,7 +38,8 @@ const Header = styled("div", {
     WebkitBackdropFilter: "blur(8px)",
     backgroundColor: theme.color.background.navbar,
     borderBottom: `1px solid ${theme.color.divider.base}`,
-    padding: theme.space[3],
+    padding: `0 ${theme.space[6]}`,
+    height: 60,
   },
 });
 
@@ -50,7 +51,6 @@ const User = styled("a", {
     alignItems: "center",
     gap: theme.space[4],
     cursor: "pointer",
-    fontSize: "0.875rem",
     opacity: "0.8",
     transition: `opacity ${theme.colorFadeDuration} ease-out`,
     ":hover": {
@@ -70,8 +70,8 @@ const UserImage = styled("img", {
 
 const OrgSwitcher = styled("img", {
   base: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     flexShrink: 0,
     padding: 0,
     border: "none",
@@ -88,21 +88,22 @@ const StageSwitcher = styled("div", {
     justifyContent: "flex-start",
     alignItems: "center",
     borderLeft: `1px solid ${theme.color.divider.base}`,
-    paddingLeft: theme.space[3],
+    paddingLeft: theme.space[4],
     gap: theme.space[3],
-    font: theme.fonts.heading,
+    font: theme.font.family.heading,
     color: theme.color.text.secondary,
   },
 });
 
 const SwitcherApp = styled("div", {
   base: {
+    fontSize: theme.font.size.lg,
     fontWeight: "500",
   },
 });
 const SwitcherStage = styled("div", {
   base: {
-    fontSize: "0.875rem",
+    fontSize: theme.font.size.base,
     color: theme.color.text.dimmed,
   },
 });
@@ -110,8 +111,8 @@ const SwitcherStage = styled("div", {
 const SwitcherIcon = styled(IconChevronUpDown, {
   base: {
     color: theme.color.text.dimmed,
-    width: 20,
-    height: 20,
+    width: 28,
+    height: 28,
   },
 });
 
@@ -136,7 +137,7 @@ export function Stage() {
       <StageContext.Provider value={stageContext}>
         <ResourcesProvider>
           <Header>
-            <Row space="4">
+            <Row space="4" vertical="center">
               <OrgSwitcher src={sst} />
               <StageSwitcher
                 onClick={() => bar.show(StageProvider, AppProvider)}
