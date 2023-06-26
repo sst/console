@@ -147,6 +147,11 @@ const light = {
       hover: "",
     },
   },
+  input: {
+    border: "",
+    shadow: "",
+    background: "",
+  },
   button: {
     primary: {
       color: "",
@@ -291,6 +296,12 @@ light.icon = {
 light.link.primary = {
   base: `hsla(${light.base.blue}, 100%)`,
   hover: `hsla(${light.blue.d1}, 100%)`,
+};
+
+light.input = {
+  border: `hsla(${light.base.black}, 14%)`,
+  shadow: `0 1px 2px hsla(${light.black.d1}, 0.05)`,
+  background: "transparent",
 };
 
 light.button.primary = {
@@ -452,6 +463,12 @@ dark.icon = {
 dark.link.primary = {
   base: `hsla(${dark.base.blue}, 100%)`,
   hover: `hsla(${dark.blue.d1}, 100%)`,
+};
+
+dark.input = {
+  border: `hsla(${dark.base.white}, 12%)`,
+  shadow: "none",
+  background: `hsla(${dark.base.white}, 4%)`,
 };
 
 dark.button.primary = {

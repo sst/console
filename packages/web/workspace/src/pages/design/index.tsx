@@ -772,10 +772,13 @@ function LogsEmptyLoadingIndicator() {
 
 const Input = styled("input", {
   base: {
-    border: `1px solid ${theme.color.divider.base}`,
+    lineHeight: "normal",
+    border: `1px solid ${theme.color.input.border}`,
+    backgroundColor: theme.color.input.background,
     fontSize: "0.875rem",
     borderRadius: theme.borderRadius,
     padding: `${theme.space[2]} ${theme.space[3]}`,
+    boxShadow: theme.color.input.shadow,
   },
 });
 
