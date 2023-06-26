@@ -1,10 +1,10 @@
 import { LogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
-import { ResourceStore } from "$/data/resource";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Tag } from "$/ui";
+import { Tag, Text } from "$/ui";
 import { IconBoltSolid } from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
+import { Row, Stack } from "$/ui/layout";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, globalStyle } from "@macaron-css/core";
@@ -18,6 +18,8 @@ import {
   createSignal,
   mergeProps,
 } from "solid-js";
+import { useFunctionsContext, useResourcesContext } from "./context";
+import { Resource } from "@console/core/app/resource";
 
 const LogList = styled("div", {
   base: {
@@ -239,9 +241,28 @@ globalKeyframes("pulse", {
 });
 export function Logs() {
   const params = useParams();
-  const resource = createSubscription(() =>
-    ResourceStore.fromID(params.resourceID)
+  const resources = useResourcesContext();
+  const resource = createMemo(
+    () =>
+      resources().find((x) => x.id === params.resourceID) as
+        | Extract<Resource.Info, { type: "Function" }>
+        | undefined
   );
+  const functions = useFunctionsContext();
+  const context = createMemo(() => {
+    const parent = functions().get(resource()?.id || "")?.[0];
+    if (!parent) return;
+
+    switch (parent.type) {
+      case "EventBus":
+        return "Subscriber";
+      case "Api":
+        const route = parent.metadata.routes.find(
+          (r) => r.fn?.node === resource()?.addr
+        );
+        if (route) return route.route;
+    }
+  });
   const logGroup = createMemo(() => {
     const r = resource();
     if (!r) return "";
@@ -272,8 +293,15 @@ export function Logs() {
   });
 
   return (
-    <>
-      <div>Logs for {resource()?.metadata.handler}</div>
+    <Stack space="6">
+      <Stack space="3">
+        <Text size="xl">{resource()?.metadata.handler}</Text>
+        <Show when={context()}>
+          <Row>
+            <Tag style="outline">{context()}</Tag>
+          </Row>
+        </Show>
+      </Stack>
       <LogList>
         <LogLoadingIndicator>
           <LogLoadingIndicatorIcon>
@@ -345,7 +373,7 @@ export function Logs() {
           }}
         </For>
       </LogList>
-    </>
+    </Stack>
   );
 }
 
