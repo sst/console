@@ -130,6 +130,7 @@ export const Child = styled("div", {
 export const ChildTitleLink = styled(Link, {
   base: {
     ...utility.textLine(),
+    lineHeight: "normal",
     fontFamily: theme.font.family.code,
   },
 });
@@ -153,7 +154,7 @@ export const ChildDetail = styled("div", {
 });
 export const ChildDetailUnit = styled("span", {
   base: {
-    fontWeight: 400,
+    fontWeight: 500,
     paddingLeft: 2,
     fontSize: theme.font.size.xs,
   },
@@ -658,7 +659,7 @@ export function OrphanFunctionsCard() {
           <HeaderIcon title="Functions">
             <IconFunction />
           </HeaderIcon>
-          <HeaderName>Other functions</HeaderName>
+          <HeaderName>Other Functions</HeaderName>
         </Row>
         <HeaderType>Function</HeaderType>
       </HeaderRoot>

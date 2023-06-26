@@ -775,7 +775,7 @@ const LinkButton = styled("span", {
     fontWeight: 500,
     cursor: "pointer",
     fontSize: "0.8125rem",
-    fontFamily: theme.fonts.code,
+    fontFamily: theme.font.family.code,
     color: theme.color.link.primary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     ":hover": {
@@ -847,7 +847,7 @@ const Label = styled("p", {
     letterSpacing: 0.5,
     fontSize: "0.8125rem",
     textTransform: "uppercase",
-    fontFamily: theme.fonts.heading,
+    fontFamily: theme.font.family.heading,
   },
 });
 
