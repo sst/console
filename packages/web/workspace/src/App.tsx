@@ -12,7 +12,7 @@ import { Connect } from "./pages/connect";
 import { Debug } from "./pages/debug";
 import { Design } from "./pages/design";
 import { styled } from "@macaron-css/solid";
-import { globalStyle } from "@macaron-css/core";
+import { macaron$, globalStyle } from "@macaron-css/core";
 import { theme, darkClass, lightClass } from "./ui/theme";
 import { account, setAccount } from "./data/storage";
 import { RealtimeProvider } from "./providers/realtime";
@@ -66,6 +66,15 @@ globalStyle("*:focus", {
   border: 0,
   outline: 0,
 });
+
+macaron$(() =>
+  ["::placeholder", ":-ms-input-placeholder"].forEach((selector) =>
+    globalStyle(selector, {
+      opacity: 1,
+      color: theme.color.text.dimmed,
+    })
+  )
+);
 
 globalStyle("*", {
   cursor: "default",

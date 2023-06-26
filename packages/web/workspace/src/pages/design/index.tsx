@@ -1,8 +1,8 @@
-import { globalStyle, globalKeyframes } from "@macaron-css/core";
+import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
 import { Grower, Stack, Row } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
-import { IconChevronLeft, IconBoltSolid } from "$/ui/icons";
+import { IconChevronDown, IconChevronLeft, IconBoltSolid } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
 import { utility } from "$/ui/utility";
@@ -770,29 +770,115 @@ function LogsEmptyLoadingIndicator() {
   );
 }
 
+const LinkButton = styled("span", {
+  base: {
+    fontWeight: 500,
+    cursor: "pointer",
+    fontSize: "0.8125rem",
+    fontFamily: theme.fonts.code,
+    color: theme.color.link.primary.base,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.link.primary.hover,
+    },
+  },
+});
+
+const inputStyles: CSSProperties = {
+  border: "none",
+  lineHeight: 1.5,
+  appearance: "none",
+  fontSize: "0.875rem",
+  borderRadius: theme.borderRadius,
+  padding: `${theme.space[2]} ${theme.space[3]}`,
+  backgroundColor: theme.color.input.background,
+  transition: `box-shadow ${theme.colorFadeDuration} ease-out`,
+  boxShadow: `
+    0 0 0 1px inset ${theme.color.input.border.base},
+    ${theme.color.input.shadow}
+  `,
+};
+
+const inputFocusStyles: CSSProperties = {
+  boxShadow: `
+    0 0 0 2px inset ${theme.color.input.border.focus},
+    ${theme.color.input.shadow}
+  `,
+};
+
 const Input = styled("input", {
   base: {
-    lineHeight: "normal",
-    border: `1px solid ${theme.color.input.border}`,
-    backgroundColor: theme.color.input.background,
-    fontSize: "0.875rem",
-    borderRadius: theme.borderRadius,
-    padding: `${theme.space[2]} ${theme.space[3]}`,
-    boxShadow: theme.color.input.shadow,
+    ...inputStyles,
+    ":focus": {
+      ...inputFocusStyles,
+    },
+  },
+});
+
+const chevronDownString = `
+  <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'>
+    <path stroke='#767681' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/>
+  </svg>
+`;
+
+const Select = styled("select", {
+  base: {
+    ...inputStyles,
+    backgroundPositionY: "50%",
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "1.25rem 1.25rem",
+    backgroundPositionX: "right 0.5rem",
+    backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(
+      chevronDownString
+    )}")`,
+    padding: `${theme.space[2]} ${theme.space[10]} ${theme.space[2]} ${theme.space[3]}`,
+    ":focus": {
+      ...inputFocusStyles,
+    },
+    ":invalid": {
+      color: theme.color.text.dimmed,
+    },
+  },
+});
+
+const Label = styled("p", {
+  base: {
+    fontWeight: 500,
+    letterSpacing: 0.5,
+    fontSize: "0.8125rem",
+    textTransform: "uppercase",
+    fontFamily: theme.fonts.heading,
   },
 });
 
 function FormNewWorkspace() {
   return (
     <form>
-      <label>
-        <p>Workspace Name</p>
-        <Input placeholder="Acme Inc." type="text" />
-      </label>
-      <label>
-        <p>Workspace Slug</p>
-        <Input placeholder="acme" type="text" />
-      </label>
+      <Stack space="7">
+        <Stack space="2.5">
+          <Label>Workspace Name</Label>
+          <Input placeholder="Acme Inc." type="text" />
+        </Stack>
+        <Stack space="2.5">
+          <Label>Workspace Slug</Label>
+          <Input placeholder="acme" type="text" />
+        </Stack>
+        <Stack space="2.5">
+          <Label>Workspace</Label>
+          <Select required>
+            <option value="" disabled selected hidden>
+              Select your workspace
+            </option>
+            <option>acme</option>
+            <option>acme-2</option>
+            <option>acme-3</option>
+          </Select>
+        </Stack>
+        <Row space="5" vertical="center" horizontal="end">
+          <LinkButton>Cancel</LinkButton>
+          <Button color="primary">Create Workspace</Button>
+        </Row>
+      </Stack>
     </form>
   );
 }

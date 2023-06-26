@@ -148,7 +148,10 @@ const light = {
     },
   },
   input: {
-    border: "",
+    border: {
+      base: "",
+      focus: "",
+    },
     shadow: "",
     background: "",
   },
@@ -299,8 +302,11 @@ light.link.primary = {
 };
 
 light.input = {
-  border: `hsla(${light.base.black}, 14%)`,
-  shadow: `0 1px 2px hsla(${light.black.d1}, 0.05)`,
+  border: {
+    base: `hsla(${light.base.black}, 14%)`,
+    focus: `hsla(${light.base.blue}, 100%)`,
+  },
+  shadow: `0 1px 2px hsla(${light.black.d1}, 0.02)`,
   background: "transparent",
 };
 
@@ -466,8 +472,11 @@ dark.link.primary = {
 };
 
 dark.input = {
-  border: `hsla(${dark.base.white}, 12%)`,
-  shadow: "none",
+  border: {
+    base: `hsla(${dark.base.white}, 12%)`,
+    focus: `hsla(${dark.base.blue}, 100%)`,
+  },
+  shadow: `0 1px 2px hsla(${light.black.d1}, 0.2)`,
   background: `hsla(${dark.base.white}, 4%)`,
 };
 
