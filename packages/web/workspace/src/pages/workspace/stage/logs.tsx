@@ -1,4 +1,4 @@
-import { LogStore } from "$/data/log";
+import { Invocation, LogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
@@ -9,7 +9,7 @@ import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, globalStyle } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
-import { useParams } from "@solidjs/router";
+import { useParams, useSearchParams } from "@solidjs/router";
 import {
   For,
   Show,
@@ -20,6 +20,7 @@ import {
 } from "solid-js";
 import { useFunctionsContext, useResourcesContext } from "./context";
 import { Resource } from "@console/core/app/resource";
+import { DUMMY_LOGS } from "./logs-dummy";
 
 const LogList = styled("div", {
   base: {
@@ -237,6 +238,7 @@ globalKeyframes("pulse", {
 });
 export function Logs() {
   const params = useParams();
+  const [query] = useSearchParams();
   const resources = useResourcesContext();
   const resource = createMemo(
     () =>
@@ -288,6 +290,12 @@ export function Logs() {
     });
   });
 
+  const logs = createMemo((): Invocation[] => {
+    console.log("dummy", query.dummy);
+    if (query.dummy) return DUMMY_LOGS;
+    return LogStore[logGroup()] || [];
+  });
+
   return (
     <Stack space="6">
       <Stack space="3">
@@ -307,7 +315,7 @@ export function Logs() {
             Tailing logs&hellip;
           </LogLoadingIndicatorCopy>
         </LogLoadingIndicator>
-        <For each={LogStore[logGroup()] || []}>
+        <For each={logs()}>
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
 

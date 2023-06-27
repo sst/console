@@ -5,7 +5,7 @@ export const [LogStore, setLogStore] = createStore<
   Record<string, Invocation[]>
 >({});
 
-interface Invocation {
+export interface Invocation {
   id: string;
   cold: boolean;
   error?: boolean;
@@ -16,7 +16,7 @@ interface Invocation {
 }
 
 interface Log {
-  id: string;
+  id?: string;
   timestamp: Date;
   message: string;
 }
