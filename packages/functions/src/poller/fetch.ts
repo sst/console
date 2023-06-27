@@ -24,7 +24,7 @@ interface State {
 
 export async function handler(input: State) {
   const attempts = input.status?.attempts || 0;
-  const start = input.status?.start || Date.now();
+  const start = input.status?.start || Date.now() - 60 * 1000;
   const offset = input.status?.offset || -30 * 1000;
   if (attempts === 100) {
     return {

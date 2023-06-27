@@ -1,5 +1,11 @@
 import { createSubscription } from "$/providers/replicache";
-import { ParentProps, createContext, createMemo, useContext } from "solid-js";
+import {
+  ParentProps,
+  createContext,
+  createEffect,
+  createMemo,
+  useContext,
+} from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
@@ -168,6 +174,10 @@ const FunctionsContext =
 export function ResourcesProvider(props: ParentProps) {
   const resources = createResourcesContext();
   const functions = createFunctionsContext(resources);
+
+  createEffect(() => {
+    console.log("resources", resources());
+  });
 
   return (
     <ResourcesContext.Provider value={resources}>
