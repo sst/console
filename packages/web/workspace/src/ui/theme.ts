@@ -1,6 +1,7 @@
 import { createTheme } from "@macaron-css/core";
 
 const font = {
+  lineHeight: "1.6",
   family: {
     heading: '"IBM Plex Mono", monospace',
     body: "Rubik, sans-serif",
@@ -147,10 +148,7 @@ const light = {
     },
   },
   input: {
-    border: {
-      base: "",
-      focus: "",
-    },
+    border: "",
     shadow: "",
     background: "",
   },
@@ -301,10 +299,7 @@ light.link.primary = {
 };
 
 light.input = {
-  border: {
-    base: `hsla(${light.base.black}, 14%)`,
-    focus: `hsla(${light.base.blue}, 100%)`,
-  },
+  border: `hsla(${light.base.black}, 14%)`,
   shadow: `0 1px 2px hsla(${light.black.d1}, 0.02)`,
   background: "transparent",
 };
@@ -471,10 +466,7 @@ dark.link.primary = {
 };
 
 dark.input = {
-  border: {
-    base: `hsla(${dark.base.white}, 12%)`,
-    focus: `hsla(${dark.base.blue}, 100%)`,
-  },
+  border: `hsla(${dark.base.white}, 12%)`,
   shadow: `0 1px 2px hsla(${light.black.d1}, 0.2)`,
   background: `hsla(${dark.base.white}, 4%)`,
 };

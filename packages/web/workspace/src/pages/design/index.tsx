@@ -17,7 +17,7 @@ const ComponentRoot = styled("div", {
 
 const ComponentName = styled("h1", {
   base: {
-    fontSize: "0.9375rem",
+    fontSize: theme.font.size.mono_base,
     textTransform: "uppercase",
     paddingBottom: theme.space[6],
     fontFamily: theme.font.family.heading,
@@ -42,7 +42,7 @@ const VariantRoot = styled("div", {
 
 const VariantName = styled("h2", {
   base: {
-    fontSize: "0.8125rem",
+    fontSize: theme.font.size.mono_sm,
     textTransform: "uppercase",
     fontFamily: theme.font.family.heading,
   },
@@ -568,7 +568,7 @@ const LogEntry = styled("div", {
     paddingBottom: theme.space[2.5],
     fontFamily: theme.font.family.code,
     fontSize: "0.75rem",
-    lineHeight: 1.6,
+    lineHeight: theme.font.lineHeight,
     color: theme.color.text.primary.surface,
     selectors: {
       "&:first-child": {
@@ -767,7 +767,7 @@ function LogsEmptyLoadingIndicator() {
 const LinkButton = styled("span", {
   base: {
     fontWeight: 500,
-    fontSize: "0.8125rem",
+    fontSize: theme.font.size.mono_sm,
     fontFamily: theme.font.family.code,
     color: theme.color.link.primary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
@@ -779,22 +779,38 @@ const LinkButton = styled("span", {
 
 const inputStyles: CSSProperties = {
   border: "none",
-  lineHeight: 1.5,
+  lineHeight: theme.font.lineHeight,
   appearance: "none",
-  fontSize: "0.875rem",
+  fontSize: theme.font.size.sm,
   borderRadius: theme.borderRadius,
   padding: `${theme.space[2]} ${theme.space[3]}`,
   backgroundColor: theme.color.input.background,
   transition: `box-shadow ${theme.colorFadeDuration} ease-out`,
   boxShadow: `
-    0 0 0 1px inset ${theme.color.input.border.base},
+    0 0 0 1px inset ${theme.color.input.border},
     ${theme.color.input.shadow}
   `,
 };
 
+const inputDisabledStyles: CSSProperties = {
+  opacity: 0.5,
+  backgroundColor: theme.color.background.surface,
+  color: theme.color.text.dimmed,
+  cursor: "default",
+  boxShadow: `0 0 0 1px inset ${theme.color.input.border}`,
+};
+
 const inputFocusStyles: CSSProperties = {
   boxShadow: `
-    0 0 0 2px inset ${theme.color.input.border.focus},
+    0 0 1px 1px inset hsla(${theme.color.blue.d1}, 100%),
+    ${theme.color.input.shadow}
+  `,
+};
+
+const inputDangerFocusStyles: CSSProperties = {
+  color: `hsla(${theme.color.red.d2}, 100%)`,
+  boxShadow: `
+    0 0 1px 1px inset hsla(${theme.color.red.l2}, 100%),
     ${theme.color.input.shadow}
   `,
 };
@@ -805,6 +821,50 @@ const Input = styled("input", {
     ":focus": {
       ...inputFocusStyles,
     },
+    ":disabled": {
+      ...inputDisabledStyles,
+    },
+  },
+  variants: {
+    color: {
+      primary: {},
+      danger: {
+        ...inputDangerFocusStyles,
+        ":focus": {
+          ...inputDangerFocusStyles,
+        },
+      },
+    },
+  },
+  defaultVariants: {
+    color: "primary",
+  },
+});
+
+const Textarea = styled("textarea", {
+  base: {
+    ...inputStyles,
+    height: "auto",
+    ":focus": {
+      ...inputFocusStyles,
+    },
+    ":disabled": {
+      ...inputDisabledStyles,
+    },
+  },
+  variants: {
+    color: {
+      primary: {},
+      danger: {
+        ...inputDangerFocusStyles,
+        ":focus": {
+          ...inputDangerFocusStyles,
+        },
+      },
+    },
+  },
+  defaultVariants: {
+    color: "primary",
   },
 });
 
@@ -824,13 +884,38 @@ const Select = styled("select", {
     backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(
       chevronDownString
     )}")`,
-    padding: `${theme.space[2]} ${theme.space[10]} ${theme.space[2]} ${theme.space[3]}`,
+    paddingRight: theme.space[10],
     ":focus": {
       ...inputFocusStyles,
     },
     ":invalid": {
       color: theme.color.text.dimmed,
     },
+    ":disabled": {
+      ...inputDisabledStyles,
+    },
+  },
+  variants: {
+    color: {
+      primary: {},
+      danger: {
+        ...inputDangerFocusStyles,
+        ":focus": {
+          ...inputDangerFocusStyles,
+        },
+      },
+    },
+  },
+  defaultVariants: {
+    color: "primary",
+  },
+});
+
+const FormField = styled("label", {
+  base: {
+    display: "flex",
+    flexDirection: "column",
+    gap: theme.space[3],
   },
 });
 
@@ -838,9 +923,27 @@ const Label = styled("p", {
   base: {
     fontWeight: 500,
     letterSpacing: 0.5,
-    fontSize: "0.8125rem",
+    fontSize: theme.font.size.mono_sm,
     textTransform: "uppercase",
     fontFamily: theme.font.family.heading,
+  },
+});
+
+const FormFieldHint = styled("p", {
+  base: {
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed,
+  },
+  variants: {
+    color: {
+      primary: {},
+      danger: {
+        color: `hsla(${theme.color.red.l2}, 100%)`,
+      },
+    },
+  },
+  defaultVariants: {
+    color: "primary",
   },
 });
 
@@ -848,15 +951,62 @@ function FormNewWorkspace() {
   return (
     <form>
       <Stack space="7">
-        <Stack space="2.5">
+        <FormField>
           <Label>Workspace Name</Label>
           <Input placeholder="Acme Inc." type="text" />
+        </FormField>
+        <FormField>
+          <Label>Workspace Name</Label>
+          <Input
+            disabled
+            value="Acme Inc."
+            placeholder="Acme Inc."
+            type="text"
+          />
+        </FormField>
+        <FormField>
+          <Label>Workspace Description</Label>
+          <Textarea placeholder="Acme Inc." />
+        </FormField>
+        <FormField>
+          <Label>Workspace Description</Label>
+          <Textarea disabled placeholder="Acme Inc." />
+        </FormField>
+        <Stack space="2.5">
+          <FormField>
+            <Label>Workspace Description</Label>
+            <Textarea color="danger" placeholder="Acme Inc.">
+              Invalid Description
+            </Textarea>
+          </FormField>
+          <FormFieldHint color="danger">
+            Needs to be lowercase, unique, and URL friendly.
+          </FormFieldHint>
         </Stack>
         <Stack space="2.5">
-          <Label>Workspace Slug</Label>
-          <Input placeholder="acme" type="text" />
+          <FormField>
+            <Label>Workspace Slug</Label>
+            <Input placeholder="acme" type="text" />
+          </FormField>
+          <FormFieldHint>
+            Needs to be lowercase, unique, and URL friendly.
+          </FormFieldHint>
         </Stack>
         <Stack space="2.5">
+          <FormField>
+            <Label>Workspace Slug</Label>
+            <Input
+              type="text"
+              color="danger"
+              placeholder="acme"
+              value="Invalid Value"
+            />
+          </FormField>
+          <FormFieldHint color="danger">
+            Needs to be lowercase, unique, and URL friendly.
+          </FormFieldHint>
+        </Stack>
+        <FormField>
           <Label>Workspace</Label>
           <Select required>
             <option value="" disabled selected hidden>
@@ -866,6 +1016,28 @@ function FormNewWorkspace() {
             <option>acme-2</option>
             <option>acme-3</option>
           </Select>
+        </FormField>
+        <FormField>
+          <Label>Workspace</Label>
+          <Select required disabled>
+            <option value="" disabled selected hidden>
+              Select your workspace
+            </option>
+            <option>acme</option>
+            <option>acme-2</option>
+            <option>acme-3</option>
+          </Select>
+        </FormField>
+        <Stack space="2.5">
+          <FormField>
+            <Label>Workspace</Label>
+            <Select color="danger">
+              <option>No workspace available</option>
+            </Select>
+          </FormField>
+          <FormFieldHint color="danger">
+            You need to create a workspace to get started.
+          </FormFieldHint>
         </Stack>
         <Row space="5" vertical="center" horizontal="end">
           <LinkButton>Cancel</LinkButton>

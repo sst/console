@@ -187,7 +187,7 @@ const LogEntry = styled("div", {
     paddingTop: theme.space[2.5],
     paddingBottom: theme.space[2.5],
     fontFamily: theme.font.family.code,
-    lineHeight: 1.6,
+    lineHeight: theme.font.lineHeight,
     color: theme.color.text.primary.surface,
     selectors: {
       "&:first-child": {
