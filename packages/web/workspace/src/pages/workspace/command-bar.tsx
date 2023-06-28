@@ -7,6 +7,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  onCleanup,
   useContext,
 } from "solid-js";
 import {
@@ -45,77 +46,6 @@ interface Action {
 }
 
 type ActionProvider = (filter: string) => Promise<Action[]>;
-
-export const WorkspaceProvider: ActionProvider = async () => {
-  const workspaces = await Promise.all(
-    Object.values(useAuth()).map(async (account) => {
-      const workspaces = await account.replicache.query(async (tx) => {
-        const users = await UserStore.list()(tx);
-        return Promise.all(
-          users.map(async (user) => {
-            const workspace = await WorkspaceStore.fromID(user.workspaceID)(tx);
-            return { account: account, workspace };
-          })
-        );
-      });
-      return workspaces;
-    })
-  ).then((x) => x.flat());
-  const splits = location.pathname.split("/");
-  return workspaces
-    .filter((w) => w.workspace?.slug !== splits[1])
-    .map((w) => ({
-      title: `Switch to ${w.workspace?.slug} workspace`,
-      category: "Workspace",
-      icon: IconBuildingOffice,
-      run: (control) => {
-        const nav = useNavigate();
-        setAccount(w.account.token.accountID);
-        nav(`/${w.workspace.slug}`);
-        control.hide();
-      },
-    }));
-};
-
-export const AppProvider: ActionProvider = async () => {
-  const rep = useReplicache()();
-  const apps = await rep.query(AppStore.list());
-  return apps.map((app) => ({
-    icon: IconApp,
-    category: "App",
-    title: `Switch to "${app.name}" app`,
-    run: async (control) => {
-      const nav = useNavigate();
-      const params = useParams();
-      const rep = useReplicache();
-      const stages = await rep().query(StageStore.forApp(app.id));
-      nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
-      control.hide();
-    },
-  }));
-};
-
-export const StageProvider: ActionProvider = async () => {
-  const splits = location.pathname.split("/");
-  const appName = splits[2];
-  if (!appName) return [];
-  const rep = useReplicache()();
-  const app = await rep.query(AppStore.fromName(appName));
-  const stages = await rep.query(StageStore.forApp(app!.id));
-  return stages
-    .filter((stage) => stage.name !== splits[3])
-    .map((stage) => ({
-      icon: IconStage,
-      category: "Stage",
-      title: `Switch to "${stage.name}" stage`,
-      run: (control) => {
-        const params = useParams();
-        const nav = useNavigate();
-        nav(`/${params.workspaceSlug}/${app!.name}/${stage.name}`);
-        control.hide();
-      },
-    }));
-};
 
 export const ResourceProvider: ActionProvider = async (filter) => {
   if (!filter) return [];
@@ -170,35 +100,6 @@ export const ResourceProvider: ActionProvider = async (filter) => {
     return [];
   });
 };
-
-export const AccountProvider: ActionProvider = async () => {
-  return [
-    {
-      icon: IconSubRight,
-      category: "Account",
-      title: "Switch workspaces...",
-      run: (control) => {
-        control.show(WorkspaceProvider);
-      },
-    },
-    {
-      icon: IconSubRight,
-      category: "Account",
-      title: "Switch apps...",
-      run: (control) => {
-        control.show(AppProvider);
-      },
-    },
-  ];
-};
-
-const DEFAULT_PROVIDERS = [
-  ResourceProvider,
-  StageProvider,
-  AppProvider,
-  WorkspaceProvider,
-  AccountProvider,
-];
 
 const Root = styled("div", {
   base: {
@@ -336,15 +237,16 @@ const ActionRowTitle = styled("div", {
 });
 
 function createControl() {
-  const [providers, setProviders] = createSignal<ActionProvider[]>([]);
+  const providers = new Map<string, ActionProvider>();
+  const [activeProviders, setActiveProviders] = createSignal<string[]>([]);
   const [visible, setVisible] = createSignal(false);
   const [actions, setActions] = createSignal<Action[]>([]);
   const [input, setInput] = createSignal("");
   const [root, setRoot] = createSignal<HTMLElement>();
 
-  function show(...providers: ActionProvider[]) {
+  function show(...providers: string[]) {
     batch(() => {
-      setProviders(providers);
+      setActiveProviders(providers);
       setVisible(true);
       setInput("");
     });
@@ -365,7 +267,12 @@ function createControl() {
   });
 
   createEffect(async () => {
-    const p = providers().length ? providers() : DEFAULT_PROVIDERS;
+    if (!visible()) return;
+    const p = activeProviders().length
+      ? activeProviders()
+          .map((p) => providers.get(p)!)
+          .filter(Boolean)
+      : [...providers.values()].reverse();
     const actions = await Promise.all(
       p.map(async (provider) => {
         const actions = await provider(input());
@@ -411,14 +318,15 @@ function createControl() {
         "[data-element='action'].active"
       ) as HTMLElement;
     },
-    setActive(el: Element) {
+    setActive(el: Element, disableScroll?: boolean) {
       if (!el) return;
       const current = control.active();
       if (current) current.classList.remove("active");
       el.classList.add("active");
-      el.scrollIntoView({
-        block: "end",
-      });
+      if (!disableScroll)
+        el.scrollIntoView({
+          block: "nearest",
+        });
     },
     move(direction: -1 | 1) {
       const current = control.active();
@@ -461,11 +369,6 @@ function createControl() {
     }
   });
 
-  createEventListener(root, "click", (e) => {
-    const el = e.target as HTMLElement;
-    const closest = el.closest<HTMLElement>("[data-element='action']");
-  });
-
   return {
     bind: setRoot,
     get input() {
@@ -479,6 +382,12 @@ function createControl() {
     get visible() {
       return visible();
     },
+    register(name: string, provider: ActionProvider) {
+      providers.set(name, provider);
+      onCleanup(() => {
+        providers.delete(name);
+      });
+    },
     show,
     hide,
   };
@@ -490,6 +399,7 @@ const CommandbarContext = createContext<Control>();
 
 export function CommandBar(props: ParentProps) {
   const control = createControl();
+  let scrolling: NodeJS.Timer | undefined;
 
   return (
     <CommandbarContext.Provider value={control}>
@@ -505,7 +415,15 @@ export function CommandBar(props: ParentProps) {
                 placeholder="Type to search"
               />
             </Filter>
-            <Results data-element="results">
+            <Results
+              data-element="results"
+              onScroll={() => {
+                if (scrolling) clearTimeout(scrolling);
+                scrolling = setTimeout(() => {
+                  scrolling = undefined;
+                }, 100);
+              }}
+            >
               <For each={Object.entries(control.groups)}>
                 {([category, actions]) => (
                   <>
@@ -513,6 +431,13 @@ export function CommandBar(props: ParentProps) {
                     <For each={actions}>
                       {(action) => (
                         <ActionRow
+                          onMouseOver={(e) => {
+                            const target = e.currentTarget;
+                            setTimeout(() => {
+                              if (scrolling) return;
+                              control.setActive(target, true);
+                            }, 0);
+                          }}
                           data-element="action"
                           onClick={() => {
                             action.run(control);

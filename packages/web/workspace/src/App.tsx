@@ -16,6 +16,7 @@ import { macaron$, globalStyle } from "@macaron-css/core";
 import { theme, darkClass, lightClass } from "./ui/theme";
 import { account, setAccount } from "./data/storage";
 import { RealtimeProvider } from "./providers/realtime";
+import { CommandBar } from "./pages/workspace/command-bar";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -105,86 +106,38 @@ export const App: Component = () => {
       <AuthProvider>
         <RealtimeProvider />
         <Router>
-          <Routes>
-            <Route path="debug" component={Debug} />
-            <Route path="design" component={Design} />
-            <Route path="connect" component={Connect} />
-            <Route path=":workspaceSlug/*" component={Workspace} />
-            <Route
-              path="*"
-              component={() => {
-                const auth = useAuth();
-                let existing = account();
-                if (!existing || !auth[existing]) {
-                  existing = Object.keys(auth)[0];
-                  setAccount(existing);
-                }
-                const workspaces = createSubscription(
-                  WorkspaceStore.list,
-                  [],
-                  () => auth[existing].replicache
-                );
+          <CommandBar>
+            <Routes>
+              <Route path="debug" component={Debug} />
+              <Route path="design" component={Design} />
+              <Route path="connect" component={Connect} />
+              <Route path=":workspaceSlug/*" component={Workspace} />
+              <Route
+                path="*"
+                component={() => {
+                  const auth = useAuth();
+                  let existing = account();
+                  if (!existing || !auth[existing]) {
+                    existing = Object.keys(auth)[0];
+                    setAccount(existing);
+                  }
+                  const workspaces = createSubscription(
+                    WorkspaceStore.list,
+                    [],
+                    () => auth[existing].replicache
+                  );
 
-                return (
-                  <Show when={workspaces().length > 0}>
-                    <Navigate href={`/${workspaces()![0].slug}`} />
-                  </Show>
-                );
-              }}
-            />
-          </Routes>
+                  return (
+                    <Show when={workspaces().length > 0}>
+                      <Navigate href={`/${workspaces()![0].slug}`} />
+                    </Show>
+                  );
+                }}
+              />
+            </Routes>
+          </CommandBar>
         </Router>
       </AuthProvider>
     </Root>
   );
 };
-
-function Header() {
-  const auth = useAuth();
-
-  return (
-    <For each={Object.values(auth)}>
-      {(entry) => {
-        const users = createSubscription(
-          UserStore.list,
-          [],
-          () => entry.replicache
-        );
-        return (
-          <ol>
-            <li>{users()[0]?.email}</li>
-            <ol>
-              <For each={users()}>
-                {(user) => {
-                  const workspace = createSubscription(
-                    () => WorkspaceStore.fromID(user.workspaceID),
-                    undefined,
-                    () => entry.replicache
-                  );
-                  return (
-                    <li>
-                      <Link
-                        href={`/${entry.token.accountID}/${workspace()?.id}`}
-                      >
-                        {" "}
-                        Workspace: {workspace()?.slug}
-                      </Link>
-                    </li>
-                  );
-                }}
-              </For>
-            </ol>
-          </ol>
-        );
-      }}
-    </For>
-  );
-}
-
-// App
-// -> look for any login tokens
-// -> redirect to default
-// -> if none found, redirect to login
-// Workspace
-// -> make sure the login token exists + works
-// -> otherwise redirect to login

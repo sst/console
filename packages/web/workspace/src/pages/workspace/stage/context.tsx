@@ -6,12 +6,14 @@ import {
   createMemo,
   useContext,
 } from "solid-js";
-import { useParams, useSearchParams } from "@solidjs/router";
+import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_RESOURCES } from "./resources-dummy";
 import { ResourceStore } from "$/data/resource";
+import { useCommandBar } from "../command-bar";
+import { IconApi, IconEventBus } from "$/ui/icons/custom";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -174,6 +176,56 @@ const FunctionsContext =
 export function ResourcesProvider(props: ParentProps) {
   const resources = createResourcesContext();
   const functions = createFunctionsContext(resources);
+  const params = useParams();
+  const nav = useNavigate();
+  const bar = useCommandBar();
+
+  bar.register("resource", async (filter) => {
+    if (!filter) return [];
+    const splits = location.pathname.split("/");
+    const appName = splits[2];
+    const stageName = splits[3];
+    if (!stageName || !appName) return [];
+    return resources().flatMap((resource) => {
+      if (resource.type === "Api") {
+        return resource.metadata.routes.map((rt) => ({
+          icon: IconApi,
+          category: "API Routes",
+          title: `Go to ${rt.route}`,
+          run: (control) => {
+            nav(
+              `/${params.workspaceSlug}/${appName}/${stageName}/logs/${
+                resources().find((r) => r.addr === rt.fn?.node)?.id
+              }`
+            );
+            control.hide();
+          },
+        }));
+      }
+
+      if (resource.type === "EventBus") {
+        return resource.metadata.rules.flatMap((rule) =>
+          rule.targets.filter(Boolean).map((t) => ({
+            icon: IconEventBus,
+            category: "EventBus Subscriptions",
+            title: `Go to ${
+              // @ts-expect-error
+              resources().find((r) => r.addr === t!.node)?.metadata["handler"]
+            }`,
+            run: (control) => {
+              const params = useParams();
+              const id = resources().find((r) => r.addr === t?.node)?.id;
+              useNavigate()(
+                `/${params.workspaceSlug}/${appName}/${stageName}/logs/${id}`
+              );
+              control.hide();
+            },
+          }))
+        );
+      }
+      return [];
+    });
+  });
 
   createEffect(() => {
     console.log("resources", resources());

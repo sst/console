@@ -31,7 +31,6 @@ export const Text = styled("span", {
           fontSize: value,
         };
       }
-      console.log(result);
       return result;
     })(),
   },

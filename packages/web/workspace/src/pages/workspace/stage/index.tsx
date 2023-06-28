@@ -3,7 +3,7 @@ import patrick from "./patrick.jpg";
 import { styled } from "@macaron-css/solid";
 import { IconChevronUpDown } from "$/ui/icons";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Route, Routes, useParams } from "@solidjs/router";
+import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { theme } from "$/ui/theme";
@@ -18,6 +18,7 @@ import {
 import { ResourcesProvider, StageContext, createStageContext } from "./context";
 import { Resources } from "./resources";
 import { Logs } from "./logs";
+import { IconApp, IconStage } from "$/ui/icons/custom";
 
 const Content = styled("div", {
   base: {
@@ -116,7 +117,11 @@ const SwitcherIcon = styled(IconChevronUpDown, {
 });
 
 export function Stage() {
+  const bar = useCommandBar();
+  const rep = useReplicache();
+  const nav = useNavigate();
   const params = useParams();
+
   const app = createSubscription(() => AppStore.fromName(params.appName));
   const stage = createSubscription(() =>
     app()
@@ -124,10 +129,36 @@ export function Stage() {
       : async () => undefined
   );
 
-  createEffect(() => console.log({ ...params }));
+  bar.register("app", async () => {
+    const apps = await rep().query(AppStore.list());
+    return apps.map((app) => ({
+      icon: IconApp,
+      category: "App",
+      title: `Switch to "${app.name}" app`,
+      run: async (control) => {
+        const stages = await rep().query(StageStore.forApp(app.id));
+        nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
+        control.hide();
+      },
+    }));
+  });
 
-  const bar = useCommandBar();
-  const rep = useReplicache();
+  bar.register("stage", async () => {
+    const stages = await rep().query(StageStore.forApp(app()?.id || ""));
+    return stages
+      .filter((item) => item.id !== stage()?.id)
+      .map((stage) => ({
+        icon: IconStage,
+        category: "Stage",
+        title: `Switch to "${stage.name}" stage`,
+        run: (control) => {
+          nav(`/${params.workspaceSlug}/${app()!.name}/${stage.name}`);
+          control.hide();
+        },
+      }));
+  });
+
+  createEffect(() => console.log({ ...params }));
 
   const stageContext = createStageContext();
 
@@ -138,9 +169,7 @@ export function Stage() {
           <Header>
             <Row space="4" vertical="center">
               <OrgSwitcher src={sst} />
-              <StageSwitcher
-                onClick={() => bar.show(StageProvider, AppProvider)}
-              >
+              <StageSwitcher onClick={() => bar.show("stage", "app")}>
                 <Stack space="1.5">
                   <SwitcherApp>{stageContext.app.name}</SwitcherApp>
                   <SwitcherStage>{stageContext.stage.name}</SwitcherStage>
