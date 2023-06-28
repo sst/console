@@ -37,7 +37,8 @@ export const DUMMY_LOGS: Invocation[] = [
     id: crypto.randomUUID(),
     logs: [
       {
-        message: "slow log start",
+        message:
+          "start of log but this is going to be a really long log line that should overflow because it's too long and it won't fit in the box and it really keeps going on and on and on.",
         timestamp: new Date(),
       },
       {

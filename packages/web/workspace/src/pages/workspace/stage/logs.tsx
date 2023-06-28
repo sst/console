@@ -369,7 +369,7 @@ export function Logs() {
                   loading={empty()}
                   onClick={() => setExpanded((r) => !empty() && !r)}
                 >
-                  <Row space="2" vertical="center">
+                  <Row shrink={false} space="2" vertical="center">
                     <CaretIcon>
                       <IconCaretRight />
                     </CaretIcon>
