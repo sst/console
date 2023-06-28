@@ -60,6 +60,21 @@ export const DUMMY_RESOURCES = [
         fn: ref("notes_get"),
       },
       {
+        route: "PUT /notes",
+        type: "function",
+        fn: ref("notes_get"),
+      },
+      {
+        route: "UPDATE /notes",
+        type: "function",
+        fn: ref("notes_get"),
+      },
+      {
+        route: "PATCH /notes",
+        type: "function",
+        fn: ref("notes_get"),
+      },
+      {
         route:
           "POST /with/an/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long",
         type: "function",

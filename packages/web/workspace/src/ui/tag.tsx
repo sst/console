@@ -16,6 +16,8 @@ export const Tag = styled("div", {
     borderRadius: theme.borderRadius,
     boxSizing: "border-box",
     lineHeight: "normal",
+    userSelect: "none",
+    WebkitUserSelect: "none",
   },
   variants: {
     level: {
@@ -44,7 +46,7 @@ export const Tag = styled("div", {
         width: 120,
       },
       small: {
-        width: 85,
+        width: 70,
       },
       auto: {},
     },

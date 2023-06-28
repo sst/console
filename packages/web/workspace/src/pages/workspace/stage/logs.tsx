@@ -55,15 +55,18 @@ const LogSummary = styled("div", {
   base: {
     ...utility.row(3),
     height: 48,
-    fontSize: theme.font.size.sm,
+    fontSize: theme.font.size.mono_sm,
     alignItems: "center",
-    borderStyle: "solid",
-    borderColor: theme.color.divider.base,
-    borderWidth: 0,
     padding: `0 ${theme.space[3]}`,
-    selectors: {
-      [`${LogContainer.selector({ expanded: true })} &`]: {
-        borderBottomWidth: 1,
+    transition: `opacity ${theme.colorFadeDuration} ease-out`,
+  },
+  variants: {
+    loading: {
+      true: {
+        opacity: 0.4,
+      },
+      false: {
+        opacity: 1,
       },
     },
   },
@@ -109,14 +112,17 @@ const LogRequestId = styled(LogText, {
     flexShrink: 0,
     lineHeight: "normal",
     color: theme.color.text.secondary,
+    fontSize: theme.font.size.mono_base,
   },
 });
 
 const LogMessage = styled(LogText, {
   base: {
     flexGrow: 1,
+    alignSelf: "center",
     lineHeight: "normal",
     paddingLeft: theme.space[2],
+    fontSize: theme.font.size.mono_base,
     selectors: {
       [`${LogContainer.selector({ level: "error" })} &`]: {
         color: `hsla(${theme.color.base.red}, 100%)`,
@@ -145,6 +151,11 @@ const LogDetail = styled("div", {
   base: {
     padding: theme.space[3],
     ...utility.stack(3),
+    selectors: {
+      [`${LogContainer.selector({ expanded: true })} &`]: {
+        borderTop: `1px solid ${theme.color.divider.base}`,
+      },
+    },
   },
 });
 
@@ -175,20 +186,19 @@ const LogLink = styled("a", {
 const LogEntries = styled("div", {
   base: {
     borderRadius: theme.borderRadius,
-    padding: `0 ${theme.space[3]}`,
-    fontSize: theme.font.size.sm,
+    padding: `0 ${theme.space[4]}`,
+    fontSize: theme.font.size.mono_sm,
     backgroundColor: theme.color.background.surface,
   },
 });
 
 const LogEntry = styled("div", {
   base: {
+    ...utility.row(3.5),
     borderTop: `1px solid ${theme.color.divider.surface}`,
-    paddingTop: theme.space[2.5],
-    paddingBottom: theme.space[2.5],
+    paddingTop: theme.space[3],
+    paddingBottom: theme.space[3],
     fontFamily: theme.font.family.code,
-    lineHeight: theme.font.lineHeight,
-    color: theme.color.text.primary.surface,
     selectors: {
       "&:first-child": {
         borderTop: "none",
@@ -197,9 +207,26 @@ const LogEntry = styled("div", {
   },
 });
 
+const LogEntryTime = styled("div", {
+  base: {
+    flexShrink: 0,
+    minWidth: 89,
+    textAlign: "left",
+    color: theme.color.text.dimmed,
+    lineHeight: theme.font.lineHeight,
+  },
+});
+
+const LogEntryMessage = styled("span", {
+  base: {
+    color: theme.color.text.primary.surface,
+    lineHeight: theme.font.lineHeight,
+  },
+});
+
 const LogLoadingIndicator = styled("div", {
   base: {
-    ...utility.row(1.5),
+    ...utility.row(2),
     alignItems: "center",
     padding: `0 ${theme.space[3]}`,
     height: 48,
@@ -329,17 +356,23 @@ export function Logs() {
                 invocation.start
               )
             );
+            const empty = createMemo(() => invocation.logs.length === 0);
 
             return (
               <LogContainer
                 expanded={expanded()}
                 level={invocation.error ? "error" : "info"}
               >
-                <LogSummary onClick={() => setExpanded((r) => !r)}>
-                  <CaretIcon>
-                    <IconCaretRight />
-                  </CaretIcon>
-                  <LogLevel level={invocation.error ? "error" : "info"} />
+                <LogSummary
+                  loading={empty()}
+                  onClick={() => setExpanded((r) => !empty() && !r)}
+                >
+                  <Row space="2" vertical="center">
+                    <CaretIcon>
+                      <IconCaretRight />
+                    </CaretIcon>
+                    <LogLevel level={invocation.error ? "error" : "info"} />
+                  </Row>
                   <LogDate title={longDate()}>{shortDate()}</LogDate>
                   <LogDuration
                     coldStart={invocation.cold}
@@ -347,12 +380,16 @@ export function Logs() {
                   >
                     {invocation.duration
                       ? formatTime(invocation.duration)
-                      : "- ms"}
+                      : "-"}
                   </LogDuration>
                   <LogRequestId title="Request Id">
                     {invocation.id}
                   </LogRequestId>
-                  <LogMessage></LogMessage>
+                  <LogMessage>
+                    <Show when={invocation.logs.length > 0}>
+                      {invocation.logs[0].message}
+                    </Show>
+                  </LogMessage>
                 </LogSummary>
                 <Show when={expanded()}>
                   <LogDetail>
@@ -365,8 +402,10 @@ export function Logs() {
                     <LogEntries>
                       {invocation.logs.map((entry) => (
                         <LogEntry>
-                          {invocation.start.toLocaleTimeString()}{" "}
-                          {entry.message}
+                          <LogEntryTime>
+                            {entry.timestamp.toLocaleTimeString()}
+                          </LogEntryTime>
+                          <LogEntryMessage>{entry.message}</LogEntryMessage>
                         </LogEntry>
                       ))}
                     </LogEntries>
