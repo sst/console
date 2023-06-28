@@ -9,6 +9,38 @@ import { utility } from "$/ui/utility";
 import { IconEventBus } from "$/ui/icons/custom";
 import { JSX } from "solid-js";
 
+interface AvatarSvgProps {
+  text: string;
+  round?: boolean;
+  size?: number;
+  bgColor?: string;
+  textColor?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number | string;
+}
+function generateAvatarSvg({
+  text,
+  size = 64,
+  round = false,
+  fontSize = 0.4,
+  bgColor = "#395C6B",
+  textColor = "#FFFBF9",
+  fontWeight = "normal",
+  fontFamily = "monospace",
+}: AvatarSvgProps) {
+  // From https://github.com/gilbitron/ui-avatar-svg
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${size}px" height="${size}px" viewBox="0 0 ${size} ${size}" version="1.1"><${
+    round ? "circle" : "rect"
+  } fill="${bgColor}" width="${size}" height="${size}" cx="${size / 2}" cy="${
+    size / 2
+  }" r="${
+    size / 2
+  }"/><text x="50%" y="50%" style="color: ${textColor};line-height: 1;font-family: ${fontFamily};" alignment-baseline="middle" text-anchor="middle" font-size="${Math.round(
+    size * fontSize
+  )}" font-weight="${fontWeight}" dy=".1em" dominant-baseline="middle" fill="${textColor}">${text}</text></svg>`;
+}
+
 const ComponentRoot = styled("div", {
   base: {
     padding: theme.space[4],
@@ -102,9 +134,44 @@ const OverflowSpan = styled("span", {
   },
 });
 
+const Icon = styled("div", {
+  base: {
+    width: 36,
+    height: 36,
+    backgroundSize: "cover",
+    borderRadius: theme.borderRadius,
+  },
+});
+
+interface WorkspaceIconProps {
+  text: string;
+  fontSize?: number;
+}
+function WorkspaceIcon(props: WorkspaceIconProps) {
+  return (
+    <Icon
+      style={{
+        "background-image": `url("data:image/svg+xml;utf8,${encodeURIComponent(
+          generateAvatarSvg({
+            text: props.text,
+            fontSize: props.fontSize,
+          })
+        )}")`,
+      }}
+    />
+  );
+}
+
 export function Design() {
   return (
     <>
+      <ComponentType name="FormNewWorkspace">
+        <Variant name="Default">
+          <Grower>
+            <WorkspaceIcon text="SO" fontSize={0.6} />
+          </Grower>
+        </Variant>
+      </ComponentType>
       <ComponentType name="FormNewWorkspace">
         <Variant name="Default">
           <Grower>
@@ -484,10 +551,9 @@ const chevronDownString = `
 const Select = styled("select", {
   base: {
     ...inputStyles,
-    backgroundPositionY: "50%",
     backgroundRepeat: "no-repeat",
     backgroundSize: "1.25rem 1.25rem",
-    backgroundPositionX: "right 0.5rem",
+    backgroundPosition: "bottom 50% right 0.5rem",
     backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(
       chevronDownString
     )}")`,

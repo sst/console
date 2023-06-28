@@ -1,4 +1,3 @@
-import sst from "./sst.png";
 import patrick from "./patrick.jpg";
 import { styled } from "@macaron-css/solid";
 import { IconChevronUpDown } from "$/ui/icons";
@@ -68,19 +67,6 @@ const UserImage = styled("img", {
   },
 });
 
-const OrgSwitcher = styled("img", {
-  base: {
-    width: 36,
-    height: 36,
-    flexShrink: 0,
-    padding: 0,
-    border: "none",
-    backgroundColor: "transparent",
-    borderRadius: theme.borderRadius,
-    transition: `border ${theme.colorFadeDuration} ease-out`,
-  },
-});
-
 const StageSwitcher = styled("div", {
   base: {
     flexShrink: 0,
@@ -115,6 +101,34 @@ const SwitcherIcon = styled(IconChevronUpDown, {
     height: 28,
   },
 });
+
+const Icon = styled("div", {
+  base: {
+    width: 36,
+    height: 36,
+    backgroundSize: "cover",
+    borderRadius: theme.borderRadius,
+  },
+});
+
+interface WorkspaceIconProps {
+  text: string;
+  fontSize?: number;
+}
+function WorkspaceIcon(props: WorkspaceIconProps) {
+  return (
+    <Icon
+      style={{
+        "background-image": `url("data:image/svg+xml;utf8,${encodeURIComponent(
+          generateAvatarSvg({
+            text: props.text.slice(0, 2).toUpperCase(),
+            fontSize: props.fontSize,
+          })
+        )}")`,
+      }}
+    />
+  );
+}
 
 export function Stage() {
   const bar = useCommandBar();
@@ -168,7 +182,7 @@ export function Stage() {
         <ResourcesProvider>
           <Header>
             <Row space="4" vertical="center">
-              <OrgSwitcher src={sst} />
+              <WorkspaceIcon text="S" fontSize={0.5} />
               <StageSwitcher onClick={() => bar.show("stage", "app")}>
                 <Stack space="1.5">
                   <SwitcherApp>{stageContext.app.name}</SwitcherApp>
@@ -198,4 +212,36 @@ export function Stage() {
       </StageContext.Provider>
     </Show>
   );
+}
+
+interface AvatarSvgProps {
+  text: string;
+  round?: boolean;
+  size?: number;
+  bgColor?: string;
+  textColor?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number | string;
+}
+function generateAvatarSvg({
+  text,
+  size = 64,
+  round = false,
+  fontSize = 0.4,
+  bgColor = "#395C6B",
+  textColor = "#FFFBF9",
+  fontWeight = "normal",
+  fontFamily = "monospace",
+}: AvatarSvgProps) {
+  // From https://github.com/gilbitron/ui-avatar-svg
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${size}px" height="${size}px" viewBox="0 0 ${size} ${size}" version="1.1"><${
+    round ? "circle" : "rect"
+  } fill="${bgColor}" width="${size}" height="${size}" cx="${size / 2}" cy="${
+    size / 2
+  }" r="${
+    size / 2
+  }"/><text x="50%" y="50%" style="color: ${textColor};line-height: 1;font-family: ${fontFamily};" alignment-baseline="middle" text-anchor="middle" font-size="${Math.round(
+    size * fontSize
+  )}" font-weight="${fontWeight}" dy=".1em" dominant-baseline="middle" fill="${textColor}">${text}</text></svg>`;
 }
