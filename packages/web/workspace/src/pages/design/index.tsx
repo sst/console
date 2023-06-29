@@ -6,7 +6,18 @@ import { IconArrowPath, IconChevronLeft, IconBoltSolid } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
 import { Button, LinkButton } from "$/ui/button";
 import { utility } from "$/ui/utility";
-import { IconApp, IconEventBus, IconGitHub } from "$/ui/icons/custom";
+import {
+  IconApi,
+  IconApp,
+  IconFunction,
+  IconCron,
+  IconAuth,
+  IconConfig,
+  IconEventBus,
+  IconGitHub,
+  IconRDS,
+  IconBucket,
+} from "$/ui/icons/custom";
 import { For, JSX } from "solid-js";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
 
@@ -116,7 +127,14 @@ const ButtonIcon = styled("span", {
 export function Design() {
   return (
     <>
-      <ComponentType name="ConnectingWorkspace">
+      <ComponentType name="LoadingResources">
+        <Variant name="Default">
+          <Grower>
+            <LoadingResources />
+          </Grower>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Login">
         <Variant name="Default">
           <Grower>
             <Login />
@@ -311,7 +329,7 @@ const LogLoadingIndicatorIcon = styled("div", {
     height: 15,
     color: theme.color.text.dimmed,
     opacity: theme.iconOpacity,
-    animation: "pulse 1.5s linear infinite",
+    animation: "pulse 2.5s linear infinite",
   },
 });
 
@@ -715,7 +733,7 @@ const ConnectWorkspaceIcon = styled("div", {
     height: 24,
     color: theme.color.text.secondary,
     opacity: theme.iconOpacity,
-    animation: "spin 1.5s linear infinite",
+    animation: "spin 2.5s linear infinite",
   },
 });
 
@@ -925,5 +943,154 @@ function FormTest() {
         </Row>
       </Stack>
     </form>
+  );
+}
+
+const LoadingResourcesH1 = styled("h1", {
+  base: {
+    fontSize: theme.font.size.lg,
+    fontWeight: 500,
+    color: theme.color.text.dimmed,
+  },
+});
+
+const LoadingResourcesIndicator = styled("div", {
+  base: {
+    display: "inline-flex",
+    flexDirection: "column",
+    alignItems: "center",
+    borderRadius: theme.borderRadius,
+    border: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const LoadingRow = styled("div", {
+  base: {
+    display: "inline-flex",
+    alignItems: "center",
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    selectors: {
+      "&:first-child": {
+        borderTopWidth: 0,
+      },
+    },
+  },
+});
+
+const LoadingIcon = styled("div", {
+  base: {
+    borderRight: `1px solid ${theme.color.divider.base}`,
+    padding: 30,
+    width: 96,
+    height: 96,
+    color: theme.color.icon.dimmed,
+    selectors: {
+      "&:last-child": {
+        borderRightWidth: 0,
+      },
+    },
+  },
+});
+
+const opacity = 0.3;
+const timing = "ease-out";
+
+globalKeyframes("pulse", {
+  "0%": {
+    opacity,
+  },
+  "16.66%": {
+    opacity: 1,
+  },
+  "33.32%": {
+    opacity,
+  },
+});
+
+function LoadingResources() {
+  return (
+    <Stack space="5" horizontal="center">
+      <LoadingResourcesH1>Syncing resources&hellip;</LoadingResourcesH1>
+      <LoadingResourcesIndicator>
+        <LoadingRow>
+          <LoadingIcon>
+            <IconApi
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} infinite`,
+              }}
+            />
+          </LoadingIcon>
+          <LoadingIcon>
+            <IconAuth
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} .5s infinite`,
+              }}
+            />
+          </LoadingIcon>
+          <LoadingIcon>
+            <IconConfig
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} 1s infinite`,
+              }}
+            />
+          </LoadingIcon>
+        </LoadingRow>
+        <LoadingRow>
+          <LoadingIcon>
+            <IconFunction
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} .5s infinite`,
+              }}
+            />
+          </LoadingIcon>
+          <LoadingIcon>
+            <IconApp
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} 1s infinite`,
+              }}
+            />
+          </LoadingIcon>
+          <LoadingIcon>
+            <IconEventBus
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} 1.5s infinite`,
+              }}
+            />
+          </LoadingIcon>
+        </LoadingRow>
+        <LoadingRow>
+          <LoadingIcon>
+            <IconCron
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} 1s infinite`,
+              }}
+            />
+          </LoadingIcon>
+          <LoadingIcon>
+            <IconBucket
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} 1.5s infinite`,
+              }}
+            />
+          </LoadingIcon>
+          <LoadingIcon>
+            <IconRDS
+              style={{
+                opacity,
+                animation: `pulse 2.5s ${timing} 2s infinite`,
+              }}
+            />
+          </LoadingIcon>
+        </LoadingRow>
+      </LoadingResourcesIndicator>
+    </Stack>
   );
 }
