@@ -6,7 +6,7 @@ import { IconArrowPath, IconChevronLeft, IconBoltSolid } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
 import { utility } from "$/ui/utility";
-import { IconEventBus } from "$/ui/icons/custom";
+import { IconApp, IconEventBus, IconGitHub } from "$/ui/icons/custom";
 import { For, JSX } from "solid-js";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
 
@@ -103,9 +103,26 @@ const OverflowSpan = styled("span", {
   },
 });
 
+const ButtonIcon = styled("span", {
+  base: {
+    width: 18,
+    height: 18,
+    marginRight: 6,
+    verticalAlign: -4,
+    display: "inline-block",
+  },
+});
+
 export function Design() {
   return (
     <>
+      <ComponentType name="ConnectingWorkspace">
+        <Variant name="Default">
+          <Grower>
+            <Login />
+          </Grower>
+        </Variant>
+      </ComponentType>
       <ComponentType name="ConnectingWorkspace">
         <Variant name="Default">
           <Grower>
@@ -189,6 +206,32 @@ export function Design() {
           </Button>
           <Button disabled color="secondary">
             Button
+          </Button>
+        </Variant>
+        <Variant name="GitHub">
+          <Button color="github">
+            <ButtonIcon>
+              <IconGitHub />
+            </ButtonIcon>
+            Login with GitHub
+          </Button>
+          <Button data-state-hover color="github">
+            <ButtonIcon>
+              <IconGitHub />
+            </ButtonIcon>
+            Login with GitHub
+          </Button>
+          <Button data-state-active color="github">
+            <ButtonIcon>
+              <IconGitHub />
+            </ButtonIcon>
+            Login with GitHub
+          </Button>
+          <Button disabled color="github">
+            <ButtonIcon>
+              <IconGitHub />
+            </ButtonIcon>
+            Login with GitHub
           </Button>
         </Variant>
       </ComponentType>
@@ -654,6 +697,7 @@ const ConnectWorkspaceRow = styled("a", {
     ...utility.row(2),
     padding: `${theme.space[3]} ${theme.space[3]}`,
     width: 320,
+    boxSizing: "border-box",
     alignItems: "center",
     color: theme.color.text.secondary,
     lineHeight: "normal",
@@ -718,6 +762,60 @@ function ConnectWorkspace() {
         </For>
       </ConnectWorkspaceList>
     </Stack>
+  );
+}
+
+const LoginContainer = styled("div", {
+  base: {
+    ...utility.stack(8),
+    alignItems: "center",
+    margin: "0 auto",
+    width: 320,
+    boxSizing: "border-box",
+  },
+});
+
+const LoginIcon = styled("div", {
+  base: {
+    width: 42,
+    height: 42,
+    color: theme.color.accent,
+  },
+});
+
+const LoginHeader = styled("h1", {
+  base: {
+    fontSize: theme.font.size.lg,
+    fontWeight: 500,
+  },
+});
+
+const LoginDesc = styled("p", {
+  base: {
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary,
+  },
+});
+
+function Login() {
+  return (
+    <LoginContainer>
+      <Stack horizontal="center" space="5">
+        <LoginIcon>
+          <IconApp />
+        </LoginIcon>
+        <Stack horizontal="center" space="2">
+          <LoginHeader>Welcome to the SST Console</LoginHeader>
+          <LoginDesc>Log in with your GitHub to get started</LoginDesc>
+        </Stack>
+      </Stack>
+      <Button color="github">
+        <ButtonIcon>
+          <IconGitHub />
+        </ButtonIcon>
+        Login with GitHub
+      </Button>
+    </LoginContainer>
   );
 }
 

@@ -131,7 +131,7 @@ const light = {
       base: "",
       surface: "",
       accent: "",
-      danger: "",
+      inverted: "",
     },
     secondary: "",
     dimmed: "",
@@ -154,6 +154,7 @@ const light = {
   },
   button: {
     primary: {
+      text: "",
       color: "",
       active: "",
       border: "",
@@ -166,6 +167,7 @@ const light = {
       },
     },
     secondary: {
+      text: "",
       color: "",
       active: "",
       border: "",
@@ -178,6 +180,20 @@ const light = {
       },
     },
     danger: {
+      text: "",
+      color: "",
+      active: "",
+      border: "",
+      hover: {
+        color: "",
+        border: "",
+      },
+      disabled: {
+        opacity: "",
+      },
+    },
+    github: {
+      text: "",
       color: "",
       active: "",
       border: "",
@@ -281,7 +297,7 @@ light.text = {
     base: `hsla(${light.base.black}, 93%)`,
     surface: `hsla(${light.base.black}, 78%)`,
     accent: `hsla(${light.base.white}, 93%)`,
-    danger: `hsla(${light.base.white}, 93%)`,
+    inverted: `hsla(${dark.base.white}, 87%)`,
   },
   secondary: `hsla(${light.base.black}, 60%)`,
   dimmed: `hsla(${light.base.black}, 38%)`,
@@ -305,6 +321,7 @@ light.input = {
 };
 
 light.button.primary = {
+  text: light.text.primary.accent,
   color: light.accent,
   active: `hsla(${light.brand.d1}, 100%)`,
   border: `hsla(${light.brand.d2}, 100%)`,
@@ -318,6 +335,7 @@ light.button.primary = {
 };
 
 light.button.secondary = {
+  text: light.text.primary.surface,
   color: light.background.surface,
   active: `hsla(${light.base.black}, 8%)`,
   border: `hsla(${light.base.black}, 5%)`,
@@ -331,12 +349,27 @@ light.button.secondary = {
 };
 
 light.button.danger = {
+  text: light.text.primary.accent,
   color: `hsla(${light.base.red}, 100%)`,
   active: `hsla(${light.red.d1}, 100%)`,
   border: `hsla(${light.red.d2}, 100%)`,
   hover: {
     color: `hsla(${light.red.l1}, 100%)`,
     border: `hsla(${light.red.d1}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+};
+
+light.button.github = {
+  text: light.text.primary.accent,
+  color: "hsla(0, 0%, 20%, 100%)",
+  active: "hsla(0, 0%, 14%, 100%)",
+  border: "hsla(0, 0%, 8%, 100%)",
+  hover: {
+    color: "hsla(0, 0%, 26%, 100%)",
+    border: "hsla(0, 0%, 14%, 100%)",
   },
   disabled: {
     opacity: "0.65",
@@ -448,7 +481,7 @@ dark.text = {
     base: `hsla(${dark.base.white}, 87%)`,
     surface: `hsla(${dark.base.white}, 80%)`,
     accent: `hsla(${dark.base.white}, 87%)`,
-    danger: `hsla(${dark.base.white}, 87%)`,
+    inverted: `hsla(${light.base.black}, 93%)`,
   },
   secondary: `hsla(${dark.base.white}, 60%)`,
   dimmed: `hsla(${dark.base.white}, 38%)`,
@@ -472,6 +505,7 @@ dark.input = {
 };
 
 dark.button.primary = {
+  text: dark.text.primary.accent,
   color: dark.accent,
   active: `hsla(${dark.brand.d1}, 100%)`,
   border: `hsla(${dark.brand.d2}, 100%)`,
@@ -485,6 +519,7 @@ dark.button.primary = {
 };
 
 dark.button.secondary = {
+  text: dark.text.primary.surface,
   color: dark.background.surface,
   active: `hsla(${dark.base.white}, 4%)`,
   border: `hsla(${dark.base.white}, 4%)`,
@@ -498,12 +533,27 @@ dark.button.secondary = {
 };
 
 dark.button.danger = {
+  text: dark.text.primary.accent,
   color: `hsla(${dark.base.red}, 100%)`,
   active: `hsla(${dark.red.d1}, 100%)`,
   border: `hsla(${dark.red.d2}, 100%)`,
   hover: {
     color: `hsla(${dark.red.l1}, 100%)`,
     border: `hsla(${dark.base.red}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+};
+
+dark.button.github = {
+  text: dark.text.primary.inverted,
+  color: "hsla(0, 0%, 96%, 100%)",
+  active: "hsla(0, 0%, 90%, 100%)",
+  border: "hsla(0, 0%, 84%, 100%)",
+  hover: {
+    color: "hsla(0, 0%, 100%, 100%)",
+    border: "hsla(0, 0%, 90%, 100%)",
   },
   disabled: {
     opacity: "0.65",

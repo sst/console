@@ -31,6 +31,16 @@ const dangerActive: CSSProperties = {
   borderColor: "transparent",
   boxShadow: "none",
 };
+const githubHover: CSSProperties = {
+  borderColor: theme.color.button.github.hover.border,
+  backgroundColor: theme.color.button.github.hover.color,
+};
+const githubActive: CSSProperties = {
+  backgroundColor: theme.color.button.github.active,
+  transform: "translateY(1px)",
+  borderColor: "transparent",
+  boxShadow: "none",
+};
 
 export const Button = styled("button", {
   base: {
@@ -40,7 +50,7 @@ export const Button = styled("button", {
     padding: `0.625rem 1rem`,
     fontSize: `0.8125rem`,
     fontWeight: 500,
-    lineHeight: 1,
+    lineHeight: "normal",
     fontFamily: theme.font.family.code,
     transitionDelay: "0s, 0s",
     transitionDuration: "0.2s, 0.2s",
@@ -56,7 +66,7 @@ export const Button = styled("button", {
         backgroundColor: theme.color.button.primary.color,
         borderColor: theme.color.button.primary.border,
         boxShadow: theme.color.shadow.button.accent,
-        color: theme.color.text.primary.accent,
+        color: theme.color.button.primary.text,
         ":disabled": {
           borderColor: "transparent",
           boxShadow: "none",
@@ -73,7 +83,7 @@ export const Button = styled("button", {
         backgroundColor: theme.color.button.secondary.color,
         borderColor: theme.color.button.secondary.border,
         boxShadow: theme.color.shadow.button.base,
-        color: theme.color.text.primary.surface,
+        color: theme.color.button.secondary.text,
         ":disabled": {
           boxShadow: "none",
           opacity: theme.color.button.secondary.disabled.opacity,
@@ -89,7 +99,7 @@ export const Button = styled("button", {
         backgroundColor: theme.color.button.danger.color,
         borderColor: theme.color.button.danger.border,
         boxShadow: theme.color.shadow.button.danger,
-        color: theme.color.text.primary.danger,
+        color: theme.color.button.danger.text,
         ":disabled": {
           borderColor: "transparent",
           boxShadow: "none",
@@ -100,6 +110,23 @@ export const Button = styled("button", {
           "&:active": dangerActive,
           "&[data-state-hover]": dangerHover,
           "&[data-state-active]": dangerActive,
+        },
+      },
+      github: {
+        backgroundColor: theme.color.button.github.color,
+        borderColor: theme.color.button.github.border,
+        boxShadow: theme.color.shadow.drop.shortDark,
+        color: theme.color.button.github.text,
+        ":disabled": {
+          borderColor: "transparent",
+          boxShadow: "none",
+          opacity: theme.color.button.github.disabled.opacity,
+        },
+        selectors: {
+          "&:hover": githubHover,
+          "&:active": githubActive,
+          "&[data-state-hover]": githubHover,
+          "&[data-state-active]": githubActive,
         },
       },
     },
