@@ -4,7 +4,7 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { IconArrowPath, IconChevronLeft, IconBoltSolid } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
-import { Button } from "$/ui/button";
+import { Button, LinkButton } from "$/ui/button";
 import { utility } from "$/ui/utility";
 import { IconApp, IconEventBus, IconGitHub } from "$/ui/icons/custom";
 import { For, JSX } from "solid-js";
@@ -435,19 +435,6 @@ function LogsEmptyLoadingIndicator() {
     </LogsEmptyContainer>
   );
 }
-
-const LinkButton = styled("span", {
-  base: {
-    fontWeight: 500,
-    fontSize: theme.font.size.mono_sm,
-    fontFamily: theme.font.family.code,
-    color: theme.color.link.primary.base,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      color: theme.color.link.primary.hover,
-    },
-  },
-});
 
 const inputStyles: CSSProperties = {
   border: "none",

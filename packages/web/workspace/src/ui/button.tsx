@@ -65,7 +65,7 @@ export const Button = styled("button", {
       primary: {
         backgroundColor: theme.color.button.primary.color,
         borderColor: theme.color.button.primary.border,
-        boxShadow: theme.color.shadow.button.accent,
+        boxShadow: theme.color.button.primary.shadow,
         color: theme.color.button.primary.text,
         ":disabled": {
           borderColor: "transparent",
@@ -82,7 +82,7 @@ export const Button = styled("button", {
       secondary: {
         backgroundColor: theme.color.button.secondary.color,
         borderColor: theme.color.button.secondary.border,
-        boxShadow: theme.color.shadow.button.base,
+        boxShadow: theme.color.button.secondary.shadow,
         color: theme.color.button.secondary.text,
         ":disabled": {
           boxShadow: "none",
@@ -98,7 +98,7 @@ export const Button = styled("button", {
       danger: {
         backgroundColor: theme.color.button.danger.color,
         borderColor: theme.color.button.danger.border,
-        boxShadow: theme.color.shadow.button.danger,
+        boxShadow: theme.color.button.danger.shadow,
         color: theme.color.button.danger.text,
         ":disabled": {
           borderColor: "transparent",
@@ -115,7 +115,7 @@ export const Button = styled("button", {
       github: {
         backgroundColor: theme.color.button.github.color,
         borderColor: theme.color.button.github.border,
-        boxShadow: theme.color.shadow.drop.shortDark,
+        boxShadow: theme.color.button.github.shadow,
         color: theme.color.button.github.text,
         ":disabled": {
           borderColor: "transparent",
@@ -133,5 +133,18 @@ export const Button = styled("button", {
   },
   defaultVariants: {
     color: "primary",
+  },
+});
+
+export const LinkButton = styled("span", {
+  base: {
+    fontWeight: 500,
+    fontSize: theme.font.size.mono_sm,
+    fontFamily: theme.font.family.code,
+    color: theme.color.link.primary.base,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.link.primary.hover,
+    },
   },
 });

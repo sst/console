@@ -152,6 +152,19 @@ const light = {
     shadow: "",
     background: "",
   },
+  shadow: {
+    inset: {
+      surface: "",
+      accent: "",
+      danger: "",
+    },
+    drop: {
+      short: "",
+      shortDark: "",
+      medium: "",
+      long: "",
+    },
+  },
   button: {
     primary: {
       text: "",
@@ -165,6 +178,7 @@ const light = {
       disabled: {
         opacity: "",
       },
+      shadow: "",
     },
     secondary: {
       text: "",
@@ -178,6 +192,7 @@ const light = {
       disabled: {
         opacity: "",
       },
+      shadow: "",
     },
     danger: {
       text: "",
@@ -191,6 +206,7 @@ const light = {
       disabled: {
         opacity: "",
       },
+      shadow: "",
     },
     github: {
       text: "",
@@ -204,39 +220,7 @@ const light = {
       disabled: {
         opacity: "",
       },
-    },
-  },
-  tag: {
-    info: {
-      color: "",
-      text: "",
-    },
-    danger: {
-      color: "",
-      text: "",
-    },
-  },
-  shadow: {
-    inset: {
-      surface: "",
-      accent: "",
-      danger: "",
-    },
-    drop: {
-      short: "",
-      shortDark: "",
-      medium: "",
-      long: "",
-    },
-    on: {
-      surface2: "",
-      accent210: "",
-      danger210: "",
-    },
-    button: {
-      base: "",
-      accent: "",
-      danger: "",
+      shadow: "",
     },
   },
 };
@@ -320,72 +304,6 @@ light.input = {
   background: "transparent",
 };
 
-light.button.primary = {
-  text: light.text.primary.accent,
-  color: light.accent,
-  active: `hsla(${light.brand.d1}, 100%)`,
-  border: `hsla(${light.brand.d2}, 100%)`,
-  hover: {
-    color: `hsla(${light.brand.l1}, 100%)`,
-    border: `hsla(${light.brand.d1}, 100%)`,
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-light.button.secondary = {
-  text: light.text.primary.surface,
-  color: light.background.surface,
-  active: `hsla(${light.base.black}, 8%)`,
-  border: `hsla(${light.base.black}, 5%)`,
-  hover: {
-    color: `hsla(${light.base.black}, 3%)`,
-    border: `hsla(${light.base.black}, 5%)`,
-  },
-  disabled: {
-    opacity: "0.6",
-  },
-};
-
-light.button.danger = {
-  text: light.text.primary.accent,
-  color: `hsla(${light.base.red}, 100%)`,
-  active: `hsla(${light.red.d1}, 100%)`,
-  border: `hsla(${light.red.d2}, 100%)`,
-  hover: {
-    color: `hsla(${light.red.l1}, 100%)`,
-    border: `hsla(${light.red.d1}, 100%)`,
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-light.button.github = {
-  text: light.text.primary.accent,
-  color: "hsla(0, 0%, 20%, 100%)",
-  active: "hsla(0, 0%, 14%, 100%)",
-  border: "hsla(0, 0%, 8%, 100%)",
-  hover: {
-    color: "hsla(0, 0%, 26%, 100%)",
-    border: "hsla(0, 0%, 14%, 100%)",
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-light.tag.info = {
-  color: light.background.surface,
-  text: light.text.dimmed,
-};
-
-light.tag.danger = {
-  color: `hsla(${light.base.red}, 25%)`,
-  text: `hsla(${light.red.l2}, 100%)`,
-};
-
 light.shadow.inset = {
   surface: `0 1px 0 inset hsla(${light.base.white}, 54%)`,
   accent: `0 1px 0 inset hsla(${light.brand.l2}, 80%)`,
@@ -413,16 +331,64 @@ light.shadow.drop = {
   `,
 };
 
-light.shadow.on = {
-  surface2: `${light.shadow.inset.surface}, ${light.shadow.drop.short}`,
-  accent210: ` ${light.shadow.inset.accent}, ${light.shadow.drop.shortDark}`,
-  danger210: ` ${light.shadow.inset.danger}, ${light.shadow.drop.shortDark}`,
+light.button.primary = {
+  text: light.text.primary.accent,
+  color: light.accent,
+  active: `hsla(${light.brand.d1}, 100%)`,
+  border: `hsla(${light.brand.d2}, 100%)`,
+  hover: {
+    color: `hsla(${light.brand.l1}, 100%)`,
+    border: `hsla(${light.brand.d1}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+  shadow: `${light.shadow.inset.accent}, ${light.shadow.drop.shortDark}`,
 };
 
-light.shadow.button = {
-  base: light.shadow.on.surface2,
-  accent: light.shadow.on.accent210,
-  danger: light.shadow.on.danger210,
+light.button.secondary = {
+  text: light.text.primary.surface,
+  color: light.background.surface,
+  active: `hsla(${light.base.black}, 8%)`,
+  border: `hsla(${light.base.black}, 5%)`,
+  hover: {
+    color: `hsla(${light.base.black}, 3%)`,
+    border: `hsla(${light.base.black}, 5%)`,
+  },
+  disabled: {
+    opacity: "0.6",
+  },
+  shadow: `${light.shadow.inset.surface}, ${light.shadow.drop.short}`,
+};
+
+light.button.danger = {
+  text: light.text.primary.accent,
+  color: `hsla(${light.base.red}, 100%)`,
+  active: `hsla(${light.red.d1}, 100%)`,
+  border: `hsla(${light.red.d2}, 100%)`,
+  hover: {
+    color: `hsla(${light.red.l1}, 100%)`,
+    border: `hsla(${light.red.d1}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+  shadow: `${light.shadow.inset.accent}, ${light.shadow.drop.shortDark}`,
+};
+
+light.button.github = {
+  text: light.text.primary.accent,
+  color: "hsla(0, 0%, 20%, 100%)",
+  active: "hsla(0, 0%, 14%, 100%)",
+  border: "hsla(0, 0%, 8%, 100%)",
+  hover: {
+    color: "hsla(0, 0%, 26%, 100%)",
+    border: "hsla(0, 0%, 14%, 100%)",
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+  shadow: light.shadow.drop.shortDark,
 };
 
 dark.base = {
@@ -504,70 +470,10 @@ dark.input = {
   background: `hsla(${dark.base.white}, 4%)`,
 };
 
-dark.button.primary = {
-  text: dark.text.primary.accent,
-  color: dark.accent,
-  active: `hsla(${dark.brand.d1}, 100%)`,
-  border: `hsla(${dark.brand.d2}, 100%)`,
-  hover: {
-    color: `hsla(${dark.brand.l1}, 100%)`,
-    border: `hsla(${dark.brand.d1}, 100%)`,
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-dark.button.secondary = {
-  text: dark.text.primary.surface,
-  color: dark.background.surface,
-  active: `hsla(${dark.base.white}, 4%)`,
-  border: `hsla(${dark.base.white}, 4%)`,
-  hover: {
-    color: `hsla(${dark.base.white}, 9%)`,
-    border: `hsla(${dark.base.white}, 3%)`,
-  },
-  disabled: {
-    opacity: "0.6",
-  },
-};
-
-dark.button.danger = {
-  text: dark.text.primary.accent,
-  color: `hsla(${dark.base.red}, 100%)`,
-  active: `hsla(${dark.red.d1}, 100%)`,
-  border: `hsla(${dark.red.d2}, 100%)`,
-  hover: {
-    color: `hsla(${dark.red.l1}, 100%)`,
-    border: `hsla(${dark.base.red}, 100%)`,
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-dark.button.github = {
-  text: dark.text.primary.inverted,
-  color: "hsla(0, 0%, 96%, 100%)",
-  active: "hsla(0, 0%, 90%, 100%)",
-  border: "hsla(0, 0%, 84%, 100%)",
-  hover: {
-    color: "hsla(0, 0%, 100%, 100%)",
-    border: "hsla(0, 0%, 90%, 100%)",
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-dark.tag.info = {
-  color: dark.background.surface,
-  text: dark.text.dimmed,
-};
-
-dark.tag.danger = {
-  color: `hsla(${dark.base.red}, 25%)`,
-  text: `hsla(${dark.red.l2}, 100%)`,
+dark.shadow.inset = {
+  surface: "",
+  accent: "",
+  danger: "",
 };
 
 dark.shadow.drop = {
@@ -589,10 +495,64 @@ dark.shadow.drop = {
   `,
 };
 
-dark.shadow.button = {
-  base: dark.shadow.drop.short,
-  accent: dark.shadow.drop.shortDark,
-  danger: "",
+dark.button.primary = {
+  text: dark.text.primary.accent,
+  color: dark.accent,
+  active: `hsla(${dark.brand.d1}, 100%)`,
+  border: `hsla(${dark.brand.d2}, 100%)`,
+  hover: {
+    color: `hsla(${dark.brand.l1}, 100%)`,
+    border: `hsla(${dark.brand.d1}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+  shadow: dark.shadow.drop.shortDark,
+};
+
+dark.button.secondary = {
+  text: dark.text.primary.surface,
+  color: dark.background.surface,
+  active: `hsla(${dark.base.white}, 4%)`,
+  border: `hsla(${dark.base.white}, 4%)`,
+  hover: {
+    color: `hsla(${dark.base.white}, 9%)`,
+    border: `hsla(${dark.base.white}, 3%)`,
+  },
+  disabled: {
+    opacity: "0.6",
+  },
+  shadow: dark.shadow.drop.shortDark,
+};
+
+dark.button.danger = {
+  text: dark.text.primary.accent,
+  color: `hsla(${dark.base.red}, 100%)`,
+  active: `hsla(${dark.red.d1}, 100%)`,
+  border: `hsla(${dark.red.d2}, 100%)`,
+  hover: {
+    color: `hsla(${dark.red.l1}, 100%)`,
+    border: `hsla(${dark.base.red}, 100%)`,
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+  shadow: dark.shadow.drop.shortDark,
+};
+
+dark.button.github = {
+  text: dark.text.primary.inverted,
+  color: "hsla(0, 0%, 96%, 100%)",
+  active: "hsla(0, 0%, 90%, 100%)",
+  border: "hsla(0, 0%, 84%, 100%)",
+  hover: {
+    color: "hsla(0, 0%, 100%, 100%)",
+    border: "hsla(0, 0%, 90%, 100%)",
+  },
+  disabled: {
+    opacity: "0.65",
+  },
+  shadow: dark.shadow.drop.shortDark,
 };
 
 export const [lightClass, theme] = createTheme({

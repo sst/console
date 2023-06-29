@@ -1,6 +1,12 @@
 import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
 
+const infoColor = theme.color.background.surface;
+const infoText = theme.color.text.dimmed;
+
+const dangerColor = `hsla(${theme.color.base.red}, 25%)`;
+const dangerText = `hsla(${theme.color.red.l2}, 100%)`;
+
 export const Tag = styled("div", {
   base: {
     flex: "0 0 auto",
@@ -22,12 +28,12 @@ export const Tag = styled("div", {
   variants: {
     level: {
       info: {
-        backgroundColor: theme.color.tag.info.color,
-        color: theme.color.tag.info.text,
+        backgroundColor: infoColor,
+        color: infoText,
       },
       danger: {
-        backgroundColor: theme.color.tag.danger.color,
-        color: theme.color.tag.danger.text,
+        backgroundColor: dangerColor,
+        color: dangerText,
       },
     },
     style: {
@@ -69,7 +75,7 @@ export const Tag = styled("div", {
       },
       style: {
         color: `hsla(${theme.color.base.red}, 100%)`,
-        borderColor: theme.color.tag.danger.color,
+        borderColor: dangerColor,
       },
     },
   ],
