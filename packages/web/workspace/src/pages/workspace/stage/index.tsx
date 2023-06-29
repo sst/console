@@ -102,8 +102,9 @@ const SwitcherIcon = styled(IconChevronUpDown, {
   },
 });
 
-const Icon = styled("div", {
+const Icon = styled("span", {
   base: {
+    flexShrink: 0,
     width: 36,
     height: 36,
     backgroundSize: "cover",
@@ -113,16 +114,15 @@ const Icon = styled("div", {
 
 interface WorkspaceIconProps {
   text: string;
-  fontSize?: number;
 }
-function WorkspaceIcon(props: WorkspaceIconProps) {
+export function WorkspaceIcon(props: WorkspaceIconProps) {
   return (
     <Icon
+      title={props.text}
       style={{
         "background-image": `url("data:image/svg+xml;utf8,${encodeURIComponent(
           generateAvatarSvg({
             text: props.text.slice(0, 2).toUpperCase(),
-            fontSize: props.fontSize,
           })
         )}")`,
       }}

@@ -2,44 +2,13 @@ import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
 import { Grower, Stack, Row } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
-import { IconChevronLeft, IconBoltSolid } from "$/ui/icons";
+import { IconArrowPath, IconChevronLeft, IconBoltSolid } from "$/ui/icons";
 import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
 import { utility } from "$/ui/utility";
 import { IconEventBus } from "$/ui/icons/custom";
-import { JSX } from "solid-js";
-
-interface AvatarSvgProps {
-  text: string;
-  round?: boolean;
-  size?: number;
-  bgColor?: string;
-  textColor?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  fontWeight?: number | string;
-}
-function generateAvatarSvg({
-  text,
-  size = 64,
-  round = false,
-  fontSize = 0.4,
-  bgColor = "#395C6B",
-  textColor = "#FFFBF9",
-  fontWeight = "normal",
-  fontFamily = "monospace",
-}: AvatarSvgProps) {
-  // From https://github.com/gilbitron/ui-avatar-svg
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${size}px" height="${size}px" viewBox="0 0 ${size} ${size}" version="1.1"><${
-    round ? "circle" : "rect"
-  } fill="${bgColor}" width="${size}" height="${size}" cx="${size / 2}" cy="${
-    size / 2
-  }" r="${
-    size / 2
-  }"/><text x="50%" y="50%" style="color: ${textColor};line-height: 1;font-family: ${fontFamily};" alignment-baseline="middle" text-anchor="middle" font-size="${Math.round(
-    size * fontSize
-  )}" font-weight="${fontWeight}" dy=".1em" dominant-baseline="middle" fill="${textColor}">${text}</text></svg>`;
-}
+import { WorkspaceIcon } from "../workspace/stage";
+import { For, JSX } from "solid-js";
 
 const ComponentRoot = styled("div", {
   base: {
@@ -134,48 +103,34 @@ const OverflowSpan = styled("span", {
   },
 });
 
-const Icon = styled("div", {
-  base: {
-    width: 36,
-    height: 36,
-    backgroundSize: "cover",
-    borderRadius: theme.borderRadius,
-  },
-});
-
-interface WorkspaceIconProps {
-  text: string;
-  fontSize?: number;
-}
-function WorkspaceIcon(props: WorkspaceIconProps) {
-  return (
-    <Icon
-      style={{
-        "background-image": `url("data:image/svg+xml;utf8,${encodeURIComponent(
-          generateAvatarSvg({
-            text: props.text,
-            fontSize: props.fontSize,
-          })
-        )}")`,
-      }}
-    />
-  );
-}
-
 export function Design() {
   return (
     <>
-      <ComponentType name="FormNewWorkspace">
+      <ComponentType name="ConnectingWorkspace">
         <Variant name="Default">
           <Grower>
-            <WorkspaceIcon text="SO" fontSize={0.6} />
+            <ConnectingWorkspace />
           </Grower>
         </Variant>
       </ComponentType>
-      <ComponentType name="FormNewWorkspace">
+      <ComponentType name="ConnectWorkspace">
         <Variant name="Default">
           <Grower>
-            <FormNewWorkspace />
+            <ConnectWorkspace />
+          </Grower>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="NewWorkspace">
+        <Variant name="Default">
+          <Grower>
+            <NewWorkspace />
+          </Grower>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="FormTest">
+        <Variant name="Default">
+          <Grower>
+            <FormTest />
           </Grower>
         </Variant>
       </ComponentType>
@@ -620,7 +575,174 @@ const FormFieldHint = styled("p", {
   },
 });
 
-function FormNewWorkspace() {
+const NewWorkspaceHeader = styled("h1", {
+  base: {
+    fontSize: theme.font.size.lg,
+    fontWeight: 500,
+  },
+});
+
+const NewWorkspaceDesc = styled("p", {
+  base: {
+    color: theme.color.text.secondary,
+  },
+});
+
+const FormNewWorkspace = styled("form", {
+  base: {
+    ...utility.stack(5),
+    alignItems: "stretch",
+    margin: "0 auto",
+    maxWidth: 600,
+  },
+});
+
+function NewWorkspace() {
+  return (
+    <Stack space="8">
+      <Stack horizontal="center" space="5">
+        <WorkspaceIcon text="acme" />
+        <Stack horizontal="center" space="2">
+          <NewWorkspaceHeader>Create a new workspace</NewWorkspaceHeader>
+          <NewWorkspaceDesc>
+            Start by giving your workspace a name
+          </NewWorkspaceDesc>
+        </Stack>
+      </Stack>
+      <FormNewWorkspace>
+        <Stack space="2.5">
+          <FormField>
+            <Input placeholder="acme" type="text" />
+          </FormField>
+          <FormFieldHint>
+            Needs to be lowercase, unique, and URL friendly.
+          </FormFieldHint>
+        </Stack>
+        <Button color="primary">Create Workspace</Button>
+      </FormNewWorkspace>
+    </Stack>
+  );
+}
+
+const ConnectWorkspaceHeader = styled("h1", {
+  base: {
+    fontSize: theme.font.size.lg,
+    fontWeight: 500,
+  },
+  variants: {
+    loading: {
+      true: {
+        color: theme.color.text.secondary,
+      },
+      false: {},
+    },
+  },
+  defaultVariants: {
+    loading: false,
+  },
+});
+
+const ConnectWorkspaceList = styled("div", {
+  base: {
+    border: `1px solid ${theme.color.divider.base}`,
+    borderRadius: theme.borderRadius,
+  },
+});
+
+const ConnectWorkspaceRow = styled("a", {
+  base: {
+    ...utility.row(2),
+    padding: `${theme.space[3]} ${theme.space[3]}`,
+    width: 320,
+    alignItems: "center",
+    color: theme.color.text.secondary,
+    lineHeight: "normal",
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    ":hover": {
+      color: theme.color.text.primary.surface,
+      backgroundColor: theme.color.background.surface,
+    },
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+const ConnectWorkspaceName = styled("span", {
+  base: {
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+  },
+});
+
+const ConnectWorkspaceIcon = styled("div", {
+  base: {
+    width: 24,
+    height: 24,
+    color: theme.color.text.secondary,
+    opacity: theme.iconOpacity,
+    animation: "spin 1.5s linear infinite",
+  },
+});
+
+globalKeyframes("spin", {
+  from: {
+    transform: "rotate(0deg)",
+  },
+  to: {
+    transform: "rotate(360deg)",
+  },
+});
+
+function ConnectWorkspace() {
+  const list = [
+    "acme",
+    "krusty-krab",
+    "chum-bucket",
+    "some-really-long-workspace-name",
+  ];
+  return (
+    <Stack horizontal="center" space="5">
+      <ConnectWorkspaceHeader>Connect to a workspace</ConnectWorkspaceHeader>
+      <ConnectWorkspaceList>
+        <For each={list}>
+          {(item: string) => (
+            <ConnectWorkspaceRow href="#">
+              <WorkspaceIcon text={item} />
+              <ConnectWorkspaceName>{item}</ConnectWorkspaceName>
+            </ConnectWorkspaceRow>
+          )}
+        </For>
+      </ConnectWorkspaceList>
+    </Stack>
+  );
+}
+
+function ConnectingWorkspace() {
+  return (
+    <Stack horizontal="center" space="5">
+      <ConnectWorkspaceIcon>
+        <IconArrowPath />
+      </ConnectWorkspaceIcon>
+      <Stack horizontal="center" space="3">
+        <ConnectWorkspaceHeader loading>
+          Connecting to workspace&hellip;
+        </ConnectWorkspaceHeader>
+        <ConnectWorkspaceList>
+          <ConnectWorkspaceRow href="#">
+            <WorkspaceIcon text="krusty-krab" />
+            <ConnectWorkspaceName>krusty-krab</ConnectWorkspaceName>
+          </ConnectWorkspaceRow>
+        </ConnectWorkspaceList>
+      </Stack>
+    </Stack>
+  );
+}
+
+function FormTest() {
   return (
     <form>
       <Stack space="7">
