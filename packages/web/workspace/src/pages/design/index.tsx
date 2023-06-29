@@ -7,8 +7,8 @@ import { Tag } from "$/ui/tag";
 import { Button } from "$/ui/button";
 import { utility } from "$/ui/utility";
 import { IconEventBus } from "$/ui/icons/custom";
-import { WorkspaceIcon } from "../workspace/stage";
 import { For, JSX } from "solid-js";
+import { WorkspaceIcon } from "$/ui/workspace-icon";
 
 const ComponentRoot = styled("div", {
   base: {

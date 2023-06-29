@@ -1,8 +1,80 @@
 import { AppStore } from "$/data/app";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { StageStore } from "$/data/stage";
-import { Navigate, useSearchParams } from "@solidjs/router";
-import { Match, Show, Switch, createMemo } from "solid-js";
+import { Navigate, useParams, useSearchParams } from "@solidjs/router";
+import { Show, createMemo } from "solid-js";
+import { styled } from "@macaron-css/solid";
+import { theme } from "$/ui/theme";
+import { utility } from "$/ui/utility";
+import { IconArrowPath } from "$/ui/icons";
+import { Stack } from "$/ui/layout";
+import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { WorkspaceStore } from "$/data/workspace";
+
+const Root = styled("div", {
+  base: {
+    position: "fixed",
+    inset: "0",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
+
+const ConnectWorkspaceHeader = styled("h1", {
+  base: {
+    fontSize: theme.font.size.lg,
+    fontWeight: 500,
+    color: theme.color.text.secondary,
+  },
+});
+
+const ConnectWorkspaceRow = styled("a", {
+  base: {
+    ...utility.row(2),
+    padding: `${theme.space[3]} ${theme.space[3]}`,
+    width: 320,
+    alignItems: "center",
+    color: theme.color.text.secondary,
+    lineHeight: "normal",
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    ":hover": {
+      color: theme.color.text.primary.surface,
+      backgroundColor: theme.color.background.surface,
+    },
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+const ConnectWorkspaceName = styled("span", {
+  base: {
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+  },
+});
+
+const ConnectWorkspaceList = styled("div", {
+  base: {
+    border: `1px solid ${theme.color.divider.base}`,
+    borderRadius: theme.borderRadius,
+    overflow: "hidden",
+  },
+});
+
+const ConnectWorkspaceIcon = styled("div", {
+  base: {
+    width: 24,
+    height: 24,
+    color: theme.color.text.secondary,
+    opacity: theme.iconOpacity,
+    animation: "spin 1.5s linear infinite",
+  },
+});
 
 export function Connect() {
   const rep = useReplicache();
@@ -13,7 +85,11 @@ export function Connect() {
     stage: query.stage!,
     region: query.region!,
   });
+  const params = useParams();
 
+  const workspace = createSubscription(() =>
+    WorkspaceStore.fromSlug(params.workspaceSlug)
+  );
   const app = createSubscription(() => AppStore.fromName(query.app!));
   const stages = createSubscription(
     () => StageStore.forApp(app()?.id || "unknown"),
@@ -22,11 +98,28 @@ export function Connect() {
   const stage = createMemo(() => stages().find((s) => s.name === query.stage));
 
   return (
-    <Show
-      when={stage()}
-      fallback={`Connecting ${query.app}/${query.stage} to aws...`}
-    >
-      <Navigate href={`../${app()?.name}/${stage()?.name}`} />
-    </Show>
+    <Root>
+      <Show
+        when={!stage()}
+        fallback={<Navigate href={`../${app()?.name}/${stage()?.name}`} />}
+      >
+        <Stack horizontal="center" space="5">
+          <ConnectWorkspaceIcon>
+            <IconArrowPath />
+          </ConnectWorkspaceIcon>
+          <Stack horizontal="center" space="3">
+            <ConnectWorkspaceHeader>
+              Connecting to workspace&hellip;
+            </ConnectWorkspaceHeader>
+            <ConnectWorkspaceList>
+              <ConnectWorkspaceRow href="#">
+                <WorkspaceIcon text={workspace()?.slug || ""} />
+                <ConnectWorkspaceName>{workspace()?.slug}</ConnectWorkspaceName>
+              </ConnectWorkspaceRow>
+            </ConnectWorkspaceList>
+          </Stack>
+        </Stack>
+      </Show>
+    </Root>
   );
 }
