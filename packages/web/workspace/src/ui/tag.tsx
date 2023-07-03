@@ -20,7 +20,6 @@ export const Tag = styled("div", {
     alignItems: "center",
     textTransform: "uppercase",
     borderRadius: theme.borderRadius,
-    boxSizing: "border-box",
     lineHeight: "normal",
     userSelect: "none",
     WebkitUserSelect: "none",

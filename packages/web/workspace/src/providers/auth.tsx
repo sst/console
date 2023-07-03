@@ -1,4 +1,4 @@
-import { createLocalStorage } from "@solid-primitives/storage";
+import { setAccount } from "$/data/storage";
 import { Navigate } from "@solidjs/router";
 import { Replicache } from "replicache";
 import { ParentProps, createContext, useContext } from "solid-js";
@@ -23,17 +23,6 @@ function set(auth: AuthData) {
   return localStorage.setItem("auth", JSON.stringify(auth));
 }
 
-function login() {
-  const params = new URLSearchParams({
-    client_id: "solid",
-    redirect_uri: location.origin + "/",
-    response_type: "token",
-    provider: "github",
-  });
-  const url = import.meta.env.VITE_AUTH_URL + "/authorize?" + params.toString();
-  return url;
-}
-
 type AuthContextType = Record<
   string,
   {
@@ -56,15 +45,14 @@ export function AuthProvider(props: ParentProps) {
       token: access_token,
       ...payload.properties,
     };
+    setAccount(payload.properties.accountID);
     set(tokens);
   }
 
   console.log("Auth Info", tokens);
 
-  if (Object.values(tokens).length === 0) {
-    location.href = login();
-    return;
-  }
+  if (Object.values(tokens).length === 0)
+    return <Navigate href="/auth/login" />;
 
   const stores: AuthContextType = {};
   for (const token of Object.values(tokens)) {

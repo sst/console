@@ -702,7 +702,6 @@ const ConnectWorkspaceRow = styled("a", {
     ...utility.row(2),
     padding: `${theme.space[3]} ${theme.space[3]}`,
     width: 320,
-    boxSizing: "border-box",
     alignItems: "center",
     color: theme.color.text.secondary,
     lineHeight: "normal",
@@ -776,7 +775,6 @@ const LoginContainer = styled("div", {
     alignItems: "center",
     margin: "0 auto",
     width: 320,
-    boxSizing: "border-box",
   },
 });
 

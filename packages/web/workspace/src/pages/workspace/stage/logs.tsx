@@ -238,7 +238,6 @@ const LogLoadingIndicator = styled("div", {
 const LogLoadingIndicatorIcon = styled("div", {
   base: {
     padding: 2,
-    boxSizing: "border-box",
     width: 20,
     height: 20,
     color: theme.color.text.dimmed,

@@ -1,11 +1,17 @@
 import "@fontsource/rubik/latin.css";
 import "@fontsource/ibm-plex-mono/latin.css";
 
-import { Component, For, createSignal, createEffect, Show } from "solid-js";
-import { Link, Navigate, Route, Router, Routes } from "@solidjs/router";
+import {
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  Switch,
+  Match,
+} from "solid-js";
+import { Navigate, Route, Router, Routes } from "@solidjs/router";
 import { AuthProvider, useAuth } from "$/providers/auth";
 import { createSubscription } from "$/providers/replicache";
-import { UserStore } from "./data/user";
 import { WorkspaceStore } from "./data/workspace";
 import { Workspace } from "./pages/workspace";
 import { Connect } from "./pages/connect";
@@ -17,6 +23,7 @@ import { theme, darkClass, lightClass } from "./ui/theme";
 import { account, setAccount } from "./data/storage";
 import { RealtimeProvider } from "./providers/realtime";
 import { CommandBar } from "./pages/workspace/command-bar";
+import { Auth } from "./pages/auth";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -78,6 +85,7 @@ macaron$(() =>
 
 globalStyle("*", {
   cursor: "default",
+  boxSizing: "border-box",
 });
 
 globalStyle("input", {
@@ -103,41 +111,58 @@ export const App: Component = () => {
 
   return (
     <Root class={theme() === "light" ? lightClass : darkClass} id="styled">
-      <AuthProvider>
-        <RealtimeProvider />
-        <Router>
-          <CommandBar>
-            <Routes>
-              <Route path="debug" component={Debug} />
-              <Route path="design" component={Design} />
-              <Route path="connect" component={Connect} />
-              <Route path=":workspaceSlug/*" component={Workspace} />
-              <Route
-                path="*"
-                component={() => {
-                  const auth = useAuth();
-                  let existing = account();
-                  if (!existing || !auth[existing]) {
-                    existing = Object.keys(auth)[0];
-                    setAccount(existing);
-                  }
-                  const workspaces = createSubscription(
-                    WorkspaceStore.list,
-                    [],
-                    () => auth[existing].replicache
-                  );
+      <Router>
+        <Routes>
+          <Route path="auth/*" component={Auth} />
+          <Route
+            path="*"
+            element={
+              <AuthProvider>
+                <RealtimeProvider />
+                <CommandBar>
+                  <Routes>
+                    <Route path="debug" component={Debug} />
+                    <Route path="design" component={Design} />
+                    <Route path="connect" component={Connect} />
+                    <Route path=":workspaceSlug/*" component={Workspace} />
+                    <Route
+                      path="*"
+                      component={() => {
+                        const auth = useAuth();
+                        let existing = account();
+                        if (!existing || !auth[existing]) {
+                          existing = Object.keys(auth)[0];
+                          setAccount(existing);
+                        }
+                        const workspaces = createSubscription(
+                          WorkspaceStore.list,
+                          null,
+                          () => auth[existing].replicache
+                        );
 
-                  return (
-                    <Show when={workspaces().length > 0}>
-                      <Navigate href={`/${workspaces()![0].slug}`} />
-                    </Show>
-                  );
-                }}
-              />
-            </Routes>
-          </CommandBar>
-        </Router>
-      </AuthProvider>
+                        return (
+                          <Switch>
+                            <Match
+                              when={workspaces() && workspaces()!.length > 0}
+                            >
+                              <Navigate href={`/${workspaces()![0].slug}`} />
+                            </Match>
+                            <Match
+                              when={workspaces() && workspaces()!.length === 0}
+                            >
+                              <Navigate href={`/workspace`} />
+                            </Match>
+                          </Switch>
+                        );
+                      }}
+                    />
+                  </Routes>
+                </CommandBar>
+              </AuthProvider>
+            }
+          />
+        </Routes>
+      </Router>
     </Root>
   );
 };
