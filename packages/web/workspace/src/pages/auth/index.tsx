@@ -10,6 +10,7 @@ import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
 import { styled } from "@macaron-css/solid";
+import { createId } from "@paralleldrive/cuid2";
 import { Route, Routes, useNavigate } from "@solidjs/router";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
@@ -125,6 +126,7 @@ export function CreateWorkspace() {
           const slug = fd.get("slug") as string;
           setPending(slug);
           rep().mutate.workspace_create({
+            id: createId(),
             slug,
           });
         }}

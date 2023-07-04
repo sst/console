@@ -1,4 +1,5 @@
 import { setAccount } from "$/data/storage";
+import { WorkspaceStore } from "$/data/workspace";
 import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
 import { Navigate } from "@solidjs/router";
@@ -35,7 +36,15 @@ type AuthContextType = Record<
 const AuthContext = createContext<AuthContextType>();
 
 const mutators = new Client<ServerType>()
-  .mutation("workspace_create", async (tx, input) => {})
+  .mutation("workspace_create", async (tx, input) => {
+    await WorkspaceStore.put({
+      id: input.id!,
+      slug: input.slug,
+      timeCreated: new Date().toISOString(),
+      timeUpdated: new Date().toISOString(),
+      timeDeleted: null,
+    })(tx);
+  })
   .build();
 
 export function AuthProvider(props: ParentProps) {
