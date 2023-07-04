@@ -993,7 +993,7 @@ const LoadingIcon = styled("div", {
 const opacity = 0.3;
 const timing = "ease-out";
 
-globalKeyframes("pulse", {
+globalKeyframes("pulse33", {
   "0%": {
     opacity,
   },
@@ -1015,7 +1015,7 @@ function LoadingResources() {
             <IconApi
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} infinite`,
+                animation: `pulse33 2.5s ${timing} infinite`,
               }}
             />
           </LoadingIcon>
@@ -1023,7 +1023,7 @@ function LoadingResources() {
             <IconAuth
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} .5s infinite`,
+                animation: `pulse33 2.5s ${timing} .5s infinite`,
               }}
             />
           </LoadingIcon>
@@ -1031,7 +1031,7 @@ function LoadingResources() {
             <IconConfig
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1s infinite`,
+                animation: `pulse33 2.5s ${timing} 1s infinite`,
               }}
             />
           </LoadingIcon>
@@ -1041,7 +1041,7 @@ function LoadingResources() {
             <IconFunction
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} .5s infinite`,
+                animation: `pulse33 2.5s ${timing} .5s infinite`,
               }}
             />
           </LoadingIcon>
@@ -1049,7 +1049,7 @@ function LoadingResources() {
             <IconApp
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1s infinite`,
+                animation: `pulse33 2.5s ${timing} 1s infinite`,
               }}
             />
           </LoadingIcon>
@@ -1057,7 +1057,7 @@ function LoadingResources() {
             <IconEventBus
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1.5s infinite`,
+                animation: `pulse33 2.5s ${timing} 1.5s infinite`,
               }}
             />
           </LoadingIcon>
@@ -1067,7 +1067,7 @@ function LoadingResources() {
             <IconCron
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1s infinite`,
+                animation: `pulse33 2.5s ${timing} 1s infinite`,
               }}
             />
           </LoadingIcon>
@@ -1075,7 +1075,7 @@ function LoadingResources() {
             <IconBucket
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1.5s infinite`,
+                animation: `pulse33 2.5s ${timing} 1.5s infinite`,
               }}
             />
           </LoadingIcon>
@@ -1083,7 +1083,7 @@ function LoadingResources() {
             <IconRDS
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 2s infinite`,
+                animation: `pulse33 2.5s ${timing} 2s infinite`,
               }}
             />
           </LoadingIcon>

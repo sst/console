@@ -1,8 +1,8 @@
-import { globalKeyframes } from "@macaron-css/core";
-import { styled } from "@macaron-css/solid";
-import { theme } from "./theme";
-import { Stack } from "./layout";
-import { ParentProps } from "solid-js";
+import {globalKeyframes} from "@macaron-css/core";
+import {styled} from "@macaron-css/solid";
+import {theme} from "./theme";
+import {Stack} from "./layout";
+import {ParentProps} from "solid-js";
 import {
   IconApi,
   IconApp,
@@ -18,7 +18,7 @@ import {
 const opacity = 0.3;
 const timing = "ease-out";
 
-globalKeyframes("pulse", {
+globalKeyframes("pulse33", {
   "0%": {
     opacity,
   },
@@ -86,7 +86,7 @@ export function Syncing(props: ParentProps) {
             <IconApi
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} infinite`,
+                animation: `pulse33 2.5s ${timing} infinite`,
               }}
             />
           </LoadingIcon>
@@ -94,7 +94,7 @@ export function Syncing(props: ParentProps) {
             <IconAuth
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} .5s infinite`,
+                animation: `pulse33 2.5s ${timing} .5s infinite`,
               }}
             />
           </LoadingIcon>
@@ -102,7 +102,7 @@ export function Syncing(props: ParentProps) {
             <IconConfig
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1s infinite`,
+                animation: `pulse33 2.5s ${timing} 1s infinite`,
               }}
             />
           </LoadingIcon>
@@ -112,7 +112,7 @@ export function Syncing(props: ParentProps) {
             <IconFunction
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} .5s infinite`,
+                animation: `pulse33 2.5s ${timing} .5s infinite`,
               }}
             />
           </LoadingIcon>
@@ -120,7 +120,7 @@ export function Syncing(props: ParentProps) {
             <IconApp
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1s infinite`,
+                animation: `pulse33 2.5s ${timing} 1s infinite`,
               }}
             />
           </LoadingIcon>
@@ -128,7 +128,7 @@ export function Syncing(props: ParentProps) {
             <IconEventBus
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1.5s infinite`,
+                animation: `pulse33 2.5s ${timing} 1.5s infinite`,
               }}
             />
           </LoadingIcon>
@@ -138,7 +138,7 @@ export function Syncing(props: ParentProps) {
             <IconCron
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1s infinite`,
+                animation: `pulse33 2.5s ${timing} 1s infinite`,
               }}
             />
           </LoadingIcon>
@@ -146,7 +146,7 @@ export function Syncing(props: ParentProps) {
             <IconBucket
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 1.5s infinite`,
+                animation: `pulse33 2.5s ${timing} 1.5s infinite`,
               }}
             />
           </LoadingIcon>
@@ -154,7 +154,7 @@ export function Syncing(props: ParentProps) {
             <IconRDS
               style={{
                 opacity,
-                animation: `pulse 2.5s ${timing} 2s infinite`,
+                animation: `pulse33 2.5s ${timing} 2s infinite`,
               }}
             />
           </LoadingIcon>

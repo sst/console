@@ -1,15 +1,15 @@
-import { Invocation, LogStore } from "$/data/log";
-import { LogPollerStore } from "$/data/log-poller";
-import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Tag, Text } from "$/ui";
-import { IconBoltSolid } from "$/ui/icons";
-import { IconCaretRight } from "$/ui/icons/custom";
-import { Row, Stack } from "$/ui/layout";
-import { theme } from "$/ui/theme";
-import { utility } from "$/ui/utility";
-import { globalKeyframes, globalStyle } from "@macaron-css/core";
-import { styled } from "@macaron-css/solid";
-import { useParams, useSearchParams } from "@solidjs/router";
+import {Invocation, LogStore} from "$/data/log";
+import {LogPollerStore} from "$/data/log-poller";
+import {createSubscription, useReplicache} from "$/providers/replicache";
+import {Tag, Text} from "$/ui";
+import {IconBoltSolid} from "$/ui/icons";
+import {IconCaretRight} from "$/ui/icons/custom";
+import {Row, Stack} from "$/ui/layout";
+import {theme} from "$/ui/theme";
+import {utility} from "$/ui/utility";
+import {globalKeyframes, globalStyle} from "@macaron-css/core";
+import {styled} from "@macaron-css/solid";
+import {useParams, useSearchParams} from "@solidjs/router";
 import {
   For,
   Show,
@@ -18,9 +18,9 @@ import {
   createSignal,
   mergeProps,
 } from "solid-js";
-import { useFunctionsContext, useResourcesContext } from "./context";
-import { Resource } from "@console/core/app/resource";
-import { DUMMY_LOGS } from "./logs-dummy";
+import {useFunctionsContext, useResourcesContext} from "./context";
+import {Resource} from "@console/core/app/resource";
+import {DUMMY_LOGS} from "./logs-dummy";
 
 const LogList = styled("div", {
   base: {
@@ -124,7 +124,7 @@ const LogMessage = styled(LogText, {
     paddingLeft: theme.space[2],
     fontSize: theme.font.size.mono_base,
     selectors: {
-      [`${LogContainer.selector({ level: "error" })} &`]: {
+      [`${LogContainer.selector({level: "error"})} &`]: {
         color: `hsla(${theme.color.base.red}, 100%)`,
       },
     },
@@ -140,7 +140,7 @@ const CaretIcon = styled("div", {
     color: theme.color.icon.dimmed,
     transition: "transform 0.2s ease-out",
     selectors: {
-      [`${LogContainer.selector({ expanded: true })} &`]: {
+      [`${LogContainer.selector({expanded: true})} &`]: {
         transform: "rotate(90deg)",
       },
     },
@@ -152,7 +152,7 @@ const LogDetail = styled("div", {
     padding: theme.space[3],
     ...utility.stack(3),
     selectors: {
-      [`${LogContainer.selector({ expanded: true })} &`]: {
+      [`${LogContainer.selector({expanded: true})} &`]: {
         borderTop: `1px solid ${theme.color.divider.base}`,
       },
     },
@@ -219,8 +219,10 @@ const LogEntryTime = styled("div", {
 
 const LogEntryMessage = styled("span", {
   base: {
-    color: theme.color.text.primary.surface,
+    minWidth: 0,
+    overflowWrap: "break-word",
     lineHeight: theme.font.lineHeight,
+    color: theme.color.text.primary.surface,
   },
 });
 
@@ -271,8 +273,8 @@ export function Logs() {
   const resource = createMemo(
     () =>
       resources().find((x) => x.id === params.resourceID) as
-        | Extract<Resource.Info, { type: "Function" }>
-        | undefined
+      | Extract<Resource.Info, {type: "Function"}>
+      | undefined
   );
   const functions = useFunctionsContext();
   const context = createMemo(() => {
@@ -425,8 +427,8 @@ export function Logs() {
   );
 }
 
-function LogLevel(props: { level?: string }) {
-  props = mergeProps({ level: "info" }, props);
+function LogLevel(props: {level?: string}) {
+  props = mergeProps({level: "info"}, props);
   return (
     <Tag
       size="small"
