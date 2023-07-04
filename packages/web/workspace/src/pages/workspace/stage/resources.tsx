@@ -11,7 +11,7 @@ import { useFunctionsContext, useResourcesContext } from "./context";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
-import { Row } from "$/ui/layout";
+import { Fullscreen, Row } from "$/ui/layout";
 import { Tag } from "$/ui/tag";
 import {
   IconApi,
@@ -38,6 +38,7 @@ import {
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { Link } from "@solidjs/router";
+import { Syncing } from "$/ui/loader";
 
 const Card = styled("div", {
   base: {
@@ -204,6 +205,11 @@ export function Resources() {
   const resources = useResourcesContext();
   return (
     <>
+      <Show when={!resources().length}>
+        <Fullscreen>
+          <Syncing>Waiting for resources</Syncing>
+        </Fullscreen>
+      </Show>
       <For
         each={resources()
           .filter(
@@ -658,20 +664,24 @@ export function OrphanFunctionsCard() {
   );
 
   return (
-    <Card>
-      <HeaderRoot>
-        <Row space="2" vertical="center">
-          <HeaderIcon title="Functions">
-            <IconFunction />
-          </HeaderIcon>
-          <HeaderName>Functions</HeaderName>
-        </Row>
-        <HeaderType>Function</HeaderType>
-      </HeaderRoot>
-      <Children>
-        <For each={orphans()}>{(orphan) => <FunctionChild id={orphan} />}</For>
-      </Children>
-    </Card>
+    <Show when={orphans().length}>
+      <Card>
+        <HeaderRoot>
+          <Row space="2" vertical="center">
+            <HeaderIcon title="Functions">
+              <IconFunction />
+            </HeaderIcon>
+            <HeaderName>Functions</HeaderName>
+          </Row>
+          <HeaderType>Function</HeaderType>
+        </HeaderRoot>
+        <Children>
+          <For each={orphans()}>
+            {(orphan) => <FunctionChild id={orphan} />}
+          </For>
+        </Children>
+      </Card>
+    </Show>
   );
 }
 

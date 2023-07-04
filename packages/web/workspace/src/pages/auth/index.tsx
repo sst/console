@@ -1,3 +1,7 @@
+import { account } from "$/data/storage";
+import { WorkspaceStore } from "$/data/workspace";
+import { useAuth } from "$/providers/auth";
+import { createSubscription } from "$/providers/replicache";
 import { Button } from "$/ui";
 import { FormInput } from "$/ui/form";
 import { IconApp, IconGitHub } from "$/ui/icons/custom";
@@ -6,7 +10,8 @@ import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
 import { styled } from "@macaron-css/solid";
-import { Route, Routes } from "@solidjs/router";
+import { Route, Routes, useNavigate } from "@solidjs/router";
+import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
 const Root = styled("div", {
   base: {
@@ -48,15 +53,6 @@ const ButtonIcon = styled("span", {
     display: "inline-block",
   },
 });
-
-export function Auth() {
-  return (
-    <Routes>
-      <Route path="login" component={Login} />
-      <Route path="workspace" component={Workspace} />
-    </Routes>
-  );
-}
 
 export function Login() {
   return (
@@ -100,7 +96,19 @@ const Form = styled("form", {
   },
 });
 
-export function Workspace() {
+export function CreateWorkspace() {
+  const auth = useAuth();
+  const nav = useNavigate();
+  const rep = createMemo(() => auth[account()].replicache);
+  const workspaces = createSubscription(WorkspaceStore.list, [], rep);
+  const [pending, setPending] = createSignal<string>();
+
+  createEffect(() => {
+    const match = workspaces().find((w) => w.slug === pending());
+    if (!match) return;
+    nav("/" + match.slug);
+  });
+
   return (
     <Root>
       <Stack horizontal="center" space="5">
@@ -110,13 +118,27 @@ export function Workspace() {
           <Description>Start by giving your workspace a name</Description>
         </Stack>
       </Stack>
-      <Form>
+      <Form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          const slug = fd.get("slug") as string;
+          setPending(slug);
+          rep().mutate.workspace_create({
+            slug,
+          });
+        }}
+      >
         <FormInput
-          name="name"
+          name="slug"
           placeholder="acme"
           hint="Needs to be lowercase, unique, and URL friendly."
         />
-        <Button>Create workspace</Button>
+        <Button disabled={Boolean(pending())}>
+          <Show when={pending()} fallback="Create workspace">
+            Creating…
+          </Show>
+        </Button>
       </Form>
     </Root>
   );

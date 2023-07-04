@@ -15,13 +15,22 @@ import { CommandBar, useCommandBar } from "./command-bar";
 import { account, setAccount } from "$/data/storage";
 import { Stage } from "./stage";
 import { AppStore } from "$/data/app";
-import { Accessor, Show, createContext, createMemo } from "solid-js";
+import {
+  Accessor,
+  Match,
+  Show,
+  Switch,
+  createContext,
+  createMemo,
+} from "solid-js";
 import { StageStore } from "$/data/stage";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
 import { IconApp, IconSubRight } from "$/ui/icons/custom";
 import { UserStore } from "$/data/user";
 import { IconBuildingOffice } from "$/ui/icons";
+import { Fullscreen, Stack, Text } from "$/ui";
+import { Syncing } from "$/ui/loader";
 
 const WorkspaceContext = createContext<Accessor<WorkspaceStore.Info>>();
 
@@ -108,9 +117,16 @@ export function Workspace() {
                 );
                 const stageName = createMemo(() => stages()[0]?.name);
                 return (
-                  <Show when={app() && stageName()}>
-                    <Navigate href={`${app().name}/${stageName()}`} />
-                  </Show>
+                  <Switch>
+                    <Match when={!apps().length}>
+                      <Fullscreen>
+                        <Syncing>Run `sst connect` in your app</Syncing>
+                      </Fullscreen>
+                    </Match>
+                    <Match when={app() && stageName()}>
+                      <Navigate href={`${app().name}/${stageName()}`} />
+                    </Match>
+                  </Switch>
                 );
               }}
             />

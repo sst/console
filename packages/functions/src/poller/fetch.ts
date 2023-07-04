@@ -24,7 +24,7 @@ interface State {
 
 export async function handler(input: State) {
   const attempts = input.status?.attempts || 0;
-  const start = input.status?.start || Date.now() - 60 * 1000;
+  let start = input.status?.start;
   const offset = input.status?.offset || -30 * 1000;
   if (attempts === 100) {
     return {
@@ -112,8 +112,12 @@ export async function handler(input: State) {
   const streams: string[] = [];
   for await (const stream of fetchStreams(input.logGroup)) {
     streams.push(stream.logStreamName || "");
+    if (!start && stream.lastEventTimestamp) {
+      start = stream.lastEventTimestamp - 60 * 1000;
+    }
     if (streams.length === 100) break;
   }
+  if (!start) start = Date.now() - 30 * 1000;
 
   let count = 0;
   console.log("fetching since", offset);

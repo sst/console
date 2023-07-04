@@ -50,7 +50,8 @@ export const handler = ApiHandler(async () => {
       mutationID,
     });
   });
-  await Replicache.poke();
+  const actor = useActor();
+  if (actor.type === "user") await Replicache.poke();
   return {
     statusCode: 200,
   };

@@ -1,4 +1,6 @@
 import { setAccount } from "$/data/storage";
+import { Client } from "@console/functions/replicache/framework";
+import type { ServerType } from "@console/functions/replicache/server";
 import { Navigate } from "@solidjs/router";
 import { Replicache } from "replicache";
 import { ParentProps, createContext, useContext } from "solid-js";
@@ -27,10 +29,14 @@ type AuthContextType = Record<
   string,
   {
     token: Token;
-    replicache: Replicache;
+    replicache: Replicache<typeof mutators>;
   }
 >;
 const AuthContext = createContext<AuthContextType>();
+
+const mutators = new Client<ServerType>()
+  .mutation("workspace_create", async (tx, input) => {})
+  .build();
 
 export function AuthProvider(props: ParentProps) {
   const tokens = get();
@@ -56,15 +62,26 @@ export function AuthProvider(props: ParentProps) {
 
   const stores: AuthContextType = {};
   for (const token of Object.values(tokens)) {
+    const rep = new Replicache({
+      name: token.accountID,
+      auth: `Bearer ${token.token}`,
+      licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
+      pullURL: import.meta.env.VITE_API_URL + "/replicache/pull",
+      pushURL: import.meta.env.VITE_API_URL + "/replicache/push",
+      mutators,
+    });
+    const oldPush = rep.pusher;
+    rep.pusher = async (req: Request) => {
+      const result = await oldPush(req);
+      setTimeout(() => {
+        rep.pull();
+      }, 10);
+      return result;
+    };
+
     stores[token.accountID] = {
       token,
-      replicache: new Replicache({
-        name: token.accountID,
-        auth: `Bearer ${token.token}`,
-        licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
-        pullURL: import.meta.env.VITE_API_URL + "/replicache/pull",
-        pushURL: import.meta.env.VITE_API_URL + "/replicache/push",
-      }),
+      replicache: rep,
     };
   }
 

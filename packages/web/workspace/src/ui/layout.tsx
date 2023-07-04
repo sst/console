@@ -99,3 +99,13 @@ export const Grower = styled("div", {
     minWidth: 0,
   },
 });
+
+export const Fullscreen = styled("div", {
+  base: {
+    position: "fixed",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

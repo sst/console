@@ -23,7 +23,7 @@ import { theme, darkClass, lightClass } from "./ui/theme";
 import { account, setAccount } from "./data/storage";
 import { RealtimeProvider } from "./providers/realtime";
 import { CommandBar } from "./pages/workspace/command-bar";
-import { Auth } from "./pages/auth";
+import { Auth, CreateWorkspace, Login } from "./pages/auth";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -113,7 +113,7 @@ export const App: Component = () => {
     <Root class={theme() === "light" ? lightClass : darkClass} id="styled">
       <Router>
         <Routes>
-          <Route path="auth/*" component={Auth} />
+          <Route path="auth/login" component={Login} />
           <Route
             path="*"
             element={
@@ -125,6 +125,7 @@ export const App: Component = () => {
                     <Route path="design" component={Design} />
                     <Route path="connect" component={Connect} />
                     <Route path=":workspaceSlug/*" component={Workspace} />
+                    <Route path="/auth/workspace" component={CreateWorkspace} />
                     <Route
                       path="*"
                       component={() => {
