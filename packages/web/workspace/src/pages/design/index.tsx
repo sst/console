@@ -1,11 +1,11 @@
-import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
-import { Grower, Stack, Row } from "$/ui/layout";
-import { styled } from "@macaron-css/solid";
-import { theme } from "$/ui/theme";
-import { IconArrowPath, IconChevronLeft, IconBoltSolid } from "$/ui/icons";
-import { Tag } from "$/ui/tag";
-import { Button, LinkButton } from "$/ui/button";
-import { utility } from "$/ui/utility";
+import {globalStyle, globalKeyframes, CSSProperties} from "@macaron-css/core";
+import {Grower, Stack, Row} from "$/ui/layout";
+import {styled} from "@macaron-css/solid";
+import {theme} from "$/ui/theme";
+import {IconArrowPath, IconChevronLeft, IconBoltSolid} from "$/ui/icons";
+import {Tag} from "$/ui/tag";
+import {Button, LinkButton} from "$/ui/button";
+import {utility} from "$/ui/utility";
 import {
   IconApi,
   IconApp,
@@ -18,8 +18,8 @@ import {
   IconRDS,
   IconBucket,
 } from "$/ui/icons/custom";
-import { For, JSX } from "solid-js";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
+import {For, JSX} from "solid-js";
+import {WorkspaceIcon} from "$/ui/workspace-icon";
 
 const ComponentRoot = styled("div", {
   base: {
