@@ -631,6 +631,19 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
       />
       <Children>
         <FunctionChild id={props.resource.metadata.server} tag="Server" />
+        <Child>
+          <Row space="3" vertical="center">
+            <Tag style="outline">Server</Tag>
+            <ChildTitleLink href={`./logs/${props.resource.metadata.server}`}>
+              {props.resource.metadata.path}
+            </ChildTitleLink>
+          </Row>
+          <Row shrink={false} space="3" vertical="center">
+            <ChildIcon>
+              <IconNodeRuntime />
+            </ChildIcon>
+          </Row>
+        </Child>
       </Children>
     </>
   );

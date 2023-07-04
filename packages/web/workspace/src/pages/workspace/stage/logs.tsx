@@ -290,6 +290,11 @@ export function Logs() {
     }
   });
   const logGroup = createMemo(() => {
+    if (params.resourceID.includes("arn")) {
+      return params.resourceID
+        .replace("function:", "log-group:/aws/lambda/")
+        .replace("arn:aws:lambda", "arn:aws:logs");
+    }
     const r = resource();
     if (!r) return "";
     const logGroup = (() => {
@@ -311,10 +316,9 @@ export function Logs() {
   createEffect(() => {
     if (!logGroup()) return;
     if (poller()) return;
-    if (!resource()) return;
     rep().mutate.log_poller_subscribe({
       logGroup: logGroup(),
-      stageID: resource()!.stageID,
+      stageID: resources()?.at(0)?.stageID!,
     });
   });
 
