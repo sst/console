@@ -130,11 +130,12 @@ export function CreateWorkspace() {
         }}
       >
         <FormInput
+          autofocus
           name="slug"
           placeholder="acme"
           hint="Needs to be lowercase, unique, and URL friendly."
         />
-        <Button disabled={Boolean(pending())}>
+        <Button type="submit" disabled={Boolean(pending())}>
           <Show when={pending()} fallback="Create workspace">
             Creating…
           </Show>

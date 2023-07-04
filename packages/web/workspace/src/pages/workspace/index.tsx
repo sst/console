@@ -64,6 +64,15 @@ export function Workspace() {
           control.show("app");
         },
       },
+      {
+        icon: IconSubRight,
+        category: "Account",
+        title: "Create new workspace",
+        run: (control) => {
+          nav("/auth/workspace");
+          control.hide();
+        },
+      },
     ];
   });
 

@@ -54,23 +54,6 @@ export const handler = AuthHandler({
         accountID = await Account.create({
           email: email!,
         });
-
-        const workspaceID = createId();
-        await Workspace.create({
-          slug: workspaceID,
-          id: workspaceID,
-        });
-
-        provideActor({
-          type: "system",
-          properties: {
-            workspaceID,
-          },
-        });
-
-        await User.create({
-          email: email!,
-        });
       });
     }
 

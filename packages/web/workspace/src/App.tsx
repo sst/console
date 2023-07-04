@@ -151,7 +151,7 @@ export const App: Component = () => {
                             <Match
                               when={workspaces() && workspaces()!.length === 0}
                             >
-                              <Navigate href={`/workspace`} />
+                              <Navigate href={`/auth/workspace`} />
                             </Match>
                           </Switch>
                         );
