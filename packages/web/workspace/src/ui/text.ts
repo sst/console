@@ -33,6 +33,11 @@ export const Text = styled("span", {
       }
       return result;
     })(),
+    color: {
+      secondary: {
+        color: theme.color.text.secondary,
+      },
+    },
   },
   defaultVariants: {
     weight: "regular",

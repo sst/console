@@ -36,17 +36,21 @@ export class Server<Mutations> {
 
   public expose<
     Name extends string,
-    Shape extends ZodSchema,
-    Args = z.infer<Shape>
+    Shape extends ZodRawShape,
+    Args = z.infer<ZodObject<Shape, "strip", ZodAny>>
   >(
     name: Name,
-    fn: ((input: Args) => Promise<any>) & {
-      schema: ZodSchema;
+    fn: ((
+      input: z.infer<ZodObject<Shape, "strip", ZodAny>>
+    ) => Promise<any>) & {
+      schema: {
+        shape: Shape;
+      };
     }
   ): Server<Mutations & { [key in Name]: Mutation<Name, Args> }> {
     this.mutations.set(name as string, {
       fn,
-      input: fn.schema,
+      input: z.object(fn.schema.shape),
     });
     return this;
   }

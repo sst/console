@@ -5,13 +5,9 @@ import {
   useNavigate,
   useParams,
 } from "@solidjs/router";
-import {
-  ReplicacheProvider,
-  createSubscription,
-  useReplicache,
-} from "$/providers/replicache";
+import { ReplicacheProvider, createSubscription } from "$/providers/replicache";
 import { Connect } from "./connect";
-import { CommandBar, useCommandBar } from "./command-bar";
+import { useCommandBar } from "./command-bar";
 import { account, setAccount } from "$/data/storage";
 import { Stage } from "./stage";
 import { AppStore } from "$/data/app";
@@ -22,6 +18,7 @@ import {
   Switch,
   createContext,
   createMemo,
+  useContext,
 } from "solid-js";
 import { StageStore } from "$/data/stage";
 import { WorkspaceStore } from "$/data/workspace";
@@ -31,8 +28,15 @@ import { UserStore } from "$/data/user";
 import { IconBuildingOffice } from "$/ui/icons";
 import { Fullscreen, Stack, Text } from "$/ui";
 import { Syncing } from "$/ui/loader";
+import { User } from "./user";
 
 const WorkspaceContext = createContext<Accessor<WorkspaceStore.Info>>();
+
+export function useWorkspace() {
+  const context = useContext(WorkspaceContext);
+  if (!context) throw new Error("No workspace context");
+  return context;
+}
 
 export function Workspace() {
   const params = useParams();
@@ -51,9 +55,18 @@ export function Workspace() {
       {
         icon: IconSubRight,
         category: "Account",
+        title: "Create new workspace",
+        run: (control) => {
+          nav("/auth/workspace");
+          control.hide();
+        },
+      },
+      {
+        icon: IconSubRight,
+        category: "Account",
         title: "Switch workspaces...",
         run: (control) => {
-          control.show("workspace");
+          control.show("workspace-switcher");
         },
       },
       {
@@ -61,22 +74,26 @@ export function Workspace() {
         category: "Account",
         title: "Switch apps...",
         run: (control) => {
-          control.show("app");
+          control.show("app-switcher");
         },
       },
+    ];
+  });
+  bar.register("workspace", async () => {
+    return [
       {
         icon: IconSubRight,
-        category: "Account",
-        title: "Create new workspace",
+        title: "Add user to workspace",
+        category: "Workspace",
         run: (control) => {
-          nav("/auth/workspace");
           control.hide();
+          nav(`/${workspace()?.slug}/user`);
         },
       },
     ];
   });
 
-  bar.register("workspace", async () => {
+  bar.register("workspace-switcher", async () => {
     const workspaces = await Promise.all(
       Object.values(auth).map(async (account) => {
         const workspaces = await account.replicache.query(async (tx) => {
@@ -114,26 +131,27 @@ export function Workspace() {
         <WorkspaceContext.Provider value={() => workspace()!}>
           <Routes>
             <Route path="connect" component={Connect} />
+            <Route path="user" component={User} />
             <Route path=":appName/:stageName/*" component={Stage} />
             <Route
               path="*"
               component={() => {
-                const apps = createSubscription(AppStore.list, []);
-                const app = createMemo(() => apps()[0]);
+                const apps = createSubscription(AppStore.list);
+                const app = createMemo(() => apps()?.[0]);
                 const stages = createSubscription(
-                  () => StageStore.forApp(app()?.id),
+                  () => StageStore.forApp(app()?.id || ""),
                   []
                 );
                 const stageName = createMemo(() => stages()[0]?.name);
                 return (
                   <Switch>
-                    <Match when={!apps().length}>
+                    <Match when={apps() && !apps()!.length}>
                       <Fullscreen>
                         <Syncing>Run `sst connect` in your app</Syncing>
                       </Fullscreen>
                     </Match>
                     <Match when={app() && stageName()}>
-                      <Navigate href={`${app().name}/${stageName()}`} />
+                      <Navigate href={`${app()!.name}/${stageName()}`} />
                     </Match>
                   </Switch>
                 );

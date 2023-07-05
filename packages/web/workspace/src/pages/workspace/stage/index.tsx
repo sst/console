@@ -112,7 +112,7 @@ export function Stage() {
       : async () => undefined
   );
 
-  bar.register("app", async () => {
+  bar.register("app-switcher", async () => {
     const apps = await rep().query(AppStore.list());
     return apps.map((app) => ({
       icon: IconApp,
@@ -126,7 +126,7 @@ export function Stage() {
     }));
   });
 
-  bar.register("stage", async () => {
+  bar.register("stage-switcher", async () => {
     const stages = await rep().query(StageStore.forApp(app()?.id || ""));
     return stages
       .filter((item) => item.id !== stage()?.id)
@@ -152,7 +152,9 @@ export function Stage() {
           <Header>
             <Row space="4" vertical="center">
               <WorkspaceIcon text="S" />
-              <StageSwitcher onClick={() => bar.show("stage", "app")}>
+              <StageSwitcher
+                onClick={() => bar.show("stage-switcher", "app-switcher")}
+              >
                 <Stack space="1.5">
                   <SwitcherApp>{stageContext.app.name}</SwitcherApp>
                   <SwitcherStage>{stageContext.stage.name}</SwitcherStage>

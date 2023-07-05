@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.16.0",
-    "drizzle-kit": "0.17.6-76e73f3",
+    "drizzle-kit": "0.19.3",
     "sst": "2.15.0",
     "vitest": "^0.25.3"
   },
@@ -27,8 +27,8 @@
     "@octokit/rest": "^19.0.7",
     "@paralleldrive/cuid2": "^2.2.0",
     "@planetscale/database": "^1.7.0",
-    "drizzle-orm": "0.25.3",
-    "drizzle-zod": "0.4.1",
+    "drizzle-orm": "0.27.0",
+    "drizzle-zod": "0.4.4",
     "undici": "^5.22.0",
     "zod": "^3.21.4"
   }

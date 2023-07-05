@@ -83,7 +83,9 @@ export function Connect() {
   return (
     <Root>
       <Stack horizontal="center" space="5">
-        <ConnectWorkspaceHeader>Connect to a workspace</ConnectWorkspaceHeader>
+        <ConnectWorkspaceHeader>
+          Connect `{query.app}/{query.stage}` to a workspace
+        </ConnectWorkspaceHeader>
         <ConnectWorkspaceList>
           <For each={Object.values(auth)}>
             {(account) => {

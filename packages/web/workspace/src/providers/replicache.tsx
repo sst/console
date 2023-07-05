@@ -10,14 +10,21 @@ import {
 } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import { useAuth } from "./auth";
+import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
-import { Client } from "../../../../functions/src/replicache/framework";
 import { bus } from "./bus";
+import { UserStore } from "$/data/user";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async (tx, input) => {})
   .mutation("app_stage_sync", async (tx, input) => {})
   .mutation("log_poller_subscribe", async (tx, input) => {})
+  .mutation("user_create", async (tx, input) => {
+    await UserStore.put(tx, {
+      id: input.id,
+      email: input.email,
+    });
+  })
   .build();
 
 const ReplicacheContext =

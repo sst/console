@@ -1,5 +1,5 @@
-import { ReadTransaction } from "replicache";
-import type { User } from "../../../../core/src/user";
+import { ReadTransaction, WriteTransaction } from "replicache";
+import type { User } from "@console/core/user";
 
 export function list() {
   return async (tx: ReadTransaction) => {
@@ -13,6 +13,10 @@ export function fromID(id: string) {
     const result = await tx.get(`/user/${id}`);
     return result as unknown as User.Info;
   };
+}
+
+export async function put(tx: WriteTransaction, user: Partial<User.Info>) {
+  await tx.put(`/user/${user.id}`, user);
 }
 
 export type UserInfo = User.Info;

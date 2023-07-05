@@ -16,7 +16,7 @@ export function fromID(id: string) {
 }
 
 export async function put(tx: WriteTransaction, app: App.Info) {
-  await tx.put(`/app/${app}`, app);
+  await tx.put(`/app/${app.id}`, app);
 }
 
 export function fromName(name: string) {

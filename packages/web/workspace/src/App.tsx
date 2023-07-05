@@ -1,14 +1,7 @@
 import "@fontsource/rubik/latin.css";
 import "@fontsource/ibm-plex-mono/latin.css";
 
-import {
-  Component,
-  createSignal,
-  createEffect,
-  Show,
-  Switch,
-  Match,
-} from "solid-js";
+import { Component, createSignal, createEffect, Switch, Match } from "solid-js";
 import { Navigate, Route, Router, Routes } from "@solidjs/router";
 import { AuthProvider, useAuth } from "$/providers/auth";
 import { createSubscription } from "$/providers/replicache";
@@ -23,7 +16,7 @@ import { theme, darkClass, lightClass } from "./ui/theme";
 import { account, setAccount } from "./data/storage";
 import { RealtimeProvider } from "./providers/realtime";
 import { CommandBar } from "./pages/workspace/command-bar";
-import { Auth, CreateWorkspace, Login } from "./pages/auth";
+import { CreateWorkspace, Login } from "./pages/auth";
 
 console.log(import.meta.env.VITE_API_URL);
 
