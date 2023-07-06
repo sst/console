@@ -39,7 +39,7 @@ export function User() {
               id,
               email,
             });
-            nav("/");
+            nav(`/${workspace()?.slug}`);
           }}
         >
           <FormInput

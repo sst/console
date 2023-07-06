@@ -20,10 +20,10 @@ const mutators = new Client<ServerType>()
   .mutation("app_stage_sync", async (tx, input) => {})
   .mutation("log_poller_subscribe", async (tx, input) => {})
   .mutation("user_create", async (tx, input) => {
-    await UserStore.put(tx, {
-      id: input.id,
-      email: input.email,
-    });
+    // await UserStore.put(tx, {
+    //   id: input.id,
+    //   email: input.email,
+    // });
   })
   .build();
 

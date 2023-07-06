@@ -137,21 +137,29 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
   console.log("found", list.Contents?.length, "resources");
   const results = await Promise.all(
     list.Contents?.map(async (obj) => {
-      const stackID = obj.Key?.split("/").pop()!;
+      const stackID = obj.Key?.split("/").pop()!.split(".")[1];
       const result = await s3.send(
         new GetObjectCommand({
           Key: obj.Key!,
           Bucket: bucket,
         })
       );
-      const body = await result.Body!.transformToString();
+      const body = await result
+        .Body!.transformToString()
+        .then((x) => JSON.parse(x));
       const r = [];
-      for (let res of JSON.parse(body)) {
+      body.push({
+        type: "Stack",
+        id: stackID,
+        addr: "",
+        data: {},
+      });
+      for (let res of body) {
         const { type } = res;
         const enrichment =
           type in Enrichers
             ? await Enrichers[type as keyof typeof Enrichers](
-                res.data,
+                res,
                 credentials,
                 row.region
               )
