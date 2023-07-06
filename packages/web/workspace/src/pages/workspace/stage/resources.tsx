@@ -7,12 +7,12 @@ import {
   createMemo,
   ComponentProps,
 } from "solid-js";
-import { useFunctionsContext, useResourcesContext } from "./context";
-import { styled } from "@macaron-css/solid";
-import { theme } from "$/ui/theme";
-import { utility } from "$/ui/utility";
-import { Fullscreen, Row } from "$/ui/layout";
-import { Tag } from "$/ui/tag";
+import {useFunctionsContext, useResourcesContext} from "./context";
+import {styled} from "@macaron-css/solid";
+import {theme} from "$/ui/theme";
+import {utility} from "$/ui/utility";
+import {Fullscreen, Row} from "$/ui/layout";
+import {Tag} from "$/ui/tag";
 import {
   IconApi,
   IconRDS,
@@ -36,9 +36,9 @@ import {
   IconApiGatewayV1Api,
   IconFunction,
 } from "$/ui/icons/custom";
-import { Resource } from "@console/core/app/resource";
-import { Link } from "@solidjs/router";
-import { Syncing } from "$/ui/loader";
+import {Resource} from "@console/core/app/resource";
+import {Link} from "@solidjs/router";
+import {Syncing} from "$/ui/loader";
 
 const Card = styled("div", {
   base: {
@@ -70,8 +70,8 @@ const HeaderRoot = styled("div", {
 const HeaderIcon = styled("div", {
   base: {
     flexShrink: 0,
-    width: 16,
-    height: 16,
+    width: 14,
+    height: 14,
     color: theme.color.icon.secondary,
   },
 });
@@ -186,7 +186,7 @@ export function Header(props: HeaderProps) {
   return (
     <HeaderRoot>
       <Row space="3" vertical="center">
-        <Row space="2" vertical="center">
+        <Row space="1.5" vertical="center">
           <Show when={props.icon}>
             {(icon) => (
               <HeaderIcon title={props.resource.type}>{icon()({})}</HeaderIcon>
@@ -306,7 +306,7 @@ export function Resources() {
 }
 
 interface CardProps<Type extends Resource.Info["type"]> {
-  resource: Extract<Resource.Info, { type: Type }>;
+  resource: Extract<Resource.Info, {type: Type}>;
 }
 
 export function ApiCard(props: CardProps<"Api">) {
@@ -738,7 +738,7 @@ function FunctionChild(props: {
           (r.id === props.id ||
             r.addr === props.id ||
             r.metadata.arn === props.id)
-      ) as Extract<Resource.Info, { type: "Function" }> | undefined
+      ) as Extract<Resource.Info, {type: "Function"}> | undefined
   );
   return (
     <Show when={fn()}>

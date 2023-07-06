@@ -1,4 +1,4 @@
-import { createTheme } from "@macaron-css/core";
+import {createTheme} from "@macaron-css/core";
 
 const font = {
   lineHeight: "1.6",
@@ -392,7 +392,7 @@ light.button.github = {
 };
 
 dark.base = {
-  brand: `${color.base.brand}, 62%`,
+  brand: `${color.base.brand}, 58%`,
   white: `${color.base.white}, 100%`,
   black: `${color.base.black}, 14%`,
   blue: `${color.base.blue}, 61%`,
@@ -401,12 +401,12 @@ dark.base = {
 };
 
 dark.brand = {
-  d4: `${color.base.brand}, 38%`,
-  d3: `${color.base.brand}, 44%`,
-  d2: `${color.base.brand}, 50%`,
-  d1: `${color.base.brand}, 56%`,
-  l1: `${color.base.brand}, 71%`,
-  l2: `${color.base.brand}, 77%`,
+  d4: `${color.base.brand}, 34%`,
+  d3: `${color.base.brand}, 40%`,
+  d2: `${color.base.brand}, 46%`,
+  d1: `${color.base.brand}, 52%`,
+  l1: `${color.base.brand}, 64%`,
+  l2: `${color.base.brand}, 70%`,
 };
 
 dark.blue = {
@@ -499,10 +499,10 @@ dark.button.primary = {
   text: dark.text.primary.accent,
   color: dark.accent,
   active: `hsla(${dark.brand.d1}, 100%)`,
-  border: `hsla(${dark.brand.d2}, 100%)`,
+  border: dark.accent,
   hover: {
     color: `hsla(${dark.brand.l1}, 100%)`,
-    border: `hsla(${dark.brand.d1}, 100%)`,
+    border: `hsla(${dark.brand.l1}, 100%)`,
   },
   disabled: {
     opacity: "0.65",
@@ -529,10 +529,10 @@ dark.button.danger = {
   text: dark.text.primary.accent,
   color: `hsla(${dark.base.red}, 100%)`,
   active: `hsla(${dark.red.d1}, 100%)`,
-  border: `hsla(${dark.red.d2}, 100%)`,
+  border: `hsla(${dark.base.red}, 100%)`,
   hover: {
     color: `hsla(${dark.red.l1}, 100%)`,
-    border: `hsla(${dark.base.red}, 100%)`,
+    border: `hsla(${dark.red.l1}, 100%)`,
   },
   disabled: {
     opacity: "0.65",
@@ -543,11 +543,11 @@ dark.button.danger = {
 dark.button.github = {
   text: dark.text.primary.inverted,
   color: "hsla(0, 0%, 96%, 100%)",
-  active: "hsla(0, 0%, 90%, 100%)",
-  border: "hsla(0, 0%, 84%, 100%)",
+  active: "hsla(0, 0%, 86%, 100%)",
+  border: "hsla(0, 0%, 96%, 100%)",
   hover: {
     color: "hsla(0, 0%, 100%, 100%)",
-    border: "hsla(0, 0%, 90%, 100%)",
+    border: "hsla(0, 0%, 100%, 100%)",
   },
   disabled: {
     opacity: "0.65",
