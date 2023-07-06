@@ -17,25 +17,25 @@ import {
   IconSubRight,
   IconEventBus,
 } from "$/ui/icons/custom";
-import { IconBuildingOffice } from "$/ui/icons";
-import { useAuth } from "$/providers/auth";
-import { UserStore } from "../../data/user";
-import { WorkspaceStore } from "../../data/workspace";
-import { styled } from "@macaron-css/solid";
-import { useReplicache } from "$/providers/replicache";
-import { AppStore } from "../../data/app";
-import { theme } from "$/ui/theme";
-import { filter, groupBy, pipe } from "remeda";
-import { globalStyle } from "@macaron-css/core";
-import { createShortcut } from "@solid-primitives/keyboard";
-import { useNavigate, useParams } from "@solidjs/router";
-import { StageStore } from "../../data/stage";
-import { ResourceStore } from "../../data/resource";
-import { Portal } from "solid-js/web";
-import { createEventListener } from "@solid-primitives/event-listener";
-import { createMutationObserver } from "@solid-primitives/mutation-observer";
-import { setAccount } from "$/data/storage";
-import { utility } from "$/ui/utility";
+import {IconBuildingOffice} from "$/ui/icons";
+import {useAuth} from "$/providers/auth";
+import {UserStore} from "../../data/user";
+import {WorkspaceStore} from "../../data/workspace";
+import {styled} from "@macaron-css/solid";
+import {useReplicache} from "$/providers/replicache";
+import {AppStore} from "../../data/app";
+import {theme} from "$/ui/theme";
+import {filter, groupBy, pipe} from "remeda";
+import {globalStyle} from "@macaron-css/core";
+import {createShortcut} from "@solid-primitives/keyboard";
+import {useNavigate, useParams} from "@solidjs/router";
+import {StageStore} from "../../data/stage";
+import {ResourceStore} from "../../data/resource";
+import {Portal} from "solid-js/web";
+import {createEventListener} from "@solid-primitives/event-listener";
+import {createMutationObserver} from "@solid-primitives/mutation-observer";
+import {setAccount} from "$/data/storage";
+import {utility} from "$/ui/utility";
 
 interface Action {
   icon: (props: any) => JSX.Element;
@@ -68,8 +68,7 @@ export const ResourceProvider: ActionProvider = async (filter) => {
         run: (control) => {
           const params = useParams();
           useNavigate()(
-            `/${params.workspaceSlug}/${appName}/${stageName}/logs/${
-              resources.find((r) => r.addr === rt.fn?.node)?.id
+            `/${params.workspaceSlug}/${appName}/${stageName}/logs/${resources.find((r) => r.addr === rt.fn?.node)?.id
             }`
           );
           control.hide();
@@ -85,7 +84,7 @@ export const ResourceProvider: ActionProvider = async (filter) => {
           title: `Go to ${
             // @ts-expect-error
             resources.find((r) => r.addr === t!.node)?.metadata["handler"]
-          }`,
+            }`,
           run: (control) => {
             const params = useParams();
             const id = resources.find((r) => r.addr === t?.node)?.id;
@@ -141,7 +140,7 @@ const Modal = styled("div", {
   },
 });
 
-globalStyle(`${Root.selector({ show: true })} ${Modal}`, {
+globalStyle(`${Root.selector({show: true})} ${Modal}`, {
   transform: "initial",
 });
 
@@ -187,7 +186,7 @@ const Category = styled("div", {
     fontSize: theme.font.size.sm,
     alignItems: "center",
     fontWeight: theme.textBoldWeight,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -218,7 +217,7 @@ const ActionRowIcon = styled("div", {
 });
 
 globalStyle(`${ActionRowIcon} svg`, {
-  color: theme.color.text.secondary,
+  color: theme.color.text.secondary.base,
   opacity: theme.iconOpacity,
   transitionDelay: "0s",
   transitionDuration: "0.2s",
@@ -270,8 +269,8 @@ function createControl() {
     if (!visible()) return;
     const p = activeProviders().length
       ? activeProviders()
-          .map((p) => providers.get(p)!)
-          .filter(Boolean)
+        .map((p) => providers.get(p)!)
+        .filter(Boolean)
       : [...providers.values()].reverse();
     const actions = await Promise.all(
       p.map(async (provider) => {
@@ -294,7 +293,7 @@ function createControl() {
 
   createMutationObserver(
     () => root()?.querySelector(`[data-element="results"]`)!,
-    { childList: true },
+    {childList: true},
     () => control.reset()
   );
 

@@ -1,20 +1,20 @@
 import patrick from "./patrick.jpg";
-import { styled } from "@macaron-css/solid";
-import { IconChevronUpDown } from "$/ui/icons";
-import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
-import { StageStore } from "$/data/stage";
-import { AppStore } from "$/data/app";
-import { theme } from "$/ui/theme";
-import { Row, Stack } from "$/ui/layout";
-import { utility } from "$/ui/utility";
-import { Show, createEffect } from "solid-js";
-import { useCommandBar } from "$/pages/workspace/command-bar";
-import { ResourcesProvider, StageContext, createStageContext } from "./context";
-import { Resources } from "./resources";
-import { Logs } from "./logs";
-import { IconApp, IconStage } from "$/ui/icons/custom";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
+import {styled} from "@macaron-css/solid";
+import {IconChevronUpDown} from "$/ui/icons";
+import {createSubscription, useReplicache} from "$/providers/replicache";
+import {Route, Routes, useNavigate, useParams} from "@solidjs/router";
+import {StageStore} from "$/data/stage";
+import {AppStore} from "$/data/app";
+import {theme} from "$/ui/theme";
+import {Row, Stack} from "$/ui/layout";
+import {utility} from "$/ui/utility";
+import {Show, createEffect} from "solid-js";
+import {useCommandBar} from "$/pages/workspace/command-bar";
+import {ResourcesProvider, StageContext, createStageContext} from "./context";
+import {Resources} from "./resources";
+import {Logs} from "./logs";
+import {IconApp, IconStage} from "$/ui/icons/custom";
+import {WorkspaceIcon} from "$/ui/workspace-icon";
 
 const Content = styled("div", {
   base: {
@@ -42,7 +42,7 @@ const Header = styled("div", {
 
 const User = styled("a", {
   base: {
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     flexShrink: 0,
     display: "flex",
     alignItems: "center",
@@ -74,7 +74,7 @@ const StageSwitcher = styled("div", {
     paddingLeft: theme.space[4],
     gap: theme.space[3],
     font: theme.font.family.heading,
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
   },
 });
 
@@ -87,13 +87,13 @@ const SwitcherApp = styled("div", {
 const SwitcherStage = styled("div", {
   base: {
     fontSize: theme.font.size.base,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
   },
 });
 
 const SwitcherIcon = styled(IconChevronUpDown, {
   base: {
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
     width: 28,
     height: 28,
   },
@@ -141,7 +141,7 @@ export function Stage() {
       }));
   });
 
-  createEffect(() => console.log({ ...params }));
+  createEffect(() => console.log({...params}));
 
   const stageContext = createStageContext();
 
@@ -165,7 +165,7 @@ export function Stage() {
             <User>
               <div
                 onClick={() =>
-                  rep().mutate.app_stage_sync({ stageID: stage()!.id })
+                  rep().mutate.app_stage_sync({stageID: stage()!.id})
                 }
               >
                 resync

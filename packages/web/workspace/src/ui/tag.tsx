@@ -1,11 +1,7 @@
-import { styled } from "@macaron-css/solid";
-import { theme } from "./theme";
+import {styled} from "@macaron-css/solid";
+import {theme} from "./theme";
 
-const infoColor = theme.color.background.surface;
-const infoText = theme.color.text.dimmed;
-
-const dangerColor = `hsla(${theme.color.base.red}, 25%)`;
-const dangerText = `hsla(${theme.color.red.l2}, 100%)`;
+const dangerBackground = `hsla(${theme.color.base.red}, 25%)`;
 
 export const Tag = styled("div", {
   base: {
@@ -27,12 +23,12 @@ export const Tag = styled("div", {
   variants: {
     level: {
       info: {
-        backgroundColor: infoColor,
-        color: infoText,
+        backgroundColor: theme.color.background.surface,
+        color: theme.color.text.dimmed.base,
       },
       danger: {
-        backgroundColor: dangerColor,
-        color: dangerText,
+        backgroundColor: dangerBackground,
+        color: `hsla(${theme.color.red.l2}, 100%)`,
       },
     },
     style: {
@@ -63,7 +59,7 @@ export const Tag = styled("div", {
         style: "outline",
       },
       style: {
-        color: theme.color.text.dimmed,
+        color: theme.color.text.dimmed.base,
         borderColor: theme.color.divider.base,
       },
     },
@@ -73,8 +69,8 @@ export const Tag = styled("div", {
         style: "outline",
       },
       style: {
+        borderColor: dangerBackground,
         color: `hsla(${theme.color.base.red}, 100%)`,
-        borderColor: dangerColor,
       },
     },
   ],

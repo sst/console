@@ -1,14 +1,14 @@
-import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import { createSubscription } from "$/providers/replicache";
-import { useAuth } from "$/providers/auth";
-import { For } from "solid-js";
-import { WorkspaceStore } from "../../data/workspace";
-import { Stack } from "$/ui/layout";
-import { styled } from "@macaron-css/solid";
-import { theme } from "$/ui/theme";
-import { utility } from "$/ui/utility";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
-import { setAccount } from "$/data/storage";
+import {Link, useNavigate, useSearchParams} from "@solidjs/router";
+import {createSubscription} from "$/providers/replicache";
+import {useAuth} from "$/providers/auth";
+import {For} from "solid-js";
+import {WorkspaceStore} from "../../data/workspace";
+import {Stack} from "$/ui/layout";
+import {styled} from "@macaron-css/solid";
+import {theme} from "$/ui/theme";
+import {utility} from "$/ui/utility";
+import {WorkspaceIcon} from "$/ui/workspace-icon";
+import {setAccount} from "$/data/storage";
 
 const Root = styled("div", {
   base: {
@@ -28,7 +28,7 @@ const ConnectWorkspaceHeader = styled("h1", {
   variants: {
     loading: {
       true: {
-        color: theme.color.text.secondary,
+        color: theme.color.text.secondary.base,
       },
       false: {},
     },
@@ -52,7 +52,7 @@ const ConnectWorkspaceRow = styled("div", {
     padding: `${theme.space[3]} ${theme.space[3]}`,
     width: 320,
     alignItems: "center",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     lineHeight: "normal",
     borderTop: `1px solid ${theme.color.divider.base}`,
     ":hover": {

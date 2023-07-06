@@ -1,15 +1,15 @@
-import { AppStore } from "$/data/app";
-import { createSubscription, useReplicache } from "$/providers/replicache";
-import { StageStore } from "$/data/stage";
-import { Navigate, useParams, useSearchParams } from "@solidjs/router";
-import { Show, createMemo } from "solid-js";
-import { styled } from "@macaron-css/solid";
-import { theme } from "$/ui/theme";
-import { utility } from "$/ui/utility";
-import { IconArrowPath } from "$/ui/icons";
-import { Stack } from "$/ui/layout";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
-import { WorkspaceStore } from "$/data/workspace";
+import {AppStore} from "$/data/app";
+import {createSubscription, useReplicache} from "$/providers/replicache";
+import {StageStore} from "$/data/stage";
+import {Navigate, useParams, useSearchParams} from "@solidjs/router";
+import {Show, createMemo} from "solid-js";
+import {styled} from "@macaron-css/solid";
+import {theme} from "$/ui/theme";
+import {utility} from "$/ui/utility";
+import {IconArrowPath} from "$/ui/icons";
+import {Stack} from "$/ui/layout";
+import {WorkspaceIcon} from "$/ui/workspace-icon";
+import {WorkspaceStore} from "$/data/workspace";
 
 const Root = styled("div", {
   base: {
@@ -25,7 +25,7 @@ const ConnectWorkspaceHeader = styled("h1", {
   base: {
     fontSize: theme.font.size.lg,
     fontWeight: 500,
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
   },
 });
 
@@ -35,7 +35,7 @@ const ConnectWorkspaceRow = styled("a", {
     padding: `${theme.space[3]} ${theme.space[3]}`,
     width: 320,
     alignItems: "center",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     lineHeight: "normal",
     borderTop: `1px solid ${theme.color.divider.base}`,
     ":hover": {
@@ -70,7 +70,7 @@ const ConnectWorkspaceIcon = styled("div", {
   base: {
     width: 24,
     height: 24,
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     opacity: theme.iconOpacity,
     animation: "spin 1.5s linear infinite",
   },

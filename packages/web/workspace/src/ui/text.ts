@@ -1,6 +1,6 @@
-import { CSSProperties } from "@macaron-css/core";
-import { styled } from "@macaron-css/solid";
-import { theme } from "./theme";
+import {CSSProperties} from "@macaron-css/core";
+import {styled} from "@macaron-css/solid";
+import {theme} from "./theme";
 
 export const Text = styled("span", {
   base: {},
@@ -34,13 +34,20 @@ export const Text = styled("span", {
       return result;
     })(),
     color: {
+      primary: {
+        color: theme.color.text.primary.base,
+      },
       secondary: {
-        color: theme.color.text.secondary,
+        color: theme.color.text.secondary.base,
+      },
+      dimmed: {
+        color: theme.color.text.dimmed.base,
       },
     },
   },
   defaultVariants: {
-    weight: "regular",
     size: "base",
+    color: "primary",
+    weight: "regular",
   },
 });

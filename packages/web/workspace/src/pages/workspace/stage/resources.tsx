@@ -91,13 +91,13 @@ const HeaderDescription = styled("div", {
     maxWidth: "500px",
     fontSize: theme.font.size.base,
     lineHeight: "normal",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
   },
 });
 
 const HeaderType = styled("div", {
   base: {
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_base,
   },
@@ -149,7 +149,7 @@ export const ChildDetail = styled("div", {
     ...utility.textLine(),
     display: "flex",
     alignItems: "baseline",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_base,
     textAlign: "right",

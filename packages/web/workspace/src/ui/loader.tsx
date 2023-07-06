@@ -34,7 +34,7 @@ const LoadingResourcesH1 = styled("h1", {
   base: {
     fontSize: theme.font.size.lg,
     fontWeight: 500,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
   },
 });
 

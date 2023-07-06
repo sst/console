@@ -124,6 +124,23 @@ const ButtonIcon = styled("span", {
   },
 });
 
+const TextContainer = styled("div", {
+  base: {
+    padding: theme.space[4],
+  },
+  variants: {
+    background: {
+      base: {},
+      surface: {},
+      accent: {},
+      inverted: {},
+    },
+  },
+  defaultVariants: {
+    background: "base",
+  },
+});
+
 export function Design() {
   return (
     <>
@@ -187,6 +204,13 @@ export function Design() {
               route="/replicache/push"
             />
           </Grower>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Text">
+        <Variant name="Primary">
+          <TextContainer>
+            <p>Paragraph</p>
+          </TextContainer>
         </Variant>
       </ComponentType>
       <ComponentType name="Button">
@@ -353,7 +377,7 @@ const BackButton = styled("button", {
     transition: `color ${theme.colorFadeDuration} ease-out`,
     selectors: {
       "&:hover": {
-        color: theme.color.text.secondary,
+        color: theme.color.text.secondary.base,
       },
     },
   },
@@ -390,14 +414,14 @@ const ConstructIcon = styled("div", {
 const ConstructName = styled("div", {
   base: {
     fontSize: "0.8125rem",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
   },
 });
 
 const EventRoute = styled("div", {
   base: {
     fontSize: "0.75rem",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     fontFamily: theme.font.family.code,
   },
 });
@@ -632,7 +656,7 @@ const NewWorkspaceHeader = styled("h1", {
 
 const NewWorkspaceDesc = styled("p", {
   base: {
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
   },
 });
 
@@ -680,7 +704,7 @@ const ConnectWorkspaceHeader = styled("h1", {
   variants: {
     loading: {
       true: {
-        color: theme.color.text.secondary,
+        color: theme.color.text.secondary.base,
       },
       false: {},
     },
@@ -703,7 +727,7 @@ const ConnectWorkspaceRow = styled("a", {
     padding: `${theme.space[3]} ${theme.space[3]}`,
     width: 320,
     alignItems: "center",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     lineHeight: "normal",
     borderTop: `1px solid ${theme.color.divider.base}`,
     ":hover": {
@@ -730,7 +754,7 @@ const ConnectWorkspaceIcon = styled("div", {
   base: {
     width: 24,
     height: 24,
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     opacity: theme.iconOpacity,
     animation: "spin 2.5s linear infinite",
   },
@@ -796,7 +820,7 @@ const LoginHeader = styled("h1", {
 const LoginDesc = styled("p", {
   base: {
     fontSize: theme.font.size.sm,
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
   },
 });
 

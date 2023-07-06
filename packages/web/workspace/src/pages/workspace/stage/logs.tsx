@@ -91,7 +91,7 @@ const LogDuration = styled(LogText, {
     flexShrink: 0,
     minWidth: 70,
     textAlign: "right",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
   },
   variants: {
     coldStart: {
@@ -111,7 +111,7 @@ const LogRequestId = styled(LogText, {
     paddingLeft: theme.space[2],
     flexShrink: 0,
     lineHeight: "normal",
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
     fontSize: theme.font.size.mono_base,
   },
 });
@@ -174,7 +174,7 @@ const LogDetailHeaderTitle = styled("div", {
     letterSpacing: 0.5,
     textTransform: "uppercase",
     fontFamily: theme.font.family.heading,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
     fontWeight: 500,
   },
 });
@@ -214,7 +214,7 @@ const LogEntryTime = styled("div", {
     flexShrink: 0,
     minWidth: 89,
     textAlign: "left",
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
     lineHeight: theme.font.lineHeight,
   },
 });
@@ -244,7 +244,7 @@ const LogLoadingIndicatorIcon = styled("div", {
     padding: 2,
     width: 20,
     height: 20,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
     opacity: theme.iconOpacity,
     animation: "pulse 1.5s linear infinite",
   },
@@ -252,7 +252,7 @@ const LogLoadingIndicatorIcon = styled("div", {
 
 const LogLoadingIndicatorCopy = styled("div", {
   base: {
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
     fontSize: theme.font.size.base,
   },
 });

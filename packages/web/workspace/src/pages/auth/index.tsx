@@ -41,7 +41,7 @@ const Header = styled("h1", {
 
 const Description = styled("p", {
   base: {
-    color: theme.color.text.secondary,
+    color: theme.color.text.secondary.base,
   },
 });
 

@@ -1,9 +1,9 @@
-import { CSSProperties } from "@macaron-css/core";
-import { styled } from "@macaron-css/solid";
-import { theme } from "./theme";
-import { utility } from "./utility";
-import { ComponentProps, Show } from "solid-js";
-import { Stack } from "./layout";
+import {CSSProperties} from "@macaron-css/core";
+import {styled} from "@macaron-css/solid";
+import {theme} from "./theme";
+import {utility} from "./utility";
+import {ComponentProps, Show} from "solid-js";
+import {Stack} from "./layout";
 
 const inputStyles: CSSProperties = {
   border: "none",
@@ -23,7 +23,7 @@ const inputStyles: CSSProperties = {
 const inputDisabledStyles: CSSProperties = {
   opacity: 0.5,
   backgroundColor: theme.color.background.surface,
-  color: theme.color.text.dimmed,
+  color: theme.color.text.dimmed.base,
   cursor: "default",
   boxShadow: `0 0 0 1px inset ${theme.color.input.border}`,
 };
@@ -116,7 +116,7 @@ const Select = styled("select", {
       ...inputFocusStyles,
     },
     ":invalid": {
-      color: theme.color.text.dimmed,
+      color: theme.color.text.dimmed.base,
     },
     ":disabled": {
       ...inputDisabledStyles,
@@ -151,7 +151,7 @@ const Label = styled("p", {
 const Hint = styled("p", {
   base: {
     fontSize: theme.font.size.sm,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
   },
   variants: {
     color: {

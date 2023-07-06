@@ -130,11 +130,18 @@ const light = {
     primary: {
       base: "",
       surface: "",
-      accent: "",
       inverted: "",
     },
-    secondary: "",
-    dimmed: "",
+    secondary: {
+      base: "",
+      surface: "",
+      inverted: "",
+    },
+    dimmed: {
+      base: "",
+      surface: "",
+      inverted: "",
+    },
   },
   icon: {
     primary: "",
@@ -236,6 +243,15 @@ light.base = {
   gray: `${color.base.white}, 97%`,
 };
 
+dark.base = {
+  brand: `${color.base.brand}, 58%`,
+  white: `${color.base.white}, 100%`,
+  black: `${color.base.black}, 14%`,
+  blue: `${color.base.blue}, 61%`,
+  red: `${color.base.red}, 60%`,
+  gray: `240, 19%, 18%`,
+};
+
 light.brand = {
   d4: `${color.base.brand}, 36%`,
   d3: `${color.base.brand}, 42%`,
@@ -280,11 +296,18 @@ light.text = {
   primary: {
     base: `hsla(${light.base.black}, 93%)`,
     surface: `hsla(${light.base.black}, 78%)`,
-    accent: `hsla(${light.base.white}, 93%)`,
     inverted: `hsla(${dark.base.white}, 87%)`,
   },
-  secondary: `hsla(${light.base.black}, 60%)`,
-  dimmed: `hsla(${light.base.black}, 38%)`,
+  secondary: {
+    base: `hsla(${light.base.black}, 60%)`,
+    surface: `hsla(${light.base.black}, 60%)`,
+    inverted: `hsla(${light.base.black}, 60%)`,
+  },
+  dimmed: {
+    base: `hsla(${light.base.black}, 38%)`,
+    surface: `hsla(${light.base.black}, 38%)`,
+    inverted: `hsla(${light.base.black}, 38%)`,
+  },
 };
 
 light.icon = {
@@ -332,7 +355,7 @@ light.shadow.drop = {
 };
 
 light.button.primary = {
-  text: light.text.primary.accent,
+  text: light.text.primary.inverted,
   color: light.accent,
   active: `hsla(${light.brand.d1}, 100%)`,
   border: `hsla(${light.brand.d2}, 100%)`,
@@ -362,7 +385,7 @@ light.button.secondary = {
 };
 
 light.button.danger = {
-  text: light.text.primary.accent,
+  text: light.text.primary.inverted,
   color: `hsla(${light.base.red}, 100%)`,
   active: `hsla(${light.red.d1}, 100%)`,
   border: `hsla(${light.red.d2}, 100%)`,
@@ -377,7 +400,7 @@ light.button.danger = {
 };
 
 light.button.github = {
-  text: light.text.primary.accent,
+  text: light.text.primary.inverted,
   color: "hsla(0, 0%, 20%, 100%)",
   active: "hsla(0, 0%, 14%, 100%)",
   border: "hsla(0, 0%, 8%, 100%)",
@@ -389,15 +412,6 @@ light.button.github = {
     opacity: "0.65",
   },
   shadow: light.shadow.drop.shortDark,
-};
-
-dark.base = {
-  brand: `${color.base.brand}, 58%`,
-  white: `${color.base.white}, 100%`,
-  black: `${color.base.black}, 14%`,
-  blue: `${color.base.blue}, 61%`,
-  red: `${color.base.red}, 60%`,
-  gray: `240, 19%, 18%`,
 };
 
 dark.brand = {
@@ -446,11 +460,18 @@ dark.text = {
   primary: {
     base: `hsla(${dark.base.white}, 87%)`,
     surface: `hsla(${dark.base.white}, 80%)`,
-    accent: `hsla(${dark.base.white}, 87%)`,
     inverted: `hsla(${light.base.black}, 93%)`,
   },
-  secondary: `hsla(${dark.base.white}, 60%)`,
-  dimmed: `hsla(${dark.base.white}, 38%)`,
+  secondary: {
+    base: `hsla(${dark.base.white}, 60%)`,
+    surface: `hsla(${dark.base.white}, 60%)`,
+    inverted: `hsla(${dark.base.white}, 60%)`,
+  },
+  dimmed: {
+    base: `hsla(${dark.base.white}, 38%)`,
+    surface: `hsla(${dark.base.white}, 38%)`,
+    inverted: `hsla(${dark.base.white}, 38%)`,
+  },
 };
 
 dark.icon = {
@@ -496,7 +517,7 @@ dark.shadow.drop = {
 };
 
 dark.button.primary = {
-  text: dark.text.primary.accent,
+  text: dark.text.primary.surface,
   color: dark.accent,
   active: `hsla(${dark.brand.d1}, 100%)`,
   border: dark.accent,
@@ -526,7 +547,7 @@ dark.button.secondary = {
 };
 
 dark.button.danger = {
-  text: dark.text.primary.accent,
+  text: dark.text.primary.surface,
   color: `hsla(${dark.base.red}, 100%)`,
   active: `hsla(${dark.red.d1}, 100%)`,
   border: `hsla(${dark.base.red}, 100%)`,

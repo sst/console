@@ -1,22 +1,22 @@
 import "@fontsource/rubik/latin.css";
 import "@fontsource/ibm-plex-mono/latin.css";
 
-import { Component, createSignal, createEffect, Switch, Match } from "solid-js";
-import { Navigate, Route, Router, Routes } from "@solidjs/router";
-import { AuthProvider, useAuth } from "$/providers/auth";
-import { createSubscription } from "$/providers/replicache";
-import { WorkspaceStore } from "./data/workspace";
-import { Workspace } from "./pages/workspace";
-import { Connect } from "./pages/connect";
-import { Debug } from "./pages/debug";
-import { Design } from "./pages/design";
-import { styled } from "@macaron-css/solid";
-import { macaron$, globalStyle } from "@macaron-css/core";
-import { theme, darkClass, lightClass } from "./ui/theme";
-import { account, setAccount } from "./data/storage";
-import { RealtimeProvider } from "./providers/realtime";
-import { CommandBar } from "./pages/workspace/command-bar";
-import { CreateWorkspace, Login } from "./pages/auth";
+import {Component, createSignal, createEffect, Switch, Match} from "solid-js";
+import {Navigate, Route, Router, Routes} from "@solidjs/router";
+import {AuthProvider, useAuth} from "$/providers/auth";
+import {createSubscription} from "$/providers/replicache";
+import {WorkspaceStore} from "./data/workspace";
+import {Workspace} from "./pages/workspace";
+import {Connect} from "./pages/connect";
+import {Debug} from "./pages/debug";
+import {Design} from "./pages/design";
+import {styled} from "@macaron-css/solid";
+import {macaron$, globalStyle} from "@macaron-css/core";
+import {theme, darkClass, lightClass} from "./ui/theme";
+import {account, setAccount} from "./data/storage";
+import {RealtimeProvider} from "./providers/realtime";
+import {CommandBar} from "./pages/workspace/command-bar";
+import {CreateWorkspace, Login} from "./pages/auth";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -71,7 +71,7 @@ macaron$(() =>
   ["::placeholder", ":-ms-input-placeholder"].forEach((selector) =>
     globalStyle(selector, {
       opacity: 1,
-      color: theme.color.text.dimmed,
+      color: theme.color.text.dimmed.base,
     })
   )
 );
