@@ -1,18 +1,18 @@
-import { account } from "$/data/storage";
-import { WorkspaceStore } from "$/data/workspace";
-import { useAuth } from "$/providers/auth";
-import { createSubscription } from "$/providers/replicache";
-import { Button } from "$/ui";
-import { FormInput } from "$/ui/form";
-import { IconApp, IconGitHub } from "$/ui/icons/custom";
-import { Stack } from "$/ui/layout";
-import { theme } from "$/ui/theme";
-import { utility } from "$/ui/utility";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
-import { styled } from "@macaron-css/solid";
-import { createId } from "@paralleldrive/cuid2";
-import { Route, Routes, useNavigate } from "@solidjs/router";
-import { Show, createEffect, createMemo, createSignal } from "solid-js";
+import {account} from "$/data/storage";
+import {WorkspaceStore} from "$/data/workspace";
+import {useAuth} from "$/providers/auth";
+import {createSubscription} from "$/providers/replicache";
+import {Button} from "$/ui";
+import {FormInput} from "$/ui/form";
+import {IconApp, IconGitHub} from "$/ui/icons/custom";
+import {Stack} from "$/ui/layout";
+import {theme} from "$/ui/theme";
+import {utility} from "$/ui/utility";
+import {WorkspaceIcon} from "$/ui/workspace-icon";
+import {styled} from "@macaron-css/solid";
+import {createId} from "@paralleldrive/cuid2";
+import {Route, Routes, useNavigate} from "@solidjs/router";
+import {Show, createEffect, createMemo, createSignal} from "solid-js";
 
 const Root = styled("div", {
   base: {
@@ -138,8 +138,8 @@ export function CreateWorkspace() {
           hint="Needs to be lowercase, unique, and URL friendly."
         />
         <Button type="submit" disabled={Boolean(pending())}>
-          <Show when={pending()} fallback="Create workspace">
-            Creating…
+          <Show when={pending()} fallback="Create Workspace">
+            Creating&hellip;
           </Show>
         </Button>
       </Form>
