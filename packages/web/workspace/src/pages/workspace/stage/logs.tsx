@@ -180,7 +180,9 @@ const LogDetailHeaderTitle = styled("div", {
 });
 
 const LogLink = styled("a", {
-  base: {},
+  base: {
+    visibility: "hidden",
+  },
 });
 
 const LogEntries = styled("div", {
