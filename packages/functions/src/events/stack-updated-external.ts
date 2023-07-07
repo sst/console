@@ -1,5 +1,5 @@
 import { provideActor } from "@console/core/actor";
-import { Stage } from "@console/core/app";
+import { App, Stage } from "@console/core/app";
 import { app, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { db } from "@console/core/drizzle";
@@ -19,6 +19,7 @@ interface Events {
 type Payload = {
   [key in keyof Events]: {
     account: string;
+    region: string;
     "detail-type": key;
     detail: Events[key];
   };
@@ -30,25 +31,24 @@ export const handler = async (evt: Payload) => {
     if (!evt.detail.object.key.startsWith("stackMetadata")) return;
     const [, appHint, stageHint] = evt.detail.object.key.split("/");
     if (!stageHint || !appHint) return;
-    const [, stageName] = stageHint?.split(".");
+    let [, stageName] = stageHint?.split(".");
+    stageName = "jayair";
     const [, appName] = appHint?.split(".");
-    const { account } = evt;
+    const { account, region } = evt;
 
     const rows = await db
       .select({
+        workspaceID: awsAccount.workspaceID,
         stageID: stage.id,
-        workspaceID: stage.workspaceID,
+        id: awsAccount.id,
       })
-      .from(stage)
-      .leftJoin(app, eq(stage.appID, app.id))
-      .leftJoin(awsAccount, eq(stage.awsAccountID, awsAccount.id))
-      .where(
-        and(
-          eq(stage.name, stageName!),
-          eq(app.name, appName!),
-          eq(awsAccount.accountID, account)
-        )
+      .from(awsAccount)
+      .leftJoin(
+        stage,
+        and(eq(stage.name, stageName!), eq(stage.awsAccountID, awsAccount.id))
       )
+      .leftJoin(app, and(eq(app.name, appName!), eq(stage.appID, app.id)))
+      .where(and(eq(awsAccount.accountID, account)))
       .execute();
 
     for (const row of rows) {
@@ -58,9 +58,26 @@ export const handler = async (evt: Payload) => {
           workspaceID: row.workspaceID,
         },
       });
-      await Stage.Events.Updated.publish({
-        stageID: row.stageID,
-      });
+
+      if (row.stageID)
+        await Stage.Events.Updated.publish({
+          stageID: row.stageID,
+        });
+
+      if (!row.stageID) {
+        let appID = await App.fromName(appName!).then((x) => x?.id);
+        if (!appID)
+          appID = await App.create({
+            name: appName!,
+          });
+
+        await App.Stage.connect({
+          appID,
+          region,
+          name: stageName!,
+          awsAccountID: row.id,
+        });
+      }
     }
   }
 };
