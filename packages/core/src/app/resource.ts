@@ -93,7 +93,6 @@ export const Enrichers = {
         StackName: resource.id,
       })
     );
-    console.log(result.Stacks?.[0]);
     return {
       outputs:
         result.Stacks?.[0]?.Outputs?.filter(

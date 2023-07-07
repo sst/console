@@ -33,6 +33,7 @@ export const handler = async (evt: Payload) => {
     if (!stageHint || !appHint) return;
     let [, stageName] = stageHint?.split(".");
     const [, appName] = appHint?.split(".");
+    console.log("processing", appName, stageName);
     const { account, region } = evt;
 
     const rows = await db
@@ -49,6 +50,8 @@ export const handler = async (evt: Payload) => {
       .leftJoin(app, and(eq(app.name, appName!), eq(stage.appID, app.id)))
       .where(and(eq(awsAccount.accountID, account)))
       .execute();
+
+    console.log("matches", rows);
 
     for (const row of rows) {
       provideActor({

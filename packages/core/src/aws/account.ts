@@ -26,6 +26,8 @@ import {
   CreateRoleCommand,
   DeletePolicyCommand,
   DeleteRoleCommand,
+  DeleteRolePolicyCommand,
+  GetRoleCommand,
   IAMClient,
   PutRolePolicyCommand,
 } from "@aws-sdk/client-iam";
@@ -128,7 +130,6 @@ export const bootstrap = zod(
 );
 
 export const integrate = zod(bootstrap.schema, async (input) => {
-  return;
   const { bucket } = await bootstrap(input);
 
   const s3 = new S3Client(input);
@@ -159,16 +160,21 @@ export const integrate = zod(bootstrap.schema, async (input) => {
   );
   console.log("created eventbus rule");
 
-  await iam.send(
-    new DeletePolicyCommand({
-      PolicyArn: "eventbus",
-    })
-  );
-  await iam.send(
-    new DeleteRoleCommand({
-      RoleName: "SSTConsolePublisher",
-    })
-  );
+  await iam
+    .send(
+      new DeleteRolePolicyCommand({
+        RoleName: "SSTConsolePublisher",
+        PolicyName: "eventbus",
+      })
+    )
+    .catch(() => {});
+  await iam
+    .send(
+      new DeleteRoleCommand({
+        RoleName: "SSTConsolePublisher",
+      })
+    )
+    .catch(() => {});
   const role = await iam.send(
     new CreateRoleCommand({
       RoleName: "SSTConsolePublisher",
