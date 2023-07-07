@@ -11,6 +11,7 @@ import { useTransaction } from "../util/transaction";
 
 export const Info = createSelectSchema(workspace, {
   id: (schema) => schema.id.cuid2(),
+  slug: (schema) => schema.slug.nonempty(),
 });
 export type Info = z.infer<typeof Info>;
 

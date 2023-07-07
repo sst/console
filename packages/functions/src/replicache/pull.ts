@@ -13,7 +13,7 @@ import { createId } from "@console/core/util/sql";
 import { mapValues } from "remeda";
 import { log_poller } from "@console/core/log-poller/log-poller.sql";
 
-const VERSION = 2;
+const VERSION = 3;
 export const handler = ApiHandler(async () => {
   await useApiAuth();
   const actor = useActor();
@@ -146,9 +146,15 @@ export const handler = ApiHandler(async () => {
 
     if (actor.type === "account") {
       console.log("syncing account", actor.properties);
-      if (new Date(lastSync).getTime() === 0) {
+      const first = new Date(lastSync).getTime() === 0;
+      if (first) {
         result.patch.push({
           op: "clear",
+        });
+        result.patch.push({
+          op: "put",
+          key: "/init",
+          value: true,
         });
       }
       const [users] = await Promise.all([
@@ -177,26 +183,6 @@ export const handler = ApiHandler(async () => {
         .execute()
         .then((rows) => rows.map((row) => row.workspace));
       console.log("workspaces", workspaces);
-
-      /*
-      const workspaces =
-        users.length > 0
-          ? await tx
-              .select()
-              .from(workspace)
-              .where(
-                and(
-                  inArray(
-                    workspace.id,
-                    users.map((u) => u.workspaceID)
-                  ),
-                  gt(workspace.timeUpdated, lastSync)
-                )
-              )
-              .execute()
-          : [];
-          */
-      console.log("found workspaces", workspaces);
 
       result.patch.push(
         ...users.map((item) => ({

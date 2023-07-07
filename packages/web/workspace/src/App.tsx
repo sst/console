@@ -1,22 +1,21 @@
 import "@fontsource/rubik/latin.css";
 import "@fontsource/ibm-plex-mono/latin.css";
-
-import {Component, createSignal, createEffect, Switch, Match} from "solid-js";
-import {Navigate, Route, Router, Routes} from "@solidjs/router";
-import {AuthProvider, useAuth} from "$/providers/auth";
-import {createSubscription} from "$/providers/replicache";
-import {WorkspaceStore} from "./data/workspace";
-import {Workspace} from "./pages/workspace";
-import {Connect} from "./pages/connect";
-import {Debug} from "./pages/debug";
-import {Design} from "./pages/design";
-import {styled} from "@macaron-css/solid";
-import {macaron$, globalStyle} from "@macaron-css/core";
-import {theme, darkClass, lightClass} from "./ui/theme";
-import {account, setAccount} from "./data/storage";
-import {RealtimeProvider} from "./providers/realtime";
-import {CommandBar} from "./pages/workspace/command-bar";
-import {CreateWorkspace, Login} from "./pages/auth";
+import { styled } from "@macaron-css/solid";
+import { darkClass, lightClass, theme } from "./ui/theme";
+import { globalStyle, macaron$ } from "@macaron-css/core";
+import { Component, Match, Switch, createEffect, createSignal } from "solid-js";
+import { Navigate, Route, Router, Routes } from "@solidjs/router";
+import { CreateWorkspace, Login } from "./pages/auth";
+import { AuthProvider, useAuth } from "./providers/auth";
+import { RealtimeProvider } from "./providers/realtime";
+import { CommandBar } from "./pages/workspace/command-bar";
+import { Debug } from "./pages/debug";
+import { Design } from "./pages/design";
+import { Connect } from "./pages/connect";
+import { Workspace } from "./pages/workspace";
+import { account, setAccount } from "./data/storage";
+import { createSubscription } from "./providers/replicache";
+import { WorkspaceStore } from "./data/workspace";
 
 console.log(import.meta.env.VITE_API_URL);
 
@@ -134,6 +133,14 @@ export const App: Component = () => {
                           () => auth[existing].replicache
                         );
 
+                        const init = createSubscription(
+                          () => (tx) => {
+                            return tx.get("/init");
+                          },
+                          false,
+                          () => auth[existing].replicache
+                        );
+
                         return (
                           <Switch>
                             <Match
@@ -142,7 +149,11 @@ export const App: Component = () => {
                               <Navigate href={`/${workspaces()![0].slug}`} />
                             </Match>
                             <Match
-                              when={workspaces() && workspaces()!.length === 0}
+                              when={
+                                init() &&
+                                workspaces() &&
+                                workspaces()!.length === 0
+                              }
                             >
                               <Navigate href={`/auth/workspace`} />
                             </Match>
