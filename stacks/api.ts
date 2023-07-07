@@ -101,7 +101,6 @@ export function API({ stack, app }: StackContext) {
 
   stack.addOutputs({
     ApiEndpoint: api.customDomainUrl,
-    Output: "",
   });
 
   return api;
