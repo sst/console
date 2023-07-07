@@ -37,9 +37,11 @@ import {
   IconFunction,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
-import { Link } from "@solidjs/router";
+import { Link, useNavigate } from "@solidjs/router";
 import { Syncing } from "$/ui/loader";
 import { IconDocumentDuplicate } from "$/ui/icons";
+import {} from "@solid-primitives/keyboard";
+import { createEventListener } from "@solid-primitives/event-listener";
 
 const Card = styled("div", {
   base: {

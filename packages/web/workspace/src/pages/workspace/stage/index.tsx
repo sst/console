@@ -1,20 +1,20 @@
 import patrick from "./patrick.jpg";
-import {styled} from "@macaron-css/solid";
-import {IconChevronUpDown} from "$/ui/icons";
-import {createSubscription, useReplicache} from "$/providers/replicache";
-import {Route, Routes, useNavigate, useParams} from "@solidjs/router";
-import {StageStore} from "$/data/stage";
-import {AppStore} from "$/data/app";
-import {theme} from "$/ui/theme";
-import {Row, Stack} from "$/ui/layout";
-import {utility} from "$/ui/utility";
-import {Show, createEffect} from "solid-js";
-import {useCommandBar} from "$/pages/workspace/command-bar";
-import {ResourcesProvider, StageContext, createStageContext} from "./context";
-import {Resources} from "./resources";
-import {Logs} from "./logs";
-import {IconApp, IconStage} from "$/ui/icons/custom";
-import {WorkspaceIcon} from "$/ui/workspace-icon";
+import { styled } from "@macaron-css/solid";
+import { IconChevronUpDown } from "$/ui/icons";
+import { createSubscription, useReplicache } from "$/providers/replicache";
+import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
+import { StageStore } from "$/data/stage";
+import { AppStore } from "$/data/app";
+import { theme } from "$/ui/theme";
+import { Row, Stack } from "$/ui/layout";
+import { utility } from "$/ui/utility";
+import { Show, createEffect } from "solid-js";
+import { useCommandBar } from "$/pages/workspace/command-bar";
+import { ResourcesProvider, StageContext, createStageContext } from "./context";
+import { Resources } from "./resources";
+import { Logs } from "./logs";
+import { IconApp, IconStage } from "$/ui/icons/custom";
+import { WorkspaceIcon } from "$/ui/workspace-icon";
 
 const Content = styled("div", {
   base: {
@@ -114,16 +114,18 @@ export function Stage() {
 
   bar.register("app-switcher", async () => {
     const apps = await rep().query(AppStore.list());
-    return apps.map((app) => ({
-      icon: IconApp,
-      category: "App",
-      title: `Switch to "${app.name}" app`,
-      run: async (control) => {
-        const stages = await rep().query(StageStore.forApp(app.id));
-        nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
-        control.hide();
-      },
-    }));
+    return apps
+      .filter((a) => a.id !== app()?.id)
+      .map((app) => ({
+        icon: IconApp,
+        category: "App",
+        title: `Switch to "${app.name}" app`,
+        run: async (control) => {
+          const stages = await rep().query(StageStore.forApp(app.id));
+          nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
+          control.hide();
+        },
+      }));
   });
 
   bar.register("stage-switcher", async () => {
@@ -141,7 +143,7 @@ export function Stage() {
       }));
   });
 
-  createEffect(() => console.log({...params}));
+  createEffect(() => console.log({ ...params }));
 
   const stageContext = createStageContext();
 
@@ -165,7 +167,7 @@ export function Stage() {
             <User>
               <div
                 onClick={() =>
-                  rep().mutate.app_stage_sync({stageID: stage()!.id})
+                  rep().mutate.app_stage_sync({ stageID: stage()!.id })
                 }
               >
                 resync

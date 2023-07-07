@@ -13,7 +13,7 @@ import { Resource } from "@console/core/app/resource";
 import { DUMMY_RESOURCES } from "./resources-dummy";
 import { ResourceStore } from "$/data/resource";
 import { useCommandBar } from "../command-bar";
-import { IconApi, IconEventBus } from "$/ui/icons/custom";
+import { IconApi, IconEventBus, IconFunction } from "$/ui/icons/custom";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -203,25 +203,20 @@ export function ResourcesProvider(props: ParentProps) {
         }));
       }
 
-      if (resource.type === "EventBus") {
-        return resource.metadata.rules.flatMap((rule) =>
-          rule.targets.filter(Boolean).map((t) => ({
-            icon: IconEventBus,
-            category: "EventBus Subscriptions",
-            title: `Go to ${
-              // @ts-expect-error
-              resources().find((r) => r.addr === t!.node)?.metadata["handler"]
-            }`,
+      if (resource.type === "Function") {
+        return [
+          {
+            icon: IconFunction,
+            category: "Functions",
+            title: `Go to ${resource.metadata.handler}`,
             run: (control) => {
-              const params = useParams();
-              const id = resources().find((r) => r.addr === t?.node)?.id;
-              useNavigate()(
-                `/${params.workspaceSlug}/${appName}/${stageName}/logs/${id}`
+              nav(
+                `/${params.workspaceSlug}/${appName}/${stageName}/logs/${resource.id}`
               );
               control.hide();
             },
-          }))
-        );
+          },
+        ];
       }
       return [];
     });

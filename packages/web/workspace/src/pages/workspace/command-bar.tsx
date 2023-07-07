@@ -10,32 +10,15 @@ import {
   onCleanup,
   useContext,
 } from "solid-js";
-import {
-  IconApi,
-  IconApp,
-  IconStage,
-  IconSubRight,
-  IconEventBus,
-} from "$/ui/icons/custom";
-import {IconBuildingOffice} from "$/ui/icons";
-import {useAuth} from "$/providers/auth";
-import {UserStore} from "../../data/user";
-import {WorkspaceStore} from "../../data/workspace";
-import {styled} from "@macaron-css/solid";
-import {useReplicache} from "$/providers/replicache";
-import {AppStore} from "../../data/app";
-import {theme} from "$/ui/theme";
-import {filter, groupBy, pipe} from "remeda";
-import {globalStyle} from "@macaron-css/core";
-import {createShortcut} from "@solid-primitives/keyboard";
-import {useNavigate, useParams} from "@solidjs/router";
-import {StageStore} from "../../data/stage";
-import {ResourceStore} from "../../data/resource";
-import {Portal} from "solid-js/web";
-import {createEventListener} from "@solid-primitives/event-listener";
-import {createMutationObserver} from "@solid-primitives/mutation-observer";
-import {setAccount} from "$/data/storage";
-import {utility} from "$/ui/utility";
+import { styled } from "@macaron-css/solid";
+import { theme } from "$/ui/theme";
+import { filter, groupBy, pipe } from "remeda";
+import { globalStyle } from "@macaron-css/core";
+import { createShortcut } from "@solid-primitives/keyboard";
+import { Portal } from "solid-js/web";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createMutationObserver } from "@solid-primitives/mutation-observer";
+import { utility } from "$/ui/utility";
 
 interface Action {
   icon: (props: any) => JSX.Element;
@@ -46,59 +29,6 @@ interface Action {
 }
 
 type ActionProvider = (filter: string) => Promise<Action[]>;
-
-export const ResourceProvider: ActionProvider = async (filter) => {
-  if (!filter) return [];
-  const splits = location.pathname.split("/");
-  const appName = splits[2];
-  const stageName = splits[3];
-  if (!stageName || !appName) return [];
-  const rep = useReplicache()();
-  const app = await rep.query(AppStore.fromName(appName));
-  if (!app) return [];
-  const stage = await rep.query(StageStore.fromName(app!.id, stageName));
-  if (!stage) return [];
-  const resources = await rep.query(ResourceStore.forStage(stage.id));
-  return resources.flatMap((resource) => {
-    if (resource.type === "Api") {
-      return resource.metadata.routes.map((rt) => ({
-        icon: IconApi,
-        category: "API Routes",
-        title: `Go to ${rt.route}`,
-        run: (control) => {
-          const params = useParams();
-          useNavigate()(
-            `/${params.workspaceSlug}/${appName}/${stageName}/logs/${resources.find((r) => r.addr === rt.fn?.node)?.id
-            }`
-          );
-          control.hide();
-        },
-      }));
-    }
-
-    if (resource.type === "EventBus") {
-      return resource.metadata.rules.flatMap((rule) =>
-        rule.targets.filter(Boolean).map((t) => ({
-          icon: IconEventBus,
-          category: "EventBus Subscriptions",
-          title: `Go to ${
-            // @ts-expect-error
-            resources.find((r) => r.addr === t!.node)?.metadata["handler"]
-            }`,
-          run: (control) => {
-            const params = useParams();
-            const id = resources.find((r) => r.addr === t?.node)?.id;
-            useNavigate()(
-              `/${params.workspaceSlug}/${appName}/${stageName}/logs/${id}`
-            );
-            control.hide();
-          },
-        }))
-      );
-    }
-    return [];
-  });
-};
 
 const Root = styled("div", {
   base: {
@@ -140,7 +70,7 @@ const Modal = styled("div", {
   },
 });
 
-globalStyle(`${Root.selector({show: true})} ${Modal}`, {
+globalStyle(`${Root.selector({ show: true })} ${Modal}`, {
   transform: "initial",
 });
 
@@ -269,8 +199,8 @@ function createControl() {
     if (!visible()) return;
     const p = activeProviders().length
       ? activeProviders()
-        .map((p) => providers.get(p)!)
-        .filter(Boolean)
+          .map((p) => providers.get(p)!)
+          .filter(Boolean)
       : [...providers.values()].reverse();
     const actions = await Promise.all(
       p.map(async (provider) => {
@@ -293,7 +223,7 @@ function createControl() {
 
   createMutationObserver(
     () => root()?.querySelector(`[data-element="results"]`)!,
-    {childList: true},
+    { childList: true },
     () => control.reset()
   );
 
