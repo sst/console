@@ -46,6 +46,28 @@ export const fromID = zod(Info.shape.id, async (stageID) =>
   )
 );
 
+export const fromName = zod(
+  Info.pick({
+    appID: true,
+    name: true,
+  }),
+  async (input) =>
+    useTransaction((tx) =>
+      tx
+        .select()
+        .from(stage)
+        .where(
+          and(
+            eq(stage.workspaceID, useWorkspace()),
+            eq(stage.name, input.name),
+            eq(stage.appID, input.appID)
+          )
+        )
+        .execute()
+        .then((x) => x[0])
+    )
+);
+
 export const connect = zod(
   Info.pick({
     name: true,
@@ -119,10 +141,11 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
   }
   console.log(row.app, row.stage, row.region, row.accountID);
   const credentials = await AWS.assumeRole(row.accountID);
-  const { bucket } = await AWS.Account.bootstrap({
+  const bucket = await AWS.Account.bootstrap({
     credentials,
     region: row.region,
-  });
+  }).then((r) => r?.bucket);
+  if (!bucket) return;
   const s3 = new S3Client({
     credentials,
     region: row.region,

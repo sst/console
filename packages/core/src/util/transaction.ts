@@ -48,6 +48,5 @@ export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
 
 export function createTransactionEffect(effect: () => void | Promise<void>) {
   const { effects } = TransactionContext.use();
-  console.log("pushing effects", effect);
   effects.push(effect);
 }

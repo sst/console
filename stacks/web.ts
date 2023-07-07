@@ -29,6 +29,6 @@ export function Web({ stack }: StackContext) {
 
   stack.addOutputs({
     WorkspaceUrl: workspace.customDomainUrl,
-    Output: "200",
+    Output: "209",
   });
 }

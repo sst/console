@@ -1,10 +1,10 @@
-import {Resource} from "@console/core/app/resource";
+import { Resource } from "@console/core/app/resource";
 
 function resource<Type extends Resource.Info["type"]>(
   type: Type,
   id: string,
-  metadata: Extract<Resource.Info, {type: Type}>["metadata"],
-  enrichment?: Extract<Resource.Info, {type: Type}>["enrichment"]
+  metadata: Extract<Resource.Info, { type: Type }>["metadata"],
+  enrichment?: Extract<Resource.Info, { type: Type }>["enrichment"]
 ): Resource.Info {
   return {
     id,
@@ -46,27 +46,34 @@ function ref(id: string) {
 }
 
 export const DUMMY_RESOURCES = [
-  resource("Stack", "stack", {
-  }, {
-    outputs: [
-      {
-        OutputKey: "EmptyOutput",
-        OutputValue: ""
-      },
-      {
-        OutputKey: "ApiEndpoint",
-        OutputValue: "https://api.jayair.dev.sst.dev"
-      },
-      {
-        OutputKey: "LongApiEndpoint",
-        OutputValue: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com"
-      },
-      {
-        OutputKey: "LongOutputThatShouldOverflowBecauseItsTooLongAndKeepsGoingThatShouldOverflowBecauseItsTooLongAndKeepsGoingThatShouldOverflowBecauseItsTooLongAndKeepsGoing",
-        OutputValue: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com"
-      },
-    ]
-  }),
+  resource(
+    "Stack",
+    "stack",
+    {},
+    {
+      outputs: [
+        {
+          OutputKey: "EmptyOutput",
+          OutputValue: "",
+        },
+        {
+          OutputKey: "ApiEndpoint",
+          OutputValue: "https://api.jayair.dev.sst.dev",
+        },
+        {
+          OutputKey: "LongApiEndpoint",
+          OutputValue:
+            "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+        },
+        {
+          OutputKey:
+            "LongOutputThatShouldOverflowBecauseItsTooLongAndKeepsGoingThatShouldOverflowBecauseItsTooLongAndKeepsGoingThatShouldOverflowBecauseItsTooLongAndKeepsGoing",
+          OutputValue:
+            "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+        },
+      ],
+    }
+  ),
   resource("Api", "api", {
     url: "https://example.com",
     routes: [

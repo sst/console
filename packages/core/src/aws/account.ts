@@ -8,7 +8,7 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
 import { and, eq } from "drizzle-orm";
-import { assumeRole } from ".";
+import { Credentials, assumeRole, assumeRole } from ".";
 import {
   CloudFormationClient,
   DescribeStacksCommand,
@@ -21,13 +21,12 @@ import {
 import {
   S3Client,
   PutBucketNotificationConfigurationCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import {
   CreateRoleCommand,
-  DeletePolicyCommand,
   DeleteRoleCommand,
   DeleteRolePolicyCommand,
-  GetRoleCommand,
   IAMClient,
   PutRolePolicyCommand,
 } from "@aws-sdk/client-iam";
@@ -100,7 +99,7 @@ export const fromAccountID = zod(Info.shape.accountID, async (accountID) =>
 
 export const bootstrap = zod(
   z.object({
-    credentials: z.custom<Awaited<ReturnType<typeof assumeRole>>>(),
+    credentials: z.custom<Credentials>(),
     region: z.string(),
   }),
   async (input) => {
@@ -112,9 +111,10 @@ export const bootstrap = zod(
           StackName: "SSTBootstrap",
         })
       )
-      .then((x) => x?.Stacks?.[0]);
+      .then((x) => x?.Stacks?.[0])
+      .catch(() => {});
     if (!bootstrap) {
-      throw new Error("Bootstrap stack not found");
+      return;
     }
 
     const bucket = bootstrap.Outputs?.find(
@@ -129,99 +129,179 @@ export const bootstrap = zod(
   }
 );
 
-export const integrate = zod(bootstrap.schema, async (input) => {
-  const { bucket } = await bootstrap(input);
+import { DescribeRegionsCommand, EC2Client } from "@aws-sdk/client-ec2";
+import { App } from "../app";
 
-  const s3 = new S3Client(input);
-  const eb = new EventBridgeClient(input);
-  const iam = new IAMClient(input);
+export const regions = zod(
+  bootstrap.schema.shape.credentials,
+  async (credentials) => {
+    const client = new EC2Client({
+      credentials,
+    });
+    const regions = await client
+      .send(new DescribeRegionsCommand({}))
+      .then((r) => r.Regions || []);
+    return regions;
+  }
+);
 
-  await s3.send(
-    new PutBucketNotificationConfigurationCommand({
-      Bucket: bucket,
-      NotificationConfiguration: {
-        EventBridgeConfiguration: {},
-      },
-    })
-  );
+export const integrate = zod(Info.shape.id, async (id) => {
+  const account = await fromID(id);
+  if (!account) return;
+  const credentials = await assumeRole(account.accountID);
+  await Promise.all(
+    (
+      await regions(credentials)
+    ).map(async (region) => {
+      if (region.RegionName !== "us-east-1") return;
+      const config = {
+        credentials,
+        region: region.RegionName!,
+      };
+      console.log("integrating region", region);
 
-  const rule = await eb.send(
-    new PutRuleCommand({
-      Name: "SSTConsole",
-      State: "ENABLED",
-      EventPattern: JSON.stringify({
-        source: [
-          {
-            prefix: "",
+      const b = await bootstrap(config);
+      if (!b) return;
+
+      const s3 = new S3Client(config);
+      const eb = new EventBridgeClient(config);
+      const iam = new IAMClient(config);
+
+      await s3.send(
+        new PutBucketNotificationConfigurationCommand({
+          Bucket: b.bucket,
+          NotificationConfiguration: {
+            EventBridgeConfiguration: {},
           },
-        ],
-      }),
-    })
-  );
-  console.log("created eventbus rule");
+        })
+      );
 
-  await iam
-    .send(
-      new DeleteRolePolicyCommand({
-        RoleName: "SSTConsolePublisher",
-        PolicyName: "eventbus",
-      })
-    )
-    .catch(() => {});
-  await iam
-    .send(
-      new DeleteRoleCommand({
-        RoleName: "SSTConsolePublisher",
-      })
-    )
-    .catch(() => {});
-  const role = await iam.send(
-    new CreateRoleCommand({
-      RoleName: "SSTConsolePublisher",
-      AssumeRolePolicyDocument: JSON.stringify({
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Principal: {
-              Service: "events.amazonaws.com",
+      await eb.send(
+        new PutRuleCommand({
+          Name: "SSTConsole",
+          State: "ENABLED",
+          EventPattern: JSON.stringify({
+            source: ["aws.s3"],
+            detail: {
+              bucket: {
+                name: [b.bucket],
+              },
             },
-            Action: "sts:AssumeRole",
-          },
-        ],
-      }),
-    })
-  );
-  console.log("created publisher role");
+          }),
+        })
+      );
+      console.log("created eventbus rule");
 
-  await iam.send(
-    new PutRolePolicyCommand({
-      RoleName: role.Role!.RoleName,
-      PolicyName: "eventbus",
-      PolicyDocument: JSON.stringify({
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Action: ["events:PutEvents"],
-            Resource: [process.env.EVENT_BUS_ARN],
-          },
-        ],
-      }),
-    })
-  );
+      await iam
+        .send(
+          new DeleteRolePolicyCommand({
+            RoleName: "SSTConsolePublisher",
+            PolicyName: "eventbus",
+          })
+        )
+        .catch(() => {});
+      await iam
+        .send(
+          new DeleteRoleCommand({
+            RoleName: "SSTConsolePublisher",
+          })
+        )
+        .catch(() => {});
+      const role = await iam.send(
+        new CreateRoleCommand({
+          RoleName: "SSTConsolePublisher",
+          AssumeRolePolicyDocument: JSON.stringify({
+            Version: "2012-10-17",
+            Statement: [
+              {
+                Effect: "Allow",
+                Principal: {
+                  Service: "events.amazonaws.com",
+                },
+                Action: "sts:AssumeRole",
+              },
+            ],
+          }),
+        })
+      );
+      console.log("created publisher role");
 
-  await eb.send(
-    new PutTargetsCommand({
-      Rule: "SSTConsole",
-      Targets: [
-        {
-          Arn: process.env.EVENT_BUS_ARN,
-          Id: "SSTConsole",
-          RoleArn: role.Role!.Arn,
-        },
-      ],
+      await iam.send(
+        new PutRolePolicyCommand({
+          RoleName: role.Role!.RoleName,
+          PolicyName: "eventbus",
+          PolicyDocument: JSON.stringify({
+            Version: "2012-10-17",
+            Statement: [
+              {
+                Effect: "Allow",
+                Action: ["events:PutEvents"],
+                Resource: [process.env.EVENT_BUS_ARN],
+              },
+            ],
+          }),
+        })
+      );
+
+      await eb.send(
+        new PutTargetsCommand({
+          Rule: "SSTConsole",
+          Targets: [
+            {
+              Arn: process.env.EVENT_BUS_ARN,
+              Id: "SSTConsole",
+              RoleArn: role.Role!.Arn,
+            },
+          ],
+        })
+      );
+      console.log("enabled s3 notification");
+
+      let token: string | undefined;
+      while (true) {
+        const list = await s3.send(
+          new ListObjectsV2Command({
+            Prefix: "appMetadata",
+            Bucket: b.bucket,
+            ContinuationToken: token,
+          })
+        );
+
+        for (const item of list.Contents || []) {
+          const [, appHint, stageHint] = item.Key?.split("/") || [];
+          if (!appHint || !stageHint) return;
+          const [, stageName] = stageHint?.split(".");
+          const [, appName] = appHint?.split(".");
+          if (!stageName || !appName) return;
+          await useTransaction(async () => {
+            let app = await App.fromName(appName).then((a) => a?.id);
+            if (!app)
+              app = await App.create({
+                name: appName,
+              });
+
+            let stage = await App.Stage.fromName({
+              appID: app,
+              name: stageName,
+            }).then((s) => s?.id);
+            if (!stage)
+              stage = await App.Stage.connect({
+                name: stageName,
+                appID: app,
+                region: config.region,
+                awsAccountID: account.id,
+              });
+          });
+          console.log(stageName, appName);
+        }
+        if (!list.ContinuationToken) break;
+      }
     })
   );
-  console.log("enabled s3 notification");
+  return;
+});
+
+export const discover = zod(bootstrap.schema, async (input) => {
+  const b = await bootstrap(input);
+  if (!b) return;
 });

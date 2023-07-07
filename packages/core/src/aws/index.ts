@@ -23,3 +23,5 @@ export const assumeRole = zod(z.string(), async (id) => {
     sessionToken: result.Credentials!.SessionToken!,
   };
 });
+
+export type Credentials = Awaited<ReturnType<typeof assumeRole>>;
