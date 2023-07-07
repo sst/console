@@ -1,6 +1,6 @@
-import {CSSProperties} from "@macaron-css/core";
-import {styled} from "@macaron-css/solid";
-import {theme} from "./theme";
+import { styled } from "@macaron-css/solid";
+import { theme } from "./theme";
+import { CSSProperties } from "@macaron-css/core";
 
 export const Text = styled("span", {
   base: {},
@@ -33,100 +33,42 @@ export const Text = styled("span", {
       }
       return result;
     })(),
-    color: {
-      primary: {},
-      secondary: {},
-      dimmed: {},
-    },
-    on: {
-      base: {},
-      surface: {},
-      inverted: {},
-    },
+    color: (() => {
+      const record = {} as Record<keyof typeof theme.color.text, CSSProperties>;
+      for (const [key, _value] of Object.entries(theme.color.text)) {
+        record[key as keyof typeof record] = {};
+      }
+      return record;
+    })(),
+    on: (() => {
+      const record = {} as Record<
+        keyof typeof theme.color.text.primary,
+        CSSProperties
+      >;
+      for (const [key, _value] of Object.entries(theme.color.text.primary)) {
+        record[key as keyof typeof record] = {};
+      }
+      return record;
+    })(),
   },
-  compoundVariants: [
-    {
-      variants: {
-        color: "primary",
-        on: "base",
-      },
-      style: {
-        color: theme.color.text.primary.base,
-      },
-    },
-    {
-      variants: {
-        color: "primary",
-        on: "surface",
-      },
-      style: {
-        color: theme.color.text.primary.surface,
-      },
-    },
-    {
-      variants: {
-        color: "primary",
-        on: "inverted",
-      },
-      style: {
-        color: theme.color.text.primary.inverted,
-      },
-    },
-    {
-      variants: {
-        color: "secondary",
-        on: "base",
-      },
-      style: {
-        color: theme.color.text.secondary.base,
-      },
-    },
-    {
-      variants: {
-        color: "secondary",
-        on: "surface",
-      },
-      style: {
-        color: theme.color.text.secondary.surface,
-      },
-    },
-    {
-      variants: {
-        color: "secondary",
-        on: "inverted",
-      },
-      style: {
-        color: theme.color.text.secondary.inverted,
-      },
-    },
-    {
-      variants: {
-        color: "dimmed",
-        on: "base",
-      },
-      style: {
-        color: theme.color.text.dimmed.base,
-      },
-    },
-    {
-      variants: {
-        color: "dimmed",
-        on: "surface",
-      },
-      style: {
-        color: theme.color.text.dimmed.surface,
-      },
-    },
-    {
-      variants: {
-        color: "dimmed",
-        on: "inverted",
-      },
-      style: {
-        color: theme.color.text.dimmed.inverted,
-      },
-    },
-  ],
+  compoundVariants: (() => {
+    const result: any[] = [];
+    for (const [color, ons] of Object.entries(theme.color.text)) {
+      for (const [on, value] of Object.entries(ons)) {
+        result.push({
+          variants: {
+            color,
+            on,
+          },
+          style: {
+            color: value,
+          },
+        });
+      }
+    }
+    console.log(result);
+    return result;
+  })(),
   defaultVariants: {
     on: "base",
     size: "base",
