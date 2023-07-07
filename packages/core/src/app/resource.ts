@@ -95,9 +95,11 @@ export const Enrichers = {
     );
     console.log(result.Stacks?.[0]);
     return {
-      outputs: result.Stacks?.[0]?.Outputs?.filter(
-        (o) => o.OutputKey !== "SSTMetadata"
-      ),
+      outputs:
+        result.Stacks?.[0]?.Outputs?.filter(
+          (o) =>
+            o.OutputKey !== "SSTMetadata" && !o.OutputKey?.startsWith("Export")
+        ) || [],
     } as const;
   },
 } satisfies {

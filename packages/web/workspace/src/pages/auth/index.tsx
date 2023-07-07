@@ -1,18 +1,14 @@
-import {account} from "$/data/storage";
-import {WorkspaceStore} from "$/data/workspace";
-import {useAuth} from "$/providers/auth";
-import {createSubscription} from "$/providers/replicache";
-import {Button} from "$/ui";
-import {FormInput} from "$/ui/form";
-import {IconApp, IconGitHub} from "$/ui/icons/custom";
-import {Stack} from "$/ui/layout";
-import {theme} from "$/ui/theme";
-import {utility} from "$/ui/utility";
-import {WorkspaceIcon} from "$/ui/workspace-icon";
-import {styled} from "@macaron-css/solid";
-import {createId} from "@paralleldrive/cuid2";
-import {Route, Routes, useNavigate} from "@solidjs/router";
-import {Show, createEffect, createMemo, createSignal} from "solid-js";
+import { account } from "$/data/storage";
+import { WorkspaceStore } from "$/data/workspace";
+import { useAuth } from "$/providers/auth";
+import { createSubscription } from "$/providers/replicache";
+import { Button, Text, FormInput, Stack, theme, utility } from "$/ui";
+import { IconApp, IconGitHub } from "$/ui/icons/custom";
+import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { styled } from "@macaron-css/solid";
+import { createId } from "@paralleldrive/cuid2";
+import { useNavigate } from "@solidjs/router";
+import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
 const Root = styled("div", {
   base: {
@@ -29,19 +25,6 @@ const LoginIcon = styled("div", {
     width: 42,
     height: 42,
     color: theme.color.accent,
-  },
-});
-
-const Header = styled("h1", {
-  base: {
-    fontSize: theme.font.size.lg,
-    fontWeight: 500,
-  },
-});
-
-const Description = styled("p", {
-  base: {
-    color: theme.color.text.secondary.base,
   },
 });
 
@@ -63,8 +46,12 @@ export function Login() {
           <IconApp />
         </LoginIcon>
         <Stack horizontal="center" space="2">
-          <Header>Welcome to the SST Console</Header>
-          <Description>Log in with your GitHub to get started</Description>
+          <Text size="lg" weight="medium">
+            Welcome to the SST Console
+          </Text>
+          <Text color="secondary" on="base">
+            Log in with your GitHub to get started
+          </Text>
         </Stack>
       </Stack>
       <a
@@ -115,8 +102,12 @@ export function CreateWorkspace() {
       <Stack horizontal="center" space="5">
         <WorkspaceIcon text="acme" />
         <Stack horizontal="center" space="2">
-          <Header>Create a new workspace</Header>
-          <Description>Start by giving your workspace a name</Description>
+          <Text size="lg" weight="medium">
+            Create a new workspace
+          </Text>
+          <Text color="secondary" on="base">
+            Start by giving your workspace a name
+          </Text>
         </Stack>
       </Stack>
       <Form

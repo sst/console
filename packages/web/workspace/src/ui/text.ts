@@ -13,6 +13,11 @@ export const Text = styled("span", {
         lineHeight: theme.font.lineHeight,
       },
     },
+    code: {
+      true: {
+        fontFamily: theme.font.family.code,
+      },
+    },
     weight: {
       regular: {
         fontWeight: 400,
@@ -22,6 +27,13 @@ export const Text = styled("span", {
       },
       semibold: {
         fontWeight: 600,
+      },
+    },
+    line: {
+      true: {
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
       },
     },
     size: (() => {

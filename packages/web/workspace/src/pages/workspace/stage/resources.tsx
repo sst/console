@@ -7,12 +7,12 @@ import {
   createMemo,
   ComponentProps,
 } from "solid-js";
-import {useFunctionsContext, useResourcesContext} from "./context";
-import {styled} from "@macaron-css/solid";
-import {theme} from "$/ui/theme";
-import {utility} from "$/ui/utility";
-import {Fullscreen, Row} from "$/ui/layout";
-import {Tag} from "$/ui/tag";
+import { useFunctionsContext, useResourcesContext } from "./context";
+import { styled } from "@macaron-css/solid";
+import { theme } from "$/ui/theme";
+import { utility } from "$/ui/utility";
+import { Fullscreen, Row } from "$/ui/layout";
+import { Tag, Text } from "$/ui";
 import {
   IconApi,
   IconRDS,
@@ -36,9 +36,10 @@ import {
   IconApiGatewayV1Api,
   IconFunction,
 } from "$/ui/icons/custom";
-import {Resource} from "@console/core/app/resource";
-import {Link} from "@solidjs/router";
-import {Syncing} from "$/ui/loader";
+import { Resource } from "@console/core/app/resource";
+import { Link } from "@solidjs/router";
+import { Syncing } from "$/ui/loader";
+import { IconDocumentDuplicate } from "$/ui/icons";
 
 const Card = styled("div", {
   base: {
@@ -46,9 +47,8 @@ const Card = styled("div", {
     backgroundColor: theme.color.background.surface,
   },
   variants: {
-    type: {
-      default: {},
-      outputs: {
+    outputs: {
+      true: {
         backgroundColor: "transparent",
         border: `1px solid ${theme.color.divider.base}`,
       },
@@ -296,17 +296,21 @@ export function Resources() {
               <Match when={resource.type === "Table" && resource}>
                 {(resource) => <TableCard resource={resource()} />}
               </Match>
+              <Match when={resource.type === "Stack" && resource}>
+                {(resource) => <StackCard resource={resource()} />}
+              </Match>
             </Switch>
           </Card>
         )}
       </For>
       <OrphanFunctionsCard />
+      <OutputsCard />
     </>
   );
 }
 
 interface CardProps<Type extends Resource.Info["type"]> {
-  resource: Extract<Resource.Info, {type: Type}>;
+  resource: Extract<Resource.Info, { type: Type }>;
 }
 
 export function ApiCard(props: CardProps<"Api">) {
@@ -487,6 +491,7 @@ export function AppSyncCard(props: CardProps<"AppSync">) {
     </>
   );
 }
+
 export function TableCard(props: CardProps<"Table">) {
   return (
     <>
@@ -495,6 +500,33 @@ export function TableCard(props: CardProps<"Table">) {
         <For each={props.resource.metadata.consumers}>
           {(consumer) => (
             <FunctionChild id={consumer.fn?.node} tag="Consumer" />
+          )}
+        </For>
+      </Children>
+    </>
+  );
+}
+
+export function StackCard(props: CardProps<"Stack">) {
+  return (
+    <>
+      <Header resource={props.resource} />
+      <Children>
+        <For each={props.resource.enrichment.outputs}>
+          {(output) => (
+            <Child>
+              <Text code color="dimmed" on="base">
+                {output.OutputKey}
+              </Text>
+              <Row shrink={false} space="3" vertical="center">
+                <Text code color="dimmed" on="base" line>
+                  {output.OutputValue}
+                </Text>
+                <ChildIcon>
+                  <IconDocumentDuplicate />
+                </ChildIcon>
+              </Row>
+            </Child>
           )}
         </For>
       </Children>
@@ -668,6 +700,44 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
   );
 }
 
+export function OutputsCard() {
+  const resources = useResourcesContext();
+  const outputs = createMemo(() =>
+    resources()
+      .flatMap((r) => (r.type === "Stack" ? r.enrichment.outputs : []))
+      .sort((a, b) => a.OutputKey!.localeCompare(b.OutputKey!))
+  );
+
+  return (
+    <Show when={outputs().length}>
+      <Card outputs>
+        <HeaderRoot>
+          <HeaderName>Outputs</HeaderName>
+        </HeaderRoot>
+        <Children>
+          <For each={outputs()}>
+            {(output) => (
+              <Child>
+                <Text code color="dimmed" on="base">
+                  {output.OutputKey}
+                </Text>
+                <Row shrink={false} space="3" vertical="center">
+                  <Text code color="dimmed" on="base" line>
+                    {output.OutputValue}
+                  </Text>
+                  <ChildIcon>
+                    <IconDocumentDuplicate />
+                  </ChildIcon>
+                </Row>
+              </Child>
+            )}
+          </For>
+        </Children>
+      </Card>
+    </Show>
+  );
+}
+
 export function OrphanFunctionsCard() {
   const functions = useFunctionsContext();
   const orphans = createMemo(() =>
@@ -738,7 +808,7 @@ function FunctionChild(props: {
           (r.id === props.id ||
             r.addr === props.id ||
             r.metadata.arn === props.id)
-      ) as Extract<Resource.Info, {type: "Function"}> | undefined
+      ) as Extract<Resource.Info, { type: "Function" }> | undefined
   );
   return (
     <Show when={fn()}>
