@@ -32,7 +32,6 @@ export const handler = async (evt: Payload) => {
     const [, appHint, stageHint] = evt.detail.object.key.split("/");
     if (!stageHint || !appHint) return;
     let [, stageName] = stageHint?.split(".");
-    stageName = "jayair";
     const [, appName] = appHint?.split(".");
     const { account, region } = evt;
 
