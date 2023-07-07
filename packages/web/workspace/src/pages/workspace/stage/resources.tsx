@@ -714,10 +714,16 @@ export function OutputsCard() {
             {(output) => (
               <Show when={output.OutputValue && output.OutputValue?.trim() !== ""}>
                 <Child outputs>
-                  <Text code size="mono_base" leading="normal">
+                  <Text
+                    line
+                    code
+                    size="mono_base"
+                    leading="normal"
+                    style={{"min-width": "33%"}}
+                  >
                     {output.OutputKey}
                   </Text>
-                  <Row shrink={false} space="3" vertical="center">
+                  <Row space="3" vertical="center">
                     <Text code line size="mono_base" color="dimmed" leading="normal">
                       {output.OutputValue}
                     </Text>

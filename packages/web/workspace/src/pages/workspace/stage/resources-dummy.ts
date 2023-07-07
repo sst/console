@@ -46,6 +46,27 @@ function ref(id: string) {
 }
 
 export const DUMMY_RESOURCES = [
+  resource("Stack", "stack", {
+  }, {
+    outputs: [
+      {
+        OutputKey: "EmptyOutput",
+        OutputValue: ""
+      },
+      {
+        OutputKey: "ApiEndpoint",
+        OutputValue: "https://api.jayair.dev.sst.dev"
+      },
+      {
+        OutputKey: "LongApiEndpoint",
+        OutputValue: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com"
+      },
+      {
+        OutputKey: "LongOutputThatShouldOverflowBecauseItsTooLongAndKeepsGoingThatShouldOverflowBecauseItsTooLongAndKeepsGoingThatShouldOverflowBecauseItsTooLongAndKeepsGoing",
+        OutputValue: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com"
+      },
+    ]
+  }),
   resource("Api", "api", {
     url: "https://example.com",
     routes: [
@@ -84,17 +105,6 @@ export const DUMMY_RESOURCES = [
     graphql: false,
     httpApiId: "someapi",
     customDomainUrl: "https://example.com",
-  }, {
-    outputs: [
-      {
-        OutputKey: "Output",
-        OutputValue: ""
-      },
-      {
-        OutputKey: "ApiEndpoint",
-        OutputValue: "https://api.jayair.dev.sst.dev"
-      }
-    ]
   }),
   resource("Api", "long-api", {
     url: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
