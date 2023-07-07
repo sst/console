@@ -3,6 +3,7 @@ import {Grower, Stack, Row} from "$/ui/layout";
 import {styled} from "@macaron-css/solid";
 import {theme} from "$/ui/theme";
 import {IconArrowPath, IconChevronLeft, IconBoltSolid} from "$/ui/icons";
+import {Text} from "$/ui/text";
 import {Tag} from "$/ui/tag";
 import {Button, LinkButton} from "$/ui/button";
 import {utility} from "$/ui/utility";
@@ -130,10 +131,15 @@ const TextContainer = styled("div", {
   },
   variants: {
     background: {
-      base: {},
-      surface: {},
-      accent: {},
-      inverted: {},
+      base: {
+        backgroundColor: theme.color.background.base,
+      },
+      surface: {
+        backgroundColor: theme.color.background.surface,
+      },
+      accent: {
+        backgroundColor: theme.color.accent,
+      },
     },
   },
   defaultVariants: {
@@ -208,8 +214,36 @@ export function Design() {
       </ComponentType>
       <ComponentType name="Text">
         <Variant name="Primary">
-          <TextContainer>
-            <p>Paragraph</p>
+          <TextContainer background="base">
+            <Text>Text</Text>
+          </TextContainer>
+          <TextContainer background="surface">
+            <Text on="surface">Text</Text>
+          </TextContainer>
+          <TextContainer background="accent">
+            <Text on="inverted">Text</Text>
+          </TextContainer>
+        </Variant>
+        <Variant name="Secondary">
+          <TextContainer background="base">
+            <Text color="secondary">Text</Text>
+          </TextContainer>
+          <TextContainer background="surface">
+            <Text color="secondary" on="surface">Text</Text>
+          </TextContainer>
+          <TextContainer background="accent">
+            <Text color="secondary" on="inverted">Text</Text>
+          </TextContainer>
+        </Variant>
+        <Variant name="Dimmed">
+          <TextContainer background="base">
+            <Text color="dimmed">Text</Text>
+          </TextContainer>
+          <TextContainer background="surface">
+            <Text color="dimmed" on="surface">Text</Text>
+          </TextContainer>
+          <TextContainer background="accent">
+            <Text color="dimmed" on="inverted">Text</Text>
           </TextContainer>
         </Variant>
       </ComponentType>
@@ -351,7 +385,7 @@ const LogLoadingIndicatorIcon = styled("div", {
   base: {
     width: 15,
     height: 15,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
     opacity: theme.iconOpacity,
     animation: "pulse 2.5s linear infinite",
   },
@@ -359,7 +393,7 @@ const LogLoadingIndicatorIcon = styled("div", {
 
 const LogLoadingIndicatorCopy = styled("div", {
   base: {
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
     fontSize: "0.8125rem",
   },
 });
@@ -368,7 +402,7 @@ const BackButton = styled("button", {
   base: {
     border: "none",
     background: "none",
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
     opacity: theme.iconOpacity,
     width: 42,
     height: 42,
@@ -496,7 +530,7 @@ const inputStyles: CSSProperties = {
 const inputDisabledStyles: CSSProperties = {
   opacity: 0.5,
   backgroundColor: theme.color.background.surface,
-  color: theme.color.text.dimmed,
+  color: theme.color.text.dimmed.base,
   cursor: "default",
   boxShadow: `0 0 0 1px inset ${theme.color.input.border}`,
 };
@@ -589,7 +623,7 @@ const Select = styled("select", {
       ...inputFocusStyles,
     },
     ":invalid": {
-      color: theme.color.text.dimmed,
+      color: theme.color.text.dimmed.base,
     },
     ":disabled": {
       ...inputDisabledStyles,
@@ -632,7 +666,7 @@ const Label = styled("p", {
 const FormFieldHint = styled("p", {
   base: {
     fontSize: theme.font.size.sm,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
   },
   variants: {
     color: {
@@ -972,7 +1006,7 @@ const LoadingResourcesH1 = styled("h1", {
   base: {
     fontSize: theme.font.size.lg,
     fontWeight: 500,
-    color: theme.color.text.dimmed,
+    color: theme.color.text.dimmed.base,
   },
 });
 

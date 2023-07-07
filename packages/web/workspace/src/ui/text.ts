@@ -10,7 +10,7 @@ export const Text = styled("span", {
         lineHeight: 1,
       },
       loose: {
-        lineHeight: 1.5,
+        lineHeight: theme.font.lineHeight,
       },
     },
     weight: {
@@ -34,18 +34,101 @@ export const Text = styled("span", {
       return result;
     })(),
     color: {
-      primary: {
+      primary: {},
+      secondary: {},
+      dimmed: {},
+    },
+    on: {
+      base: {},
+      surface: {},
+      inverted: {},
+    },
+  },
+  compoundVariants: [
+    {
+      variants: {
+        color: "primary",
+        on: "base",
+      },
+      style: {
         color: theme.color.text.primary.base,
       },
-      secondary: {
+    },
+    {
+      variants: {
+        color: "primary",
+        on: "surface",
+      },
+      style: {
+        color: theme.color.text.primary.surface,
+      },
+    },
+    {
+      variants: {
+        color: "primary",
+        on: "inverted",
+      },
+      style: {
+        color: theme.color.text.primary.inverted,
+      },
+    },
+    {
+      variants: {
+        color: "secondary",
+        on: "base",
+      },
+      style: {
         color: theme.color.text.secondary.base,
       },
-      dimmed: {
+    },
+    {
+      variants: {
+        color: "secondary",
+        on: "surface",
+      },
+      style: {
+        color: theme.color.text.secondary.surface,
+      },
+    },
+    {
+      variants: {
+        color: "secondary",
+        on: "inverted",
+      },
+      style: {
+        color: theme.color.text.secondary.inverted,
+      },
+    },
+    {
+      variants: {
+        color: "dimmed",
+        on: "base",
+      },
+      style: {
         color: theme.color.text.dimmed.base,
       },
     },
-  },
+    {
+      variants: {
+        color: "dimmed",
+        on: "surface",
+      },
+      style: {
+        color: theme.color.text.dimmed.surface,
+      },
+    },
+    {
+      variants: {
+        color: "dimmed",
+        on: "inverted",
+      },
+      style: {
+        color: theme.color.text.dimmed.inverted,
+      },
+    },
+  ],
   defaultVariants: {
+    on: "base",
     size: "base",
     color: "primary",
     weight: "regular",

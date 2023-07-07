@@ -300,13 +300,13 @@ light.text = {
   },
   secondary: {
     base: `hsla(${light.base.black}, 60%)`,
-    surface: `hsla(${light.base.black}, 60%)`,
-    inverted: `hsla(${light.base.black}, 60%)`,
+    surface: `hsla(${light.base.black}, 45%)`,
+    inverted: `hsla(${dark.base.white}, 60%)`,
   },
   dimmed: {
     base: `hsla(${light.base.black}, 38%)`,
-    surface: `hsla(${light.base.black}, 38%)`,
-    inverted: `hsla(${light.base.black}, 38%)`,
+    surface: `hsla(${light.base.black}, 23%)`,
+    inverted: `hsla(${dark.base.white}, 38%)`,
   },
 };
 
@@ -464,13 +464,13 @@ dark.text = {
   },
   secondary: {
     base: `hsla(${dark.base.white}, 60%)`,
-    surface: `hsla(${dark.base.white}, 60%)`,
-    inverted: `hsla(${dark.base.white}, 60%)`,
+    surface: `hsla(${dark.base.white}, 53%)`,
+    inverted: `hsla(${light.base.black}, 60%)`,
   },
   dimmed: {
     base: `hsla(${dark.base.white}, 38%)`,
-    surface: `hsla(${dark.base.white}, 38%)`,
-    inverted: `hsla(${dark.base.white}, 38%)`,
+    surface: `hsla(${dark.base.white}, 31%)`,
+    inverted: `hsla(${light.base.black}, 38%)`,
   },
 };
 
