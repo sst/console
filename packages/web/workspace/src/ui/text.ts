@@ -1,6 +1,6 @@
-import { styled } from "@macaron-css/solid";
-import { theme } from "./theme";
-import { CSSProperties } from "@macaron-css/core";
+import {styled} from "@macaron-css/solid";
+import {theme} from "./theme";
+import {CSSProperties} from "@macaron-css/core";
 
 export const Text = styled("span", {
   base: {},
@@ -8,6 +8,9 @@ export const Text = styled("span", {
     leading: {
       base: {
         lineHeight: 1,
+      },
+      normal: {
+        lineHeight: "normal",
       },
       loose: {
         lineHeight: theme.font.lineHeight,
@@ -32,8 +35,8 @@ export const Text = styled("span", {
     line: {
       true: {
         overflow: "hidden",
-        textOverflow: "ellipsis",
         whiteSpace: "nowrap",
+        textOverflow: "ellipsis",
       },
     },
     size: (() => {

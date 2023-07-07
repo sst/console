@@ -7,12 +7,12 @@ import {
   createMemo,
   ComponentProps,
 } from "solid-js";
-import { useFunctionsContext, useResourcesContext } from "./context";
-import { styled } from "@macaron-css/solid";
-import { theme } from "$/ui/theme";
-import { utility } from "$/ui/utility";
-import { Fullscreen, Row } from "$/ui/layout";
-import { Tag, Text } from "$/ui";
+import {useFunctionsContext, useResourcesContext} from "./context";
+import {styled} from "@macaron-css/solid";
+import {theme} from "$/ui/theme";
+import {utility} from "$/ui/utility";
+import {Fullscreen, Row} from "$/ui/layout";
+import {Tag, Text} from "$/ui";
 import {
   IconApi,
   IconRDS,
@@ -36,12 +36,12 @@ import {
   IconApiGatewayV1Api,
   IconFunction,
 } from "$/ui/icons/custom";
-import { Resource } from "@console/core/app/resource";
-import { Link, useNavigate } from "@solidjs/router";
-import { Syncing } from "$/ui/loader";
-import { IconDocumentDuplicate } from "$/ui/icons";
+import {Resource} from "@console/core/app/resource";
+import {Link, useNavigate} from "@solidjs/router";
+import {Syncing} from "$/ui/loader";
+import {IconDocumentDuplicate} from "$/ui/icons";
 import {} from "@solid-primitives/keyboard";
-import { createEventListener } from "@solid-primitives/event-listener";
+import {createEventListener} from "@solid-primitives/event-listener";
 
 const Card = styled("div", {
   base: {
@@ -312,7 +312,7 @@ export function Resources() {
 }
 
 interface CardProps<Type extends Resource.Info["type"]> {
-  resource: Extract<Resource.Info, { type: Type }>;
+  resource: Extract<Resource.Info, {type: Type}>;
 }
 
 export function ApiCard(props: CardProps<"Api">) {
@@ -720,11 +720,11 @@ export function OutputsCard() {
           <For each={outputs()}>
             {(output) => (
               <Child>
-                <Text code color="dimmed" on="base">
+                <Text code size="mono_base" leading="normal">
                   {output.OutputKey}
                 </Text>
                 <Row shrink={false} space="3" vertical="center">
-                  <Text code color="dimmed" on="base" line>
+                  <Text code line size="mono_base" color="dimmed" leading="normal">
                     {output.OutputValue}
                   </Text>
                   <ChildIcon>
@@ -810,7 +810,7 @@ function FunctionChild(props: {
           (r.id === props.id ||
             r.addr === props.id ||
             r.metadata.arn === props.id)
-      ) as Extract<Resource.Info, { type: "Function" }> | undefined
+      ) as Extract<Resource.Info, {type: "Function"}> | undefined
   );
   return (
     <Show when={fn()}>

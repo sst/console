@@ -137,8 +137,8 @@ const TextContainer = styled("div", {
       surface: {
         backgroundColor: theme.color.background.surface,
       },
-      accent: {
-        backgroundColor: theme.color.accent,
+      inverted: {
+        backgroundColor: theme.color.button.github.color,
       },
     },
   },
@@ -213,37 +213,25 @@ export function Design() {
         </Variant>
       </ComponentType>
       <ComponentType name="Text">
-        <Variant name="Primary">
+        <Variant name="Base">
           <TextContainer background="base">
-            <Text>Text</Text>
-          </TextContainer>
-          <TextContainer background="surface">
-            <Text on="surface">Text</Text>
-          </TextContainer>
-          <TextContainer background="accent">
-            <Text on="inverted">Text</Text>
+            <Text color="primary" on="base">TextName</Text>
+            <Text color="secondary" on="base">TextName</Text>
+            <Text color="dimmed" on="base">TextName</Text>
           </TextContainer>
         </Variant>
-        <Variant name="Secondary">
-          <TextContainer background="base">
-            <Text color="secondary">Text</Text>
-          </TextContainer>
+        <Variant name="Surface">
           <TextContainer background="surface">
-            <Text color="secondary" on="surface">Text</Text>
-          </TextContainer>
-          <TextContainer background="accent">
-            <Text color="secondary" on="inverted">Text</Text>
+            <Text color="primary" on="surface">TextName</Text>
+            <Text color="secondary" on="surface">TextName</Text>
+            <Text color="dimmed" on="surface">TextName</Text>
           </TextContainer>
         </Variant>
-        <Variant name="Dimmed">
-          <TextContainer background="base">
-            <Text color="dimmed">Text</Text>
-          </TextContainer>
-          <TextContainer background="surface">
-            <Text color="dimmed" on="surface">Text</Text>
-          </TextContainer>
-          <TextContainer background="accent">
-            <Text color="dimmed" on="inverted">Text</Text>
+        <Variant name="Inverted">
+          <TextContainer background="inverted">
+            <Text color="primary" on="inverted">TextName</Text>
+            <Text color="secondary" on="inverted">TextName</Text>
+            <Text color="dimmed" on="inverted">TextName</Text>
           </TextContainer>
         </Variant>
       </ComponentType>

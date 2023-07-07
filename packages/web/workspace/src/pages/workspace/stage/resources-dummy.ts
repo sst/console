@@ -1,10 +1,10 @@
-import { Resource } from "@console/core/app/resource";
+import {Resource} from "@console/core/app/resource";
 
 function resource<Type extends Resource.Info["type"]>(
   type: Type,
   id: string,
-  metadata: Extract<Resource.Info, { type: Type }>["metadata"],
-  enrichment?: Extract<Resource.Info, { type: Type }>["enrichment"]
+  metadata: Extract<Resource.Info, {type: Type}>["metadata"],
+  enrichment?: Extract<Resource.Info, {type: Type}>["enrichment"]
 ): Resource.Info {
   return {
     id,
@@ -84,6 +84,17 @@ export const DUMMY_RESOURCES = [
     graphql: false,
     httpApiId: "someapi",
     customDomainUrl: "https://example.com",
+  }, {
+    outputs: [
+      {
+        OutputKey: "Output",
+        OutputValue: ""
+      },
+      {
+        OutputKey: "ApiEndpoint",
+        OutputValue: "https://api.jayair.dev.sst.dev"
+      }
+    ]
   }),
   resource("Api", "long-api", {
     url: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
