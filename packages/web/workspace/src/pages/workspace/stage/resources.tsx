@@ -114,6 +114,13 @@ const Children = styled("div", {
       display: "none",
     },
   },
+  variants: {
+    outputs: {
+      true: {
+        borderColor: theme.color.divider.base,
+      },
+    },
+  },
 });
 
 export const Child = styled("div", {
@@ -127,6 +134,13 @@ export const Child = styled("div", {
     selectors: {
       "&:last-child": {
         border: "none",
+      },
+    },
+  },
+  variants: {
+    outputs: {
+      true: {
+        borderColor: theme.color.divider.base,
       },
     },
   },
@@ -172,6 +186,15 @@ export const ChildIcon = styled("div", {
     height: 16,
     width: 16,
     color: theme.color.icon.dimmed,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+  },
+});
+
+export const ChildIconButton = styled(ChildIcon, {
+  base: {
+    ":hover": {
+      color: theme.color.icon.secondary,
+    },
   },
 });
 
@@ -297,9 +320,6 @@ export function Resources() {
               </Match>
               <Match when={resource.type === "Table" && resource}>
                 {(resource) => <TableCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "Stack" && resource}>
-                {(resource) => <StackCard resource={resource()} />}
               </Match>
             </Switch>
           </Card>
@@ -509,33 +529,6 @@ export function TableCard(props: CardProps<"Table">) {
   );
 }
 
-export function StackCard(props: CardProps<"Stack">) {
-  return (
-    <>
-      <Header resource={props.resource} />
-      <Children>
-        <For each={props.resource.enrichment.outputs}>
-          {(output) => (
-            <Child>
-              <Text code color="dimmed" on="base">
-                {output.OutputKey}
-              </Text>
-              <Row shrink={false} space="3" vertical="center">
-                <Text code color="dimmed" on="base" line>
-                  {output.OutputValue}
-                </Text>
-                <ChildIcon>
-                  <IconDocumentDuplicate />
-                </ChildIcon>
-              </Row>
-            </Child>
-          )}
-        </For>
-      </Children>
-    </>
-  );
-}
-
 export function CognitoCard(props: CardProps<"Cognito">) {
   return (
     <>
@@ -716,22 +709,24 @@ export function OutputsCard() {
         <HeaderRoot>
           <HeaderName>Outputs</HeaderName>
         </HeaderRoot>
-        <Children>
+        <Children outputs>
           <For each={outputs()}>
             {(output) => (
-              <Child>
-                <Text code size="mono_base" leading="normal">
-                  {output.OutputKey}
-                </Text>
-                <Row shrink={false} space="3" vertical="center">
-                  <Text code line size="mono_base" color="dimmed" leading="normal">
-                    {output.OutputValue}
+              <Show when={output.OutputValue && output.OutputValue?.trim() !== ""}>
+                <Child outputs>
+                  <Text code size="mono_base" leading="normal">
+                    {output.OutputKey}
                   </Text>
-                  <ChildIcon>
-                    <IconDocumentDuplicate />
-                  </ChildIcon>
-                </Row>
-              </Child>
+                  <Row shrink={false} space="3" vertical="center">
+                    <Text code line size="mono_base" color="dimmed" leading="normal">
+                      {output.OutputValue}
+                    </Text>
+                    <ChildIconButton>
+                      <IconDocumentDuplicate />
+                    </ChildIconButton>
+                  </Row>
+                </Child>
+              </Show>
             )}
           </For>
         </Children>
