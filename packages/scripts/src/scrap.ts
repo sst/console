@@ -1,17 +1,21 @@
-import { Workspace } from "@console/core/workspace";
-import { User } from "@console/core/user";
+import { awsAccount } from "@console/core/aws/aws.sql";
+import { AWS } from "@console/core/aws";
 import { provideActor } from "@console/core/actor";
+import { db } from "@console/core/drizzle";
 
-provideActor({
-  type: "system",
-  properties: {
-    workspaceID: "cjl2fmobui506ctxs8bdvsez",
-  },
-});
+const accounts = await db.select().from(awsAccount).execute();
 
-await User.create({
-  id: "pnludxtej0qprh7kk10saipp",
-  email: "mail@thdxr.com",
-});
+for (const account of accounts) {
+  provideActor({
+    type: "system",
+    properties: {
+      workspaceID: account.workspaceID,
+    },
+  });
+
+  await AWS.Account.Events.Created.publish({
+    awsAccountID: account.id,
+  });
+}
 
 export {};

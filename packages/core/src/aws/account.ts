@@ -153,7 +153,6 @@ export const integrate = zod(Info.shape.id, async (id) => {
     (
       await regions(credentials)
     ).map(async (region) => {
-      if (region.RegionName !== "us-east-1") return;
       const config = {
         credentials,
         region: region.RegionName!,
