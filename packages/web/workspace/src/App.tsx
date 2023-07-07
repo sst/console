@@ -3,7 +3,7 @@ import "@fontsource/ibm-plex-mono/latin.css";
 import { styled } from "@macaron-css/solid";
 import { darkClass, lightClass, theme } from "./ui/theme";
 import { globalStyle, macaron$ } from "@macaron-css/core";
-import { Component, Match, Switch, createEffect, createSignal } from "solid-js";
+import { Component, Match, Switch, createSignal, onCleanup } from "solid-js";
 import { Navigate, Route, Router, Routes } from "@solidjs/router";
 import { CreateWorkspace, Login } from "./pages/auth";
 import { AuthProvider, useAuth } from "./providers/auth";
@@ -16,14 +16,6 @@ import { Workspace } from "./pages/workspace";
 import { account, setAccount } from "./data/storage";
 import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
-
-console.log(import.meta.env.VITE_API_URL);
-
-const initializeTheme = () => {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-};
 
 const Root = styled("div", {
   base: {
@@ -85,7 +77,9 @@ globalStyle("input", {
 });
 
 export const App: Component = () => {
-  const [theme, setTheme] = createSignal<string>(initializeTheme());
+  const [theme, setTheme] = createSignal<string>(
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+  );
 
   const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
   const setColorScheme = (e: MediaQueryListEvent) => {
