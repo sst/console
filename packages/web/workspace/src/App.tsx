@@ -87,18 +87,13 @@ globalStyle("input", {
 export const App: Component = () => {
   const [theme, setTheme] = createSignal<string>(initializeTheme());
 
-  createEffect(() => {
-    const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const setColorScheme = (e: MediaQueryListEvent) => {
-      setTheme(e.matches ? "dark" : "light");
-    };
-
-    darkMode.addEventListener("change", setColorScheme);
-
-    return () => {
-      darkMode.removeEventListener("change", setColorScheme);
-    };
+  const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
+  const setColorScheme = (e: MediaQueryListEvent) => {
+    setTheme(e.matches ? "dark" : "light");
+  };
+  darkMode.addEventListener("change", setColorScheme);
+  onCleanup(() => {
+    darkMode.removeEventListener("change", setColorScheme);
   });
 
   return (
