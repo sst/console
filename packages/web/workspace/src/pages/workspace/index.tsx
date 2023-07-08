@@ -29,6 +29,7 @@ import { IconBuildingOffice } from "$/ui/icons";
 import { Fullscreen, Stack, Text } from "$/ui";
 import { Syncing } from "$/ui/loader";
 import { User } from "./user";
+import { Account } from "./account";
 
 const WorkspaceContext = createContext<Accessor<WorkspaceStore.Info>>();
 
@@ -132,6 +133,7 @@ export function Workspace() {
           <Routes>
             <Route path="connect" component={Connect} />
             <Route path="user" component={User} />
+            <Route path="account" component={Account} />
             <Route path=":appName/:stageName/*" component={Stage} />
             <Route
               path="*"

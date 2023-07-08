@@ -96,6 +96,9 @@ importers:
 
   packages/functions:
     dependencies:
+      '@aws-sdk/client-cloudformation':
+        specifier: ^3.326.0
+        version: 3.326.0
       '@aws-sdk/client-cloudwatch-logs':
         specifier: ^3.352.0
         version: 3.352.0
@@ -120,6 +123,9 @@ importers:
       replicache:
         specifier: ^12.2.1
         version: 12.2.1
+      undici:
+        specifier: ^5.22.0
+        version: 5.22.0
       zod:
         specifier: ^3.21.4
         version: 3.21.4
@@ -335,7 +341,7 @@ packages:
       '@aws-crypto/ie11-detection': 3.0.0
       '@aws-crypto/supports-web-crypto': 3.0.0
       '@aws-crypto/util': 3.0.0
-      '@aws-sdk/types': 3.342.0
+      '@aws-sdk/types': 3.357.0
       '@aws-sdk/util-locate-window': 3.310.0
       '@aws-sdk/util-utf8-browser': 3.259.0
       tslib: 1.14.1

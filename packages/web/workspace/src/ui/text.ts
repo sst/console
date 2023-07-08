@@ -1,6 +1,6 @@
-import {styled} from "@macaron-css/solid";
-import {theme} from "./theme";
-import {CSSProperties} from "@macaron-css/core";
+import { styled } from "@macaron-css/solid";
+import { theme } from "./theme";
+import { CSSProperties } from "@macaron-css/core";
 
 export const Text = styled("span", {
   base: {},
@@ -81,7 +81,6 @@ export const Text = styled("span", {
         });
       }
     }
-    console.log(result);
     return result;
   })(),
   defaultVariants: {
