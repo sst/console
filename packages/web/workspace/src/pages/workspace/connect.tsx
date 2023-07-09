@@ -1,15 +1,20 @@
-import {AppStore} from "$/data/app";
-import {createSubscription, useReplicache} from "$/providers/replicache";
-import {StageStore} from "$/data/stage";
-import {Navigate, useParams, useSearchParams} from "@solidjs/router";
-import {Show, createMemo} from "solid-js";
-import {styled} from "@macaron-css/solid";
-import {theme} from "$/ui/theme";
-import {utility} from "$/ui/utility";
-import {IconArrowPath} from "$/ui/icons";
-import {Stack} from "$/ui/layout";
-import {WorkspaceIcon} from "$/ui/workspace-icon";
-import {WorkspaceStore} from "$/data/workspace";
+import { AppStore } from "$/data/app";
+import { createSubscription, useReplicache } from "$/providers/replicache";
+import { StageStore } from "$/data/stage";
+import {
+  Navigate,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "@solidjs/router";
+import { Show, createMemo } from "solid-js";
+import { styled } from "@macaron-css/solid";
+import { theme } from "$/ui/theme";
+import { utility } from "$/ui/utility";
+import { IconArrowPath } from "$/ui/icons";
+import { Stack } from "$/ui/layout";
+import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { WorkspaceStore } from "$/data/workspace";
 
 const Root = styled("div", {
   base: {

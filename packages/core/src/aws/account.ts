@@ -174,22 +174,7 @@ export const integrate = zod(Info.shape.id, async (id) => {
           },
         })
       );
-
-      await eb.send(
-        new PutRuleCommand({
-          Name: "SSTConsole",
-          State: "ENABLED",
-          EventPattern: JSON.stringify({
-            source: ["aws.s3"],
-            detail: {
-              bucket: {
-                name: [b.bucket],
-              },
-            },
-          }),
-        })
-      );
-      console.log("created eventbus rule");
+      console.log("enabled s3 notification");
 
       await iam
         .send(
@@ -223,8 +208,6 @@ export const integrate = zod(Info.shape.id, async (id) => {
           }),
         })
       );
-      console.log("created publisher role");
-
       await iam.send(
         new PutRolePolicyCommand({
           RoleName: role.Role!.RoleName,
@@ -241,7 +224,22 @@ export const integrate = zod(Info.shape.id, async (id) => {
           }),
         })
       );
+      console.log("created publisher role");
 
+      await eb.send(
+        new PutRuleCommand({
+          Name: "SSTConsole",
+          State: "ENABLED",
+          EventPattern: JSON.stringify({
+            source: ["aws.s3"],
+            detail: {
+              bucket: {
+                name: [b.bucket],
+              },
+            },
+          }),
+        })
+      );
       await eb.send(
         new PutTargetsCommand({
           Rule: "SSTConsole",
@@ -254,7 +252,7 @@ export const integrate = zod(Info.shape.id, async (id) => {
           ],
         })
       );
-      console.log("enabled s3 notification");
+      console.log("created eventbus rule");
 
       let token: string | undefined;
       while (true) {

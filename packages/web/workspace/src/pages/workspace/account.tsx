@@ -17,6 +17,7 @@ const Form = styled("form", {
 
 export function Account() {
   const workspace = useWorkspace();
+  const nav = useNavigate();
   return (
     <Fullscreen>
       <Stack horizontal="center" space="5">
@@ -29,6 +30,7 @@ export function Account() {
         </Stack>
         <a
           target="_blank"
+          onClick={() => nav("../")}
           href={`https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?region=us-east-1&param_workspaceID=${
             workspace().id
           }&stackName=SSTConsole-${workspace().id}&templateURL=${

@@ -1,4 +1,5 @@
 import {
+  Link,
   Navigate,
   Route,
   Routes,
@@ -23,7 +24,7 @@ import {
 import { StageStore } from "$/data/stage";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
-import { IconApp, IconSubRight } from "$/ui/icons/custom";
+import { IconSubRight } from "$/ui/icons/custom";
 import { UserStore } from "$/data/user";
 import { IconBuildingOffice } from "$/ui/icons";
 import { Fullscreen, Stack, Text } from "$/ui";
@@ -149,7 +150,16 @@ export function Workspace() {
                   <Switch>
                     <Match when={apps() && !apps()!.length}>
                       <Fullscreen>
-                        <Syncing>Run `sst connect` in your app</Syncing>
+                        <Syncing>
+                          <Stack space="2" horizontal="center">
+                            <span>Discovering apps</span>
+                            <span>
+                              <Link href="account">
+                                Connect a new AWS Account
+                              </Link>
+                            </span>
+                          </Stack>
+                        </Syncing>
                       </Fullscreen>
                     </Match>
                     <Match when={app() && stageName()}>

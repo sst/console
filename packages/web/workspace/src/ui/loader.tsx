@@ -1,8 +1,8 @@
-import {globalKeyframes} from "@macaron-css/core";
-import {styled} from "@macaron-css/solid";
-import {theme} from "./theme";
-import {Stack} from "./layout";
-import {ParentProps} from "solid-js";
+import { globalKeyframes } from "@macaron-css/core";
+import { styled } from "@macaron-css/solid";
+import { theme } from "./theme";
+import { Stack } from "./layout";
+import { ParentProps } from "solid-js";
 import {
   IconApi,
   IconApp,
@@ -30,7 +30,7 @@ globalKeyframes("pulse33", {
   },
 });
 
-const LoadingResourcesH1 = styled("h1", {
+const Title = styled("div", {
   base: {
     fontSize: theme.font.size.lg,
     fontWeight: 500,
@@ -79,7 +79,7 @@ const LoadingIcon = styled("div", {
 export function Syncing(props: ParentProps) {
   return (
     <Stack space="5" horizontal="center">
-      <LoadingResourcesH1>{props.children}</LoadingResourcesH1>
+      <Title>{props.children}</Title>
       <LoadingResourcesIndicator>
         <LoadingRow>
           <LoadingIcon>

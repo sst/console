@@ -94,7 +94,7 @@ export function CreateWorkspace() {
   createEffect(() => {
     const match = workspaces().find((w) => w.slug === pending());
     if (!match) return;
-    nav("/" + match.slug);
+    nav("/" + match.slug + "/account");
   });
 
   return (
