@@ -6,14 +6,14 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
 import { awsAccount } from "../aws/aws.sql";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { AWS } from "../aws";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { Enrichers } from "./resource";
+import { Enrichers, Resource } from "./resource";
 import { db } from "../drizzle";
 import { Realtime } from "../realtime";
 import { event } from "../event";
@@ -157,7 +157,7 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
       Bucket: bucket,
     })
   );
-  console.log("found", list.Contents?.length, "resources");
+  console.log("found", list.Contents?.length, "stacks");
   const results = await Promise.all(
     list.Contents?.map(async (obj) => {
       const stackID = obj.Key?.split("/").pop()!.split(".")[1];
@@ -189,8 +189,8 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
             : {};
         r.push({
           ...res,
-          enrichment,
           stackID,
+          enrichment,
         });
       }
       return r;
@@ -199,17 +199,24 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
 
   return useTransaction(async (tx) => {
     createTransactionEffect(() => Replicache.poke());
-    await tx
-      .delete(resource)
+    const existing = await tx
+      .select({
+        id: resource.id,
+        cfnID: resource.cfnID,
+      })
+      .from(resource)
       .where(
         and(
           eq(resource.stageID, stageID),
           eq(resource.workspaceID, useWorkspace())
         )
       )
-      .execute();
-    console.log("marked existing resources as deleted");
+      .execute()
+      .then((x) => x.map((x) => [x.cfnID, x.id]))
+      .then(Object.fromEntries);
+    console.log("existing", existing);
     for (const res of results) {
+      const id = existing[res.id] || createId();
       await tx
         .insert(resource)
         .values({
@@ -218,12 +225,36 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
           addr: res.addr,
           stackID: res.stackID,
           stageID,
-          id: createId(),
+          id,
           type: res.type,
           metadata: res.data,
           enrichment: res.enrichment,
         })
+        .onDuplicateKeyUpdate({
+          set: {
+            addr: res.addr,
+            stackID: res.stackID,
+            type: res.type,
+            metadata: res.data,
+            enrichment: res.enrichment,
+          },
+        })
         .execute();
+
+      delete existing[res.id];
     }
+
+    const toDelete = Object.values(existing);
+    console.log("deleting", toDelete.length, "resources");
+    if (toDelete.length)
+      await tx
+        .delete(resource)
+        .where(
+          and(
+            eq(resource.stageID, stageID),
+            eq(resource.workspaceID, useWorkspace()),
+            inArray(resource.id, Object.values(existing))
+          )
+        );
   });
 });

@@ -10,6 +10,19 @@ import {
 } from "@aws-sdk/client-cloudformation";
 import type { AWS } from "../aws";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
+import { event } from "../event";
+import { id } from "../util/sql";
+import { z } from "zod";
+import { zod } from "../util/zod";
+import { useTransaction } from "../util/transaction";
+import { and, eq } from "drizzle-orm";
+import { useWorkspace } from "../actor";
+
+export const Events = {
+  Updated: event("app.resource.updated", {
+    resourceID: z.string().nonempty(),
+  }),
+};
 
 type Model = InferModel<typeof resource>;
 
@@ -93,12 +106,18 @@ export const Enrichers = {
         StackName: resource.id,
       })
     );
+    const [stack] = result.Stacks || [];
+    const parsed = JSON.parse(
+      stack?.Outputs?.find((o) => o.OutputKey === "SSTMetadata")?.OutputValue ||
+        "{}"
+    );
     return {
       outputs:
-        result.Stacks?.[0]?.Outputs?.filter(
+        stack?.Outputs?.filter(
           (o) =>
             o.OutputKey !== "SSTMetadata" && !o.OutputKey?.startsWith("Export")
         ) || [],
+      version: parsed.version as string | undefined,
     } as const;
   },
 } satisfies {
@@ -111,3 +130,37 @@ export const Enrichers = {
     region: string
   ) => Promise<any>;
 };
+
+export const fromID = zod(z.string().nonempty(), async (id) =>
+  useTransaction((tx) =>
+    tx
+      .select()
+      .from(resource)
+      .where(and(eq(resource.workspaceID, useWorkspace()), eq(resource.id, id)))
+      .execute()
+      .then((x) => x[0])
+  )
+);
+
+export const enrich = zod(
+  z.object({
+    resourceID: z.string().nonempty(),
+    credentials: z.custom<Credentials>(),
+    region: z.string(),
+  }),
+  async (input) =>
+    useTransaction(async () => {
+      const resource = await fromID(input.resourceID);
+      if (!resource) return;
+      const enricher = Enrichers[resource.type as keyof typeof Enrichers];
+      if (!enricher) return;
+      await enricher(
+        {
+          id: resource.cfnID,
+          data: resource.metadata as any,
+        },
+        input.credentials,
+        input.region
+      );
+    })
+);

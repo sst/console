@@ -600,7 +600,19 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
         }
       />
       <Children>
-        <FunctionChild id={props.resource.metadata.server} tag="Server" />
+        <Child>
+          <Row space="3" vertical="center">
+            <Tag style="outline">Server</Tag>
+            <ChildTitleLink href={`./logs/`}>
+              {props.resource.metadata.path}
+            </ChildTitleLink>
+          </Row>
+          <Row shrink={false} space="3" vertical="center">
+            <ChildIcon>
+              <IconNodeRuntime />
+            </ChildIcon>
+          </Row>
+        </Child>
       </Children>
     </>
   );
@@ -713,7 +725,7 @@ export function OutputsCard() {
           <For each={outputs()}>
             {(output) => (
               <Show
-                when={output.OutputValue && output.OutputValue?.trim() !== ""}
+                when={output?.OutputValue && output.OutputValue?.trim() !== ""}
               >
                 <Child outputs>
                   <Text

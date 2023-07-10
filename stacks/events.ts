@@ -29,13 +29,13 @@ export function Events({ stack }: StackContext) {
 
   bus.subscribe("app.stage.connected", {
     handler: "packages/functions/src/events/app-stage-connected.handler",
-    bind: [...Object.values(secrets.database)],
+    bind: [...Object.values(secrets.database), bus],
     permissions: ["sts", "iot"],
   });
 
   bus.subscribe("app.stage.updated", {
     handler: "packages/functions/src/events/app-stage-updated.handler",
-    bind: [...Object.values(secrets.database)],
+    bind: [...Object.values(secrets.database), bus],
     permissions: ["sts", "iot"],
   });
 

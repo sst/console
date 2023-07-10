@@ -8,7 +8,7 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
 import { and, eq } from "drizzle-orm";
-import { Credentials, assumeRole, assumeRole } from ".";
+import { Credentials, assumeRole } from ".";
 import {
   CloudFormationClient,
   DescribeStacksCommand,
@@ -131,6 +131,8 @@ export const bootstrap = zod(
 
 import { DescribeRegionsCommand, EC2Client } from "@aws-sdk/client-ec2";
 import { App } from "../app";
+import { Realtime } from "../realtime";
+import { Replicache } from "../replicache";
 
 export const regions = zod(
   bootstrap.schema.shape.credentials,
@@ -289,16 +291,13 @@ export const integrate = zod(Info.shape.id, async (id) => {
                 awsAccountID: account.id,
               });
           });
-          console.log(stageName, appName);
+          console.log("found", stageName, appName);
         }
         if (!list.ContinuationToken) break;
       }
+
+      await Replicache.poke();
     })
   );
   return;
-});
-
-export const discover = zod(bootstrap.schema, async (input) => {
-  const b = await bootstrap(input);
-  if (!b) return;
 });
