@@ -361,7 +361,7 @@ export function Logs() {
             Tailing logs&hellip; {logs().length} count
           </LogLoadingIndicatorCopy>
         </LogLoadingIndicator>
-        <For each={logs()}>
+        <For each={logs().slice().reverse()}>
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
 
@@ -462,7 +462,7 @@ const shortDateOptions: Intl.DateTimeFormatOptions = {
   month: "short",
   day: "numeric",
   hour: "numeric",
-  hour12: false,
+  hour12: true,
   minute: "numeric",
   second: "numeric",
   timeZoneName: "short",

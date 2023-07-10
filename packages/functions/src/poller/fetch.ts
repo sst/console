@@ -122,7 +122,20 @@ export async function handler(input: State) {
   for await (const stream of fetchStreams(input.logGroup)) {
     streams.push(stream.logStreamName || "");
     if (!start && stream.lastEventTimestamp) {
-      start = stream.lastEventTimestamp - 60 * 1000;
+      const result = await client
+        .send(
+          new GetLogEventsCommand({
+            startFromHead: false,
+            limit: 1,
+            logGroupIdentifier: input.logGroup,
+            logStreamName: stream.logStreamName,
+          })
+        )
+        .then((r) => r.events?.[0]);
+      if (result) {
+        console.log("found last event", result.timestamp, stream.logStreamName);
+        start = (result.timestamp || 0) - 60 * 1000;
+      }
     }
     if (streams.length === 100) break;
   }
@@ -132,14 +145,22 @@ export async function handler(input: State) {
   console.log("fetching since", new Date(start + offset).toLocaleString());
   const cold = new Set<string>();
   let batch: Log[] = [];
+  let batchSize = 0;
+
+  function push(log: Log) {
+    batch.push(log);
+    batchSize += JSON.stringify(log).length;
+  }
   for await (const event of fetchEvents(
     input.logGroup,
     start + offset,
     streams
   )) {
-    if (batch.length === 10) {
+    if (batchSize >= 100 * 1024) {
+      console.log("publishing batch sized", batchSize);
       await Realtime.publish("log", batch);
       batch = [];
+      batchSize = 0;
     }
     count++;
     const tabs = (event.message || "").split("\t");
@@ -150,7 +171,7 @@ export async function handler(input: State) {
     }
     if (tabs[0]?.startsWith("START")) {
       const splits = tabs[0].split(" ");
-      batch.push([
+      push([
         "s",
         event.timestamp!,
         input.logGroup,
@@ -162,12 +183,12 @@ export async function handler(input: State) {
     }
     if (tabs[0]?.startsWith("END")) {
       const splits = tabs[0].split(" ");
-      batch.push(["e", event.timestamp!, input.logGroup, splits[2]!]);
+      push(["e", event.timestamp!, input.logGroup, splits[2]!]);
       continue;
     }
 
     if (tabs[0]?.startsWith("REPORT")) {
-      batch.push([
+      push([
         "r",
         event.timestamp!,
         input.logGroup,
@@ -178,7 +199,7 @@ export async function handler(input: State) {
     }
 
     if (tabs[0]?.length === 24) {
-      batch.push([
+      push([
         "m",
         event.timestamp!,
         input.logGroup,
