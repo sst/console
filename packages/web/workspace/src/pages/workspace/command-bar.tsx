@@ -10,15 +10,15 @@ import {
   onCleanup,
   useContext,
 } from "solid-js";
-import {styled} from "@macaron-css/solid";
-import {theme} from "$/ui/theme";
-import {filter, groupBy, pipe} from "remeda";
-import {globalStyle} from "@macaron-css/core";
-import {createShortcut} from "@solid-primitives/keyboard";
-import {Portal} from "solid-js/web";
-import {createEventListener} from "@solid-primitives/event-listener";
-import {createMutationObserver} from "@solid-primitives/mutation-observer";
-import {utility} from "$/ui/utility";
+import { styled } from "@macaron-css/solid";
+import { theme } from "$/ui/theme";
+import { filter, groupBy, pipe } from "remeda";
+import { globalStyle } from "@macaron-css/core";
+import { createShortcut } from "@solid-primitives/keyboard";
+import { Portal } from "solid-js/web";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createMutationObserver } from "@solid-primitives/mutation-observer";
+import { utility } from "$/ui/utility";
 
 interface Action {
   icon: (props: any) => JSX.Element;
@@ -70,7 +70,7 @@ const Modal = styled("div", {
   },
 });
 
-globalStyle(`${Root.selector({show: true})} ${Modal}`, {
+globalStyle(`${Root.selector({ show: true })} ${Modal}`, {
   transform: "initial",
 });
 
@@ -198,8 +198,8 @@ function createControl() {
     if (!visible()) return;
     const p = activeProviders().length
       ? activeProviders()
-        .map((p) => providers.get(p)!)
-        .filter(Boolean)
+          .map((p) => providers.get(p)!)
+          .filter(Boolean)
       : [...providers.values()].reverse();
     const actions = await Promise.all(
       p.map(async (provider) => {
@@ -222,7 +222,7 @@ function createControl() {
 
   createMutationObserver(
     () => root()?.querySelector(`[data-element="results"]`)!,
-    {childList: true},
+    { childList: true },
     () => control.reset()
   );
 
@@ -293,7 +293,7 @@ function createControl() {
     }
 
     if (e.key === "Escape") {
-      hide();
+      setTimeout(() => hide(), 1);
     }
   });
 

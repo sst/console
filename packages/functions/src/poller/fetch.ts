@@ -2,6 +2,7 @@ import {
   CloudWatchLogsClient,
   DescribeLogStreamsCommand,
   FilterLogEventsCommand,
+  GetLogEventsCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { provideActor } from "@console/core/actor";
 import { App } from "@console/core/app";
@@ -21,6 +22,14 @@ interface State {
     attempts: number;
   };
 }
+
+export type Log =
+  | ["e", number, string, string]
+  | ["s", number, string, string, boolean]
+  | ["r", number, string, string, number]
+  | ["m", number, string, string, string, string, string];
+
+const l: Log = [] as any;
 
 export async function handler(input: State) {
   const attempts = input.status?.attempts || 0;
@@ -120,13 +129,18 @@ export async function handler(input: State) {
   if (!start) start = Date.now() - 30 * 1000;
 
   let count = 0;
-  console.log("fetching since", offset);
+  console.log("fetching since", new Date(start + offset).toLocaleString());
   const cold = new Set<string>();
+  let batch: Log[] = [];
   for await (const event of fetchEvents(
     input.logGroup,
     start + offset,
     streams
   )) {
+    if (batch.length === 10) {
+      await Realtime.publish("log", batch);
+      batch = [];
+    }
     count++;
     const tabs = (event.message || "").split("\t");
 
@@ -136,48 +150,48 @@ export async function handler(input: State) {
     }
     if (tabs[0]?.startsWith("START")) {
       const splits = tabs[0].split(" ");
-      await Realtime.publish("log.start", {
-        t: event.timestamp,
-        l: input.logGroup,
-        r: splits[2],
-        c: cold.has(event.logStreamName!),
-      });
+      batch.push([
+        "s",
+        event.timestamp!,
+        input.logGroup,
+        splits[2]!,
+        cold.has(event.logStreamName!),
+      ]);
       cold.delete(event.logStreamName!);
       continue;
     }
     if (tabs[0]?.startsWith("END")) {
       const splits = tabs[0].split(" ");
-      await Realtime.publish("log.end", {
-        t: event.timestamp,
-        l: input.logGroup,
-        r: splits[2],
-      });
+      batch.push(["e", event.timestamp!, input.logGroup, splits[2]!]);
       continue;
     }
 
     if (tabs[0]?.startsWith("REPORT")) {
-      await Realtime.publish("log.report", {
-        t: event.timestamp,
-        l: input.logGroup,
-        r: tabs[0].split(" ")[2],
-        d: parseInt(tabs[2]?.split(" ")[2] || "0"),
-      });
+      batch.push([
+        "r",
+        event.timestamp!,
+        input.logGroup,
+        tabs[0].split(" ")[2]!,
+        parseInt(tabs[2]?.split(" ")[2] || "0"),
+      ]);
       continue;
     }
 
     if (tabs[0]?.length === 24) {
-      await Realtime.publish("log.entry", {
-        t: event.timestamp,
-        l: input.logGroup,
-        r: tabs[1],
-        k: tabs[2],
-        m: tabs.slice(3).join("\t"),
-        i: event.eventId,
-      });
+      batch.push([
+        "m",
+        event.timestamp!,
+        input.logGroup,
+        tabs[1]!,
+        tabs[2]!,
+        tabs.slice(3).join("\t"),
+        event.eventId!,
+      ]);
       continue;
     }
     console.log("unhandled log line", tabs);
   }
+  await Realtime.publish("log", batch);
   console.log("published", count, "events");
 
   return {

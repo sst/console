@@ -1,9 +1,11 @@
 import { createEmitter, createEventBus } from "@solid-primitives/event-bus";
+import { Log } from "@console/functions/poller/fetch";
 
 export const bus = createEmitter<{
   poke: {
     workspaceID: string;
   };
+  log: Log[];
   "log.end": {
     // timestamp
     t: number;

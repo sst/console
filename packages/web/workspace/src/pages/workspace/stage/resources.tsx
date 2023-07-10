@@ -844,7 +844,13 @@ function FunctionChild(props: {
               </Tag>
             </Show>
             <ChildTitleLink href={`./logs/${exists().id}`}>
-              <Show when={props.title} fallback={exists().metadata.handler}>
+              <Show
+                when={props.title}
+                fallback={
+                  new URL("https://example.com/" + exists().metadata.handler)
+                    .pathname
+                }
+              >
                 {props.title}
               </Show>
             </ChildTitleLink>

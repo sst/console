@@ -25,64 +25,73 @@ interface Log {
 const pendingEntries = new Map<string, Log[]>();
 const invocations = new Set<string>();
 
-bus.on("log.start", (e) => {
-  console.log(e);
-  setLogStore(
-    produce((state) => {
-      if (invocations.has(e.r)) return;
-      let group = state[e.l];
-      if (!group) state[e.l] = group = [];
-      const pending = pendingEntries.get(e.r) || [];
-      pendingEntries.delete(e.r);
-      group.unshift({
-        id: e.r,
-        start: new Date(e.t),
-        cold: e.c,
-        logs: pending,
-      });
-      invocations.add(e.r);
-    })
-  );
-});
-
-bus.on("log.entry", (e) => {
-  setLogStore(
-    produce((state) => {
-      const log: Log = {
-        id: e.i,
-        timestamp: new Date(e.t),
-        message: e.m,
-      };
-      const invocation = state[e.l]?.find((i) => i.id === e.r);
-      let logs = invocation?.logs;
-      if (!logs) {
-        logs = pendingEntries.get(e.r);
-        if (!logs) pendingEntries.set(e.r, (logs = []));
+bus.on("log", (e) => {
+  for (const log of e) {
+    switch (log[0]) {
+      case "s": {
+        const [_, timestamp, logGroup, requestId, cold] = log;
+        setLogStore(
+          produce((state) => {
+            if (invocations.has(requestId)) return;
+            let group = state[logGroup];
+            if (!group) state[logGroup] = group = [];
+            const pending = pendingEntries.get(requestId) || [];
+            pendingEntries.delete(requestId);
+            group.push({
+              id: requestId,
+              start: new Date(timestamp),
+              cold: cold,
+              logs: pending,
+            });
+            invocations.add(requestId);
+          })
+        );
+        break;
       }
-      if (logs.find((l) => l.id === log.id)) return;
-      logs.push(log);
-      console.log(e, invocation);
-      if (invocation && e.k === "ERROR") invocation.error = true;
-    })
-  );
-});
-
-bus.on("log.end", (e) => {
-  setLogStore(
-    produce((state) => {
-      let invocation = state[e.l]?.find((i) => i.id === e.r);
-      if (!invocation) return;
-      invocation.end = new Date(e.t);
-    })
-  );
-});
-
-bus.on("log.report", (e) => {
-  setLogStore(
-    produce((state) => {
-      let invocation = state[e.l]?.find((i) => i.id === e.r);
-      if (!invocation) return;
-      invocation.duration = e.d;
-    })
-  );
+      case "m": {
+        const [_, timestamp, logGroup, requestId, kind, message, id] = log;
+        setLogStore(
+          produce((state) => {
+            const log: Log = {
+              id: id,
+              timestamp: new Date(timestamp),
+              message: message,
+            };
+            const invocation = state[logGroup]?.find((i) => i.id === requestId);
+            let logs = invocation?.logs;
+            if (!logs) {
+              logs = pendingEntries.get(requestId);
+              if (!logs) pendingEntries.set(requestId, (logs = []));
+            }
+            if (logs.find((l) => l.id === log.id)) return;
+            logs.push(log);
+            if (invocation && kind === "ERROR") invocation.error = true;
+          })
+        );
+        break;
+      }
+      case "e": {
+        const [_, timestamp, logGroup, requestId] = log;
+        setLogStore(
+          produce((state) => {
+            let invocation = state[logGroup]?.find((i) => i.id === requestId);
+            if (!invocation) return;
+            invocation.end = new Date(timestamp);
+          })
+        );
+        break;
+      }
+      case "r": {
+        const [_, timestamp, logGroup, requestId, duration] = log;
+        setLogStore(
+          produce((state) => {
+            let invocation = state[logGroup]?.find((i) => i.id === requestId);
+            if (!invocation) return;
+            invocation.duration = duration;
+          })
+        );
+        break;
+      }
+    }
+  }
 });

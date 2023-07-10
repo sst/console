@@ -5,5 +5,5 @@ import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(Resource.Events.Updated, async (evt) => {
   provideActor(evt.metadata.actor);
-  await Stage.syncMetadata(evt.properties.stageID);
+  await Stage.syncMetadata(evt.properties.);
 });

@@ -1,12 +1,12 @@
-import {globalStyle, globalKeyframes, CSSProperties} from "@macaron-css/core";
-import {Grower, Stack, Row} from "$/ui/layout";
-import {styled} from "@macaron-css/solid";
-import {theme} from "$/ui/theme";
-import {IconArrowPath, IconChevronLeft, IconBoltSolid} from "$/ui/icons";
-import {Text} from "$/ui/text";
-import {Tag} from "$/ui/tag";
-import {Button, LinkButton} from "$/ui/button";
-import {utility} from "$/ui/utility";
+import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
+import { Grower, Stack, Row } from "$/ui/layout";
+import { styled } from "@macaron-css/solid";
+import { theme } from "$/ui/theme";
+import { IconArrowPath, IconChevronLeft, IconBoltSolid } from "$/ui/icons";
+import { Text } from "$/ui/text";
+import { Tag } from "$/ui/tag";
+import { Button, LinkButton } from "$/ui/button";
+import { utility } from "$/ui/utility";
 import {
   IconApi,
   IconApp,
@@ -19,8 +19,8 @@ import {
   IconRDS,
   IconBucket,
 } from "$/ui/icons/custom";
-import {For, JSX} from "solid-js";
-import {WorkspaceIcon} from "$/ui/workspace-icon";
+import { For, JSX } from "solid-js";
+import { WorkspaceIcon } from "$/ui/workspace-icon";
 
 const ComponentRoot = styled("div", {
   base: {
@@ -215,23 +215,41 @@ export function Design() {
       <ComponentType name="Text">
         <Variant name="Base">
           <TextContainer background="base">
-            <Text color="primary" on="base">TextName</Text>
-            <Text color="secondary" on="base">TextName</Text>
-            <Text color="dimmed" on="base">TextName</Text>
+            <Text color="primary" on="base">
+              TextName
+            </Text>
+            <Text color="secondary" on="base">
+              TextName
+            </Text>
+            <Text color="dimmed" on="base">
+              TextName
+            </Text>
           </TextContainer>
         </Variant>
         <Variant name="Surface">
           <TextContainer background="surface">
-            <Text color="primary" on="surface">TextName</Text>
-            <Text color="secondary" on="surface">TextName</Text>
-            <Text color="dimmed" on="surface">TextName</Text>
+            <Text color="primary" on="surface">
+              TextName
+            </Text>
+            <Text color="secondary" on="surface">
+              TextName
+            </Text>
+            <Text color="dimmed" on="surface">
+              TextName
+            </Text>
           </TextContainer>
         </Variant>
         <Variant name="Inverted">
           <TextContainer background="inverted">
-            <Text color="primary" on="inverted">TextName</Text>
-            <Text color="secondary" on="inverted">TextName</Text>
-            <Text color="dimmed" on="inverted">TextName</Text>
+            <Text color="primary" on="inverted">
+              TextName
+            </Text>
+            <Text color="secondary" on="inverted">
+              TextName
+            </Text>
+            <Text color="dimmed" on="inverted">
+              TextName
+            </Text>
           </TextContainer>
         </Variant>
       </ComponentType>
@@ -487,14 +505,16 @@ const LogsEmptyContainer = styled("div", {
   },
 });
 
-function LogsEmptyLoadingIndicator() {
+function LogsEmptyLoadingIndicator(props: { count: string }) {
   return (
     <LogsEmptyContainer>
       <LogLoadingIndicator>
         <LogLoadingIndicatorIcon>
           <IconBoltSolid />
         </LogLoadingIndicatorIcon>
-        <LogLoadingIndicatorCopy>Tailing logs&hellip;</LogLoadingIndicatorCopy>
+        <LogLoadingIndicatorCopy>
+          Tailing logs&hellip; {props.count}
+        </LogLoadingIndicatorCopy>
       </LogLoadingIndicator>
     </LogsEmptyContainer>
   );

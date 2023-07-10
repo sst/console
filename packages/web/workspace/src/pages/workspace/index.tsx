@@ -92,6 +92,15 @@ export function Workspace() {
           nav(`/${workspace()?.slug}/user`);
         },
       },
+      {
+        icon: IconSubRight,
+        title: "Connect an AWS Account",
+        category: "Workspace",
+        run: (control) => {
+          control.hide();
+          nav(`/${workspace()?.slug}/account`);
+        },
+      },
     ];
   });
 

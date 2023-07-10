@@ -22,6 +22,7 @@ import { useFunctionsContext, useResourcesContext } from "./context";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_LOGS } from "./logs-dummy";
 import { createEventListener } from "@solid-primitives/event-listener";
+import { useCommandBar } from "../command-bar";
 
 const LogList = styled("div", {
   base: {
@@ -272,11 +273,12 @@ globalKeyframes("pulse", {
 export function Logs() {
   const nav = useNavigate();
   createEventListener(window, "keydown", (e) => {
-    console.log(e.key);
-    if (e.key === "Escape") {
+    console.log(bar.visible);
+    if (e.key === "Escape" && !bar.visible) {
       nav("../../");
     }
   });
+  const bar = useCommandBar();
   const params = useParams();
   const [query] = useSearchParams();
   const resources = useResourcesContext();
@@ -356,7 +358,7 @@ export function Logs() {
             <IconBoltSolid />
           </LogLoadingIndicatorIcon>
           <LogLoadingIndicatorCopy>
-            Tailing logs&hellip;
+            Tailing logs&hellip; {logs().length} count
           </LogLoadingIndicatorCopy>
         </LogLoadingIndicator>
         <For each={logs()}>
