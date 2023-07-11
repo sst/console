@@ -84,7 +84,9 @@ export function Overview() {
             <Text size="lg" weight="medium">
               Overview
             </Text>
-            <Button color="secondary">Add AWS Account</Button>
+            <Link href="account">
+              <Button color="secondary">Add AWS Account</Button>
+            </Link>
           </Row>
           <List>
             <For each={accounts()}>
