@@ -3,14 +3,14 @@ import type { Account } from "@console/core/aws/account";
 
 export function list() {
   return async (tx: ReadTransaction) => {
-    const result = await tx.scan({ prefix: `/aws_account/` }).toArray();
+    const result = await tx.scan({ prefix: `/awsAccount/` }).toArray();
     return (result || []) as unknown as Account.Info[];
   };
 }
 
 export function fromID(id: string) {
   return async (tx: ReadTransaction) => {
-    const result = await tx.get(`/aws_account/${id}`);
+    const result = await tx.get(`/awsAccount/${id}`);
     return result as unknown as Account.Info;
   };
 }

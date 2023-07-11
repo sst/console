@@ -31,6 +31,7 @@ import { Fullscreen, Stack, Text } from "$/ui";
 import { Syncing } from "$/ui/loader";
 import { User } from "./user";
 import { Account } from "./account";
+import { Overview } from "./overview";
 
 const WorkspaceContext = createContext<Accessor<WorkspaceStore.Info>>();
 
@@ -145,39 +146,7 @@ export function Workspace() {
             <Route path="user" component={User} />
             <Route path="account" component={Account} />
             <Route path=":appName/:stageName/*" component={Stage} />
-            <Route
-              path="*"
-              component={() => {
-                const apps = createSubscription(AppStore.list);
-                const app = createMemo(() => apps()?.[0]);
-                const stages = createSubscription(
-                  () => StageStore.forApp(app()?.id || ""),
-                  []
-                );
-                const stageName = createMemo(() => stages()[0]?.name);
-                return (
-                  <Switch>
-                    <Match when={apps() && !apps()!.length}>
-                      <Fullscreen>
-                        <Syncing>
-                          <Stack space="2" horizontal="center">
-                            <span>Discovering apps</span>
-                            <span>
-                              <Link href="account">
-                                Connect a new AWS Account
-                              </Link>
-                            </span>
-                          </Stack>
-                        </Syncing>
-                      </Fullscreen>
-                    </Match>
-                    <Match when={app() && stageName()}>
-                      <Navigate href={`${app()!.name}/${stageName()}`} />
-                    </Match>
-                  </Switch>
-                );
-              }}
-            />
+            <Route path="*" component={Overview} />
           </Routes>
         </WorkspaceContext.Provider>
       </ReplicacheProvider>
