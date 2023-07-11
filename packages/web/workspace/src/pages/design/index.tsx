@@ -1,18 +1,7 @@
 import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
-<<<<<<< HEAD
-import { Grower, Stack, Row } from "$/ui/layout";
-import { styled } from "@macaron-css/solid";
-import { theme } from "$/ui/theme";
-import { IconArrowPath, IconChevronLeft, IconBoltSolid } from "$/ui/icons";
-import { Text } from "$/ui/text";
-import { Tag } from "$/ui/tag";
-import { Button, LinkButton } from "$/ui/button";
-import { utility } from "$/ui/utility";
-=======
 import { Grower, Stack, Row, Hr } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
->>>>>>> 4d47f13 (Mockups for homescreen)
 import {
   IconArrowLongLeft,
   IconArrowLongRight,
