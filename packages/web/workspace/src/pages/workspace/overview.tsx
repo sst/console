@@ -12,11 +12,11 @@ import {
   theme,
   utility,
 } from "$/ui";
-import { IconApp } from "$/ui/icons/custom";
+import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
 import type { Stage } from "@console/core/app";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
-import { For, createEffect, createMemo } from "solid-js";
+import { For, Show, createEffect, createMemo } from "solid-js";
 
 const Root = styled("div", {
   base: {
@@ -47,6 +47,28 @@ const CardHeader = styled("div", {
     alignItems: "center",
     padding: theme.space[4],
     borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const CardLoading = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    padding: theme.space[4],
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+const CardLoadingIcon = styled("div", {
+  base: {
+    width: 16,
+    height: 16,
+    color: theme.color.icon.dimmed,
   },
 });
 
@@ -88,6 +110,16 @@ export function Overview() {
                       >
                         {(stage) => <StageCard stage={stage} />}
                       </For>
+                      <Show when={children().length === 0}>
+                        <CardLoading>
+                          <CardLoadingIcon>
+                            <IconArrowPathSpin />
+                          </CardLoadingIcon>
+                          <Text size="sm" color="dimmed">
+                            Seaching for SST apps&hellip;
+                          </Text>
+                        </CardLoading>
+                      </Show>
                     </div>
                   </Card>
                 );
