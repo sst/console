@@ -1,6 +1,8 @@
 import { createSubscription } from "$/providers/replicache";
 import {
+  Accessor,
   ParentProps,
+  Show,
   createContext,
   createEffect,
   createMemo,
@@ -46,25 +48,22 @@ export function useStageContext() {
 function createResourcesContext() {
   const ctx = useStageContext();
   const [query] = useSearchParams();
-  const resources = createSubscription(
-    () =>
-      query.dummy
-        ? async (): Promise<Resource.Info[]> => {
-            return DUMMY_RESOURCES;
-          }
-        : ResourceStore.forStage(ctx.stage.id),
-    [] as Resource.Info[]
+  const resources = createSubscription(() =>
+    query.dummy
+      ? async (): Promise<Resource.Info[]> => {
+          return DUMMY_RESOURCES;
+        }
+      : ResourceStore.forStage(ctx.stage.id)
   );
 
   return resources;
 }
 
-const ResourcesContext =
-  createContext<ReturnType<typeof createResourcesContext>>();
+const ResourcesContext = createContext<Accessor<Resource.Info[]>>();
 
-function createFunctionsContext(resources: () => Resource.Info[]) {
+function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
   return createMemo(() => {
-    const all = resources();
+    const all = resources() || [];
     const result = new Map<string, Resource.Info[]>();
 
     function push(resource: Resource.Info, fn?: { node: string } | string) {
@@ -82,7 +81,7 @@ function createFunctionsContext(resources: () => Resource.Info[]) {
       arr.push(resource);
     }
 
-    for (const resource of resources()) {
+    for (const resource of all) {
       switch (resource.type) {
         case "Function":
           if (!result.get(resource.id)) result.set(resource.id, []);
@@ -186,7 +185,7 @@ export function ResourcesProvider(props: ParentProps) {
     const appName = splits[2];
     const stageName = splits[3];
     if (!stageName || !appName) return [];
-    return resources().flatMap((resource) => {
+    return (resources() || []).flatMap((resource) => {
       if (resource.type === "Api") {
         return resource.metadata.routes.map((rt) => ({
           icon: IconApi,
@@ -195,7 +194,7 @@ export function ResourcesProvider(props: ParentProps) {
           run: (control) => {
             nav(
               `/${params.workspaceSlug}/${appName}/${stageName}/logs/${
-                resources().find((r) => r.addr === rt.fn?.node)?.id
+                (resources() || []).find((r) => r.addr === rt.fn?.node)?.id
               }`
             );
             control.hide();
@@ -227,11 +226,15 @@ export function ResourcesProvider(props: ParentProps) {
   });
 
   return (
-    <ResourcesContext.Provider value={resources}>
-      <FunctionsContext.Provider value={functions}>
-        {props.children}
-      </FunctionsContext.Provider>
-    </ResourcesContext.Provider>
+    <Show when={resources()}>
+      {(val) => (
+        <ResourcesContext.Provider value={val}>
+          <FunctionsContext.Provider value={functions}>
+            {props.children}
+          </FunctionsContext.Provider>
+        </ResourcesContext.Provider>
+      )}
+    </Show>
   );
 }
 
