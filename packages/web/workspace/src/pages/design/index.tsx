@@ -520,16 +520,14 @@ const LogsEmptyContainer = styled("div", {
   },
 });
 
-function LogsEmptyLoadingIndicator(props: { count: string }) {
+function LogsEmptyLoadingIndicator() {
   return (
     <LogsEmptyContainer>
       <LogLoadingIndicator>
         <LogLoadingIndicatorIcon>
           <IconBoltSolid />
         </LogLoadingIndicatorIcon>
-        <LogLoadingIndicatorCopy>
-          Tailing logs&hellip; {props.count}
-        </LogLoadingIndicatorCopy>
+        <LogLoadingIndicatorCopy>Tailing logs&hellip;</LogLoadingIndicatorCopy>
       </LogLoadingIndicator>
     </LogsEmptyContainer>
   );
