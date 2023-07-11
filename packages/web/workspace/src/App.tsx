@@ -76,6 +76,11 @@ globalStyle("input", {
   cursor: "text",
 });
 
+globalStyle("ul, ol", {
+  margin: 0,
+  padding: 0,
+});
+
 export const App: Component = () => {
   const [theme, setTheme] = createSignal<string>(
     window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"

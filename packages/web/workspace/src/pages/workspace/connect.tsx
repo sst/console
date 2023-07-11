@@ -11,7 +11,7 @@ import { Show, createMemo } from "solid-js";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
-import { IconArrowPath } from "$/ui/icons";
+import { IconArrowPathSpin } from "$/ui/icons/custom";
 import { Stack } from "$/ui/layout";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
 import { WorkspaceStore } from "$/data/workspace";
@@ -77,7 +77,6 @@ const ConnectWorkspaceIcon = styled("div", {
     height: 24,
     color: theme.color.text.secondary.base,
     opacity: theme.iconOpacity,
-    animation: "spin 1.5s linear infinite",
   },
 });
 
@@ -110,7 +109,7 @@ export function Connect() {
       >
         <Stack horizontal="center" space="5">
           <ConnectWorkspaceIcon>
-            <IconArrowPath />
+            <IconArrowPathSpin />
           </ConnectWorkspaceIcon>
           <Stack horizontal="center" space="3">
             <ConnectWorkspaceHeader>

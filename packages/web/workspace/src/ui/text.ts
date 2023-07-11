@@ -21,6 +21,12 @@ export const Text = styled("span", {
         fontFamily: theme.font.family.code,
       },
     },
+    uppercase: {
+      true: {
+        textTransform: "uppercase",
+        letterSpacing: "0.5",
+      },
+    },
     weight: {
       regular: {
         fontWeight: 400,

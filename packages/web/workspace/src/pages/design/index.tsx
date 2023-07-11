@@ -1,4 +1,5 @@
 import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
+<<<<<<< HEAD
 import { Grower, Stack, Row } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
@@ -7,7 +8,24 @@ import { Text } from "$/ui/text";
 import { Tag } from "$/ui/tag";
 import { Button, LinkButton } from "$/ui/button";
 import { utility } from "$/ui/utility";
+=======
+import { Grower, Stack, Row, Hr } from "$/ui/layout";
+import { styled } from "@macaron-css/solid";
+import { theme } from "$/ui/theme";
+>>>>>>> 4d47f13 (Mockups for homescreen)
 import {
+  IconArrowLongLeft,
+  IconArrowLongRight,
+  IconChevronLeft,
+  IconBoltSolid,
+  IconExclamationTriangle,
+} from "$/ui/icons";
+import { Text } from "$/ui/text";
+import { Tag } from "$/ui/tag";
+import { Button, LinkButton } from "$/ui/button";
+import { utility } from "$/ui/utility";
+import {
+  IconAws,
   IconApi,
   IconApp,
   IconFunction,
@@ -18,6 +36,7 @@ import {
   IconGitHub,
   IconRDS,
   IconBucket,
+  IconArrowPathSpin,
 } from "$/ui/icons/custom";
 import { For, JSX } from "solid-js";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
@@ -150,10 +169,17 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
-      <ComponentType name="LoadingResources">
+      <ComponentType name="Accounts">
         <Variant name="Default">
           <Grower>
-            <LoadingResources />
+            <Accounts />
+          </Grower>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="AddAccount">
+        <Variant name="Default">
+          <Grower>
+            <AddAccount />
           </Grower>
         </Variant>
       </ComponentType>
@@ -738,6 +764,386 @@ function NewWorkspace() {
   );
 }
 
+const AddAccountContainer = styled("div", {
+  base: {
+    ...utility.stack(5),
+    alignItems: "center",
+  },
+});
+
+const AddAccountGraphic = styled("div", {
+  base: {
+    ...utility.row(4),
+  },
+});
+
+const AddAccountGraphicAwsIcon = styled("div", {
+  base: {
+    width: 36,
+    height: 36,
+    padding: 5,
+    color: "#FF9900",
+    boxSizing: "border-box",
+    borderRadius: theme.borderRadius,
+    backgroundColor: theme.color.background.surface,
+    border: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const AddAccountGraphicConnectIcon = styled("div", {
+  base: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
+const AddAccountGraphicConnectArrowIcon = styled("div", {
+  base: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -8,
+    width: 16,
+    height: 16,
+    color: theme.color.text.dimmed.base,
+  },
+  variants: {
+    direction: {
+      left: {
+        marginTop: -13,
+      },
+      right: {
+        marginTop: -3,
+      },
+    },
+  },
+});
+
+const AddAccountHint = styled("div", {
+  base: {
+    borderRadius: theme.borderRadius,
+    boxSizing: "border-box",
+  },
+});
+
+const AddAccountHintTitle = styled("h4", {
+  base: {
+    fontSize: theme.font.size.sm,
+    textAlign: "center",
+    fontWeight: 400,
+    color: theme.color.text.dimmed.surface,
+  },
+});
+
+const AddAccountHintSteps = styled("ul", {
+  base: {
+    ...utility.stack(3),
+    listStyle: "circle inside",
+    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.sm,
+  },
+});
+
+const AddAccountStepsFooter = styled("div", {
+  base: {
+    ...utility.stack(2.5),
+    minWidth: 360,
+    paddingTop: theme.space[5],
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    textAlign: "center",
+    alignItems: "stretch",
+  },
+});
+
+function AddAccount() {
+  return (
+    <AddAccountContainer>
+      <AddAccountGraphic>
+        <WorkspaceIcon text="acme" />
+        <AddAccountGraphicConnectIcon>
+          <AddAccountGraphicConnectArrowIcon direction="left">
+            <IconArrowLongLeft />
+          </AddAccountGraphicConnectArrowIcon>
+          <AddAccountGraphicConnectArrowIcon direction="right">
+            <IconArrowLongRight />
+          </AddAccountGraphicConnectArrowIcon>
+        </AddAccountGraphicConnectIcon>
+        <AddAccountGraphicAwsIcon>
+          <IconAws />
+        </AddAccountGraphicAwsIcon>
+      </AddAccountGraphic>
+      <Stack horizontal="center" space="2">
+        <Text size="lg" weight="medium">
+          Connect an AWS account
+        </Text>
+        <Text color="secondary">
+          Let's connect an AWS account to your workspace
+        </Text>
+      </Stack>
+      <AddAccountHint>
+        <AddAccountHintSteps>
+          <li>This deploys a CloudFormation stack to your account</li>
+          <li>It contains an IAM Role and a Lambda function</li>
+          <li>It'll scan all your AWS regions for SST apps</li>
+          <li>And it'll subscribe to them and listen for changes</li>
+        </AddAccountHintSteps>
+      </AddAccountHint>
+      <AddAccountStepsFooter>
+        <Text size="sm" color="secondary">
+          Make sure this stack is deployed to <b>us-east-1</b>
+        </Text>
+        <Button color="primary">Connect an AWS Account</Button>
+        <Text size="xs" color="dimmed">
+          You can always connect another account later
+        </Text>
+      </AddAccountStepsFooter>
+    </AddAccountContainer>
+  );
+}
+
+const AccountsHeader = styled("div", {
+  base: {
+    ...utility.row(2),
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+});
+
+const AccountsList = styled("div", {
+  base: {
+    ...utility.row(4),
+    width: "100%",
+  },
+});
+
+const AccountsListCol = styled("div", {
+  base: {
+    ...utility.stack(4),
+    flex: 1,
+    width: "50%",
+  },
+});
+
+const AccountCard = styled("div", {
+  base: {
+    borderRadius: theme.borderRadius,
+    border: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const AccountCardHeader = styled("div", {
+  base: {
+    ...utility.row(0.5),
+    alignItems: "center",
+    padding: theme.space[4],
+    borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const Stage = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    padding: theme.space[4],
+    justifyContent: "space-between",
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    transition: `background-color ${theme.colorFadeDuration} ease`,
+    ":hover": {
+      backgroundColor: theme.color.background.hover,
+    },
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+const StageIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 16,
+    height: 16,
+    color: theme.color.icon.secondary,
+  },
+});
+
+const AccountCardLoading = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    padding: theme.space[4],
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+const AccountCardLoadingIcon = styled("div", {
+  base: {
+    width: 16,
+    height: 16,
+    color: theme.color.icon.dimmed,
+  },
+});
+
+interface StageCardProps {
+  app: string;
+  stage: string;
+  region: string;
+}
+function StageCard({ app, stage, region }: StageCardProps) {
+  return (
+    <Stage>
+      <Row space="2" vertical="center">
+        <StageIcon>
+          <IconApp />
+        </StageIcon>
+        <Row space="1">
+          <Text line size="base" weight="medium" leading="normal">
+            {app}
+          </Text>
+          <Text size="base" color="dimmed">
+            /
+          </Text>
+          <Text line size="base" weight="medium" leading="normal">
+            {stage}
+          </Text>
+        </Row>
+      </Row>
+      <Tag style="outline">{region}</Tag>
+    </Stage>
+  );
+}
+
+function AccountCardLoadingRow() {
+  return (
+    <AccountCardLoading>
+      <AccountCardLoadingIcon>
+        <IconArrowPathSpin />
+      </AccountCardLoadingIcon>
+      <Text size="sm" color="dimmed">
+        Seaching for SST apps&hellip;
+      </Text>
+    </AccountCardLoading>
+  );
+}
+
+function AccountCardEmptyRow() {
+  return (
+    <AccountCardLoading>
+      <AccountCardLoadingIcon>
+        <IconExclamationTriangle />
+      </AccountCardLoadingIcon>
+      <Text size="sm" color="dimmed">
+        No SST apps found
+      </Text>
+    </AccountCardLoading>
+  );
+}
+
+function Accounts() {
+  return (
+    <Stack space="4">
+      <AccountsHeader>
+        <Text size="lg" weight="medium">
+          Overview
+        </Text>
+        <Button color="secondary">Add AWS Account</Button>
+      </AccountsHeader>
+      <AccountsList>
+        <AccountsListCol>
+          <AccountCard>
+            <AccountCardHeader>
+              <Text code size="mono_sm" color="dimmed">
+                ID:
+              </Text>
+              <Text code size="mono_sm" color="dimmed">
+                298831414690
+              </Text>
+            </AccountCardHeader>
+            <div>
+              <StageCard app="console" stage="dev" region="us-east-2" />
+              <StageCard app="my-sst-app" stage="dev" region="eu-central-2" />
+            </div>
+          </AccountCard>
+          <AccountCard>
+            <AccountCardHeader>
+              <Text code size="mono_sm" color="dimmed">
+                ID:
+              </Text>
+              <Text code size="mono_sm" color="dimmed">
+                730131414690
+              </Text>
+            </AccountCardHeader>
+            <div>
+              <AccountCardLoadingRow />
+            </div>
+          </AccountCard>
+          <AccountCard>
+            <AccountCardHeader>
+              <Text code size="mono_sm" color="dimmed">
+                ID:
+              </Text>
+              <Text code size="mono_sm" color="dimmed">
+                444131414690
+              </Text>
+            </AccountCardHeader>
+            <div>
+              <StageCard app="console" stage="frank" region="us-east-1" />
+              <AccountCardLoadingRow />
+            </div>
+          </AccountCard>
+        </AccountsListCol>
+        <AccountsListCol>
+          <AccountCard>
+            <AccountCardHeader>
+              <Text code size="mono_sm" color="dimmed">
+                ID:
+              </Text>
+              <Text code size="mono_sm" color="dimmed">
+                373331414690
+              </Text>
+            </AccountCardHeader>
+            <div>
+              <StageCard app="console" stage="prod" region="ap-southeast-1" />
+              <StageCard app="my-sst-app" stage="prod" region="us-east-1" />
+              <StageCard
+                app="my-sst-app-has-a-really-long-app-name-that-should-overflow"
+                stage="prod"
+                region="us-east-1"
+              />
+              <StageCard
+                app="my-sst-app"
+                stage="thestagenameisreallylonganditwillcausethelinetooverflow"
+                region="us-east-1"
+              />
+            </div>
+          </AccountCard>
+          <AccountCard>
+            <AccountCardHeader>
+              <Text code size="mono_sm" color="dimmed">
+                ID:
+              </Text>
+              <Text code size="mono_sm" color="dimmed">
+                730131414690
+              </Text>
+            </AccountCardHeader>
+            <div>
+              <AccountCardEmptyRow />
+            </div>
+          </AccountCard>
+        </AccountsListCol>
+      </AccountsList>
+    </Stack>
+  );
+}
+
 const ConnectWorkspaceHeader = styled("h1", {
   base: {
     fontSize: theme.font.size.lg,
@@ -798,16 +1204,6 @@ const ConnectWorkspaceIcon = styled("div", {
     height: 24,
     color: theme.color.text.secondary.base,
     opacity: theme.iconOpacity,
-    animation: "spin 2.5s linear infinite",
-  },
-});
-
-globalKeyframes("spin", {
-  from: {
-    transform: "rotate(0deg)",
-  },
-  to: {
-    transform: "rotate(360deg)",
   },
 });
 
@@ -892,7 +1288,7 @@ function ConnectingWorkspace() {
   return (
     <Stack horizontal="center" space="5">
       <ConnectWorkspaceIcon>
-        <IconArrowPath />
+        <IconArrowPathSpin />
       </ConnectWorkspaceIcon>
       <Stack horizontal="center" space="3">
         <ConnectWorkspaceHeader loading>
