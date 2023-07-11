@@ -86,7 +86,7 @@ export function Account() {
   return (
     <Fullscreen>
       <Stack space="5" vertical="center">
-        <Row>
+        <Row horizontal="center" space="4">
           <WorkspaceIcon text="acme" />
           <AddAccountGraphicConnectIcon>
             <AddAccountGraphicConnectArrowIcon direction="left">
