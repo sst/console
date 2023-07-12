@@ -6,6 +6,7 @@ import {
   Switch,
   createMemo,
   ComponentProps,
+  createSignal,
 } from "solid-js";
 import { useFunctionsContext, useResourcesContext } from "./context";
 import { styled } from "@macaron-css/solid";
@@ -39,7 +40,7 @@ import {
 import { Resource } from "@console/core/app/resource";
 import { Link, useNavigate } from "@solidjs/router";
 import { Syncing } from "$/ui/loader";
-import { IconDocumentDuplicate } from "$/ui/icons";
+import { IconCheck, IconDocumentDuplicate } from "$/ui/icons";
 import {} from "@solid-primitives/keyboard";
 import { createEventListener } from "@solid-primitives/event-listener";
 
@@ -194,6 +195,13 @@ export const ChildIconButton = styled(ChildIcon, {
   base: {
     ":hover": {
       color: theme.color.icon.secondary,
+    },
+  },
+  variants: {
+    copying: {
+      true: {
+        color: theme.color.icon.primary,
+      },
     },
   },
 });
@@ -723,37 +731,51 @@ export function OutputsCard() {
         </HeaderRoot>
         <Children outputs>
           <For each={outputs()}>
-            {(output) => (
-              <Show
-                when={output?.OutputValue && output.OutputValue?.trim() !== ""}
-              >
-                <Child outputs>
-                  <Text
-                    line
-                    code
-                    size="mono_base"
-                    leading="normal"
-                    style={{ "min-width": "33%" }}
-                  >
-                    {output.OutputKey}
-                  </Text>
-                  <Row space="3" vertical="center">
+            {(output) => {
+              const [copying, setCopying] = createSignal(false);
+              return (
+                <Show
+                  when={
+                    output?.OutputValue && output.OutputValue?.trim() !== ""
+                  }
+                >
+                  <Child outputs>
                     <Text
-                      code
                       line
+                      code
                       size="mono_base"
-                      color="dimmed"
                       leading="normal"
+                      style={{ "min-width": "33%" }}
                     >
-                      {output.OutputValue}
+                      {output.OutputKey}
                     </Text>
-                    <ChildIconButton>
-                      <IconDocumentDuplicate />
-                    </ChildIconButton>
-                  </Row>
-                </Child>
-              </Show>
-            )}
+                    <Row space="3" vertical="center">
+                      <Text
+                        code
+                        line
+                        size="mono_base"
+                        color="dimmed"
+                        leading="normal"
+                      >
+                        {output.OutputValue}
+                      </Text>
+                      <ChildIconButton
+                        copying={copying()}
+                        onClick={() => {
+                          setCopying(true);
+                          navigator.clipboard.writeText(output.OutputValue!);
+                          setTimeout(() => setCopying(false), 1000);
+                        }}
+                      >
+                        <Show when={!copying()} fallback={<IconCheck />}>
+                          <IconDocumentDuplicate />
+                        </Show>
+                      </ChildIconButton>
+                    </Row>
+                  </Child>
+                </Show>
+              );
+            }}
           </For>
         </Children>
       </Card>
