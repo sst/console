@@ -158,6 +158,20 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
+      <ComponentType name="UnsupportedAppBanner">
+        <Variant name="Default">
+          <Grower>
+            <UnsupportedAppBanner />
+          </Grower>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="UnsupportedApp">
+        <Variant name="Default">
+          <Grower>
+            <UnsupportedApp />
+          </Grower>
+        </Variant>
+      </ComponentType>
       <ComponentType name="Accounts">
         <Variant name="Default">
           <Grower>
@@ -1123,6 +1137,86 @@ function Login() {
         Login with GitHub
       </Button>
     </LoginContainer>
+  );
+}
+
+const UnsupportedAppBannerRoot = styled("div", {
+  base: {
+    ...utility.row(1.5),
+    alignItems: "center",
+    backgroundColor: theme.color.background.surface,
+    borderRadius: theme.borderRadius,
+    padding: `${theme.space[5]} ${theme.space[4]}`,
+  },
+});
+
+const UnsupportedAppBannerIcon = styled("div", {
+  base: {
+    width: 18,
+    height: 18,
+    color: theme.color.icon.dimmed,
+  },
+});
+
+function UnsupportedAppBanner() {
+  return (
+    <UnsupportedAppBannerRoot>
+      <UnsupportedAppBannerIcon>
+        <IconExclamationTriangle />
+      </UnsupportedAppBannerIcon>
+      <Text color="secondary" on="surface" leading="normal">
+        Some of the stacks in this app are not supported by the SST Console.{" "}
+        <a
+          target="_blank"
+          href="https://github.com/serverless-stack/sst/releases"
+        >
+          Upgrade them to v2.19.0.
+        </a>
+      </Text>
+    </UnsupportedAppBannerRoot>
+  );
+}
+
+const UnsupportedAppRoot = styled("div", {
+  base: {
+    ...utility.stack(8),
+    alignItems: "center",
+    margin: "0 auto",
+    width: 320,
+  },
+});
+
+const UnsupportedAppIcon = styled("div", {
+  base: {
+    width: 42,
+    height: 42,
+    color: theme.color.icon.dimmed,
+  },
+});
+
+function UnsupportedApp() {
+  return (
+    <UnsupportedAppRoot>
+      <Stack horizontal="center" space="5">
+        <UnsupportedAppIcon>
+          <IconExclamationTriangle />
+        </UnsupportedAppIcon>
+        <Stack horizontal="center" space="2">
+          <Text size="lg" weight="medium">
+            Unsupported SST version
+          </Text>
+          <Text center size="sm" color="secondary">
+            To use the SST Console,{" "}
+            <a
+              target="_blank"
+              href="https://github.com/serverless-stack/sst/releases"
+            >
+              upgrade to v2.19.0
+            </a>
+          </Text>
+        </Stack>
+      </Stack>
+    </UnsupportedAppRoot>
   );
 }
 
