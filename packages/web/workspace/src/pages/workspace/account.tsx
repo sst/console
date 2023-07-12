@@ -122,7 +122,7 @@ export function Account() {
           </Text>
           <a
             target="_blank"
-            onClick={() => nav("../?force=true")}
+            onClick={() => nav(`../?force=true`)}
             href={`https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?region=us-east-1&param_workspaceID=${
               workspace().id
             }&stackName=SSTConsole-${workspace().id}&templateURL=${
