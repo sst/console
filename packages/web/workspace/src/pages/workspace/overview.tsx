@@ -10,7 +10,7 @@ import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
 import type { Stage } from "@console/core/app";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import { For, Show, createEffect, createMemo } from "solid-js";
+import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import { Header } from "./header";
 
 const Root = styled("div", {
@@ -100,85 +100,91 @@ export function Overview() {
     <>
       <Header />
       <Root>
-        <Fullscreen>
-          <Syncing>
-            <Stack space="2.5">
-              <Text center size="lg" color="dimmed">
-                Waiting to connect to your AWS account&hellip;
-              </Text>
-              <Text center size="sm" color="dimmed">
-                Haven't connected one yet?{" "}
-                <Link href="account">Head over here.</Link>
-              </Text>
-            </Stack>
-          </Syncing>
-        </Fullscreen>
-        {/*
-        <Stack space="4">
-          <Row vertical="center" horizontal="between">
-            <Text size="lg" weight="medium">
-              Overview
-            </Text>
-            <Link href="account">
-              <Button color="secondary">Add AWS Account</Button>
-            </Link>
-          </Row>
-          <List>
-            <For each={accounts() || []}>
-              {(account) => {
-                const children = createMemo(() =>
-                  stages().filter((stage) => stage.awsAccountID === account.id)
-                );
-                return (
-                  <Card>
-                    <CardHeader>
-                      <Text code size="mono_sm" color="dimmed">
-                        ID:
-                      </Text>
-                      <Text code size="mono_sm" color="dimmed">
-                        {account.accountID}
-                      </Text>
-                    </CardHeader>
-                    <div>
-                      <For
-                        each={children().sort((a, b) =>
-                          a.appID.localeCompare(b.appID)
-                        )}
-                      >
-                        {(stage) => <StageCard stage={stage} />}
-                      </For>
-                      <Show when={children().length === 0}>
-                        <CardLoading>
-                          <CardLoadingIcon>
-                            <IconArrowPathSpin />
-                          </CardLoadingIcon>
-                          <Text size="sm" color="dimmed">
-                            Seaching for SST apps&hellip;
-                          </Text>
-                        </CardLoading>
-                      </Show>
-                    </div>
-                  </Card>
-                );
-              }}
-            </For>
-            <Show when={(accounts() || []).length === 1}>
-              <CardEmpty>
+        <Switch>
+          <Match when={accounts() && accounts()?.length === 0}>
+            <Fullscreen>
+              <Syncing>
+                <Stack space="2.5">
+                  <Text center size="lg" color="dimmed">
+                    Waiting to connect to your AWS account&hellip;
+                  </Text>
+                  <Text center size="sm" color="dimmed">
+                    Haven't connected one yet?{" "}
+                    <Link href="account">Head over here.</Link>
+                  </Text>
+                </Stack>
+              </Syncing>
+            </Fullscreen>
+          </Match>
+          <Match when={true}>
+            <Stack space="4">
+              <Row vertical="center" horizontal="between">
+                <Text size="lg" weight="medium">
+                  Overview
+                </Text>
                 <Link href="account">
-                  <Row space="2" vertical="center">
-                    <CardEmptyIcon>
-                      <IconPlus />
-                    </CardEmptyIcon>
-                    <Text leading="normal" size="sm" color="dimmed">
-                      Let's connect another AWS account
-                    </Text>
-                  </Row>
+                  <Button color="secondary">Add AWS Account</Button>
                 </Link>
-              </CardEmpty>
-            </Show>
-          </List>
-        </Stack>
-        */}
+              </Row>
+              <List>
+                <For each={accounts() || []}>
+                  {(account) => {
+                    const children = createMemo(() =>
+                      stages().filter(
+                        (stage) => stage.awsAccountID === account.id
+                      )
+                    );
+                    return (
+                      <Card>
+                        <CardHeader>
+                          <Text code size="mono_sm" color="dimmed">
+                            ID:
+                          </Text>
+                          <Text code size="mono_sm" color="dimmed">
+                            {account.accountID}
+                          </Text>
+                        </CardHeader>
+                        <div>
+                          <For
+                            each={children().sort((a, b) =>
+                              a.appID.localeCompare(b.appID)
+                            )}
+                          >
+                            {(stage) => <StageCard stage={stage} />}
+                          </For>
+                          <Show when={children().length === 0}>
+                            <CardLoading>
+                              <CardLoadingIcon>
+                                <IconArrowPathSpin />
+                              </CardLoadingIcon>
+                              <Text size="sm" color="dimmed">
+                                Seaching for SST apps&hellip;
+                              </Text>
+                            </CardLoading>
+                          </Show>
+                        </div>
+                      </Card>
+                    );
+                  }}
+                </For>
+                <Show when={(accounts() || []).length === 1}>
+                  <CardEmpty>
+                    <Link href="account">
+                      <Row space="2" vertical="center">
+                        <CardEmptyIcon>
+                          <IconPlus />
+                        </CardEmptyIcon>
+                        <Text leading="normal" size="sm" color="dimmed">
+                          Let's connect another AWS account
+                        </Text>
+                      </Row>
+                    </Link>
+                  </CardEmpty>
+                </Show>
+              </List>
+            </Stack>
+          </Match>
+        </Switch>
       </Root>
     </>
   );

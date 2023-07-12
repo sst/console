@@ -23,6 +23,7 @@ import { Resource } from "@console/core/app/resource";
 import { DUMMY_LOGS } from "./logs-dummy";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { useCommandBar } from "../command-bar";
+import { IconMap } from "./resources";
 
 const LogList = styled("div", {
   base: {
@@ -307,12 +308,40 @@ export function Logs() {
 
     switch (parent.type) {
       case "EventBus":
-        return "Subscriber";
-      case "Api":
+        return <Context type="EventBus" tag="Subscription" />;
+      case "Api": {
         const route = parent.metadata.routes.find(
           (r) => r.fn?.node === resource()?.addr
         );
-        if (route) return route.route;
+        if (route) {
+          const [method, path] = route.route.split(" ");
+          return <Context type="Api" tag={method} extra={path} />;
+        }
+        break;
+      }
+      case "ApiGatewayV1Api": {
+        const route = parent.metadata.routes.find(
+          (r) => r.fn?.node === resource()?.addr
+        );
+        if (route) {
+          const [method, path] = route.route.split(" ");
+          return <Context type="Api" tag={method} extra={path} />;
+        }
+        break;
+      }
+      case "WebSocketApi": {
+        const route = parent.metadata.routes.find(
+          (r) => r.fn?.node === resource()?.addr
+        );
+        if (route) {
+          const [method, path] = route.route.split(" ");
+          return <Context type="Api" tag={method} extra={path} />;
+        }
+        break;
+      }
+      case "Topic": {
+        return <Context type="Topic" tag="Subscriber" />;
+      }
     }
   });
   const logGroup = createMemo(() => {
@@ -358,11 +387,7 @@ export function Logs() {
     <Stack space="6">
       <Stack space="3">
         <Text size="xl">{resource()?.metadata.handler}</Text>
-        <Show when={context()}>
-          <Row>
-            <Tag style="outline">{context()}</Tag>
-          </Row>
-        </Show>
+        <Show when={context()}>{context()}</Show>
       </Stack>
       <LogList>
         <LogLoadingIndicator>
@@ -455,6 +480,37 @@ export function Logs() {
         </For>
       </LogList>
     </Stack>
+  );
+}
+
+function Context(props: {
+  tag?: string;
+  type?: Resource.Info["type"];
+  extra?: string;
+}) {
+  const icon = createMemo(() => props.type && IconMap[props.type]);
+  return (
+    <Row vertical="center" space="3">
+      <Show when={props.tag}>
+        <Tag style="outline">{props.tag}</Tag>
+      </Show>
+      <Row vertical="center" space="2">
+        <Show when={icon()}>
+          {icon()!({
+            width: 13,
+            height: 13,
+          })}
+          <Text size="sm" color="secondary" on="base">
+            {props.type}
+          </Text>
+        </Show>
+      </Row>
+      <Show when={props.extra}>
+        <Text size="sm" color="secondary" on="base">
+          {props.extra!}
+        </Text>
+      </Show>
+    </Row>
   );
 }
 

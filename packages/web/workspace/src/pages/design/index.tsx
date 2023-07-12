@@ -165,13 +165,6 @@ export function Design() {
           </Grower>
         </Variant>
       </ComponentType>
-      <ComponentType name="AddAccount">
-        <Variant name="Default">
-          <Grower>
-            <AddAccount />
-          </Grower>
-        </Variant>
-      </ComponentType>
       <ComponentType name="Login">
         <Variant name="Default">
           <Grower>

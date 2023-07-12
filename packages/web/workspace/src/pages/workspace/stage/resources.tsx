@@ -36,13 +36,21 @@ import {
   IconSolidStartSite,
   IconApiGatewayV1Api,
   IconFunction,
+  IconJob,
+  IconAuth,
+  IconStack,
+  IconScript,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
-import { Link, useNavigate } from "@solidjs/router";
+import { Link } from "@solidjs/router";
 import { Syncing } from "$/ui/loader";
-import { IconCheck, IconDocumentDuplicate } from "$/ui/icons";
+import {
+  IconCheck,
+  IconDocumentDuplicate,
+  IconMoon,
+  IconQueueList,
+} from "$/ui/icons";
 import {} from "@solid-primitives/keyboard";
-import { createEventListener } from "@solid-primitives/event-listener";
 
 const Card = styled("div", {
   base: {
@@ -219,13 +227,16 @@ interface HeaderProps {
   description?: string;
 }
 export function Header(props: HeaderProps) {
+  const icon = createMemo(() => props.icon || IconMap[props.resource.type]);
   return (
     <HeaderRoot>
       <Row space="3" vertical="center">
         <Row space="1.5" vertical="center">
-          <Show when={props.icon}>
+          <Show when={icon}>
             {(icon) => (
-              <HeaderIcon title={props.resource.type}>{icon()({})}</HeaderIcon>
+              <HeaderIcon title={props.resource.type}>
+                {icon()()({})}
+              </HeaderIcon>
             )}
           </Show>
           <HeaderName>{props.resource.cfnID}</HeaderName>
@@ -346,11 +357,38 @@ interface CardProps<Type extends Resource.Info["type"]> {
   resource: Extract<Resource.Info, { type: Type }>;
 }
 
+export const IconMap = {
+  Api: IconApi,
+  Job: IconJob,
+  RDS: IconRDS,
+  Auth: IconAuth,
+  Cron: IconCron,
+  Queue: IconQueue,
+  Stack: IconStack,
+  Table: IconTable,
+  Topic: IconTopic,
+  Bucket: IconBucket,
+  Script: IconScript,
+  AppSync: IconAppSync,
+  Cognito: IconCognito,
+  EventBus: IconEventBus,
+  Function: IconFunction,
+  AstroSite: IconAstroSite,
+  RemixSite: IconRemixSite,
+  NextjsSite: IconNextjsSite,
+  StaticSite: IconStaticSite,
+  WebSocketApi: IconWebSocketApi,
+  KinesisStream: IconKinesisStream,
+  SlsNextjsSite: IconNextjsSite,
+  SvelteKitSite: IconSvelteKitSite,
+  SolidStartSite: IconSolidStartSite,
+  ApiGatewayV1Api: IconApiGatewayV1Api,
+} satisfies Record<Resource.Info["type"], (props: any) => JSX.Element>;
+
 export function ApiCard(props: CardProps<"Api">) {
   return (
     <>
       <Header
-        icon={IconApi}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -384,7 +422,6 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
   return (
     <>
       <Header
-        icon={IconWebSocketApi}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -415,7 +452,6 @@ export function ApiGatewayV1ApiCard(props: CardProps<"ApiGatewayV1Api">) {
   return (
     <>
       <Header
-        icon={IconApiGatewayV1Api}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -446,7 +482,7 @@ export function ApiGatewayV1ApiCard(props: CardProps<"ApiGatewayV1Api">) {
 export function EventBusCard(props: CardProps<"EventBus">) {
   return (
     <>
-      <Header icon={IconEventBus} resource={props.resource} />
+      <Header resource={props.resource} />
       <Children>
         <For each={props.resource.metadata.rules}>
           {(rule) => (
@@ -465,7 +501,7 @@ export function EventBusCard(props: CardProps<"EventBus">) {
 export function TopicCard(props: CardProps<"Topic">) {
   return (
     <>
-      <Header icon={IconTopic} resource={props.resource} />
+      <Header resource={props.resource} />
       <Children>
         <For each={props.resource.metadata.subscribers}>
           {(sub) => <FunctionChild id={sub?.node} tag="Subscriber" />}
@@ -477,7 +513,7 @@ export function TopicCard(props: CardProps<"Topic">) {
 export function BucketCard(props: CardProps<"Bucket">) {
   return (
     <>
-      <Header icon={IconBucket} resource={props.resource} />
+      <Header resource={props.resource} />
       {props.resource.metadata.notifications.length > 0 && (
         <Children>
           <For each={props.resource.metadata.notifications}>
@@ -494,7 +530,7 @@ export function BucketCard(props: CardProps<"Bucket">) {
 export function KinesisStreamCard(props: CardProps<"KinesisStream">) {
   return (
     <>
-      <Header icon={IconKinesisStream} resource={props.resource} />
+      <Header resource={props.resource} />
       <Children>
         <For each={props.resource.metadata.consumers}>
           {(consumer) => (
@@ -510,7 +546,6 @@ export function AppSyncCard(props: CardProps<"AppSync">) {
   return (
     <>
       <Header
-        icon={IconAppSync}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl || props.resource.metadata.url
@@ -528,7 +563,7 @@ export function AppSyncCard(props: CardProps<"AppSync">) {
 export function TableCard(props: CardProps<"Table">) {
   return (
     <>
-      <Header icon={IconTable} resource={props.resource} />
+      <Header resource={props.resource} />
       <Children>
         <For each={props.resource.metadata.consumers}>
           {(consumer) => (
@@ -543,7 +578,7 @@ export function TableCard(props: CardProps<"Table">) {
 export function CognitoCard(props: CardProps<"Cognito">) {
   return (
     <>
-      <Header icon={IconCognito} resource={props.resource} />
+      <Header resource={props.resource} />
       <Children>
         <For each={props.resource.metadata.triggers}>
           {(trigger) => <FunctionChild id={trigger.fn?.node} tag="Trigger" />}
@@ -557,7 +592,6 @@ export function CronCard(props: CardProps<"Cron">) {
   return (
     <>
       <Header
-        icon={IconCron}
         resource={props.resource}
         description={props.resource.metadata.schedule}
       />
@@ -571,7 +605,7 @@ export function CronCard(props: CardProps<"Cron">) {
 export function QueueCard(props: CardProps<"Queue">) {
   return (
     <>
-      <Header icon={IconQueue} resource={props.resource} />
+      <Header resource={props.resource} />
       <Children>
         <FunctionChild
           id={props.resource.metadata.consumer?.node}
@@ -586,7 +620,6 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
   return (
     <>
       <Header
-        icon={IconStaticSite}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -602,7 +635,6 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
   return (
     <>
       <Header
-        icon={IconNextjsSite}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -633,7 +665,6 @@ export function SvelteKitSiteCard(props: CardProps<"SvelteKitSite">) {
   return (
     <>
       <Header
-        icon={IconSvelteKitSite}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -652,7 +683,6 @@ export function RemixSiteCard(props: CardProps<"RemixSite">) {
   return (
     <>
       <Header
-        icon={IconRemixSite}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -671,7 +701,6 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
   return (
     <>
       <Header
-        icon={IconAstroSite}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -703,7 +732,6 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
   return (
     <>
       <Header
-        icon={IconSolidStartSite}
         resource={props.resource}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -820,7 +848,6 @@ export function RDSCard(props: CardProps<"RDS">) {
   return (
     <>
       <Header
-        icon={IconRDS}
         resource={props.resource}
         description={props.resource.metadata.defaultDatabaseName}
       />
