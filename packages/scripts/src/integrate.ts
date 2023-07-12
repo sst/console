@@ -11,9 +11,7 @@ for (const row of rows) {
       workspaceID: row.workspaceID,
     },
   });
-  try {
-    await AWS.Account.integrate(row.id);
-  } catch {
-    console.log("failed to integrate", row);
-  }
+  await AWS.Account.Events.Created.publish({
+    awsAccountID: row.id,
+  });
 }
