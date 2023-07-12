@@ -358,7 +358,7 @@ export function Logs() {
             <IconBoltSolid />
           </LogLoadingIndicatorIcon>
           <LogLoadingIndicatorCopy>
-            Tailing logs&hellip; {logs().length} count
+            Tailing logs&hellip;
           </LogLoadingIndicatorCopy>
         </LogLoadingIndicator>
         <For each={logs().slice().reverse()}>
