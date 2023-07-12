@@ -67,13 +67,7 @@ export function Email() {
         </Stack>
       </Stack>
       <Form method="get" action={import.meta.env.VITE_AUTH_URL + "/authorize"}>
-        <FormInput
-          autofocus
-          type="email"
-          name="email"
-          placeholder="Email"
-          hint="We will send you a pin code to confirm"
-        />
+        <FormInput autofocus type="email" name="email" placeholder="Email" />
         <input type="hidden" name="client_id" value="solid" />
         <input
           type="hidden"
@@ -82,7 +76,12 @@ export function Email() {
         />
         <input type="hidden" name="response_type" value="token" />
         <input type="hidden" name="provider" value="email" />
-        <Button type="submit">Continue</Button>
+        <Stack space="3">
+          <Button type="submit">Continue</Button>
+          <Text center size="sm" color="dimmed">
+            We'll send a pin code to your email
+          </Text>
+        </Stack>
       </Form>
     </>
   );
@@ -112,10 +111,10 @@ export function Code() {
         </LoginIcon>
         <Stack horizontal="center" space="2">
           <Text size="lg" weight="medium">
-            Check your email for a code
+            Let's verify your email
           </Text>
           <Text color="secondary" on="base" center>
-            Go to your inbox to complete the process.
+            Enter the code that we emailed to you
           </Text>
         </Stack>
       </Stack>
@@ -124,7 +123,11 @@ export function Code() {
           <For each={Array(6).fill(0)}>
             {() => (
               <FormInput
-                style={{ "text-align": "center", width: "40px" }}
+                style={{
+                  width: "40px",
+                  "text-align": "center",
+                  "font-family": `${theme.font.family.code}`,
+                }}
                 data-element="code"
                 maxLength={1}
                 autofocus
