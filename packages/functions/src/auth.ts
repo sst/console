@@ -41,14 +41,14 @@ export const handler = AuthHandler({
               Simple: {
                 Body: {
                   Html: {
-                    Data: `Your login code is <strong>${code}</strong>`,
+                    Data: `Your pin code is <strong>${code}</strong>`,
                   },
                   Text: {
-                    Data: `Your login code is ${code}`,
+                    Data: `Your pin code is ${code}`,
                   },
                 },
                 Subject: {
-                  Data: "SST Login Code: " + code,
+                  Data: "SST Console Pin Code: " + code,
                 },
               },
             },
