@@ -11,12 +11,17 @@ import { useTransaction } from "../util/transaction";
 
 export const Info = createSelectSchema(workspace, {
   id: (schema) => schema.id.cuid2(),
-  slug: (schema) => schema.slug.nonempty(),
+  slug: (schema) =>
+    schema.slug
+      .nonempty()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9\-]+$/),
 });
 export type Info = z.infer<typeof Info>;
 
 export const create = zod(
-  Info.pick({ slug: true, id: true, businessID: true }).partial({
+  Info.pick({ slug: true, id: true }).partial({
     id: true,
   }),
   async (input) => {

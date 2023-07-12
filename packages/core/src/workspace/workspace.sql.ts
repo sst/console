@@ -15,5 +15,6 @@ export const workspace = mysqlTable(
   },
   (table) => ({
     primary: primaryKey(table.id),
+    slug: uniqueIndex("slug").on(table.slug),
   })
 );

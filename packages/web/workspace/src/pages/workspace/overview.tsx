@@ -15,7 +15,7 @@ import {
 import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
 import type { Stage } from "@console/core/app";
 import { styled } from "@macaron-css/solid";
-import { Link, useNavigate } from "@solidjs/router";
+import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { For, Show, createEffect, createMemo } from "solid-js";
 
 const Root = styled("div", {
@@ -75,11 +75,12 @@ const CardLoadingIcon = styled("div", {
 export function Overview() {
   const accounts = createSubscription(AccountStore.list);
   const stages = createSubscription(StageStore.list, []);
+  const [query] = useSearchParams();
   const nav = useNavigate();
 
   createEffect(() => {
     const all = accounts();
-    if (all && !all.length) nav("account");
+    if (all && !all.length && !query.force) nav("account");
   });
 
   return (

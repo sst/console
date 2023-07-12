@@ -6,16 +6,15 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
 import { awsAccount } from "../aws/aws.sql";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { AWS } from "../aws";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { Enrichers, Resource } from "./resource";
+import { Enrichers } from "./resource";
 import { db } from "../drizzle";
-import { Realtime } from "../realtime";
 import { event } from "../event";
 import { Replicache } from "../replicache";
 
@@ -32,6 +31,11 @@ export const Events = {
 
 export const Info = createSelectSchema(stage, {
   id: (schema) => schema.id.cuid2(),
+  name: (schema) => schema.name.trim().nonempty(),
+  appID: (schema) => schema.appID.cuid2(),
+  workspaceID: (schema) => schema.workspaceID.cuid2(),
+  region: (schema) => schema.region.trim().nonempty(),
+  awsAccountID: (schema) => schema.awsAccountID.cuid2(),
 });
 export type Info = z.infer<typeof Info>;
 

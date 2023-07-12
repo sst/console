@@ -35,12 +35,13 @@ import { event } from "../event";
 export const Info = createSelectSchema(awsAccount, {
   id: (schema) => schema.id.cuid2(),
   accountID: (schema) => schema.accountID.regex(/^[0-9]{12}$/),
+  workspaceID: (schema) => schema.workspaceID.cuid2(),
 });
 export type Info = z.infer<typeof Info>;
 
 export const Events = {
   Created: event("aws.account.created", {
-    awsAccountID: z.string(),
+    awsAccountID: z.string().cuid2(),
   }),
 };
 

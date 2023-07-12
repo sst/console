@@ -4,14 +4,18 @@ import { createSelectSchema } from "drizzle-zod";
 import { log_poller } from "./log-poller.sql";
 import { zod } from "../util/zod";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
-import cuid2 from "@paralleldrive/cuid2";
 import { and, eq } from "drizzle-orm";
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
 import { useWorkspace } from "../actor";
 import { z } from "zod";
+import { createId } from "@paralleldrive/cuid2";
 
 export const Info = createSelectSchema(log_poller, {
   id: (schema) => schema.id.cuid2(),
+  workspaceID: (schema) => schema.workspaceID.cuid2(),
+  stageID: (schema) => schema.stageID.cuid2(),
+  logGroup: (schema) => schema.logGroup.trim().nonempty(),
+  executionARN: (schema) => schema.executionARN.trim().nonempty(),
 });
 export type Info = z.infer<typeof Info>;
 
@@ -39,7 +43,7 @@ export const subscribe = zod(
         .then((rows) => rows[0]?.id);
       if (!existing) {
         console.log("log poller", "starting new execution");
-        existing = cuid2.createId();
+        existing = createId();
         await tx
           .insert(log_poller)
           .values({

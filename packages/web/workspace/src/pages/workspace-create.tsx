@@ -27,13 +27,21 @@ export function WorkspaceCreate() {
   const auth = useAuth();
   const nav = useNavigate();
   const rep = createMemo(() => auth[account()].replicache);
-  const workspaces = createSubscription(WorkspaceStore.list, [], rep);
-  const [pending, setPending] = createSignal<string>();
+  const id = createId();
+  const workspace = createSubscription(
+    () => WorkspaceStore.fromID(id),
+    null,
+    rep
+  );
+  const pending = createMemo(() => workspace() != null);
+  const [error, setError] = createSignal(false);
 
+  createEffect((prev) => {
+    if (prev && !pending()) setError(true);
+    return pending();
+  });
   createEffect(() => {
-    const match = workspaces().find((w) => w.slug === pending());
-    if (!match) return;
-    nav("/" + match.slug + "/account");
+    if (workspace()?.timeCreated) nav("/" + workspace()?.slug + "/account");
   });
 
   return (
@@ -55,16 +63,18 @@ export function WorkspaceCreate() {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
             const slug = fd.get("slug") as string;
-            setPending(slug);
             rep().mutate.workspace_create({
-              id: createId(),
+              id,
               slug,
             });
           }}
         >
           <FormInput
             autofocus
+            pattern="[a-z0-9\-]+"
+            onInput={() => setError(false)}
             name="slug"
+            color={error() ? "danger" : "primary"}
             placeholder="acme"
             hint="Needs to be lowercase, unique, and URL friendly."
           />

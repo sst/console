@@ -40,8 +40,8 @@ const mutators = new Client<ServerType>()
     await WorkspaceStore.put({
       id: input.id!,
       slug: input.slug,
-      timeCreated: new Date().toISOString(),
-      timeUpdated: new Date().toISOString(),
+      timeUpdated: null as any,
+      timeCreated: null as any,
       timeDeleted: null,
     })(tx);
   })
