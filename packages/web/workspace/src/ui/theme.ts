@@ -1,4 +1,4 @@
-import {createTheme} from "@macaron-css/core";
+import { createTheme } from "@macaron-css/core";
 
 const font = {
   lineHeight: "1.6",
@@ -14,6 +14,7 @@ const font = {
     sm: "0.875rem",
     mono_base: "0.9375rem",
     base: "1rem",
+    mono_lg: "1.0625rem",
     lg: "1.125rem",
     xl: "1.25rem",
     "2xl": "1.5rem",

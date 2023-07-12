@@ -25,6 +25,14 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { useCommandBar } from "../command-bar";
 import { IconMap } from "./resources";
 
+const LogListHeader = styled("div", {
+  base: {
+    ...utility.stack(0),
+    height: 39,
+    justifyContent: "center",
+  },
+});
+
 const LogList = styled("div", {
   base: {
     borderStyle: "solid",
@@ -420,11 +428,13 @@ export function Logs() {
   });
 
   return (
-    <Stack space="6">
-      <Stack space="3">
-        <Text size="xl">{resource()?.metadata.handler}</Text>
-        <Show when={context()}>{context()}</Show>
-      </Stack>
+    <Stack space="4">
+      <LogListHeader>
+        <Text code size="mono_lg" weight="medium">
+          {resource()?.metadata.handler}
+        </Text>
+        {/* <Show when={context()}>{context()}</Show> */}
+      </LogListHeader>
       <LogList>
         <LogLoadingIndicator>
           <Row space="2" vertical="center">
