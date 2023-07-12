@@ -12,7 +12,7 @@ import { useFunctionsContext, useResourcesContext } from "./context";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
-import { Fullscreen, Row } from "$/ui/layout";
+import { Fullscreen, Row, Stack } from "$/ui/layout";
 import { Tag, Text } from "$/ui";
 import {
   IconApi,
@@ -47,10 +47,12 @@ import { Syncing } from "$/ui/loader";
 import {
   IconCheck,
   IconDocumentDuplicate,
+  IconExclamationTriangle,
   IconMoon,
   IconQueueList,
 } from "$/ui/icons";
 import {} from "@solid-primitives/keyboard";
+import { createMemoObject } from "@solidjs/router/dist/utils";
 
 const Card = styled("div", {
   base: {
@@ -226,6 +228,7 @@ interface HeaderProps {
   icon?: (props: any) => JSX.Element;
   description?: string;
 }
+
 export function Header(props: HeaderProps) {
   const icon = createMemo(() => props.icon || IconMap[props.resource.type]);
   return (
@@ -248,110 +251,198 @@ export function Header(props: HeaderProps) {
   );
 }
 
+const MINIMUM_VERSION = "2.19.2";
 export function Resources() {
   const resources = useResourcesContext();
+  const stacks = createMemo(() =>
+    resources().filter((r) => r.type === "Stack")
+  );
+  const outdated = createMemo(() =>
+    stacks().filter(
+      (r) =>
+        r.type === "Stack" && (r.enrichment.version || "") < MINIMUM_VERSION
+    )
+  );
   return (
-    <>
-      <Show when={!resources().length}>
+    <Switch>
+      <Match when={!resources().length}>
         <Fullscreen>
           <Syncing>Waiting for resources</Syncing>
         </Fullscreen>
-      </Show>
-      <For
-        each={resources()
-          .filter(
-            (r) =>
-              r.type === "Api" ||
-              r.type === "RDS" ||
-              r.type === "Cron" ||
-              r.type === "Table" ||
-              r.type === "Queue" ||
-              r.type === "Topic" ||
-              r.type === "Bucket" ||
-              r.type === "Cognito" ||
-              r.type === "AppSync" ||
-              r.type === "EventBus" ||
-              r.type === "AstroSite" ||
-              r.type === "RemixSite" ||
-              r.type === "StaticSite" ||
-              r.type === "NextjsSite" ||
-              r.type === "WebSocketApi" ||
-              r.type === "KinesisStream" ||
-              r.type === "SvelteKitSite" ||
-              r.type === "SolidStartSite" ||
-              r.type === "ApiGatewayV1Api"
-          )
-          .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
-      >
-        {(resource) => (
-          <Card>
-            <Switch>
-              <Match when={resource.type === "Api" && resource}>
-                {(resource) => <ApiCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "ApiGatewayV1Api" && resource}>
-                {(resource) => <ApiGatewayV1ApiCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "AppSync" && resource}>
-                {(resource) => <AppSyncCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "WebSocketApi" && resource}>
-                {(resource) => <WebSocketApiCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "EventBus" && resource}>
-                {(resource) => <EventBusCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "NextjsSite" && resource}>
-                {(resource) => <NextjsSiteCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "SvelteKitSite" && resource}>
-                {(resource) => <SvelteKitSiteCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "AstroSite" && resource}>
-                {(resource) => <AstroSiteCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "RemixSite" && resource}>
-                {(resource) => <RemixSiteCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "SolidStartSite" && resource}>
-                {(resource) => <SolidStartSiteCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "StaticSite" && resource}>
-                {(resource) => <StaticSiteCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "RDS" && resource}>
-                {(resource) => <RDSCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "Topic" && resource}>
-                {(resource) => <TopicCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "KinesisStream" && resource}>
-                {(resource) => <KinesisStreamCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "Queue" && resource}>
-                {(resource) => <QueueCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "Bucket" && resource}>
-                {(resource) => <BucketCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "Cognito" && resource}>
-                {(resource) => <CognitoCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "Cron" && resource}>
-                {(resource) => <CronCard resource={resource()} />}
-              </Match>
-              <Match when={resource.type === "Table" && resource}>
-                {(resource) => <TableCard resource={resource()} />}
-              </Match>
-            </Switch>
-          </Card>
-        )}
-      </For>
-      <OrphanFunctionsCard />
-      <OutputsCard />
-    </>
+      </Match>
+      <Match when={stacks().length === outdated().length && outdated.length}>
+        <Fullscreen>
+          <UnsupportedAppRoot>
+            <Stack horizontal="center" space="5">
+              <UnsupportedAppIcon>
+                <IconExclamationTriangle />
+              </UnsupportedAppIcon>
+              <Stack horizontal="center" space="2">
+                <Text size="lg" weight="medium">
+                  Unsupported SST version
+                </Text>
+                <Text center size="sm" color="secondary">
+                  To use the SST Console,{" "}
+                  <a
+                    target="_blank"
+                    href="https://github.com/serverless-stack/sst/releases"
+                  >
+                    upgrade to v{MINIMUM_VERSION}
+                  </a>
+                </Text>
+              </Stack>
+            </Stack>
+          </UnsupportedAppRoot>
+        </Fullscreen>
+      </Match>
+      <Match when={true}>
+        <Show when={outdated().length}>
+          <UnsupportedAppBannerRoot>
+            <UnsupportedAppBannerIcon>
+              <IconExclamationTriangle />
+            </UnsupportedAppBannerIcon>
+            <Text color="secondary" on="surface" leading="normal">
+              Some of the stacks in this app are not supported by the SST
+              Console.{" "}
+              <a
+                target="_blank"
+                href="https://github.com/serverless-stack/sst/releases"
+              >
+                Upgrade them to v{MINIMUM_VERSION}.
+              </a>
+            </Text>
+          </UnsupportedAppBannerRoot>
+        </Show>
+        <For
+          each={resources()
+            .filter(
+              (r) =>
+                r.type === "Api" ||
+                r.type === "RDS" ||
+                r.type === "Cron" ||
+                r.type === "Table" ||
+                r.type === "Queue" ||
+                r.type === "Topic" ||
+                r.type === "Bucket" ||
+                r.type === "Cognito" ||
+                r.type === "AppSync" ||
+                r.type === "EventBus" ||
+                r.type === "AstroSite" ||
+                r.type === "RemixSite" ||
+                r.type === "StaticSite" ||
+                r.type === "NextjsSite" ||
+                r.type === "WebSocketApi" ||
+                r.type === "KinesisStream" ||
+                r.type === "SvelteKitSite" ||
+                r.type === "SolidStartSite" ||
+                r.type === "ApiGatewayV1Api"
+            )
+            .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
+        >
+          {(resource) => (
+            <Card>
+              <Switch>
+                <Match when={resource.type === "Api" && resource}>
+                  {(resource) => <ApiCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "ApiGatewayV1Api" && resource}>
+                  {(resource) => <ApiGatewayV1ApiCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "AppSync" && resource}>
+                  {(resource) => <AppSyncCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "WebSocketApi" && resource}>
+                  {(resource) => <WebSocketApiCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "EventBus" && resource}>
+                  {(resource) => <EventBusCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "NextjsSite" && resource}>
+                  {(resource) => <NextjsSiteCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "SvelteKitSite" && resource}>
+                  {(resource) => <SvelteKitSiteCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "AstroSite" && resource}>
+                  {(resource) => <AstroSiteCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "RemixSite" && resource}>
+                  {(resource) => <RemixSiteCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "SolidStartSite" && resource}>
+                  {(resource) => <SolidStartSiteCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "StaticSite" && resource}>
+                  {(resource) => <StaticSiteCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "RDS" && resource}>
+                  {(resource) => <RDSCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "Topic" && resource}>
+                  {(resource) => <TopicCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "KinesisStream" && resource}>
+                  {(resource) => <KinesisStreamCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "Queue" && resource}>
+                  {(resource) => <QueueCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "Bucket" && resource}>
+                  {(resource) => <BucketCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "Cognito" && resource}>
+                  {(resource) => <CognitoCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "Cron" && resource}>
+                  {(resource) => <CronCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "Table" && resource}>
+                  {(resource) => <TableCard resource={resource()} />}
+                </Match>
+              </Switch>
+            </Card>
+          )}
+        </For>
+        <OrphanFunctionsCard />
+        <OutputsCard />
+      </Match>
+    </Switch>
   );
 }
+
+const UnsupportedAppRoot = styled("div", {
+  base: {
+    ...utility.stack(8),
+    alignItems: "center",
+    width: 320,
+  },
+});
+
+const UnsupportedAppIcon = styled("div", {
+  base: {
+    width: 42,
+    height: 42,
+    color: theme.color.icon.dimmed,
+  },
+});
+
+const UnsupportedAppBannerRoot = styled("div", {
+  base: {
+    ...utility.row(1.5),
+    alignItems: "center",
+    backgroundColor: theme.color.background.surface,
+    borderRadius: theme.borderRadius,
+    padding: `${theme.space[5]} ${theme.space[4]}`,
+  },
+});
+
+const UnsupportedAppBannerIcon = styled("div", {
+  base: {
+    width: 18,
+    height: 18,
+    color: theme.color.icon.dimmed,
+  },
+});
 
 interface CardProps<Type extends Resource.Info["type"]> {
   resource: Extract<Resource.Info, { type: Type }>;
