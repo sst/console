@@ -7,6 +7,7 @@ import {
   createMemo,
   ComponentProps,
   createSignal,
+  createEffect,
 } from "solid-js";
 import { useFunctionsContext, useResourcesContext } from "./context";
 import { styled } from "@macaron-css/solid";
@@ -263,6 +264,10 @@ export function Resources() {
         r.type === "Stack" && (r.enrichment.version || "") < MINIMUM_VERSION
     )
   );
+
+  createEffect(() => {
+    console.log(outdated().length, stacks().length);
+  });
   return (
     <Switch>
       <Match when={!resources().length}>
@@ -270,7 +275,7 @@ export function Resources() {
           <Syncing>Waiting for resources</Syncing>
         </Fullscreen>
       </Match>
-      <Match when={stacks().length === outdated().length && outdated.length}>
+      <Match when={stacks().length === outdated().length}>
         <Fullscreen>
           <UnsupportedAppRoot>
             <Stack horizontal="center" space="5">
@@ -279,7 +284,12 @@ export function Resources() {
               </UnsupportedAppIcon>
               <Stack horizontal="center" space="2">
                 <Text size="lg" weight="medium">
-                  Unsupported SST version
+                  Unsupported SST version v
+                  {
+                    outdated()
+                      .map((r) => r.type === "Stack" && r.enrichment.version)
+                      .sort()[0]
+                  }
                 </Text>
                 <Text center size="sm" color="secondary">
                   To use the SST Console,{" "}
