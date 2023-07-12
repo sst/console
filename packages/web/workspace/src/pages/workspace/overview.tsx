@@ -3,6 +3,9 @@ import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
 import { createSubscription } from "$/providers/replicache";
 import { Button, Row, Stack, Tag, Text, theme, utility } from "$/ui";
+import { Fullscreen } from "$/ui/layout";
+import { IconPlus } from "$/ui/icons";
+import { Syncing } from "$/ui/loader";
 import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
 import type { Stage } from "@console/core/app";
 import { styled } from "@macaron-css/solid";
@@ -29,6 +32,22 @@ const Card = styled("div", {
   base: {
     borderRadius: theme.borderRadius,
     border: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const CardEmpty = styled("div", {
+  base: {
+    padding: theme.space[4],
+    borderRadius: theme.borderRadius,
+    border: `2px dashed ${theme.color.divider.base}`,
+  },
+});
+
+const CardEmptyIcon = styled("div", {
+  base: {
+    width: 16,
+    height: 16,
+    color: theme.color.icon.dimmed,
   },
 });
 
@@ -81,6 +100,20 @@ export function Overview() {
     <>
       <Header />
       <Root>
+        <Fullscreen>
+          <Syncing>
+            <Stack space="2.5">
+              <Text center size="lg" color="dimmed">
+                Waiting to connect to your AWS account&hellip;
+              </Text>
+              <Text center size="sm" color="dimmed">
+                Haven't connected one yet?{" "}
+                <Link href="account">Head over here.</Link>
+              </Text>
+            </Stack>
+          </Syncing>
+        </Fullscreen>
+        {/*
         <Stack space="4">
           <Row vertical="center" horizontal="between">
             <Text size="lg" weight="medium">
@@ -129,8 +162,21 @@ export function Overview() {
                 );
               }}
             </For>
+            <CardEmpty>
+              <Link href="account">
+                <Row space="2" vertical="center">
+                  <CardEmptyIcon>
+                    <IconPlus />
+                  </CardEmptyIcon>
+                  <Text leading="normal" size="sm" color="dimmed">
+                    Let's connect another AWS account
+                  </Text>
+                </Row>
+              </Link>
+            </CardEmpty>
           </List>
         </Stack>
+        */}
       </Root>
     </>
   );
