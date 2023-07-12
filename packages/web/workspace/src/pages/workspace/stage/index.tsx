@@ -2,10 +2,11 @@ import patrick from "./patrick.jpg";
 import { styled } from "@macaron-css/solid";
 import { IconChevronUpDown } from "$/ui/icons";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
+import { Link, Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { theme } from "$/ui/theme";
+import { Text } from "$/ui/text";
 import { Row, Stack } from "$/ui/layout";
 import { utility } from "$/ui/utility";
 import { Show, createEffect } from "solid-js";
@@ -74,20 +75,6 @@ const StageSwitcher = styled("div", {
     paddingLeft: theme.space[4],
     gap: theme.space[3],
     font: theme.font.family.heading,
-    color: theme.color.text.secondary.base,
-  },
-});
-
-const SwitcherApp = styled("div", {
-  base: {
-    fontSize: theme.font.size.lg,
-    fontWeight: 500,
-  },
-});
-const SwitcherStage = styled("div", {
-  base: {
-    fontSize: theme.font.size.base,
-    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -153,14 +140,24 @@ export function Stage() {
         <ResourcesProvider>
           <Header>
             <Row space="4" vertical="center">
-              <WorkspaceIcon text="S" />
+              <Link href="/">
+                <WorkspaceIcon text="S" />
+              </Link>
               <StageSwitcher
                 onClick={() => bar.show("stage-switcher", "app-switcher")}
               >
-                <Stack space="1.5">
-                  <SwitcherApp>{stageContext.app.name}</SwitcherApp>
-                  <SwitcherStage>{stageContext.stage.name}</SwitcherStage>
-                </Stack>
+                {true ? (
+                  <Stack space="1.5">
+                    <Text size="lg" weight="medium" color="secondary">
+                      {stageContext.app.name}
+                    </Text>
+                    <Text color="dimmed">{stageContext.stage.name}</Text>
+                  </Stack>
+                ) : (
+                  <Text size="lg" weight="medium" color="secondary">
+                    krusty-krab
+                  </Text>
+                )}
                 <SwitcherIcon />
               </StageSwitcher>
             </Row>

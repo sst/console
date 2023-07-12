@@ -43,6 +43,7 @@ const Icon = styled("span", {
     flexShrink: 0,
     width: 36,
     height: 36,
+    display: "inline-block",
     backgroundSize: "cover",
     borderRadius: theme.borderRadius,
   },
