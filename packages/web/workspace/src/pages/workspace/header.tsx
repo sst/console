@@ -119,7 +119,18 @@ export function Header(props: { app?: string; stage?: string }) {
           <SwitcherIcon />
         </StageSwitcher>
       </Row>
-      <LogoutButton>Logout</LogoutButton>
+      <LogoutButton
+        onClick={async () => {
+          const dbs = await window.indexedDB.databases();
+          dbs.forEach((db) => {
+            window.indexedDB.deleteDatabase(db.name!);
+          });
+          localStorage.clear();
+          location.href = "/";
+        }}
+      >
+        Logout
+      </LogoutButton>
       {/*
       <User>
         <UserImage />
