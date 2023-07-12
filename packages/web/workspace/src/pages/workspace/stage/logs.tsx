@@ -1,4 +1,4 @@
-import { Invocation, LogStore } from "$/data/log";
+import { Invocation, LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
@@ -232,8 +232,9 @@ const LogEntryMessage = styled("span", {
 
 const LogLoadingIndicator = styled("div", {
   base: {
-    ...utility.row(2),
+    ...utility.row(0),
     alignItems: "center",
+    justifyContent: "space-between",
     padding: `0 ${theme.space[3]}`,
     height: 48,
     borderTop: `1px solid ${theme.color.divider.base}`,
@@ -354,12 +355,19 @@ export function Logs() {
       </Stack>
       <LogList>
         <LogLoadingIndicator>
-          <LogLoadingIndicatorIcon>
-            <IconBoltSolid />
-          </LogLoadingIndicatorIcon>
-          <LogLoadingIndicatorCopy>
-            Tailing logs&hellip;
-          </LogLoadingIndicatorCopy>
+          <Row space="2" vertical="center">
+            <LogLoadingIndicatorIcon>
+              <IconBoltSolid />
+            </LogLoadingIndicatorIcon>
+            <LogLoadingIndicatorCopy>
+              Tailing logs&hellip;
+            </LogLoadingIndicatorCopy>
+          </Row>
+          <Show when={logs().length > 0}>
+            <Text size="sm" onClick={() => clearLogStore(logGroup())}>
+              Clear
+            </Text>
+          </Show>
         </LogLoadingIndicator>
         <For each={logs().slice().reverse()}>
           {(invocation) => {

@@ -5,6 +5,14 @@ export const [LogStore, setLogStore] = createStore<
   Record<string, Invocation[]>
 >({});
 
+export function clearLogStore(input: string) {
+  setLogStore(
+    produce((state) => {
+      state[input] = [];
+    })
+  );
+}
+
 export interface Invocation {
   id: string;
   cold: boolean;
