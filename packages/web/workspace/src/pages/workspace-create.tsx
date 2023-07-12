@@ -33,6 +33,7 @@ export function WorkspaceCreate() {
     null,
     rep
   );
+  const [slug, setSlug] = createSignal("");
   const pending = createMemo(() => workspace() != null);
   const [error, setError] = createSignal(false);
 
@@ -48,7 +49,7 @@ export function WorkspaceCreate() {
     <Fullscreen>
       <Stack space="5">
         <Stack horizontal="center" space="5">
-          <WorkspaceIcon text="acme" />
+          <WorkspaceIcon text={slug() || "-"} />
           <Stack horizontal="center" space="2">
             <Text size="lg" weight="medium">
               Create a new workspace
@@ -72,7 +73,10 @@ export function WorkspaceCreate() {
           <FormInput
             autofocus
             pattern="[a-z0-9\-]+"
-            onInput={() => setError(false)}
+            onInput={(e) => {
+              setSlug(e.currentTarget.value);
+              setError(false);
+            }}
             name="slug"
             color={error() ? "danger" : "primary"}
             placeholder="acme"
