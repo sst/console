@@ -342,6 +342,42 @@ export function Logs() {
       case "Topic": {
         return <Context type="Topic" tag="Subscriber" />;
       }
+      case "Bucket": {
+        return <Context type="Bucket" tag="Notification" />;
+      }
+      case "KinesisStream": {
+        return <Context type="KinesisStream" tag="Consumer" />;
+      }
+      case "AppSync": {
+        return <Context type="AppSync" tag="Source" />;
+      }
+      case "Table": {
+        return <Context type="Table" tag="Consumer" />;
+      }
+      case "Cognito": {
+        return <Context type="Cognito" tag="Trigger" />;
+      }
+      case "Cron": {
+        return <Context type="Cron" tag="Job" />;
+      }
+      case "Queue": {
+        return <Context type="Queue" tag="Consumer" />;
+      }
+      case "NextjsSite": {
+        return <Context type="NextjsSite" tag="Server" />;
+      }
+      case "SvelteKitSite": {
+        return <Context type="SvelteKitSite" tag="Server" />;
+      }
+      case "RemixSite": {
+        return <Context type="RemixSite" tag="Server" />;
+      }
+      case "AstroSite": {
+        return <Context type="AstroSite" tag="Server" />;
+      }
+      case "SolidStartSite": {
+        return <Context type="SolidStartSite" tag="Server" />;
+      }
     }
   });
   const logGroup = createMemo(() => {
