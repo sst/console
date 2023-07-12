@@ -71,7 +71,10 @@ export function Overview() {
 
   createEffect(() => {
     const all = accounts();
-    if (all && !all.length && !query.force) nav("account");
+    if (all && !all.length && !query.force)
+      nav("account", {
+        replace: true,
+      });
   });
 
   return (
