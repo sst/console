@@ -260,6 +260,17 @@ const LogLoadingIndicatorCopy = styled("div", {
   },
 });
 
+const LogClearButton = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary.base,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.text.primary.base,
+    },
+  },
+});
+
 globalKeyframes("pulse", {
   "0%": {
     opacity: 0.3,
@@ -364,9 +375,9 @@ export function Logs() {
             </LogLoadingIndicatorCopy>
           </Row>
           <Show when={logs().length > 0}>
-            <Text size="sm" onClick={() => clearLogStore(logGroup())}>
+            <LogClearButton onClick={() => clearLogStore(logGroup())}>
               Clear
-            </Text>
+            </LogClearButton>
           </Show>
         </LogLoadingIndicator>
         <For each={logs().slice().reverse()}>
