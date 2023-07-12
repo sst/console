@@ -38,6 +38,11 @@ export const Text = styled("span", {
         fontWeight: 600,
       },
     },
+    center: {
+      true: {
+        textAlign: "center",
+      },
+    },
     line: {
       true: {
         overflow: "hidden",

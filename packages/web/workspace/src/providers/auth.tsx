@@ -66,8 +66,7 @@ export function AuthProvider(props: ParentProps) {
 
   console.log("Auth Info", tokens);
 
-  if (Object.values(tokens).length === 0)
-    return <Navigate href="/auth/login" />;
+  if (Object.values(tokens).length === 0) return <Navigate href="/auth" />;
 
   const stores: AuthContextType = {};
   for (const token of Object.values(tokens)) {

@@ -52,6 +52,5 @@ export async function handler(evt: any) {
       },
     ],
   };
-  console.log(JSON.stringify(policy, null, 2));
   return policy;
 }

@@ -7,6 +7,7 @@ import { Events } from "./stacks/events";
 import { DNS } from "./stacks/dns";
 import { Realtime } from "./stacks/realtime";
 import { Connect } from "./stacks/connect";
+import { Email } from "./stacks/email";
 
 export default {
   config(input) {
@@ -22,6 +23,7 @@ export default {
     }
     app
       .stack(DNS)
+      .stack(Email)
       .stack(Secrets)
       .stack(Auth)
       .stack(Events)

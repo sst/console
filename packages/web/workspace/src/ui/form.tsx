@@ -1,9 +1,9 @@
-import {CSSProperties} from "@macaron-css/core";
-import {styled} from "@macaron-css/solid";
-import {theme} from "./theme";
-import {utility} from "./utility";
-import {ComponentProps, Show} from "solid-js";
-import {Stack} from "./layout";
+import { CSSProperties } from "@macaron-css/core";
+import { styled } from "@macaron-css/solid";
+import { theme } from "./theme";
+import { utility } from "./utility";
+import { ComponentProps, Show } from "solid-js";
+import { Stack } from "./layout";
 
 const inputStyles: CSSProperties = {
   border: "none",
@@ -13,7 +13,7 @@ const inputStyles: CSSProperties = {
   borderRadius: theme.borderRadius,
   padding: `${theme.space[2]} ${theme.space[3]}`,
   backgroundColor: theme.color.input.background,
-  transition: `box-shadow ${theme.colorFadeDuration} ease-out`,
+  // transition: `box-shadow ${theme.colorFadeDuration}`,
   boxShadow: `
     0 0 0 1px inset ${theme.color.input.border},
     ${theme.color.input.shadow}

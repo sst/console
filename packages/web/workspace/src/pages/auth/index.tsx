@@ -1,22 +1,30 @@
-import { account } from "$/data/storage";
-import { WorkspaceStore } from "$/data/workspace";
-import { useAuth } from "$/providers/auth";
-import { createSubscription } from "$/providers/replicache";
-import { Button, Text, FormInput, Stack, theme, utility } from "$/ui";
-import { IconApp, IconGitHub } from "$/ui/icons/custom";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
+import {
+  Button,
+  Text,
+  FormInput,
+  Stack,
+  theme,
+  utility,
+  Row,
+  Fullscreen,
+} from "$/ui";
+import { IconApp } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
-import { createId } from "@paralleldrive/cuid2";
-import { useNavigate } from "@solidjs/router";
-import { Show, createEffect, createMemo, createSignal } from "solid-js";
+import { Navigate, Route, Routes } from "@solidjs/router";
+import { For, createSignal } from "solid-js";
+
+const Form = styled("form", {
+  base: {
+    width: 320,
+    ...utility.stack(5),
+  },
+});
 
 const Root = styled("div", {
   base: {
     ...utility.stack(8),
-    position: "fixed",
-    inset: 0,
     alignItems: "center",
-    justifyContent: "center",
+    width: 320,
   },
 });
 
@@ -28,19 +36,23 @@ const LoginIcon = styled("div", {
   },
 });
 
-const ButtonIcon = styled("span", {
-  base: {
-    width: 18,
-    height: 18,
-    marginRight: 6,
-    verticalAlign: -4,
-    display: "inline-block",
-  },
-});
-
-export function Login() {
+export function Auth() {
   return (
-    <Root>
+    <Fullscreen>
+      <Root>
+        <Routes>
+          <Route path="email" component={Email} />
+          <Route path="code" component={Code} />
+          <Route path="" element={<Navigate href="email" />} />
+        </Routes>
+      </Root>
+    </Fullscreen>
+  );
+}
+
+export function Email() {
+  return (
+    <>
       <Stack horizontal="center" space="5">
         <LoginIcon>
           <IconApp />
@@ -49,91 +61,126 @@ export function Login() {
           <Text size="lg" weight="medium">
             Welcome to the SST Console
           </Text>
-          <Text color="secondary" on="base">
-            Log in with your GitHub to get started
+          <Text color="secondary" on="base" center>
+            Log in with your email to get started
           </Text>
         </Stack>
       </Stack>
-      <a
-        href={
-          import.meta.env.VITE_AUTH_URL +
-          "/authorize?" +
-          new URLSearchParams({
-            client_id: "solid",
-            redirect_uri: location.origin + "/",
-            response_type: "token",
-            provider: "github",
-          }).toString()
-        }
-      >
-        <Button color="github">
-          <ButtonIcon>
-            <IconGitHub />
-          </ButtonIcon>
-          Login with GitHub
-        </Button>
-      </a>
-    </Root>
+      <Form method="get" action={import.meta.env.VITE_AUTH_URL + "/authorize"}>
+        <FormInput
+          autofocus
+          type="email"
+          name="email"
+          placeholder="Email"
+          hint="We will send you a pin code to confirm"
+        />
+        <input type="hidden" name="client_id" value="solid" />
+        <input
+          type="hidden"
+          name="redirect_uri"
+          value={location.origin + "/"}
+        />
+        <input type="hidden" name="response_type" value="token" />
+        <input type="hidden" name="provider" value="email" />
+        <Button type="submit">Continue</Button>
+      </Form>
+    </>
   );
 }
 
-const Form = styled("form", {
-  base: {
-    width: 320,
-    ...utility.stack(5),
-  },
-});
+export function Code() {
+  const [disabled, setDisabled] = createSignal(false);
 
-export function CreateWorkspace() {
-  const auth = useAuth();
-  const nav = useNavigate();
-  const rep = createMemo(() => auth[account()].replicache);
-  const workspaces = createSubscription(WorkspaceStore.list, [], rep);
-  const [pending, setPending] = createSignal<string>();
-
-  createEffect(() => {
-    const match = workspaces().find((w) => w.slug === pending());
-    if (!match) return;
-    nav("/" + match.slug + "/account");
-  });
+  function submit() {
+    setDisabled(true);
+    const code = [...document.querySelectorAll("[data-element=code]")]
+      .map((el) => (el as HTMLInputElement).value)
+      .join("");
+    location.href =
+      import.meta.env.VITE_AUTH_URL +
+      "/callback?" +
+      new URLSearchParams({
+        code,
+      }).toString();
+  }
 
   return (
-    <Root>
+    <>
       <Stack horizontal="center" space="5">
-        <WorkspaceIcon text="acme" />
+        <LoginIcon>
+          <IconApp />
+        </LoginIcon>
         <Stack horizontal="center" space="2">
           <Text size="lg" weight="medium">
-            Create a new workspace
+            Check your email for a code
           </Text>
-          <Text color="secondary" on="base">
-            Start by giving your workspace a name
+          <Text color="secondary" on="base" center>
+            Go to your inbox to complete the process.
           </Text>
         </Stack>
       </Stack>
-      <Form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          const slug = fd.get("slug") as string;
-          setPending(slug);
-          rep().mutate.workspace_create({
-            id: createId(),
-            slug,
-          });
-        }}
-      >
-        <FormInput
-          autofocus
-          name="slug"
-          placeholder="acme"
-          hint="Needs to be lowercase, unique, and URL friendly."
-        />
-        <Button type="submit" disabled={Boolean(pending())}>
-          <Show when={pending()} fallback="Create Workspace">
-            Creating&hellip;
-          </Show>
-        </Button>
+      <Form method="get" action={import.meta.env.VITE_AUTH_URL + "/authorize"}>
+        <Row horizontal="between">
+          <For each={Array(6).fill(0)}>
+            {() => (
+              <FormInput
+                style={{ "text-align": "center", width: "40px" }}
+                data-element="code"
+                maxLength={1}
+                autofocus
+                disabled={disabled()}
+                type="text"
+                onPaste={(e) => {
+                  const code = e.clipboardData?.getData("text/plain");
+                  if (!code) return;
+                  document.querySelectorAll("input").forEach((item, index) => {
+                    item.value = code[index];
+                  });
+                  e.preventDefault();
+                  submit();
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.select();
+                }}
+                onKeyDown={(e) => {
+                  if (!e.currentTarget.value && e.key === "Backspace") {
+                    e.preventDefault();
+                    const previous =
+                      e.currentTarget.parentNode?.parentNode?.previousSibling
+                        ?.firstChild?.firstChild;
+                    if (previous instanceof HTMLInputElement) {
+                      previous.focus();
+                    }
+                    return;
+                  }
+                }}
+                onInput={(e) => {
+                  if (!e.currentTarget.value) {
+                    const previous =
+                      e.currentTarget.parentNode?.parentNode?.previousSibling
+                        ?.firstChild?.firstChild;
+                    if (previous instanceof HTMLInputElement) {
+                      previous.focus();
+                    }
+                    return;
+                  }
+
+                  const next =
+                    e.currentTarget.parentNode?.parentNode?.nextSibling
+                      ?.firstChild?.firstChild;
+                  if (next instanceof HTMLInputElement) {
+                    next.focus();
+                    next.select();
+                    return;
+                  }
+
+                  if (!next) submit();
+                }}
+              />
+            )}
+          </For>
+        </Row>
       </Form>
-    </Root>
+    </>
   );
 }

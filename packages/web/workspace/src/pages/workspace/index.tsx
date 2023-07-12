@@ -60,7 +60,7 @@ export function Workspace() {
         category: "Account",
         title: "Create new workspace",
         run: (control) => {
-          nav("/auth/workspace");
+          nav("/workspace");
           control.hide();
         },
       },

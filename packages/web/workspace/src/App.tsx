@@ -5,7 +5,7 @@ import { darkClass, lightClass, theme } from "./ui/theme";
 import { globalStyle, macaron$ } from "@macaron-css/core";
 import { Component, Match, Switch, createSignal, onCleanup } from "solid-js";
 import { Navigate, Route, Router, Routes } from "@solidjs/router";
-import { CreateWorkspace, Login } from "./pages/auth";
+import { Auth, Code, Email } from "./pages/auth";
 import { AuthProvider, useAuth } from "./providers/auth";
 import { RealtimeProvider } from "./providers/realtime";
 import { CommandBar } from "./pages/workspace/command-bar";
@@ -13,6 +13,7 @@ import { Debug } from "./pages/debug";
 import { Design } from "./pages/design";
 import { Connect } from "./pages/connect";
 import { Workspace } from "./pages/workspace";
+import { WorkspaceCreate } from "./pages/workspace-create";
 import { account, setAccount } from "./data/storage";
 import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
@@ -99,7 +100,7 @@ export const App: Component = () => {
     <Root class={theme() === "light" ? lightClass : darkClass} id="styled">
       <Router>
         <Routes>
-          <Route path="auth/login" component={Login} />
+          <Route path="auth/*" component={Auth} />
           <Route
             path="*"
             element={
@@ -110,8 +111,9 @@ export const App: Component = () => {
                     <Route path="debug" component={Debug} />
                     <Route path="design" component={Design} />
                     <Route path="connect" component={Connect} />
+                    <Route path="workspace" component={WorkspaceCreate} />
                     <Route path=":workspaceSlug/*" component={Workspace} />
-                    <Route path="/auth/workspace" component={CreateWorkspace} />
+                    <Route path="/auth/code" component={Code} />
                     <Route
                       path="*"
                       component={() => {
@@ -149,7 +151,7 @@ export const App: Component = () => {
                                 workspaces()!.length === 0
                               }
                             >
-                              <Navigate href={`/auth/workspace`} />
+                              <Navigate href={`/workspace`} />
                             </Match>
                           </Switch>
                         );

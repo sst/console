@@ -3,7 +3,7 @@ import { Auth as SSTAuth } from "sst/constructs/future";
 import { Secrets } from "./secrets";
 import { DNS } from "./dns";
 
-export function Auth({ stack }: StackContext) {
+export function Auth({ stack, app }: StackContext) {
   const { github, database } = use(Secrets);
   const dns = use(DNS);
   const auth = new SSTAuth(stack, "auth", {
@@ -15,6 +15,14 @@ export function Auth({ stack }: StackContext) {
         database.PLANETSCALE_PASSWORD,
         database.PLANETSCALE_USERNAME,
       ],
+      environment: {
+        AUTH_FRONTEND_URL:
+          app.mode === "dev"
+            ? "http://localhost:3000"
+            : "https://console." + dns.domain,
+        EMAIL_DOMAIN: use(DNS).domain,
+      },
+      permissions: ["ses"],
     },
     customDomain: {
       domainName: "auth." + dns.domain,
