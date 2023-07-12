@@ -162,18 +162,20 @@ export function Overview() {
                 );
               }}
             </For>
-            <CardEmpty>
-              <Link href="account">
-                <Row space="2" vertical="center">
-                  <CardEmptyIcon>
-                    <IconPlus />
-                  </CardEmptyIcon>
-                  <Text leading="normal" size="sm" color="dimmed">
-                    Let's connect another AWS account
-                  </Text>
-                </Row>
-              </Link>
-            </CardEmpty>
+            <Show when={(accounts() || []).length === 1}>
+              <CardEmpty>
+                <Link href="account">
+                  <Row space="2" vertical="center">
+                    <CardEmptyIcon>
+                      <IconPlus />
+                    </CardEmptyIcon>
+                    <Text leading="normal" size="sm" color="dimmed">
+                      Let's connect another AWS account
+                    </Text>
+                  </Row>
+                </Link>
+              </CardEmpty>
+            </Show>
           </List>
         </Stack>
         */}
