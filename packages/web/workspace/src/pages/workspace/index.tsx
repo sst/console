@@ -1,9 +1,4 @@
-import {
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from "@solidjs/router";
+import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { ReplicacheProvider, createSubscription } from "$/providers/replicache";
 import { Connect } from "./connect";
 import { useCommandBar } from "./command-bar";
