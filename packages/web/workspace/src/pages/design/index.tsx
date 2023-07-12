@@ -1158,6 +1158,23 @@ const UnsupportedAppBannerIcon = styled("div", {
   },
 });
 
+const UnsupportedAppRoot = styled("div", {
+  base: {
+    ...utility.stack(8),
+    alignItems: "center",
+    margin: "0 auto",
+    width: 320,
+  },
+});
+
+const UnsupportedAppIcon = styled("div", {
+  base: {
+    width: 42,
+    height: 42,
+    color: theme.color.icon.dimmed,
+  },
+});
+
 function UnsupportedAppBanner() {
   return (
     <UnsupportedAppBannerRoot>
@@ -1176,23 +1193,6 @@ function UnsupportedAppBanner() {
     </UnsupportedAppBannerRoot>
   );
 }
-
-const UnsupportedAppRoot = styled("div", {
-  base: {
-    ...utility.stack(8),
-    alignItems: "center",
-    margin: "0 auto",
-    width: 320,
-  },
-});
-
-const UnsupportedAppIcon = styled("div", {
-  base: {
-    width: 42,
-    height: 42,
-    color: theme.color.icon.dimmed,
-  },
-});
 
 function UnsupportedApp() {
   return (

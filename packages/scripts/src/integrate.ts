@@ -1,0 +1,19 @@
+import { provideActor } from "@console/core/actor";
+import { AWS } from "@console/core/aws";
+import { awsAccount } from "@console/core/aws/aws.sql";
+import { db } from "@console/core/drizzle";
+
+const rows = await db.select().from(awsAccount).execute();
+for (const row of rows) {
+  provideActor({
+    type: "system",
+    properties: {
+      workspaceID: row.workspaceID,
+    },
+  });
+  try {
+    await AWS.Account.integrate(row.id);
+  } catch {
+    console.log("failed to integrate", row);
+  }
+}

@@ -106,6 +106,18 @@ export function Header(props: { app?: string; stage?: string }) {
       </Row>
       <User>
         <UserImage />
+        <Text
+          onClick={async () => {
+            const dbs = await window.indexedDB.databases();
+            dbs.forEach((db) => {
+              window.indexedDB.deleteDatabase(db.name!);
+            });
+            localStorage.clear();
+            location.href = "/";
+          }}
+        >
+          Logout
+        </Text>
       </User>
     </Root>
   );

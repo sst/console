@@ -211,6 +211,7 @@ export const integrate = zod(Info.shape.id, async (id) => {
           }),
         })
       );
+      console.log(process.env.EVENT_BUS_ARN);
       await iam.send(
         new PutRolePolicyCommand({
           RoleName: role.Role!.RoleName,

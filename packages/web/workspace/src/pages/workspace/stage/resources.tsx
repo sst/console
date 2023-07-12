@@ -264,6 +264,12 @@ export function Resources() {
         r.type === "Stack" && (r.enrichment.version || "") < MINIMUM_VERSION
     )
   );
+  const minVersion = createMemo(
+    () =>
+      outdated()
+        .map((r) => r.type === "Stack" && r.enrichment.version)
+        .sort()[0]
+  );
 
   createEffect(() => {
     console.log(outdated().length, stacks().length);
@@ -284,12 +290,8 @@ export function Resources() {
               </UnsupportedAppIcon>
               <Stack horizontal="center" space="2">
                 <Text size="lg" weight="medium">
-                  Unsupported SST version v
-                  {
-                    outdated()
-                      .map((r) => r.type === "Stack" && r.enrichment.version)
-                      .sort()[0]
-                  }
+                  Unsupported SST version
+                  {minVersion() ? "v" + minVersion() : ""}
                 </Text>
                 <Text center size="sm" color="secondary">
                   To use the SST Console,{" "}
