@@ -13,7 +13,7 @@ import { createId } from "@console/core/util/sql";
 import { mapValues } from "remeda";
 import { log_poller } from "@console/core/log-poller/log-poller.sql";
 
-const VERSION = 3;
+const VERSION = 4;
 export const handler = ApiHandler(async () => {
   await useApiAuth();
   const actor = useActor();
@@ -56,6 +56,11 @@ export const handler = ApiHandler(async () => {
       if (!oldCvrID) {
         result.patch.push({
           op: "clear",
+        });
+        result.patch.push({
+          op: "put",
+          key: "/init",
+          value: true,
         });
       }
       const tables = {
