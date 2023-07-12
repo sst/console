@@ -1,6 +1,4 @@
 import {
-  Link,
-  Navigate,
   Route,
   Routes,
   useNavigate,
@@ -11,7 +9,6 @@ import { Connect } from "./connect";
 import { useCommandBar } from "./command-bar";
 import { account, setAccount } from "$/data/storage";
 import { Stage } from "./stage";
-import { AppStore } from "$/data/app";
 import {
   Accessor,
   Match,

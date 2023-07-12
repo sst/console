@@ -1,13 +1,9 @@
-import patrick from "./patrick.jpg";
 import { styled } from "@macaron-css/solid";
-import { IconChevronUpDown } from "$/ui/icons";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Link, Route, Routes, useNavigate, useParams } from "@solidjs/router";
+import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { theme } from "$/ui/theme";
-import { Text } from "$/ui/text";
-import { Row, Stack } from "$/ui/layout";
 import { utility } from "$/ui/utility";
 import { Show, createEffect } from "solid-js";
 import { useCommandBar } from "$/pages/workspace/command-bar";
@@ -15,7 +11,8 @@ import { ResourcesProvider, StageContext, createStageContext } from "./context";
 import { Resources } from "./resources";
 import { Logs } from "./logs";
 import { IconApp, IconStage } from "$/ui/icons/custom";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { useWorkspace } from "..";
+import { Header } from "../header";
 
 const Content = styled("div", {
   base: {
@@ -24,73 +21,12 @@ const Content = styled("div", {
   },
 });
 
-const Header = styled("div", {
-  base: {
-    top: "0",
-    zIndex: 1,
-    position: "sticky",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backdropFilter: "blur(8px)",
-    WebkitBackdropFilter: "blur(8px)",
-    backgroundColor: theme.color.background.navbar,
-    borderBottom: `1px solid ${theme.color.divider.base}`,
-    padding: `0 ${theme.space[4]}`,
-    height: 68,
-  },
-});
-
-const User = styled("a", {
-  base: {
-    color: theme.color.text.secondary.base,
-    flexShrink: 0,
-    display: "flex",
-    alignItems: "center",
-    gap: theme.space[4],
-    opacity: "0.8",
-    transition: `opacity ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      opacity: "1",
-      textDecoration: "none",
-    },
-  },
-});
-
-const UserImage = styled("img", {
-  base: {
-    borderRadius: "50%",
-    backgroundColor: theme.color.background.surface,
-    width: 28,
-  },
-});
-
-const StageSwitcher = styled("div", {
-  base: {
-    flexShrink: 0,
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    borderLeft: `1px solid ${theme.color.divider.base}`,
-    paddingLeft: theme.space[4],
-    gap: theme.space[3],
-    font: theme.font.family.heading,
-  },
-});
-
-const SwitcherIcon = styled(IconChevronUpDown, {
-  base: {
-    color: theme.color.text.dimmed.base,
-    width: 28,
-    height: 28,
-  },
-});
-
 export function Stage() {
   const bar = useCommandBar();
   const rep = useReplicache();
   const nav = useNavigate();
   const params = useParams();
+  const workspace = useWorkspace();
 
   const app = createSubscription(() => AppStore.fromName(params.appName));
   const stage = createSubscription(() =>
@@ -138,40 +74,7 @@ export function Stage() {
     <Show when={stageContext.app && stageContext.stage}>
       <StageContext.Provider value={stageContext}>
         <ResourcesProvider>
-          <Header>
-            <Row space="4" vertical="center">
-              <Link href="/">
-                <WorkspaceIcon text="S" />
-              </Link>
-              <StageSwitcher
-                onClick={() => bar.show("stage-switcher", "app-switcher")}
-              >
-                {true ? (
-                  <Stack space="1.5">
-                    <Text size="lg" weight="medium" color="secondary">
-                      {stageContext.app.name}
-                    </Text>
-                    <Text color="dimmed">{stageContext.stage.name}</Text>
-                  </Stack>
-                ) : (
-                  <Text size="lg" weight="medium" color="secondary">
-                    krusty-krab
-                  </Text>
-                )}
-                <SwitcherIcon />
-              </StageSwitcher>
-            </Row>
-            <User>
-              <div
-                onClick={() =>
-                  rep().mutate.app_stage_sync({ stageID: stage()!.id })
-                }
-              >
-                resync
-              </div>
-              <UserImage src={patrick} />
-            </User>
-          </Header>
+          <Header app={app()?.name} stage={stage()?.name} />
           <Content>
             <Routes>
               <Route path="" component={Resources} />

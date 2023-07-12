@@ -2,26 +2,17 @@ import { AppStore } from "$/data/app";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
 import { createSubscription } from "$/providers/replicache";
-import {
-  Button,
-  Fullscreen,
-  Row,
-  Stack,
-  Tag,
-  Text,
-  theme,
-  utility,
-} from "$/ui";
+import { Button, Row, Stack, Tag, Text, theme, utility } from "$/ui";
 import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
 import type { Stage } from "@console/core/app";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { For, Show, createEffect, createMemo } from "solid-js";
+import { Header } from "./header";
 
 const Root = styled("div", {
   base: {
-    width: "100%",
-    maxWidth: 768,
+    padding: theme.space[4],
   },
 });
 
@@ -84,7 +75,8 @@ export function Overview() {
   });
 
   return (
-    <Fullscreen>
+    <>
+      <Header />
       <Root>
         <Stack space="4">
           <Row vertical="center" horizontal="between">
@@ -137,7 +129,7 @@ export function Overview() {
           </List>
         </Stack>
       </Root>
-    </Fullscreen>
+    </>
   );
 }
 
