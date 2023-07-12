@@ -75,8 +75,16 @@ export function ReplicacheProvider(
     rep().close();
   });
 
+  const init = createSubscription(
+    () => (tx) => {
+      return tx.get("/init");
+    },
+    false,
+    rep
+  );
+
   return (
-    <Show when={rep()}>
+    <Show when={rep() && init()}>
       <ReplicacheContext.Provider value={rep}>
         {props.children}
       </ReplicacheContext.Provider>
