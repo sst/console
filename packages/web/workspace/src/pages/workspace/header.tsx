@@ -69,6 +69,21 @@ const SwitcherIcon = styled(IconChevronUpDown, {
   },
 });
 
+const LogoutButton = styled("span", {
+  base: {
+    fontWeight: 500,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.base,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.text.secondary.base,
+    },
+  },
+});
+
 export function Header(props: { app?: string; stage?: string }) {
   const workspace = useWorkspace();
   const bar = useCommandBar();
@@ -104,6 +119,8 @@ export function Header(props: { app?: string; stage?: string }) {
           <SwitcherIcon />
         </StageSwitcher>
       </Row>
+      <LogoutButton>Logout</LogoutButton>
+      {/*
       <User>
         <UserImage />
         <Text
@@ -119,6 +136,7 @@ export function Header(props: { app?: string; stage?: string }) {
           Logout
         </Text>
       </User>
+      */}
     </Root>
   );
 }

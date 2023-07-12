@@ -23,8 +23,8 @@ export const Text = styled("span", {
     },
     uppercase: {
       true: {
+        letterSpacing: 0.5,
         textTransform: "uppercase",
-        letterSpacing: "0.5",
       },
     },
     weight: {
