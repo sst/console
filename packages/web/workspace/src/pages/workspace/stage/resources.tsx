@@ -200,7 +200,10 @@ export const ChildIconButton = styled(ChildIcon, {
   variants: {
     copying: {
       true: {
-        color: theme.color.icon.primary,
+        color: theme.color.accent,
+        ":hover": {
+          color: theme.color.accent,
+        },
       },
     },
   },
@@ -764,7 +767,7 @@ export function OutputsCard() {
                         onClick={() => {
                           setCopying(true);
                           navigator.clipboard.writeText(output.OutputValue!);
-                          setTimeout(() => setCopying(false), 1000);
+                          setTimeout(() => setCopying(false), 2000);
                         }}
                       >
                         <Show when={!copying()} fallback={<IconCheck />}>

@@ -129,7 +129,9 @@ export function Account() {
               import.meta.env.VITE_CONNECT_URL
             }`}
           >
-            <Button color="primary">Connect an AWS Account</Button>
+            <Button style={{ width: "100%" }} color="primary">
+              Connect an AWS Account
+            </Button>
           </a>
           <Text size="xs" color="dimmed">
             You can always connect another account later
