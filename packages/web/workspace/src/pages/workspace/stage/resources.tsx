@@ -291,7 +291,7 @@ export function Resources() {
               <Stack horizontal="center" space="2">
                 <Text size="lg" weight="medium">
                   Unsupported SST version
-                  {minVersion() ? "v" + minVersion() : ""}
+                  {minVersion() ? " v" + minVersion() : ""}
                 </Text>
                 <Text center size="sm" color="secondary">
                   To use the SST Console,{" "}
