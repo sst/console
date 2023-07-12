@@ -18,7 +18,14 @@ import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
 import { IconSubRight } from "$/ui/icons/custom";
 import { UserStore } from "$/data/user";
-import { IconBuildingOffice } from "$/ui/icons";
+import {
+  IconBuildingOffice,
+  IconLink,
+  IconPlus,
+  IconUser,
+  IconUserPlus,
+  IconUsers,
+} from "$/ui/icons";
 import { Fullscreen, Stack, Text } from "$/ui";
 import { Syncing } from "$/ui/loader";
 import { User } from "./user";
@@ -45,6 +52,7 @@ export function Workspace() {
 
   const bar = useCommandBar();
 
+  /*
   bar.register("account", async () => {
     return [
       {
@@ -74,10 +82,11 @@ export function Workspace() {
       },
     ];
   });
+  */
   bar.register("workspace", async () => {
     return [
       {
-        icon: IconSubRight,
+        icon: IconUserPlus,
         title: "Add user to workspace",
         category: "Workspace",
         run: (control) => {
@@ -86,7 +95,7 @@ export function Workspace() {
         },
       },
       {
-        icon: IconSubRight,
+        icon: IconLink,
         title: "Connect an AWS Account",
         category: "Workspace",
         run: (control) => {
@@ -115,18 +124,29 @@ export function Workspace() {
       })
     ).then((x) => x.flat());
     const splits = location.pathname.split("/");
-    return workspaces
-      .filter((w) => w.workspace?.slug !== splits[1])
-      .map((w) => ({
-        title: `Switch to ${w.workspace?.slug} workspace`,
+    return [
+      ...workspaces
+        .filter((w) => w.workspace?.slug !== splits[1])
+        .map((w) => ({
+          title: `Switch to ${w.workspace?.slug} workspace`,
+          category: "Workspace",
+          icon: IconBuildingOffice,
+          run: (control: any) => {
+            setAccount(w.account.token.accountID);
+            nav(`/${w.workspace.slug}`);
+            control.hide();
+          },
+        })),
+      {
+        icon: IconPlus,
         category: "Workspace",
-        icon: IconBuildingOffice,
+        title: "Create new workspace",
         run: (control) => {
-          setAccount(w.account.token.accountID);
-          nav(`/${w.workspace.slug}`);
+          nav("/workspace");
           control.hide();
         },
-      }));
+      },
+    ];
   });
 
   return (
