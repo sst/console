@@ -326,15 +326,21 @@ type Control = ReturnType<typeof createControl>;
 const CommandbarContext = createContext<Control>();
 
 export function CommandBar(props: ParentProps) {
+  createEventListener(document, "mouseup", (e) => {
+    if (!modal?.contains(e.target as Node)) {
+      if (control.visible) control.hide();
+    }
+  });
   const control = createControl();
   let scrolling: NodeJS.Timer | undefined;
+  let modal!: HTMLDivElement;
 
   return (
     <CommandbarContext.Provider value={control}>
       {props.children}
       <Portal mount={document.getElementById("styled")!}>
         <Root show={control.visible} ref={control.bind}>
-          <Modal>
+          <Modal ref={modal}>
             <Filter>
               <FilterInput
                 value={control.input}
