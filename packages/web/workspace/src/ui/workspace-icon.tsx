@@ -50,13 +50,27 @@ const Icon = styled("span", {
 });
 
 export function WorkspaceIcon(props: WorkspaceIconProps) {
-  const svg = createMemo(() =>
-    encodeURIComponent(
+  const svg = createMemo(() => {
+    const parts = props.text.split(/[-_]/g).filter((p) => p.trim() !== "");
+    let text = "";
+
+    if (parts.length > 1) {
+      text = parts[0].slice(0, 1) + parts[1].slice(0, 1);
+    } else {
+      const alpha = props.text.replace(/[^a-zA-Z]/g, "");
+      if (alpha.length === 0) {
+        text = "-";
+      } else {
+        text = alpha.slice(0, 2);
+      }
+    }
+
+    return encodeURIComponent(
       generateAvatarSvg({
-        text: props.text.slice(0, 2).toUpperCase(),
+        text: text.toUpperCase(),
       })
-    )
-  );
+    );
+  });
 
   return (
     <Icon

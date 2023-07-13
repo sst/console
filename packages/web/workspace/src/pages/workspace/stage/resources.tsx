@@ -313,7 +313,7 @@ export function Resources() {
             <UnsupportedAppBannerIcon>
               <IconExclamationTriangle />
             </UnsupportedAppBannerIcon>
-            <Text color="secondary" on="surface" leading="normal">
+            <Text size="sm" color="secondary" on="surface" leading="normal">
               Some of the stacks in this app are not supported by the SST
               Console.{" "}
               <a
@@ -450,8 +450,8 @@ const UnsupportedAppBannerRoot = styled("div", {
 
 const UnsupportedAppBannerIcon = styled("div", {
   base: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     color: theme.color.icon.dimmed,
   },
 });
@@ -480,9 +480,9 @@ export const IconMap = {
   RemixSite: IconRemixSite,
   NextjsSite: IconNextjsSite,
   StaticSite: IconStaticSite,
+  SlsNextjsSite: IconNextjsSite,
   WebSocketApi: IconWebSocketApi,
   KinesisStream: IconKinesisStream,
-  SlsNextjsSite: IconNextjsSite,
   SvelteKitSite: IconSvelteKitSite,
   SolidStartSite: IconSolidStartSite,
   ApiGatewayV1Api: IconApiGatewayV1Api,

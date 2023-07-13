@@ -1152,8 +1152,8 @@ const UnsupportedAppBannerRoot = styled("div", {
 
 const UnsupportedAppBannerIcon = styled("div", {
   base: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     color: theme.color.icon.dimmed,
   },
 });
@@ -1181,7 +1181,7 @@ function UnsupportedAppBanner() {
       <UnsupportedAppBannerIcon>
         <IconExclamationTriangle />
       </UnsupportedAppBannerIcon>
-      <Text color="secondary" on="surface" leading="normal">
+      <Text color="secondary" on="surface" leading="normal" size="sm">
         Some of the stacks in this app are not supported by the SST Console.{" "}
         <a
           target="_blank"

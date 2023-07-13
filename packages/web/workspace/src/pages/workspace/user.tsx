@@ -25,9 +25,11 @@ export function User() {
         <WorkspaceIcon text={workspace().slug} />
         <Stack horizontal="center" space="2">
           <Text size="lg" weight="medium">
-            Create a new user
+            Add a user to this workspace
           </Text>
-          <Text color="secondary">Invite your team to collaborate</Text>
+          <Text color="secondary">
+            Enter their email and we'll send an invite
+          </Text>
         </Stack>
         <Form
           onSubmit={async (e) => {
@@ -46,10 +48,10 @@ export function User() {
             type="email"
             autofocus
             name="email"
-            placeholder="user@example.com"
             hint="Need copy here"
+            placeholder="user@example.com"
           />
-          <Button type="submit">Create</Button>
+          <Button type="submit">Send Invite</Button>
         </Form>
       </Stack>
     </Fullscreen>

@@ -62,7 +62,7 @@ export function Email() {
             Welcome to the SST Console
           </Text>
           <Text color="secondary" on="base" center>
-            Log in with your email to get started
+            Sign in with your email to get started
           </Text>
         </Stack>
       </Stack>
@@ -114,7 +114,7 @@ export function Code() {
             Let's verify your email
           </Text>
           <Text color="secondary" on="base" center>
-            Enter the code that we emailed to you
+            Check your inbox for the code we sent you
           </Text>
         </Stack>
       </Stack>
