@@ -10,6 +10,7 @@ import {
   Show,
   Switch,
   createContext,
+  createEffect,
   createMemo,
   useContext,
 } from "solid-js";
@@ -44,10 +45,11 @@ export function Workspace() {
   const params = useParams();
   const auth = useAuth();
   const nav = useNavigate();
+  const rep = createMemo(() => auth[account()].replicache);
   const workspace = createSubscription(
     () => WorkspaceStore.fromSlug(params.workspaceSlug),
     undefined,
-    () => auth[account()].replicache
+    rep
   );
 
   const bar = useCommandBar();
@@ -149,6 +151,9 @@ export function Workspace() {
     ];
   });
 
+  createEffect(() => {
+    console.log("workspace", workspace());
+  });
   return (
     <Show when={workspace()}>
       <ReplicacheProvider accountID={account()} workspaceID={workspace()!.id}>

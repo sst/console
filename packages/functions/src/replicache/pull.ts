@@ -57,11 +57,6 @@ export const handler = ApiHandler(async () => {
         result.patch.push({
           op: "clear",
         });
-        result.patch.push({
-          op: "put",
-          key: "/init",
-          value: true,
-        });
       }
       const tables = {
         workspace,
@@ -135,6 +130,14 @@ export const handler = ApiHandler(async () => {
         });
       }
 
+      if (!oldCvrID) {
+        result.patch.push({
+          op: "put",
+          key: "/init",
+          value: true,
+        });
+      }
+
       if (result.patch.length > 0) {
         const nextCvrID = createId();
         await tx
@@ -155,11 +158,6 @@ export const handler = ApiHandler(async () => {
       if (first) {
         result.patch.push({
           op: "clear",
-        });
-        result.patch.push({
-          op: "put",
-          key: "/init",
-          value: true,
         });
       }
       const [users] = await Promise.all([
@@ -205,6 +203,13 @@ export const handler = ApiHandler(async () => {
         [...workspaces, ...users].sort((a, b) =>
           b.timeUpdated > a.timeUpdated ? 1 : -1
         )[0]?.timeUpdated || lastSync;
+      if (first) {
+        result.patch.push({
+          op: "put",
+          key: "/init",
+          value: true,
+        });
+      }
     }
 
     return {
