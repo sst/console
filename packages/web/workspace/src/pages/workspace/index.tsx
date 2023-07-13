@@ -108,49 +108,6 @@ export function Workspace() {
     ];
   });
 
-  bar.register("workspace-switcher", async () => {
-    const workspaces = await Promise.all(
-      Object.values(auth).map(async (account) => {
-        const workspaces = await account.replicache.query(async (tx) => {
-          const users = await UserStore.list()(tx);
-          return Promise.all(
-            users.map(async (user) => {
-              const workspace = await WorkspaceStore.fromID(user.workspaceID)(
-                tx
-              );
-              return { account: account, workspace };
-            })
-          );
-        });
-        return workspaces;
-      })
-    ).then((x) => x.flat());
-    const splits = location.pathname.split("/");
-    return [
-      ...workspaces
-        .filter((w) => w.workspace?.slug !== splits[1])
-        .map((w) => ({
-          title: `Switch to ${w.workspace?.slug} workspace`,
-          category: "Workspace",
-          icon: IconBuildingOffice,
-          run: (control: any) => {
-            setAccount(w.account.token.accountID);
-            nav(`/${w.workspace.slug}`);
-            control.hide();
-          },
-        })),
-      {
-        icon: IconPlus,
-        category: "Workspace",
-        title: "Create new workspace",
-        run: (control) => {
-          nav("/workspace");
-          control.hide();
-        },
-      },
-    ];
-  });
-
   createEffect(() => {
     console.log("workspace", workspace());
   });

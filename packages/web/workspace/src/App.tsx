@@ -4,11 +4,11 @@ import { styled } from "@macaron-css/solid";
 import { darkClass, lightClass, theme } from "./ui/theme";
 import { globalStyle, macaron$ } from "@macaron-css/core";
 import { Component, Match, Switch, createSignal, onCleanup } from "solid-js";
-import { Navigate, Route, Router, Routes } from "@solidjs/router";
+import { Navigate, Route, Router, Routes, useNavigate } from "@solidjs/router";
 import { Auth, Code, Email } from "./pages/auth";
 import { AuthProvider, useAuth } from "./providers/auth";
 import { RealtimeProvider } from "./providers/realtime";
-import { CommandBar } from "./pages/workspace/command-bar";
+import { CommandBar, useCommandBar } from "./pages/workspace/command-bar";
 import { Debug } from "./pages/debug";
 import { Design } from "./pages/design";
 import { Connect } from "./pages/connect";
@@ -17,6 +17,8 @@ import { WorkspaceCreate } from "./pages/workspace-create";
 import { account, setAccount } from "./data/storage";
 import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
+import { UserStore } from "./data/user";
+import { IconBuildingOffice, IconPlus } from "./ui/icons";
 
 const Root = styled("div", {
   base: {
@@ -107,6 +109,7 @@ export const App: Component = () => {
               <AuthProvider>
                 <RealtimeProvider />
                 <CommandBar>
+                  <GlobalCommands />
                   <Routes>
                     <Route path="debug" component={Debug} />
                     <Route path="design" component={Design} />
@@ -167,3 +170,52 @@ export const App: Component = () => {
     </Root>
   );
 };
+
+function GlobalCommands() {
+  const bar = useCommandBar();
+  const auth = useAuth();
+  const nav = useNavigate();
+  bar.register("workspace-switcher", async () => {
+    const workspaces = await Promise.all(
+      Object.values(auth).map(async (account) => {
+        const workspaces = await account.replicache.query(async (tx) => {
+          const users = await UserStore.list()(tx);
+          return Promise.all(
+            users.map(async (user) => {
+              const workspace = await WorkspaceStore.fromID(user.workspaceID)(
+                tx
+              );
+              return { account: account, workspace };
+            })
+          );
+        });
+        return workspaces;
+      })
+    ).then((x) => x.flat());
+    const splits = location.pathname.split("/");
+    return [
+      ...workspaces
+        .filter((w) => w.workspace?.slug !== splits[1])
+        .map((w) => ({
+          title: `Switch to ${w.workspace?.slug} workspace`,
+          category: "Workspace",
+          icon: IconBuildingOffice,
+          run: (control: any) => {
+            setAccount(w.account.token.accountID);
+            nav(`/${w.workspace.slug}`);
+            control.hide();
+          },
+        })),
+      {
+        icon: IconPlus,
+        category: "Workspace",
+        title: "Create new workspace",
+        run: (control) => {
+          nav("/workspace");
+          control.hide();
+        },
+      },
+    ];
+  });
+  return undefined;
+}
