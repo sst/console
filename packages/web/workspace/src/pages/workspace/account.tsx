@@ -7,7 +7,7 @@ import { FormInput } from "$/ui/form";
 import { createId } from "@paralleldrive/cuid2";
 import { useReplicache } from "$/providers/replicache";
 import { Link, useNavigate } from "@solidjs/router";
-import { IconArrowLongLeft, IconArrowLongRight } from "$/ui/icons";
+import { IconArrowsRightLeft } from "$/ui/icons";
 import { IconAws } from "$/ui/icons/custom";
 import { Header } from "./header";
 
@@ -26,31 +26,9 @@ const AddAccountGraphicAwsIcon = styled("div", {
 
 const AddAccountGraphicConnectIcon = styled("div", {
   base: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
-
-const AddAccountGraphicConnectArrowIcon = styled("div", {
-  base: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    marginLeft: -8,
     width: 16,
     height: 16,
     color: theme.color.text.dimmed.base,
-  },
-  variants: {
-    direction: {
-      left: {
-        marginTop: -13,
-      },
-      right: {
-        marginTop: -3,
-      },
-    },
   },
 });
 
@@ -89,15 +67,10 @@ export function Account() {
       <Header />
       <Fullscreen>
         <Stack space="5" vertical="center">
-          <Row horizontal="center" space="4">
-            <WorkspaceIcon text="acme" />
+          <Row vertical="center" horizontal="center" space="2">
+            <WorkspaceIcon text={workspace().slug} />
             <AddAccountGraphicConnectIcon>
-              <AddAccountGraphicConnectArrowIcon direction="left">
-                <IconArrowLongLeft />
-              </AddAccountGraphicConnectArrowIcon>
-              <AddAccountGraphicConnectArrowIcon direction="right">
-                <IconArrowLongRight />
-              </AddAccountGraphicConnectArrowIcon>
+              <IconArrowsRightLeft />
             </AddAccountGraphicConnectIcon>
             <AddAccountGraphicAwsIcon>
               <IconAws />

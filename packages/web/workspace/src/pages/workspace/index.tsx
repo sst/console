@@ -19,8 +19,8 @@ import { useAuth } from "$/providers/auth";
 import { IconSubRight } from "$/ui/icons/custom";
 import { UserStore } from "$/data/user";
 import {
+  IconArrowsRightLeft,
   IconBuildingOffice,
-  IconLink,
   IconPlus,
   IconUser,
   IconUserPlus,
@@ -95,7 +95,7 @@ export function Workspace() {
         },
       },
       {
-        icon: IconLink,
+        icon: IconArrowsRightLeft,
         title: "Connect an AWS Account",
         category: "Workspace",
         run: (control) => {

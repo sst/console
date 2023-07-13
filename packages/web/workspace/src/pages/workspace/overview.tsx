@@ -105,10 +105,10 @@ export function Overview() {
             <Fullscreen>
               <Syncing>
                 <Stack space="2.5">
-                  <Text center size="lg" color="dimmed">
+                  <Text center size="lg" color="secondary">
                     Waiting to connect to your AWS account&hellip;
                   </Text>
-                  <Text center size="sm" color="dimmed">
+                  <Text center size="sm" color="secondary">
                     Haven't connected one yet?{" "}
                     <Link href="account">Head over here.</Link>
                   </Text>
