@@ -5,6 +5,7 @@ import {
 } from "aws-lambda";
 import { AWS } from "@console/core/aws";
 import { provideActor } from "@console/core/actor";
+import { useTransaction } from "@console/core/util/transaction";
 
 export async function handler(event: CloudFormationCustomResourceEvent) {
   let status: CloudFormationCustomResourceResponse["Status"] = "SUCCESS";
@@ -19,8 +20,14 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
       const credentials = await AWS.assumeRole(
         event.ResourceProperties.accountID
       );
-      await AWS.Account.create({
-        accountID: event.ResourceProperties.accountID,
+      await useTransaction(async () => {
+        const existing = await AWS.Account.fromAccountID(
+          event.ResourceProperties.accountID
+        );
+        if (existing) return existing.id;
+        return await AWS.Account.create({
+          accountID: event.ResourceProperties.accountID,
+        });
       });
       console.log(credentials);
       status = "SUCCESS";
