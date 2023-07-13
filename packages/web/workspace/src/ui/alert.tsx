@@ -31,9 +31,9 @@ const AlertRoot = styled("div", {
 
 const AlertIcon = styled("div", {
   base: {
-    width: 18,
-    height: 18,
-    paddingTop: 1,
+    width: 16,
+    height: 16,
+    paddingTop: 3,
     opacity: theme.iconOpacity,
     selectors: {
       [`${AlertRoot.selector({ level: "info" })} &`]: {
