@@ -150,6 +150,7 @@ export const regions = zod(
 
 export const integrate = zod(Info.shape.id, async (id) => {
   const account = await fromID(id);
+  console.log("integrating account", account);
   if (!account) return;
   const credentials = await assumeRole(account.accountID);
   await Promise.all(
