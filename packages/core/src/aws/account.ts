@@ -169,6 +169,8 @@ export const integrate = zod(Info.shape.id, async (id) => {
       const eb = new EventBridgeClient(config);
       const iam = new IAMClient(config);
 
+      console.log("found sst bucket", b.bucket);
+
       await s3.send(
         new PutBucketNotificationConfigurationCommand({
           Bucket: b.bucket,
