@@ -11,7 +11,7 @@ import { account } from "./account.sql";
 
 export const Info = createSelectSchema(account, {
   id: (schema) => schema.id.cuid2(),
-  email: (schema) => schema.email.trim().email(),
+  email: (schema) => schema.email.trim().toLowerCase().email(),
 });
 export type Info = z.infer<typeof Info>;
 
