@@ -12,7 +12,7 @@ import { useWorkspace } from "../actor";
 
 export const Info = createSelectSchema(user, {
   id: (schema) => schema.id.cuid2(),
-  email: (schema) => schema.email.trim().toLowerCase().email(),
+  email: (schema) => schema.email.trim().toLowerCase().nonempty(),
   workspaceID: (schema) => schema.workspaceID.cuid2(),
 });
 export type Info = z.infer<typeof Info>;
