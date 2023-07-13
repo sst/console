@@ -14,9 +14,11 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { filter, groupBy, pipe } from "remeda";
 import { globalStyle } from "@macaron-css/core";
-import { createShortcut } from "@solid-primitives/keyboard";
 import { Portal } from "solid-js/web";
-import { createEventListener } from "@solid-primitives/event-listener";
+import {
+  createEventListener,
+  makeEventListener,
+} from "@solid-primitives/event-listener";
 import { createMutationObserver } from "@solid-primitives/mutation-observer";
 import { utility } from "$/ui/utility";
 
@@ -173,6 +175,7 @@ function createControl() {
   const [root, setRoot] = createSignal<HTMLElement>();
 
   function show(...providers: string[]) {
+    console.log("showing command bar");
     batch(() => {
       setActiveProviders(providers);
       setVisible(true);
@@ -186,12 +189,16 @@ function createControl() {
     setVisible(false);
   }
 
-  createShortcut(["Control", "K"], () => {
-    show();
-  });
+  makeEventListener(document, "keydown", (e) => {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      show();
+    }
 
-  createShortcut(["Meta", "K"], () => {
-    show();
+    if (e.key === "Enter") {
+      const current = control.active();
+      if (current) current.click();
+    }
   });
 
   createEffect(async () => {
@@ -274,11 +281,6 @@ function createControl() {
       return control.move(-1);
     },
   };
-
-  createShortcut(["Enter"], () => {
-    const current = control.active();
-    if (current) current.click();
-  });
 
   createEventListener(window, "keydown", (e) => {
     if (!visible()) return;
