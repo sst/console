@@ -320,7 +320,7 @@ export function Resources() {
                 target="_blank"
                 href="https://github.com/serverless-stack/sst/releases"
               >
-                Upgrade them to v{MINIMUM_VERSION}.
+                Upgrade them to at least v{MINIMUM_VERSION}.
               </a>
             </Text>
           </UnsupportedAppBannerRoot>
