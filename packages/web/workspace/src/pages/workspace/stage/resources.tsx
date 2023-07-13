@@ -289,7 +289,7 @@ export function Resources() {
                 <IconExclamationTriangle />
               </UnsupportedAppIcon>
               <Stack horizontal="center" space="2">
-                <Text size="lg" weight="medium">
+                <Text line size="lg" weight="medium">
                   Unsupported SST version
                   {minVersion() ? " v" + minVersion() : ""}
                 </Text>
@@ -299,7 +299,7 @@ export function Resources() {
                     target="_blank"
                     href="https://github.com/serverless-stack/sst/releases"
                   >
-                    upgrade to v{MINIMUM_VERSION}
+                    upgrade to v{MINIMUM_VERSION}.
                   </a>
                 </Text>
               </Stack>
