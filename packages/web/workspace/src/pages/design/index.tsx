@@ -11,6 +11,7 @@ import {
 } from "$/ui/icons";
 import { Text } from "$/ui/text";
 import { Tag } from "$/ui/tag";
+import { Alert } from "$/ui/alert";
 import { Button, LinkButton } from "$/ui/button";
 import { utility } from "$/ui/utility";
 import {
@@ -161,7 +162,16 @@ export function Design() {
       <ComponentType name="UnsupportedAppBanner">
         <Variant name="Default">
           <Grower>
-            <UnsupportedAppBanner />
+            <Alert level="info">
+              Some of the stacks in this app are not supported by the SST
+              Console.{" "}
+              <a
+                target="_blank"
+                href="https://github.com/serverless-stack/sst/releases"
+              >
+                Upgrade them to at least v2.19.1.
+              </a>
+            </Alert>
           </Grower>
         </Variant>
       </ComponentType>
@@ -337,6 +347,24 @@ export function Design() {
             </ButtonIcon>
             Login with GitHub
           </Button>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Alert">
+        <Variant name="Info">
+          <Grower>
+            <Alert level="info">
+              This is an info alert. You don't need to take it very seriously.
+              But it is a long info alert that will overflow. And we want to
+              test how long it can really get. So here is some more text.
+            </Alert>
+          </Grower>
+        </Variant>
+        <Variant name="Danger">
+          <Grower>
+            <Alert level="danger">
+              This is a danger alert. You need to take it very seriously.
+            </Alert>
+          </Grower>
         </Variant>
       </ComponentType>
       <ComponentType name="Tag">

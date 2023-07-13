@@ -14,7 +14,7 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { Fullscreen, Row, Stack } from "$/ui/layout";
-import { Tag, Text } from "$/ui";
+import { Tag, Text, Alert } from "$/ui";
 import {
   IconApi,
   IconRDS,
@@ -309,11 +309,7 @@ export function Resources() {
       </Match>
       <Match when={true}>
         <Show when={outdated().length}>
-          <UnsupportedAppBannerRoot>
-            <UnsupportedAppBannerIcon>
-              <IconExclamationTriangle />
-            </UnsupportedAppBannerIcon>
-            <Text size="sm" color="secondary" on="surface" leading="normal">
+          <Alert level="info">
               Some of the stacks in this app are not supported by the SST
               Console.{" "}
               <a
@@ -322,8 +318,7 @@ export function Resources() {
               >
                 Upgrade them to at least v{MINIMUM_VERSION}.
               </a>
-            </Text>
-          </UnsupportedAppBannerRoot>
+          </Alert>
         </Show>
         <For
           each={resources()
