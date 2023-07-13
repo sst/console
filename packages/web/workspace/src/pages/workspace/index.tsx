@@ -2,33 +2,18 @@ import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { ReplicacheProvider, createSubscription } from "$/providers/replicache";
 import { Connect } from "./connect";
 import { useCommandBar } from "./command-bar";
-import { account, setAccount } from "$/data/storage";
+import { account } from "$/data/storage";
 import { Stage } from "./stage";
 import {
   Accessor,
-  Match,
   Show,
-  Switch,
   createContext,
-  createEffect,
   createMemo,
   useContext,
 } from "solid-js";
-import { StageStore } from "$/data/stage";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
-import { IconSubRight } from "$/ui/icons/custom";
-import { UserStore } from "$/data/user";
-import {
-  IconArrowsRightLeft,
-  IconBuildingOffice,
-  IconPlus,
-  IconUser,
-  IconUserPlus,
-  IconUsers,
-} from "$/ui/icons";
-import { Fullscreen, Stack, Text } from "$/ui";
-import { Syncing } from "$/ui/loader";
+import { IconArrowsRightLeft, IconUserPlus } from "$/ui/icons";
 import { User } from "./user";
 import { Account } from "./account";
 import { Overview } from "./overview";
@@ -54,37 +39,6 @@ export function Workspace() {
 
   const bar = useCommandBar();
 
-  /*
-  bar.register("account", async () => {
-    return [
-      {
-        icon: IconSubRight,
-        category: "Account",
-        title: "Create new workspace",
-        run: (control) => {
-          nav("/workspace");
-          control.hide();
-        },
-      },
-      {
-        icon: IconSubRight,
-        category: "Account",
-        title: "Switch workspaces...",
-        run: (control) => {
-          control.show("workspace-switcher");
-        },
-      },
-      {
-        icon: IconSubRight,
-        category: "Account",
-        title: "Switch apps...",
-        run: (control) => {
-          control.show("app-switcher");
-        },
-      },
-    ];
-  });
-  */
   bar.register("workspace", async () => {
     return [
       {
@@ -108,9 +62,6 @@ export function Workspace() {
     ];
   });
 
-  createEffect(() => {
-    console.log("workspace", workspace());
-  });
   return (
     <Show when={workspace()}>
       <ReplicacheProvider accountID={account()} workspaceID={workspace()!.id}>
