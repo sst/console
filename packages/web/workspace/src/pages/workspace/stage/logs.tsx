@@ -233,6 +233,7 @@ const LogEntryTime = styled("div", {
 const LogEntryMessage = styled("span", {
   base: {
     minWidth: 0,
+    whiteSpace: "pre-wrap",
     overflowWrap: "break-word",
     lineHeight: theme.font.lineHeight,
     color: theme.color.text.primary.surface,

@@ -1,4 +1,4 @@
-import {Invocation} from "$/data/log";
+import { Invocation } from "$/data/log";
 
 export const DUMMY_LOGS: Invocation[] = [
   {
@@ -12,7 +12,19 @@ export const DUMMY_LOGS: Invocation[] = [
     id: crypto.randomUUID(),
     logs: [
       {
-        message: "start of log",
+        // Test fomatting
+        message: `vR {
+  cmd: 'connack',
+  retain: false,
+  qos: 0,
+  dup: false,
+  length: 2,
+  topic: null,
+  payload: null,
+  sessionPresent: false,
+  returnCode: 0
+}
+        `,
         timestamp: new Date("1995-12-17T01:24:00"),
       },
       {
