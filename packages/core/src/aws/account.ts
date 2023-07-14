@@ -132,7 +132,6 @@ export const bootstrap = zod(
 
 import { DescribeRegionsCommand, EC2Client } from "@aws-sdk/client-ec2";
 import { App } from "../app";
-import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 
 export const regions = zod(

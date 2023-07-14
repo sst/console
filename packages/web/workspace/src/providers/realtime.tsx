@@ -1,6 +1,6 @@
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { iot, mqtt } from "aws-iot-device-sdk-v2";
-import { createEffect, onCleanup } from "solid-js";
+import { createEffect, onCleanup, onMount } from "solid-js";
 import { useAuth } from "./auth";
 import { WorkspaceStore } from "$/data/workspace";
 import { bus } from "./bus";
@@ -71,7 +71,28 @@ export function RealtimeProvider() {
     await connection.connect();
   });
 
+  let reconnect: NodeJS.Timer;
+  onMount(() => {
+    let ws: WebSocket;
+    function connect() {
+      clearTimeout(reconnect);
+      ws = new WebSocket("ws://localhost:13557/socket");
+      ws.onmessage = (e) => {
+        const parsed = JSON.parse(e.data);
+        bus.emit(parsed.type, parsed.properties);
+      };
+      ws.onclose = () => {
+        reconnect = setTimeout(connect, 3000);
+      };
+      ws.onerror = () => {
+        reconnect = setTimeout(connect, 3000);
+      };
+    }
+    connect();
+  });
+
   onCleanup(() => {
+    if (reconnect) clearTimeout(reconnect);
     if (connection) connection.disconnect();
   });
 

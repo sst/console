@@ -24,6 +24,7 @@ import { DUMMY_LOGS } from "./logs-dummy";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { useCommandBar } from "../command-bar";
 import { IconMap } from "./resources";
+import { createMemoObject } from "@solidjs/router/dist/utils";
 
 const LogListHeader = styled("div", {
   base: {
@@ -408,6 +409,12 @@ export function Logs() {
 
     return logGroup;
   });
+
+  const addr = createMemo(() => {
+    const r = resource();
+    if (!r) return;
+    if (r.type === "Function") return r.addr;
+  });
   const rep = useReplicache();
   const poller = createSubscription(() =>
     LogPollerStore.fromLogGroup(logGroup())
@@ -423,9 +430,12 @@ export function Logs() {
   });
 
   const logs = createMemo((): Invocation[] => {
-    console.log("dummy", query.dummy);
     if (query.dummy) return DUMMY_LOGS;
-    return LogStore[logGroup()] || [];
+    return LogStore[addr()!] || LogStore[logGroup()] || [];
+  });
+
+  createEffect(() => {
+    console.log("logs", logs(), addr(), logGroup());
   });
 
   return (
@@ -447,7 +457,12 @@ export function Logs() {
             </LogLoadingIndicatorCopy>
           </Row>
           <Show when={logs().length > 0}>
-            <LogClearButton onClick={() => clearLogStore(logGroup())}>
+            <LogClearButton
+              onClick={() => {
+                clearLogStore(logGroup());
+                clearLogStore(addr()!);
+              }}
+            >
               Clear
             </LogClearButton>
           </Show>

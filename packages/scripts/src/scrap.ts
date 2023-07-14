@@ -12,7 +12,6 @@ for (const account of accounts) {
       workspaceID: account.workspaceID,
     },
   });
-
   await AWS.Account.Events.Created.publish({
     awsAccountID: account.id,
   });

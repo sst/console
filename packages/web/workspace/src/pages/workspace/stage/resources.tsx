@@ -261,7 +261,9 @@ export function Resources() {
   const outdated = createMemo(() =>
     stacks().filter(
       (r) =>
-        r.type === "Stack" && (r.enrichment.version || "") < MINIMUM_VERSION
+        r.type === "Stack" &&
+        (r.enrichment.version || "") < MINIMUM_VERSION &&
+        !r.enrichment.version?.startsWith("0.0.0")
     )
   );
   const minVersion = createMemo(
