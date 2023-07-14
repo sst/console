@@ -18,8 +18,8 @@ importers:
         specifier: 10.1.156
         version: 10.1.156
       sst:
-        specifier: 2.21.2
-        version: link:../sst/packages/sst/dist
+        specifier: 2.21.3
+        version: 2.21.3
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -88,8 +88,8 @@ importers:
         specifier: 0.19.3
         version: 0.19.3
       sst:
-        specifier: 2.21.2
-        version: 2.21.2
+        specifier: 2.21.3
+        version: 2.21.3
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -140,8 +140,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.21.2
-        version: 2.21.2
+        specifier: 2.21.3
+        version: 2.21.3
 
   packages/scripts:
     dependencies:
@@ -149,8 +149,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       sst:
-        specifier: 2.21.2
-        version: 2.21.2
+        specifier: 2.21.3
+        version: 2.21.3
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -220,8 +220,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.21.2
-        version: 2.21.2
+        specifier: 2.21.3
+        version: 2.21.3
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -347,7 +347,7 @@ packages:
       '@aws-crypto/ie11-detection': 3.0.0
       '@aws-crypto/supports-web-crypto': 3.0.0
       '@aws-crypto/util': 3.0.0
-      '@aws-sdk/types': 3.357.0
+      '@aws-sdk/types': 3.369.0
       '@aws-sdk/util-locate-window': 3.310.0
       '@aws-sdk/util-utf8-browser': 3.259.0
       tslib: 1.14.1
@@ -818,8 +818,8 @@ packages:
       '@aws-sdk/util-user-agent-browser': 3.338.0
       '@aws-sdk/util-user-agent-node': 3.338.0
       '@aws-sdk/util-utf8': 3.310.0
-      '@smithy/protocol-http': 1.0.1
-      '@smithy/types': 1.0.0
+      '@smithy/protocol-http': 1.1.1
+      '@smithy/types': 1.1.1
       tslib: 2.5.0
       uuid: 8.3.2
     transitivePeerDependencies:
@@ -5064,6 +5064,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       tslib: 2.5.0
+    dev: false
 
   /@aws-sdk/types@3.369.0:
     resolution: {integrity: sha512-0LgII+RatF2OEFaFQcNyX72py4ZgWz+/JAv++PXv0gkIaTRnsJbSveQArNynEK+aAc/rZKWJgBvwT4FvLM2vgA==}
@@ -7078,6 +7079,7 @@ packages:
     dependencies:
       '@smithy/types': 1.1.1
       tslib: 2.5.0
+    dev: false
 
   /@smithy/protocol-http@1.1.1:
     resolution: {integrity: sha512-mFLFa2sSvlUxm55U7B4YCIsJJIMkA6lHxwwqOaBkral1qxFz97rGffP/mmd4JDuin1EnygiO5eNJGgudiUgmDQ==}
@@ -7139,6 +7141,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       tslib: 2.5.0
+    dev: false
 
   /@smithy/types@1.1.0:
     resolution: {integrity: sha512-KzmvisMmuwD2jZXuC9e65JrgsZM97y5NpDU7g347oB+Q+xQLU6hQZ5zFNNbEfwwOJHoOvEVTna+dk1h/lW7alw==}
@@ -11023,8 +11026,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.21.2:
-    resolution: {integrity: sha512-56yn7n+BPqlOtR2pS4TX9Tx5CdHiyAo1n9THHok8rseYBXiYc6+miA9SMc+S/BK4TCzz5ut6WxoocFqtVHzgCg==}
+  /sst@2.21.3:
+    resolution: {integrity: sha512-VB+QKDo4QwfDjmoYY+BCqPyzHiWZRq2U7KNTviQ5LGZvf+UT1BQpUtYj3YUxVF792fweMK8K9Ca3dWn+MvV9Ow==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

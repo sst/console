@@ -434,10 +434,6 @@ export function Logs() {
     return LogStore[addr()!] || LogStore[logGroup()] || [];
   });
 
-  createEffect(() => {
-    console.log("logs", logs(), addr(), logGroup());
-  });
-
   return (
     <Stack space="4">
       <LogListHeader>
