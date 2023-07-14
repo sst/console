@@ -28,9 +28,10 @@ import { createMemoObject } from "@solidjs/router/dist/utils";
 
 const LogListHeader = styled("div", {
   base: {
-    ...utility.stack(0),
+    ...utility.row(0),
     height: 39,
-    justifyContent: "center",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 });
 
@@ -390,6 +391,7 @@ export function Logs() {
       }
     }
   });
+
   const logGroup = createMemo(() => {
     if (params.resourceID.includes("arn")) {
       return params.resourceID
@@ -415,6 +417,14 @@ export function Logs() {
     if (!r) return;
     if (r.type === "Function") return r.addr;
   });
+
+  const logs = {
+    local: createMemo(() => LogStore[addr()!]),
+    remote: createMemo(() => LogStore[logGroup()]),
+  };
+  const [mode, setMode] = createSignal<"local" | "remote">("remote");
+  const invocations = createMemo(() => logs[mode()]() || []);
+
   const rep = useReplicache();
   const poller = createSubscription(() =>
     LogPollerStore.fromLogGroup(logGroup())
@@ -429,17 +439,26 @@ export function Logs() {
     });
   });
 
-  const logs = createMemo((): Invocation[] => {
-    if (query.dummy) return DUMMY_LOGS;
-    return LogStore[addr()!] || LogStore[logGroup()] || [];
-  });
-
   return (
     <Stack space="4">
       <LogListHeader>
         <Text code size="mono_lg" weight="medium">
           {resource()?.metadata.handler}
         </Text>
+        <Show when={logs.local()?.length}>
+          <Row space="2">
+            <For each={["local", "remote"]}>
+              {(item) => (
+                <Text
+                  onClick={() => setMode(item as any)}
+                  color={mode() !== item ? "dimmed" : "primary"}
+                >
+                  {item}
+                </Text>
+              )}
+            </For>
+          </Row>
+        </Show>
         {/* <Show when={context()}>{context()}</Show> */}
       </LogListHeader>
       <LogList>
@@ -452,7 +471,7 @@ export function Logs() {
               Tailing logs&hellip;
             </LogLoadingIndicatorCopy>
           </Row>
-          <Show when={logs().length > 0}>
+          <Show when={invocations().length > 0}>
             <LogClearButton
               onClick={() => {
                 clearLogStore(logGroup());
@@ -463,7 +482,7 @@ export function Logs() {
             </LogClearButton>
           </Show>
         </LogLoadingIndicator>
-        <For each={logs().slice().reverse()}>
+        <For each={invocations().slice().reverse()}>
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
 
