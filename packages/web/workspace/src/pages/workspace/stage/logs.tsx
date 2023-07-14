@@ -518,6 +518,16 @@ export function Logs() {
                       </LogLink>
                     </LogDetailHeader>
                     <LogEntries>
+                      <Show when={invocation.event}>
+                        <LogEntry>
+                          <LogEntryTime>
+                            {invocation.start.toLocaleTimeString()}
+                          </LogEntryTime>
+                          <LogEntryMessage>
+                            Request: {JSON.stringify(invocation.event, null, 2)}
+                          </LogEntryMessage>
+                        </LogEntry>
+                      </Show>
                       {invocation.logs.map((entry) => (
                         <LogEntry>
                           <LogEntryTime>
