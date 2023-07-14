@@ -133,6 +133,7 @@ export const bootstrap = zod(
 import { DescribeRegionsCommand, EC2Client } from "@aws-sdk/client-ec2";
 import { App } from "../app";
 import { Replicache } from "../replicache";
+import { Config } from "sst/node/config";
 
 export const regions = zod(
   bootstrap.schema.shape.credentials,
@@ -168,6 +169,7 @@ export const integrate = zod(Info.shape.id, async (id) => {
       const s3 = new S3Client(config);
       const eb = new EventBridgeClient(config);
       const iam = new IAMClient(config);
+      const suffix = Config.STAGE !== "production" ? "-" + Config.STAGE : "";
 
       console.log("found sst bucket", b.bucket);
 
@@ -184,7 +186,7 @@ export const integrate = zod(Info.shape.id, async (id) => {
       await iam
         .send(
           new DeleteRolePolicyCommand({
-            RoleName: "SSTConsolePublisher",
+            RoleName: "SSTConsolePublisher" + suffix,
             PolicyName: "eventbus",
           })
         )
@@ -192,13 +194,13 @@ export const integrate = zod(Info.shape.id, async (id) => {
       await iam
         .send(
           new DeleteRoleCommand({
-            RoleName: "SSTConsolePublisher",
+            RoleName: "SSTConsolePublisher" + suffix,
           })
         )
         .catch(() => {});
       const role = await iam.send(
         new CreateRoleCommand({
-          RoleName: "SSTConsolePublisher",
+          RoleName: "SSTConsolePublisher" + suffix,
           AssumeRolePolicyDocument: JSON.stringify({
             Version: "2012-10-17",
             Statement: [
@@ -213,7 +215,6 @@ export const integrate = zod(Info.shape.id, async (id) => {
           }),
         })
       );
-      console.log(process.env.EVENT_BUS_ARN);
       await iam.send(
         new PutRolePolicyCommand({
           RoleName: role.Role!.RoleName,
@@ -234,7 +235,7 @@ export const integrate = zod(Info.shape.id, async (id) => {
 
       await eb.send(
         new PutRuleCommand({
-          Name: "SSTConsole",
+          Name: "SSTConsole" + suffix,
           State: "ENABLED",
           EventPattern: JSON.stringify({
             source: ["aws.s3"],
@@ -248,7 +249,7 @@ export const integrate = zod(Info.shape.id, async (id) => {
       );
       await eb.send(
         new PutTargetsCommand({
-          Rule: "SSTConsole",
+          Rule: "SSTConsole" + suffix,
           Targets: [
             {
               Arn: process.env.EVENT_BUS_ARN,
