@@ -312,6 +312,8 @@ export function Logs() {
         | Extract<Resource.Info, { type: "Function" }>
         | undefined
   );
+  const live = createMemo(() => resource()?.enrichment.live);
+
   const functions = useFunctionsContext();
   const context = createMemo(() => {
     const parent = functions().get(resource()?.id || "")?.[0];
@@ -402,6 +404,7 @@ export function Logs() {
     if (!r) return "";
     const logGroup = (() => {
       if (r.type === "Function") {
+        if (r.enrichment.live) return r.addr;
         return r.metadata.arn
           .replace("function:", "log-group:/aws/lambda/")
           .replace("arn:aws:lambda", "arn:aws:logs");
@@ -412,18 +415,7 @@ export function Logs() {
     return logGroup;
   });
 
-  const addr = createMemo(() => {
-    const r = resource();
-    if (!r) return;
-    if (r.type === "Function") return r.addr;
-  });
-
-  const logs = {
-    local: createMemo(() => LogStore[addr()!]),
-    remote: createMemo(() => LogStore[logGroup()]),
-  };
-  const [mode, setMode] = createSignal<"local" | "remote">("remote");
-  const invocations = createMemo(() => logs[mode()]() || []);
+  const invocations = createMemo(() => LogStore[logGroup()] || []);
 
   const rep = useReplicache();
   const poller = createSubscription(() =>
@@ -433,6 +425,7 @@ export function Logs() {
   createEffect(() => {
     if (!logGroup()) return;
     if (poller()) return;
+    if (live()) return;
     rep().mutate.log_poller_subscribe({
       logGroup: logGroup(),
       stageID: resources()?.at(0)?.stageID!,
@@ -445,20 +438,6 @@ export function Logs() {
         <Text code size="mono_lg" weight="medium">
           {resource()?.metadata.handler}
         </Text>
-        <Show when={logs.local()?.length}>
-          <Row space="2">
-            <For each={["local", "remote"]}>
-              {(item) => (
-                <Text
-                  onClick={() => setMode(item as any)}
-                  color={mode() !== item ? "dimmed" : "primary"}
-                >
-                  {item}
-                </Text>
-              )}
-            </For>
-          </Row>
-        </Show>
         {/* <Show when={context()}>{context()}</Show> */}
       </LogListHeader>
       <LogList>
@@ -468,14 +447,13 @@ export function Logs() {
               <IconBoltSolid />
             </LogLoadingIndicatorIcon>
             <LogLoadingIndicatorCopy>
-              Tailing logs&hellip;
+              Tailing {live() ? "local logs" : "logs"}&hellip;
             </LogLoadingIndicatorCopy>
           </Row>
           <Show when={invocations().length > 0}>
             <LogClearButton
               onClick={() => {
                 clearLogStore(logGroup());
-                clearLogStore(addr()!);
               }}
             >
               Clear
@@ -548,6 +526,17 @@ export function Logs() {
                           <LogEntryMessage>{entry.message}</LogEntryMessage>
                         </LogEntry>
                       ))}
+                      <Show when={invocation.response}>
+                        <LogEntry>
+                          <LogEntryTime>
+                            {invocation.end?.toLocaleTimeString()}
+                          </LogEntryTime>
+                          <LogEntryMessage>
+                            Response:{" "}
+                            {JSON.stringify(invocation.response, null, 2)}
+                          </LogEntryMessage>
+                        </LogEntry>
+                      </Show>
                     </LogEntries>
                   </LogDetail>
                 </Show>

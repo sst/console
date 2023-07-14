@@ -87,8 +87,12 @@ export const Enrichers = {
         FunctionName: resource.data.arn,
       })
     );
+    console.log(info.Configuration?.Environment?.Variables);
     return {
       size: info.Configuration?.CodeSize,
+      live: Boolean(
+        info.Configuration?.Environment?.Variables?.SST_FUNCTION_ID
+      ),
     };
   },
   async WebSocketApi() {

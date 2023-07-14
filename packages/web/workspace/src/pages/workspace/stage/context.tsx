@@ -15,7 +15,7 @@ import { Resource } from "@console/core/app/resource";
 import { DUMMY_RESOURCES } from "./resources-dummy";
 import { ResourceStore } from "$/data/resource";
 import { useCommandBar } from "../command-bar";
-import { IconApi, IconEventBus, IconFunction } from "$/ui/icons/custom";
+import { IconApi, IconFunction } from "$/ui/icons/custom";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();

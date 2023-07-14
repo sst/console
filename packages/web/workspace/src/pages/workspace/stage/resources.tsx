@@ -49,11 +49,8 @@ import {
   IconCheck,
   IconDocumentDuplicate,
   IconExclamationTriangle,
-  IconMoon,
-  IconQueueList,
 } from "$/ui/icons";
 import {} from "@solid-primitives/keyboard";
-import { createMemoObject } from "@solidjs/router/dist/utils";
 
 const Card = styled("div", {
   base: {

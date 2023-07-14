@@ -16,6 +16,8 @@ export function clearLogStore(input: string) {
 export interface Invocation {
   id: string;
   cold: boolean;
+  event?: any;
+  response?: any;
   error?: boolean;
   start: Date;
   end?: Date;
@@ -102,4 +104,48 @@ bus.on("log", (e) => {
       }
     }
   }
+});
+
+bus.on("function.invoked", (e) => {
+  bus.emit("log", [["s", Date.now(), e.functionID, e.requestID, false]]);
+  setLogStore(
+    produce((state) => {
+      let group = state[e.functionID];
+      if (!group) return;
+      const invocation = group.find((i) => i.id === e.requestID);
+      if (!invocation) return;
+      invocation.event = e.event;
+    })
+  );
+});
+
+bus.on("worker.stdout", (e) => {
+  bus.emit("log", [
+    [
+      "m",
+      Date.now(),
+      e.functionID,
+      e.requestID,
+      "INFO",
+      e.message,
+      Math.random().toString(),
+    ],
+  ]);
+});
+
+bus.on("function.success", (e) => {
+  bus.emit("log", [["e", Date.now(), e.functionID, e.requestID]]);
+  setLogStore(
+    produce((state) => {
+      let group = state[e.functionID];
+      if (!group) return;
+      const invocation = group.find((i) => i.id === e.requestID);
+      if (!invocation) return;
+      invocation.response = e.body;
+    })
+  );
+});
+
+bus.on("function.error", (e) => {
+  bus.emit("log", [["e", Date.now(), e.functionID, e.requestID]]);
 });

@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@tsconfig/node16": "^1.0.3",
-    "sst": "2.21.3",
+    "sst": "2.21.4",
     "tsx": "^3.12.7"
   },
   "devDependencies": {
