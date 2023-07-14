@@ -262,7 +262,8 @@ export function Resources() {
     stacks().filter(
       (r) =>
         r.type === "Stack" &&
-        (r.enrichment.version || "") < MINIMUM_VERSION &&
+        r.enrichment.version &&
+        r.enrichment.version < MINIMUM_VERSION &&
         !r.enrichment.version?.startsWith("0.0.0")
     )
   );
@@ -312,14 +313,13 @@ export function Resources() {
       <Match when={true}>
         <Show when={outdated().length}>
           <Alert level="info">
-              Some of the stacks in this app are not supported by the SST
-              Console.{" "}
-              <a
-                target="_blank"
-                href="https://github.com/serverless-stack/sst/releases"
-              >
-                Upgrade them to at least v{MINIMUM_VERSION}.
-              </a>
+            Some of the stacks in this app are not supported by the SST Console.{" "}
+            <a
+              target="_blank"
+              href="https://github.com/serverless-stack/sst/releases"
+            >
+              Upgrade them to at least v{MINIMUM_VERSION}.
+            </a>
           </Alert>
         </Show>
         <For
