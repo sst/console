@@ -36,6 +36,7 @@ export function Events({ stack }: StackContext) {
   bus.subscribe("app.stage.updated", {
     handler: "packages/functions/src/events/app-stage-updated.handler",
     bind: [...Object.values(secrets.database), bus],
+    timeout: "1 minute",
     permissions: ["sts", "iot"],
   });
 
