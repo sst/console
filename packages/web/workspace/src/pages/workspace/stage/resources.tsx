@@ -310,7 +310,14 @@ export function Resources() {
       <Match when={true}>
         <Show when={outdated().length}>
           <Alert level="info">
-            Some of the stacks in this app are not supported by the SST Console.{" "}
+            <span
+              title={outdated()
+                .map((s) => s.stackID)
+                .join(", ")}
+            >
+              Some of the stacks in this app are not supported by the SST
+              Console.
+            </span>{" "}
             <a
               target="_blank"
               href="https://github.com/serverless-stack/sst/releases"

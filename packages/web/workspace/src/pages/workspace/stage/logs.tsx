@@ -423,6 +423,7 @@ export function Logs() {
   );
 
   createEffect(() => {
+    console.log("resource", resource());
     if (!logGroup()) return;
     if (poller()) return;
     if (live()) return;
