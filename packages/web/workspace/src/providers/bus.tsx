@@ -9,6 +9,9 @@ export const bus = createEmitter<{
     workspaceID: string;
   };
   log: Log[];
+  "log.cleared": {
+    functionID: string;
+  };
   "worker.stdout": Events["worker.stdout"];
   "function.invoked": Events["function.invoked"];
   "function.success": Events["function.success"];

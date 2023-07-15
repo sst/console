@@ -19,7 +19,7 @@ importers:
         version: 10.1.156
       sst:
         specifier: 2.21.6
-        version: 2.21.6
+        version: link:../sst/packages/sst/dist
       typescript:
         specifier: ^5.0.4
         version: 5.0.4

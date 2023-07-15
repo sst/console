@@ -72,8 +72,8 @@ export function RealtimeProvider() {
   });
 
   let reconnect: NodeJS.Timer;
+  let ws: WebSocket;
   onMount(() => {
-    let ws: WebSocket;
     function connect() {
       clearTimeout(reconnect);
       ws = new WebSocket("ws://localhost:13557/socket");
@@ -91,6 +91,14 @@ export function RealtimeProvider() {
     connect();
   });
 
+  bus.on("log.cleared", (properties) => {
+    ws.send(
+      JSON.stringify({
+        type: "log.cleared",
+        properties,
+      })
+    );
+  });
   onCleanup(() => {
     if (reconnect) clearTimeout(reconnect);
     if (connection) connection.disconnect();

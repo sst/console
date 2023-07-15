@@ -25,6 +25,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { useCommandBar } from "../command-bar";
 import { IconMap } from "./resources";
 import { createMemoObject } from "@solidjs/router/dist/utils";
+import { bus } from "$/providers/bus";
 
 const LogListHeader = styled("div", {
   base: {
@@ -455,6 +456,9 @@ export function Logs() {
             <LogClearButton
               onClick={() => {
                 clearLogStore(logGroup());
+                bus.emit("log.cleared", {
+                  functionID: logGroup(),
+                });
               }}
             >
               Clear
