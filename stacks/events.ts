@@ -43,6 +43,7 @@ export function Events({ stack }: StackContext) {
   bus.subscribe("aws.account.created", {
     handler: "packages/functions/src/events/aws-account-created.handler",
     bind: [...Object.values(secrets.database), bus],
+    timeout: "1 minute",
     permissions: ["sts", "iot"],
     environment: {
       EVENT_BUS_ARN: bus.eventBusArn,
