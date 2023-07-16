@@ -17,14 +17,7 @@ import { IconArrowsRightLeft, IconUserPlus } from "$/ui/icons";
 import { User } from "./user";
 import { Account } from "./account";
 import { Overview } from "./overview";
-
-const WorkspaceContext = createContext<Accessor<WorkspaceStore.Info>>();
-
-export function useWorkspace() {
-  const context = useContext(WorkspaceContext);
-  if (!context) throw new Error("No workspace context");
-  return context;
-}
+import { WorkspaceContext } from "./context";
 
 export function Workspace() {
   const params = useParams();

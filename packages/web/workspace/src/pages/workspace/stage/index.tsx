@@ -11,7 +11,7 @@ import { ResourcesProvider, StageContext, createStageContext } from "./context";
 import { Resources } from "./resources";
 import { Logs } from "./logs";
 import { IconApp, IconStage } from "$/ui/icons/custom";
-import { useWorkspace } from "..";
+import { useWorkspace } from "../context";
 import { Header } from "../header";
 
 const Content = styled("div", {

@@ -1,9 +1,8 @@
-import patrick from "./patrick.jpg";
 import { Row, Stack, WorkspaceIcon, Text, theme } from "$/ui";
 import { IconChevronUpDown } from "$/ui/icons";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
-import { useWorkspace } from ".";
+import { useWorkspace } from "./context";
 import { useCommandBar } from "./command-bar";
 import { Show } from "solid-js";
 

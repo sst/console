@@ -71,36 +71,7 @@ export function RealtimeProvider() {
     await connection.connect();
   });
 
-  let reconnect: NodeJS.Timer;
-  let ws: WebSocket;
-  onMount(() => {
-    function connect() {
-      clearTimeout(reconnect);
-      ws = new WebSocket("ws://localhost:13557/socket");
-      ws.onmessage = (e) => {
-        const parsed = JSON.parse(e.data);
-        bus.emit(parsed.type, parsed.properties);
-      };
-      ws.onclose = () => {
-        reconnect = setTimeout(connect, 3000);
-      };
-      ws.onerror = () => {
-        reconnect = setTimeout(connect, 3000);
-      };
-    }
-    connect();
-  });
-
-  bus.on("log.cleared", (properties) => {
-    ws.send(
-      JSON.stringify({
-        type: "log.cleared",
-        properties,
-      })
-    );
-  });
   onCleanup(() => {
-    if (reconnect) clearTimeout(reconnect);
     if (connection) connection.disconnect();
   });
 

@@ -1,7 +1,7 @@
 import { Button, Fullscreen, Stack, Text } from "$/ui";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
 import { styled } from "@macaron-css/solid";
-import { useWorkspace } from ".";
+import { useWorkspace } from "./context";
 import { utility } from "$/ui/utility";
 import { FormInput } from "$/ui/form";
 import { createId } from "@paralleldrive/cuid2";

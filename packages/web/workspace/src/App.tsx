@@ -19,6 +19,7 @@ import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
 import { UserStore } from "./data/user";
 import { IconBuildingOffice, IconPlus } from "./ui/icons";
+import { LocalProvider } from "./providers/local";
 
 const Root = styled("div", {
   base: {
@@ -108,60 +109,62 @@ export const App: Component = () => {
             element={
               <AuthProvider>
                 <RealtimeProvider />
-                <CommandBar>
-                  <GlobalCommands />
-                  <Routes>
-                    <Route path="debug" component={Debug} />
-                    <Route path="design" component={Design} />
-                    <Route path="connect" component={Connect} />
-                    <Route path="workspace" component={WorkspaceCreate} />
-                    <Route path=":workspaceSlug/*" component={Workspace} />
-                    <Route path="/auth/code" component={Code} />
-                    <Route
-                      path="*"
-                      component={() => {
-                        const auth = useAuth();
-                        let existing = account();
-                        if (!existing || !auth[existing]) {
-                          existing = Object.keys(auth)[0];
-                          setAccount(existing);
-                        }
-                        const workspaces = createSubscription(
-                          WorkspaceStore.list,
-                          null,
-                          () => auth[existing].replicache
-                        );
+                <LocalProvider>
+                  <CommandBar>
+                    <GlobalCommands />
+                    <Routes>
+                      <Route path="debug" component={Debug} />
+                      <Route path="design" component={Design} />
+                      <Route path="connect" component={Connect} />
+                      <Route path="workspace" component={WorkspaceCreate} />
+                      <Route path=":workspaceSlug/*" component={Workspace} />
+                      <Route path="/auth/code" component={Code} />
+                      <Route
+                        path="*"
+                        component={() => {
+                          const auth = useAuth();
+                          let existing = account();
+                          if (!existing || !auth[existing]) {
+                            existing = Object.keys(auth)[0];
+                            setAccount(existing);
+                          }
+                          const workspaces = createSubscription(
+                            WorkspaceStore.list,
+                            null,
+                            () => auth[existing].replicache
+                          );
 
-                        const init = createSubscription(
-                          () => (tx) => {
-                            return tx.get("/init");
-                          },
-                          false,
-                          () => auth[existing].replicache
-                        );
+                          const init = createSubscription(
+                            () => (tx) => {
+                              return tx.get("/init");
+                            },
+                            false,
+                            () => auth[existing].replicache
+                          );
 
-                        return (
-                          <Switch>
-                            <Match
-                              when={workspaces() && workspaces()!.length > 0}
-                            >
-                              <Navigate href={`/${workspaces()![0].slug}`} />
-                            </Match>
-                            <Match
-                              when={
-                                init() &&
-                                workspaces() &&
-                                workspaces()!.length === 0
-                              }
-                            >
-                              <Navigate href={`/workspace`} />
-                            </Match>
-                          </Switch>
-                        );
-                      }}
-                    />
-                  </Routes>
-                </CommandBar>
+                          return (
+                            <Switch>
+                              <Match
+                                when={workspaces() && workspaces()!.length > 0}
+                              >
+                                <Navigate href={`/${workspaces()![0].slug}`} />
+                              </Match>
+                              <Match
+                                when={
+                                  init() &&
+                                  workspaces() &&
+                                  workspaces()!.length === 0
+                                }
+                              >
+                                <Navigate href={`/workspace`} />
+                              </Match>
+                            </Switch>
+                          );
+                        }}
+                      />
+                    </Routes>
+                  </CommandBar>
+                </LocalProvider>
               </AuthProvider>
             }
           />

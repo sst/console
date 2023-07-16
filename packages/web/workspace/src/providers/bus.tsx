@@ -16,4 +16,8 @@ export const bus = createEmitter<{
   "function.invoked": Events["function.invoked"];
   "function.success": Events["function.success"];
   "function.error": Events["function.error"];
+  "cli.dev": {
+    stage: string;
+    app: string;
+  };
 }>();

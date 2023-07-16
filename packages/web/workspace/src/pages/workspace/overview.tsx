@@ -10,8 +10,17 @@ import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
 import type { Stage } from "@console/core/app";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  useContext,
+} from "solid-js";
 import { Header } from "./header";
+import { useLocalContext } from "$/providers/local";
 
 const Root = styled("div", {
   base: {
@@ -223,6 +232,10 @@ interface StageCardProps {
 }
 function StageCard(props: StageCardProps) {
   const app = createSubscription(() => AppStore.fromID(props.stage.appID));
+  const local = useLocalContext();
+  createEffect(() => {
+    console.log("local", local());
+  });
   return (
     <StageRoot href={`${app()?.name}/${props.stage.name}`}>
       <Row space="2" vertical="center">
@@ -241,7 +254,18 @@ function StageCard(props: StageCardProps) {
           </Text>
         </Row>
       </Row>
-      <Tag style="outline">{props.stage.region}</Tag>
+      <Row space="4" vertical="center">
+        <Show
+          when={
+            props.stage.name === local()?.stage && app()?.name === local()?.app
+          }
+        >
+          <Text size="sm" color="primary" on="base">
+            Live
+          </Text>
+        </Show>
+        <Tag style="outline">{props.stage.region}</Tag>
+      </Row>
     </StageRoot>
   );
 }
