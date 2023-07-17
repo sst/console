@@ -103,7 +103,9 @@ const light = (() => {
   };
 
   const blue = {
-    d1: `${color.base.blue}, 46%`,
+    d1: `${color.base.blue}, 45%`,
+    l1: `${color.base.blue}, 57%`,
+    l2: `${color.base.blue}, 63%`,
   };
 
   const black = {
@@ -298,6 +300,8 @@ const dark = ((): typeof light => {
 
   const blue = {
     d1: `${color.base.blue}, 55%`,
+    l1: `${color.base.blue}, 67%`,
+    l2: `${color.base.blue}, 73%`,
   };
 
   const black = {

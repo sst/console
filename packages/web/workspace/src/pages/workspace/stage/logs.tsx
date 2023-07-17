@@ -28,15 +28,6 @@ import { createMemoObject } from "@solidjs/router/dist/utils";
 import { bus } from "$/providers/bus";
 import { createId } from "@paralleldrive/cuid2";
 
-const LogListHeader = styled("div", {
-  base: {
-    ...utility.row(0),
-    height: 39,
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-});
-
 const LogList = styled("div", {
   base: {
     borderStyle: "solid",
@@ -191,6 +182,30 @@ const LogDetailHeaderTitle = styled("div", {
     fontFamily: theme.font.family.heading,
     color: theme.color.text.dimmed.base,
     fontWeight: 500,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.text.secondary.base,
+    },
+  },
+  variants: {
+    state: {
+      active: {
+        color: theme.color.text.primary.base,
+        ":hover": {
+          color: theme.color.text.primary.base,
+        },
+      },
+      inactive: {},
+      disabled: {
+        opacity: "0.65",
+        ":hover": {
+          color: theme.color.text.dimmed.base,
+        },
+      },
+    },
+  },
+  defaultVariants: {
+    state: "inactive",
   },
 });
 
@@ -436,13 +451,23 @@ export function Logs() {
   });
 
   return (
-    <Stack space="4">
-      <LogListHeader>
-        <Text code size="mono_lg" weight="medium">
-          {resource()?.metadata.handler}
-        </Text>
-        {/* <Show when={context()}>{context()}</Show> */}
-      </LogListHeader>
+    <Stack space="5">
+      <Row space="2" horizontal="between" vertical="center">
+        <Stack space="2" vertical="center">
+          <Text size="lg" weight="medium">
+            Logs
+          </Text>
+          <Text code size="mono_base" color="secondary">
+            {resource()?.metadata.handler}
+          </Text>
+        </Stack>
+        <Show when={live()}>
+          <Tag level="tip" style="outline">
+            Local
+          </Tag>
+        </Show>
+      </Row>
+      {/* <Show when={context()}>{context()}</Show> */}
       <LogList>
         <LogLoadingIndicator>
           <Row space="2" vertical="center">
@@ -450,7 +475,7 @@ export function Logs() {
               <IconBoltSolid />
             </LogLoadingIndicatorIcon>
             <LogLoadingIndicatorCopy>
-              Tailing {live() ? "local logs" : "logs"}&hellip;
+              Tailing logs&hellip;
             </LogLoadingIndicatorCopy>
           </Row>
           <Show when={invocations().length > 0}>
@@ -518,7 +543,15 @@ export function Logs() {
                 <Show when={expanded()}>
                   <LogDetail>
                     <LogDetailHeader>
-                      <LogDetailHeaderTitle>Details</LogDetailHeaderTitle>
+                      <Row space="5" vertical="center">
+                        <LogDetailHeaderTitle state="active">
+                          Details
+                        </LogDetailHeaderTitle>
+                        <LogDetailHeaderTitle>Request</LogDetailHeaderTitle>
+                        <LogDetailHeaderTitle state="disabled">
+                          Response
+                        </LogDetailHeaderTitle>
+                      </Row>
                       <Show when={invocation.event}>
                         <Row space="2">
                           <Text

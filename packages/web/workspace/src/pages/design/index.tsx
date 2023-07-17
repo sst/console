@@ -372,12 +372,24 @@ export function Design() {
           <Tag style="solid" level="info">
             Tag
           </Tag>
+          <Tag style="solid" level="tip">
+            Tag
+          </Tag>
+          <Tag style="solid" level="caution">
+            Tag
+          </Tag>
           <Tag style="solid" level="danger">
             Tag
           </Tag>
         </Variant>
         <Variant name="Outline">
           <Tag style="outline" level="info">
+            Tag
+          </Tag>
+          <Tag style="outline" level="tip">
+            Tag
+          </Tag>
+          <Tag style="outline" level="caution">
             Tag
           </Tag>
           <Tag style="outline" level="danger">
