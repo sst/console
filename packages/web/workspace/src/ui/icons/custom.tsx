@@ -1,5 +1,5 @@
 import { globalKeyframes } from "@macaron-css/core";
-import { JSX } from "solid-js";
+import { JSX, ComponentProps } from "solid-js";
 import { IconArrowPath } from "$/ui/icons";
 
 export function IconApi(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
@@ -811,12 +811,41 @@ globalKeyframes("spin", {
   },
 });
 
-export function IconArrowPathSpin() {
+export function IconArrowPathSpin(props: ComponentProps<"svg">) {
   return (
     <IconArrowPath
       style={{
         animation: "spin 1.5s linear infinite",
       }}
+      {...props}
     />
+  );
+}
+
+export function IconSpinner(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      style={{
+        animation: "spin 1.5s linear infinite",
+      }}
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
+    </svg>
   );
 }

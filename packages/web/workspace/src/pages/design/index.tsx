@@ -3,6 +3,7 @@ import { Grower, Stack, Row, Hr } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import {
+  IconBookmark,
   IconArrowLongLeft,
   IconArrowLongRight,
   IconChevronLeft,
@@ -12,7 +13,7 @@ import {
 import { Text } from "$/ui/text";
 import { Tag } from "$/ui/tag";
 import { Alert } from "$/ui/alert";
-import { Button, LinkButton } from "$/ui/button";
+import { TextButton, Button, LinkButton } from "$/ui/button";
 import { utility } from "$/ui/utility";
 import {
   IconAws,
@@ -347,6 +348,32 @@ export function Design() {
             </ButtonIcon>
             Login with GitHub
           </Button>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="TextButton">
+        <Variant name="Base">
+          <TextContainer>
+            <Row space="4">
+              <TextButton on="base" icon={<IconBookmark />}>
+                Button
+              </TextButton>
+              <TextButton completing on="base" icon={<IconBookmark />}>
+                Button
+              </TextButton>
+            </Row>
+          </TextContainer>
+        </Variant>
+        <Variant name="Surface">
+          <TextContainer background="surface">
+            <Row space="4">
+              <TextButton on="surface" icon={<IconBookmark />}>
+                Button
+              </TextButton>
+              <TextButton completing on="surface" icon={<IconBookmark />}>
+                Button
+              </TextButton>
+            </Row>
+          </TextContainer>
         </Variant>
       </ComponentType>
       <ComponentType name="Alert">

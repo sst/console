@@ -1,5 +1,7 @@
 import { styled } from "@macaron-css/solid";
+import { JSX, ComponentProps } from "solid-js";
 import { theme } from "./theme";
+import { IconCheck } from "$/ui/icons";
 import { CSSProperties } from "@macaron-css/core";
 
 const primaryHover: CSSProperties = {
@@ -47,7 +49,8 @@ export const Button = styled("button", {
     appearance: "none",
     borderRadius: 4,
     border: "1px solid",
-    padding: `0.625rem 1rem`,
+    padding: `0 1rem`,
+    height: 40,
     fontSize: `0.8125rem`,
     fontWeight: 500,
     lineHeight: "normal",
@@ -148,3 +151,96 @@ export const LinkButton = styled("span", {
     },
   },
 });
+
+const TextButtonRoot = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+  },
+  variants: {
+    on: {
+      base: {
+        color: theme.color.text.secondary.base,
+        ":hover": {
+          color: theme.color.text.primary.base,
+        },
+      },
+      surface: {
+        color: theme.color.text.secondary.surface,
+        ":hover": {
+          color: theme.color.text.primary.surface,
+        },
+      },
+    },
+    completing: {
+      true: {},
+      false: {},
+    },
+  },
+  compoundVariants: [
+    {
+      variants: {
+        completing: true,
+        on: "base",
+      },
+      style: {
+        color: theme.color.text.secondary.base,
+        ":hover": {
+          color: theme.color.text.secondary.base,
+        },
+      },
+    },
+    {
+      variants: {
+        completing: true,
+        on: "surface",
+      },
+      style: {
+        color: theme.color.text.secondary.surface,
+        ":hover": {
+          color: theme.color.text.secondary.surface,
+        },
+      },
+    },
+  ],
+  defaultVariants: {
+    on: "base",
+    completing: false,
+  },
+});
+
+const TextButtonIcon = styled("span", {
+  base: {
+    width: 14,
+    height: 14,
+    marginRight: 4,
+    verticalAlign: -2,
+    display: "inline-block",
+    opacity: theme.iconOpacity,
+    selectors: {
+      [`${TextButtonRoot.selector({ completing: true })} &`]: {
+        color: theme.color.accent,
+      },
+    },
+  },
+});
+
+type TextButtonProps = ComponentProps<typeof TextButtonRoot> & {
+  icon?: JSX.Element;
+  completing?: boolean;
+};
+
+export function TextButton(props: TextButtonProps) {
+  return (
+    <TextButtonRoot {...props}>
+      {props.completing ? (
+        <TextButtonIcon>
+          <IconCheck />
+        </TextButtonIcon>
+      ) : (
+        <TextButtonIcon>{props.icon}</TextButtonIcon>
+      )}
+      {props.children}
+    </TextButtonRoot>
+  );
+}

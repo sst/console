@@ -2,9 +2,10 @@ import { Invocation, LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
-import { IconBoltSolid } from "$/ui/icons";
+import { IconBookmark, IconArrowPath, IconBoltSolid } from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
+import { TextButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, globalStyle } from "@macaron-css/core";
@@ -506,6 +507,7 @@ export function Logs() {
               )
             );
             const empty = createMemo(() => invocation.logs.length === 0);
+            const [replaying, setReplaying] = createSignal(false);
 
             return (
               <LogContainer
@@ -553,11 +555,10 @@ export function Logs() {
                         </LogDetailHeaderTitle>
                       </Row>
                       <Show when={invocation.event}>
-                        <Row space="2">
-                          <Text
-                            size="sm"
-                            color="secondary"
+                        <Row space="4">
+                          <TextButton
                             on="surface"
+                            icon={<IconBookmark />}
                             onClick={() =>
                               rep().mutate.function_payload_save({
                                 name: new Date().toISOString(),
@@ -568,21 +569,23 @@ export function Logs() {
                             }
                           >
                             Save
-                          </Text>
-                          <Text
-                            size="sm"
-                            color="secondary"
+                          </TextButton>
+                          <TextButton
                             on="surface"
+                            completing={replaying()}
+                            icon={<IconArrowPath />}
                             onClick={() => {
+                              setReplaying(true);
                               rep().mutate.function_invoke({
                                 stageID: resource()!.stageID,
                                 payload: invocation.event,
                                 functionARN: resource()!.metadata.arn,
                               });
+                              setTimeout(() => setReplaying(false), 2000);
                             }}
                           >
                             Replay
-                          </Text>
+                          </TextButton>
                         </Row>
                       </Show>
                     </LogDetailHeader>

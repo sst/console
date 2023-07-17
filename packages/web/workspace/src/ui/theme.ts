@@ -29,7 +29,7 @@ const font = {
 };
 
 const constants = {
-  colorFadeDuration: "0.20s",
+  colorFadeDuration: "0.15s",
   borderRadius: "4px",
   textBoldWeight: "600",
   iconOpacity: "0.85",
