@@ -26,6 +26,7 @@ import { useCommandBar } from "../command-bar";
 import { IconMap } from "./resources";
 import { createMemoObject } from "@solidjs/router/dist/utils";
 import { bus } from "$/providers/bus";
+import { createId } from "@paralleldrive/cuid2";
 
 const LogListHeader = styled("div", {
   base: {
@@ -194,9 +195,7 @@ const LogDetailHeaderTitle = styled("div", {
 });
 
 const LogLink = styled("a", {
-  base: {
-    visibility: "hidden",
-  },
+  base: {},
 });
 
 const LogEntries = styled("div", {
@@ -518,9 +517,39 @@ export function Logs() {
                   <LogDetail>
                     <LogDetailHeader>
                       <LogDetailHeaderTitle>Details</LogDetailHeaderTitle>
-                      <LogLink href={""} target="_blank" rel="noreferrer">
-                        Link
-                      </LogLink>
+                      <Show when={invocation.event}>
+                        <Row space="2">
+                          <Text
+                            size="sm"
+                            color="secondary"
+                            on="surface"
+                            onClick={() =>
+                              rep().mutate.function_payload_save({
+                                name: new Date().toISOString(),
+                                id: createId(),
+                                payload: invocation.event,
+                                functionARN: resource()!.metadata.arn,
+                              })
+                            }
+                          >
+                            Save
+                          </Text>
+                          <Text
+                            size="sm"
+                            color="secondary"
+                            on="surface"
+                            onClick={() => {
+                              rep().mutate.function_invoke({
+                                stageID: resource()!.stageID,
+                                payload: invocation.event,
+                                functionARN: resource()!.metadata.arn,
+                              });
+                            }}
+                          >
+                            Replay
+                          </Text>
+                        </Row>
+                      </Show>
                     </LogDetailHeader>
                     <LogEntries>
                       <Show when={invocation.event}>

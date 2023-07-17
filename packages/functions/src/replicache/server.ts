@@ -4,11 +4,14 @@ import { LogPoller } from "@console/core/log-poller";
 import { AWS } from "@console/core/aws";
 import { z } from "zod";
 import { Workspace } from "@console/core/workspace";
+import { Lambda } from "@console/core/lambda";
 import { assertActor, provideActor } from "@console/core/actor";
 import { User } from "@console/core/user";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
+  .expose("function_invoke", Lambda.invoke)
+  .expose("function_payload_save", Lambda.savePayload)
   .mutation(
     "connect",
     {

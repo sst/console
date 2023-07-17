@@ -262,3 +262,23 @@ export const syncMetadata = zod(Info.shape.id, async (stageID) => {
         );
   });
 });
+
+export const assumeRole = zod(Info.shape.id, async (stageID) =>
+  useTransaction(async (tx) => {
+    const result = await tx
+      .select({
+        accountID: awsAccount.accountID,
+        region: stage.region,
+      })
+      .from(awsAccount)
+      .innerJoin(stage, eq(stage.awsAccountID, awsAccount.id))
+      .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
+      .execute()
+      .then((rows) => rows.at(0));
+    if (!result) throw new Error("no account found");
+    return {
+      credentials: await AWS.assumeRole(result.accountID),
+      region: result.region,
+    };
+  })
+);

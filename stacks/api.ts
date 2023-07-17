@@ -74,7 +74,7 @@ export function API({ stack, app }: StackContext) {
     defaults: {
       function: {
         bind: [auth, ...Object.values(secrets.database), bus],
-        permissions: ["iot"],
+        permissions: ["iot", "sts"],
         environment: {
           LOG_POLLER_ARN: poller.stateMachineArn,
         },

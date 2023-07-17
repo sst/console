@@ -9,6 +9,7 @@ import { workspace } from "@console/core/workspace/workspace.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { replicache_cvr } from "@console/core/replicache/replicache.sql";
+import { lambdaPayload } from "@console/core/lambda/lambda.sql";
 import { createId } from "@console/core/util/sql";
 import { mapValues } from "remeda";
 import { log_poller } from "@console/core/log-poller/log-poller.sql";
@@ -66,6 +67,7 @@ export const handler = ApiHandler(async () => {
         stage,
         resource,
         log_poller,
+        lambdaPayload,
       };
       const results: [string, { id: string; time_updated: string }[]][] = [];
       for (const [name, table] of Object.entries(tables)) {
