@@ -415,7 +415,9 @@ export function Logs() {
     return logGroup;
   });
 
-  const invocations = createMemo(() => LogStore[logGroup()] || []);
+  const invocations = createMemo(() =>
+    query.dummy ? DUMMY_LOGS : LogStore[logGroup()] || []
+  );
 
   const rep = useReplicache();
   const poller = createSubscription(() =>
