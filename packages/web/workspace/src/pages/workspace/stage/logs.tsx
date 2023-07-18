@@ -612,7 +612,9 @@ export function Logs() {
                               rep().mutate.function_payload_save({
                                 name: new Date().toISOString(),
                                 id: createId(),
-                                payload: unwrap(invocation.event),
+                                payload: structuredClone(
+                                  unwrap(invocation.event)
+                                ),
                                 functionARN: resource()!.metadata.arn,
                               })
                             }
@@ -627,7 +629,9 @@ export function Logs() {
                               setReplaying(true);
                               rep().mutate.function_invoke({
                                 stageID: resource()!.stageID,
-                                payload: unwrap(invocation.event),
+                                payload: structuredClone(
+                                  unwrap(invocation.event)
+                                ),
                                 functionARN: resource()!.metadata.arn,
                               });
                               setTimeout(() => setReplaying(false), 2000);
