@@ -769,12 +769,31 @@ export function IconSubRight(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   );
 }
 
+// https://api.iconify.design/akar-icons:triangle-right-fill.svg
 export function IconCaretRight(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path
         fill="currentColor"
         d="M8 6a1 1 0 0 1 1.6-.8l8 6a1 1 0 0 1 0 1.6l-8 6A1 1 0 0 1 8 18V6Z"
+      />
+    </svg>
+  );
+}
+
+// https://api.iconify.design/akar-icons:triangle-right.svg
+export function IconCaretRightOutline(
+  props: JSX.SvgSVGAttributes<SVGSVGElement>
+) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M17 12L9 6v12l8-6Z"
       />
     </svg>
   );

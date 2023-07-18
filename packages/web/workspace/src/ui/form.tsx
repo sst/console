@@ -102,7 +102,7 @@ const chevronDownString = `
   </svg>
 `;
 
-const Select = styled("select", {
+export const Select = styled("select", {
   base: {
     ...inputStyles,
     backgroundRepeat: "no-repeat",

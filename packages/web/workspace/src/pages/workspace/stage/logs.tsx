@@ -1,17 +1,17 @@
 import { Invocation, LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Tag, Text } from "$/ui";
+import { Tag, Text, Select } from "$/ui";
 import {
   IconChevronUpDown,
   IconBookmark,
+  IconBookmarkSlash,
   IconArrowPath,
   IconBoltSolid,
 } from "$/ui/icons";
-import { IconCaretRight } from "$/ui/icons/custom";
+import { IconCaretRight, IconCaretRightOutline } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
-import { Textarea } from "$/ui/form";
-import { Button, TextButton } from "$/ui/button";
+import { Button, LinkButton, TextButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, globalStyle } from "@macaron-css/core";
@@ -49,33 +49,215 @@ const LogSwitchIcon = styled("div", {
   },
 });
 
-const InvokeRoot = styled("div", {
+const LogList = styled("div", {
   base: {
-    position: "relative",
+    border: `1px solid ${theme.color.divider.base}`,
+    borderRadius: theme.borderRadius,
   },
 });
 
-const InvokePayloadClass = style({
-  width: "100%",
-  resize: "none",
-  display: "block",
-  height: `calc(40px + ${theme.space[4]})`,
-});
-
-const InvokeControlsClass = style({
-  position: "absolute",
-  top: 0,
-  left: 0,
-  width: "100%",
-  padding: `${theme.space[2]} ${theme.space[2]} ${theme.space[2]} ${theme.space[4]}`,
-});
-
-const LogList = styled("div", {
+const LogLoadingIndicator = styled("div", {
   base: {
-    borderStyle: "solid",
-    borderColor: theme.color.divider.base,
-    borderWidth: "0 1px 1px",
+    ...utility.row(0),
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: `0 ${theme.space[3]}`,
+    height: 48,
+  },
+});
+
+const LogLoadingIndicatorIcon = styled("div", {
+  base: {
+    padding: 2,
+    width: 20,
+    height: 20,
+    color: theme.color.text.dimmed.base,
+    opacity: theme.iconOpacity,
+    animation: "pulse 1.5s linear infinite",
+  },
+});
+
+const LogLoadingIndicatorCopy = styled("div", {
+  base: {
+    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.base,
+  },
+});
+
+const LogClearButton = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary.base,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.text.primary.base,
+    },
+  },
+});
+
+globalKeyframes("pulse", {
+  "0%": {
+    opacity: 0.3,
+  },
+  "50%": {
+    opacity: 1,
+  },
+  "100%": {
+    opacity: 0.3,
+  },
+});
+
+const InvokeRoot = styled("div", {
+  base: {
+    position: "relative",
+    borderTop: `1px solid ${theme.color.divider.base}`,
+  },
+  variants: {
+    focus: {
+      true: {},
+      false: {},
+    },
+  },
+});
+
+const InvokePayload = styled("textarea", {
+  base: {
+    width: "100%",
+    resize: "none",
+    display: "block",
+    height: `calc(40px + ${theme.space[6]})`,
+    border: "none",
+    lineHeight: theme.font.lineHeight,
+    appearance: "none",
+    fontSize: theme.font.size.mono_sm,
+    fontFamily: theme.font.family.code,
+    padding: `calc(${theme.space[5]} + 2px) 100px ${theme.space[2]} ${theme.space[4]}`,
+    backgroundColor: "transparent",
+    ":focus": {
+      backgroundColor: theme.color.input.background,
+    },
+    selectors: {
+      [`${InvokeRoot.selector({ focus: true })} &`]: {
+        height: 160,
+        padding: `${theme.space[4]} ${theme.space[4]} calc(${theme.space[8]} + 40px)`,
+      },
+    },
+  },
+});
+
+const InvokePayloadLabel = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    position: "absolute",
+    top: 0,
+    left: theme.space[3],
+    pointerEvents: "none",
+    height: `calc(40px + ${theme.space[6]})`,
+    selectors: {
+      [`${InvokeRoot.selector({ focus: true })} &`]: {
+        display: "none",
+      },
+    },
+  },
+});
+
+const InvokePayloadLabelIcon = styled("div", {
+  base: {
+    width: 20,
+    height: 20,
+    color: theme.color.icon.dimmed,
+  },
+});
+
+const InvokeLeftControls = styled("div", {
+  base: {
+    ...utility.row(4),
+    alignItems: "center",
+    padding: theme.space[3],
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    display: "none",
+    selectors: {
+      [`${InvokeRoot.selector({ focus: true })} &`]: {
+        display: "flex",
+      },
+    },
+  },
+});
+
+const InvokeSavedPayloads = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    justifyContent: "space-between",
+    border: `1px solid ${theme.color.divider.base}`,
     borderRadius: theme.borderRadius,
+    height: 40,
+    width: 200,
+    padding: `0 ${theme.space[2]} 0 ${theme.space[3]}`,
+  },
+  variants: {
+    selected: {
+      true: {},
+      false: {},
+    },
+  },
+  defaultVariants: {
+    selected: false,
+  },
+});
+
+const InvokeSavedPayloadsLabel = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    lineHeight: "normal",
+    selectors: {
+      [`${InvokeSavedPayloads.selector({ selected: true })} &`]: {
+        color: theme.color.text.secondary.base,
+      },
+      [`${InvokeSavedPayloads.selector({ selected: false })} &`]: {
+        color: theme.color.text.dimmed.base,
+      },
+    },
+  },
+});
+
+const InvokeSavedPayloadsIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 18,
+    height: 18,
+    color: theme.color.icon.primary,
+  },
+});
+
+const InvokeRightControls = styled("div", {
+  base: {
+    ...utility.row(5),
+    alignItems: "center",
+    padding: theme.space[3],
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    selectors: {
+      [`${InvokeRoot.selector({ focus: true })} &`]: {
+        display: "flex",
+      },
+    },
+  },
+});
+
+const InvokeCancelButton = style({
+  display: "none",
+  selectors: {
+    [`${InvokeRoot.selector({ focus: true })} &`]: {
+      display: "inline-block",
+    },
   },
 });
 
@@ -298,59 +480,6 @@ const LogEntryMessage = styled("span", {
     color: theme.color.text.primary.surface,
   },
 });
-
-const LogLoadingIndicator = styled("div", {
-  base: {
-    ...utility.row(0),
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: `0 ${theme.space[3]}`,
-    height: 48,
-    borderTop: `1px solid ${theme.color.divider.base}`,
-    borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
-  },
-});
-
-const LogLoadingIndicatorIcon = styled("div", {
-  base: {
-    padding: 2,
-    width: 20,
-    height: 20,
-    color: theme.color.text.dimmed.base,
-    opacity: theme.iconOpacity,
-    animation: "pulse 1.5s linear infinite",
-  },
-});
-
-const LogLoadingIndicatorCopy = styled("div", {
-  base: {
-    color: theme.color.text.dimmed.base,
-    fontSize: theme.font.size.base,
-  },
-});
-
-const LogClearButton = styled("span", {
-  base: {
-    fontSize: theme.font.size.sm,
-    color: theme.color.text.secondary.base,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      color: theme.color.text.primary.base,
-    },
-  },
-});
-
-globalKeyframes("pulse", {
-  "0%": {
-    opacity: 0.3,
-  },
-  "50%": {
-    opacity: 1,
-  },
-  "100%": {
-    opacity: 0.3,
-  },
-});
 export function Logs() {
   const nav = useNavigate();
   createEventListener(window, "keydown", (e) => {
@@ -520,17 +649,6 @@ export function Logs() {
       </Row>
       {/* <Show when={context()}>{context()}</Show> */}
       <LogList>
-        {/*
-      <InvokeRoot>
-        <Textarea class={InvokePayloadClass} />
-        <Row class={InvokeControlsClass} vertical="center" horizontal="between">
-          <Text size="sm" color="dimmed">
-            Event payload&hellip;
-          </Text>
-          <Button color="secondary">Invoke Function</Button>
-        </Row>
-      </InvokeRoot>
-      */}
         <LogLoadingIndicator>
           <Row space="2" vertical="center">
             <LogLoadingIndicatorIcon>
@@ -553,6 +671,32 @@ export function Logs() {
             </LogClearButton>
           </Show>
         </LogLoadingIndicator>
+        <InvokeRoot focus={false}>
+          <InvokePayload />
+          <InvokePayloadLabel>
+            <InvokePayloadLabelIcon>
+              <IconCaretRightOutline />
+            </InvokePayloadLabelIcon>
+            <Text code size="mono_base" color="dimmed">
+              Enter event payload&hellip;
+            </Text>
+          </InvokePayloadLabel>
+          <InvokeLeftControls>
+            <InvokeSavedPayloads selected={false}>
+              <InvokeSavedPayloadsLabel>
+                Saved payloads&hellip;
+              </InvokeSavedPayloadsLabel>
+              <InvokeSavedPayloadsIcon>
+                <IconChevronUpDown />
+              </InvokeSavedPayloadsIcon>
+            </InvokeSavedPayloads>
+            <LinkButton>Save</LinkButton>
+          </InvokeLeftControls>
+          <InvokeRightControls>
+            <LinkButton class={InvokeCancelButton}>Cancel</LinkButton>
+            <Button color="secondary">Invoke</Button>
+          </InvokeRightControls>
+        </InvokeRoot>
         <For each={invocations().slice().reverse()}>
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
