@@ -35,6 +35,7 @@ import { IconMap } from "./resources";
 import { createMemoObject } from "@solidjs/router/dist/utils";
 import { bus } from "$/providers/bus";
 import { createId } from "@paralleldrive/cuid2";
+import { unwrap } from "solid-js/store";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -611,7 +612,7 @@ export function Logs() {
                               rep().mutate.function_payload_save({
                                 name: new Date().toISOString(),
                                 id: createId(),
-                                payload: invocation.event,
+                                payload: unwrap(invocation.event),
                                 functionARN: resource()!.metadata.arn,
                               })
                             }
@@ -626,7 +627,7 @@ export function Logs() {
                               setReplaying(true);
                               rep().mutate.function_invoke({
                                 stageID: resource()!.stageID,
-                                payload: invocation.event,
+                                payload: unwrap(invocation.event),
                                 functionARN: resource()!.metadata.arn,
                               });
                               setTimeout(() => setReplaying(false), 2000);

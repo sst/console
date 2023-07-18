@@ -30,7 +30,9 @@ const mutators = new Client<ServerType>()
     //   email: input.email,
     // });
   })
-  .mutation("function_invoke", async (tx, input) => {})
+  .mutation("function_invoke", async (tx, input) => {
+    console.log(input);
+  })
   .mutation("function_payload_save", async (tx, input) => {})
   .build();
 
