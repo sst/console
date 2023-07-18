@@ -621,6 +621,8 @@ export function Logs() {
     });
   });
 
+  const [invoking, setInvoking] = createSignal(false);
+
   return (
     <Stack space="5">
       <Row space="2" horizontal="between" vertical="center">
@@ -694,7 +696,16 @@ export function Logs() {
           </InvokeLeftControls>
           <InvokeRightControls>
             <LinkButton class={InvokeCancelButton}>Cancel</LinkButton>
-            <Button color="secondary">Invoke</Button>
+            <Button
+              onClick={() => {
+                setInvoking(true);
+                setTimeout(() => setInvoking(false), 2000);
+              }}
+              disabled={invoking()}
+              color="secondary"
+            >
+              {invoking() ? "Invoking" : "Invoke"}
+            </Button>
           </InvokeRightControls>
         </InvokeRoot>
         <For each={invocations().slice().reverse()}>
