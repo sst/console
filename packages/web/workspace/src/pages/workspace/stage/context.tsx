@@ -179,8 +179,8 @@ export function ResourcesProvider(props: ParentProps) {
   const nav = useNavigate();
   const bar = useCommandBar();
 
-  bar.register("resource", async (filter) => {
-    if (!filter) return [];
+  bar.register("resource", async (filter, global) => {
+    if (global && !filter) return [];
     const splits = location.pathname.split("/");
     const appName = splits[2];
     const stageName = splits[3];

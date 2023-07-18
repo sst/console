@@ -30,7 +30,7 @@ interface Action {
   run: (control: Control) => void | Promise<void>;
 }
 
-type ActionProvider = (filter: string) => Promise<Action[]>;
+type ActionProvider = (filter: string, global: boolean) => Promise<Action[]>;
 
 const Root = styled("div", {
   base: {
@@ -203,7 +203,7 @@ function createControl() {
       : [...providers.values()].reverse();
     const actions = await Promise.all(
       p.map(async (provider) => {
-        const actions = await provider(input());
+        const actions = await provider(input(), activeProviders().length > 0);
         return actions;
       })
     ).then((x) => x.flat());
