@@ -18,7 +18,9 @@ import { styled } from "@macaron-css/solid";
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import {
   For,
+  Match,
   Show,
+  Switch,
   createEffect,
   createMemo,
   createSignal,
@@ -475,7 +477,7 @@ export function Logs() {
             <Text code size="mono_base" color="secondary">
               {resource()?.metadata.handler}
             </Text>
-            <LogSwitchIcon>
+            <LogSwitchIcon onClick={() => bar.show("resource")}>
               <IconChevronUpDown />
             </LogSwitchIcon>
           </Row>
@@ -513,6 +515,9 @@ export function Logs() {
         <For each={invocations().slice().reverse()}>
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
+            const [tab, setTab] = createSignal<
+              "details" | "request" | "response"
+            >("details");
 
             const shortDate = createMemo(() =>
               new Intl.DateTimeFormat("en-US", shortDateOptions)
@@ -564,13 +569,38 @@ export function Logs() {
                   <LogDetail>
                     <LogDetailHeader>
                       <Row space="5" vertical="center">
-                        <LogDetailHeaderTitle state="active">
+                        <LogDetailHeaderTitle
+                          onClick={() => setTab("details")}
+                          state={tab() === "details" ? "active" : "inactive"}
+                        >
                           Details
                         </LogDetailHeaderTitle>
-                        <LogDetailHeaderTitle>Request</LogDetailHeaderTitle>
-                        <LogDetailHeaderTitle state="disabled">
-                          Response
-                        </LogDetailHeaderTitle>
+                        <Show when={live()}>
+                          <LogDetailHeaderTitle
+                            onClick={() => setTab("request")}
+                            state={
+                              !invocation.event
+                                ? "disabled"
+                                : tab() === "request"
+                                ? "active"
+                                : "inactive"
+                            }
+                          >
+                            Request
+                          </LogDetailHeaderTitle>
+                          <LogDetailHeaderTitle
+                            onClick={() => setTab("response")}
+                            state={
+                              !invocation.response
+                                ? "disabled"
+                                : tab() === "response"
+                                ? "active"
+                                : "inactive"
+                            }
+                          >
+                            Response
+                          </LogDetailHeaderTitle>
+                        </Show>
                       </Row>
                       <Show when={invocation.event}>
                         <Row space="4">
@@ -608,35 +638,38 @@ export function Logs() {
                       </Show>
                     </LogDetailHeader>
                     <LogEntries>
-                      <Show when={invocation.event}>
-                        <LogEntry>
-                          <LogEntryTime>
-                            {invocation.start.toLocaleTimeString()}
-                          </LogEntryTime>
-                          <LogEntryMessage>
-                            Request: {JSON.stringify(invocation.event, null, 2)}
-                          </LogEntryMessage>
-                        </LogEntry>
-                      </Show>
-                      {invocation.logs.map((entry) => (
-                        <LogEntry>
-                          <LogEntryTime>
-                            {entry.timestamp.toLocaleTimeString()}
-                          </LogEntryTime>
-                          <LogEntryMessage>{entry.message}</LogEntryMessage>
-                        </LogEntry>
-                      ))}
-                      <Show when={invocation.response}>
-                        <LogEntry>
-                          <LogEntryTime>
-                            {invocation.end?.toLocaleTimeString()}
-                          </LogEntryTime>
-                          <LogEntryMessage>
-                            Response:{" "}
-                            {JSON.stringify(invocation.response, null, 2)}
-                          </LogEntryMessage>
-                        </LogEntry>
-                      </Show>
+                      <Switch>
+                        <Match when={tab() === "details"}>
+                          {invocation.logs.map((entry) => (
+                            <LogEntry>
+                              <LogEntryTime>
+                                {entry.timestamp.toLocaleTimeString()}
+                              </LogEntryTime>
+                              <LogEntryMessage>{entry.message}</LogEntryMessage>
+                            </LogEntry>
+                          ))}
+                        </Match>
+                        <Match when={tab() === "request"}>
+                          <LogEntry>
+                            <LogEntryTime>
+                              {invocation.start.toLocaleTimeString()}
+                            </LogEntryTime>
+                            <LogEntryMessage>
+                              {JSON.stringify(invocation.event, null, 2)}
+                            </LogEntryMessage>
+                          </LogEntry>
+                        </Match>
+                        <Match when={tab() === "response"}>
+                          <LogEntry>
+                            <LogEntryTime>
+                              {invocation.end?.toLocaleTimeString()}
+                            </LogEntryTime>
+                            <LogEntryMessage>
+                              {JSON.stringify(invocation.response, null, 2)}
+                            </LogEntryMessage>
+                          </LogEntry>
+                        </Match>
+                      </Switch>
                     </LogEntries>
                   </LogDetail>
                 </Show>
