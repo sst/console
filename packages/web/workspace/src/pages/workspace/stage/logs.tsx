@@ -2,7 +2,12 @@ import { Invocation, LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
-import { IconBookmark, IconArrowPath, IconBoltSolid } from "$/ui/icons";
+import {
+  IconChevronUpDown,
+  IconBookmark,
+  IconArrowPath,
+  IconBoltSolid,
+} from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
 import { TextButton } from "$/ui/button";
@@ -28,6 +33,14 @@ import { IconMap } from "./resources";
 import { createMemoObject } from "@solidjs/router/dist/utils";
 import { bus } from "$/providers/bus";
 import { createId } from "@paralleldrive/cuid2";
+
+const LogSwitchIcon = styled("div", {
+  base: {
+    width: 18,
+    height: 18,
+    color: theme.color.icon.secondary,
+  },
+});
 
 const LogList = styled("div", {
   base: {
@@ -458,9 +471,14 @@ export function Logs() {
           <Text size="lg" weight="medium">
             Logs
           </Text>
-          <Text code size="mono_base" color="secondary">
-            {resource()?.metadata.handler}
-          </Text>
+          <Row space="1" horizontal="center">
+            <Text code size="mono_base" color="secondary">
+              {resource()?.metadata.handler}
+            </Text>
+            <LogSwitchIcon>
+              <IconChevronUpDown />
+            </LogSwitchIcon>
+          </Row>
         </Stack>
         <Show when={live()}>
           <Tag level="tip" style="outline">
