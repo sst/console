@@ -130,10 +130,6 @@ const ActionRow = styled("div", {
     alignItems: "center",
     borderRadius: 4,
     fontSize: theme.font.size.base,
-    // transitionDelay: "0s",
-    // transitionDuration: "0.2s",
-    // transitionProperty: "background-color",
-    // transitionTimingFunction: "ease-out",
   },
 });
 
@@ -150,10 +146,7 @@ const ActionRowIcon = styled("div", {
 
 globalStyle(`${ActionRowIcon} svg`, {
   color: theme.color.icon.secondary,
-  transitionDelay: "0s",
-  transitionDuration: "0.2s",
-  transitionProperty: "color",
-  transitionTimingFunction: "ease-out",
+  transition: `color ${theme.colorFadeDuration} ease-out`,
 });
 
 globalStyle(`${ActionRow}.active ${ActionRowIcon} svg`, {

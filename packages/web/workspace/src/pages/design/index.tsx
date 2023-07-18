@@ -4,19 +4,17 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import {
   IconBookmark,
-  IconArrowLongLeft,
-  IconArrowLongRight,
   IconChevronLeft,
   IconBoltSolid,
   IconExclamationTriangle,
 } from "$/ui/icons";
 import { Text } from "$/ui/text";
+import { FormInput } from "$/ui/form";
 import { Tag } from "$/ui/tag";
 import { Alert } from "$/ui/alert";
 import { TextButton, Button, LinkButton } from "$/ui/button";
 import { utility } from "$/ui/utility";
 import {
-  IconAws,
   IconApi,
   IconApp,
   IconFunction,
@@ -160,6 +158,15 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
+      <ComponentType name="PayloadNameModal">
+        <Variant name="Default">
+          <Grower>
+            <PayloadNameModalWrapper>
+              <PayloadNameModal />
+            </PayloadNameModalWrapper>
+          </Grower>
+        </Variant>
+      </ComponentType>
       <ComponentType name="UnsupportedAppBanner">
         <Variant name="Default">
           <Grower>
@@ -1204,6 +1211,46 @@ function Login() {
         Login with GitHub
       </Button>
     </LoginContainer>
+  );
+}
+
+const PayloadNameModalWrapper = styled("div", {
+  base: {
+    margin: "0 auto",
+    width: 480,
+    borderRadius: 10,
+    flexShrink: 0,
+    boxShadow: theme.color.shadow.drop.long,
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    background: theme.color.background.modal,
+    transform: "scale(0.95)",
+    transition: "200ms all",
+    padding: theme.space[5],
+  },
+});
+
+function PayloadNameModal() {
+  return (
+    <form>
+      <Stack space="5">
+        <Stack space="2">
+          <Text size="lg" weight="medium">
+            Save event to workspace
+          </Text>
+        </Stack>
+        <FormInput
+          autofocus
+          label="Event name"
+          hint="Give the event a short recognizable name."
+          placeholder="EventA"
+        />
+        <Row space="5" vertical="center" horizontal="end">
+          <LinkButton>Cancel</LinkButton>
+          <Button color="secondary">Save Event</Button>
+        </Row>
+      </Stack>
+    </form>
   );
 }
 
