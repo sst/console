@@ -678,7 +678,7 @@ export function Logs() {
               <IconCaretRightOutline />
             </InvokePayloadLabelIcon>
             <Text code size="mono_base" color="dimmed">
-              Enter event payload&hellip;
+              Enter event payload
             </Text>
           </InvokePayloadLabel>
           <InvokeLeftControls>
