@@ -152,6 +152,13 @@ export const LinkButton = styled("span", {
   },
 });
 
+const textButtonBaseHover: CSSProperties = {
+  color: theme.color.text.primary.base,
+};
+const textButtonSurfaceHover: CSSProperties = {
+  color: theme.color.text.primary.surface,
+};
+
 const TextButtonRoot = styled("span", {
   base: {
     fontSize: theme.font.size.sm,
@@ -161,14 +168,16 @@ const TextButtonRoot = styled("span", {
     on: {
       base: {
         color: theme.color.text.secondary.base,
-        ":hover": {
-          color: theme.color.text.primary.base,
+        selectors: {
+          "&:hover": textButtonBaseHover,
+          "&[data-state-hover]": textButtonBaseHover,
         },
       },
       surface: {
         color: theme.color.text.secondary.surface,
-        ":hover": {
-          color: theme.color.text.primary.surface,
+        selectors: {
+          "&:hover": textButtonSurfaceHover,
+          "&[data-state-hover]": textButtonSurfaceHover,
         },
       },
     },

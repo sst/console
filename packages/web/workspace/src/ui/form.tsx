@@ -69,7 +69,7 @@ const Input = styled("input", {
   },
 });
 
-const Textarea = styled("textarea", {
+export const Textarea = styled("textarea", {
   base: {
     ...inputStyles,
     height: "auto",

@@ -27,7 +27,7 @@ import {
   IconBucket,
   IconArrowPathSpin,
 } from "$/ui/icons/custom";
-import { For, JSX } from "solid-js";
+import { For, JSX, Show } from "solid-js";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
 
 const ComponentRoot = styled("div", {
@@ -364,6 +364,9 @@ export function Design() {
               <TextButton on="base" icon={<IconBookmark />}>
                 Button
               </TextButton>
+              <TextButton data-state-hover on="base" icon={<IconBookmark />}>
+                Button
+              </TextButton>
               <TextButton completing on="base" icon={<IconBookmark />}>
                 Button
               </TextButton>
@@ -374,6 +377,9 @@ export function Design() {
           <TextContainer background="surface">
             <Row space="4">
               <TextButton on="surface" icon={<IconBookmark />}>
+                Button
+              </TextButton>
+              <TextButton data-state-hover on="surface" icon={<IconBookmark />}>
                 Button
               </TextButton>
               <TextButton completing on="surface" icon={<IconBookmark />}>
@@ -922,12 +928,21 @@ const AccountCardLoadingIcon = styled("div", {
   },
 });
 
+const StageCardTags = styled("div", {
+  base: {
+    ...utility.row(3),
+    alignItems: "center",
+    flex: "0 0 auto",
+  },
+});
+
 interface StageCardProps {
   app: string;
   stage: string;
   region: string;
+  local?: boolean;
 }
-function StageCard({ app, stage, region }: StageCardProps) {
+function StageCard({ app, stage, region, local }: StageCardProps) {
   return (
     <Stage>
       <Row space="2" vertical="center">
@@ -946,7 +961,14 @@ function StageCard({ app, stage, region }: StageCardProps) {
           </Text>
         </Row>
       </Row>
-      <Tag style="outline">{region}</Tag>
+      <StageCardTags>
+        <Show when={local}>
+          <Tag level="tip" style="outline">
+            Local
+          </Tag>
+        </Show>
+        <Tag style="outline">{region}</Tag>
+      </StageCardTags>
     </Stage>
   );
 }
@@ -1044,6 +1066,7 @@ function Accounts() {
               <StageCard app="console" stage="prod" region="ap-southeast-1" />
               <StageCard app="my-sst-app" stage="prod" region="us-east-1" />
               <StageCard
+                local
                 app="my-sst-app-has-a-really-long-app-name-that-should-overflow"
                 stage="prod"
                 region="us-east-1"

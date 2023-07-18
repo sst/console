@@ -10,10 +10,12 @@ import {
 } from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
-import { TextButton } from "$/ui/button";
+import { Textarea } from "$/ui/form";
+import { Button, TextButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, globalStyle } from "@macaron-css/core";
+import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import {
@@ -39,10 +41,33 @@ import { unwrap } from "solid-js/store";
 
 const LogSwitchIcon = styled("div", {
   base: {
+    top: -1,
     width: 18,
     height: 18,
+    position: "relative",
     color: theme.color.icon.secondary,
   },
+});
+
+const InvokeRoot = styled("div", {
+  base: {
+    position: "relative",
+  },
+});
+
+const InvokePayloadClass = style({
+  width: "100%",
+  resize: "none",
+  display: "block",
+  height: `calc(40px + ${theme.space[4]})`,
+});
+
+const InvokeControlsClass = style({
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: "100%",
+  padding: `${theme.space[2]} ${theme.space[2]} ${theme.space[2]} ${theme.space[4]}`,
 });
 
 const LogList = styled("div", {
@@ -474,11 +499,15 @@ export function Logs() {
           <Text size="lg" weight="medium">
             Logs
           </Text>
-          <Row space="1" horizontal="center">
+          <Row
+            space="1"
+            horizontal="center"
+            onClick={() => bar.show("resource")}
+          >
             <Text code size="mono_base" color="secondary">
               {resource()?.metadata.handler}
             </Text>
-            <LogSwitchIcon onClick={() => bar.show("resource")}>
+            <LogSwitchIcon>
               <IconChevronUpDown />
             </LogSwitchIcon>
           </Row>
@@ -491,6 +520,17 @@ export function Logs() {
       </Row>
       {/* <Show when={context()}>{context()}</Show> */}
       <LogList>
+        {/*
+      <InvokeRoot>
+        <Textarea class={InvokePayloadClass} />
+        <Row class={InvokeControlsClass} vertical="center" horizontal="between">
+          <Text size="sm" color="dimmed">
+            Event payload&hellip;
+          </Text>
+          <Button color="secondary">Invoke Function</Button>
+        </Row>
+      </InvokeRoot>
+      */}
         <LogLoadingIndicator>
           <Row space="2" vertical="center">
             <LogLoadingIndicatorIcon>
@@ -572,7 +612,13 @@ export function Logs() {
                       <Row space="5" vertical="center">
                         <LogDetailHeaderTitle
                           onClick={() => setTab("details")}
-                          state={tab() === "details" ? "active" : "inactive"}
+                          state={
+                            live()
+                              ? tab() === "details"
+                                ? "active"
+                                : "inactive"
+                              : "inactive"
+                          }
                         >
                           Details
                         </LogDetailHeaderTitle>
@@ -656,9 +702,6 @@ export function Logs() {
                         </Match>
                         <Match when={tab() === "request"}>
                           <LogEntry>
-                            <LogEntryTime>
-                              {invocation.start.toLocaleTimeString()}
-                            </LogEntryTime>
                             <LogEntryMessage>
                               {JSON.stringify(invocation.event, null, 2)}
                             </LogEntryMessage>
@@ -666,9 +709,6 @@ export function Logs() {
                         </Match>
                         <Match when={tab() === "response"}>
                           <LogEntry>
-                            <LogEntryTime>
-                              {invocation.end?.toLocaleTimeString()}
-                            </LogEntryTime>
                             <LogEntryMessage>
                               {JSON.stringify(invocation.response, null, 2)}
                             </LogEntryMessage>

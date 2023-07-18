@@ -227,6 +227,14 @@ const StageIcon = styled("div", {
   },
 });
 
+const StageCardTags = styled("div", {
+  base: {
+    ...utility.row(3),
+    alignItems: "center",
+    flex: "0 0 auto",
+  },
+});
+
 interface StageCardProps {
   stage: Stage.Info;
 }
@@ -254,7 +262,7 @@ function StageCard(props: StageCardProps) {
           </Text>
         </Row>
       </Row>
-      <Row space="3" vertical="center">
+      <StageCardTags>
         <Show
           when={
             props.stage.name === local()?.stage && app()?.name === local()?.app
@@ -265,7 +273,7 @@ function StageCard(props: StageCardProps) {
           </Tag>
         </Show>
         <Tag style="outline">{props.stage.region}</Tag>
-      </Row>
+      </StageCardTags>
     </StageRoot>
   );
 }
