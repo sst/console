@@ -254,15 +254,15 @@ function StageCard(props: StageCardProps) {
           </Text>
         </Row>
       </Row>
-      <Row space="4" vertical="center">
+      <Row space="3" vertical="center">
         <Show
           when={
             props.stage.name === local()?.stage && app()?.name === local()?.app
           }
         >
-          <Text size="sm" color="primary" on="base">
-            Live
-          </Text>
+          <Tag level="tip" style="outline">
+            Local
+          </Tag>
         </Show>
         <Tag style="outline">{props.stage.region}</Tag>
       </Row>
