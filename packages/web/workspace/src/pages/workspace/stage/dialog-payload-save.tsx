@@ -9,12 +9,12 @@ import { createStore, unwrap } from "solid-js/store";
 function init() {
   const [state, setState] = createStore<{
     show: boolean;
-    functionARN: string;
+    key: string;
     payload: any;
   }>({
     show: false,
     payload: null,
-    functionARN: "",
+    key: "",
   });
 
   const input = () =>
@@ -25,10 +25,10 @@ function init() {
   return {
     state,
     control: {
-      show(functionARN: string, payload: any) {
+      show(key: string, payload: any) {
         batch(() => {
           setState("show", true);
-          setState("functionARN", functionARN);
+          setState("key", key);
           setState("payload", payload);
         });
         setTimeout(() => input().focus(), 0);
@@ -69,7 +69,7 @@ export function DialogPayloadSave(props: {
           rep().mutate.function_payload_save({
             id: createId(),
             payload: structuredClone(unwrap(state.payload)),
-            key: "test",
+            key: state.key,
             name: fd.get("name") as string,
           });
           control.hide();

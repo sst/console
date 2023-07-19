@@ -31,7 +31,11 @@ import {
   createSignal,
   mergeProps,
 } from "solid-js";
-import { useFunctionsContext, useResourcesContext } from "./context";
+import {
+  useFunctionsContext,
+  useResourcesContext,
+  useStageContext,
+} from "./context";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_LOGS } from "./logs-dummy";
 import { useCommandBar } from "../command-bar";
@@ -435,6 +439,7 @@ const LogEntryMessage = styled("span", {
 });
 export function Logs() {
   const nav = useNavigate();
+  const stage = useStageContext();
   const bar = useCommandBar();
   const params = useParams();
   const [query] = useSearchParams();
@@ -445,8 +450,9 @@ export function Logs() {
         | Extract<Resource.Info, { type: "Function" }>
         | undefined
   );
+  const key = createMemo(() => [stage.app.name, resource().cfnID].join("-"));
   const lambdaPayloads = createSubscription(
-    () => LambdaPayloadStore.forKey("test"),
+    () => LambdaPayloadStore.forKey(key()),
     []
   );
 
@@ -714,10 +720,7 @@ export function Logs() {
               <IconButton
                 title="Save payload"
                 onClick={() =>
-                  saveControl.show(
-                    resource()?.metadata.arn!,
-                    JSON.parse(invokeTextArea.value)
-                  )
+                  saveControl.show(key(), JSON.parse(invokeTextArea.value))
                 }
               >
                 <IconBookmark width={24} height={24} />
@@ -857,7 +860,7 @@ export function Logs() {
                             icon={<IconBookmark />}
                             onClick={() =>
                               saveControl.show(
-                                resource()!.metadata.arn,
+                                key(),
                                 structuredClone(unwrap(invocation.event))
                               )
                             }

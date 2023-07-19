@@ -207,7 +207,7 @@ export function DialogPayloadManage(props: {
                               const user = createSubscription(() =>
                                 UserStore.fromID(creator().properties.userID)
                               );
-                              return user()?.email || "";
+                              return <span>{user()?.email || ""}</span>;
                             }}
                           </Show>
                         </Text>
