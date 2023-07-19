@@ -13,7 +13,7 @@ import { Row, Stack } from "$/ui/layout";
 import { Button, LinkButton, TextButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
-import { globalKeyframes } from "@macaron-css/core";
+import { globalKeyframes, style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import {
@@ -700,7 +700,7 @@ export function Logs() {
                   <IconChevronUpDown />
                 </InvokeSavedPayloadsIcon>
               </InvokeSavedPayloads>
-              <LinkButton>Save</LinkButton>
+              <LinkButton class={style({ display: "none" })}>Save</LinkButton>
             </InvokeControlsLeft>
             <Row vertical="center" space="4">
               <InvokeControlsCancel
