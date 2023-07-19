@@ -474,12 +474,6 @@ const LogEntryMessage = styled("span", {
 });
 export function Logs() {
   const nav = useNavigate();
-  createEventListener(window, "keydown", (e) => {
-    console.log(bar.visible);
-    if (e.key === "Escape" && !bar.visible) {
-      nav("../../");
-    }
-  });
   const bar = useCommandBar();
   const params = useParams();
   const [query] = useSearchParams();
