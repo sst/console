@@ -1,11 +1,10 @@
-import { Invocation, LogStore, clearLogStore } from "$/data/log";
+import { LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Tag, Text, Select } from "$/ui";
+import { Tag, Text } from "$/ui";
 import {
   IconChevronUpDown,
   IconBookmark,
-  IconBookmarkSlash,
   IconArrowPath,
   IconBoltSolid,
 } from "$/ui/icons";
@@ -14,8 +13,7 @@ import { Row, Stack } from "$/ui/layout";
 import { Button, LinkButton, TextButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
-import { globalKeyframes, globalStyle } from "@macaron-css/core";
-import { style } from "@macaron-css/core";
+import { globalKeyframes } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import {
@@ -34,10 +32,9 @@ import { DUMMY_LOGS } from "./logs-dummy";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { useCommandBar } from "../command-bar";
 import { IconMap } from "./resources";
-import { createMemoObject } from "@solidjs/router/dist/utils";
 import { bus } from "$/providers/bus";
 import { createId } from "@paralleldrive/cuid2";
-import { unwrap } from "solid-js/store";
+import { createStore, unwrap } from "solid-js/store";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -107,160 +104,6 @@ globalKeyframes("pulse", {
   },
 });
 
-const InvokeRoot = styled("div", {
-  base: {
-    position: "relative",
-    borderTop: `1px solid ${theme.color.divider.base}`,
-  },
-  variants: {
-    focus: {
-      true: {},
-      false: {},
-    },
-  },
-});
-
-const InvokePayload = styled("textarea", {
-  base: {
-    width: "100%",
-    resize: "none",
-    display: "block",
-    height: `calc(40px + ${theme.space[6]})`,
-    border: "none",
-    lineHeight: theme.font.lineHeight,
-    appearance: "none",
-    fontSize: theme.font.size.mono_sm,
-    fontFamily: theme.font.family.code,
-    padding: `calc(${theme.space[5]} + 2px) 100px ${theme.space[2]} ${theme.space[4]}`,
-    backgroundColor: "transparent",
-    ":focus": {
-      backgroundColor: theme.color.input.background,
-    },
-    selectors: {
-      [`${InvokeRoot.selector({ focus: true })} &`]: {
-        height: 160,
-        padding: `${theme.space[4]} ${theme.space[4]} calc(${theme.space[8]} + 40px)`,
-      },
-    },
-  },
-});
-
-const InvokePayloadLabel = styled("div", {
-  base: {
-    ...utility.row(2),
-    alignItems: "center",
-    position: "absolute",
-    top: 0,
-    left: theme.space[3],
-    pointerEvents: "none",
-    height: `calc(40px + ${theme.space[6]})`,
-    selectors: {
-      [`${InvokeRoot.selector({ focus: true })} &`]: {
-        display: "none",
-      },
-    },
-  },
-});
-
-const InvokePayloadLabelIcon = styled("div", {
-  base: {
-    width: 20,
-    height: 20,
-    color: theme.color.icon.dimmed,
-  },
-});
-
-const InvokeLeftControls = styled("div", {
-  base: {
-    ...utility.row(4),
-    alignItems: "center",
-    padding: theme.space[3],
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    display: "none",
-    selectors: {
-      [`${InvokeRoot.selector({ focus: true })} &`]: {
-        display: "flex",
-      },
-    },
-  },
-});
-
-const InvokeSavedPayloads = styled("div", {
-  base: {
-    ...utility.row(2),
-    alignItems: "center",
-    justifyContent: "space-between",
-    border: `1px solid ${theme.color.divider.base}`,
-    borderRadius: theme.borderRadius,
-    height: 40,
-    width: 200,
-    padding: `0 ${theme.space[2]} 0 ${theme.space[3]}`,
-  },
-  variants: {
-    selected: {
-      true: {},
-      false: {},
-    },
-  },
-  defaultVariants: {
-    selected: false,
-  },
-});
-
-const InvokeSavedPayloadsLabel = styled("span", {
-  base: {
-    fontSize: theme.font.size.sm,
-    overflow: "hidden",
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-    lineHeight: "normal",
-    selectors: {
-      [`${InvokeSavedPayloads.selector({ selected: true })} &`]: {
-        color: theme.color.text.secondary.base,
-      },
-      [`${InvokeSavedPayloads.selector({ selected: false })} &`]: {
-        color: theme.color.text.dimmed.base,
-      },
-    },
-  },
-});
-
-const InvokeSavedPayloadsIcon = styled("div", {
-  base: {
-    flex: "0 0 auto",
-    width: 18,
-    height: 18,
-    color: theme.color.icon.primary,
-  },
-});
-
-const InvokeRightControls = styled("div", {
-  base: {
-    ...utility.row(5),
-    alignItems: "center",
-    padding: theme.space[3],
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    selectors: {
-      [`${InvokeRoot.selector({ focus: true })} &`]: {
-        display: "flex",
-      },
-    },
-  },
-});
-
-const InvokeCancelButton = style({
-  display: "none",
-  selectors: {
-    [`${InvokeRoot.selector({ focus: true })} &`]: {
-      display: "inline-block",
-    },
-  },
-});
-
 const LogContainer = styled("div", {
   base: {
     borderTop: `1px solid ${theme.color.divider.base}`,
@@ -299,6 +142,155 @@ const LogSummary = styled("div", {
         opacity: 1,
       },
     },
+  },
+});
+
+const InvokeRoot = styled("div", {
+  base: {
+    ...utility.row(0),
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    justifyContent: "space-between",
+    paddingLeft: theme.space[3],
+    alignItems: "center",
+    height: 64,
+    ":focus-within": {},
+  },
+  variants: {
+    expand: {
+      true: {
+        ...utility.stack(0),
+        backgroundColor: theme.color.input.background,
+        height: "auto",
+        alignItems: "stretch",
+        padding: 0,
+      },
+    },
+  },
+});
+
+const InvokeControls = styled("div", {
+  base: {
+    ...utility.row(0),
+    justifyContent: "space-between",
+    padding: theme.space[3],
+  },
+});
+
+const InvokeControlsLeft = styled("div", {
+  base: {
+    ...utility.row(4),
+    alignItems: "center",
+    display: "none",
+    selectors: {
+      [`${InvokeRoot.selector({ expand: true })} &`]: {
+        display: "flex",
+      },
+    },
+  },
+});
+
+const InvokeControlsCancel = styled(LinkButton, {
+  base: {
+    display: "none",
+    selectors: {
+      [`${InvokeRoot.selector({ expand: true })} &`]: {
+        display: "initial",
+      },
+    },
+  },
+});
+
+const InvokePayloadLabel = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    left: theme.space[3],
+    selectors: {
+      [`${InvokeRoot.selector({ expand: true })} &`]: {
+        display: "none",
+      },
+    },
+  },
+});
+
+const InvokePayloadLabelIcon = styled("div", {
+  base: {
+    width: 20,
+    height: 20,
+    color: theme.color.icon.dimmed,
+  },
+});
+
+const InvokeTextArea = styled("textarea", {
+  base: {
+    display: "none",
+    padding: theme.space[4],
+    flexGrow: 1,
+    flexShrink: 0,
+    resize: "none",
+    height: "100%",
+    border: "none",
+    lineHeight: theme.font.lineHeight,
+    appearance: "none",
+    fontSize: theme.font.size.mono_sm,
+    fontFamily: theme.font.family.code,
+    background: "transparent",
+    selectors: {
+      [`${InvokeRoot.selector({ expand: true })} &`]: {
+        display: "block",
+      },
+    },
+  },
+});
+
+const InvokeSavedPayloads = styled("div", {
+  base: {
+    ...utility.row(2),
+    display: "none",
+    alignItems: "center",
+    justifyContent: "space-between",
+    border: `1px solid ${theme.color.divider.base}`,
+    borderRadius: theme.borderRadius,
+    height: 40,
+    width: 200,
+    padding: `0 ${theme.space[2]} 0 ${theme.space[3]}`,
+  },
+  variants: {
+    selected: {
+      true: {},
+      false: {},
+    },
+  },
+  defaultVariants: {
+    selected: false,
+  },
+});
+
+const InvokeSavedPayloadsLabel = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    display: "none",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    lineHeight: "normal",
+    selectors: {
+      [`${InvokeSavedPayloads.selector({ selected: true })} &`]: {
+        color: theme.color.text.secondary.base,
+      },
+      [`${InvokeSavedPayloads.selector({ selected: false })} &`]: {
+        color: theme.color.text.dimmed.base,
+      },
+    },
+  },
+});
+
+const InvokeSavedPayloadsIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 18,
+    height: 18,
+    color: theme.color.icon.primary,
   },
 });
 
@@ -621,6 +613,15 @@ export function Logs() {
     });
   });
 
+  let invokeTextArea!: HTMLTextAreaElement;
+
+  const [invoke, setInvoke] = createStore<{
+    invoking: boolean;
+    expand: boolean;
+  }>({
+    expand: false,
+    invoking: false,
+  });
   const [invoking, setInvoking] = createSignal(false);
 
   return (
@@ -673,8 +674,13 @@ export function Logs() {
             </LogClearButton>
           </Show>
         </LogLoadingIndicator>
-        <InvokeRoot focus={false}>
-          <InvokePayload />
+        <InvokeRoot
+          expand={invoke.expand}
+          onClick={() => {
+            setInvoke("expand", true);
+            invokeTextArea.focus();
+          }}
+        >
           <InvokePayloadLabel>
             <InvokePayloadLabelIcon>
               <IconCaretRightOutline />
@@ -683,30 +689,47 @@ export function Logs() {
               Enter event payload
             </Text>
           </InvokePayloadLabel>
-          <InvokeLeftControls>
-            <InvokeSavedPayloads selected={false}>
-              <InvokeSavedPayloadsLabel>
-                Saved payloads&hellip;
-              </InvokeSavedPayloadsLabel>
-              <InvokeSavedPayloadsIcon>
-                <IconChevronUpDown />
-              </InvokeSavedPayloadsIcon>
-            </InvokeSavedPayloads>
-            <LinkButton>Save</LinkButton>
-          </InvokeLeftControls>
-          <InvokeRightControls>
-            <LinkButton class={InvokeCancelButton}>Cancel</LinkButton>
-            <Button
-              onClick={() => {
-                setInvoking(true);
-                setTimeout(() => setInvoking(false), 2000);
-              }}
-              disabled={invoking()}
-              color="secondary"
-            >
-              {invoking() ? "Invoking" : "Invoke"}
-            </Button>
-          </InvokeRightControls>
+          <InvokeTextArea placeholder="{}" rows={5} ref={invokeTextArea} />
+          <InvokeControls>
+            <InvokeControlsLeft>
+              <InvokeSavedPayloads selected={false}>
+                <InvokeSavedPayloadsLabel>
+                  Saved payloads&hellip;
+                </InvokeSavedPayloadsLabel>
+                <InvokeSavedPayloadsIcon>
+                  <IconChevronUpDown />
+                </InvokeSavedPayloadsIcon>
+              </InvokeSavedPayloads>
+              <LinkButton>Save</LinkButton>
+            </InvokeControlsLeft>
+            <Row vertical="center" space="4">
+              <InvokeControlsCancel
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInvoke("expand", false);
+                }}
+              >
+                Cancel
+              </InvokeControlsCancel>
+              <Button
+                disabled={invoke.invoking}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const payload = JSON.parse(invokeTextArea.value || "{}");
+                  setTimeout(() => setInvoke("invoking", false), 2000);
+                  setInvoke("invoking", true);
+                  rep().mutate.function_invoke({
+                    stageID: resource()!.stageID,
+                    payload,
+                    functionARN: resource()!.metadata.arn,
+                  });
+                }}
+                color="secondary"
+              >
+                {invoke.invoking ? "Invoking" : "Invoke"}
+              </Button>
+            </Row>
+          </InvokeControls>
         </InvokeRoot>
         <For each={invocations().slice().reverse()}>
           {(invocation) => {
