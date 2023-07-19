@@ -39,10 +39,14 @@ import { IconMap } from "./resources";
 import { bus } from "$/providers/bus";
 import { createStore, unwrap } from "solid-js/store";
 import {
-  SavePayloadDialog,
-  SavePayloadDialogControl,
-} from "./save-payload-dialog";
+  DialogPayloadSave,
+  DialogPayloadSaveControl,
+} from "./dialog-payload-save";
 import { LambdaPayloadStore } from "$/data/lambda-payload";
+import {
+  DialogPayloadManage,
+  DialogPayloadManageControl,
+} from "./dialog-payload-manage";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -442,9 +446,14 @@ export function Logs() {
         | undefined
   );
   const lambdaPayloads = createSubscription(
-    () => LambdaPayloadStore.forARN(resource()?.metadata.arn || ""),
+    () => LambdaPayloadStore.forKey("test"),
     []
   );
+
+  createEffect(() => {
+    console.log("payloads", lambdaPayloads());
+  });
+
   const live = createMemo(() => resource()?.enrichment.live);
 
   const functions = useFunctionsContext();
@@ -577,7 +586,16 @@ export function Logs() {
     expand: false,
     invoking: false,
   });
-  let savePayloadDialogControl!: SavePayloadDialogControl;
+  let saveControl!: DialogPayloadSaveControl;
+  let manageControl!: DialogPayloadManageControl;
+
+  function setPayload(value: any) {
+    invokeTextArea.value = JSON.stringify(value, null, 2).trim();
+    setInvoke("expand", true);
+    invokeTextArea.focus();
+    invokeTextArea.selectionStart = 0;
+    invokeTextArea.selectionEnd = 0;
+  }
 
   bar.register("lambda-payloads", async (filter, global) => {
     if (global && !filter) return [];
@@ -586,11 +604,7 @@ export function Logs() {
       category: "Payloads",
       title: x.name,
       async run(control) {
-        invokeTextArea.value = JSON.stringify(x.payload, null, 2);
-        setInvoke("expand", true);
-        invokeTextArea.focus();
-        invokeTextArea.selectionStart = 0;
-        invokeTextArea.selectionEnd = 0;
+        setPayload(x.payload);
         control.hide();
       },
     }));
@@ -619,8 +633,11 @@ export function Logs() {
 
   return (
     <Stack space="5">
-      <SavePayloadDialog
-        control={(control) => (savePayloadDialogControl = control)}
+      <DialogPayloadSave control={(control) => (saveControl = control)} />
+      <DialogPayloadManage
+        lambdaPayloads={lambdaPayloads()}
+        onSelect={(item) => setPayload(item.payload)}
+        control={(control) => (manageControl = control)}
       />
       <Row space="2" horizontal="between" vertical="center">
         <Stack space="2" vertical="center">
@@ -689,7 +706,7 @@ export function Logs() {
           <InvokeControls>
             <InvokeControlsLeft>
               <IconButton
-                onClick={() => bar.show("lambda-payloads")}
+                onClick={() => manageControl.show()}
                 title="Load saved payloads"
               >
                 <IconArrowDownTray width={24} height={24} />
@@ -697,7 +714,7 @@ export function Logs() {
               <IconButton
                 title="Save payload"
                 onClick={() =>
-                  savePayloadDialogControl.show(
+                  saveControl.show(
                     resource()?.metadata.arn!,
                     JSON.parse(invokeTextArea.value)
                   )
@@ -752,7 +769,9 @@ export function Logs() {
                 invocation.start
               )
             );
-            const empty = createMemo(() => invocation.logs.length === 0);
+            const empty = createMemo(
+              () => !live() && invocation.logs.length === 0
+            );
             const [replaying, setReplaying] = createSignal(false);
 
             return (
@@ -837,7 +856,7 @@ export function Logs() {
                             on="surface"
                             icon={<IconBookmark />}
                             onClick={() =>
-                              savePayloadDialogControl.show(
+                              saveControl.show(
                                 resource()!.metadata.arn,
                                 structuredClone(unwrap(invocation.event))
                               )
@@ -888,7 +907,11 @@ export function Logs() {
                         <Match when={tab() === "response"}>
                           <LogEntry>
                             <LogEntryMessage>
-                              {JSON.stringify(invocation.response, null, 2)}
+                              {JSON.stringify(
+                                invocation.response || invocation.error,
+                                null,
+                                2
+                              )}
                             </LogEntryMessage>
                           </LogEntry>
                         </Match>

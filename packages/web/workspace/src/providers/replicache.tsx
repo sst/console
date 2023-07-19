@@ -39,7 +39,12 @@ const mutators = new Client<ServerType>()
       id: input.id,
       name: input.name,
       payload: input.payload,
+      key: input.key,
+      timeCreated: new Date().toISOString(),
     });
+  })
+  .mutation("function_payload_remove", async (tx, input) => {
+    await LambdaPayloadStore.remove(tx, input);
   })
   .build();
 

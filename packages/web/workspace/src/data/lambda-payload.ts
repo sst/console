@@ -15,13 +15,17 @@ export function fromID(id: string) {
   };
 }
 
-export function forARN(arn: string) {
+export function forKey(key: string) {
   return async (tx: ReadTransaction) => {
     const result = (await tx
       .scan({ prefix: `/lambdaPayload/` })
       .toArray()) as LambdaPayload[];
-    return result.filter((r) => r.functionARN === arn);
+    return result.filter((r) => r.key === key);
   };
+}
+
+export async function remove(tx: WriteTransaction, id: LambdaPayload["id"]) {
+  await tx.del(`/lambdaPayload/${id}`);
 }
 
 export async function put(

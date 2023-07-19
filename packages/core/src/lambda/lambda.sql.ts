@@ -7,7 +7,7 @@ export const lambdaPayload = mysqlTable(
   {
     ...workspaceID,
     ...timestamps,
-    functionARN: varchar("function_arn", { length: 255 }).notNull(),
+    key: varchar("key", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     payload: json("payload").notNull(),
     creator: json("creator").notNull().$type<Actor>(),

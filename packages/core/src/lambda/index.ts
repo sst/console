@@ -7,6 +7,7 @@ import { lambdaPayload } from "./lambda.sql";
 import { useActor, useWorkspace } from "../actor";
 import { createSelectSchema } from "drizzle-zod";
 import { createId } from "@paralleldrive/cuid2";
+import { and, eq } from "drizzle-orm";
 
 export * as Lambda from ".";
 
@@ -38,7 +39,7 @@ export const savePayload = zod(
   LambdaPayload.pick({
     id: true,
     name: true,
-    functionARN: true,
+    key: true,
     payload: true,
   }).partial({
     id: true,
@@ -46,13 +47,28 @@ export const savePayload = zod(
   async (input) =>
     useTransaction(async (tx) => {
       const id = input.id || createId();
+      console.log(id);
       await tx.insert(lambdaPayload).values({
         id,
-        functionARN: input.functionARN,
+        key: input.key,
         name: input.name,
         creator: useActor(),
         workspaceID: useWorkspace(),
         payload: input.payload,
       });
     })
+);
+
+export const removePayload = zod(LambdaPayload.shape.id, async (input) =>
+  useTransaction(async (tx) => {
+    await tx
+      .delete(lambdaPayload)
+      .where(
+        and(
+          eq(lambdaPayload.id, input),
+          eq(lambdaPayload.workspaceID, useWorkspace())
+        )
+      );
+    return input;
+  })
 );

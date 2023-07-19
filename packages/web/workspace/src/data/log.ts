@@ -18,7 +18,11 @@ export interface Invocation {
   cold: boolean;
   event?: any;
   response?: any;
-  error?: boolean;
+  error?: {
+    type: string;
+    message: string;
+    trace: string[];
+  };
   start: Date;
   end?: Date;
   duration?: number;
@@ -75,7 +79,12 @@ bus.on("log", (e) => {
             }
             if (logs.find((l) => l.id === log.id)) return;
             logs.push(log);
-            if (invocation && kind === "ERROR") invocation.error = true;
+            if (invocation && kind === "ERROR")
+              invocation.error = {
+                type: "error",
+                message: "error",
+                trace: [],
+              };
           })
         );
         break;
@@ -147,5 +156,19 @@ bus.on("function.success", (e) => {
 });
 
 bus.on("function.error", (e) => {
+  console.log("got error", e);
   bus.emit("log", [["e", Date.now(), e.functionID, e.requestID]]);
+  setLogStore(
+    produce((state) => {
+      let group = state[e.functionID];
+      if (!group) return;
+      const invocation = group.find((i) => i.id === e.requestID);
+      if (!invocation) return;
+      invocation.error = {
+        type: e.errorType,
+        message: e.errorMessage,
+        trace: e.trace,
+      };
+    })
+  );
 });

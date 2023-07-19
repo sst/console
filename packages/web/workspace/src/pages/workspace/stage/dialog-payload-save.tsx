@@ -26,7 +26,6 @@ function init() {
     state,
     control: {
       show(functionARN: string, payload: any) {
-        console.log("hello");
         batch(() => {
           setState("show", true);
           setState("functionARN", functionARN);
@@ -42,7 +41,7 @@ function init() {
   };
 }
 
-export type SavePayloadDialogControl = ReturnType<typeof init>["control"];
+export type DialogPayloadSaveControl = ReturnType<typeof init>["control"];
 
 const Form = styled("form", {
   base: {
@@ -51,8 +50,8 @@ const Form = styled("form", {
   },
 });
 
-export function SavePayloadDialog(props: {
-  control: (control: SavePayloadDialogControl) => void;
+export function DialogPayloadSave(props: {
+  control: (control: DialogPayloadSaveControl) => void;
 }) {
   const { state, control } = init();
   const rep = useReplicache();
@@ -70,7 +69,7 @@ export function SavePayloadDialog(props: {
           rep().mutate.function_payload_save({
             id: createId(),
             payload: structuredClone(unwrap(state.payload)),
-            functionARN: state.functionARN,
+            key: "test",
             name: fd.get("name") as string,
           });
           control.hide();

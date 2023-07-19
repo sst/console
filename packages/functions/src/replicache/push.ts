@@ -20,6 +20,7 @@ export const handler = ApiHandler(async () => {
     })();
 
     for (const mutation of body.mutations) {
+      console.log("processing", mutation);
       const expectedMutationID = mutationID + 1;
 
       if (mutation.id < expectedMutationID) {

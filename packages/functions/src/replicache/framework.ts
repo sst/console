@@ -1,4 +1,4 @@
-import { z, ZodAny, ZodObject, ZodRawShape, ZodSchema, ZodType } from "zod";
+import { z, ZodAny, ZodObject, ZodRawShape, ZodSchema } from "zod";
 import { WriteTransaction } from "replicache";
 
 interface Mutation<Name extends string = string, Input = any> {
@@ -17,40 +17,36 @@ export class Server<Mutations> {
 
   public mutation<
     Name extends string,
-    Shape extends ZodRawShape,
-    Args = z.infer<ZodObject<Shape, "strip", ZodAny>>
+    Shape extends ZodSchema,
+    Args = z.infer<Shape>
   >(
     name: Name,
     shape: Shape,
-    fn: (input: z.infer<ZodObject<Shape, "strip", ZodAny>>) => Promise<any>
+    fn: (input: z.infer<Shape>) => Promise<any>
   ): Server<Mutations & { [key in Name]: Mutation<Name, Args> }> {
     this.mutations.set(name as string, {
       fn: async (args) => {
         const parsed = args;
         return fn(parsed);
       },
-      input: z.object(shape),
+      input: shape,
     });
     return this;
   }
 
   public expose<
     Name extends string,
-    Shape extends ZodRawShape,
-    Args = z.infer<ZodObject<Shape, "strip", ZodAny>>
+    Shape extends ZodSchema,
+    Args = z.infer<Shape>
   >(
     name: Name,
-    fn: ((
-      input: z.infer<ZodObject<Shape, "strip", ZodAny>>
-    ) => Promise<any>) & {
-      schema: {
-        shape: Shape;
-      };
+    fn: ((input: z.infer<ZodSchema>) => Promise<any>) & {
+      schema: Shape;
     }
   ): Server<Mutations & { [key in Name]: Mutation<Name, Args> }> {
     this.mutations.set(name as string, {
       fn,
-      input: z.object(fn.schema.shape),
+      input: fn.schema,
     });
     return this;
   }
@@ -72,10 +68,10 @@ export class Client<
 > {
   private mutations = new Map<string, (...input: any) => Promise<void>>();
 
-  public mutation<
-    Name extends keyof Mutations,
-    Input extends ZodRawShape = Mutations[Name]["input"]
-  >(name: Name, fn: (tx: WriteTransaction, input: Input) => Promise<void>) {
+  public mutation<Name extends keyof Mutations>(
+    name: Name,
+    fn: (tx: WriteTransaction, input: Mutations[Name]["input"]) => Promise<void>
+  ) {
     this.mutations.set(name as string, fn);
     return this;
   }
