@@ -135,6 +135,7 @@ export function Code() {
                 type="text"
                 onPaste={(e) => {
                   const code = e.clipboardData?.getData("text/plain");
+                  //const code = await navigator.clipboard.readText();
                   if (!code) return;
                   document.querySelectorAll("input").forEach((item, index) => {
                     item.value = code[index];
