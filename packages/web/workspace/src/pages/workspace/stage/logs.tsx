@@ -35,6 +35,10 @@ import { IconMap } from "./resources";
 import { bus } from "$/providers/bus";
 import { createId } from "@paralleldrive/cuid2";
 import { createStore, unwrap } from "solid-js/store";
+import {
+  SavePayloadDialog,
+  SavePayloadDialogControl,
+} from "./save-payload-dialog";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -246,7 +250,6 @@ const InvokeTextArea = styled("textarea", {
 const InvokeSavedPayloads = styled("div", {
   base: {
     ...utility.row(2),
-    display: "none",
     alignItems: "center",
     justifyContent: "space-between",
     border: `1px solid ${theme.color.divider.base}`,
@@ -269,7 +272,6 @@ const InvokeSavedPayloads = styled("div", {
 const InvokeSavedPayloadsLabel = styled("span", {
   base: {
     fontSize: theme.font.size.sm,
-    display: "none",
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
@@ -616,10 +618,13 @@ export function Logs() {
     expand: false,
     invoking: false,
   });
-  const [invoking, setInvoking] = createSignal(false);
+  let savePayloadDialogControl!: SavePayloadDialogControl;
 
   return (
     <Stack space="5">
+      <SavePayloadDialog
+        control={(control) => (savePayloadDialogControl = control)}
+      />
       <Row space="2" horizontal="between" vertical="center">
         <Stack space="2" vertical="center">
           <Text size="lg" weight="medium">
@@ -694,7 +699,16 @@ export function Logs() {
                   <IconChevronUpDown />
                 </InvokeSavedPayloadsIcon>
               </InvokeSavedPayloads>
-              <LinkButton class={style({ display: "none" })}>Save</LinkButton>
+              <LinkButton
+                onClick={() =>
+                  savePayloadDialogControl.show(
+                    resource()?.metadata.arn!,
+                    invokeTextArea.value
+                  )
+                }
+              >
+                Save
+              </LinkButton>
             </InvokeControlsLeft>
             <Row vertical="center" space="4">
               <InvokeControlsCancel
@@ -827,14 +841,10 @@ export function Logs() {
                             on="surface"
                             icon={<IconBookmark />}
                             onClick={() =>
-                              rep().mutate.function_payload_save({
-                                name: new Date().toISOString(),
-                                id: createId(),
-                                payload: structuredClone(
-                                  unwrap(invocation.event)
-                                ),
-                                functionARN: resource()!.metadata.arn,
-                              })
+                              savePayloadDialogControl.show(
+                                resource()!.metadata.arn,
+                                structuredClone(unwrap(invocation.event))
+                              )
                             }
                           >
                             Save
