@@ -248,55 +248,6 @@ const InvokeTextArea = styled("textarea", {
   },
 });
 
-const InvokeSavedPayloads = styled("div", {
-  base: {
-    ...utility.row(2),
-    alignItems: "center",
-    justifyContent: "space-between",
-    border: `1px solid ${theme.color.divider.base}`,
-    borderRadius: theme.borderRadius,
-    height: 40,
-    width: 200,
-    padding: `0 ${theme.space[2]} 0 ${theme.space[3]}`,
-  },
-  variants: {
-    selected: {
-      true: {},
-      false: {},
-    },
-  },
-  defaultVariants: {
-    selected: false,
-  },
-});
-
-const InvokeSavedPayloadsLabel = styled("span", {
-  base: {
-    fontSize: theme.font.size.sm,
-    overflow: "hidden",
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-    lineHeight: "normal",
-    selectors: {
-      [`${InvokeSavedPayloads.selector({ selected: true })} &`]: {
-        color: theme.color.text.secondary.base,
-      },
-      [`${InvokeSavedPayloads.selector({ selected: false })} &`]: {
-        color: theme.color.text.dimmed.base,
-      },
-    },
-  },
-});
-
-const InvokeSavedPayloadsIcon = styled("div", {
-  base: {
-    flex: "0 0 auto",
-    width: 18,
-    height: 18,
-    color: theme.color.icon.primary,
-  },
-});
-
 const LogText = styled("div", {
   base: {
     ...utility.textLine(),
