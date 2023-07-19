@@ -12,6 +12,7 @@ import {
 } from "solid-js";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
+import { Text } from "$/ui/text";
 import { filter, groupBy, pipe } from "remeda";
 import { globalStyle } from "@macaron-css/core";
 import { Portal } from "solid-js/web";
@@ -124,7 +125,7 @@ const Category = styled("div", {
 
 const ActionRow = styled("div", {
   base: {
-    ...utility.row(3),
+    ...utility.row(2),
     padding: `0 ${theme.space[3]}`,
     height: 48,
     alignItems: "center",
@@ -139,8 +140,9 @@ globalStyle(`${ActionRow}.active`, {
 
 const ActionRowIcon = styled("div", {
   base: {
-    width: 16,
-    height: 16,
+    flex: "0 0 auto",
+    width: 15,
+    height: 15,
   },
 });
 
@@ -151,12 +153,6 @@ globalStyle(`${ActionRowIcon} svg`, {
 
 globalStyle(`${ActionRow}.active ${ActionRowIcon} svg`, {
   color: theme.color.icon.primary,
-});
-
-const ActionRowTitle = styled("div", {
-  base: {
-    color: theme.color.text.primary.surface,
-  },
 });
 
 function createControl() {
@@ -375,7 +371,14 @@ export function CommandBar(props: ParentProps) {
                           <ActionRowIcon>
                             <action.icon />
                           </ActionRowIcon>
-                          <ActionRowTitle>{action.title}</ActionRowTitle>
+                          <Text
+                            line
+                            on="surface"
+                            color="primary"
+                            leading="normal"
+                          >
+                            {action.title}
+                          </Text>
                         </ActionRow>
                       )}
                     </For>
