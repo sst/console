@@ -9,7 +9,11 @@ import {
   IconArrowPath,
   IconBoltSolid,
 } from "$/ui/icons";
-import { IconCaretRight, IconCaretRightOutline } from "$/ui/icons/custom";
+import {
+  IconCaretRight,
+  IconCaretRightOutline,
+  IconFunction,
+} from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
 import { Button, LinkButton, TextButton, IconButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
@@ -30,16 +34,15 @@ import {
 import { useFunctionsContext, useResourcesContext } from "./context";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_LOGS } from "./logs-dummy";
-import { createEventListener } from "@solid-primitives/event-listener";
 import { useCommandBar } from "../command-bar";
 import { IconMap } from "./resources";
 import { bus } from "$/providers/bus";
-import { createId } from "@paralleldrive/cuid2";
 import { createStore, unwrap } from "solid-js/store";
 import {
   SavePayloadDialog,
   SavePayloadDialogControl,
 } from "./save-payload-dialog";
+import { LambdaPayloadStore } from "$/data/lambda-payload";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -438,6 +441,10 @@ export function Logs() {
         | Extract<Resource.Info, { type: "Function" }>
         | undefined
   );
+  const lambdaPayloads = createSubscription(
+    () => LambdaPayloadStore.forARN(resource()?.metadata.arn || ""),
+    []
+  );
   const live = createMemo(() => resource()?.enrichment.live);
 
   const functions = useFunctionsContext();
@@ -572,6 +579,44 @@ export function Logs() {
   });
   let savePayloadDialogControl!: SavePayloadDialogControl;
 
+  bar.register("lambda-payloads", async (filter, global) => {
+    if (global && !filter) return [];
+    return lambdaPayloads().map((x) => ({
+      icon: IconFunction,
+      category: "Payloads",
+      title: x.name,
+      async run(control) {
+        invokeTextArea.value = JSON.stringify(x.payload, null, 2);
+        setInvoke("expand", true);
+        invokeTextArea.focus();
+        invokeTextArea.selectionStart = 0;
+        invokeTextArea.selectionEnd = 0;
+        control.hide();
+      },
+    }));
+  });
+
+  bar.register("invoke", async (filter, global) => {
+    return [
+      {
+        icon: IconFunction,
+        category: "Invoke",
+        title: "Load saved payloads...",
+        async run(control) {
+          control.show("lambda-payloads");
+        },
+      },
+      {
+        icon: IconFunction,
+        category: "Invoke",
+        title: "Manage saved payloads...",
+        async run(control) {
+          control.show("lambda-payloads");
+        },
+      },
+    ];
+  });
+
   return (
     <Stack space="5">
       <SavePayloadDialog
@@ -643,16 +688,18 @@ export function Logs() {
           <InvokeTextArea rows={5} ref={invokeTextArea} />
           <InvokeControls>
             <InvokeControlsLeft>
-              <IconButton title="Load saved payloads">
+              <IconButton
+                onClick={() => bar.show("lambda-payloads")}
+                title="Load saved payloads"
+              >
                 <IconArrowDownTray width={24} height={24} />
               </IconButton>
               <IconButton
-                disabled
                 title="Save payload"
                 onClick={() =>
                   savePayloadDialogControl.show(
                     resource()?.metadata.arn!,
-                    invokeTextArea.value
+                    JSON.parse(invokeTextArea.value)
                   )
                 }
               >

@@ -19,6 +19,7 @@ import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
 import { bus } from "./bus";
 import { UserStore } from "$/data/user";
+import { LambdaPayloadStore } from "$/data/lambda-payload";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async (tx, input) => {})
@@ -33,7 +34,13 @@ const mutators = new Client<ServerType>()
   .mutation("function_invoke", async (tx, input) => {
     console.log(input);
   })
-  .mutation("function_payload_save", async (tx, input) => {})
+  .mutation("function_payload_save", async (tx, input) => {
+    await LambdaPayloadStore.put(tx, {
+      id: input.id,
+      name: input.name,
+      payload: input.payload,
+    });
+  })
   .build();
 
 const ReplicacheContext =

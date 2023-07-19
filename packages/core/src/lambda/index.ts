@@ -29,12 +29,13 @@ export const invoke = zod(
   }
 );
 
-export const SavedPayload = createSelectSchema(lambdaPayload, {
+export const LambdaPayload = createSelectSchema(lambdaPayload, {
   id: (schema) => schema.id.cuid2(),
 });
+export type LambdaPayload = z.infer<typeof LambdaPayload>;
 
 export const savePayload = zod(
-  SavedPayload.pick({
+  LambdaPayload.pick({
     id: true,
     name: true,
     functionARN: true,

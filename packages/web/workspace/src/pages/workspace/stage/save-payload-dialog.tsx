@@ -32,7 +32,7 @@ function init() {
           setState("functionARN", functionARN);
           setState("payload", payload);
         });
-        input().focus();
+        setTimeout(() => input().focus(), 0);
       },
       hide() {
         setState("show", false);
