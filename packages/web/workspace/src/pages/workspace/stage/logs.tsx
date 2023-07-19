@@ -688,7 +688,7 @@ export function Logs() {
               Enter event payload
             </Text>
           </InvokePayloadLabel>
-          <InvokeTextArea placeholder="{}" rows={5} ref={invokeTextArea} />
+          <InvokeTextArea rows={5} ref={invokeTextArea} />
           <InvokeControls>
             <InvokeControlsLeft>
               <InvokeSavedPayloads selected={false}>
@@ -720,6 +720,7 @@ export function Logs() {
                 Cancel
               </InvokeControlsCancel>
               <Button
+                color="secondary"
                 disabled={invoke.invoking}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -732,7 +733,6 @@ export function Logs() {
                     functionARN: resource()!.metadata.arn,
                   });
                 }}
-                color="secondary"
               >
                 {invoke.invoking ? "Invoking" : "Invoke"}
               </Button>

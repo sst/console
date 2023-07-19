@@ -95,7 +95,7 @@ const Results = styled("div", {
   base: {
     borderTop: `1px solid ${theme.color.divider.base}`,
     maxHeight: 320,
-    padding: `${theme.space[2]} ${theme.space[2]}`,
+    padding: theme.space[2],
     overflowY: "auto",
     selectors: {
       "&::-webkit-scrollbar": {
@@ -128,7 +128,7 @@ const ActionRow = styled("div", {
     padding: `0 ${theme.space[3]}`,
     height: 48,
     alignItems: "center",
-    borderRadius: 4,
+    borderRadius: theme.borderRadius,
     fontSize: theme.font.size.base,
   },
 });

@@ -3,9 +3,11 @@ import { Grower, Stack, Row, Hr } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import {
+  IconTrash,
+  IconXMark,
   IconBookmark,
-  IconChevronLeft,
   IconBoltSolid,
+  IconChevronLeft,
   IconExclamationTriangle,
 } from "$/ui/icons";
 import { Text } from "$/ui/text";
@@ -158,11 +160,18 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
-      <ComponentType name="PayloadNameModal">
+      <ComponentType name="PayloadSelectModal">
         <Variant name="Default">
           <Grower>
             <PayloadNameModalWrapper>
-              <PayloadNameModal />
+              <PayloadSelectModal />
+            </PayloadNameModalWrapper>
+          </Grower>
+        </Variant>
+        <Variant name="Empty">
+          <Grower>
+            <PayloadNameModalWrapper>
+              <PayloadSelectModal empty />
             </PayloadNameModalWrapper>
           </Grower>
         </Variant>
@@ -1240,7 +1249,7 @@ function Login() {
 const PayloadNameModalWrapper = styled("div", {
   base: {
     margin: "0 auto",
-    width: 480,
+    width: 640,
     borderRadius: 10,
     flexShrink: 0,
     boxShadow: theme.color.shadow.drop.long,
@@ -1249,31 +1258,187 @@ const PayloadNameModalWrapper = styled("div", {
     background: theme.color.background.modal,
     transform: "scale(0.95)",
     transition: "200ms all",
-    padding: theme.space[5],
   },
 });
 
-function PayloadNameModal() {
+const PayloadSelectModalIcon = styled("div", {
+  base: {
+    width: 24,
+    height: 24,
+    color: theme.color.icon.dimmed,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.icon.secondary,
+    },
+  },
+});
+
+const PayloadSelectModalEmpty = styled("div", {
+  base: {
+    ...utility.stack(4),
+    height: 240,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTop: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const PayloadSelectModalList = styled("div", {
+  base: {
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    maxHeight: 320,
+    overflowY: "auto",
+  },
+});
+
+const PayloadSelectModalRowRoot = styled("div", {
+  base: {
+    ...utility.row(5),
+    padding: `${theme.space[4]} ${theme.space[5]}`,
+    alignItems: "center",
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    ":hover": {
+      background: theme.color.background.hover,
+    },
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+const PayloadSelectModalRowCol = styled("div", {
+  base: {
+    ...utility.stack(2),
+    minWidth: 0,
+  },
+  variants: {
+    side: {
+      left: {
+        flex: 2,
+      },
+      right: {
+        flex: 1,
+        textAlign: "right",
+      },
+    },
+  },
+});
+const PayloadSelectModalRemoveIcon = styled("div", {
+  base: {
+    width: 18,
+    height: 18,
+    flex: "0 0 auto",
+    color: theme.color.icon.secondary,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.icon.primary,
+    },
+  },
+});
+
+function PayloadSelectModalRow({
+  name,
+  summary,
+  author,
+  date,
+}: {
+  name: string;
+  summary: string;
+  author: string;
+  date: string;
+}) {
   return (
-    <form>
-      <Stack space="5">
-        <Stack space="2">
-          <Text size="lg" weight="medium">
-            Save event to workspace
+    <PayloadSelectModalRowRoot>
+      <Row space="5" horizontal="between" style={{ "flex-grow": 1 }}>
+        <PayloadSelectModalRowCol side="left">
+          <Text line leading="normal" weight="medium">
+            {name}
           </Text>
-        </Stack>
-        <FormInput
-          autofocus
-          label="Event name"
-          hint="Give the event a short recognizable name."
-          placeholder="EventA"
-        />
-        <Row space="5" vertical="center" horizontal="end">
-          <LinkButton>Cancel</LinkButton>
-          <Button color="secondary">Save Event</Button>
-        </Row>
-      </Stack>
-    </form>
+          <Text line code leading="normal" color="dimmed" size="mono_sm">
+            {summary}
+          </Text>
+        </PayloadSelectModalRowCol>
+        <PayloadSelectModalRowCol side="right">
+          <Text line leading="normal" color="secondary" size="sm">
+            {author}
+          </Text>
+          <Text line leading="normal" color="dimmed" size="xs">
+            {date}
+          </Text>
+        </PayloadSelectModalRowCol>
+      </Row>
+      <PayloadSelectModalRemoveIcon title="Remove saved payload">
+        <IconTrash />
+      </PayloadSelectModalRemoveIcon>
+    </PayloadSelectModalRowRoot>
+  );
+}
+
+function PayloadSelectModal({ empty }: { empty?: boolean }) {
+  return (
+    <Stack>
+      <Row
+        space="2"
+        vertical="center"
+        horizontal="between"
+        style={{ padding: theme.space[5] }}
+      >
+        <Text size="lg" weight="medium" leading="normal">
+          Saved event payloads
+        </Text>
+        <PayloadSelectModalIcon>
+          <IconXMark />
+        </PayloadSelectModalIcon>
+      </Row>
+      <Show when={empty}>
+        <PayloadSelectModalEmpty>
+          <IconBookmark
+            width={32}
+            height={32}
+            color={theme.color.icon.dimmed}
+          />
+          <Text center color="dimmed">
+            You have no saved payloads for this function
+          </Text>
+        </PayloadSelectModalEmpty>
+      </Show>
+      <Show when={!empty}>
+        <PayloadSelectModalList>
+          <PayloadSelectModalRow
+            name="Pull Event"
+            summary={JSON.stringify({ action: "opened" })}
+            author="spongebob@krustykrab.com"
+            date="3hrs ago"
+          />
+          <PayloadSelectModalRow
+            name="migration_event"
+            summary={JSON.stringify({
+              event: "test",
+              option: true,
+              action: "gone",
+              event_name:
+                "a_really_really_long_event_name_that_should_be_truncated_before_it_gets_too_long",
+            })}
+            author="patrick@krustykrab.com"
+            date="1 day ago"
+          />
+          <PayloadSelectModalRow
+            name="a_really_really_long_event_name_that_should_be_truncated_before_it_gets_too_long"
+            summary={JSON.stringify({
+              event: "test",
+              option: true,
+              action: "opened",
+              event_name:
+                "a_really_really_long_event_name_that_should_be_truncated_before_it_gets_too_long",
+            })}
+            author="squidward.tentacles@krustykrab.com"
+            date="2023-01-01"
+          />
+        </PayloadSelectModalList>
+      </Show>
+    </Stack>
   );
 }
 
