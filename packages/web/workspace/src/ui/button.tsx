@@ -253,3 +253,31 @@ export function TextButton(props: TextButtonProps) {
     </TextButtonRoot>
   );
 }
+
+const IconButtonRoot = styled("button", {
+  base: {
+    padding: 0,
+    border: "none",
+    appearance: "none",
+    background: "none",
+    color: theme.color.icon.secondary,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":disabled": {
+      pointerEvents: "none",
+      opacity: 0.4,
+    },
+    selectors: {
+      "&:hover": {
+        color: theme.color.icon.primary,
+      },
+
+      "&[data-state-hover]": {
+        color: theme.color.icon.primary,
+      },
+    },
+  },
+});
+
+export function IconButton(props: ComponentProps<typeof IconButtonRoot>) {
+  return <IconButtonRoot {...props}>{props.children}</IconButtonRoot>;
+}

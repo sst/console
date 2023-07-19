@@ -3,6 +3,7 @@ import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
 import {
+  IconArrowDownTray,
   IconChevronUpDown,
   IconBookmark,
   IconArrowPath,
@@ -10,7 +11,7 @@ import {
 } from "$/ui/icons";
 import { IconCaretRight, IconCaretRightOutline } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
-import { Button, LinkButton, TextButton } from "$/ui/button";
+import { Button, LinkButton, TextButton, IconButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, style } from "@macaron-css/core";
@@ -176,7 +177,7 @@ const InvokeControls = styled("div", {
   base: {
     ...utility.row(0),
     justifyContent: "space-between",
-    padding: theme.space[3],
+    padding: `${theme.space[3]} ${theme.space[3]} ${theme.space[3]} ${theme.space[4]}`,
   },
 });
 
@@ -691,15 +692,12 @@ export function Logs() {
           <InvokeTextArea rows={5} ref={invokeTextArea} />
           <InvokeControls>
             <InvokeControlsLeft>
-              <InvokeSavedPayloads selected={false}>
-                <InvokeSavedPayloadsLabel>
-                  Saved payloads&hellip;
-                </InvokeSavedPayloadsLabel>
-                <InvokeSavedPayloadsIcon>
-                  <IconChevronUpDown />
-                </InvokeSavedPayloadsIcon>
-              </InvokeSavedPayloads>
-              <LinkButton
+              <IconButton title="Load saved payloads">
+                <IconArrowDownTray width={24} height={24} />
+              </IconButton>
+              <IconButton
+                disabled
+                title="Save payload"
                 onClick={() =>
                   savePayloadDialogControl.show(
                     resource()?.metadata.arn!,
@@ -707,8 +705,8 @@ export function Logs() {
                   )
                 }
               >
-                Save
-              </LinkButton>
+                <IconBookmark width={24} height={24} />
+              </IconButton>
             </InvokeControlsLeft>
             <Row vertical="center" space="4">
               <InvokeControlsCancel

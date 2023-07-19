@@ -14,7 +14,7 @@ import { Text } from "$/ui/text";
 import { FormInput } from "$/ui/form";
 import { Tag } from "$/ui/tag";
 import { Alert } from "$/ui/alert";
-import { TextButton, Button, LinkButton } from "$/ui/button";
+import { IconButton, TextButton, Button, LinkButton } from "$/ui/button";
 import { utility } from "$/ui/utility";
 import {
   IconApi,
@@ -394,6 +394,23 @@ export function Design() {
               <TextButton completing on="surface" icon={<IconBookmark />}>
                 Button
               </TextButton>
+            </Row>
+          </TextContainer>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="IconButton">
+        <Variant name="Base">
+          <TextContainer>
+            <Row space="4">
+              <IconButton>
+                <IconBookmark width={24} height={24} />
+              </IconButton>
+              <IconButton data-state-hover>
+                <IconBookmark width={24} height={24} />
+              </IconButton>
+              <IconButton disabled>
+                <IconBookmark width={24} height={24} />
+              </IconButton>
             </Row>
           </TextContainer>
         </Variant>
