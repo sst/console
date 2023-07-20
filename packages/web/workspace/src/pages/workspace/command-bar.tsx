@@ -185,6 +185,7 @@ function createControl() {
     }
 
     if (e.key === "Enter") {
+      e.preventDefault();
       const current = control.active();
       if (current) current.click();
     }
