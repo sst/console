@@ -34,7 +34,7 @@ const IconClose = styled("div", {
 const Empty = styled("div", {
   base: {
     ...utility.stack(4),
-    height: 240,
+    height: 320,
     alignItems: "center",
     justifyContent: "center",
     borderTop: `1px solid ${theme.color.divider.base}`,
