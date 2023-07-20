@@ -1,7 +1,8 @@
 import { LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Tag, Text } from "$/ui";
+import { Tag, Text, Select } from "$/ui";
+import { Dropdown, DropdownOption, DropdownDivider } from "../../design";
 import {
   IconCommandLine,
   IconChevronUpDown,
@@ -74,8 +75,7 @@ const LogLoadingIndicator = styled("div", {
     ...utility.row(0),
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `0 ${theme.space[3]}`,
-    height: 48,
+    padding: `${theme.space[2.5]} ${theme.space[3]} ${theme.space[2.5]}`,
   },
 });
 
@@ -692,21 +692,35 @@ export function Logs() {
               <IconBoltSolid />
             </LogLoadingIndicatorIcon>
             <LogLoadingIndicatorCopy>
-              Tailing logs&hellip;
+              <span>Tailing logs&hellip;</span>
+              <Show when={invocations().length > 0}>
+                <LogClearButton
+                  style={{ "padding-left": theme.space[2] }}
+                  onClick={() => {
+                    clearLogStore(logGroup());
+                    bus.emit("log.cleared", {
+                      functionID: logGroup(),
+                    });
+                  }}
+                >
+                  Clear
+                </LogClearButton>
+              </Show>
             </LogLoadingIndicatorCopy>
           </Row>
-          <Show when={invocations().length > 0}>
-            <LogClearButton
-              onClick={() => {
-                clearLogStore(logGroup());
-                bus.emit("log.cleared", {
-                  functionID: logGroup(),
-                });
-              }}
-            >
-              Clear
-            </LogClearButton>
-          </Show>
+          <Dropdown size="sm" open={false} align="right" value="View">
+            <DropdownOption>Live</DropdownOption>
+            <DropdownOption>Recent</DropdownOption>
+            <DropdownDivider />
+            <DropdownOption>5mins ago</DropdownOption>
+            <DropdownOption>15mins ago</DropdownOption>
+            <DropdownOption>1hr ago</DropdownOption>
+            <DropdownOption>6hrs ago</DropdownOption>
+            <DropdownOption>12hrs ago</DropdownOption>
+            <DropdownOption>1 day ago</DropdownOption>
+            <DropdownDivider />
+            <DropdownOption>Specify a time&hellip;</DropdownOption>
+          </Dropdown>
         </LogLoadingIndicator>
         <InvokeRoot
           expand={invoke.expand}

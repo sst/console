@@ -29,7 +29,7 @@ import {
   IconBucket,
   IconArrowPathSpin,
 } from "$/ui/icons/custom";
-import { For, JSX, Show } from "solid-js";
+import { For, JSX, Show, ComponentProps } from "solid-js";
 import { WorkspaceIcon } from "$/ui/workspace-icon";
 
 const ComponentRoot = styled("div", {
@@ -65,6 +65,7 @@ const VariantRoot = styled("div", {
 
 const VariantName = styled("h2", {
   base: {
+    flex: "0 0 auto",
     fontSize: theme.font.size.mono_sm,
     textTransform: "uppercase",
     fontFamily: theme.font.family.heading,
@@ -73,6 +74,7 @@ const VariantName = styled("h2", {
 
 const VariantContent = styled("div", {
   base: {
+    flex: "1 1 auto",
     display: "flex",
     gap: theme.space[2],
     border: `1px solid ${theme.color.divider.base}`,
@@ -94,12 +96,6 @@ interface ComponentTypeProps {
   children: JSX.Element;
 }
 
-interface VariantProps {
-  themes?: boolean;
-  name: string;
-  children: JSX.Element;
-}
-
 function ComponentType(props: ComponentTypeProps) {
   return (
     <ComponentRoot>
@@ -109,9 +105,14 @@ function ComponentType(props: ComponentTypeProps) {
   );
 }
 
+type VariantProps = ComponentProps<typeof VariantRoot> & {
+  themes?: boolean;
+  name: string;
+};
+
 function Variant(props: VariantProps) {
   return (
-    <VariantRoot>
+    <VariantRoot {...props}>
       <VariantName>{props.name}</VariantName>
       <VariantContent>{props.children}</VariantContent>
     </VariantRoot>
@@ -160,20 +161,54 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
-      <ComponentType name="PayloadSelectModal">
+      <ComponentType name="Dropdown">
         <Variant name="Default">
-          <Grower>
-            <PayloadNameModalWrapper>
-              <PayloadSelectModal />
-            </PayloadNameModalWrapper>
-          </Grower>
+          <Dropdown value="Dropdown"></Dropdown>
         </Variant>
-        <Variant name="Empty">
-          <Grower>
-            <PayloadNameModalWrapper>
-              <PayloadSelectModal empty />
-            </PayloadNameModalWrapper>
-          </Grower>
+        <Variant name="Small">
+          <Dropdown size="sm" value="Dropdown"></Dropdown>
+        </Variant>
+        <Variant name="Overflow">
+          <Dropdown value="Test is a really long string that should overflow"></Dropdown>
+        </Variant>
+        <Variant name="Open Left" style={{ height: "480px" }}>
+          <Dropdown open value="Dropdown">
+            <DropdownOption>Live</DropdownOption>
+            <DropdownOption>Recent</DropdownOption>
+            <DropdownDivider />
+            <DropdownOption>5mins ago</DropdownOption>
+            <DropdownOption>15mins ago</DropdownOption>
+            <DropdownOption>1hr ago</DropdownOption>
+            <DropdownOption>6hrs ago</DropdownOption>
+            <DropdownOption>12hrs ago</DropdownOption>
+            <DropdownOption>1 day ago</DropdownOption>
+            <DropdownDivider />
+            <DropdownOption>
+              A really really really long dropdown option that should overflow
+            </DropdownOption>
+          </Dropdown>
+        </Variant>
+        <Variant name="Open Right" style={{ height: "480px" }}>
+          <Dropdown
+            open
+            align="right"
+            value="Dropdown"
+            style={{ "margin-left": "200px" }}
+          >
+            <DropdownOption>Live</DropdownOption>
+            <DropdownOption>Recent</DropdownOption>
+            <DropdownDivider />
+            <DropdownOption>5mins ago</DropdownOption>
+            <DropdownOption>15mins ago</DropdownOption>
+            <DropdownOption>1hr ago</DropdownOption>
+            <DropdownOption>6hrs ago</DropdownOption>
+            <DropdownOption>12hrs ago</DropdownOption>
+            <DropdownOption>1 day ago</DropdownOption>
+            <DropdownDivider />
+            <DropdownOption>
+              A really really really long dropdown option that should overflow
+            </DropdownOption>
+          </Dropdown>
         </Variant>
       </ComponentType>
       <ComponentType name="UnsupportedAppBanner">
@@ -1263,219 +1298,148 @@ function Login() {
   );
 }
 
-const PayloadNameModalWrapper = styled("div", {
+const DropdownRoot = styled("div", {
   base: {
-    margin: "0 auto",
-    width: 640,
-    borderRadius: 10,
-    flexShrink: 0,
-    boxShadow: theme.color.shadow.drop.long,
+    position: "relative",
+  },
+  variants: {
+    size: {
+      sm: {},
+      base: {},
+    },
+    align: {
+      left: {},
+      right: {},
+    },
+    open: {
+      true: {},
+      false: {},
+    },
+  },
+  defaultVariants: {
+    open: false,
+    size: "base",
+    align: "left",
+  },
+});
+
+const DropdownButton = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: 32,
+    borderRadius: theme.borderRadius,
+    padding: `0 ${theme.space[2]} 0 ${theme.space[3]}`,
+    backgroundColor: theme.color.input.background,
+    transition: `box-shadow ${theme.colorFadeDuration} ease-out`,
+    maxWidth: 200,
+    boxShadow: `
+      0 0 0 1px inset ${theme.color.input.border},
+      ${theme.color.input.shadow}
+    `,
+
+    selectors: {
+      [`${DropdownRoot.selector({ open: true })} &`]: {
+        boxShadow: `
+        0 0 1px 1px inset hsla(${theme.color.blue.d1}, 100%),
+        ${theme.color.input.shadow}
+      `,
+      },
+      [`${DropdownRoot.selector({ size: "base" })} &`]: {
+        height: 40,
+      },
+      [`${DropdownRoot.selector({ size: "sm" })} &`]: {
+        height: 32,
+      },
+    },
+  },
+});
+
+const DropdownButtonIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 20,
+    height: 20,
+    backgroundRepeat: "no-repeat",
+    backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(
+      chevronDownString
+    )}")`,
+  },
+});
+
+const DropdownOptions = styled("div", {
+  base: {
+    marginTop: theme.space[1],
+    padding: `${theme.space[1]} 0`,
+    border: `1px solid ${theme.color.divider.base}`,
+    position: "absolute",
+    zIndex: 10,
+    borderRadius: theme.borderRadius,
     backdropFilter: "blur(10px)",
     WebkitBackdropFilter: "blur(10px)",
     background: theme.color.background.modal,
-    transform: "scale(0.95)",
-    transition: "200ms all",
-  },
-});
-
-const PayloadSelectModalIcon = styled("div", {
-  base: {
-    width: 24,
-    height: 24,
-    color: theme.color.icon.dimmed,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      color: theme.color.icon.secondary,
-    },
-  },
-});
-
-const PayloadSelectModalEmpty = styled("div", {
-  base: {
-    ...utility.stack(4),
-    height: 240,
-    alignItems: "center",
-    justifyContent: "center",
-    borderTop: `1px solid ${theme.color.divider.base}`,
-  },
-});
-
-const PayloadSelectModalList = styled("div", {
-  base: {
-    borderTop: `1px solid ${theme.color.divider.base}`,
-    maxHeight: 320,
-    overflowY: "auto",
-  },
-});
-
-const PayloadSelectModalRowRoot = styled("div", {
-  base: {
-    ...utility.row(5),
-    padding: `${theme.space[4]} ${theme.space[5]}`,
-    alignItems: "center",
-    borderTop: `1px solid ${theme.color.divider.base}`,
-    ":hover": {
-      background: theme.color.background.hover,
-    },
+    overflow: "hidden",
+    boxShadow: theme.color.shadow.drop.medium,
+    width: 220,
     selectors: {
-      "&:first-child": {
-        borderTop: "none",
+      [`${DropdownRoot.selector({ align: "left" })} &`]: {
+        left: 0,
+      },
+      [`${DropdownRoot.selector({ align: "right" })} &`]: {
+        right: 0,
+      },
+      [`${DropdownRoot.selector({ open: true })} &`]: {
+        display: "block",
+      },
+      [`${DropdownRoot.selector({ open: false })} &`]: {
+        display: "none",
       },
     },
   },
 });
 
-const PayloadSelectModalRowCol = styled("div", {
+export const DropdownOption = styled("div", {
   base: {
-    ...utility.stack(2),
-    minWidth: 0,
-  },
-  variants: {
-    side: {
-      left: {
-        flex: 2,
-      },
-      right: {
-        flex: 1,
-        textAlign: "right",
-      },
-    },
-  },
-});
-const PayloadSelectModalRemoveIcon = styled("div", {
-  base: {
-    width: 18,
-    height: 18,
-    flex: "0 0 auto",
-    color: theme.color.icon.secondary,
+    ...utility.textLine(),
+    padding: `${theme.space[3]} ${theme.space[3.5]}`,
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     ":hover": {
-      color: theme.color.icon.primary,
+      color: theme.color.text.primary.surface,
+      backgroundColor: theme.color.background.hover,
     },
   },
 });
 
-function PayloadSelectModalRow({
-  name,
-  summary,
-  author,
-  date,
-}: {
-  name: string;
-  summary: string;
-  author: string;
-  date: string;
-}) {
-  return (
-    <PayloadSelectModalRowRoot>
-      <Row space="5" horizontal="between" style={{ "flex-grow": 1 }}>
-        <PayloadSelectModalRowCol side="left">
-          <Text line leading="normal" weight="medium">
-            {name}
-          </Text>
-          <Text line code leading="normal" color="dimmed" size="mono_sm">
-            {summary}
-          </Text>
-        </PayloadSelectModalRowCol>
-        <PayloadSelectModalRowCol side="right">
-          <Text line leading="normal" color="secondary" size="sm">
-            {author}
-          </Text>
-          <Text line leading="normal" color="dimmed" size="xs">
-            {date}
-          </Text>
-        </PayloadSelectModalRowCol>
-      </Row>
-      <PayloadSelectModalRemoveIcon title="Remove saved payload">
-        <IconTrash />
-      </PayloadSelectModalRemoveIcon>
-    </PayloadSelectModalRowRoot>
-  );
-}
+export const DropdownDivider = styled("div", {
+  base: {
+    height: 1,
+    margin: `${theme.space[1]} 0`,
+    backgroundColor: theme.color.divider.surface,
+  },
+});
 
-function PayloadSelectModal({ empty }: { empty?: boolean }) {
+type DropdownProps = ComponentProps<typeof DropdownRoot> & {
+  value: string;
+};
+
+export function Dropdown(props: DropdownProps) {
   return (
-    <Stack>
-      <Row
-        space="2"
-        vertical="center"
-        horizontal="between"
-        style={{ padding: theme.space[5] }}
-      >
-        <Text size="lg" weight="medium" leading="normal">
-          Saved event payloads
+    <DropdownRoot {...props}>
+      <DropdownButton>
+        <Text line size={props.size === "sm" ? "xs" : "sm"}>
+          {props.value}
         </Text>
-        <PayloadSelectModalIcon>
-          <IconXMark />
-        </PayloadSelectModalIcon>
-      </Row>
-      <Show when={empty}>
-        <PayloadSelectModalEmpty>
-          <IconBookmark
-            width={32}
-            height={32}
-            color={theme.color.icon.dimmed}
-          />
-          <Text center color="dimmed">
-            You have no saved payloads for this function
-          </Text>
-        </PayloadSelectModalEmpty>
-      </Show>
-      <Show when={!empty}>
-        <PayloadSelectModalList>
-          <PayloadSelectModalRow
-            name="Pull Event"
-            summary={JSON.stringify({ action: "opened" })}
-            author="spongebob@krustykrab.com"
-            date="3hrs ago"
-          />
-          <PayloadSelectModalRow
-            name="migration_event"
-            summary={JSON.stringify({
-              event: "test",
-              option: true,
-              action: "gone",
-              event_name:
-                "a_really_really_long_event_name_that_should_be_truncated_before_it_gets_too_long",
-            })}
-            author="patrick@krustykrab.com"
-            date="1 day ago"
-          />
-          <PayloadSelectModalRow
-            name="a_really_really_long_event_name_that_should_be_truncated_before_it_gets_too_long"
-            summary={JSON.stringify({
-              event: "test",
-              option: true,
-              action: "opened",
-              event_name:
-                "a_really_really_long_event_name_that_should_be_truncated_before_it_gets_too_long",
-            })}
-            author="squidward.tentacles@krustykrab.com"
-            date="2023-01-01"
-          />
-        </PayloadSelectModalList>
-      </Show>
-    </Stack>
+        <DropdownButtonIcon />
+      </DropdownButton>
+      <DropdownOptions>
+        <>{props.children}</>
+      </DropdownOptions>
+    </DropdownRoot>
   );
 }
-
-const UnsupportedAppBannerRoot = styled("div", {
-  base: {
-    ...utility.row(1.5),
-    alignItems: "center",
-    backgroundColor: theme.color.background.surface,
-    borderRadius: theme.borderRadius,
-    padding: `${theme.space[5]} ${theme.space[4]}`,
-  },
-});
-
-const UnsupportedAppBannerIcon = styled("div", {
-  base: {
-    width: 16,
-    height: 16,
-    color: theme.color.icon.dimmed,
-  },
-});
 
 const UnsupportedAppRoot = styled("div", {
   base: {
@@ -1493,25 +1457,6 @@ const UnsupportedAppIcon = styled("div", {
     color: theme.color.icon.dimmed,
   },
 });
-
-function UnsupportedAppBanner() {
-  return (
-    <UnsupportedAppBannerRoot>
-      <UnsupportedAppBannerIcon>
-        <IconExclamationTriangle />
-      </UnsupportedAppBannerIcon>
-      <Text color="secondary" on="surface" leading="normal" size="sm">
-        Some of the stacks in this app are not supported by the SST Console.{" "}
-        <a
-          target="_blank"
-          href="https://github.com/serverless-stack/sst/releases"
-        >
-          Upgrade them to v2.19.0.
-        </a>
-      </Text>
-    </UnsupportedAppBannerRoot>
-  );
-}
 
 function UnsupportedApp() {
   return (

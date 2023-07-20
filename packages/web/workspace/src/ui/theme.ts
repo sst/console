@@ -186,19 +186,19 @@ const light = (() => {
       shortDark: `0 1px 1px hsla(${black.d1}, 0.1),
         0 2px 2px hsla(${black.d1}, 0.1)`,
       medium: `0 1px 1px hsla(${black.d1}, 0.01),
-    0 2px 2px hsla(${black.d1}, 0.01),
-    0 4px 4px hsla(${black.d1}, 0.01),
-    0 8px 8px hsla(${black.d1}, 0.01),
-    0 10px 10px hsla(${black.d1}, 0.01)
-    `,
+          0 2px 2px hsla(${black.d1}, 0.01),
+          0 4px 4px hsla(${black.d1}, 0.01),
+          0 8px 8px hsla(${black.d1}, 0.01),
+          0 10px 10px hsla(${black.d1}, 0.01)
+          `,
       long: `
-    0 2px 4px hsla(${black.d1}, 0.05),
-    0 4px 8px hsla(${black.d1}, 0.05),
-    0 8px 16px hsla(${black.d1}, 0.07),
-    0 16px 32px hsla(${black.d1}, 0.07),
-    0 32px 64px hsla(${black.d1}, 0.07),
-    0 48px 96px hsla(${black.d1}, 0.07)
-    `,
+        0 2px 4px hsla(${black.d1}, 0.05),
+        0 4px 8px hsla(${black.d1}, 0.05),
+        0 8px 16px hsla(${black.d1}, 0.07),
+        0 16px 32px hsla(${black.d1}, 0.07),
+        0 32px 64px hsla(${black.d1}, 0.07),
+        0 48px 96px hsla(${black.d1}, 0.07)
+      `,
     },
   };
 
