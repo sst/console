@@ -179,6 +179,7 @@ function createControl() {
   }
 
   makeEventListener(document, "keydown", (e) => {
+    if (!visible()) return;
     if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       show();
