@@ -3,6 +3,7 @@ import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
 import {
+  IconCommandLine,
   IconArrowDownTray,
   IconChevronUpDown,
   IconBookmark,
@@ -241,9 +242,10 @@ const InvokeTextArea = styled("textarea", {
   base: {
     display: "none",
     padding: theme.space[4],
+    paddingBottom: 0,
     flexGrow: 1,
     flexShrink: 0,
-    resize: "none",
+    resize: "vertical",
     height: "100%",
     border: "none",
     lineHeight: theme.font.lineHeight,
@@ -588,9 +590,11 @@ export function Logs() {
   const [invoke, setInvoke] = createStore<{
     invoking: boolean;
     expand: boolean;
+    empty: boolean;
   }>({
     expand: false,
     invoking: false,
+    empty: true,
   });
   let saveControl!: DialogPayloadSaveControl;
   let manageControl!: DialogPayloadManageControl;
@@ -601,13 +605,14 @@ export function Logs() {
     invokeTextArea.focus();
     invokeTextArea.selectionStart = 0;
     invokeTextArea.selectionEnd = 0;
+    invokeTextArea.scrollTop = 0;
   }
 
   bar.register("lambda-payloads", async (filter, global) => {
     if (global && !filter) return [];
     return lambdaPayloads().map((x) => ({
-      icon: IconFunction,
-      category: "Payloads",
+      icon: IconCommandLine,
+      category: "Event Payloads",
       title: x.name,
       async run(control) {
         setPayload(x.payload);
@@ -619,7 +624,7 @@ export function Logs() {
   bar.register("invoke", async (filter, global) => {
     return [
       {
-        icon: IconFunction,
+        icon: IconCommandLine,
         category: "Invoke",
         title: "Load saved payloads...",
         async run(control) {
@@ -627,11 +632,12 @@ export function Logs() {
         },
       },
       {
-        icon: IconFunction,
+        icon: IconCommandLine,
         category: "Invoke",
         title: "Manage saved payloads...",
         async run(control) {
-          control.show("lambda-payloads");
+          control.hide();
+          manageControl.show();
         },
       },
     ];
@@ -708,7 +714,14 @@ export function Logs() {
               Enter event payload
             </Text>
           </InvokePayloadLabel>
-          <InvokeTextArea rows={5} ref={invokeTextArea} />
+          <InvokeTextArea
+            spellcheck={false}
+            onInput={(e) => {
+              setInvoke("empty", !Boolean(e.currentTarget.value));
+            }}
+            rows={7}
+            ref={invokeTextArea}
+          />
           <InvokeControls>
             <InvokeControlsLeft>
               <IconButton
@@ -718,6 +731,7 @@ export function Logs() {
                 <IconArrowDownTray width={24} height={24} />
               </IconButton>
               <IconButton
+                disabled={invoke.empty}
                 title="Save payload"
                 onClick={() =>
                   saveControl.show(key(), JSON.parse(invokeTextArea.value))
