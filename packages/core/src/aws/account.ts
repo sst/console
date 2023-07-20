@@ -8,7 +8,7 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
 import { and, eq } from "drizzle-orm";
-import { Credentials, assumeRole } from ".";
+import { Credentials } from ".";
 import {
   CloudFormationClient,
   DescribeStacksCommand,
@@ -52,11 +52,18 @@ export const create = zod(
   async (input) =>
     useTransaction(async (tx) => {
       const id = input.id ?? createId();
-      await tx.insert(awsAccount).values({
-        id,
-        workspaceID: useWorkspace(),
-        accountID: input.accountID,
-      });
+      await tx
+        .insert(awsAccount)
+        .values({
+          id,
+          workspaceID: useWorkspace(),
+          accountID: input.accountID,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            timeFailed: null,
+          },
+        });
       createTransactionEffect(() =>
         Events.Created.publish({
           awsAccountID: id,
@@ -148,161 +155,166 @@ export const regions = zod(
   }
 );
 
-export const integrate = zod(Info.shape.id, async (id) => {
-  const account = await fromID(id);
-  console.log("integrating account", account);
-  if (!account) return;
-  const credentials = await assumeRole(account.accountID);
-  await Promise.all(
-    (
-      await regions(credentials)
-    ).map(async (region) => {
-      const config = {
-        credentials,
-        region: region.RegionName!,
-      };
-      console.log("integrating region", region);
+export const integrate = zod(
+  z.object({
+    awsAccountID: Info.shape.id,
+    credentials: z.custom<Credentials>(),
+  }),
+  async (input) => {
+    const account = await fromID(input.awsAccountID);
+    console.log("integrating account", account);
+    if (!account) return;
+    await Promise.all(
+      (
+        await regions(input.credentials)
+      ).map(async (region) => {
+        const config = {
+          credentials: input.credentials,
+          region: region.RegionName!,
+        };
+        console.log("integrating region", region);
 
-      const b = await bootstrap(config);
-      if (!b) return;
+        const b = await bootstrap(config);
+        if (!b) return;
 
-      const s3 = new S3Client(config);
-      const eb = new EventBridgeClient(config);
-      const iam = new IAMClient(config);
-      const suffix = Config.STAGE !== "production" ? "-" + Config.STAGE : "";
+        const s3 = new S3Client(config);
+        const eb = new EventBridgeClient(config);
+        const iam = new IAMClient(config);
+        const suffix = Config.STAGE !== "production" ? "-" + Config.STAGE : "";
 
-      console.log("found sst bucket", b.bucket);
+        console.log("found sst bucket", b.bucket);
 
-      await s3.send(
-        new PutBucketNotificationConfigurationCommand({
-          Bucket: b.bucket,
-          NotificationConfiguration: {
-            EventBridgeConfiguration: {},
-          },
-        })
-      );
-      console.log("enabled s3 notification");
-
-      await iam
-        .send(
-          new DeleteRolePolicyCommand({
-            RoleName: "SSTConsolePublisher" + suffix,
-            PolicyName: "eventbus",
-          })
-        )
-        .catch(() => {});
-      await iam
-        .send(
-          new DeleteRoleCommand({
-            RoleName: "SSTConsolePublisher" + suffix,
-          })
-        )
-        .catch(() => {});
-      const role = await iam.send(
-        new CreateRoleCommand({
-          RoleName: "SSTConsolePublisher" + suffix,
-          AssumeRolePolicyDocument: JSON.stringify({
-            Version: "2012-10-17",
-            Statement: [
-              {
-                Effect: "Allow",
-                Principal: {
-                  Service: "events.amazonaws.com",
-                },
-                Action: "sts:AssumeRole",
-              },
-            ],
-          }),
-        })
-      );
-      await iam.send(
-        new PutRolePolicyCommand({
-          RoleName: role.Role!.RoleName,
-          PolicyName: "eventbus",
-          PolicyDocument: JSON.stringify({
-            Version: "2012-10-17",
-            Statement: [
-              {
-                Effect: "Allow",
-                Action: ["events:PutEvents"],
-                Resource: [process.env.EVENT_BUS_ARN],
-              },
-            ],
-          }),
-        })
-      );
-      console.log("created publisher role");
-
-      await eb.send(
-        new PutRuleCommand({
-          Name: "SSTConsole" + suffix,
-          State: "ENABLED",
-          EventPattern: JSON.stringify({
-            source: ["aws.s3"],
-            detail: {
-              bucket: {
-                name: [b.bucket],
-              },
-            },
-          }),
-        })
-      );
-      await eb.send(
-        new PutTargetsCommand({
-          Rule: "SSTConsole" + suffix,
-          Targets: [
-            {
-              Arn: process.env.EVENT_BUS_ARN,
-              Id: "SSTConsole",
-              RoleArn: role.Role!.Arn,
-            },
-          ],
-        })
-      );
-      console.log("created eventbus rule");
-
-      let token: string | undefined;
-      while (true) {
-        const list = await s3.send(
-          new ListObjectsV2Command({
-            Prefix: "appMetadata",
+        await s3.send(
+          new PutBucketNotificationConfigurationCommand({
             Bucket: b.bucket,
-            ContinuationToken: token,
+            NotificationConfiguration: {
+              EventBridgeConfiguration: {},
+            },
           })
         );
+        console.log("enabled s3 notification");
 
-        for (const item of list.Contents || []) {
-          const [, appHint, stageHint] = item.Key?.split("/") || [];
-          if (!appHint || !stageHint) return;
-          const [, stageName] = stageHint?.split(".");
-          const [, appName] = appHint?.split(".");
-          if (!stageName || !appName) return;
-          await useTransaction(async () => {
-            let app = await App.fromName(appName).then((a) => a?.id);
-            if (!app)
-              app = await App.create({
-                name: appName,
-              });
+        await iam
+          .send(
+            new DeleteRolePolicyCommand({
+              RoleName: "SSTConsolePublisher" + suffix,
+              PolicyName: "eventbus",
+            })
+          )
+          .catch(() => {});
+        await iam
+          .send(
+            new DeleteRoleCommand({
+              RoleName: "SSTConsolePublisher" + suffix,
+            })
+          )
+          .catch(() => {});
+        const role = await iam.send(
+          new CreateRoleCommand({
+            RoleName: "SSTConsolePublisher" + suffix,
+            AssumeRolePolicyDocument: JSON.stringify({
+              Version: "2012-10-17",
+              Statement: [
+                {
+                  Effect: "Allow",
+                  Principal: {
+                    Service: "events.amazonaws.com",
+                  },
+                  Action: "sts:AssumeRole",
+                },
+              ],
+            }),
+          })
+        );
+        await iam.send(
+          new PutRolePolicyCommand({
+            RoleName: role.Role!.RoleName,
+            PolicyName: "eventbus",
+            PolicyDocument: JSON.stringify({
+              Version: "2012-10-17",
+              Statement: [
+                {
+                  Effect: "Allow",
+                  Action: ["events:PutEvents"],
+                  Resource: [process.env.EVENT_BUS_ARN],
+                },
+              ],
+            }),
+          })
+        );
+        console.log("created publisher role");
 
-            let stage = await App.Stage.fromName({
-              appID: app,
-              name: stageName,
-            }).then((s) => s?.id);
-            if (!stage)
-              stage = await App.Stage.connect({
-                name: stageName,
+        await eb.send(
+          new PutRuleCommand({
+            Name: "SSTConsole" + suffix,
+            State: "ENABLED",
+            EventPattern: JSON.stringify({
+              source: ["aws.s3"],
+              detail: {
+                bucket: {
+                  name: [b.bucket],
+                },
+              },
+            }),
+          })
+        );
+        await eb.send(
+          new PutTargetsCommand({
+            Rule: "SSTConsole" + suffix,
+            Targets: [
+              {
+                Arn: process.env.EVENT_BUS_ARN,
+                Id: "SSTConsole",
+                RoleArn: role.Role!.Arn,
+              },
+            ],
+          })
+        );
+        console.log("created eventbus rule");
+
+        let token: string | undefined;
+        while (true) {
+          const list = await s3.send(
+            new ListObjectsV2Command({
+              Prefix: "appMetadata",
+              Bucket: b.bucket,
+              ContinuationToken: token,
+            })
+          );
+
+          for (const item of list.Contents || []) {
+            const [, appHint, stageHint] = item.Key?.split("/") || [];
+            if (!appHint || !stageHint) return;
+            const [, stageName] = stageHint?.split(".");
+            const [, appName] = appHint?.split(".");
+            if (!stageName || !appName) return;
+            await useTransaction(async () => {
+              let app = await App.fromName(appName).then((a) => a?.id);
+              if (!app)
+                app = await App.create({
+                  name: appName,
+                });
+
+              let stage = await App.Stage.fromName({
                 appID: app,
-                region: config.region,
-                awsAccountID: account.id,
-              });
-          });
-          console.log("found", stageName, appName);
+                name: stageName,
+              }).then((s) => s?.id);
+              if (!stage)
+                stage = await App.Stage.connect({
+                  name: stageName,
+                  appID: app,
+                  region: config.region,
+                  awsAccountID: account.id,
+                });
+            });
+            console.log("found", stageName, appName);
+          }
+          if (!list.ContinuationToken) break;
         }
-        if (!list.ContinuationToken) break;
-      }
 
-      await Replicache.poke();
-    })
-  );
-  return;
-});
+        await Replicache.poke();
+      })
+    );
+    return;
+  }
+);

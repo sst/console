@@ -53,6 +53,8 @@ export async function handler(input: State) {
   const stage = await App.Stage.fromID(poller.stageID);
   const account = await AWS.Account.fromID(stage!.awsAccountID);
   const credentials = await AWS.assumeRole(account!.accountID);
+  if (!credentials)
+    throw new Error("Unable to assume role for " + account!.accountID);
   const client = new CloudWatchLogsClient({
     region: stage!.region,
     credentials,

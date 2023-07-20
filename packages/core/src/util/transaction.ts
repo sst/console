@@ -5,10 +5,13 @@ import {
 } from "drizzle-orm/planetscale-serverless";
 import { Context } from "sst/context";
 import { db } from "../drizzle";
+import { ExtractTablesWithRelations } from "drizzle-orm";
 
 export type Transaction = MySqlTransaction<
   PlanetscaleQueryResultHKT,
-  PlanetScalePreparedQueryHKT
+  PlanetScalePreparedQueryHKT,
+  Record<string, never>,
+  ExtractTablesWithRelations<Record<string, never>>
 >;
 
 const TransactionContext = Context.create<{

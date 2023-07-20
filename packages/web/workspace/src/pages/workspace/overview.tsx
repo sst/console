@@ -64,6 +64,7 @@ const CardHeader = styled("div", {
   base: {
     ...utility.row(0.5),
     alignItems: "center",
+    justifyContent: "space-between",
     padding: theme.space[4],
     borderBottom: `1px solid ${theme.color.divider.base}`,
   },
@@ -147,11 +148,13 @@ export function Overview() {
                       <Card>
                         <CardHeader>
                           <Text code size="mono_sm" color="dimmed">
-                            ID:
+                            ID: {account.accountID}
                           </Text>
-                          <Text code size="mono_sm" color="dimmed">
-                            {account.accountID}
-                          </Text>
+                          <Show when={account.timeFailed}>
+                            <Link href="account">
+                              <Tag level="danger">Disconnected</Tag>
+                            </Link>
+                          </Show>
                         </CardHeader>
                         <div>
                           <For

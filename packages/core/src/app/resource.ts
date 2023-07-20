@@ -8,10 +8,9 @@ import {
   CloudFormationClient,
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
-import type { AWS } from "../aws";
+import type { Credentials } from "../aws";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 import { event } from "../event";
-import { id } from "../util/sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
@@ -42,8 +41,6 @@ export type Info = {
       : {};
   };
 }[Metadata["type"]];
-
-type Credentials = Awaited<ReturnType<typeof AWS.assumeRole>>;
 
 const RETRY_STRATEGY = new StandardRetryStrategy(async () => 10000, {
   retryDecider: (e: any) => {
