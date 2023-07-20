@@ -37,10 +37,12 @@ export function LocalProvider(props: ParentProps) {
     setStore(properties);
   });
 
+  let ssl = true;
   onMount(() => {
     function connect() {
+      ssl = !ssl;
       clearTimeout(reconnect);
-      ws = new WebSocket("ws://localhost:13557/socket");
+      ws = new WebSocket(`ws${ssl ? "s" : ""}://localhost:13557/socket`);
       ws.onmessage = (e) => {
         const parsed = JSON.parse(e.data);
         bus.emit(parsed.type, parsed.properties);
