@@ -147,8 +147,8 @@ export function DialogPayloadManage(props: {
           <Show when={!props.lambdaPayloads.length}>
             <Empty>
               <IconBookmark
-                width={32}
-                height={32}
+                width={28}
+                height={28}
                 color={theme.color.icon.dimmed}
               />
               <Text center color="dimmed">

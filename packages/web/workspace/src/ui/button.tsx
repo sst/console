@@ -260,6 +260,7 @@ const IconButtonRoot = styled("button", {
     border: "none",
     appearance: "none",
     background: "none",
+    display: "inline-block",
     color: theme.color.icon.secondary,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     ":disabled": {

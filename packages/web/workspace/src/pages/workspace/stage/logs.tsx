@@ -4,7 +4,6 @@ import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
 import {
   IconCommandLine,
-  IconArrowDownTray,
   IconChevronUpDown,
   IconBookmark,
   IconArrowPath,
@@ -169,7 +168,6 @@ const InvokeRoot = styled("div", {
     justifyContent: "space-between",
     paddingLeft: theme.space[3],
     alignItems: "center",
-    height: 64,
     ":focus-within": {},
   },
   variants: {
@@ -180,6 +178,13 @@ const InvokeRoot = styled("div", {
         height: "auto",
         alignItems: "stretch",
         padding: 0,
+        paddingBottom: theme.space[3],
+        resize: "vertical",
+        overflow: "scroll",
+        minHeight: 170,
+      },
+      false: {
+        height: 64,
       },
     },
   },
@@ -190,12 +195,18 @@ const InvokeControls = styled("div", {
     ...utility.row(0),
     justifyContent: "space-between",
     padding: `${theme.space[3]} ${theme.space[3]} ${theme.space[3]} ${theme.space[4]}`,
+    selectors: {
+      [`${InvokeRoot.selector({ expand: true })} &`]: {
+        flex: "0 0 auto",
+        padding: `${theme.space[3]} ${theme.space[3]} 0 ${theme.space[4]}`,
+      },
+    },
   },
 });
 
 const InvokeControlsLeft = styled("div", {
   base: {
-    ...utility.row(4),
+    ...utility.row(3),
     alignItems: "center",
     display: "none",
     selectors: {
@@ -241,13 +252,11 @@ const InvokePayloadLabelIcon = styled("div", {
 const InvokeTextArea = styled("textarea", {
   base: {
     display: "none",
+    flex: "1 1 auto",
     padding: theme.space[4],
-    paddingBottom: 0,
-    flexGrow: 1,
-    flexShrink: 0,
-    resize: "vertical",
-    height: "100%",
     border: "none",
+    resize: "none",
+    height: "100%",
     lineHeight: theme.font.lineHeight,
     appearance: "none",
     fontSize: theme.font.size.mono_sm,
@@ -611,7 +620,7 @@ export function Logs() {
   bar.register("lambda-payloads", async (filter, global) => {
     if (global && !filter) return [];
     return lambdaPayloads().map((x) => ({
-      icon: IconCommandLine,
+      icon: IconBookmark,
       category: "Event Payloads",
       title: x.name,
       async run(control) {
@@ -624,7 +633,7 @@ export function Logs() {
   bar.register("invoke", async (filter, global) => {
     return [
       {
-        icon: IconCommandLine,
+        icon: IconBookmark,
         category: "Invoke",
         title: "Load saved payloads...",
         async run(control) {
@@ -632,7 +641,7 @@ export function Logs() {
         },
       },
       {
-        icon: IconCommandLine,
+        icon: IconBookmark,
         category: "Invoke",
         title: "Manage saved payloads...",
         async run(control) {
@@ -701,6 +710,10 @@ export function Logs() {
         </LogLoadingIndicator>
         <InvokeRoot
           expand={invoke.expand}
+          style={{
+            /** Overrides height set by Chrome after resizing **/
+            height: "auto",
+          }}
           onClick={() => {
             setInvoke("expand", true);
             invokeTextArea.focus();
@@ -715,7 +728,12 @@ export function Logs() {
             </Text>
           </InvokePayloadLabel>
           <InvokeTextArea
+            rows={7}
             spellcheck={false}
+            ref={invokeTextArea}
+            onInput={(e) => {
+              setInvoke("empty", !Boolean(e.currentTarget.value));
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                 e.stopPropagation();
@@ -729,29 +747,23 @@ export function Logs() {
                 });
               }
             }}
-            onInput={(e) => {
-              setInvoke("empty", !Boolean(e.currentTarget.value));
-            }}
-            rows={7}
-            ref={invokeTextArea}
           />
           <InvokeControls>
             <InvokeControlsLeft>
               <IconButton
-                onClick={() => manageControl.show()}
                 title="Load saved payloads"
+                onClick={() => manageControl.show()}
               >
-                <IconArrowDownTray width={24} height={24} />
+                <IconBookmark display="block" width={24} height={24} />
               </IconButton>
-              <IconButton
-                disabled={invoke.empty}
-                title="Save payload"
+              <LinkButton
+                style={{ display: invoke.empty ? "none" : "inline" }}
                 onClick={() =>
                   saveControl.show(key(), JSON.parse(invokeTextArea.value))
                 }
               >
-                <IconBookmark width={24} height={24} />
-              </IconButton>
+                Save
+              </LinkButton>
             </InvokeControlsLeft>
             <Row vertical="center" space="4">
               <InvokeControlsCancel
