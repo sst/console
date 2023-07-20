@@ -716,6 +716,19 @@ export function Logs() {
           </InvokePayloadLabel>
           <InvokeTextArea
             spellcheck={false}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                e.stopPropagation();
+                const payload = JSON.parse(invokeTextArea.value || "{}");
+                setTimeout(() => setInvoke("invoking", false), 2000);
+                setInvoke("invoking", true);
+                rep().mutate.function_invoke({
+                  stageID: resource()!.stageID,
+                  payload,
+                  functionARN: resource()!.metadata.arn,
+                });
+              }
+            }}
             onInput={(e) => {
               setInvoke("empty", !Boolean(e.currentTarget.value));
             }}
