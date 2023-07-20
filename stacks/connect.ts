@@ -10,7 +10,7 @@ export function Connect({ stack }: StackContext) {
   const bus = use(Events);
   const connect = new Function(stack, "connect", {
     handler: "packages/functions/src/connect.handler",
-    permissions: ["sts"],
+    permissions: ["sts", "iot"],
     bind: [bus, ...Object.values(secrets.database)],
   });
   connect.grantInvoke(new AnyPrincipal());
