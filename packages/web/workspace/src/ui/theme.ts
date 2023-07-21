@@ -33,6 +33,10 @@ const constants = {
   borderRadius: "4px",
   textBoldWeight: "600",
   iconOpacity: "0.85",
+  modalWidth: {
+    sm: "480px",
+    md: "640px",
+  },
 };
 
 const space = {

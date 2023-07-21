@@ -150,6 +150,14 @@ export const LinkButton = styled("span", {
       color: theme.color.link.primary.hover,
     },
   },
+  variants: {
+    disabled: {
+      true: {
+        opacity: 0.65,
+      },
+      false: {},
+    },
+  },
 });
 
 const textButtonBaseHover: CSSProperties = {

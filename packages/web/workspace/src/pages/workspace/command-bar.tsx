@@ -61,7 +61,7 @@ const Root = styled("div", {
 
 const Modal = styled("div", {
   base: {
-    width: 640,
+    width: theme.modalWidth.md,
     borderRadius: 10,
     flexShrink: 0,
     boxShadow: theme.color.shadow.drop.long,

@@ -162,6 +162,9 @@ export function Design() {
   return (
     <>
       <ComponentType name="Dropdown">
+        <Variant name="SelectLogTime">
+          <SelectLogTime />
+        </Variant>
         <Variant name="Default">
           <Dropdown value="Dropdown"></Dropdown>
         </Variant>
@@ -188,7 +191,13 @@ export function Design() {
             </DropdownOption>
           </Dropdown>
         </Variant>
-        <Variant name="Open Right" style={{ height: "480px" }}>
+        <Variant name="Open Small" style={{ height: "240px" }}>
+          <Dropdown open size="sm" value="Dropdown">
+            <DropdownOption>Live</DropdownOption>
+            <DropdownOption>Recent</DropdownOption>
+          </Dropdown>
+        </Variant>
+        <Variant name="Open Right" style={{ height: "240px" }}>
           <Dropdown
             open
             align="right"
@@ -196,15 +205,6 @@ export function Design() {
             style={{ "margin-left": "200px" }}
           >
             <DropdownOption>Live</DropdownOption>
-            <DropdownOption>Recent</DropdownOption>
-            <DropdownDivider />
-            <DropdownOption>5mins ago</DropdownOption>
-            <DropdownOption>15mins ago</DropdownOption>
-            <DropdownOption>1hr ago</DropdownOption>
-            <DropdownOption>6hrs ago</DropdownOption>
-            <DropdownOption>12hrs ago</DropdownOption>
-            <DropdownOption>1 day ago</DropdownOption>
-            <DropdownDivider />
             <DropdownOption>
               A really really really long dropdown option that should overflow
             </DropdownOption>
@@ -1298,6 +1298,52 @@ function Login() {
   );
 }
 
+const FakeModal = styled("form", {
+  base: {
+    borderRadius: 10,
+    flexShrink: 0,
+    boxShadow: theme.color.shadow.drop.long,
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    background: theme.color.background.modal,
+  },
+});
+
+const SelectLogTimeForm = styled("form", {
+  base: {
+    padding: theme.space[5],
+    width: theme.modalWidth.sm,
+  },
+});
+
+function SelectLogTime() {
+  return (
+    <FakeModal>
+      <SelectLogTimeForm>
+        <Stack space="5">
+          <Stack space="2">
+            <Text size="lg" weight="medium">
+              View logs from
+            </Text>
+          </Stack>
+          <FormInput
+            data-element={"save-payload-dialog-name"}
+            autofocus
+            name="time"
+            minLength={1}
+            hint="Supports the date time string format"
+            placeholder="2011-10-10T14:48"
+          />
+          <Row space="5" vertical="center" horizontal="end">
+            <LinkButton>Cancel</LinkButton>
+            <Button color="secondary">View Logs</Button>
+          </Row>
+        </Stack>
+      </SelectLogTimeForm>
+    </FakeModal>
+  );
+}
+
 const DropdownRoot = styled("div", {
   base: {
     position: "relative",
@@ -1340,12 +1386,6 @@ const DropdownButton = styled("div", {
     `,
 
     selectors: {
-      [`${DropdownRoot.selector({ open: true })} &`]: {
-        boxShadow: `
-        0 0 1px 1px inset hsla(${theme.color.blue.d1}, 100%),
-        ${theme.color.input.shadow}
-      `,
-      },
       [`${DropdownRoot.selector({ size: "base" })} &`]: {
         height: 40,
       },

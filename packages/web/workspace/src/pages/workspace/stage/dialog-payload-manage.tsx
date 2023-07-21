@@ -89,7 +89,7 @@ const RemoveIcon = styled("div", {
 
 const Root = styled("div", {
   base: {
-    width: 640,
+    width: theme.modalWidth.md,
   },
 });
 

@@ -46,7 +46,7 @@ export type DialogPayloadSaveControl = ReturnType<typeof init>["control"];
 const Form = styled("form", {
   base: {
     padding: theme.space[5],
-    width: 480,
+    width: theme.modalWidth.sm,
   },
 });
 
@@ -87,7 +87,7 @@ export function DialogPayloadSave(props: {
             name="name"
             label="Event name"
             minLength={1}
-            hint="Give the event a short recognizable name."
+            hint="Give the event a short recognizable name"
             placeholder="EventA"
           />
           <Row space="5" vertical="center" horizontal="end">
