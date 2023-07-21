@@ -4,16 +4,20 @@ import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text, Select } from "$/ui";
 import { Dropdown, DropdownOption, DropdownDivider } from "../../design";
 import {
-  IconCommandLine,
-  IconChevronUpDown,
   IconBookmark,
   IconArrowPath,
+  IconArrowDown,
   IconBoltSolid,
+  IconCommandLine,
+  IconArrowsUpDown,
+  IconChevronUpDown,
+  IconMagnifyingGlass,
 } from "$/ui/icons";
 import {
-  IconCaretRight,
-  IconCaretRightOutline,
   IconFunction,
+  IconCaretRight,
+  IconArrowPathSpin,
+  IconCaretRightOutline,
 } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
 import { Button, LinkButton, TextButton, IconButton } from "$/ui/button";
@@ -73,9 +77,10 @@ const LogList = styled("div", {
 const LogLoadingIndicator = styled("div", {
   base: {
     ...utility.row(0),
+    height: 52,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `${theme.space[2.5]} ${theme.space[3]} ${theme.space[2.5]}`,
+    padding: `0 ${theme.space[3]}`,
   },
 });
 
@@ -86,19 +91,23 @@ const LogLoadingIndicatorIcon = styled("div", {
     height: 20,
     color: theme.color.text.dimmed.base,
     opacity: theme.iconOpacity,
-    animation: "pulse 1.5s linear infinite",
   },
-});
-
-const LogLoadingIndicatorCopy = styled("div", {
-  base: {
-    color: theme.color.text.dimmed.base,
-    fontSize: theme.font.size.base,
+  variants: {
+    pulse: {
+      true: {
+        animation: "pulse 1.5s linear infinite",
+      },
+      false: {},
+    },
+  },
+  defaultVariants: {
+    pulse: true,
   },
 });
 
 const LogClearButton = styled("span", {
   base: {
+    lineHeight: "normal",
     fontSize: theme.font.size.sm,
     color: theme.color.text.secondary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
@@ -267,6 +276,16 @@ const InvokeTextArea = styled("textarea", {
         display: "block",
       },
     },
+  },
+});
+
+const LogEmpty = styled("div", {
+  base: {
+    ...utility.stack(4),
+    height: 240,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTop: `1px solid ${theme.color.divider.base}`,
   },
 });
 
@@ -448,6 +467,26 @@ const LogEntryMessage = styled("span", {
     color: theme.color.text.primary.surface,
   },
 });
+
+const LogMoreIndicator = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    padding: `${theme.space[3]} ${theme.space[3]}`,
+    borderTop: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const LogMoreIndicatorIcon = styled("div", {
+  base: {
+    padding: 2,
+    width: 20,
+    height: 20,
+    color: theme.color.text.dimmed.base,
+    opacity: theme.iconOpacity,
+  },
+});
+
 export function Logs() {
   const nav = useNavigate();
   const stage = useStageContext();
@@ -652,6 +691,11 @@ export function Logs() {
     ];
   });
 
+  // MOCKUPS
+  const isSearch = false;
+  const isLoading = false;
+  const isTryingToConnect = false;
+
   return (
     <Stack space="5">
       <DialogPayloadSave control={(control) => (saveControl = control)} />
@@ -688,14 +732,28 @@ export function Logs() {
       <LogList>
         <LogLoadingIndicator>
           <Row space="2" vertical="center">
-            <LogLoadingIndicatorIcon>
-              <IconBoltSolid />
+            <LogLoadingIndicatorIcon pulse={!isSearch}>
+              {isSearch ? (
+                <IconArrowDown />
+              ) : isTryingToConnect ? (
+                <IconArrowsUpDown />
+              ) : (
+                <IconBoltSolid />
+              )}
             </LogLoadingIndicatorIcon>
-            <LogLoadingIndicatorCopy>
-              <span>Tailing logs&hellip;</span>
+            <Row space="3" vertical="center">
+              <Text leading="normal" color="dimmed" size="sm">
+                {isSearch
+                  ? `Viewing logs from ${new Date().toLocaleTimeString()}`
+                  : isTryingToConnect
+                  ? "Trying to connect to local `sst dev`"
+                  : live()
+                  ? "Tailing logs from local `sst dev`"
+                  : "Tailing logs"}
+                &hellip;
+              </Text>
               <Show when={invocations().length > 0}>
                 <LogClearButton
-                  style={{ "padding-left": theme.space[2] }}
                   onClick={() => {
                     clearLogStore(logGroup());
                     bus.emit("log.cleared", {
@@ -706,92 +764,53 @@ export function Logs() {
                   Clear
                 </LogClearButton>
               </Show>
-            </LogLoadingIndicatorCopy>
+            </Row>
           </Row>
-          <Dropdown size="sm" open={false} align="right" value="View">
-            <DropdownOption>Live</DropdownOption>
-            <DropdownOption>Recent</DropdownOption>
-            <DropdownDivider />
-            <DropdownOption>5mins ago</DropdownOption>
-            <DropdownOption>15mins ago</DropdownOption>
-            <DropdownOption>1hr ago</DropdownOption>
-            <DropdownOption>6hrs ago</DropdownOption>
-            <DropdownOption>12hrs ago</DropdownOption>
-            <DropdownOption>1 day ago</DropdownOption>
-            <DropdownDivider />
-            <DropdownOption>Specify a time&hellip;</DropdownOption>
-          </Dropdown>
+          <Show when={!live()}>
+            <Dropdown size="sm" open={false} align="right" value="View">
+              <DropdownOption>Live</DropdownOption>
+              <DropdownOption>Recent</DropdownOption>
+              <DropdownDivider />
+              <DropdownOption>5mins ago</DropdownOption>
+              <DropdownOption>15mins ago</DropdownOption>
+              <DropdownOption>1hr ago</DropdownOption>
+              <DropdownOption>6hrs ago</DropdownOption>
+              <DropdownOption>12hrs ago</DropdownOption>
+              <DropdownOption>1 day ago</DropdownOption>
+              <DropdownDivider />
+              <DropdownOption>Specify a time&hellip;</DropdownOption>
+            </Dropdown>
+          </Show>
         </LogLoadingIndicator>
-        <InvokeRoot
-          expand={invoke.expand}
-          style={{
-            /** Overrides height set by Chrome after resizing **/
-            height: "auto",
-          }}
-          onClick={() => {
-            setInvoke("expand", true);
-            invokeTextArea.focus();
-          }}
-        >
-          <InvokePayloadLabel>
-            <InvokePayloadLabelIcon>
-              <IconCaretRightOutline />
-            </InvokePayloadLabelIcon>
-            <Text code size="mono_base" color="dimmed">
-              Enter event payload
-            </Text>
-          </InvokePayloadLabel>
-          <InvokeTextArea
-            rows={7}
-            spellcheck={false}
-            ref={invokeTextArea}
-            onInput={(e) => {
-              setInvoke("empty", !Boolean(e.currentTarget.value));
+        <Show when={!isSearch}>
+          <InvokeRoot
+            expand={invoke.expand}
+            style={{
+              /** Overrides height set by Chrome after resizing **/
+              height: "auto",
             }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                e.stopPropagation();
-                const payload = JSON.parse(invokeTextArea.value || "{}");
-                setTimeout(() => setInvoke("invoking", false), 2000);
-                setInvoke("invoking", true);
-                rep().mutate.function_invoke({
-                  stageID: resource()!.stageID,
-                  payload,
-                  functionARN: resource()!.metadata.arn,
-                });
-              }
+            onClick={() => {
+              setInvoke("expand", true);
+              invokeTextArea.focus();
             }}
-          />
-          <InvokeControls>
-            <InvokeControlsLeft>
-              <IconButton
-                title="Load saved payloads"
-                onClick={() => manageControl.show()}
-              >
-                <IconBookmark display="block" width={24} height={24} />
-              </IconButton>
-              <LinkButton
-                style={{ display: invoke.empty ? "none" : "inline" }}
-                onClick={() =>
-                  saveControl.show(key(), JSON.parse(invokeTextArea.value))
-                }
-              >
-                Save
-              </LinkButton>
-            </InvokeControlsLeft>
-            <Row vertical="center" space="4">
-              <InvokeControlsCancel
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setInvoke("expand", false);
-                }}
-              >
-                Cancel
-              </InvokeControlsCancel>
-              <Button
-                color="secondary"
-                disabled={invoke.invoking}
-                onClick={(e) => {
+          >
+            <InvokePayloadLabel>
+              <InvokePayloadLabelIcon>
+                <IconCaretRightOutline />
+              </InvokePayloadLabelIcon>
+              <Text code size="mono_base" color="dimmed">
+                Enter event payload
+              </Text>
+            </InvokePayloadLabel>
+            <InvokeTextArea
+              rows={7}
+              spellcheck={false}
+              ref={invokeTextArea}
+              onInput={(e) => {
+                setInvoke("empty", !Boolean(e.currentTarget.value));
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                   e.stopPropagation();
                   const payload = JSON.parse(invokeTextArea.value || "{}");
                   setTimeout(() => setInvoke("invoking", false), 2000);
@@ -801,13 +820,68 @@ export function Logs() {
                     payload,
                     functionARN: resource()!.metadata.arn,
                   });
-                }}
-              >
-                {invoke.invoking ? "Invoking" : "Invoke"}
-              </Button>
-            </Row>
-          </InvokeControls>
-        </InvokeRoot>
+                }
+              }}
+            />
+            <InvokeControls>
+              <InvokeControlsLeft>
+                <IconButton
+                  title="Load saved payloads"
+                  onClick={() => manageControl.show()}
+                >
+                  <IconBookmark display="block" width={24} height={24} />
+                </IconButton>
+                <LinkButton
+                  style={{ display: invoke.empty ? "none" : "inline" }}
+                  onClick={() =>
+                    saveControl.show(key(), JSON.parse(invokeTextArea.value))
+                  }
+                >
+                  Save
+                </LinkButton>
+              </InvokeControlsLeft>
+              <Row vertical="center" space="4">
+                <InvokeControlsCancel
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInvoke("expand", false);
+                  }}
+                >
+                  Cancel
+                </InvokeControlsCancel>
+                <Button
+                  color="secondary"
+                  disabled={invoke.invoking}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const payload = JSON.parse(invokeTextArea.value || "{}");
+                    setTimeout(() => setInvoke("invoking", false), 2000);
+                    setInvoke("invoking", true);
+                    rep().mutate.function_invoke({
+                      stageID: resource()!.stageID,
+                      payload,
+                      functionARN: resource()!.metadata.arn,
+                    });
+                  }}
+                >
+                  {invoke.invoking ? "Invoking" : "Invoke"}
+                </Button>
+              </Row>
+            </InvokeControls>
+          </InvokeRoot>
+        </Show>
+        <Show when={isSearch && invocations().length === 0}>
+          <LogEmpty>
+            <IconMagnifyingGlass
+              width={28}
+              height={28}
+              color={theme.color.icon.dimmed}
+            />
+            <Text center color="dimmed">
+              Could not find any logs from {new Date().toLocaleTimeString()}
+            </Text>
+          </LogEmpty>
+        </Show>
         <For each={invocations().slice().reverse()}>
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
@@ -979,6 +1053,16 @@ export function Logs() {
             );
           }}
         </For>
+        <Show when={isLoading}>
+          <LogMoreIndicator>
+            <LogMoreIndicatorIcon>
+              <IconArrowPathSpin />
+            </LogMoreIndicatorIcon>
+            <Text leading="normal" color="dimmed" size="sm">
+              Loading more logs&hellip;
+            </Text>
+          </LogMoreIndicator>
+        </Show>
       </LogList>
     </Stack>
   );
