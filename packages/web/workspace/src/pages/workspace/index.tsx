@@ -18,6 +18,9 @@ import { User } from "./user";
 import { Account } from "./account";
 import { Overview } from "./overview";
 import { WorkspaceContext } from "./context";
+import { AppStore } from "$/data/app";
+import { IconApp } from "$/ui/icons/custom";
+import { StageStore } from "$/data/stage";
 
 export function Workspace() {
   const params = useParams();
@@ -59,6 +62,22 @@ export function Workspace() {
     <Show when={workspace()}>
       <ReplicacheProvider accountID={account()} workspaceID={workspace()!.id}>
         <WorkspaceContext.Provider value={() => workspace()!}>
+          {(() => {
+            bar.register("app-switcher", async () => {
+              const apps = await rep().query(AppStore.list());
+              return apps.map((app) => ({
+                icon: IconApp,
+                category: "App",
+                title: `Switch to "${app.name}" app`,
+                run: async (control) => {
+                  const stages = await rep().query(StageStore.forApp(app.id));
+                  nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
+                  control.hide();
+                },
+              }));
+            });
+            return null;
+          })()}
           <Routes>
             <Route path="connect" component={Connect} />
             <Route path="user" component={User} />

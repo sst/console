@@ -35,22 +35,6 @@ export function Stage() {
       : async () => undefined
   );
 
-  bar.register("app-switcher", async () => {
-    const apps = await rep().query(AppStore.list());
-    return apps
-      .filter((a) => a.id !== app()?.id)
-      .map((app) => ({
-        icon: IconApp,
-        category: "App",
-        title: `Switch to "${app.name}" app`,
-        run: async (control) => {
-          const stages = await rep().query(StageStore.forApp(app.id));
-          nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
-          control.hide();
-        },
-      }));
-  });
-
   bar.register("stage-switcher", async () => {
     const stages = await rep().query(StageStore.forApp(app()?.id || ""));
     return stages
