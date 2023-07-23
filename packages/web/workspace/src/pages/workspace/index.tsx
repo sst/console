@@ -1,5 +1,9 @@
 import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
-import { ReplicacheProvider, createSubscription } from "$/providers/replicache";
+import {
+  ReplicacheProvider,
+  createSubscription,
+  useReplicache,
+} from "$/providers/replicache";
 import { Connect } from "./connect";
 import { useCommandBar } from "./command-bar";
 import { account } from "$/data/storage";
@@ -62,31 +66,38 @@ export function Workspace() {
     <Show when={workspace()}>
       <ReplicacheProvider accountID={account()} workspaceID={workspace()!.id}>
         <WorkspaceContext.Provider value={() => workspace()!}>
-          {(() => {
-            bar.register("app-switcher", async () => {
-              const apps = await rep().query(AppStore.list());
-              return apps.map((app) => ({
-                icon: IconApp,
-                category: "App",
-                title: `Switch to "${app.name}" app`,
-                run: async (control) => {
-                  const stages = await rep().query(StageStore.forApp(app.id));
-                  nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
-                  control.hide();
-                },
-              }));
-            });
-            return null;
-          })()}
-          <Routes>
-            <Route path="connect" component={Connect} />
-            <Route path="user" component={User} />
-            <Route path="account" component={Account} />
-            <Route path=":appName/:stageName/*" component={Stage} />
-            <Route path="*" component={Overview} />
-          </Routes>
+          <Content />
         </WorkspaceContext.Provider>
       </ReplicacheProvider>
     </Show>
+  );
+}
+
+export function Content() {
+  const bar = useCommandBar();
+  const rep = useReplicache();
+  const nav = useNavigate();
+  const params = useParams();
+  bar.register("app-switcher", async () => {
+    const apps = await rep().query(AppStore.list());
+    return apps.map((app) => ({
+      icon: IconApp,
+      category: "App",
+      title: `Switch to "${app.name}" app`,
+      run: async (control) => {
+        const stages = await rep().query(StageStore.forApp(app.id));
+        nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
+        control.hide();
+      },
+    }));
+  });
+  return (
+    <Routes>
+      <Route path="connect" component={Connect} />
+      <Route path="user" component={User} />
+      <Route path="account" component={Account} />
+      <Route path=":appName/:stageName/*" component={Stage} />
+      <Route path="*" component={Overview} />
+    </Routes>
   );
 }
