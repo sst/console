@@ -6,15 +6,8 @@ import {
 } from "$/providers/replicache";
 import { Connect } from "./connect";
 import { useCommandBar } from "./command-bar";
-import { account } from "$/data/storage";
 import { Stage } from "./stage";
-import {
-  Accessor,
-  Show,
-  createContext,
-  createMemo,
-  useContext,
-} from "solid-js";
+import { Show, createEffect, createMemo } from "solid-js";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
 import { IconArrowsRightLeft, IconUserPlus } from "$/ui/icons";
@@ -25,12 +18,14 @@ import { WorkspaceContext } from "./context";
 import { AppStore } from "$/data/app";
 import { IconApp } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
+import { useStorage } from "$/providers/account";
 
 export function Workspace() {
   const params = useParams();
   const auth = useAuth();
+  const storage = useStorage();
   const nav = useNavigate();
-  const rep = createMemo(() => auth[account()].replicache);
+  const rep = createMemo(() => auth[storage.value.account].replicache);
   const workspace = createSubscription(
     () => WorkspaceStore.fromSlug(params.workspaceSlug),
     undefined,
@@ -38,6 +33,11 @@ export function Workspace() {
   );
 
   const bar = useCommandBar();
+
+  createEffect(() => {
+    const id = workspace()?.id;
+    if (id) storage.set("workspace", id);
+  });
 
   bar.register("workspace", async () => {
     return [
@@ -64,7 +64,10 @@ export function Workspace() {
 
   return (
     <Show when={workspace()}>
-      <ReplicacheProvider accountID={account()} workspaceID={workspace()!.id}>
+      <ReplicacheProvider
+        accountID={storage.value.account}
+        workspaceID={workspace()!.id}
+      >
         <WorkspaceContext.Provider value={() => workspace()!}>
           <Content />
         </WorkspaceContext.Provider>

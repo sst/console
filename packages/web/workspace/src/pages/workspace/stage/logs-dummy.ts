@@ -72,7 +72,11 @@ export const DUMMY_LOGS: Invocation[] = [
       },
     ],
     cold: false,
-    error: true,
+    error: {
+      type: "Error",
+      message: "Error message",
+      trace: [],
+    },
     start: new Date(),
     duration: 234161,
   },

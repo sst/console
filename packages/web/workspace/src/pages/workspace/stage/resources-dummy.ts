@@ -34,6 +34,7 @@ function func(id: string, handler: string, size?: number) {
     },
     {
       size: size || 2048,
+      live: true,
     }
   );
 }
@@ -51,6 +52,7 @@ export const DUMMY_RESOURCES = [
     "stack",
     {},
     {
+      version: "1.0.0",
       outputs: [
         {
           OutputKey: "EmptyOutput",

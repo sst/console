@@ -5,7 +5,7 @@ import { darkClass, lightClass, theme } from "./ui/theme";
 import { globalStyle, macaron$ } from "@macaron-css/core";
 import { Component, Match, Switch, createSignal, onCleanup } from "solid-js";
 import { Navigate, Route, Router, Routes, useNavigate } from "@solidjs/router";
-import { Auth, Code, Email } from "./pages/auth";
+import { Auth, Code } from "./pages/auth";
 import { AuthProvider, useAuth } from "./providers/auth";
 import { RealtimeProvider } from "./providers/realtime";
 import { CommandBar, useCommandBar } from "./pages/workspace/command-bar";
@@ -14,12 +14,12 @@ import { Design } from "./pages/design";
 import { Connect } from "./pages/connect";
 import { Workspace } from "./pages/workspace";
 import { WorkspaceCreate } from "./pages/workspace-create";
-import { account, setAccount } from "./data/storage";
 import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
 import { UserStore } from "./data/user";
 import { IconBuildingOffice, IconPlus } from "./ui/icons";
 import { LocalProvider } from "./providers/local";
+import { useStorage } from "./providers/account";
 
 const Root = styled("div", {
   base: {
@@ -98,6 +98,7 @@ export const App: Component = () => {
   onCleanup(() => {
     darkMode.removeEventListener("change", setColorScheme);
   });
+  const storage = useStorage();
 
   return (
     <Root class={theme() === "light" ? lightClass : darkClass} id="styled">
@@ -123,15 +124,15 @@ export const App: Component = () => {
                         path="*"
                         component={() => {
                           const auth = useAuth();
-                          let existing = account();
+                          let existing = storage.value.account;
                           if (!existing || !auth[existing]) {
                             existing = Object.keys(auth)[0];
-                            setAccount(existing);
+                            storage.set("account", existing);
                           }
                           const workspaces = createSubscription(
                             WorkspaceStore.list,
                             null,
-                            () => auth[existing].replicache
+                            () => auth[existing!].replicache
                           );
 
                           const init = createSubscription(
@@ -139,7 +140,7 @@ export const App: Component = () => {
                               return tx.get("/init");
                             },
                             false,
-                            () => auth[existing].replicache
+                            () => auth[existing!].replicache
                           );
 
                           return (
@@ -147,7 +148,15 @@ export const App: Component = () => {
                               <Match
                                 when={workspaces() && workspaces()!.length > 0}
                               >
-                                <Navigate href={`/${workspaces()![0].slug}`} />
+                                <Navigate
+                                  href={`/${
+                                    (
+                                      workspaces()!.find(
+                                        (w) => w.id === storage.value.workspace
+                                      ) || workspaces()![0]
+                                    ).slug
+                                  }`}
+                                />
                               </Match>
                               <Match
                                 when={
@@ -178,6 +187,7 @@ function GlobalCommands() {
   const bar = useCommandBar();
   const auth = useAuth();
   const nav = useNavigate();
+  const account = useStorage();
   bar.register("workspace-switcher", async () => {
     const workspaces = await Promise.all(
       Object.values(auth).map(async (account) => {
@@ -204,7 +214,7 @@ function GlobalCommands() {
           category: "Workspace",
           icon: IconBuildingOffice,
           run: (control: any) => {
-            setAccount(w.account.token.accountID);
+            account.set("account", w.account.token.accountID);
             nav(`/${w.workspace.slug}`);
             control.hide();
           },

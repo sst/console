@@ -1,14 +1,14 @@
-import {Link, useNavigate, useSearchParams} from "@solidjs/router";
-import {createSubscription} from "$/providers/replicache";
-import {useAuth} from "$/providers/auth";
-import {For} from "solid-js";
-import {WorkspaceStore} from "../../data/workspace";
-import {Stack} from "$/ui/layout";
-import {styled} from "@macaron-css/solid";
-import {theme} from "$/ui/theme";
-import {utility} from "$/ui/utility";
-import {WorkspaceIcon} from "$/ui/workspace-icon";
-import {setAccount} from "$/data/storage";
+import { useNavigate, useSearchParams } from "@solidjs/router";
+import { createSubscription } from "$/providers/replicache";
+import { useAuth } from "$/providers/auth";
+import { For } from "solid-js";
+import { WorkspaceStore } from "../../data/workspace";
+import { Stack } from "$/ui/layout";
+import { styled } from "@macaron-css/solid";
+import { theme } from "$/ui/theme";
+import { utility } from "$/ui/utility";
+import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { useStorage } from "$/providers/account";
 
 const Root = styled("div", {
   base: {
@@ -79,6 +79,7 @@ export function Connect() {
   const auth = useAuth();
   const [query] = useSearchParams();
   const nav = useNavigate();
+  const storage = useStorage();
 
   return (
     <Root>
@@ -88,18 +89,18 @@ export function Connect() {
         </ConnectWorkspaceHeader>
         <ConnectWorkspaceList>
           <For each={Object.values(auth)}>
-            {(account) => {
+            {(item) => {
               const workspaces = createSubscription(
                 WorkspaceStore.list,
                 [],
-                () => account.replicache
+                () => item.replicache
               );
               return (
                 <For each={workspaces()}>
                   {(workspace) => (
                     <ConnectWorkspaceRow
                       onClick={() => {
-                        setAccount(account.token.accountID);
+                        storage.set("account", item.token.accountID);
                         nav(`/${workspace.slug}/connect` + location.search);
                       }}
                     >

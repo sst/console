@@ -27,7 +27,7 @@
     "@solid-primitives/event-listener": "^2.2.13",
     "@solid-primitives/keyboard": "^1.2.3",
     "@solid-primitives/mutation-observer": "^1.1.13",
-    "@solid-primitives/storage": "^1.3.11",
+    "@solid-primitives/storage": "^2.0.0",
     "@solidjs/router": "^0.8.2",
     "@tanstack/solid-virtual": "3.0.0-beta.6",
     "aws-iot-device-sdk-v2": "^1.13.1",

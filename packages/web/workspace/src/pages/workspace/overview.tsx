@@ -244,9 +244,6 @@ interface StageCardProps {
 function StageCard(props: StageCardProps) {
   const app = createSubscription(() => AppStore.fromID(props.stage.appID));
   const local = useLocalContext();
-  createEffect(() => {
-    console.log("local", local());
-  });
   return (
     <StageRoot href={`${app()?.name}/${props.stage.name}`}>
       <Row space="2" vertical="center">

@@ -1,10 +1,10 @@
-import { setAccount } from "$/data/storage";
 import { WorkspaceStore } from "$/data/workspace";
 import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
 import { Navigate } from "@solidjs/router";
 import { Replicache } from "replicache";
 import { ParentProps, createContext, useContext } from "solid-js";
+import { useStorage } from "./account";
 
 export * as AuthStore from "./auth";
 
@@ -51,6 +51,7 @@ export function AuthProvider(props: ParentProps) {
   const tokens = get();
   const fragment = new URLSearchParams(location.hash.substring(1));
   const access_token = fragment.get("access_token");
+  const account = useStorage();
   if (access_token) {
     const [_headerEncoded, payloadEncoded] = access_token.split(".");
     const payload = JSON.parse(
@@ -60,7 +61,7 @@ export function AuthProvider(props: ParentProps) {
       token: access_token,
       ...payload.properties,
     };
-    setAccount(payload.properties.accountID);
+    account.set(payload.properties.accountID);
     set(tokens);
   }
 

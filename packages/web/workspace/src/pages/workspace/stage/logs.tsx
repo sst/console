@@ -500,7 +500,7 @@ export function Logs() {
         | Extract<Resource.Info, { type: "Function" }>
         | undefined
   );
-  const key = createMemo(() => [stage.app.name, resource().cfnID].join("-"));
+  const key = createMemo(() => [stage.app.name, resource()?.cfnID].join("-"));
   const lambdaPayloads = createSubscription(
     () => LambdaPayloadStore.forKey(key()),
     []

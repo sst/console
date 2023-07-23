@@ -1,5 +1,5 @@
-import { account } from "$/data/storage";
 import { WorkspaceStore } from "$/data/workspace";
+import { useStorage } from "$/providers/account";
 import { useAuth } from "$/providers/auth";
 import { createSubscription } from "$/providers/replicache";
 import {
@@ -25,8 +25,9 @@ const Form = styled("form", {
 
 export function WorkspaceCreate() {
   const auth = useAuth();
+  const storage = useStorage();
   const nav = useNavigate();
-  const rep = createMemo(() => auth[account()].replicache);
+  const rep = createMemo(() => auth[storage.value.account].replicache);
   const id = createId();
   const workspace = createSubscription(
     () => WorkspaceStore.fromID(id),
