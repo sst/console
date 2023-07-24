@@ -4,13 +4,12 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { cuid, id, timestamps } from "../util/sql";
+import { cuid, id, timestamps, workspaceID } from "../util/sql";
 
 export const user = mysqlTable(
   "user",
   {
-    ...id,
-    workspaceID: cuid("workspace_id").notNull(),
+    ...workspaceID,
     ...timestamps,
     email: varchar("email", { length: 255 }).notNull(),
   },

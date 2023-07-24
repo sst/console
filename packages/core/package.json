@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.16.0",
-    "drizzle-kit": "0.19.9",
+    "drizzle-kit": "0.19.10",
     "sst": "2.21.8",
     "vitest": "^0.25.3"
   },

@@ -21,12 +21,10 @@ export const replicache_client = mysqlTable("replicache_client", {
 export const replicache_cvr = mysqlTable(
   "replicache_cvr",
   {
-    ...id,
+    id: id.id.primaryKey(),
     ...timestamps,
     actor: json("actor").$type<Actor>(),
     data: json("data").$type<Record<string, string>>(),
   },
-  (table) => ({
-    primary: primaryKey(table.id),
-  })
+  (table) => ({})
 );

@@ -9,12 +9,11 @@ import { timestamps, id, cuid } from "../util/sql";
 export const workspace = mysqlTable(
   "workspace",
   {
-    ...id,
+    id: id.id.primaryKey(),
     ...timestamps,
     slug: varchar("slug", { length: 255 }).notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.id),
     slug: uniqueIndex("slug").on(table.slug),
   })
 );
