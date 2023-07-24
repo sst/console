@@ -354,9 +354,9 @@ function UserCard(props: UserCardProps) {
         </Text>
       </Row>
       <Row space="3" horizontal="center" style={{ flex: "0 0 auto" }}>
-        <Tag level={props.status === "invited" ? "tip" : "info"}>
-          {props.status}
-        </Tag>
+        <Show when={props.status === "invited"}>
+          <Tag level="tip">Invited</Tag>
+        </Show>
         <IconButton
           disabled={props.self}
           title="Remove from workspace"
