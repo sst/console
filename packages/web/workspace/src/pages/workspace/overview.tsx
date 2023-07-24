@@ -357,7 +357,15 @@ function UserCard(props: UserCardProps) {
         <Tag level={props.status === "invited" ? "tip" : "info"}>
           {props.status}
         </Tag>
-        <IconButton disabled={props.self} title="Remove from workspace">
+        <IconButton
+          disabled={props.self}
+          title="Remove from workspace"
+          onClick={() =>
+            window.confirm(
+              "Are you sure you want to remove them from the workspace?"
+            )
+          }
+        >
           <IconUserMinus width={18} height={18} style={{ display: "block" }} />
         </IconButton>
       </Row>
