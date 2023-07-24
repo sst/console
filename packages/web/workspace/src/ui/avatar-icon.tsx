@@ -57,9 +57,10 @@ type AvatarInitialsIconProps = ComponentProps<typeof Icon> & {
 };
 export function AvatarInitialsIcon(props: AvatarInitialsIconProps) {
   const svg = createMemo(() => {
-    const bgColor = props.type === "user" ? "#8F675E" : "#395C6B";
+    const bgColor = props.type === "user" ? "#606165" : "#395C6B";
     const round = props.type === "user";
     const parts = props.text
+      .replace(/@.*$/, "")
       .toUpperCase()
       .split(/[^A-Z0-9]/g)
       .filter((p) => p.trim() !== "");

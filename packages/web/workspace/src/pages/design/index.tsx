@@ -433,7 +433,7 @@ export function Design() {
           </Tag>
         </Variant>
       </ComponentType>
-      <ComponentType name="InitialsAvatarIcon">
+      <ComponentType name="AvatarInitialsIcon">
         <Variant name="Default">
           <AvatarInitialsIcon type="workspace" text="S" />
           <AvatarInitialsIcon type="workspace" text="SST" />
@@ -446,6 +446,12 @@ export function Design() {
           <AvatarInitialsIcon type="workspace" text="123" />
           <AvatarInitialsIcon type="workspace" text="1-2" />
           <AvatarInitialsIcon type="workspace" text="1Krusty-2Krab" />
+          <AvatarInitialsIcon type="workspace" text="patrick@example.com" />
+          <AvatarInitialsIcon
+            type="workspace"
+            text="patrick_start@example.com"
+          />
+          <AvatarInitialsIcon type="workspace" text="patrick2002@example.com" />
           <AvatarInitialsIcon type="workspace" text="$-_.+! *'()" />
           <AvatarInitialsIcon type="workspace" text="" />
         </Variant>

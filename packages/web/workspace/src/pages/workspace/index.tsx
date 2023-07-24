@@ -43,7 +43,7 @@ export function Workspace() {
     return [
       {
         icon: IconUserPlus,
-        title: "Add user to workspace",
+        title: "Invite user to workspace",
         category: "Workspace",
         run: (control) => {
           control.hide();

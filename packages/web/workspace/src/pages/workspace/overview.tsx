@@ -2,9 +2,19 @@ import { AppStore } from "$/data/app";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
 import { createSubscription } from "$/providers/replicache";
-import { Button, Row, Stack, Tag, Text, theme, utility } from "$/ui";
+import {
+  Button,
+  Row,
+  Stack,
+  Tag,
+  Text,
+  IconButton,
+  theme,
+  utility,
+} from "$/ui";
 import { Fullscreen } from "$/ui/layout";
-import { IconPlus } from "$/ui/icons";
+import { IconPlus, IconUserMinus } from "$/ui/icons";
+import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
 import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
 import type { Stage } from "@console/core/app";
@@ -18,6 +28,7 @@ import {
   createEffect,
   createMemo,
   useContext,
+  ComponentProps,
 } from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
@@ -31,7 +42,7 @@ const Root = styled("div", {
 const List = styled("div", {
   base: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: `repeat(auto-fill, minmax(calc((100% - ${theme.space[4]}) / 2), 1fr))`,
     alignItems: "start",
     gap: theme.space[4],
   },
@@ -128,13 +139,18 @@ export function Overview() {
           </Match>
           <Match when={true}>
             <Stack space="4">
-              <Row vertical="center" horizontal="between">
+              <Row space="5" vertical="center" horizontal="between">
                 <Text size="lg" weight="medium">
                   Overview
                 </Text>
-                <Link href="account">
-                  <Button color="secondary">Add AWS Account</Button>
-                </Link>
+                <Row space="4" vertical="center">
+                  <Link href="account">
+                    <Button color="secondary">Add AWS Account</Button>
+                  </Link>
+                  <Link href="user">
+                    <Button color="primary">Invite Team</Button>
+                  </Link>
+                </Row>
               </Row>
               <List>
                 <For each={accounts() || []}>
@@ -179,6 +195,31 @@ export function Overview() {
                     );
                   }}
                 </For>
+                {/*
+                <Card>
+                  <CardHeader>
+                    <Text code size="mono_sm" color="dimmed">
+                      Team
+                    </Text>
+                  </CardHeader>
+                  <div>
+                    <UserCard
+                      self
+                      email="spongebob@krusty-krab.com"
+                      status="active"
+                    />
+                    <UserCard
+                      email="patrick_star@krusty-krab.com"
+                      status="active"
+                    />
+                    <UserCard email="sandy@krusty-krab.com" status="invited" />
+                    <UserCard
+                      email="reallyreallylongemailthatshouldoverflowbecauseitstoolong@reallylongdomain.com"
+                      status="invited"
+                    />
+                  </div>
+                </Card>
+                */}
                 <Show when={(accounts() || []).length === 1}>
                   <CardEmpty>
                     <Link href="account">
@@ -204,7 +245,7 @@ export function Overview() {
 
 const StageRoot = styled(Link, {
   base: {
-    ...utility.row(2),
+    ...utility.row(3),
     alignItems: "center",
     padding: theme.space[4],
     justifyContent: "space-between",
@@ -275,5 +316,51 @@ function StageCard(props: StageCardProps) {
         <Tag style="outline">{props.stage.region}</Tag>
       </StageCardTags>
     </StageRoot>
+  );
+}
+
+const UserRoot = styled("div", {
+  base: {
+    ...utility.row(3),
+    alignItems: "center",
+    padding: theme.space[4],
+    justifyContent: "space-between",
+    borderTop: `1px solid ${theme.color.divider.base}`,
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+type UserCardProps = ComponentProps<typeof UserRoot> & {
+  self?: boolean;
+  email: string;
+  status: "invited" | "active";
+};
+
+function UserCard(props: UserCardProps) {
+  return (
+    <UserRoot>
+      <Row space="2" vertical="center">
+        <AvatarInitialsIcon
+          type="user"
+          text={props.email}
+          style={{ width: "24px", height: "24px" }}
+        />
+        <Text line size="base" weight="medium" leading="normal">
+          {props.email}
+        </Text>
+      </Row>
+      <Row space="3" horizontal="center" style={{ flex: "0 0 auto" }}>
+        <Tag level={props.status === "invited" ? "tip" : "info"}>
+          {props.status}
+        </Tag>
+        <IconButton disabled={props.self} title="Remove from workspace">
+          <IconUserMinus width={18} height={18} style={{ display: "block" }} />
+        </IconButton>
+      </Row>
+    </UserRoot>
   );
 }

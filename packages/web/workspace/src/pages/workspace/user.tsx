@@ -28,7 +28,7 @@ export function User() {
           <AvatarInitialsIcon type="workspace" text={workspace().slug} />
           <Stack horizontal="center" space="2">
             <Text size="lg" weight="medium">
-              Add a user to this workspace
+              Invite a user to this workspace
             </Text>
             <Text color="secondary">
               Enter their email and we'll send an invite
@@ -51,7 +51,6 @@ export function User() {
               type="email"
               autofocus
               name="email"
-              hint="Need copy here"
               placeholder="user@example.com"
             />
             <Button type="submit">Send Invite</Button>
