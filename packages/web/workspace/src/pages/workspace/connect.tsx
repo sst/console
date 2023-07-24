@@ -13,7 +13,7 @@ import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { IconArrowPathSpin } from "$/ui/icons/custom";
 import { Stack } from "$/ui/layout";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { WorkspaceStore } from "$/data/workspace";
 
 const Root = styled("div", {
@@ -117,7 +117,10 @@ export function Connect() {
             </ConnectWorkspaceHeader>
             <ConnectWorkspaceList>
               <ConnectWorkspaceRow href="#">
-                <WorkspaceIcon text={workspace()?.slug || ""} />
+                <AvatarInitialsIcon
+                  type="workspace"
+                  text={workspace()?.slug || ""}
+                />
                 <ConnectWorkspaceName>{workspace()?.slug}</ConnectWorkspaceName>
               </ConnectWorkspaceRow>
             </ConnectWorkspaceList>

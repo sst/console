@@ -7,7 +7,7 @@ import { Stack } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { useStorage } from "$/providers/account";
 
 const Root = styled("div", {
@@ -104,7 +104,10 @@ export function Connect() {
                         nav(`/${workspace.slug}/connect` + location.search);
                       }}
                     >
-                      <WorkspaceIcon text={workspace.slug} />
+                      <AvatarInitialsIcon
+                        type="workspace"
+                        text={workspace.slug}
+                      />
                       <ConnectWorkspaceName>
                         {workspace.slug}
                       </ConnectWorkspaceName>

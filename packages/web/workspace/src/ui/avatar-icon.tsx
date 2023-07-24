@@ -1,15 +1,15 @@
 import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
-import { createMemo } from "solid-js";
+import { createMemo, ComponentProps } from "solid-js";
 
 interface AvatarSvgProps {
   text: string;
-  round?: boolean;
   size?: number;
+  round?: boolean;
   bgColor?: string;
+  fontSize?: number;
   textColor?: string;
   fontFamily?: string;
-  fontSize?: number;
   fontWeight?: number | string;
 }
 function generateAvatarSvg({
@@ -34,10 +34,6 @@ function generateAvatarSvg({
   )}" font-weight="${fontWeight}" dy=".1em" dominant-baseline="middle" fill="${textColor}">${text}</text></svg>`;
 }
 
-interface WorkspaceIconProps {
-  text: string;
-}
-
 const Icon = styled("span", {
   base: {
     flexShrink: 0,
@@ -45,37 +41,51 @@ const Icon = styled("span", {
     height: 36,
     display: "inline-block",
     backgroundSize: "cover",
-    borderRadius: theme.borderRadius,
+  },
+  variants: {
+    type: {
+      workspace: {
+        borderRadius: theme.borderRadius,
+      },
+      user: {},
+    },
   },
 });
 
-export function WorkspaceIcon(props: WorkspaceIconProps) {
+type AvatarInitialsIconProps = ComponentProps<typeof Icon> & {
+  text: string;
+};
+export function AvatarInitialsIcon(props: AvatarInitialsIconProps) {
   const svg = createMemo(() => {
-    const parts = props.text.split(/[-_]/g).filter((p) => p.trim() !== "");
-    let text = "";
+    const bgColor = props.type === "user" ? "#8F675E" : "#395C6B";
+    const round = props.type === "user";
+    const parts = props.text
+      .toUpperCase()
+      .split(/[^A-Z0-9]/g)
+      .filter((p) => p.trim() !== "");
 
-    if (parts.length > 1) {
-      text = parts[0].slice(0, 1) + parts[1].slice(0, 1);
-    } else {
-      const alpha = props.text.replace(/[^a-zA-Z]/g, "");
-      if (alpha.length === 0) {
-        text = "-";
-      } else {
-        text = alpha.slice(0, 2);
-      }
-    }
+    const text =
+      parts.length > 1
+        ? parts[0].slice(0, 1) + parts[1].slice(0, 1)
+        : parts.length === 1
+        ? parts[0][0]
+        : "-";
 
     return encodeURIComponent(
       generateAvatarSvg({
-        text: text.toUpperCase(),
+        text,
+        round,
+        bgColor,
       })
     );
   });
 
   return (
     <Icon
+      {...props}
       title={props.text}
       style={{
+        ...(typeof props.style === "object" ? props.style : {}),
         "background-image": `url("data:image/svg+xml;utf8,${svg()}")`,
       }}
     />

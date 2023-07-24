@@ -7,4 +7,4 @@ export * from "./button";
 export * from "./layout";
 export * from "./loader";
 export * from "./utility";
-export * from "./workspace-icon";
+export * from "./avatar-icon";

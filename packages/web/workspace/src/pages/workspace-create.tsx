@@ -7,7 +7,7 @@ import {
   FormInput,
   Fullscreen,
   Stack,
-  WorkspaceIcon,
+  AvatarInitialsIcon,
   Text,
   utility,
 } from "$/ui";
@@ -50,7 +50,7 @@ export function WorkspaceCreate() {
     <Fullscreen>
       <Stack space="5">
         <Stack horizontal="center" space="5">
-          <WorkspaceIcon text={slug() || "-"} />
+          <AvatarInitialsIcon type="workspace" text={slug() || "-"} />
           <Stack horizontal="center" space="2">
             <Text size="lg" weight="medium">
               Create a new workspace

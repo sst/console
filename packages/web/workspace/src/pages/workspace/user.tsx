@@ -1,5 +1,5 @@
 import { Button, Fullscreen, Stack, Text } from "$/ui";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "./context";
 import { utility } from "$/ui/utility";
@@ -25,7 +25,7 @@ export function User() {
       <Header />
       <Fullscreen>
         <Stack horizontal="center" space="5">
-          <WorkspaceIcon text={workspace().slug} />
+          <AvatarInitialsIcon type="workspace" text={workspace().slug} />
           <Stack horizontal="center" space="2">
             <Text size="lg" weight="medium">
               Add a user to this workspace

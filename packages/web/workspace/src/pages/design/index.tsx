@@ -30,7 +30,7 @@ import {
   IconArrowPathSpin,
 } from "$/ui/icons/custom";
 import { For, JSX, Show, ComponentProps } from "solid-js";
-import { WorkspaceIcon } from "$/ui/workspace-icon";
+import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 
 const ComponentRoot = styled("div", {
   base: {
@@ -161,54 +161,9 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
-      <ComponentType name="Dropdown">
-        <Variant name="SelectLogTime">
-          <SelectLogTime />
-        </Variant>
+      <ComponentType name="SelectLogTime">
         <Variant name="Default">
-          <Dropdown value="Dropdown"></Dropdown>
-        </Variant>
-        <Variant name="Small">
-          <Dropdown size="sm" value="Dropdown"></Dropdown>
-        </Variant>
-        <Variant name="Overflow">
-          <Dropdown value="Test is a really long string that should overflow"></Dropdown>
-        </Variant>
-        <Variant name="Open Left" style={{ height: "480px" }}>
-          <Dropdown open value="Dropdown">
-            <DropdownOption>Live</DropdownOption>
-            <DropdownOption>Recent</DropdownOption>
-            <DropdownDivider />
-            <DropdownOption>5mins ago</DropdownOption>
-            <DropdownOption>15mins ago</DropdownOption>
-            <DropdownOption>1hr ago</DropdownOption>
-            <DropdownOption>6hrs ago</DropdownOption>
-            <DropdownOption>12hrs ago</DropdownOption>
-            <DropdownOption>1 day ago</DropdownOption>
-            <DropdownDivider />
-            <DropdownOption>
-              A really really really long dropdown option that should overflow
-            </DropdownOption>
-          </Dropdown>
-        </Variant>
-        <Variant name="Open Small" style={{ height: "240px" }}>
-          <Dropdown open size="sm" value="Dropdown">
-            <DropdownOption>Live</DropdownOption>
-            <DropdownOption>Recent</DropdownOption>
-          </Dropdown>
-        </Variant>
-        <Variant name="Open Right" style={{ height: "240px" }}>
-          <Dropdown
-            open
-            align="right"
-            value="Dropdown"
-            style={{ "margin-left": "200px" }}
-          >
-            <DropdownOption>Live</DropdownOption>
-            <DropdownOption>
-              A really really really long dropdown option that should overflow
-            </DropdownOption>
-          </Dropdown>
+          <SelectLogTime />
         </Variant>
       </ComponentType>
       <ComponentType name="UnsupportedAppBanner">
@@ -262,13 +217,6 @@ export function Design() {
           </Grower>
         </Variant>
       </ComponentType>
-      <ComponentType name="NewWorkspace">
-        <Variant name="Default">
-          <Grower>
-            <NewWorkspace />
-          </Grower>
-        </Variant>
-      </ComponentType>
       <ComponentType name="FormTest">
         <Variant name="Default">
           <Grower>
@@ -280,19 +228,6 @@ export function Design() {
         <Variant name="Default">
           <Grower>
             <LogsEmptyLoadingIndicator />
-          </Grower>
-        </Variant>
-      </ComponentType>
-      <ComponentType name="LogsHeader">
-        <Variant name="Default">
-          <Grower>
-            <LogsHeader
-              handler="packages/functions/src/events/app-stage-updated.handler"
-              construct="EventBus"
-              constructName="bus"
-              event="subscription"
-              route="/replicache/push"
-            />
           </Grower>
         </Variant>
       </ComponentType>
@@ -498,6 +433,80 @@ export function Design() {
           </Tag>
         </Variant>
       </ComponentType>
+      <ComponentType name="InitialsAvatarIcon">
+        <Variant name="Default">
+          <AvatarInitialsIcon type="workspace" text="S" />
+          <AvatarInitialsIcon type="workspace" text="SST" />
+          <AvatarInitialsIcon type="workspace" text="Spongebob" />
+          <AvatarInitialsIcon type="workspace" text="Krusty-Krab" />
+          <AvatarInitialsIcon type="workspace" text="Krusty Krab" />
+          <AvatarInitialsIcon type="workspace" text="Krusty___Krab" />
+          <AvatarInitialsIcon type="workspace" text="Krusty.Krab" />
+          <AvatarInitialsIcon type="workspace" text="1" />
+          <AvatarInitialsIcon type="workspace" text="123" />
+          <AvatarInitialsIcon type="workspace" text="1-2" />
+          <AvatarInitialsIcon type="workspace" text="1Krusty-2Krab" />
+          <AvatarInitialsIcon type="workspace" text="$-_.+! *'()" />
+          <AvatarInitialsIcon type="workspace" text="" />
+        </Variant>
+        <Variant name="User">
+          <AvatarInitialsIcon type="user" text="Patrick Star" />
+        </Variant>
+        <Variant name="Custom Size">
+          <AvatarInitialsIcon
+            text="S"
+            type="workspace"
+            style={{ width: "48px", height: "48px" }}
+          />
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Dropdown">
+        <Variant name="Default">
+          <Dropdown value="Dropdown"></Dropdown>
+        </Variant>
+        <Variant name="Small">
+          <Dropdown size="sm" value="Dropdown"></Dropdown>
+        </Variant>
+        <Variant name="Overflow">
+          <Dropdown value="Test is a really long string that should overflow"></Dropdown>
+        </Variant>
+        <Variant name="Open Left" style={{ height: "480px" }}>
+          <Dropdown open value="Dropdown">
+            <DropdownOption>Live</DropdownOption>
+            <DropdownOption>Recent</DropdownOption>
+            <DropdownDivider />
+            <DropdownOption>5mins ago</DropdownOption>
+            <DropdownOption>15mins ago</DropdownOption>
+            <DropdownOption>1hr ago</DropdownOption>
+            <DropdownOption>6hrs ago</DropdownOption>
+            <DropdownOption>12hrs ago</DropdownOption>
+            <DropdownOption>1 day ago</DropdownOption>
+            <DropdownDivider />
+            <DropdownOption>
+              A really really really long dropdown option that should overflow
+            </DropdownOption>
+          </Dropdown>
+        </Variant>
+        <Variant name="Open Small" style={{ height: "240px" }}>
+          <Dropdown open size="sm" value="Dropdown">
+            <DropdownOption>Live</DropdownOption>
+            <DropdownOption>Recent</DropdownOption>
+          </Dropdown>
+        </Variant>
+        <Variant name="Open Right" style={{ height: "240px" }}>
+          <Dropdown
+            open
+            align="right"
+            value="Dropdown"
+            style={{ "margin-left": "200px" }}
+          >
+            <DropdownOption>Live</DropdownOption>
+            <DropdownOption>
+              A really really really long dropdown option that should overflow
+            </DropdownOption>
+          </Dropdown>
+        </Variant>
+      </ComponentType>
       <ComponentType name="Row">
         <Variant name="Default">
           <Row space="1">
@@ -566,96 +575,6 @@ const LogLoadingIndicatorCopy = styled("div", {
     fontSize: "0.8125rem",
   },
 });
-
-const BackButton = styled("button", {
-  base: {
-    border: "none",
-    background: "none",
-    color: theme.color.text.dimmed.base,
-    opacity: theme.iconOpacity,
-    width: 42,
-    height: 42,
-    lineHeight: 0,
-    padding: `0 ${theme.space[2]} 0 0`,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    selectors: {
-      "&:hover": {
-        color: theme.color.text.secondary.base,
-      },
-    },
-  },
-});
-
-const BackButtonIcon = styled(IconChevronLeft, {
-  base: {},
-});
-
-function Back() {
-  return (
-    <BackButton>
-      <BackButtonIcon />
-    </BackButton>
-  );
-}
-
-const LogsHeaderTitle = styled("h1", {
-  base: {
-    fontSize: "1.25rem",
-    fontWeight: 500,
-  },
-});
-
-const ConstructIcon = styled("div", {
-  base: {
-    flex: "0 0 auto",
-    color: theme.color.icon.secondary,
-    width: 13,
-    height: 13,
-  },
-});
-
-const ConstructName = styled("div", {
-  base: {
-    fontSize: "0.8125rem",
-    color: theme.color.text.secondary.base,
-  },
-});
-
-const EventRoute = styled("div", {
-  base: {
-    fontSize: "0.75rem",
-    color: theme.color.text.secondary.base,
-    fontFamily: theme.font.family.code,
-  },
-});
-
-interface LogsHeaderProps {
-  handler: string;
-  construct: string;
-  constructName: string;
-  event: string;
-  route?: string;
-}
-function LogsHeader(props: LogsHeaderProps) {
-  return (
-    <Row space="0" vertical="center">
-      <Back />
-      <Stack space="2">
-        <LogsHeaderTitle>{props.handler}</LogsHeaderTitle>
-        <Row space="3.5" vertical="center">
-          <Tag style="outline">{props.event}</Tag>
-          <Row title={props.construct} space="1.5" vertical="center">
-            <ConstructIcon>
-              <IconEventBus />
-            </ConstructIcon>
-            <ConstructName>{props.constructName}</ConstructName>
-          </Row>
-          <EventRoute>{props.route}</EventRoute>
-        </Row>
-      </Stack>
-    </Row>
-  );
-}
 
 const LogsEmptyContainer = styled("div", {
   base: {
@@ -849,55 +768,6 @@ const FormFieldHint = styled("p", {
     color: "primary",
   },
 });
-
-const NewWorkspaceHeader = styled("h1", {
-  base: {
-    fontSize: theme.font.size.lg,
-    fontWeight: 500,
-  },
-});
-
-const NewWorkspaceDesc = styled("p", {
-  base: {
-    color: theme.color.text.secondary.base,
-  },
-});
-
-const FormNewWorkspace = styled("form", {
-  base: {
-    ...utility.stack(5),
-    alignItems: "stretch",
-    margin: "0 auto",
-    maxWidth: 600,
-  },
-});
-
-function NewWorkspace() {
-  return (
-    <Stack space="8">
-      <Stack horizontal="center" space="5">
-        <WorkspaceIcon text="acme" />
-        <Stack horizontal="center" space="2">
-          <NewWorkspaceHeader>Create a new workspace</NewWorkspaceHeader>
-          <NewWorkspaceDesc>
-            Start by giving your workspace a name
-          </NewWorkspaceDesc>
-        </Stack>
-      </Stack>
-      <FormNewWorkspace>
-        <Stack space="2.5">
-          <FormField>
-            <Input placeholder="acme" type="text" />
-          </FormField>
-          <FormFieldHint>
-            Needs to be lowercase, unique, and URL friendly.
-          </FormFieldHint>
-        </Stack>
-        <Button color="primary">Create Workspace</Button>
-      </FormNewWorkspace>
-    </Stack>
-  );
-}
 
 const AccountsHeader = styled("div", {
   base: {
@@ -1235,7 +1105,7 @@ function ConnectWorkspace() {
         <For each={list}>
           {(item: string) => (
             <ConnectWorkspaceRow href="#">
-              <WorkspaceIcon text={item} />
+              <AvatarInitialsIcon type="workspace" text={item} />
               <ConnectWorkspaceName>{item}</ConnectWorkspaceName>
             </ConnectWorkspaceRow>
           )}
@@ -1536,7 +1406,7 @@ function ConnectingWorkspace() {
         </ConnectWorkspaceHeader>
         <ConnectWorkspaceList>
           <ConnectWorkspaceRow href="#">
-            <WorkspaceIcon text="krusty-krab" />
+            <AvatarInitialsIcon type="workspace" text="krusty-krab" />
             <ConnectWorkspaceName>krusty-krab</ConnectWorkspaceName>
           </ConnectWorkspaceRow>
         </ConnectWorkspaceList>

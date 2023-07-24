@@ -1,4 +1,4 @@
-import { Row, Stack, WorkspaceIcon, Text, theme } from "$/ui";
+import { Row, Stack, AvatarInitialsIcon, Text, theme } from "$/ui";
 import { IconChevronUpDown } from "$/ui/icons";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
@@ -91,7 +91,7 @@ export function Header(props: { app?: string; stage?: string }) {
     <Root>
       <Row space="4" vertical="center">
         <Link href={`/${workspace().slug}`}>
-          <WorkspaceIcon text={workspace().slug} />
+          <AvatarInitialsIcon type="workspace" text={workspace().slug} />
         </Link>
         <StageSwitcher
           onClick={() =>
