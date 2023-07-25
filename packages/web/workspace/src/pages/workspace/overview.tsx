@@ -17,9 +17,17 @@ import { IconPlus, IconUserMinus } from "$/ui/icons";
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
 import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
+import type { App } from "@console/core/app";
 import type { Stage } from "@console/core/app";
+import type { Account } from "@console/core/aws/account";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
+import {
+  DUMMY_STAGES,
+  DUMMY_ACCOUNTS,
+  DUMMY_LOCAL_APP,
+  DUMMY_APP_STORE,
+} from "./overview-dummy";
 import {
   For,
   Match,
@@ -42,7 +50,8 @@ const Root = styled("div", {
 const List = styled("div", {
   base: {
     display: "grid",
-    gridTemplateColumns: `repeat(auto-fill, minmax(calc((100% - ${theme.space[4]}) / 2), 1fr))`,
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gridTemplateRows: "masonry",
     alignItems: "start",
     gap: theme.space[4],
   },
@@ -74,9 +83,10 @@ const CardEmptyIcon = styled("div", {
 const CardHeader = styled("div", {
   base: {
     ...utility.row(0.5),
+    height: 46,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: theme.space[4],
+    padding: `0 ${theme.space[4]}`,
     borderBottom: `1px solid ${theme.color.divider.base}`,
   },
 });
@@ -104,14 +114,28 @@ const CardLoadingIcon = styled("div", {
 });
 
 export function Overview() {
-  const accounts = createSubscription(AccountStore.list);
-  const stages = createSubscription(StageStore.list, []);
   const [query] = useSearchParams();
+  const accounts = createSubscription(() =>
+    query.dummy
+      ? async (): Promise<Account.Info[]> => {
+          return DUMMY_ACCOUNTS.hasOwnProperty(query.dummy)
+            ? DUMMY_ACCOUNTS[query.dummy as keyof typeof DUMMY_ACCOUNTS]
+            : DUMMY_ACCOUNTS.DEFAULT;
+        }
+      : AccountStore.list()
+  );
+  const stages = createSubscription(
+    () =>
+      query.dummy
+        ? async (): Promise<Stage.Info[]> => DUMMY_STAGES
+        : StageStore.list(),
+    []
+  );
   const nav = useNavigate();
 
   createEffect(() => {
     const all = accounts();
-    if (all && !all.length && !query.force)
+    if (all && !all.length && !query.force && !query.dummy)
       nav("account", {
         replace: true,
       });
@@ -163,9 +187,14 @@ export function Overview() {
                     return (
                       <Card>
                         <CardHeader>
-                          <Text code size="mono_sm" color="dimmed">
-                            ID: {account.accountID}
-                          </Text>
+                          <Row space="0.5">
+                            <Text code size="mono_sm" color="dimmed">
+                              ID:
+                            </Text>
+                            <Text code size="mono_sm" color="dimmed">
+                              {account.accountID}
+                            </Text>
+                          </Row>
                           <Show when={account.timeFailed}>
                             <Link href="account">
                               <Tag level="danger">Disconnected</Tag>
@@ -186,7 +215,7 @@ export function Overview() {
                                 <IconArrowPathSpin />
                               </CardLoadingIcon>
                               <Text size="sm" color="dimmed">
-                                Seaching for SST apps&hellip;
+                                Searching for SST apps&hellip;
                               </Text>
                             </CardLoading>
                           </Show>
@@ -199,7 +228,7 @@ export function Overview() {
                 <Card>
                   <CardHeader>
                     <Text code size="mono_sm" color="dimmed">
-                      Team
+                      Team: 4
                     </Text>
                   </CardHeader>
                   <div>
@@ -283,8 +312,13 @@ interface StageCardProps {
   stage: Stage.Info;
 }
 function StageCard(props: StageCardProps) {
-  const app = createSubscription(() => AppStore.fromID(props.stage.appID));
-  const local = useLocalContext();
+  const [query] = useSearchParams();
+  const app = createSubscription(() =>
+    query.dummy
+      ? async (): Promise<App.Info> => DUMMY_APP_STORE[props.stage.appID]
+      : AppStore.fromID(props.stage.appID)
+  );
+  const local = query.dummy ? () => DUMMY_LOCAL_APP : useLocalContext();
   return (
     <StageRoot href={`${app()?.name}/${props.stage.name}`}>
       <Row space="2" vertical="center">
