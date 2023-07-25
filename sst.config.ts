@@ -1,13 +1,13 @@
 import { SSTConfig } from "sst";
+import { DNS } from "./stacks/dns";
 import { API } from "./stacks/api";
 import { Web } from "./stacks/web";
 import { Auth } from "./stacks/auth";
-import { Secrets } from "./stacks/secrets";
-import { Events } from "./stacks/events";
-import { DNS } from "./stacks/dns";
-import { Realtime } from "./stacks/realtime";
-import { Connect } from "./stacks/connect";
 import { Email } from "./stacks/email";
+import { Events } from "./stacks/events";
+import { Secrets } from "./stacks/secrets";
+import { Connect } from "./stacks/connect";
+import { Realtime } from "./stacks/realtime";
 
 export default {
   config(input) {

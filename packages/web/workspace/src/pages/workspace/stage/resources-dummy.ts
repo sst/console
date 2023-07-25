@@ -46,7 +46,7 @@ function ref(id: string) {
   };
 }
 
-export const DUMMY_RESOURCES = [
+const DEFAULT = [
   resource(
     "Stack",
     "stack",
@@ -315,8 +315,8 @@ export const DUMMY_RESOURCES = [
     appSyncApiId: "lz26zxwynve2dopyjdd2ekve34",
     appSyncApiKey: "da2-g63kqnmio5eyhbbv4dz6fk2x4y",
   }),
-  resource("WebSocketApi", "ws-api-custom-domain", {
-    url: "",
+  resource("WebSocketApi", "ws-api", {
+    url: "wss://h7waex57g8.execute-api.us-east-1.amazonaws.com/jayair",
     routes: [
       {
         route: "$connect",
@@ -338,8 +338,8 @@ export const DUMMY_RESOURCES = [
     customDomainUrl: undefined,
     httpApiId: "someapi",
   }),
-  resource("WebSocketApi", "ws-api", {
-    url: "",
+  resource("WebSocketApi", "ws-api-custom-domain", {
+    url: "wss://h7waex57g8.execute-api.us-east-1.amazonaws.com/jayair",
     routes: [
       {
         route: "$connect",
@@ -363,3 +363,55 @@ export const DUMMY_RESOURCES = [
   func("notes_post", "packages/notes.handler", 2048000),
   func("other_func", "packages/others/func.handler", 2048000),
 ];
+
+const NOT_SUPPORTED = [
+  resource(
+    "Stack",
+    "stack",
+    {},
+    {
+      version: "1.0.0",
+      outputs: [],
+    }
+  ),
+];
+
+const PARTLY_SUPPORTED = [
+  resource(
+    "Stack",
+    "stackA",
+    {},
+    {
+      version: "1.0.0",
+      outputs: [],
+    }
+  ),
+  resource(
+    "Stack",
+    "stackB",
+    {},
+    {
+      version: "2.19.2",
+      outputs: [],
+    }
+  ),
+  resource("Table", "notes-table", {
+    consumers: [
+      {
+        fn: {
+          node: "index",
+          stack: "stack",
+        },
+        name: "consumer1",
+      },
+    ],
+    tableName: "jayair-console-dummy-notes-table",
+  }),
+  func("index", "packages/function.handler"),
+];
+
+export const DUMMY_RESOURCES = {
+  DEFAULT,
+  NOT_SUPPORTED,
+  PARTLY_SUPPORTED,
+};

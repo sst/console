@@ -51,7 +51,9 @@ function createResourcesContext() {
   const resources = createSubscription(() =>
     query.dummy
       ? async (): Promise<Resource.Info[]> => {
-          return DUMMY_RESOURCES;
+          return DUMMY_RESOURCES.hasOwnProperty(query.dummy)
+            ? DUMMY_RESOURCES[query.dummy as keyof typeof DUMMY_RESOURCES]
+            : DUMMY_RESOURCES.DEFAULT;
         }
       : ResourceStore.forStage(ctx.stage.id)
   );

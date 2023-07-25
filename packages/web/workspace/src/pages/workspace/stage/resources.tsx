@@ -204,7 +204,7 @@ export function Header(props: HeaderProps) {
   const icon = createMemo(() => props.icon || IconMap[props.resource.type]);
   return (
     <HeaderRoot>
-      <Row space="3" vertical="center">
+      <Row space="2" vertical="center">
         <Row space="1.5" vertical="center">
           <Show when={icon}>
             {(icon) => (
@@ -219,15 +219,15 @@ export function Header(props: HeaderProps) {
         </Row>
         <Text
           line
-          leading="normal"
-          color="secondary"
           on="surface"
+          color="dimmed"
+          leading="normal"
           style={{ "max-width": "500px" }}
         >
           {props.description}
         </Text>
       </Row>
-      <Text code color="dimmed" size="mono_base" on="surface">
+      <Text code color="secondary" size="mono_base" on="surface">
         {props.resource.type}
       </Text>
     </HeaderRoot>
@@ -284,7 +284,7 @@ export function Resources() {
                     target="_blank"
                     href="https://github.com/serverless-stack/sst/releases"
                   >
-                    upgrade to v{MINIMUM_VERSION}.
+                    upgrade to v{MINIMUM_VERSION}
                   </a>
                 </Text>
               </Stack>
@@ -499,8 +499,7 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
       <Header
         resource={props.resource}
         description={
-          props.resource.metadata.customDomainUrl ||
-          props.resource.enrichment.cloudfrontUrl
+          props.resource.metadata.customDomainUrl || props.resource.metadata.url
         }
       />
       <Children>
