@@ -18,13 +18,9 @@ export const replicache_client = mysqlTable("replicache_client", {
   ...timestamps,
 });
 
-export const replicache_cvr = mysqlTable(
-  "replicache_cvr",
-  {
-    id: id.id.primaryKey(),
-    ...timestamps,
-    actor: json("actor").$type<Actor>(),
-    data: json("data").$type<Record<string, string>>(),
-  },
-  (table) => ({})
-);
+export const replicache_cvr = mysqlTable("replicache_cvr", {
+  ...id,
+  ...timestamps,
+  actor: json("actor").$type<Actor>(),
+  data: json("data").$type<Record<string, string>>(),
+});

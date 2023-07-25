@@ -4,7 +4,7 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { cuid, id, timestamps, workspaceID } from "../util/sql";
+import { timestamps, workspaceID } from "../util/sql";
 
 export const user = mysqlTable(
   "user",

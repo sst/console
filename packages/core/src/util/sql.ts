@@ -5,13 +5,13 @@ export { createId } from "@paralleldrive/cuid2";
 export const cuid = (name: string) => char(name, { length: 24 });
 export const id = {
   get id() {
-    return cuid("id").notNull();
+    return cuid("id").primaryKey().notNull();
   },
 };
 
 export const workspaceID = {
   get id() {
-    return id.id;
+    return cuid("id").notNull();
   },
   get workspaceID() {
     return cuid("workspace_id").notNull();
