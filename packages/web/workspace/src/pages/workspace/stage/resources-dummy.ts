@@ -52,7 +52,7 @@ export const DUMMY_RESOURCES = [
     "stack",
     {},
     {
-      version: "1.0.0",
+      version: "2.19.2",
       outputs: [
         {
           OutputKey: "EmptyOutput",
@@ -101,6 +101,11 @@ export const DUMMY_RESOURCES = [
       },
       {
         route: "PATCH /notes",
+        type: "function",
+        fn: ref("notes_get"),
+      },
+      {
+        route: "PATCH .",
         type: "function",
         fn: ref("notes_get"),
       },

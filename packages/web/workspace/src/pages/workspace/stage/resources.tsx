@@ -1,13 +1,13 @@
 import {
   For,
   JSX,
-  Match,
   Show,
+  Match,
   Switch,
   createMemo,
-  ComponentProps,
   createSignal,
   createEffect,
+  ComponentProps,
 } from "solid-js";
 import { useFunctionsContext, useResourcesContext } from "./context";
 import { styled } from "@macaron-css/solid";
@@ -18,13 +18,18 @@ import { Tag, Text, Alert } from "$/ui";
 import {
   IconApi,
   IconRDS,
+  IconJob,
+  IconAuth,
   IconCron,
   IconTopic,
+  IconStack,
   IconTable,
   IconQueue,
+  IconScript,
   IconBucket,
   IconAppSync,
   IconCognito,
+  IconFunction,
   IconEventBus,
   IconAstroSite,
   IconRemixSite,
@@ -36,11 +41,6 @@ import {
   IconKinesisStream,
   IconSolidStartSite,
   IconApiGatewayV1Api,
-  IconFunction,
-  IconJob,
-  IconAuth,
-  IconStack,
-  IconScript,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { Link } from "@solidjs/router";
@@ -84,33 +84,6 @@ const HeaderIcon = styled("div", {
     width: 14,
     height: 14,
     color: theme.color.icon.secondary,
-  },
-});
-
-const HeaderName = styled("div", {
-  base: {
-    fontWeight: "500",
-    fontFamily: theme.font.family.body,
-    flexShrink: 0,
-    fontSize: theme.font.size.base,
-  },
-});
-
-const HeaderDescription = styled("div", {
-  base: {
-    ...utility.textLine(),
-    maxWidth: "500px",
-    fontSize: theme.font.size.base,
-    lineHeight: "normal",
-    color: theme.color.text.secondary.base,
-  },
-});
-
-const HeaderType = styled("div", {
-  base: {
-    color: theme.color.text.secondary.base,
-    fontFamily: theme.font.family.code,
-    fontSize: theme.font.size.mono_base,
   },
 });
 
@@ -174,7 +147,7 @@ export const ChildDetail = styled("div", {
     ...utility.textLine(),
     display: "flex",
     alignItems: "baseline",
-    color: theme.color.text.secondary.base,
+    color: theme.color.text.secondary.surface,
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_base,
     textAlign: "right",
@@ -240,11 +213,23 @@ export function Header(props: HeaderProps) {
               </HeaderIcon>
             )}
           </Show>
-          <HeaderName>{props.resource.cfnID}</HeaderName>
+          <Text on="surface" weight="medium" style={{ "flex-shrink": "0" }}>
+            {props.resource.cfnID}
+          </Text>
         </Row>
-        <HeaderDescription>{props.description}</HeaderDescription>
+        <Text
+          line
+          leading="normal"
+          color="secondary"
+          on="surface"
+          style={{ "max-width": "500px" }}
+        >
+          {props.description}
+        </Text>
       </Row>
-      <HeaderType>{props.resource.type}</HeaderType>
+      <Text code color="dimmed" size="mono_base" on="surface">
+        {props.resource.type}
+      </Text>
     </HeaderRoot>
   );
 }
@@ -439,23 +424,9 @@ const UnsupportedAppIcon = styled("div", {
   },
 });
 
-const UnsupportedAppBannerRoot = styled("div", {
-  base: {
-    ...utility.row(1.5),
-    alignItems: "center",
-    backgroundColor: theme.color.background.surface,
-    borderRadius: theme.borderRadius,
-    padding: `${theme.space[5]} ${theme.space[4]}`,
-  },
-});
-
-const UnsupportedAppBannerIcon = styled("div", {
-  base: {
-    width: 16,
-    height: 16,
-    color: theme.color.icon.dimmed,
-  },
-});
+function formatPath(path?: string) {
+  return path ? (path === "." ? `"${path}"` : path) : `""`;
+}
 
 interface CardProps<Type extends Resource.Info["type"]> {
   resource: Extract<Resource.Info, { type: Type }>;
@@ -751,7 +722,7 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
           <Row space="3" vertical="center">
             <Tag style="outline">Server</Tag>
             <ChildTitleLink href={`./logs/`}>
-              {props.resource.metadata.path}
+              {formatPath(props.resource.metadata.path)}
             </ChildTitleLink>
           </Row>
           <Row shrink={false} space="3" vertical="center">
@@ -818,7 +789,7 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
           <Row space="3" vertical="center">
             <Tag style="outline">Server</Tag>
             <ChildTitleLink href={`./logs/${props.resource.metadata.server}`}>
-              {props.resource.metadata.path}
+              {formatPath(props.resource.metadata.path)}
             </ChildTitleLink>
           </Row>
           <Row shrink={false} space="3" vertical="center">
@@ -862,7 +833,9 @@ export function OutputsCard() {
     <Show when={outputs().length}>
       <Card outputs>
         <HeaderRoot>
-          <HeaderName>Outputs</HeaderName>
+          <Text weight="medium" style={{ "flex-shrink": "0" }}>
+            Outputs
+          </Text>
         </HeaderRoot>
         <Children outputs>
           <For each={outputs()}>
@@ -934,9 +907,13 @@ export function OrphanFunctionsCard() {
             <HeaderIcon title="Functions">
               <IconFunction />
             </HeaderIcon>
-            <HeaderName>Functions</HeaderName>
+            <Text weight="medium" on="surface" style={{ "flex-shrink": "0" }}>
+              Functions
+            </Text>
           </Row>
-          <HeaderType>Function</HeaderType>
+          <Text code color="dimmed" size="mono_base" on="surface">
+            Function
+          </Text>
         </HeaderRoot>
         <Children>
           <For each={orphans()}>
@@ -1007,7 +984,7 @@ function FunctionChild(props: {
                     .pathname
                 }
               >
-                {props.title}
+                {formatPath(props.title)}
               </Show>
             </ChildTitleLink>
           </Row>
@@ -1018,7 +995,15 @@ function FunctionChild(props: {
                 return (
                   <ChildDetail>
                     {formattedSize.value}
-                    <ChildDetailUnit>{formattedSize.unit}</ChildDetailUnit>
+                    <Text
+                      color="secondary"
+                      on="surface"
+                      size="xs"
+                      weight="medium"
+                      style={{ padding: "3px" }}
+                    >
+                      {formattedSize.unit}
+                    </Text>
                   </ChildDetail>
                 );
               }}
