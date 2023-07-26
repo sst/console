@@ -80,7 +80,6 @@ export const handler = EventHandler(Log.Events.ScanCreated, async (evt) => {
           });
           if (evt) {
             if (evt[0] === "r") {
-              console.log(evt);
               invocations.add(evt[3]);
             }
             batch.unshift(evt);
