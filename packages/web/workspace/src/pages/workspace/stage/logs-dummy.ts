@@ -60,8 +60,32 @@ export const DUMMY_LOGS: Invocation[] = [
       },
     ],
     cold: true,
-    start: new Date(),
-    duration: 34161,
+    start: new Date("1995-12-17T12:24:00"),
+    duration: 59123,
+  },
+  {
+    id: crypto.randomUUID(),
+    logs: [
+      {
+        message: "Test formatting time, minutes, rounded to nearest second",
+        timestamp: new Date(),
+      },
+    ],
+    cold: false,
+    start: new Date("1995-12-17T12:24:00"),
+    duration: 72123,
+  },
+  {
+    id: crypto.randomUUID(),
+    logs: [
+      {
+        message: "Test formatting time, hours, hh:mm",
+        timestamp: new Date(),
+      },
+    ],
+    cold: false,
+    start: new Date("1995-12-17T12:24:00"),
+    duration: 3600100,
   },
   {
     id: crypto.randomUUID(),
@@ -78,6 +102,6 @@ export const DUMMY_LOGS: Invocation[] = [
       trace: [],
     },
     start: new Date(),
-    duration: 234161,
+    duration: 7504000,
   },
 ];

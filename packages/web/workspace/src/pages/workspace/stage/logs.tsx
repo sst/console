@@ -195,7 +195,7 @@ const InvokeRoot = styled("div", {
         padding: 0,
         paddingBottom: theme.space[3],
         resize: "vertical",
-        overflow: "scroll",
+        overflow: "auto",
         minHeight: 170,
       },
       false: {
@@ -305,6 +305,7 @@ const LogText = styled("div", {
 const LogDate = styled(LogText, {
   base: {
     flexShrink: 0,
+    minWidth: 190,
     paddingLeft: theme.space[2],
   },
 });
@@ -1145,10 +1146,22 @@ function LogLevel(props: { level?: string }) {
   );
 }
 
-function formatTime(milliseconds: number) {
-  return milliseconds < 1000
-    ? milliseconds.toFixed(0) + "ms"
-    : (milliseconds / 1000).toFixed(2) + "s";
+function formatTime(ms: number): string {
+  const milliseconds = ms % 1000;
+  const seconds = Math.floor(ms / 1000) % 60;
+  const totalSeconds = Math.round(ms / 1000);
+  const minutes = Math.floor(ms / (1000 * 60)) % 60;
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+
+  if (ms < 1000) {
+    return milliseconds + "ms";
+  } else if (ms < 1000 * 60) {
+    return (seconds + milliseconds / 1000).toFixed(2) + "s";
+  } else if (ms < 1000 * 60 * 60) {
+    return totalSeconds + "s";
+  } else {
+    return hours + ":" + (minutes < 10 ? "0" : "") + minutes + "h";
+  }
 }
 
 const shortDateOptions: Intl.DateTimeFormatOptions = {
