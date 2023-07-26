@@ -798,6 +798,7 @@ export function Logs() {
               <Dropdown.RadioGroup value={mode()} onChange={setMode}>
                 <Dropdown.RadioItem value="tail">Live</Dropdown.RadioItem>
                 <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
+                {/*
                 <Dropdown.Seperator />
                 <Dropdown.RadioItem value="5min">5min ago</Dropdown.RadioItem>
                 <Dropdown.RadioItem value="15min">15min ago</Dropdown.RadioItem>
@@ -809,6 +810,7 @@ export function Logs() {
                 <Dropdown.RadioItem value="custom">
                   Specify a time&hellip;
                 </Dropdown.RadioItem>
+                */}
               </Dropdown.RadioGroup>
             </Dropdown>
           </Show>
