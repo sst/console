@@ -79,6 +79,7 @@ bus.on("log", (e) => {
             }
             if (logs.find((l) => l.id === log.id)) return;
             logs.push(log);
+            logs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
             if (invocation && kind === "ERROR")
               invocation.error = {
                 type: "error",

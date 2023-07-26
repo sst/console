@@ -7,7 +7,8 @@ import {
 import { provideActor } from "@console/core/actor";
 import { App } from "@console/core/app";
 import { AWS } from "@console/core/aws";
-import { LogPoller } from "@console/core/log-poller";
+import { Log } from "@console/core/log";
+import { LogPoller } from "@console/core/log/poller";
 import { Realtime } from "@console/core/realtime";
 
 interface State {
@@ -28,8 +29,6 @@ export type Log =
   | ["s", number, string, string, boolean]
   | ["r", number, string, string, number]
   | ["m", number, string, string, string, string, string];
-
-const l: Log = [] as any;
 
 export async function handler(input: State) {
   const attempts = input.status?.attempts || 0;
@@ -149,10 +148,6 @@ export async function handler(input: State) {
   let batch: Log[] = [];
   let batchSize = 0;
 
-  function push(log: Log) {
-    batch.push(log);
-    batchSize += JSON.stringify(log).length;
-  }
   for await (const event of fetchEvents(
     input.logGroup,
     start + offset,
@@ -165,54 +160,18 @@ export async function handler(input: State) {
       batchSize = 0;
     }
     count++;
-    const tabs = (event.message || "").split("\t");
-
-    if (tabs[0]?.startsWith("INIT_START")) {
-      cold.add(event.logStreamName!);
-      continue;
+    const evt = Log.process({
+      timestamp: event.timestamp!,
+      line: event.message!,
+      cold,
+      stream: event.logStreamName!,
+      group: input.logGroup + "-tail",
+      id: event.eventId!,
+    });
+    if (evt) {
+      batch.push(evt);
+      batchSize += JSON.stringify(evt).length;
     }
-    if (tabs[0]?.startsWith("START")) {
-      const splits = tabs[0].split(" ");
-      push([
-        "s",
-        event.timestamp!,
-        input.logGroup,
-        splits[2]!,
-        cold.has(event.logStreamName!),
-      ]);
-      cold.delete(event.logStreamName!);
-      continue;
-    }
-    if (tabs[0]?.startsWith("END")) {
-      const splits = tabs[0].split(" ");
-      push(["e", event.timestamp!, input.logGroup, splits[2]!]);
-      continue;
-    }
-
-    if (tabs[0]?.startsWith("REPORT")) {
-      push([
-        "r",
-        event.timestamp!,
-        input.logGroup,
-        tabs[0].split(" ")[2]!,
-        parseInt(tabs[2]?.split(" ")[2] || "0"),
-      ]);
-      continue;
-    }
-
-    if (tabs[0]?.length === 24) {
-      push([
-        "m",
-        event.timestamp!,
-        input.logGroup,
-        tabs[1]!,
-        tabs[2]!,
-        tabs.slice(3).join("\t"),
-        event.eventId!,
-      ]);
-      continue;
-    }
-    console.log("unhandled log line", tabs);
   }
   await Realtime.publish("log", batch);
   console.log("published", count, "events");

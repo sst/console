@@ -2,7 +2,12 @@ import { LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text, Select } from "$/ui";
-import { Dropdown, DropdownOption, DropdownDivider } from "../../design";
+import {
+  Dropdown as Dropdown2,
+  DropdownOption,
+  DropdownDivider,
+} from "../../design";
+import { Dropdown } from "$/ui/dropdown";
 import {
   IconBookmark,
   IconArrowPath,
@@ -56,6 +61,7 @@ import {
   DialogPayloadManage,
   DialogPayloadManageControl,
 } from "./dialog-payload-manage";
+import { DropdownMenu } from "@kobalte/core";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -613,9 +619,18 @@ export function Logs() {
     return logGroup;
   });
 
-  const invocations = createMemo(() =>
-    query.dummy ? DUMMY_LOGS : LogStore[logGroup()] || []
-  );
+  const [mode, setMode] = createSignal<string>("recent");
+
+  const logGroupKey = createMemo(() => {
+    const base = logGroup();
+    if (live()) return base;
+    return base + "-" + mode();
+  });
+  const invocations = createMemo(() => {
+    const result = query.dummy ? DUMMY_LOGS : LogStore[logGroupKey()] || [];
+    if (mode() === "tail" || live()) return result.slice().reverse();
+    return result;
+  });
 
   const rep = useReplicache();
   const poller = createSubscription(() =>
@@ -627,9 +642,21 @@ export function Logs() {
     if (!logGroup()) return;
     if (poller()) return;
     if (live()) return;
+    if (mode() !== "tail") return;
     rep().mutate.log_poller_subscribe({
       logGroup: logGroup(),
       stageID: resources()?.at(0)?.stageID!,
+    });
+  });
+
+  createEffect(() => {
+    if (!logGroup()) return;
+    if (live()) return;
+    if (mode() !== "recent") return;
+    rep().mutate.log_scan({
+      logGroup: logGroup(),
+      stageID: resources()?.at(0)?.stageID!,
+      start: Date.now(),
     });
   });
 
@@ -755,7 +782,7 @@ export function Logs() {
               <Show when={invocations().length > 0}>
                 <LogClearButton
                   onClick={() => {
-                    clearLogStore(logGroup());
+                    clearLogStore(logGroupKey());
                     bus.emit("log.cleared", {
                       functionID: logGroup(),
                     });
@@ -767,18 +794,22 @@ export function Logs() {
             </Row>
           </Row>
           <Show when={!live()}>
-            <Dropdown size="sm" open={false} align="right" value="View">
-              <DropdownOption>Live</DropdownOption>
-              <DropdownOption>Recent</DropdownOption>
-              <DropdownDivider />
-              <DropdownOption>5mins ago</DropdownOption>
-              <DropdownOption>15mins ago</DropdownOption>
-              <DropdownOption>1hr ago</DropdownOption>
-              <DropdownOption>6hrs ago</DropdownOption>
-              <DropdownOption>12hrs ago</DropdownOption>
-              <DropdownOption>1 day ago</DropdownOption>
-              <DropdownDivider />
-              <DropdownOption>Specify a time&hellip;</DropdownOption>
+            <Dropdown>
+              <Dropdown.RadioGroup value={mode()} onChange={setMode}>
+                <Dropdown.RadioItem value="tail">Live</Dropdown.RadioItem>
+                <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
+                <Dropdown.Seperator />
+                <Dropdown.RadioItem value="5min">5min ago</Dropdown.RadioItem>
+                <Dropdown.RadioItem value="15min">15min ago</Dropdown.RadioItem>
+                <Dropdown.RadioItem value="1">1hr ago</Dropdown.RadioItem>
+                <Dropdown.RadioItem value="6">6hrs ago</Dropdown.RadioItem>
+                <Dropdown.RadioItem value="12">12hrs ago</Dropdown.RadioItem>
+                <Dropdown.RadioItem value="24">1 day ago</Dropdown.RadioItem>
+                <Dropdown.Seperator />
+                <Dropdown.RadioItem value="custom">
+                  Specify a time&hellip;
+                </Dropdown.RadioItem>
+              </Dropdown.RadioGroup>
             </Dropdown>
           </Show>
         </LogLoadingIndicator>
@@ -882,7 +913,7 @@ export function Logs() {
             </Text>
           </LogEmpty>
         </Show>
-        <For each={invocations().slice().reverse()}>
+        <For each={invocations()}>
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
             const [tab, setTab] = createSignal<

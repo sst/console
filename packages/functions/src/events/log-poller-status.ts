@@ -1,5 +1,5 @@
 import { provideActor } from "@console/core/actor";
-import { LogPoller } from "@console/core/log-poller";
+import { LogPoller } from "@console/core/log/poller";
 import { Replicache } from "@console/core/replicache";
 
 export const handler = async (evt: any) => {

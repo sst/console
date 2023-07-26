@@ -1350,9 +1350,7 @@ export function Dropdown(props: DropdownProps) {
         </Text>
         <DropdownButtonIcon />
       </DropdownButton>
-      <DropdownOptions>
-        <>{props.children}</>
-      </DropdownOptions>
+      <DropdownOptions>{props.children}</DropdownOptions>
     </DropdownRoot>
   );
 }

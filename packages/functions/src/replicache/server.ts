@@ -1,6 +1,7 @@
 import { Server } from "./framework";
 import { App } from "@console/core/app";
-import { LogPoller } from "@console/core/log-poller";
+import { LogPoller } from "@console/core/log/poller";
+import { Log } from "@console/core/log/";
 import { AWS } from "@console/core/aws";
 import { z } from "zod";
 import { Workspace } from "@console/core/workspace";
@@ -10,6 +11,7 @@ import { User } from "@console/core/user";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
+  .expose("log_scan", Log.scan)
   .expose("function_invoke", Lambda.invoke)
   .expose("function_payload_save", Lambda.savePayload)
   .expose("function_payload_remove", Lambda.removePayload)

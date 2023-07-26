@@ -50,5 +50,12 @@ export function Events({ stack }: StackContext) {
     },
   });
 
+  bus.subscribe("log.scan.created", {
+    handler: "packages/functions/src/events/log-scan-created.handler",
+    bind: [...Object.values(secrets.database), bus],
+    timeout: "1 minute",
+    permissions: ["sts", "iot"],
+  });
+
   return bus;
 }

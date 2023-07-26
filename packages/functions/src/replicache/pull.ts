@@ -12,7 +12,7 @@ import { replicache_cvr } from "@console/core/replicache/replicache.sql";
 import { lambdaPayload } from "@console/core/lambda/lambda.sql";
 import { createId } from "@console/core/util/sql";
 import { mapValues } from "remeda";
-import { log_poller } from "@console/core/log-poller/log-poller.sql";
+import { log_poller } from "@console/core/log/poller.sql";
 
 const VERSION = 4;
 export const handler = ApiHandler(async () => {

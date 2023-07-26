@@ -1,7 +1,7 @@
-export * as LogPoller from "./index";
+export * as LogPoller from "./poller";
 
 import { createSelectSchema } from "drizzle-zod";
-import { log_poller } from "./log-poller.sql";
+import { log_poller } from "./poller.sql";
 import { zod } from "../util/zod";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { and, eq } from "drizzle-orm";
