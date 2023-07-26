@@ -39,6 +39,7 @@ export const handler = EventHandler(Log.Events.ScanCreated, async (evt) => {
       limit: 1,
     })
   );
+  console.log(response.logStreams);
   input.start = response.logStreams?.[0]?.lastEventTimestamp! + 30 * 60 * 1000;
   console.log("start", new Date(input.start).toLocaleString());
   while (true) {
@@ -117,6 +118,6 @@ export const handler = EventHandler(Log.Events.ScanCreated, async (evt) => {
 });
 
 function delay(iteration: number) {
-  const hours = Math.pow(2, iteration) * 2;
+  const hours = Math.pow(2, iteration) - 1;
   return hours * 60 * 60 * 1000;
 }
