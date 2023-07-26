@@ -9,6 +9,16 @@ import { Stage } from "@console/core/app";
 import { Log, LogEvent } from "@console/core/log";
 import { Realtime } from "@console/core/realtime";
 import { createId } from "@console/core/util/sql";
+import {
+  flatMap,
+  flatten,
+  groupBy,
+  map,
+  mapValues,
+  pipe,
+  sort,
+  values,
+} from "remeda";
 import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(Log.Events.ScanCreated, async (evt) => {
@@ -29,7 +39,7 @@ export const handler = EventHandler(Log.Events.ScanCreated, async (evt) => {
       limit: 1,
     })
   );
-  input.start = response.logStreams?.[0]?.lastEventTimestamp! + 60 * 60;
+  input.start = response.logStreams?.[0]?.lastEventTimestamp! + 30 * 60 * 1000;
   console.log("start", new Date(input.start).toLocaleString());
   while (true) {
     iteration++;
@@ -41,17 +51,19 @@ export const handler = EventHandler(Log.Events.ScanCreated, async (evt) => {
       "to",
       new Date(end).toLocaleString()
     );
-    const result = await client.send(
-      new StartQueryCommand({
-        logGroupIdentifiers: [input.logGroup],
-        queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 1000`,
-        startTime: start / 1000,
-        endTime: end / 1000,
-      })
-    );
+    const result = await client
+      .send(
+        new StartQueryCommand({
+          logGroupIdentifiers: [input.logGroup],
+          queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 1000`,
+          startTime: start / 1000,
+          endTime: end / 1000,
+        })
+      )
+      .catch(() => {});
+    if (!result) return;
     console.log("created query", result.queryId);
 
-    let processed = 0;
     while (true) {
       const response = await client.send(
         new GetQueryResultsCommand({
@@ -59,40 +71,45 @@ export const handler = EventHandler(Log.Events.ScanCreated, async (evt) => {
         })
       );
 
-      if (response.results && response.results.length) {
+      if (response.status === "Complete") {
+        const results = response.results || [];
         let batch: LogEvent[] = [];
         let batchSize = 0;
-        for (const result of response.results.slice(processed)) {
+        const events = pipe(
+          results.flatMap((result, index) => {
+            const evt = Log.process({
+              id: index.toString(),
+              timestamp: new Date(result[0]?.value! + " Z").getTime(),
+              group: input.logGroup + "-recent",
+              stream: result[2]?.value!,
+              cold,
+              line: result[1]?.value!,
+            });
+            if (evt) return [evt];
+            return [];
+          }),
+          groupBy((evt) => evt[3]),
+          values,
+          map((evts) => evts.sort((a, b) => a[1] - b[1])),
+          sort((b, a) => a[0][1] - b[0][1])
+        );
+
+        for (const evt of events.flat()) {
+          invocations.add(evt[3]);
           if (batchSize >= 100 * 1024) {
-            console.log("publishing batch sized", batchSize);
-            batch.sort((a, b) => b[1] - a[1]);
             await Realtime.publish("log", batch);
             batch = [];
             batchSize = 0;
           }
-          const evt = Log.process({
-            id: processed.toString(),
-            timestamp: new Date(result[0]?.value!).getTime(),
-            group: input.logGroup + "-recent",
-            stream: result[2]?.value!,
-            cold,
-            line: result[1]?.value!,
-          });
-          if (evt) {
-            if (evt[0] === "r") {
-              invocations.add(evt[3]);
-            }
-            batch.unshift(evt);
-            batchSize += JSON.stringify(evt).length;
-          }
-          processed++;
+          batch.push(evt);
+          batchSize += JSON.stringify(evt).length;
         }
         await Realtime.publish("log", batch);
-        console.log("size", invocations.size);
-        if (invocations.size >= 50) return;
+        if (invocations.size >= 50) {
+          return;
+        }
+        break;
       }
-
-      if (response.status === "Complete") break;
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -100,6 +117,6 @@ export const handler = EventHandler(Log.Events.ScanCreated, async (evt) => {
 });
 
 function delay(iteration: number) {
-  const hours = Math.pow(2, iteration);
+  const hours = Math.pow(2, iteration) * 2;
   return hours * 60 * 60 * 1000;
 }

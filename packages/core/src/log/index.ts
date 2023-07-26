@@ -52,12 +52,12 @@ export function process(input: {
     const splits = tabs[0].split(" ");
     const cold = input.cold.has(input.stream);
     input.cold.delete(input.stream);
-    return ["s", input.timestamp, input.group, splits[2]!, cold];
+    return ["s", input.timestamp, input.group, splits[2]!.trim(), cold];
   }
 
   if (tabs[0]?.startsWith("END")) {
     const splits = tabs[0].split(" ");
-    return ["e", input.timestamp, input.group, splits[2]!];
+    return ["e", input.timestamp, input.group, splits[2]!.trim()];
   }
 
   if (tabs[0]?.startsWith("REPORT")) {
@@ -65,7 +65,7 @@ export function process(input: {
       "r",
       input.timestamp,
       input.group,
-      tabs[0].split(" ")[2]!,
+      tabs[0].split(" ")[2]!.trim(),
       parseInt(tabs[2]?.split(" ")[2] || "0"),
     ];
   }
@@ -75,9 +75,9 @@ export function process(input: {
       "m",
       input.timestamp,
       input.group,
-      tabs[1]!,
-      tabs[2]!,
-      tabs.slice(3).join("\t"),
+      tabs[1]!.trim(),
+      tabs[2]!.trim(),
+      tabs.slice(3).join("\t").trim(),
       input.id,
     ];
   }
