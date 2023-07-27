@@ -115,15 +115,15 @@ const LogLoadingIndicatorIconSvg = style({
 globalKeyframes("glow-pulse", {
   "0%": {
     opacity: 0.3,
-    filter: `drop-shadow(0 0 1px ${theme.color.accent})`,
+    filter: `drop-shadow(0 0 0px ${theme.color.accent})`,
   },
   "50%": {
     opacity: 1,
-    filter: `drop-shadow(0 0 2px ${theme.color.accent})`,
+    filter: `drop-shadow(0 0 1px ${theme.color.accent})`,
   },
   "100%": {
     opacity: 0.3,
-    filter: `drop-shadow(0 0 1px ${theme.color.accent})`,
+    filter: `drop-shadow(0 0 0px ${theme.color.accent})`,
   },
 });
 
