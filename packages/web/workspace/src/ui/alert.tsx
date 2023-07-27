@@ -4,8 +4,6 @@ import { utility } from "$/ui/utility";
 import { styled } from "@macaron-css/solid";
 import { IconXCircle, IconExclamationTriangle } from "$/ui/icons";
 
-const dangerBackground = `hsla(${theme.color.base.red}, 25%)`;
-
 const AlertRoot = styled("div", {
   base: {
     ...utility.row(2.5),
@@ -20,7 +18,7 @@ const AlertRoot = styled("div", {
         backgroundColor: theme.color.background.surface,
       },
       danger: {
-        backgroundColor: dangerBackground,
+        backgroundColor: theme.color.background.red,
       },
     },
   },

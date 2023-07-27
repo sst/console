@@ -135,6 +135,9 @@ const light = (() => {
     modal: `hsla(${base.gray}, 80%)`,
     overlay: `hsla(${base.black}, 3%)`,
     navbar: `hsla(${base.white}, 80%)`,
+    blue: `hsla(${base.blue}, 25%)`,
+    red: `hsla(${base.red}, 25%)`,
+    accent: `hsla(${base.brand}, 25%)`,
   };
 
   const divider = {
@@ -332,6 +335,9 @@ const dark = ((): typeof light => {
     modal: `hsla(${base.gray}, 90%)`,
     overlay: `hsla(${base.black}, 50%)`,
     navbar: `hsla(${base.black}, 75%)`,
+    blue: `hsla(${base.blue}, 25%)`,
+    red: `hsla(${base.red}, 25%)`,
+    accent: `hsla(${base.brand}, 25%)`,
   };
 
   const divider = {

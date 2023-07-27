@@ -446,8 +446,19 @@ const LogEntries = styled("div", {
   base: {
     borderRadius: theme.borderRadius,
     padding: `0 ${theme.space[4]}`,
-    fontSize: theme.font.size.mono_sm,
     backgroundColor: theme.color.background.surface,
+  },
+  variants: {
+    error: {
+      true: {
+        padding: `0 ${theme.space[5]}`,
+        backgroundColor: theme.color.background.red,
+      },
+      false: {},
+    },
+  },
+  defaultVariants: {
+    error: false,
   },
 });
 
@@ -466,13 +477,23 @@ const LogEntry = styled("div", {
   },
 });
 
+const LogError = styled("div", {
+  base: {
+    ...utility.stack(2),
+    paddingTop: theme.space[4],
+    paddingBottom: theme.space[4],
+  },
+});
+
 const LogEntryTime = styled("div", {
   base: {
     flexShrink: 0,
     minWidth: 89,
     textAlign: "left",
     color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.mono_sm,
     lineHeight: theme.font.lineHeight,
+    fontFamily: theme.font.family.code,
   },
 });
 
@@ -483,6 +504,19 @@ const LogEntryMessage = styled("span", {
     overflowWrap: "break-word",
     lineHeight: theme.font.lineHeight,
     color: theme.color.text.primary.surface,
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_sm,
+  },
+});
+
+const LogErrorMessage = styled("span", {
+  base: {
+    lineHeight: 2,
+    whiteSpace: "pre-wrap",
+    overflowWrap: "break-word",
+    fontFamily: theme.font.family.code,
+    color: theme.color.text.primary.surface,
+    fontSize: theme.font.size.mono_sm,
   },
 });
 
@@ -504,6 +538,18 @@ const LogMoreIndicatorIcon = styled("div", {
     opacity: theme.iconOpacity,
   },
 });
+
+const DUMMY_ERROR_JSON = {
+  errorType: "TypeError",
+  errorMessage: "Cannot read properties of undefined (reading 'charAt')",
+  stack: [
+    "TypeError: Cannot read properties of undefined (reading 'charAt')",
+    "    at capitalize (file:///var/task/packages/functions/src/typeform/intake.mjs:33499:16)",
+    "    at file:///var/task/packages/functions/src/typeform/intake.mjs:33444:14",
+    "    at processTicksAndRejections (node:internal/process/task_queues:96:5)",
+    "    at async file:///var/task/packages/functions/src/typeform/intake.mjs:32376:20",
+  ],
+};
 
 export function Logs() {
   const nav = useNavigate();
@@ -950,7 +996,7 @@ export function Logs() {
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
             const [tab, setTab] = createSignal<
-              "details" | "request" | "response"
+              "details" | "request" | "response" | "error"
             >("details");
 
             const shortDate = createMemo(() =>
@@ -1006,6 +1052,12 @@ export function Logs() {
                     <LogDetailHeader>
                       <Row space="5" vertical="center">
                         <LogDetailHeaderTitle
+                          onClick={() => setTab("error")}
+                          state={tab() === "error" ? "active" : "inactive"}
+                        >
+                          Error
+                        </LogDetailHeaderTitle>
+                        <LogDetailHeaderTitle
                           onClick={() => setTab("details")}
                           state={
                             live()
@@ -1015,7 +1067,7 @@ export function Logs() {
                               : "inactive"
                           }
                         >
-                          Details
+                          Logs
                         </LogDetailHeaderTitle>
                         <Show when={live()}>
                           <LogDetailHeaderTitle
@@ -1079,8 +1131,24 @@ export function Logs() {
                         </Row>
                       </Show>
                     </LogDetailHeader>
-                    <LogEntries>
+                    <LogEntries error={tab() === "error"}>
                       <Switch>
+                        <Match when={tab() === "error"}>
+                          <LogError>
+                            <Text
+                              code
+                              on="surface"
+                              size="mono_base"
+                              weight="medium"
+                              leading="normal"
+                            >
+                              {DUMMY_ERROR_JSON.stack[0]}
+                            </Text>
+                            <LogErrorMessage>
+                              {DUMMY_ERROR_JSON.stack.slice(1).join("\n")}
+                            </LogErrorMessage>
+                          </LogError>
+                        </Match>
                         <Match when={tab() === "details"}>
                           {invocation.logs.map((entry) => (
                             <LogEntry>

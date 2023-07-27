@@ -1,10 +1,6 @@
 import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
 
-const tipBackground = `hsla(${theme.color.base.blue}, 25%)`;
-const dangerBackground = `hsla(${theme.color.base.red}, 25%)`;
-const cautionBackground = `hsla(${theme.color.base.brand}, 25%)`;
-
 export const Tag = styled("div", {
   base: {
     flex: "0 0 auto",
@@ -30,18 +26,18 @@ export const Tag = styled("div", {
         color: theme.color.text.dimmed.base,
       },
       tip: {
-        borderColor: tipBackground,
-        backgroundColor: tipBackground,
+        borderColor: theme.color.background.blue,
+        backgroundColor: theme.color.background.blue,
         color: `hsla(${theme.color.blue.l2}, 100%)`,
       },
       caution: {
-        borderColor: cautionBackground,
-        backgroundColor: cautionBackground,
+        borderColor: theme.color.background.accent,
+        backgroundColor: theme.color.background.accent,
         color: `hsla(${theme.color.brand.l2}, 100%)`,
       },
       danger: {
-        borderColor: dangerBackground,
-        backgroundColor: dangerBackground,
+        borderColor: theme.color.background.red,
+        backgroundColor: theme.color.background.red,
         color: `hsla(${theme.color.red.l2}, 100%)`,
       },
     },
