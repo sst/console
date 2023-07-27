@@ -153,7 +153,7 @@ export const regions = zod(
     const regions = await client
       .send(new DescribeRegionsCommand({}))
       .then((r) => r.Regions || []);
-    return regions;
+    return [...new Set(regions.map((r) => r.RegionName!))];
   }
 );
 
@@ -166,13 +166,56 @@ export const integrate = zod(
     const account = await fromID(input.awsAccountID);
     console.log("integrating account", account);
     if (!account) return;
+    const iam = new IAMClient({
+      credentials: input.credentials,
+    });
+    const suffix = Config.STAGE !== "production" ? "-" + Config.STAGE : "";
+    const roleName = "SSTConsolePublisher" + suffix;
+    await iam
+      .send(
+        new DeleteRolePolicyCommand({
+          RoleName: roleName,
+          PolicyName: "eventbus",
+        })
+      )
+      .catch((err) => {});
+    console.log("deleted role policy");
+    await iam
+      .send(
+        new DeleteRoleCommand({
+          RoleName: roleName,
+        })
+      )
+      .catch((err) => {});
+    console.log("deleted role");
+
+    const role = await iam.send(
+      new CreateRoleCommand({
+        RoleName: roleName,
+        AssumeRolePolicyDocument: JSON.stringify({
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Principal: {
+                Service: "events.amazonaws.com",
+              },
+              Action: "sts:AssumeRole",
+            },
+          ],
+        }),
+      })
+    );
+    console.log("created role");
+
+    const r = await regions(input.credentials);
+    console.log("regions", r);
+
     await Promise.all(
-      (
-        await regions(input.credentials)
-      ).map(async (region) => {
+      r.map(async (region) => {
         const config = {
           credentials: input.credentials,
-          region: region.RegionName!,
+          region: region!,
         };
         console.log("integrating region", region);
 
@@ -181,10 +224,8 @@ export const integrate = zod(
 
         const s3 = new S3Client(config);
         const eb = new EventBridgeClient(config);
-        const iam = new IAMClient(config);
-        const suffix = Config.STAGE !== "production" ? "-" + Config.STAGE : "";
 
-        console.log("found sst bucket", b.bucket);
+        console.log(region, "found sst bucket", b.bucket);
 
         await s3.send(
           new PutBucketNotificationConfigurationCommand({
@@ -194,43 +235,11 @@ export const integrate = zod(
             },
           })
         );
-        console.log("enabled s3 notification");
+        console.log(region, "enabled s3 notification");
 
-        await iam
-          .send(
-            new DeleteRolePolicyCommand({
-              RoleName: "SSTConsolePublisher" + suffix,
-              PolicyName: "eventbus",
-            })
-          )
-          .catch(() => {});
-        await iam
-          .send(
-            new DeleteRoleCommand({
-              RoleName: "SSTConsolePublisher" + suffix,
-            })
-          )
-          .catch(() => {});
-        const role = await iam.send(
-          new CreateRoleCommand({
-            RoleName: "SSTConsolePublisher" + suffix,
-            AssumeRolePolicyDocument: JSON.stringify({
-              Version: "2012-10-17",
-              Statement: [
-                {
-                  Effect: "Allow",
-                  Principal: {
-                    Service: "events.amazonaws.com",
-                  },
-                  Action: "sts:AssumeRole",
-                },
-              ],
-            }),
-          })
-        );
         await iam.send(
           new PutRolePolicyCommand({
-            RoleName: role.Role!.RoleName,
+            RoleName: roleName,
             PolicyName: "eventbus",
             PolicyDocument: JSON.stringify({
               Version: "2012-10-17",
@@ -244,7 +253,7 @@ export const integrate = zod(
             }),
           })
         );
-        console.log("created publisher role");
+        console.log(region, "created role policy");
 
         await eb.send(
           new PutRuleCommand({
@@ -272,7 +281,7 @@ export const integrate = zod(
             ],
           })
         );
-        console.log("created eventbus rule");
+        console.log(region, "created eventbus rule");
 
         let token: string | undefined;
         while (true) {
@@ -309,7 +318,7 @@ export const integrate = zod(
                   awsAccountID: account.id,
                 });
             });
-            console.log("found", stageName, appName);
+            console.log(region, "found", stageName, appName);
           }
           if (!list.ContinuationToken) break;
         }
