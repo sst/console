@@ -208,6 +208,24 @@ export const integrate = zod(
     );
     console.log("created role");
 
+    await iam.send(
+      new PutRolePolicyCommand({
+        RoleName: roleName,
+        PolicyName: "eventbus",
+        PolicyDocument: JSON.stringify({
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Action: ["events:PutEvents"],
+              Resource: [process.env.EVENT_BUS_ARN],
+            },
+          ],
+        }),
+      })
+    );
+    console.log("created role policy");
+
     const r = await regions(input.credentials);
     console.log("regions", r);
 
@@ -236,24 +254,6 @@ export const integrate = zod(
           })
         );
         console.log(region, "enabled s3 notification");
-
-        await iam.send(
-          new PutRolePolicyCommand({
-            RoleName: roleName,
-            PolicyName: "eventbus",
-            PolicyDocument: JSON.stringify({
-              Version: "2012-10-17",
-              Statement: [
-                {
-                  Effect: "Allow",
-                  Action: ["events:PutEvents"],
-                  Resource: [process.env.EVENT_BUS_ARN],
-                },
-              ],
-            }),
-          })
-        );
-        console.log(region, "created role policy");
 
         await eb.send(
           new PutRuleCommand({
