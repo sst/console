@@ -1,5 +1,5 @@
 import { styled } from "@macaron-css/solid";
-import { JSX, ComponentProps } from "solid-js";
+import { JSX, Show, ComponentProps } from "solid-js";
 import { theme } from "./theme";
 import { IconCheck } from "$/ui/icons";
 import { CSSProperties } from "@macaron-css/core";
@@ -173,6 +173,13 @@ const TextButtonRoot = styled("span", {
     transition: `color ${theme.colorFadeDuration} ease-out`,
   },
   variants: {
+    disabled: {
+      true: {
+        opacity: 0.4,
+        pointerEvents: "none",
+      },
+      false: {},
+    },
     on: {
       base: {
         color: theme.color.text.secondary.base,
@@ -222,6 +229,7 @@ const TextButtonRoot = styled("span", {
   ],
   defaultVariants: {
     on: "base",
+    disabled: false,
     completing: false,
   },
 });
@@ -250,13 +258,15 @@ type TextButtonProps = ComponentProps<typeof TextButtonRoot> & {
 export function TextButton(props: TextButtonProps) {
   return (
     <TextButtonRoot {...props}>
-      {props.completing ? (
-        <TextButtonIcon>
-          <IconCheck />
-        </TextButtonIcon>
-      ) : (
-        <TextButtonIcon>{props.icon}</TextButtonIcon>
-      )}
+      <Show when={props.icon}>
+        {props.completing ? (
+          <TextButtonIcon>
+            <IconCheck />
+          </TextButtonIcon>
+        ) : (
+          <TextButtonIcon>{props.icon}</TextButtonIcon>
+        )}
+      </Show>
       {props.children}
     </TextButtonRoot>
   );

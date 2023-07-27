@@ -90,14 +90,12 @@ const LogLoadingIndicatorIcon = styled("div", {
     padding: 2,
     width: 20,
     height: 20,
-    color: theme.color.text.dimmed.base,
+    color: theme.color.accent,
     opacity: theme.iconOpacity,
   },
   variants: {
     pulse: {
-      true: {
-        animation: "pulse 1.5s linear infinite",
-      },
+      true: {},
       false: {},
     },
   },
@@ -106,27 +104,26 @@ const LogLoadingIndicatorIcon = styled("div", {
   },
 });
 
-const LogClearButton = styled("span", {
-  base: {
-    lineHeight: "normal",
-    fontSize: theme.font.size.sm,
-    color: theme.color.text.secondary.base,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      color: theme.color.text.primary.base,
+const LogLoadingIndicatorIconSvg = style({
+  selectors: {
+    [`${LogLoadingIndicatorIcon.selector({ pulse: true })} &`]: {
+      animation: "glow-pulse 1.7s linear infinite alternate",
     },
   },
 });
 
-globalKeyframes("pulse", {
+globalKeyframes("glow-pulse", {
   "0%": {
     opacity: 0.3,
+    filter: `drop-shadow(0 0 1px ${theme.color.accent})`,
   },
   "50%": {
     opacity: 1,
+    filter: `drop-shadow(0 0 2px ${theme.color.accent})`,
   },
   "100%": {
     opacity: 0.3,
+    filter: `drop-shadow(0 0 1px ${theme.color.accent})`,
   },
 });
 
@@ -153,7 +150,7 @@ const LogContainer = styled("div", {
 const LogSummary = styled("div", {
   base: {
     ...utility.row(3),
-    height: 48,
+    height: 51,
     fontSize: theme.font.size.mono_sm,
     alignItems: "center",
     padding: `0 ${theme.space[3]}`,
@@ -193,9 +190,7 @@ const InvokeRoot = styled("div", {
         overflow: "auto",
         minHeight: 170,
       },
-      false: {
-        height: 64,
-      },
+      false: {},
     },
   },
 });
@@ -203,10 +198,12 @@ const InvokeRoot = styled("div", {
 const InvokeControls = styled("div", {
   base: {
     ...utility.row(0),
+    height: 51,
     justifyContent: "space-between",
-    padding: `${theme.space[3]} ${theme.space[3]} ${theme.space[3]} ${theme.space[4]}`,
+    padding: `0 ${theme.space[3]} 0 ${theme.space[4]}`,
     selectors: {
       [`${InvokeRoot.selector({ expand: true })} &`]: {
+        height: "auto",
         flex: "0 0 auto",
         padding: `${theme.space[3]} ${theme.space[3]} 0 ${theme.space[4]}`,
       },
@@ -234,6 +231,24 @@ const InvokeControlsCancel = styled(LinkButton, {
       [`${InvokeRoot.selector({ expand: true })} &`]: {
         display: "initial",
       },
+    },
+  },
+});
+
+const InvokeControlsButton = style({
+  display: "none",
+  selectors: {
+    [`${InvokeRoot.selector({ expand: true })} &`]: {
+      display: "initial",
+    },
+  },
+});
+
+const InvokeControlsLinkButton = style({
+  display: "initial",
+  selectors: {
+    [`${InvokeRoot.selector({ expand: true })} &`]: {
+      display: "none",
     },
   },
 });
@@ -679,6 +694,18 @@ export function Logs() {
     invokeTextArea.scrollTop = 0;
   }
 
+  function handleInvoke(e: MouseEvent) {
+    e.stopPropagation();
+    const payload = JSON.parse(invokeTextArea.value || "{}");
+    setTimeout(() => setInvoke("invoking", false), 2000);
+    setInvoke("invoking", true);
+    rep().mutate.function_invoke({
+      stageID: resource()!.stageID,
+      payload,
+      functionARN: resource()!.metadata.arn,
+    });
+  }
+
   bar.register("lambda-payloads", async (filter, global) => {
     if (global && !filter) return [];
     return lambdaPayloads().map((x) => ({
@@ -761,40 +788,39 @@ export function Logs() {
               ) : isTryingToConnect ? (
                 <IconArrowsUpDown />
               ) : (
-                <IconBoltSolid />
+                <IconBoltSolid class={LogLoadingIndicatorIconSvg} />
               )}
             </LogLoadingIndicatorIcon>
-            <Row space="3" vertical="center">
-              <Text leading="normal" color="dimmed" size="sm">
-                {isSearch
-                  ? `Viewing logs from ${new Date().toLocaleTimeString()}`
-                  : isTryingToConnect
-                  ? "Trying to connect to local `sst dev`"
-                  : live()
-                  ? "Tailing logs from local `sst dev`"
-                  : "Tailing logs"}
-                &hellip;
-              </Text>
-              <Show when={invocations().length > 0}>
-                <LogClearButton
-                  onClick={() => {
-                    clearLogStore(logGroupKey());
-                    bus.emit("log.cleared", {
-                      functionID: logGroup(),
-                    });
-                  }}
-                >
-                  Clear
-                </LogClearButton>
-              </Show>
-            </Row>
+            <Text leading="normal" color="dimmed" size="sm">
+              {isSearch
+                ? `Viewing logs from ${new Date().toLocaleTimeString()}`
+                : isTryingToConnect
+                ? "Trying to connect to local `sst dev`"
+                : live()
+                ? "Tailing logs from local `sst dev`"
+                : "Tailing logs"}
+              &hellip;
+            </Text>
           </Row>
-          <Show when={!live()}>
-            <Dropdown size="sm" label="View">
-              <Dropdown.RadioGroup value={mode()} onChange={setMode}>
-                <Dropdown.RadioItem value="tail">Live</Dropdown.RadioItem>
-                <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
-                {/*
+          <Row space="4" vertical="center">
+            <Show when={invocations().length > 0}>
+              <TextButton
+                onClick={() => {
+                  clearLogStore(logGroupKey());
+                  bus.emit("log.cleared", {
+                    functionID: logGroup(),
+                  });
+                }}
+              >
+                Clear
+              </TextButton>
+            </Show>
+            <Show when={!live()}>
+              <Dropdown size="sm" label="View">
+                <Dropdown.RadioGroup value={mode()} onChange={setMode}>
+                  <Dropdown.RadioItem value="tail">Live</Dropdown.RadioItem>
+                  <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
+                  {/*
                 <Dropdown.Seperator />
                 <Dropdown.RadioItem value="5min">5min ago</Dropdown.RadioItem>
                 <Dropdown.RadioItem value="15min">15min ago</Dropdown.RadioItem>
@@ -807,9 +833,10 @@ export function Logs() {
                   Specify a time&hellip;
                 </Dropdown.RadioItem>
                 */}
-              </Dropdown.RadioGroup>
-            </Dropdown>
-          </Show>
+                </Dropdown.RadioGroup>
+              </Dropdown>
+            </Show>
+          </Row>
         </LogLoadingIndicator>
         <Show when={!isSearch}>
           <InvokeRoot
@@ -827,7 +854,7 @@ export function Logs() {
               <InvokePayloadLabelIcon>
                 <IconCaretRightOutline />
               </InvokePayloadLabelIcon>
-              <Text code size="mono_base" color="dimmed">
+              <Text leading="normal" size="sm" color="dimmed">
                 Enter event payload
               </Text>
             </InvokePayloadLabel>
@@ -880,21 +907,19 @@ export function Logs() {
                 </InvokeControlsCancel>
                 <Button
                   color="secondary"
+                  onClick={handleInvoke}
                   disabled={invoke.invoking}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const payload = JSON.parse(invokeTextArea.value || "{}");
-                    setTimeout(() => setInvoke("invoking", false), 2000);
-                    setInvoke("invoking", true);
-                    rep().mutate.function_invoke({
-                      stageID: resource()!.stageID,
-                      payload,
-                      functionARN: resource()!.metadata.arn,
-                    });
-                  }}
+                  class={InvokeControlsButton}
                 >
                   {invoke.invoking ? "Invoking" : "Invoke"}
                 </Button>
+                <TextButton
+                  onClick={handleInvoke}
+                  disabled={invoke.invoking}
+                  class={InvokeControlsLinkButton}
+                >
+                  {invoke.invoking ? "Invoking..." : "Invoke"}
+                </TextButton>
               </Row>
             </InvokeControls>
           </InvokeRoot>
