@@ -14,6 +14,7 @@ import { Text } from "$/ui/text";
 import { FormInput } from "$/ui/form";
 import { Tag } from "$/ui/tag";
 import { Alert } from "$/ui/alert";
+import { Dropdown } from "$/ui/dropdown";
 import { IconButton, TextButton, Button, LinkButton } from "$/ui/button";
 import { utility } from "$/ui/utility";
 import {
@@ -468,48 +469,33 @@ export function Design() {
       </ComponentType>
       <ComponentType name="Dropdown">
         <Variant name="Default">
-          <Dropdown value="Dropdown"></Dropdown>
+          <Dropdown label="Dropdown">
+            <Dropdown.RadioGroup value="selected">
+              <Dropdown.RadioItem value="live">Live</Dropdown.RadioItem>
+              <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
+              <Dropdown.Seperator />
+              <Dropdown.RadioItem value="selected">Selected</Dropdown.RadioItem>
+              <Dropdown.RadioItem value="long">
+                A really really really long dropdown option that should overflow
+              </Dropdown.RadioItem>
+            </Dropdown.RadioGroup>
+          </Dropdown>
         </Variant>
-        <Variant name="Small">
-          <Dropdown size="sm" value="Dropdown"></Dropdown>
+        <Variant name="Sm">
+          <Dropdown size="sm" label="Dropdown">
+            <Dropdown.RadioGroup value="selected">
+              <Dropdown.RadioItem value="live">Live</Dropdown.RadioItem>
+            </Dropdown.RadioGroup>
+          </Dropdown>
         </Variant>
         <Variant name="Overflow">
-          <Dropdown value="Test is a really long string that should overflow"></Dropdown>
-        </Variant>
-        <Variant name="Open Left" style={{ height: "480px" }}>
-          <Dropdown open value="Dropdown">
-            <DropdownOption>Live</DropdownOption>
-            <DropdownOption>Recent</DropdownOption>
-            <DropdownDivider />
-            <DropdownOption>5mins ago</DropdownOption>
-            <DropdownOption>15mins ago</DropdownOption>
-            <DropdownOption>1hr ago</DropdownOption>
-            <DropdownOption>6hrs ago</DropdownOption>
-            <DropdownOption>12hrs ago</DropdownOption>
-            <DropdownOption>1 day ago</DropdownOption>
-            <DropdownDivider />
-            <DropdownOption>
-              A really really really long dropdown option that should overflow
-            </DropdownOption>
-          </Dropdown>
-        </Variant>
-        <Variant name="Open Small" style={{ height: "240px" }}>
-          <Dropdown open size="sm" value="Dropdown">
-            <DropdownOption>Live</DropdownOption>
-            <DropdownOption>Recent</DropdownOption>
-          </Dropdown>
-        </Variant>
-        <Variant name="Open Right" style={{ height: "240px" }}>
           <Dropdown
-            open
-            align="right"
-            value="Dropdown"
-            style={{ "margin-left": "200px" }}
+            size="base"
+            label="A really really really long dropdown option that should overflow"
           >
-            <DropdownOption>Live</DropdownOption>
-            <DropdownOption>
-              A really really really long dropdown option that should overflow
-            </DropdownOption>
+            <Dropdown.RadioGroup value="selected">
+              <Dropdown.RadioItem value="live">Live</Dropdown.RadioItem>
+            </Dropdown.RadioGroup>
           </Dropdown>
         </Variant>
       </ComponentType>
@@ -1217,141 +1203,6 @@ function SelectLogTime() {
         </Stack>
       </SelectLogTimeForm>
     </FakeModal>
-  );
-}
-
-const DropdownRoot = styled("div", {
-  base: {
-    position: "relative",
-  },
-  variants: {
-    size: {
-      sm: {},
-      base: {},
-    },
-    align: {
-      left: {},
-      right: {},
-    },
-    open: {
-      true: {},
-      false: {},
-    },
-  },
-  defaultVariants: {
-    open: false,
-    size: "base",
-    align: "left",
-  },
-});
-
-const DropdownButton = styled("div", {
-  base: {
-    ...utility.row(2),
-    alignItems: "center",
-    justifyContent: "space-between",
-    height: 32,
-    borderRadius: theme.borderRadius,
-    padding: `0 ${theme.space[2]} 0 ${theme.space[3]}`,
-    backgroundColor: theme.color.input.background,
-    transition: `box-shadow ${theme.colorFadeDuration} ease-out`,
-    maxWidth: 200,
-    boxShadow: `
-      0 0 0 1px inset ${theme.color.input.border},
-      ${theme.color.input.shadow}
-    `,
-
-    selectors: {
-      [`${DropdownRoot.selector({ size: "base" })} &`]: {
-        height: 40,
-      },
-      [`${DropdownRoot.selector({ size: "sm" })} &`]: {
-        height: 32,
-      },
-    },
-  },
-});
-
-const DropdownButtonIcon = styled("div", {
-  base: {
-    flex: "0 0 auto",
-    width: 20,
-    height: 20,
-    backgroundRepeat: "no-repeat",
-    backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(
-      chevronDownString
-    )}")`,
-  },
-});
-
-const DropdownOptions = styled("div", {
-  base: {
-    marginTop: theme.space[1],
-    padding: `${theme.space[1]} 0`,
-    border: `1px solid ${theme.color.divider.base}`,
-    position: "absolute",
-    zIndex: 10,
-    borderRadius: theme.borderRadius,
-    backdropFilter: "blur(10px)",
-    WebkitBackdropFilter: "blur(10px)",
-    background: theme.color.background.modal,
-    overflow: "hidden",
-    boxShadow: theme.color.shadow.drop.medium,
-    width: 220,
-    selectors: {
-      [`${DropdownRoot.selector({ align: "left" })} &`]: {
-        left: 0,
-      },
-      [`${DropdownRoot.selector({ align: "right" })} &`]: {
-        right: 0,
-      },
-      [`${DropdownRoot.selector({ open: true })} &`]: {
-        display: "block",
-      },
-      [`${DropdownRoot.selector({ open: false })} &`]: {
-        display: "none",
-      },
-    },
-  },
-});
-
-export const DropdownOption = styled("div", {
-  base: {
-    ...utility.textLine(),
-    padding: `${theme.space[3]} ${theme.space[3.5]}`,
-    fontSize: theme.font.size.sm,
-    color: theme.color.text.secondary.base,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      color: theme.color.text.primary.surface,
-      backgroundColor: theme.color.background.hover,
-    },
-  },
-});
-
-export const DropdownDivider = styled("div", {
-  base: {
-    height: 1,
-    margin: `${theme.space[1]} 0`,
-    backgroundColor: theme.color.divider.surface,
-  },
-});
-
-type DropdownProps = ComponentProps<typeof DropdownRoot> & {
-  value: string;
-};
-
-export function Dropdown(props: DropdownProps) {
-  return (
-    <DropdownRoot {...props}>
-      <DropdownButton>
-        <Text line size={props.size === "sm" ? "xs" : "sm"}>
-          {props.value}
-        </Text>
-        <DropdownButtonIcon />
-      </DropdownButton>
-      <DropdownOptions>{props.children}</DropdownOptions>
-    </DropdownRoot>
   );
 }
 

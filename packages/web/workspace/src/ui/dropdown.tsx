@@ -13,7 +13,6 @@ const Trigger = styled(DropdownMenu.Trigger, {
     border: 0,
     alignItems: "center",
     justifyContent: "space-between",
-    height: 32,
     borderRadius: theme.borderRadius,
     padding: `0 ${theme.space[2]} 0 ${theme.space[3]}`,
     backgroundColor: theme.color.input.background,
@@ -24,6 +23,19 @@ const Trigger = styled(DropdownMenu.Trigger, {
       ${theme.color.input.shadow}
     `,
   },
+  variants: {
+    size: {
+      sm: {
+        height: 32,
+      },
+      base: {
+        height: 40,
+      },
+    },
+  },
+  defaultVariants: {
+    size: "base",
+  },
 });
 
 const Icon = styled(DropdownMenu.Icon, {
@@ -33,6 +45,7 @@ const Icon = styled(DropdownMenu.Icon, {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    color: theme.color.icon.primary,
     flexShrink: 0,
     selectors: {
       "&[data-expanded]": {
@@ -77,14 +90,19 @@ const RadioGroup = styled(DropdownMenu.RadioGroup, {});
 const RadioItem = styled(DropdownMenu.RadioItem, {
   base: {
     ...utility.textLine(),
+    lineHeight: "normal",
     padding: `${theme.space[3]} ${theme.space[3.5]}`,
     fontSize: theme.font.size.sm,
     color: theme.color.text.secondary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     selectors: {
-      "&[data-highlighted], &[data-checked]": {
+      "&[data-highlighted]": {
         color: theme.color.text.primary.surface,
         backgroundColor: theme.color.background.hover,
+      },
+      "&[data-checked]": {
+        color: theme.color.text.primary.surface,
+        backgroundColor: theme.color.background.selected,
       },
     },
   },
@@ -99,12 +117,17 @@ const Seperator = styled(DropdownMenu.Separator, {
   },
 });
 
-export function Dropdown(props: ComponentProps<typeof DropdownMenu.Root>) {
+type Props = ComponentProps<typeof DropdownMenu.Root> & {
+  size?: "sm" | "base";
+  label: string;
+};
+
+export function Dropdown(props: Props) {
   return (
-    <DropdownMenu.Root>
-      <Trigger>
-        <Text line size="xs">
-          View
+    <DropdownMenu.Root {...props}>
+      <Trigger size={props.size}>
+        <Text line size={props.size === "sm" ? "xs" : "sm"}>
+          {props.label}
         </Text>
         <Icon>
           <IconChevronDown width={15} height={15} />

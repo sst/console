@@ -2,11 +2,6 @@ import { LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Tag, Text, Select } from "$/ui";
-import {
-  Dropdown as Dropdown2,
-  DropdownOption,
-  DropdownDivider,
-} from "../../design";
 import { Dropdown } from "$/ui/dropdown";
 import {
   IconBookmark,
@@ -795,7 +790,7 @@ export function Logs() {
             </Row>
           </Row>
           <Show when={!live()}>
-            <Dropdown>
+            <Dropdown size="sm" label="View">
               <Dropdown.RadioGroup value={mode()} onChange={setMode}>
                 <Dropdown.RadioItem value="tail">Live</Dropdown.RadioItem>
                 <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>

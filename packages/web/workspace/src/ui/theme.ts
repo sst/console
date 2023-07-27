@@ -130,6 +130,7 @@ const light = (() => {
   const background = {
     base: `hsla(${base.white}, 100%)`,
     hover: `hsla(${base.black}, 4%)`,
+    selected: `hsla(${base.black}, 7%)`,
     surface: `hsla(${base.black}, 3%)`,
     modal: `hsla(${base.gray}, 80%)`,
     overlay: `hsla(${base.black}, 3%)`,
@@ -326,6 +327,7 @@ const dark = ((): typeof light => {
   const background = {
     base: `hsla(${base.black}, 100%)`,
     hover: `hsla(${base.white}, 4%)`,
+    selected: `hsla(${base.white}, 7%)`,
     surface: `hsla(${base.white}, 5%)`,
     modal: `hsla(${base.gray}, 90%)`,
     overlay: `hsla(${base.black}, 50%)`,
