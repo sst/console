@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -77,6 +77,9 @@ importers:
       drizzle-zod:
         specifier: 0.4.4
         version: 0.4.4(drizzle-orm@0.27.2)(zod@3.21.4)
+      remeda:
+        specifier: ^1.17.1
+        version: 1.17.1
       undici:
         specifier: ^5.22.0
         version: 5.22.0

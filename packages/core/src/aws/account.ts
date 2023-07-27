@@ -129,7 +129,9 @@ export const bootstrap = zod(
       (x) => x.OutputKey === "BucketName"
     )?.OutputValue;
 
-    if (!bucket) throw new Error("BucketName not found");
+    if (!bucket) {
+      return;
+    }
 
     return {
       bucket,

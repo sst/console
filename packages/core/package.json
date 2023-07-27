@@ -31,6 +31,7 @@
     "@planetscale/database": "^1.7.0",
     "drizzle-orm": "0.27.2",
     "drizzle-zod": "0.4.4",
+    "remeda": "^1.17.1",
     "undici": "^5.22.0",
     "zod": "^3.21.4"
   }
