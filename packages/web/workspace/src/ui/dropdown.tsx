@@ -126,7 +126,12 @@ export function Dropdown(props: Props) {
   return (
     <DropdownMenu.Root {...props}>
       <Trigger size={props.size}>
-        <Text line color="secondary" size={props.size === "sm" ? "xs" : "sm"}>
+        <Text
+          line
+          leading="normal"
+          color="secondary"
+          size={props.size === "sm" ? "xs" : "sm"}
+        >
           {props.label}
         </Text>
         <Icon>

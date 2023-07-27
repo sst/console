@@ -12,6 +12,7 @@ import {
   IconArrowsUpDown,
   IconChevronUpDown,
   IconMagnifyingGlass,
+  IconArrowPathRoundedSquare,
 } from "$/ui/icons";
 import {
   IconFunction,
@@ -802,8 +803,8 @@ export function Logs() {
               &hellip;
             </Text>
           </Row>
-          <Row space="4" vertical="center">
-            <Show when={invocations().length > 0}>
+          <Row space="3" vertical="center">
+            <Show when={live() && invocations().length > 0}>
               <TextButton
                 onClick={() => {
                   clearLogStore(logGroupKey());
@@ -814,6 +815,15 @@ export function Logs() {
               >
                 Clear
               </TextButton>
+            </Show>
+            <Show when={!live()}>
+              <IconButton title="Reload recent logs">
+                <IconArrowPathRoundedSquare
+                  display="block"
+                  width={20}
+                  height={20}
+                />
+              </IconButton>
             </Show>
             <Show when={!live()}>
               <Dropdown size="sm" label="View">
