@@ -507,6 +507,24 @@ const LogEntryMessage = styled("span", {
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_sm,
   },
+  variants: {
+    error: {
+      true: {
+        color: `hsla(${theme.color.base.red}, 100%)`,
+      },
+      false: {},
+    },
+  },
+});
+
+const LogEntryMessageErrorTitle = styled("span", {
+  base: {
+    color: `hsla(${theme.color.base.red}, 100%)`,
+    fontSize: theme.font.size.mono_sm,
+    fontWeight: 500,
+    fontFamily: theme.font.family.code,
+    lineHeight: "normal",
+  },
 });
 
 const LogErrorMessage = styled("span", {
@@ -1150,14 +1168,35 @@ export function Logs() {
                           </LogError>
                         </Match>
                         <Match when={tab() === "details"}>
-                          {invocation.logs.map((entry) => (
-                            <LogEntry>
-                              <LogEntryTime>
-                                {entry.timestamp.toLocaleTimeString()}
-                              </LogEntryTime>
-                              <LogEntryMessage>{entry.message}</LogEntryMessage>
-                            </LogEntry>
-                          ))}
+                          {invocation.logs.map((entry, i) => {
+                            return (
+                              <LogEntry>
+                                <LogEntryTime>
+                                  {entry.timestamp.toLocaleTimeString()}
+                                </LogEntryTime>
+                                <Show when={i === 4}>
+                                  <Stack
+                                    style={{ "min-width": "0" }}
+                                    space="1.5"
+                                  >
+                                    <LogEntryMessageErrorTitle>
+                                      {DUMMY_ERROR_JSON.stack[0]}
+                                    </LogEntryMessageErrorTitle>
+                                    <LogEntryMessage error>
+                                      {DUMMY_ERROR_JSON.stack
+                                        .slice(1)
+                                        .join("\n")}
+                                    </LogEntryMessage>
+                                  </Stack>
+                                </Show>
+                                <Show when={i !== 4}>
+                                  <LogEntryMessage>
+                                    {entry.message}
+                                  </LogEntryMessage>
+                                </Show>
+                              </LogEntry>
+                            );
+                          })}
                         </Match>
                         <Match when={tab() === "request"}>
                           <LogEntry>
