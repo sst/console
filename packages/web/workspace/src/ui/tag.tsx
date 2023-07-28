@@ -7,9 +7,9 @@ export const Tag = styled("div", {
     letterSpacing: 0.5,
     justifyContent: "center",
     textAlign: "center",
-    fontSize: theme.font.size.xs,
+    fontSize: theme.font.size.mono_xs,
     padding: `0 ${theme.space[3]}`,
-    height: 28,
+    height: 26,
     display: "flex",
     alignItems: "center",
     textTransform: "uppercase",
@@ -55,10 +55,10 @@ export const Tag = styled("div", {
     },
     size: {
       large: {
-        width: 120,
+        width: 114,
       },
       small: {
-        width: 70,
+        width: 66,
       },
       auto: {},
     },

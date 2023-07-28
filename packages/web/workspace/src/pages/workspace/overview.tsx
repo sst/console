@@ -267,8 +267,9 @@ export function Overview() {
 const StageRoot = styled(Link, {
   base: {
     ...utility.row(3),
+    height: 58,
     alignItems: "center",
-    padding: theme.space[4],
+    padding: `0 ${theme.space[4]}`,
     justifyContent: "space-between",
     borderTop: `1px solid ${theme.color.divider.base}`,
     transition: `background-color ${theme.colorFadeDuration} ease`,
@@ -348,8 +349,9 @@ function StageCard(props: StageCardProps) {
 const UserRoot = styled("div", {
   base: {
     ...utility.row(3),
+    height: 58,
     alignItems: "center",
-    padding: theme.space[4],
+    padding: `0 ${theme.space[4]}`,
     justifyContent: "space-between",
     borderTop: `1px solid ${theme.color.divider.base}`,
     selectors: {
