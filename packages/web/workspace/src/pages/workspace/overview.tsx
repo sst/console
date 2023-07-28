@@ -1,6 +1,9 @@
 import { AppStore } from "$/data/app";
+import { UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
+import { useAuth } from "$/providers/auth";
+import { useStorage } from "$/providers/account";
 import { createSubscription } from "$/providers/replicache";
 import {
   Button,
@@ -124,6 +127,7 @@ export function Overview() {
         }
       : AccountStore.list()
   );
+  const users = createSubscription(UserStore.list, []);
   const stages = createSubscription(
     () =>
       query.dummy
@@ -224,45 +228,33 @@ export function Overview() {
                     );
                   }}
                 </For>
-                {/*
                 <Card>
                   <CardHeader>
                     <Text code size="mono_sm" color="dimmed">
-                      Team: 4
+                      Team: {users().length}
                     </Text>
                   </CardHeader>
                   <div>
-                    <UserCard
-                      self
-                      email="spongebob@krusty-krab.com"
-                      status="active"
-                    />
-                    <UserCard
-                      email="patrick_star@krusty-krab.com"
-                      status="active"
-                    />
-                    <UserCard email="sandy@krusty-krab.com" status="invited" />
-                    <UserCard
-                      email="reallyreallylongemailthatshouldoverflowbecauseitstoolong@reallylongdomain.com"
-                      status="invited"
-                    />
+                    <For each={users()}>
+                      {(user) => {
+                        const auth = useAuth();
+                        const storage = useStorage();
+                        const currentUser = createMemo(
+                          () => auth[storage.value.account].token
+                        );
+                        return (
+                          <Show when={user.timeDeleted === null}>
+                            <UserCard
+                              email={user.email}
+                              status="active"
+                              self={currentUser().email === user.email}
+                            />
+                          </Show>
+                        );
+                      }}
+                    </For>
                   </div>
                 </Card>
-                */}
-                <Show when={(accounts() || []).length === 1}>
-                  <CardEmpty>
-                    <Link href="account">
-                      <Row space="2" vertical="center">
-                        <CardEmptyIcon>
-                          <IconPlus />
-                        </CardEmptyIcon>
-                        <Text leading="normal" size="sm" color="dimmed">
-                          Let's connect another AWS account
-                        </Text>
-                      </Row>
-                    </Link>
-                  </CardEmpty>
-                </Show>
               </List>
             </Stack>
           </Match>
@@ -383,7 +375,7 @@ function UserCard(props: UserCardProps) {
           text={props.email}
           style={{ width: "24px", height: "24px" }}
         />
-        <Text line size="base" weight="medium" leading="normal">
+        <Text line size="base" leading="normal">
           {props.email}
         </Text>
       </Row>
@@ -391,17 +383,23 @@ function UserCard(props: UserCardProps) {
         <Show when={props.status === "invited"}>
           <Tag level="tip">Invited</Tag>
         </Show>
-        <IconButton
-          disabled={props.self}
-          title="Remove from workspace"
-          onClick={() =>
-            window.confirm(
-              "Are you sure you want to remove them from the workspace?"
-            )
-          }
-        >
-          <IconUserMinus width={18} height={18} style={{ display: "block" }} />
-        </IconButton>
+        {/*<Show when={!props.self}>*/}
+        <Show when={false}>
+          <IconButton
+            title="Remove from workspace"
+            onClick={() =>
+              window.confirm(
+                "Are you sure you want to remove them from the workspace?"
+              )
+            }
+          >
+            <IconUserMinus
+              width={18}
+              height={18}
+              style={{ display: "block" }}
+            />
+          </IconButton>
+        </Show>
       </Row>
     </UserRoot>
   );
