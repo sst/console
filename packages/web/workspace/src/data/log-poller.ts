@@ -1,5 +1,5 @@
 import { ReadTransaction } from "replicache";
-import type { LogPoller } from "@console/core/log-poller";
+import type { LogPoller } from "@console/core/log/poller";
 
 export function list() {
   return async (tx: ReadTransaction) => {

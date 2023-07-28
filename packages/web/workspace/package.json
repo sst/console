@@ -32,6 +32,7 @@
     "@solidjs/router": "^0.8.2",
     "@tanstack/solid-virtual": "3.0.0-beta.6",
     "aws-iot-device-sdk-v2": "^1.13.1",
+    "luxon": "^3.3.0",
     "modern-normalize": "^1.1.0",
     "remeda": "^1.17.1",
     "replicache": "^12.2.1",

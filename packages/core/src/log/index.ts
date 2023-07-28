@@ -1,33 +1,5 @@
 export * as Log from "./index";
-
-import { z } from "zod";
-import { zod } from "../util/zod";
-import { Stage } from "../app";
-import {
-  CloudWatchLogsClient,
-  GetQueryResultsCommand,
-  StartQueryCommand,
-} from "@aws-sdk/client-cloudwatch-logs";
-import { event } from "../event";
-
-export const Events = {
-  ScanCreated: event("log.scan.created", {
-    stageID: z.string(),
-    logGroup: z.string(),
-    start: z.number(),
-  }),
-};
-
-export const scan = zod(
-  z.object({
-    stageID: z.string(),
-    logGroup: z.string(),
-    start: z.number(),
-  }),
-  async (input) => {
-    await Events.ScanCreated.publish(input);
-  }
-);
+export { Search } from "./search";
 
 export type LogEvent =
   | ["e", number, string, string]

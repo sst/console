@@ -11,7 +11,7 @@ import { User } from "@console/core/user";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
-  .expose("log_scan", Log.scan)
+  .expose("log_search", Log.Search.search)
   .expose("function_invoke", Lambda.invoke)
   .expose("function_payload_save", Lambda.savePayload)
   .expose("function_payload_remove", Lambda.removePayload)

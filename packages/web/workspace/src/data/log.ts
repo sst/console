@@ -6,6 +6,7 @@ export const [LogStore, setLogStore] = createStore<
 >({});
 
 export function clearLogStore(input: string) {
+  invocations.delete(input);
   setLogStore(
     produce((state) => {
       state[input] = [];
@@ -37,7 +38,7 @@ interface Log {
 
 // stash log entries that come out of order before log start
 const pendingEntries = new Map<string, Log[]>();
-const invocations = new Set<string>();
+const invocations = new Map<string, Set<string>>();
 
 bus.on("log", (e) => {
   for (const log of e) {
@@ -46,7 +47,7 @@ bus.on("log", (e) => {
         const [_, timestamp, logGroup, requestId, cold] = log;
         setLogStore(
           produce((state) => {
-            if (invocations.has(requestId)) return;
+            if (invocations.get(logGroup)?.has(requestId)) return;
             let group = state[logGroup];
             if (!group) state[logGroup] = group = [];
             const pending = pendingEntries.get(requestId) || [];
@@ -57,7 +58,9 @@ bus.on("log", (e) => {
               cold: cold,
               logs: pending,
             });
-            invocations.add(requestId);
+            let set = invocations.get(logGroup);
+            if (!set) invocations.set(logGroup, (set = new Set()));
+            set.add(requestId);
           })
         );
         break;

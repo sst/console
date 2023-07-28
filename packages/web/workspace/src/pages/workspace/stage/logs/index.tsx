@@ -1,32 +1,26 @@
 import { LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Tag, Text, Select } from "$/ui";
+import { Tag, Text } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import {
   IconBookmark,
   IconArrowPath,
   IconArrowDown,
   IconBoltSolid,
-  IconCommandLine,
   IconArrowsUpDown,
   IconChevronUpDown,
   IconMagnifyingGlass,
   IconArrowPathRoundedSquare,
 } from "$/ui/icons";
-import {
-  IconFunction,
-  IconCaretRight,
-  IconArrowPathSpin,
-  IconCaretRightOutline,
-} from "$/ui/icons/custom";
+import { IconCaretRight, IconArrowPathSpin } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
-import { Button, LinkButton, TextButton, IconButton } from "$/ui/button";
+import { TextButton, IconButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
-import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
+import { useParams, useSearchParams } from "@solidjs/router";
 import {
   For,
   Match,
@@ -36,28 +30,19 @@ import {
   createMemo,
   createSignal,
   mergeProps,
+  onMount,
 } from "solid-js";
-import {
-  useFunctionsContext,
-  useResourcesContext,
-  useStageContext,
-} from "./context";
+import { useResourcesContext, useStageContext } from "../context";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_LOGS } from "./logs-dummy";
-import { useCommandBar } from "../command-bar";
-import { IconMap } from "./resources";
+import { useCommandBar } from "../../command-bar";
+import { IconMap } from "../resources";
 import { bus } from "$/providers/bus";
-import { createStore, unwrap } from "solid-js/store";
-import {
-  DialogPayloadSave,
-  DialogPayloadSaveControl,
-} from "./dialog-payload-save";
-import { LambdaPayloadStore } from "$/data/lambda-payload";
-import {
-  DialogPayloadManage,
-  DialogPayloadManageControl,
-} from "./dialog-payload-manage";
-import { DropdownMenu } from "@kobalte/core";
+import { unwrap } from "solid-js/store";
+import { useLocalContext } from "$/providers/local";
+import { Invoke, InvokeControl } from "./invoke";
+import { createId } from "@paralleldrive/cuid2";
+import { LogSearchStore } from "$/data/log-search";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -164,133 +149,6 @@ const LogSummary = styled("div", {
       },
       false: {
         opacity: 1,
-      },
-    },
-  },
-});
-
-const InvokeRoot = styled("div", {
-  base: {
-    ...utility.row(0),
-    borderTop: `1px solid ${theme.color.divider.base}`,
-    justifyContent: "space-between",
-    paddingLeft: theme.space[3],
-    alignItems: "center",
-    ":focus-within": {},
-  },
-  variants: {
-    expand: {
-      true: {
-        ...utility.stack(0),
-        backgroundColor: theme.color.input.background,
-        height: "auto",
-        alignItems: "stretch",
-        padding: 0,
-        paddingBottom: theme.space[3],
-        resize: "vertical",
-        overflow: "auto",
-        minHeight: 170,
-      },
-      false: {},
-    },
-  },
-});
-
-const InvokeControls = styled("div", {
-  base: {
-    ...utility.row(0),
-    height: 51,
-    justifyContent: "space-between",
-    padding: `0 ${theme.space[3]} 0 ${theme.space[4]}`,
-    selectors: {
-      [`${InvokeRoot.selector({ expand: true })} &`]: {
-        height: "auto",
-        flex: "0 0 auto",
-        padding: `${theme.space[3]} ${theme.space[3]} 0 ${theme.space[4]}`,
-      },
-    },
-  },
-});
-
-const InvokeControlsLeft = styled("div", {
-  base: {
-    ...utility.row(3),
-    alignItems: "center",
-    display: "none",
-    selectors: {
-      [`${InvokeRoot.selector({ expand: true })} &`]: {
-        display: "flex",
-      },
-    },
-  },
-});
-
-const InvokeControlsCancel = styled(LinkButton, {
-  base: {
-    display: "none",
-    selectors: {
-      [`${InvokeRoot.selector({ expand: true })} &`]: {
-        display: "initial",
-      },
-    },
-  },
-});
-
-const InvokeControlsButton = style({
-  display: "none",
-  selectors: {
-    [`${InvokeRoot.selector({ expand: true })} &`]: {
-      display: "initial",
-    },
-  },
-});
-
-const InvokeControlsLinkButton = style({
-  display: "initial",
-  selectors: {
-    [`${InvokeRoot.selector({ expand: true })} &`]: {
-      display: "none",
-    },
-  },
-});
-
-const InvokePayloadLabel = styled("div", {
-  base: {
-    ...utility.row(2),
-    alignItems: "center",
-    left: theme.space[3],
-    selectors: {
-      [`${InvokeRoot.selector({ expand: true })} &`]: {
-        display: "none",
-      },
-    },
-  },
-});
-
-const InvokePayloadLabelIcon = styled("div", {
-  base: {
-    width: 20,
-    height: 20,
-    color: theme.color.icon.dimmed,
-  },
-});
-
-const InvokeTextArea = styled("textarea", {
-  base: {
-    display: "none",
-    flex: "1 1 auto",
-    padding: theme.space[4],
-    border: "none",
-    resize: "none",
-    height: "100%",
-    lineHeight: theme.font.lineHeight,
-    appearance: "none",
-    fontSize: theme.font.size.mono_sm,
-    fontFamily: theme.font.family.code,
-    background: "transparent",
-    selectors: {
-      [`${InvokeRoot.selector({ expand: true })} &`]: {
-        display: "block",
       },
     },
   },
@@ -438,10 +296,6 @@ const LogDetailHeaderTitle = styled("div", {
   },
 });
 
-const LogLink = styled("a", {
-  base: {},
-});
-
 const LogEntries = styled("div", {
   base: {
     borderRadius: theme.borderRadius,
@@ -570,7 +424,7 @@ const DUMMY_ERROR_JSON = {
 };
 
 export function Logs() {
-  const nav = useNavigate();
+  const local = useLocalContext();
   const stage = useStageContext();
   const bar = useCommandBar();
   const params = useParams();
@@ -582,97 +436,6 @@ export function Logs() {
         | Extract<Resource.Info, { type: "Function" }>
         | undefined
   );
-  const key = createMemo(() => [stage.app.name, resource()?.cfnID].join("-"));
-  const lambdaPayloads = createSubscription(
-    () => LambdaPayloadStore.forKey(key()),
-    []
-  );
-
-  createEffect(() => {
-    console.log("payloads", lambdaPayloads());
-  });
-
-  const live = createMemo(() => resource()?.enrichment.live);
-
-  const functions = useFunctionsContext();
-  const context = createMemo(() => {
-    const parent = functions().get(resource()?.id || "")?.[0];
-    if (!parent) return;
-
-    switch (parent.type) {
-      case "EventBus":
-        return <Context type="EventBus" tag="Subscription" />;
-      case "Api": {
-        const route = parent.metadata.routes.find(
-          (r) => r.fn?.node === resource()?.addr
-        );
-        if (route) {
-          const [method, path] = route.route.split(" ");
-          return <Context type="Api" tag={method} extra={path} />;
-        }
-        break;
-      }
-      case "ApiGatewayV1Api": {
-        const route = parent.metadata.routes.find(
-          (r) => r.fn?.node === resource()?.addr
-        );
-        if (route) {
-          const [method, path] = route.route.split(" ");
-          return <Context type="Api" tag={method} extra={path} />;
-        }
-        break;
-      }
-      case "WebSocketApi": {
-        const route = parent.metadata.routes.find(
-          (r) => r.fn?.node === resource()?.addr
-        );
-        if (route) {
-          const [method, path] = route.route.split(" ");
-          return <Context type="Api" tag={method} extra={path} />;
-        }
-        break;
-      }
-      case "Topic": {
-        return <Context type="Topic" tag="Subscriber" />;
-      }
-      case "Bucket": {
-        return <Context type="Bucket" tag="Notification" />;
-      }
-      case "KinesisStream": {
-        return <Context type="KinesisStream" tag="Consumer" />;
-      }
-      case "AppSync": {
-        return <Context type="AppSync" tag="Source" />;
-      }
-      case "Table": {
-        return <Context type="Table" tag="Consumer" />;
-      }
-      case "Cognito": {
-        return <Context type="Cognito" tag="Trigger" />;
-      }
-      case "Cron": {
-        return <Context type="Cron" tag="Job" />;
-      }
-      case "Queue": {
-        return <Context type="Queue" tag="Consumer" />;
-      }
-      case "NextjsSite": {
-        return <Context type="NextjsSite" tag="Server" />;
-      }
-      case "SvelteKitSite": {
-        return <Context type="SvelteKitSite" tag="Server" />;
-      }
-      case "RemixSite": {
-        return <Context type="RemixSite" tag="Server" />;
-      }
-      case "AstroSite": {
-        return <Context type="AstroSite" tag="Server" />;
-      }
-      case "SolidStartSite": {
-        return <Context type="SolidStartSite" tag="Server" />;
-      }
-    }
-  });
 
   const logGroup = createMemo(() => {
     if (params.resourceID.includes("arn")) {
@@ -695,29 +458,37 @@ export function Logs() {
     return logGroup;
   });
 
-  const [mode, setMode] = createSignal<string>("recent");
+  const [view, setView] = createSignal("search");
+  const mode = createMemo(() => {
+    if (resource()?.enrichment.live) return "live";
+    if (view() === "tail") return "tail";
+    return "search";
+  });
 
   const logGroupKey = createMemo(() => {
     const base = logGroup();
-    if (live()) return base;
+    if (mode() === "live") return base;
     return base + "-" + mode();
   });
+
   const invocations = createMemo(() => {
     const result = query.dummy ? DUMMY_LOGS : LogStore[logGroupKey()] || [];
-    if (mode() === "tail" || live()) return result.slice().reverse();
+    if (mode() === "tail" || mode() === "live") return result.slice().reverse();
     return result;
   });
 
   const rep = useReplicache();
+
   const poller = createSubscription(() =>
     LogPollerStore.fromLogGroup(logGroup())
   );
+  const search = createSubscription(() =>
+    LogSearchStore.fromLogGroup(logGroup())
+  );
 
   createEffect(() => {
-    console.log("resource", resource());
     if (!logGroup()) return;
     if (poller()) return;
-    if (live()) return;
     if (mode() !== "tail") return;
     rep().mutate.log_poller_subscribe({
       logGroup: logGroup(),
@@ -726,99 +497,24 @@ export function Logs() {
   });
 
   createEffect(() => {
-    if (!logGroup()) return;
-    if (live()) return;
-    if (mode() !== "recent") return;
-    rep().mutate.log_scan({
+    if (mode() !== "search") return;
+    createSearch();
+  });
+
+  function createSearch(start?: number) {
+    if (!start) clearLogStore(logGroupKey());
+    rep().mutate.log_search({
+      stageID: stage.stage.id,
       logGroup: logGroup(),
-      stageID: resources()?.at(0)?.stageID!,
-      start: Date.now(),
-    });
-  });
-
-  let invokeTextArea!: HTMLTextAreaElement;
-
-  const [invoke, setInvoke] = createStore<{
-    invoking: boolean;
-    expand: boolean;
-    empty: boolean;
-  }>({
-    expand: false,
-    invoking: false,
-    empty: true,
-  });
-  let saveControl!: DialogPayloadSaveControl;
-  let manageControl!: DialogPayloadManageControl;
-
-  function setPayload(value: any) {
-    invokeTextArea.value = JSON.stringify(value, null, 2).trim();
-    setInvoke("expand", true);
-    invokeTextArea.focus();
-    invokeTextArea.selectionStart = 0;
-    invokeTextArea.selectionEnd = 0;
-    invokeTextArea.scrollTop = 0;
-  }
-
-  function handleInvoke(e: MouseEvent) {
-    e.stopPropagation();
-    const payload = JSON.parse(invokeTextArea.value || "{}");
-    setTimeout(() => setInvoke("invoking", false), 2000);
-    setInvoke("invoking", true);
-    rep().mutate.function_invoke({
-      stageID: resource()!.stageID,
-      payload,
-      functionARN: resource()!.metadata.arn,
+      id: createId(),
+      timeStart: start ? new Date(start).toISOString().split("Z")[0] : null,
     });
   }
 
-  bar.register("lambda-payloads", async (filter, global) => {
-    if (global && !filter) return [];
-    return lambdaPayloads().map((x) => ({
-      icon: IconBookmark,
-      category: "Event Payloads",
-      title: x.name,
-      async run(control) {
-        setPayload(x.payload);
-        control.hide();
-      },
-    }));
-  });
-
-  bar.register("invoke", async (filter, global) => {
-    return [
-      {
-        icon: IconBookmark,
-        category: "Invoke",
-        title: "Load saved payloads...",
-        async run(control) {
-          control.show("lambda-payloads");
-        },
-      },
-      {
-        icon: IconBookmark,
-        category: "Invoke",
-        title: "Manage saved payloads...",
-        async run(control) {
-          control.hide();
-          manageControl.show();
-        },
-      },
-    ];
-  });
-
-  // MOCKUPS
-  const isSearch = false;
-  const isLoading = false;
-  const isTryingToConnect = false;
+  let invokeControl!: InvokeControl;
 
   return (
     <Stack space="5">
-      <DialogPayloadSave control={(control) => (saveControl = control)} />
-      <DialogPayloadManage
-        lambdaPayloads={lambdaPayloads()}
-        onSelect={(item) => setPayload(item.payload)}
-        control={(control) => (manageControl = control)}
-      />
       <Row space="2" horizontal="between" vertical="center">
         <Stack space="2" vertical="center">
           <Text size="lg" weight="medium">
@@ -837,38 +533,51 @@ export function Logs() {
             </LogSwitchIcon>
           </Row>
         </Stack>
-        <Show when={live()}>
+        <Show when={mode() === "live"}>
           <Tag level="tip" style="outline">
             Local
           </Tag>
         </Show>
       </Row>
-      {/* <Show when={context()}>{context()}</Show> */}
       <LogList>
         <LogLoadingIndicator>
           <Row space="2" vertical="center">
-            <LogLoadingIndicatorIcon pulse={!isSearch}>
-              {isSearch ? (
-                <IconArrowDown />
-              ) : isTryingToConnect ? (
-                <IconArrowsUpDown />
-              ) : (
-                <IconBoltSolid class={LogLoadingIndicatorIconSvg} />
-              )}
+            <LogLoadingIndicatorIcon pulse={mode() !== "search"}>
+              <Switch>
+                <Match when={mode() === "live" && !stage.connected}>
+                  <IconArrowsUpDown />
+                </Match>
+                <Match when={mode() === "search"}>
+                  <IconArrowDown />
+                </Match>
+                <Match when={true}>
+                  <IconBoltSolid class={LogLoadingIndicatorIconSvg} />
+                </Match>
+              </Switch>
             </LogLoadingIndicatorIcon>
             <Text leading="normal" color="dimmed" size="sm">
-              {isSearch
-                ? `Viewing logs from ${new Date().toLocaleTimeString()}`
-                : isTryingToConnect
-                ? "Trying to connect to local `sst dev`"
-                : live()
-                ? "Tailing logs from local `sst dev`"
-                : "Tailing logs"}
+              <Switch>
+                <Match when={mode() === "live" && !stage.connected}>
+                  Trying to connect to local `sst dev`
+                </Match>
+                <Match when={mode() === "live"}>
+                  Tailing logs from local `sst dev`
+                </Match>
+                <Match when={mode() === "search"}>
+                  <span>
+                    Viewing logs from{" "}
+                    {search()?.timeStart
+                      ? search()!.timeStart
+                      : new Date().toLocaleTimeString()}
+                  </span>
+                </Match>
+                <Match when={true}>Tailing logs</Match>
+              </Switch>
               &hellip;
             </Text>
           </Row>
           <Row space="3" vertical="center">
-            <Show when={live() && invocations().length > 0}>
+            <Show when={mode() !== "search" && invocations().length > 0}>
               <TextButton
                 onClick={() => {
                   clearLogStore(logGroupKey());
@@ -880,8 +589,14 @@ export function Logs() {
                 Clear
               </TextButton>
             </Show>
-            <Show when={!live()}>
-              <IconButton title="Reload recent logs">
+            <Show when={mode() === "search" && !search()}>
+              <IconButton
+                title="Reload recent logs"
+                onClick={() => {
+                  clearLogStore(logGroupKey());
+                  createSearch();
+                }}
+              >
                 <IconArrowPathRoundedSquare
                   display="block"
                   width={20}
@@ -889,11 +604,11 @@ export function Logs() {
                 />
               </IconButton>
             </Show>
-            <Show when={!live()}>
+            <Show when={mode() !== "live"}>
               <Dropdown size="sm" label="View">
-                <Dropdown.RadioGroup value={mode()} onChange={setMode}>
+                <Dropdown.RadioGroup value={mode()} onChange={setView}>
                   <Dropdown.RadioItem value="tail">Live</Dropdown.RadioItem>
-                  <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
+                  <Dropdown.RadioItem value="search">Recent</Dropdown.RadioItem>
                   {/*
                 <Dropdown.Seperator />
                 <Dropdown.RadioItem value="5min">5min ago</Dropdown.RadioItem>
@@ -912,93 +627,15 @@ export function Logs() {
             </Show>
           </Row>
         </LogLoadingIndicator>
-        <Show when={!isSearch}>
-          <InvokeRoot
-            expand={invoke.expand}
-            style={{
-              /** Overrides height set by Chrome after resizing **/
-              height: "auto",
-            }}
-            onClick={() => {
-              setInvoke("expand", true);
-              invokeTextArea.focus();
-            }}
-          >
-            <InvokePayloadLabel>
-              <InvokePayloadLabelIcon>
-                <IconCaretRightOutline />
-              </InvokePayloadLabelIcon>
-              <Text leading="normal" size="sm" color="dimmed">
-                Enter event payload
-              </Text>
-            </InvokePayloadLabel>
-            <InvokeTextArea
-              rows={7}
-              spellcheck={false}
-              ref={invokeTextArea}
-              onInput={(e) => {
-                setInvoke("empty", !Boolean(e.currentTarget.value));
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                  e.stopPropagation();
-                  const payload = JSON.parse(invokeTextArea.value || "{}");
-                  setTimeout(() => setInvoke("invoking", false), 2000);
-                  setInvoke("invoking", true);
-                  rep().mutate.function_invoke({
-                    stageID: resource()!.stageID,
-                    payload,
-                    functionARN: resource()!.metadata.arn,
-                  });
-                }
-              }}
+        <Show when={mode() !== "search" && resource()}>
+          {(resource) => (
+            <Invoke
+              control={(c) => (invokeControl = c)}
+              resource={resource()}
             />
-            <InvokeControls>
-              <InvokeControlsLeft>
-                <IconButton
-                  title="Load saved payloads"
-                  onClick={() => manageControl.show()}
-                >
-                  <IconBookmark display="block" width={24} height={24} />
-                </IconButton>
-                <LinkButton
-                  style={{ display: invoke.empty ? "none" : "inline" }}
-                  onClick={() =>
-                    saveControl.show(key(), JSON.parse(invokeTextArea.value))
-                  }
-                >
-                  Save
-                </LinkButton>
-              </InvokeControlsLeft>
-              <Row vertical="center" space="4">
-                <InvokeControlsCancel
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInvoke("expand", false);
-                  }}
-                >
-                  Cancel
-                </InvokeControlsCancel>
-                <Button
-                  color="secondary"
-                  onClick={handleInvoke}
-                  disabled={invoke.invoking}
-                  class={InvokeControlsButton}
-                >
-                  {invoke.invoking ? "Invoking" : "Invoke"}
-                </Button>
-                <TextButton
-                  onClick={handleInvoke}
-                  disabled={invoke.invoking}
-                  class={InvokeControlsLinkButton}
-                >
-                  {invoke.invoking ? "Invoking..." : "Invoke"}
-                </TextButton>
-              </Row>
-            </InvokeControls>
-          </InvokeRoot>
+          )}
         </Show>
-        <Show when={isSearch && invocations().length === 0}>
+        <Show when={false && invocations().length === 0}>
           <LogEmpty>
             <IconMagnifyingGlass
               width={28}
@@ -1014,8 +651,8 @@ export function Logs() {
           {(invocation) => {
             const [expanded, setExpanded] = createSignal(false);
             const [tab, setTab] = createSignal<
-              "details" | "request" | "response" | "error"
-            >("details");
+              "logs" | "request" | "response" | "error"
+            >("logs");
 
             const shortDate = createMemo(() =>
               new Intl.DateTimeFormat("en-US", shortDateOptions)
@@ -1028,7 +665,7 @@ export function Logs() {
               )
             );
             const empty = createMemo(
-              () => !live() && invocation.logs.length === 0
+              () => mode() !== "live" && invocation.logs.length === 0
             );
             const [replaying, setReplaying] = createSignal(false);
 
@@ -1076,10 +713,10 @@ export function Logs() {
                           Error
                         </LogDetailHeaderTitle>
                         <LogDetailHeaderTitle
-                          onClick={() => setTab("details")}
+                          onClick={() => setTab("logs")}
                           state={
-                            live()
-                              ? tab() === "details"
+                            mode() === "live"
+                              ? tab() === "logs"
                                 ? "active"
                                 : "inactive"
                               : "inactive"
@@ -1087,7 +724,7 @@ export function Logs() {
                         >
                           Logs
                         </LogDetailHeaderTitle>
-                        <Show when={live()}>
+                        <Show when={mode() === "live"}>
                           <LogDetailHeaderTitle
                             onClick={() => setTab("request")}
                             state={
@@ -1120,8 +757,7 @@ export function Logs() {
                             on="surface"
                             icon={<IconBookmark />}
                             onClick={() =>
-                              saveControl.show(
-                                key(),
+                              invokeControl.savePayload(
                                 structuredClone(unwrap(invocation.event))
                               )
                             }
@@ -1167,7 +803,7 @@ export function Logs() {
                             </LogErrorMessage>
                           </LogError>
                         </Match>
-                        <Match when={tab() === "details"}>
+                        <Match when={tab() === "logs"}>
                           {invocation.logs.map((entry, i) => {
                             return (
                               <LogEntry>
@@ -1224,15 +860,38 @@ export function Logs() {
             );
           }}
         </For>
-        <Show when={isLoading}>
-          <LogMoreIndicator>
-            <LogMoreIndicatorIcon>
-              <IconArrowPathSpin />
-            </LogMoreIndicatorIcon>
-            <Text leading="normal" color="dimmed" size="sm">
-              Loading more logs&hellip;
-            </Text>
-          </LogMoreIndicator>
+        <Show when={mode() === "search"}>
+          <Switch>
+            <Match when={search()}>
+              <LogMoreIndicator>
+                <LogMoreIndicatorIcon>
+                  <IconArrowPathSpin />
+                </LogMoreIndicatorIcon>
+                <Text leading="normal" color="dimmed" size="sm">
+                  Loading more logs&hellip;
+                </Text>
+              </LogMoreIndicator>
+            </Match>
+            <Match when={true}>
+              <LogMoreIndicator>
+                <Text
+                  leading="normal"
+                  color="dimmed"
+                  size="sm"
+                  onClick={() => {
+                    const i = invocations();
+                    console.log(
+                      "scanning from",
+                      i[i.length - 1].start.toISOString()
+                    );
+                    createSearch(i[i.length - 1]!.start.getTime());
+                  }}
+                >
+                  Click to load more
+                </Text>
+              </LogMoreIndicator>
+            </Match>
+          </Switch>
         </Show>
       </LogList>
     </Stack>
@@ -1315,3 +974,87 @@ const longDateOptions: Intl.DateTimeFormatOptions = {
   timeZone: "UTC",
   year: "numeric",
 };
+
+/*
+function context() {
+  const functions = useFunctionsContext();
+  const context = createMemo(() => {
+    const parent = functions().get(resource()?.id || "")?.[0];
+    if (!parent) return;
+
+    switch (parent.type) {
+      case "EventBus":
+        return <Context type="EventBus" tag="Subscription" />;
+      case "Api": {
+        const route = parent.metadata.routes.find(
+          (r) => r.fn?.node === resource()?.addr
+        );
+        if (route) {
+          const [method, path] = route.route.split(" ");
+          return <Context type="Api" tag={method} extra={path} />;
+        }
+        break;
+      }
+      case "ApiGatewayV1Api": {
+        const route = parent.metadata.routes.find(
+          (r) => r.fn?.node === resource()?.addr
+        );
+        if (route) {
+          const [method, path] = route.route.split(" ");
+          return <Context type="Api" tag={method} extra={path} />;
+        }
+        break;
+      }
+      case "WebSocketApi": {
+        const route = parent.metadata.routes.find(
+          (r) => r.fn?.node === resource()?.addr
+        );
+        if (route) {
+          const [method, path] = route.route.split(" ");
+          return <Context type="Api" tag={method} extra={path} />;
+        }
+        break;
+      }
+      case "Topic": {
+        return <Context type="Topic" tag="Subscriber" />;
+      }
+      case "Bucket": {
+        return <Context type="Bucket" tag="Notification" />;
+      }
+      case "KinesisStream": {
+        return <Context type="KinesisStream" tag="Consumer" />;
+      }
+      case "AppSync": {
+        return <Context type="AppSync" tag="Source" />;
+      }
+      case "Table": {
+        return <Context type="Table" tag="Consumer" />;
+      }
+      case "Cognito": {
+        return <Context type="Cognito" tag="Trigger" />;
+      }
+      case "Cron": {
+        return <Context type="Cron" tag="Job" />;
+      }
+      case "Queue": {
+        return <Context type="Queue" tag="Consumer" />;
+      }
+      case "NextjsSite": {
+        return <Context type="NextjsSite" tag="Server" />;
+      }
+      case "SvelteKitSite": {
+        return <Context type="SvelteKitSite" tag="Server" />;
+      }
+      case "RemixSite": {
+        return <Context type="RemixSite" tag="Server" />;
+      }
+      case "AstroSite": {
+        return <Context type="AstroSite" tag="Server" />;
+      }
+      case "SolidStartSite": {
+        return <Context type="SolidStartSite" tag="Server" />;
+      }
+    }
+  });
+}
+*/

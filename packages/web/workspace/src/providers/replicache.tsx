@@ -20,12 +20,15 @@ import type { ServerType } from "@console/functions/replicache/server";
 import { bus } from "./bus";
 import { UserStore } from "$/data/user";
 import { LambdaPayloadStore } from "$/data/lambda-payload";
+import { LogSearchStore } from "$/data/log-search";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async (tx, input) => {})
   .mutation("app_stage_sync", async (tx, input) => {})
   .mutation("log_poller_subscribe", async (tx, input) => {})
-  .mutation("log_scan", async (tx, input) => {})
+  .mutation("log_search", async (tx, input) => {
+    await LogSearchStore.put(tx, input);
+  })
   .mutation("user_create", async (tx, input) => {
     // await UserStore.put(tx, {
     //   id: input.id,

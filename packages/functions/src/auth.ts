@@ -30,6 +30,8 @@ export const handler = AuthHandler({
           type: "public",
           properties: {},
         });
+        console.log("sending email to", claims);
+        console.log("Code", code);
 
         if (!process.env.IS_LOCAL) {
           const email = new SendEmailCommand({
@@ -55,8 +57,6 @@ export const handler = AuthHandler({
           });
           await ses.send(email);
         }
-
-        console.log("Code", code);
 
         return {
           statusCode: 302,

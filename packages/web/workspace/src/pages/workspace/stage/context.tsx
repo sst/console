@@ -16,6 +16,7 @@ import { DUMMY_RESOURCES } from "./resources-dummy";
 import { ResourceStore } from "$/data/resource";
 import { useCommandBar } from "../command-bar";
 import { IconApi, IconFunction } from "$/ui/icons/custom";
+import { useLocalContext } from "$/providers/local";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -28,6 +29,7 @@ export function createStageContext() {
       ? StageStore.fromName(app()!.id, params.stageName)
       : async () => undefined
   );
+  const local = useLocalContext();
 
   return {
     get app() {
@@ -35,6 +37,9 @@ export function createStageContext() {
     },
     get stage() {
       return stage()!;
+    },
+    get connected() {
+      return local().app === app()?.name && local().stage === stage()?.name;
     },
   };
 }
@@ -221,10 +226,6 @@ export function ResourcesProvider(props: ParentProps) {
       }
       return [];
     });
-  });
-
-  createEffect(() => {
-    console.log("resources", resources());
   });
 
   return (

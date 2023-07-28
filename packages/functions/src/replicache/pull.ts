@@ -12,7 +12,7 @@ import { replicache_cvr } from "@console/core/replicache/replicache.sql";
 import { lambdaPayload } from "@console/core/lambda/lambda.sql";
 import { createId } from "@console/core/util/sql";
 import { mapValues } from "remeda";
-import { log_poller } from "@console/core/log/poller.sql";
+import { log_poller, log_search } from "@console/core/log/log.sql";
 
 const VERSION = 4;
 export const handler = ApiHandler(async () => {
@@ -67,6 +67,7 @@ export const handler = ApiHandler(async () => {
         stage,
         resource,
         log_poller,
+        log_search,
         lambdaPayload,
       };
       const results: [string, { id: string; time_updated: string }[]][] = [];
@@ -79,7 +80,10 @@ export const handler = ApiHandler(async () => {
               eq(
                 "workspaceID" in table ? table.workspaceID : table.id,
                 workspaceID
-              )
+              ),
+              ...(name === "log_search" && "userID" in table
+                ? [eq(table.userID, actor.properties.userID)]
+                : [])
             )
           )
           .execute();
