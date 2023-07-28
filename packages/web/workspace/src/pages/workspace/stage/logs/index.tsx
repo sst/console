@@ -563,14 +563,7 @@ export function Logs() {
                 <Match when={mode() === "live"}>
                   Tailing logs from local `sst dev`
                 </Match>
-                <Match when={mode() === "search"}>
-                  <span>
-                    Viewing logs from{" "}
-                    {search()?.timeStart
-                      ? search()!.timeStart
-                      : new Date().toLocaleTimeString()}
-                  </span>
-                </Match>
+                <Match when={mode() === "search"}>Viewing recent logs</Match>
                 <Match when={true}>Tailing logs</Match>
               </Switch>
               &hellip;
@@ -868,7 +861,11 @@ export function Logs() {
                   <IconArrowPathSpin />
                 </LogMoreIndicatorIcon>
                 <Text leading="normal" color="dimmed" size="sm">
-                  Loading more logs&hellip;
+                  Loading from{" "}
+                  {new Date(
+                    search()?.timeStart ? search()?.timeStart + "Z" : Date.now()
+                  ).toLocaleString()}
+                  &hellip;
                 </Text>
               </LogMoreIndicator>
             </Match>

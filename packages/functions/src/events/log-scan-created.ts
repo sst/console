@@ -40,11 +40,6 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
     initial = new Date(
       response.logStreams?.[0]?.lastEventTimestamp! + 30 * 60 * 1000
     );
-    await Log.Search.setStart({
-      id: search.id,
-      timeStart: initial.toISOString().split("Z")[0]!,
-    });
-    await Replicache.poke();
   }
   console.log("start", initial.toLocaleString());
   await (async () => {
@@ -52,6 +47,11 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
       iteration++;
       const start = initial.getTime() - delay(iteration);
       const end = initial.getTime() - delay(iteration - 1);
+      await Log.Search.setStart({
+        id: search.id,
+        timeStart: new Date(start).toISOString().split("Z")[0]!,
+      });
+      await Replicache.poke();
       console.log(
         "scanning from",
         new Date(start).toLocaleString(),
