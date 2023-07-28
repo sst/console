@@ -699,12 +699,14 @@ export function Logs() {
                   <LogDetail>
                     <LogDetailHeader>
                       <Row space="5" vertical="center">
-                        <LogDetailHeaderTitle
-                          onClick={() => setTab("error")}
-                          state={tab() === "error" ? "active" : "inactive"}
-                        >
-                          Error
-                        </LogDetailHeaderTitle>
+                        <Show when={false}>
+                          <LogDetailHeaderTitle
+                            onClick={() => setTab("error")}
+                            state={tab() === "error" ? "active" : "inactive"}
+                          >
+                            Error
+                          </LogDetailHeaderTitle>
+                        </Show>
                         <LogDetailHeaderTitle
                           onClick={() => setTab("logs")}
                           state={
@@ -803,7 +805,7 @@ export function Logs() {
                                 <LogEntryTime>
                                   {entry.timestamp.toLocaleTimeString()}
                                 </LogEntryTime>
-                                <Show when={i === 4}>
+                                <Show when={false}>
                                   <Stack
                                     style={{ "min-width": "0" }}
                                     space="1.5"
@@ -818,7 +820,7 @@ export function Logs() {
                                     </LogEntryMessage>
                                   </Stack>
                                 </Show>
-                                <Show when={i !== 4}>
+                                <Show when={true}>
                                   <LogEntryMessage>
                                     {entry.message}
                                   </LogEntryMessage>
