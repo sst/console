@@ -50,13 +50,10 @@ const Root = styled("div", {
   },
 });
 
-const List = styled("div", {
+const Col = styled("div", {
   base: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gridTemplateRows: "masonry",
-    alignItems: "start",
-    gap: theme.space[4],
+    ...utility.stack(4),
+    width: "50%",
   },
 });
 
@@ -116,18 +113,47 @@ const CardLoadingIcon = styled("div", {
   },
 });
 
+function splitCols(array: Account.Info[]) {
+  if (array.length === 0) {
+    return [[], []];
+  } else if (array.length === 1) {
+    return [array, []];
+  }
+
+  const newArray = [...array];
+  // Insert second element twice as a placeholder for the user's card
+  newArray.splice(2, 0, newArray[1]);
+
+  var col1 = [];
+  var col2 = [];
+
+  for (var i = 0; i < newArray.length; i++) {
+    if (i % 2 === 0) {
+      col1.push(newArray[i]);
+    } else {
+      col2.push(newArray[i]);
+    }
+  }
+
+  // Remove the duplicate element
+  return [col1, col2.slice(1)];
+}
+
 export function Overview() {
   const [query] = useSearchParams();
-  const accounts = createSubscription(() =>
-    query.dummy
-      ? async (): Promise<Account.Info[]> => {
-          return DUMMY_ACCOUNTS.hasOwnProperty(query.dummy)
-            ? DUMMY_ACCOUNTS[query.dummy as keyof typeof DUMMY_ACCOUNTS]
-            : DUMMY_ACCOUNTS.DEFAULT;
-        }
-      : AccountStore.list()
+  const accounts = createSubscription(
+    () =>
+      query.dummy
+        ? async (): Promise<Account.Info[]> => {
+            return DUMMY_ACCOUNTS.hasOwnProperty(query.dummy)
+              ? DUMMY_ACCOUNTS[query.dummy as keyof typeof DUMMY_ACCOUNTS]
+              : DUMMY_ACCOUNTS.DEFAULT;
+          }
+        : AccountStore.list(),
+    []
   );
   const users = createSubscription(UserStore.list, []);
+  const cols = createMemo(() => splitCols(accounts()));
   const stages = createSubscription(
     () =>
       query.dummy
@@ -144,6 +170,46 @@ export function Overview() {
         replace: true,
       });
   });
+
+  function renderAccount(account: Account.Info) {
+    const children = createMemo(() =>
+      stages().filter((stage) => stage.awsAccountID === account.id)
+    );
+    return (
+      <Card>
+        <CardHeader>
+          <Row space="0.5">
+            <Text code size="mono_sm" color="dimmed">
+              ID:
+            </Text>
+            <Text code size="mono_sm" color="dimmed">
+              {account.accountID}
+            </Text>
+          </Row>
+          <Show when={account.timeFailed}>
+            <Link href="account">
+              <Tag level="danger">Disconnected</Tag>
+            </Link>
+          </Show>
+        </CardHeader>
+        <div>
+          <For each={children().sort((a, b) => a.appID.localeCompare(b.appID))}>
+            {(stage) => <StageCard stage={stage} />}
+          </For>
+          <Show when={children().length === 0}>
+            <CardLoading>
+              <CardLoadingIcon>
+                <IconArrowPathSpin />
+              </CardLoadingIcon>
+              <Text size="sm" color="dimmed">
+                Searching for SST apps&hellip;
+              </Text>
+            </CardLoading>
+          </Show>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -180,82 +246,41 @@ export function Overview() {
                   </Link>
                 </Row>
               </Row>
-              <List>
-                <For each={accounts() || []}>
-                  {(account) => {
-                    const children = createMemo(() =>
-                      stages().filter(
-                        (stage) => stage.awsAccountID === account.id
-                      )
-                    );
-                    return (
-                      <Card>
-                        <CardHeader>
-                          <Row space="0.5">
-                            <Text code size="mono_sm" color="dimmed">
-                              ID:
-                            </Text>
-                            <Text code size="mono_sm" color="dimmed">
-                              {account.accountID}
-                            </Text>
-                          </Row>
-                          <Show when={account.timeFailed}>
-                            <Link href="account">
-                              <Tag level="danger">Disconnected</Tag>
-                            </Link>
-                          </Show>
-                        </CardHeader>
-                        <div>
-                          <For
-                            each={children().sort((a, b) =>
-                              a.appID.localeCompare(b.appID)
-                            )}
-                          >
-                            {(stage) => <StageCard stage={stage} />}
-                          </For>
-                          <Show when={children().length === 0}>
-                            <CardLoading>
-                              <CardLoadingIcon>
-                                <IconArrowPathSpin />
-                              </CardLoadingIcon>
-                              <Text size="sm" color="dimmed">
-                                Searching for SST apps&hellip;
-                              </Text>
-                            </CardLoading>
-                          </Show>
-                        </div>
-                      </Card>
-                    );
-                  }}
-                </For>
-                <Card>
-                  <CardHeader>
-                    <Text code size="mono_sm" color="dimmed">
-                      Team: {users().length}
-                    </Text>
-                  </CardHeader>
-                  <div>
-                    <For each={users()}>
-                      {(user) => {
-                        const auth = useAuth();
-                        const storage = useStorage();
-                        const currentUser = createMemo(
-                          () => auth[storage.value.account].token
-                        );
-                        return (
-                          <Show when={user.timeDeleted === null}>
-                            <UserCard
-                              email={user.email}
-                              status="active"
-                              self={currentUser().email === user.email}
-                            />
-                          </Show>
-                        );
-                      }}
-                    </For>
-                  </div>
-                </Card>
-              </List>
+              <Row space="4">
+                <Col>
+                  <For each={cols()[0]}>{renderAccount}</For>
+                </Col>
+                <Col>
+                  <Card>
+                    <CardHeader>
+                      <Text code size="mono_sm" color="dimmed">
+                        Team: {users().length}
+                      </Text>
+                    </CardHeader>
+                    <div>
+                      <For each={users()}>
+                        {(user) => {
+                          const auth = useAuth();
+                          const storage = useStorage();
+                          const currentUser = createMemo(
+                            () => auth[storage.value.account].token
+                          );
+                          return (
+                            <Show when={user.timeDeleted === null}>
+                              <UserCard
+                                email={user.email}
+                                status="active"
+                                self={currentUser().email === user.email}
+                              />
+                            </Show>
+                          );
+                        }}
+                      </For>
+                    </div>
+                  </Card>
+                  <For each={cols()[1]}>{renderAccount}</For>
+                </Col>
+              </Row>
             </Stack>
           </Match>
         </Switch>
