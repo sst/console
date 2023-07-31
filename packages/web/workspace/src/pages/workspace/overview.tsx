@@ -125,19 +125,17 @@ function splitCols(array: Account.Info[]) {
 
 export function Overview() {
   const [query] = useSearchParams();
-  const accounts = createSubscription(
-    () =>
-      query.dummy
-        ? async (): Promise<Account.Info[]> => {
-            return DUMMY_ACCOUNTS.hasOwnProperty(query.dummy)
-              ? DUMMY_ACCOUNTS[query.dummy as keyof typeof DUMMY_ACCOUNTS]
-              : DUMMY_ACCOUNTS.DEFAULT;
-          }
-        : AccountStore.list(),
-    []
+  const accounts = createSubscription(() =>
+    query.dummy
+      ? async (): Promise<Account.Info[]> => {
+          return DUMMY_ACCOUNTS.hasOwnProperty(query.dummy)
+            ? DUMMY_ACCOUNTS[query.dummy as keyof typeof DUMMY_ACCOUNTS]
+            : DUMMY_ACCOUNTS.DEFAULT;
+        }
+      : AccountStore.list()
   );
   const users = createSubscription(UserStore.list, []);
-  const cols = createMemo(() => splitCols(accounts()));
+  const cols = createMemo(() => splitCols(accounts() || []));
   const stages = createSubscription(
     () =>
       query.dummy
