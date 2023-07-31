@@ -17,6 +17,7 @@
     "@aws-sdk/client-lambda": "^3.332.0",
     "@aws-sdk/client-sesv2": "^3.369.0",
     "@aws-sdk/client-sqs": "^3.332.0",
+    "@botpoison/node": "^0.1.10",
     "@octokit/rest": "^19.0.7",
     "drizzle-orm": "0.27.2",
     "fast-jwt": "^2.2.1",

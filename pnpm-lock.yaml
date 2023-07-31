@@ -117,6 +117,9 @@ importers:
       '@aws-sdk/client-sqs':
         specifier: ^3.332.0
         version: 3.332.0
+      '@botpoison/node':
+        specifier: ^0.1.10
+        version: 0.1.10
       '@octokit/rest':
         specifier: ^19.0.7
         version: 19.0.7
@@ -170,6 +173,9 @@ importers:
 
   packages/web/workspace:
     dependencies:
+      '@botpoison/browser':
+        specifier: ^0.1.30
+        version: 0.1.30
       '@fontsource/ibm-plex-mono':
         specifier: ^4.5.13
         version: 4.5.13
@@ -5972,6 +5978,18 @@ packages:
   /@balena/dockerignore@1.0.2:
     resolution: {integrity: sha512-wMue2Sy4GAVTk6Ic4tJVcnfdau+gx2EnG7S+uAEe+TWJFqE4YoWN4/H8MSLj4eYJKxGg26lZwboEniNiNwZQ6Q==}
 
+  /@botpoison/browser@0.1.30:
+    resolution: {integrity: sha512-hl+YoByBwBrNE0Hv/mwse9kAV6hAlq5qnwSlFhjnI/LkwOxNo1hOQ+x2UlopQ5QEIgxhxjndz9PwcMhFojEKfQ==}
+    engines: {node: '>=10'}
+    dependencies:
+      js-sha512: 0.8.0
+    dev: false
+
+  /@botpoison/node@0.1.10:
+    resolution: {integrity: sha512-sKkiQyfACvGYLvN6KUVwFTDru4tlutxYPoihsDMs6Pklso9ADfb78jShGfhvBYVXn6Vhf5z19yalaUmzU2yjfA==}
+    engines: {node: '>=10'}
+    dev: false
+
   /@drizzle-team/studio@0.0.5:
     resolution: {integrity: sha512-ps5qF0tMxWRVu+V5gvCRrQNqlY92aTnIKdq27gm9LZMSdaKYZt6AVvSK1dlUMzs6Rt0Jm80b+eWct6xShBKhIw==}
     dev: true
@@ -10296,6 +10314,10 @@ packages:
 
   /js-sdsl@4.3.0:
     resolution: {integrity: sha512-mifzlm2+5nZ+lEcLJMoBK0/IH/bDg8XnJfd/Wq6IP+xoCjLZsTOnV2QpxlVbX9bMnkl5PdEjNtBJ9Cj1NjifhQ==}
+
+  /js-sha512@0.8.0:
+    resolution: {integrity: sha512-PWsmefG6Jkodqt+ePTvBZCSMFgN7Clckjd0O7su3I0+BW2QWUTJNzjktHsztGLhncP2h8mcF9V9Y2Ha59pAViQ==}
+    dev: false
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}

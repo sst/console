@@ -12,5 +12,6 @@ export function Secrets(ctx: StackContext) {
       "GITHUB_CLIENT_ID",
       "GITHUB_CLIENT_SECRET"
     ),
+    botpoison: new Config.Secret(ctx.stack, "BOTPOISON_SECRET_KEY"),
   };
 }

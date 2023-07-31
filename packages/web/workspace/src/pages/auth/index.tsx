@@ -11,7 +11,9 @@ import {
 import { IconApp } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
 import { Navigate, Route, Routes } from "@solidjs/router";
-import { For, createSignal } from "solid-js";
+import { For, createSignal, onMount } from "solid-js";
+import Botpoison from "@botpoison/browser";
+import { createSingleSelectListState } from "@kobalte/core";
 
 const Form = styled("form", {
   base: {
@@ -51,6 +53,12 @@ export function Auth() {
 }
 
 export function Email() {
+  const botpoison = new Botpoison({
+    publicKey: "pk_646d2d37-ab95-43d1-ae96-3ad59616e362",
+  });
+
+  const [challenge, setChallenge] = createSignal<string>();
+
   return (
     <>
       <Stack horizontal="center" space="5">
@@ -66,7 +74,17 @@ export function Email() {
           </Text>
         </Stack>
       </Stack>
-      <Form method="get" action={import.meta.env.VITE_AUTH_URL + "/authorize"}>
+      <Form
+        method="get"
+        action={import.meta.env.VITE_AUTH_URL + "/authorize"}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const result = await botpoison.challenge();
+          setChallenge(result.solution);
+          form.submit();
+        }}
+      >
         <FormInput autofocus type="email" name="email" placeholder="Email" />
         <input type="hidden" name="client_id" value="solid" />
         <input
@@ -76,6 +94,7 @@ export function Email() {
         />
         <input type="hidden" name="response_type" value="token" />
         <input type="hidden" name="provider" value="email" />
+        <input type="hidden" name="challenge" value={challenge()} />
         <Stack space="3">
           <Button type="submit">Continue</Button>
           <Text center size="sm" color="dimmed">

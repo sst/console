@@ -4,6 +4,7 @@ import { Account } from "@console/core/account";
 import { useTransaction } from "@console/core/util/transaction";
 import { provideActor } from "@console/core/actor";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import Botpoison from "@botpoison/node";
 
 declare module "sst/node/future/auth" {
   export interface SessionTypes {
@@ -34,6 +35,17 @@ export const handler = AuthHandler({
         console.log("Code", code);
 
         if (!process.env.IS_LOCAL) {
+          const botpoison = new Botpoison({
+            secretKey: Config.BOTPOISON_SECRET_KEY,
+          });
+          const { ok } = await botpoison.verify(claims.challenge);
+          if (!ok)
+            return {
+              statusCode: 302,
+              headers: {
+                Location: process.env.AUTH_FRONTEND_URL + "/auth/email",
+              },
+            };
           const email = new SendEmailCommand({
             Destination: {
               ToAddresses: [claims.email],
@@ -64,7 +76,7 @@ export const handler = AuthHandler({
             Location:
               process.env.AUTH_FRONTEND_URL +
               "/auth/code?" +
-              new URLSearchParams(claims).toString(),
+              new URLSearchParams({ email: claims.email }).toString(),
           },
         };
       },
