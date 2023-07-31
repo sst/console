@@ -372,6 +372,12 @@ const LogEntryMessage = styled("span", {
     fontSize: theme.font.size.mono_sm,
   },
   variants: {
+    error: {
+      true: {
+        color: `hsla(${theme.color.base.red}, 100%)`,
+      },
+      false: {},
+    },
     dimmed: {
       true: {
         color: theme.color.text.dimmed.surface,
@@ -380,6 +386,7 @@ const LogEntryMessage = styled("span", {
     },
   },
   defaultVariants: {
+    error: false,
     dimmed: false,
   },
 });

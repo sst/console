@@ -66,7 +66,6 @@ const Modal = styled("div", {
     flexShrink: 0,
     boxShadow: theme.color.shadow.drop.long,
     backdropFilter: "blur(10px)",
-    WebkitBackdropFilter: "blur(10px)",
     background: theme.color.background.modal,
     transform: "scale(0.95)",
     transition: "200ms all",

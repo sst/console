@@ -1,5 +1,15 @@
-import { Button, FormInput, LinkButton, Row, Stack, Text, theme } from "$/ui";
+import {
+  Grower,
+  Button,
+  FormInput,
+  LinkButton,
+  Row,
+  Stack,
+  Text,
+  theme,
+} from "$/ui";
 import { Modal } from "$/ui/modal";
+import { utility } from "$/ui/utility";
 import { styled } from "@macaron-css/solid";
 import { createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -29,6 +39,23 @@ const Form = styled("form", {
   base: {
     width: theme.modalWidth.sm,
     padding: theme.space[5],
+  },
+});
+
+const GraphicSpacer = styled("div", {
+  base: {
+    ...utility.row(0),
+    width: theme.space[8],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
+const GraphicStem = styled("div", {
+  base: {
+    flex: 1,
+    height: 2,
+    backgroundColor: theme.color.divider.base,
   },
 });
 
@@ -66,15 +93,25 @@ export function DialogRange(props: {
         <Stack space="5">
           <Stack space="2">
             <Text size="lg" weight="medium">
-              View logs from
+              View logs between
             </Text>
           </Stack>
-          <FormInput
-            ref={input}
-            name="start"
-            data-element={"save-payload-dialog-name"}
-            type="datetime-local"
-          />
+          <Row space="1">
+            <Grower>
+              <FormInput
+                ref={input}
+                name="start"
+                type="datetime-local"
+                data-element={"save-payload-dialog-name"}
+              />
+            </Grower>
+            <GraphicSpacer>
+              <GraphicStem />
+            </GraphicSpacer>
+            <Grower>
+              <FormInput minLength={1} />
+            </Grower>
+          </Row>
           <Row space="5" vertical="center" horizontal="end">
             <LinkButton onClick={() => control.hide()}>Cancel</LinkButton>
             <Button color="secondary">View Logs</Button>

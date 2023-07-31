@@ -1178,6 +1178,57 @@ const SelectLogTimeForm = styled("form", {
   },
 });
 
+const GraphicRoot = styled("div", {
+  base: {
+    ...utility.stack(0),
+    alignItems: "flex-end",
+  },
+  variants: {
+    position: {
+      start: {
+        paddingTop: 14,
+      },
+      end: {
+        paddingBottom: 14,
+      },
+    },
+  },
+});
+
+const GraphicSpacer = styled("div", {
+  base: {
+    ...utility.row(0),
+    width: theme.space[8],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
+const GraphicDisc = styled("div", {
+  base: {
+    margin: "0px 0",
+    width: 16,
+    height: 2,
+    backgroundColor: theme.color.divider.base,
+    selectors: {
+      [`${GraphicRoot.selector({ position: "start" })} &`]: {
+        borderRadius: `${theme.borderRadius} 0 0 0`,
+      },
+      [`${GraphicRoot.selector({ position: "end" })} &`]: {
+        borderRadius: `0 0 0 ${theme.borderRadius}`,
+      },
+    },
+  },
+});
+
+const GraphicStem = styled("div", {
+  base: {
+    flex: 1,
+    height: 2,
+    backgroundColor: theme.color.divider.base,
+  },
+});
+
 function SelectLogTime() {
   return (
     <FakeModal>
@@ -1185,17 +1236,32 @@ function SelectLogTime() {
         <Stack space="5">
           <Stack space="2">
             <Text size="lg" weight="medium">
-              View logs from
+              View logs between
             </Text>
           </Stack>
-          <FormInput
-            data-element={"save-payload-dialog-name"}
-            autofocus
-            name="time"
-            minLength={1}
-            hint="Supports the date time string format"
-            placeholder="2011-10-10T14:48"
-          />
+          <Row space="1">
+            <Grower>
+              <FormInput
+                data-element={"save-payload-dialog-name"}
+                autofocus
+                name="time"
+                minLength={1}
+                placeholder="2011-10-10T14:48"
+              />
+            </Grower>
+            <GraphicSpacer>
+              <GraphicStem />
+            </GraphicSpacer>
+            <Grower>
+              <FormInput
+                data-element={"save-payload-dialog-name"}
+                autofocus
+                name="time"
+                minLength={1}
+                placeholder="2011-10-10T14:48"
+              />
+            </Grower>
+          </Row>
           <Row space="5" vertical="center" horizontal="end">
             <LinkButton>Cancel</LinkButton>
             <Button color="secondary">View Logs</Button>

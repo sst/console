@@ -80,6 +80,24 @@ globalStyle("input", {
   cursor: "text",
 });
 
+macaron$(() =>
+  [
+    "input::-webkit-datetime-edit-day-field:focus",
+    "input::-webkit-datetime-edit-hour-field:focus",
+    "input::-webkit-datetime-edit-year-field:focus",
+    "input::-webkit-datetime-edit-month-field:focus",
+    "input::-webkit-datetime-edit-minute-field:focus",
+    "input::-webkit-datetime-edit-second-field:focus",
+    "input::-webkit-datetime-edit-meridiem-field:focus",
+    "input::-webkit-datetime-edit-millisecond-field:focus",
+  ].forEach((selector) =>
+    globalStyle(selector, {
+      // Mimic WebKit text selection color
+      backgroundColor: "#B4D5FE",
+    })
+  )
+);
+
 globalStyle("ul, ol", {
   margin: 0,
   padding: 0,
