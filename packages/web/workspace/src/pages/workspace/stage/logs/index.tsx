@@ -372,12 +372,15 @@ const LogEntryMessage = styled("span", {
     fontSize: theme.font.size.mono_sm,
   },
   variants: {
-    error: {
+    dimmed: {
       true: {
-        color: `hsla(${theme.color.base.red}, 100%)`,
+        color: theme.color.text.dimmed.surface,
       },
       false: {},
     },
+  },
+  defaultVariants: {
+    dimmed: false,
   },
 });
 
@@ -564,7 +567,7 @@ export function Logs() {
           <LogLoadingIndicator>
             <Row space="2" vertical="center">
               <LogLoadingIndicatorIcon
-                glow={mode() === "live"}
+                glow={mode() === "live" || mode() === "tail"}
                 pulse={mode() !== "search"}
               >
                 <Switch>
@@ -582,10 +585,10 @@ export function Logs() {
               <Text leading="normal" color="dimmed" size="sm">
                 <Switch>
                   <Match when={mode() === "live" && !stage.connected}>
-                    Trying to connect to local `sst dev`
+                    Trying to connect to local `sst dev`&hellip;
                   </Match>
                   <Match when={mode() === "live"}>
-                    Tailing logs from local `sst dev`
+                    Tailing logs from local `sst dev`&hellip;
                   </Match>
                   <Match when={mode() === "search"}>
                     <Show
@@ -593,12 +596,13 @@ export function Logs() {
                       fallback="Viewing recent logs"
                     >
                       <span>
-                        Viewing from {lastSearch.start?.toLocaleString()} to{" "}
+                        Viewing logs between{" "}
+                        {lastSearch.start?.toLocaleString()} —{" "}
                         {lastSearch.end?.toLocaleString()}
                       </span>
                     </Show>
                   </Match>
-                  <Match when={true}>Tailing logs</Match>
+                  <Match when={true}>Tailing logs&hellip;</Match>
                 </Switch>
               </Text>
             </Row>
@@ -752,9 +756,9 @@ export function Logs() {
                   invocation.start
                 )
               );
-              const empty = createMemo(
-                () => mode() !== "live" && invocation.logs.length === 0
-              );
+              //              const empty = createMemo(
+              //                () => mode() !== "live" && invocation.logs.length === 0
+              //              );
               const [replaying, setReplaying] = createSignal(false);
 
               return (
@@ -762,10 +766,7 @@ export function Logs() {
                   expanded={expanded()}
                   level={invocation.error ? "error" : "info"}
                 >
-                  <LogSummary
-                    loading={empty()}
-                    onClick={() => setExpanded((r) => !empty() && !r)}
-                  >
+                  <LogSummary onClick={() => setExpanded((r) => !r)}>
                     <Row shrink={false} space="2" vertical="center">
                       <CaretIcon>
                         <IconCaretRight />
@@ -894,6 +895,13 @@ export function Logs() {
                             </LogError>
                           </Match>
                           <Match when={tab() === "logs"}>
+                            <Show when={invocation.logs.length === 0}>
+                              <LogEntry>
+                                <LogEntryMessage dimmed>
+                                  Nothing was logged in this invocation
+                                </LogEntryMessage>
+                              </LogEntry>
+                            </Show>
                             {invocation.logs.map((entry, i) => {
                               return (
                                 <LogEntry>
@@ -958,7 +966,10 @@ export function Logs() {
                     <IconArrowPathSpin />
                   </LogMoreIndicatorIcon>
                   <Text leading="normal" color="dimmed" size="sm">
-                    <Show when={view() === "recent"} fallback="Loading...">
+                    <Show
+                      when={view() === "recent"}
+                      fallback={<>Loading&hellip;</>}
+                    >
                       Scanning from{" "}
                       {new Date(
                         search()?.timeStart
