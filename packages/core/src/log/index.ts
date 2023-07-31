@@ -2,10 +2,24 @@ export * as Log from "./index";
 export { Search } from "./search";
 
 export type LogEvent =
+  // end
   | ["e", number, string, string]
+  // start
   | ["s", number, string, string, boolean]
+  // report
   | ["r", number, string, string, number]
-  | ["m", number, string, string, string, string, string];
+  // message
+  | ["m", number, string, string, string, string, string]
+  // trace
+  | [
+      "t",
+      number /* timestamp */,
+      string /* logGroup */,
+      string /* requestID */,
+      string /* type */,
+      string /* message */,
+      string[] /* trace */
+    ];
 
 export function process(input: {
   id: string;
@@ -43,6 +57,18 @@ export function process(input: {
   }
 
   if (tabs[0]?.length === 24) {
+    if (tabs[3]?.includes("Invoke Error")) {
+      const parsed = JSON.parse(tabs[4]!);
+      return [
+        "t",
+        input.timestamp,
+        input.group,
+        tabs[1]!.trim(),
+        parsed.errorType,
+        parsed.errorMessage,
+        parsed.stack,
+      ];
+    }
     return [
       "m",
       input.timestamp,

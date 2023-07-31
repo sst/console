@@ -1,14 +1,12 @@
 import { createEmitter, createEventBus } from "@solid-primitives/event-bus";
-import type { Log } from "@console/functions/poller/fetch";
-import type {} from "sst/runtime/workers";
-import type {} from "sst/runtime/runtime";
+import type { Log } from "@console/core/log";
 import type { Events } from "sst/bus";
 
 export const bus = createEmitter<{
   poke: {
     workspaceID: string;
   };
-  log: Log[];
+  log: Log.LogEvent[];
   "log.cleared": {
     functionID: string;
   };

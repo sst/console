@@ -793,16 +793,14 @@ export function Logs() {
                       {invocation.id}
                     </LogRequestId>
                     <LogMessage>
-                      <Show when={invocation.logs.length > 0}>
-                        {invocation.logs[0].message}
-                      </Show>
+                      {invocation.error?.message || invocation.logs[0]?.message}
                     </LogMessage>
                   </LogSummary>
                   <Show when={expanded()}>
                     <LogDetail>
                       <LogDetailHeader>
                         <Row space="5" vertical="center">
-                          <Show when={false}>
+                          <Show when={invocation.error}>
                             <LogDetailHeaderTitle
                               onClick={() => setTab("error")}
                               state={tab() === "error" ? "active" : "inactive"}
@@ -812,13 +810,7 @@ export function Logs() {
                           </Show>
                           <LogDetailHeaderTitle
                             onClick={() => setTab("logs")}
-                            state={
-                              mode() === "live"
-                                ? tab() === "logs"
-                                  ? "active"
-                                  : "inactive"
-                                : "inactive"
-                            }
+                            state={tab() === "logs" ? "active" : "inactive"}
                           >
                             Logs
                           </LogDetailHeaderTitle>
@@ -894,10 +886,10 @@ export function Logs() {
                                 weight="medium"
                                 leading="normal"
                               >
-                                {DUMMY_ERROR_JSON.stack[0]}
+                                {invocation.error?.trace[0]}
                               </Text>
                               <LogErrorMessage>
-                                {DUMMY_ERROR_JSON.stack.slice(1).join("\n")}
+                                {invocation.error?.trace.slice(1).join("\n")}
                               </LogErrorMessage>
                             </LogError>
                           </Match>
@@ -988,7 +980,7 @@ export function Logs() {
                   </Text>
                 </LogMoreIndicator>
               </Match>
-              <Match when={true && view() === "recent"}>
+              <Match when={view() === "recent"}>
                 <LogMoreIndicator>
                   <LogMoreIndicatorIcon>
                     <IconEllipsisVertical />
@@ -1006,6 +998,13 @@ export function Logs() {
                   >
                     Load more logs
                   </TextButton>
+                </LogMoreIndicator>
+              </Match>
+              <Match when={true}>
+                <LogMoreIndicator>
+                  <Text leading="normal" color="dimmed" size="sm">
+                    Done
+                  </Text>
                 </LogMoreIndicator>
               </Match>
             </Switch>

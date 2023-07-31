@@ -83,12 +83,6 @@ bus.on("log", (e) => {
             if (logs.find((l) => l.id === log.id)) return;
             logs.push(log);
             logs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-            if (invocation && kind === "ERROR")
-              invocation.error = {
-                type: "error",
-                message: "error",
-                trace: [],
-              };
           })
         );
         break;
@@ -114,6 +108,22 @@ bus.on("log", (e) => {
           })
         );
         break;
+      }
+      case "t": {
+        const [_, timestamp, logGroup, requestId, type, message, trace] = log;
+        console.log(log);
+        setLogStore(
+          produce((state) => {
+            let invocation = state[logGroup]?.find((i) => i.id === requestId);
+            console.log("invocation", invocation);
+            if (!invocation) return;
+            invocation.error = {
+              type,
+              message,
+              trace,
+            };
+          })
+        );
       }
     }
   }
