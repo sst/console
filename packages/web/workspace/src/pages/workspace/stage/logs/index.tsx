@@ -11,6 +11,7 @@ import {
   IconArrowsUpDown,
   IconChevronUpDown,
   IconMagnifyingGlass,
+  IconEllipsisVertical,
   IconArrowPathRoundedSquare,
 } from "$/ui/icons";
 import { IconCaretRight, IconArrowPathSpin } from "$/ui/icons/custom";
@@ -77,7 +78,6 @@ const LogLoadingIndicatorIcon = styled("div", {
     padding: 2,
     width: 20,
     height: 20,
-    color: theme.color.accent,
     opacity: theme.iconOpacity,
   },
   variants: {
@@ -85,9 +85,18 @@ const LogLoadingIndicatorIcon = styled("div", {
       true: {},
       false: {},
     },
+    glow: {
+      true: {
+        color: theme.color.accent,
+      },
+      false: {
+        color: theme.color.icon.dimmed,
+      },
+    },
   },
   defaultVariants: {
     pulse: true,
+    glow: false,
   },
 });
 
@@ -554,7 +563,10 @@ export function Logs() {
         <LogList>
           <LogLoadingIndicator>
             <Row space="2" vertical="center">
-              <LogLoadingIndicatorIcon pulse={mode() !== "search"}>
+              <LogLoadingIndicatorIcon
+                glow={mode() === "live"}
+                pulse={mode() !== "search"}
+              >
                 <Switch>
                   <Match when={mode() === "live" && !stage.connected}>
                     <IconArrowsUpDown />
@@ -588,7 +600,6 @@ export function Logs() {
                   </Match>
                   <Match when={true}>Tailing logs</Match>
                 </Switch>
-                &hellip;
               </Text>
             </Row>
             <Row space="3" vertical="center">
@@ -606,7 +617,7 @@ export function Logs() {
               </Show>
               <Show when={mode() === "search" && !search()}>
                 <IconButton
-                  title="Reload recent logs"
+                  title="Reload logs"
                   onClick={() => {
                     clearLogStore(logGroupKey());
                     createSearch(
@@ -948,7 +959,7 @@ export function Logs() {
                   </LogMoreIndicatorIcon>
                   <Text leading="normal" color="dimmed" size="sm">
                     <Show when={view() === "recent"} fallback="Loading...">
-                      Loading from{" "}
+                      Scanning from{" "}
                       {new Date(
                         search()?.timeStart
                           ? search()?.timeStart + "Z"
@@ -961,10 +972,11 @@ export function Logs() {
               </Match>
               <Match when={true && view() === "recent"}>
                 <LogMoreIndicator>
-                  <Text
-                    leading="normal"
-                    color="dimmed"
-                    size="sm"
+                  <LogMoreIndicatorIcon>
+                    <IconEllipsisVertical />
+                  </LogMoreIndicatorIcon>
+                  <TextButton
+                    style={{ "line-height": "normal" }}
                     onClick={() => {
                       const i = invocations();
                       console.log(
@@ -974,8 +986,8 @@ export function Logs() {
                       createSearch(i[i.length - 1]!.start.getTime());
                     }}
                   >
-                    Click to load more
-                  </Text>
+                    Load more logs
+                  </TextButton>
                 </LogMoreIndicator>
               </Match>
             </Switch>
