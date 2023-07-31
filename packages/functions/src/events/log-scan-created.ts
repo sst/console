@@ -26,6 +26,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
   const invocations = new Set<string>();
 
   let initial = search.timeStart ? new Date(search.timeStart + "Z") : undefined;
+  const isFixed = search.timeEnd != null;
 
   if (!initial) {
     const response = await client.send(
@@ -45,8 +46,10 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
   await (async () => {
     while (true) {
       iteration++;
-      const start = initial.getTime() - delay(iteration);
-      const end = initial.getTime() - delay(iteration - 1);
+      const start = initial.getTime() - (isFixed ? 0 : delay(iteration));
+      const end = isFixed
+        ? new Date(search.timeEnd + "Z").getTime()
+        : initial.getTime() - delay(iteration - 1);
       await Log.Search.setStart({
         id: search.id,
         timeStart: new Date(start).toISOString().split("Z")[0]!,
@@ -62,7 +65,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
         .send(
           new StartQueryCommand({
             logGroupIdentifiers: [search.logGroup],
-            queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 1000`,
+            queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 10000`,
             startTime: start / 1000,
             endTime: end / 1000,
           })
@@ -113,7 +116,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
             batchSize += JSON.stringify(evt).length;
           }
           await Realtime.publish("log", batch);
-          if (invocations.size >= 50) {
+          if (invocations.size >= 50 || isFixed) {
             return;
           }
           break;

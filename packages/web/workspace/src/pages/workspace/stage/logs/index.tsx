@@ -38,11 +38,12 @@ import { DUMMY_LOGS } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
 import { IconMap } from "../resources";
 import { bus } from "$/providers/bus";
-import { unwrap } from "solid-js/store";
+import { createStore, unwrap } from "solid-js/store";
 import { useLocalContext } from "$/providers/local";
 import { Invoke, InvokeControl } from "./invoke";
 import { createId } from "@paralleldrive/cuid2";
 import { LogSearchStore } from "$/data/log-search";
+import { DialogRange, DialogRangeControl } from "./dialog-range";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -458,7 +459,7 @@ export function Logs() {
     return logGroup;
   });
 
-  const [view, setView] = createSignal("search");
+  const [view, setView] = createSignal<string>();
   const mode = createMemo(() => {
     if (resource()?.enrichment.live) return "live";
     if (view() === "tail") return "tail";
@@ -497,403 +498,500 @@ export function Logs() {
   });
 
   createEffect(() => {
+    if (view()) return;
     if (mode() !== "search") return;
+    setView("recent");
     createSearch();
   });
 
-  function createSearch(start?: number) {
-    if (!start) clearLogStore(logGroupKey());
+  const [lastSearch, setLastSearch] = createStore<{
+    start?: Date;
+    end?: Date;
+  }>({});
+  function createSearch(start?: number, end?: number) {
+    setLastSearch("start", start ? new Date(start) : undefined);
+    setLastSearch("end", end ? new Date(end) : undefined);
+
     rep().mutate.log_search({
       stageID: stage.stage.id,
       logGroup: logGroup(),
       id: createId(),
-      timeStart: start ? new Date(start).toISOString().split("Z")[0] : null,
+      timeStart: lastSearch.start?.toISOString().split("Z")[0] || null,
+      timeEnd: lastSearch.end?.toISOString().split("Z")[0] || null,
     });
   }
 
   let invokeControl!: InvokeControl;
+  let rangeControl!: DialogRangeControl;
 
   return (
-    <Stack space="5">
-      <Row space="2" horizontal="between" vertical="center">
-        <Stack space="2" vertical="center">
-          <Text size="lg" weight="medium">
-            Logs
-          </Text>
-          <Row
-            space="1"
-            horizontal="center"
-            onClick={() => bar.show("resource")}
-          >
-            <Text code size="mono_base" color="secondary">
-              {resource()?.metadata.handler}
+    <>
+      <Stack space="5">
+        <Row space="2" horizontal="between" vertical="center">
+          <Stack space="2" vertical="center">
+            <Text size="lg" weight="medium">
+              Logs
             </Text>
-            <LogSwitchIcon>
-              <IconChevronUpDown />
-            </LogSwitchIcon>
-          </Row>
-        </Stack>
-        <Show when={mode() === "live"}>
-          <Tag level="tip" style="outline">
-            Local
-          </Tag>
-        </Show>
-      </Row>
-      <LogList>
-        <LogLoadingIndicator>
-          <Row space="2" vertical="center">
-            <LogLoadingIndicatorIcon pulse={mode() !== "search"}>
-              <Switch>
-                <Match when={mode() === "live" && !stage.connected}>
-                  <IconArrowsUpDown />
-                </Match>
-                <Match when={mode() === "search"}>
-                  <IconArrowDown />
-                </Match>
-                <Match when={true}>
-                  <IconBoltSolid class={LogLoadingIndicatorIconSvg} />
-                </Match>
-              </Switch>
-            </LogLoadingIndicatorIcon>
-            <Text leading="normal" color="dimmed" size="sm">
-              <Switch>
-                <Match when={mode() === "live" && !stage.connected}>
-                  Trying to connect to local `sst dev`
-                </Match>
-                <Match when={mode() === "live"}>
-                  Tailing logs from local `sst dev`
-                </Match>
-                <Match when={mode() === "search"}>Viewing recent logs</Match>
-                <Match when={true}>Tailing logs</Match>
-              </Switch>
-              &hellip;
-            </Text>
-          </Row>
-          <Row space="3" vertical="center">
-            <Show when={mode() !== "search" && invocations().length > 0}>
-              <TextButton
-                onClick={() => {
-                  clearLogStore(logGroupKey());
-                  bus.emit("log.cleared", {
-                    functionID: logGroup(),
-                  });
-                }}
-              >
-                Clear
-              </TextButton>
-            </Show>
-            <Show when={mode() === "search" && !search()}>
-              <IconButton
-                title="Reload recent logs"
-                onClick={() => {
-                  clearLogStore(logGroupKey());
-                  createSearch();
-                }}
-              >
-                <IconArrowPathRoundedSquare
-                  display="block"
-                  width={20}
-                  height={20}
-                />
-              </IconButton>
-            </Show>
-            <Show when={mode() !== "live"}>
-              <Dropdown size="sm" label="View">
-                <Dropdown.RadioGroup value={mode()} onChange={setView}>
-                  <Dropdown.RadioItem value="tail">Live</Dropdown.RadioItem>
-                  <Dropdown.RadioItem value="search">Recent</Dropdown.RadioItem>
-                  {/*
-                <Dropdown.Seperator />
-                <Dropdown.RadioItem value="5min">5min ago</Dropdown.RadioItem>
-                <Dropdown.RadioItem value="15min">15min ago</Dropdown.RadioItem>
-                <Dropdown.RadioItem value="1">1hr ago</Dropdown.RadioItem>
-                <Dropdown.RadioItem value="6">6hrs ago</Dropdown.RadioItem>
-                <Dropdown.RadioItem value="12">12hrs ago</Dropdown.RadioItem>
-                <Dropdown.RadioItem value="24">1 day ago</Dropdown.RadioItem>
-                <Dropdown.Seperator />
-                <Dropdown.RadioItem value="custom">
-                  Specify a time&hellip;
-                </Dropdown.RadioItem>
-                */}
-                </Dropdown.RadioGroup>
-              </Dropdown>
-            </Show>
-          </Row>
-        </LogLoadingIndicator>
-        <Show when={mode() !== "search" && resource()}>
-          {(resource) => (
-            <Invoke
-              control={(c) => (invokeControl = c)}
-              resource={resource()}
-            />
-          )}
-        </Show>
-        <Show when={false && invocations().length === 0}>
-          <LogEmpty>
-            <IconMagnifyingGlass
-              width={28}
-              height={28}
-              color={theme.color.icon.dimmed}
-            />
-            <Text center color="dimmed">
-              Could not find any logs from {new Date().toLocaleTimeString()}
-            </Text>
-          </LogEmpty>
-        </Show>
-        <For each={invocations()}>
-          {(invocation) => {
-            const [expanded, setExpanded] = createSignal(false);
-            const [tab, setTab] = createSignal<
-              "logs" | "request" | "response" | "error"
-            >("logs");
-
-            const shortDate = createMemo(() =>
-              new Intl.DateTimeFormat("en-US", shortDateOptions)
-                .format(invocation.start)
-                .replace(" at ", ", ")
-            );
-            const longDate = createMemo(() =>
-              new Intl.DateTimeFormat("en-US", longDateOptions).format(
-                invocation.start
-              )
-            );
-            const empty = createMemo(
-              () => mode() !== "live" && invocation.logs.length === 0
-            );
-            const [replaying, setReplaying] = createSignal(false);
-
-            return (
-              <LogContainer
-                expanded={expanded()}
-                level={invocation.error ? "error" : "info"}
-              >
-                <LogSummary
-                  loading={empty()}
-                  onClick={() => setExpanded((r) => !empty() && !r)}
-                >
-                  <Row shrink={false} space="2" vertical="center">
-                    <CaretIcon>
-                      <IconCaretRight />
-                    </CaretIcon>
-                    <LogLevel level={invocation.error ? "error" : "info"} />
-                  </Row>
-                  <LogDate title={longDate()}>{shortDate()}</LogDate>
-                  <LogDuration
-                    coldStart={invocation.cold}
-                    title={invocation.cold ? "Cold start" : ""}
-                  >
-                    {invocation.duration
-                      ? formatTime(invocation.duration)
-                      : "-"}
-                  </LogDuration>
-                  <LogRequestId title="Request Id">
-                    {invocation.id}
-                  </LogRequestId>
-                  <LogMessage>
-                    <Show when={invocation.logs.length > 0}>
-                      {invocation.logs[0].message}
+            <Row
+              space="1"
+              horizontal="center"
+              onClick={() => bar.show("resource")}
+            >
+              <Text code size="mono_base" color="secondary">
+                {resource()?.metadata.handler}
+              </Text>
+              <LogSwitchIcon>
+                <IconChevronUpDown />
+              </LogSwitchIcon>
+            </Row>
+          </Stack>
+          <Show when={mode() === "live"}>
+            <Tag level="tip" style="outline">
+              Local
+            </Tag>
+          </Show>
+        </Row>
+        <LogList>
+          <LogLoadingIndicator>
+            <Row space="2" vertical="center">
+              <LogLoadingIndicatorIcon pulse={mode() !== "search"}>
+                <Switch>
+                  <Match when={mode() === "live" && !stage.connected}>
+                    <IconArrowsUpDown />
+                  </Match>
+                  <Match when={mode() === "search"}>
+                    <IconArrowDown />
+                  </Match>
+                  <Match when={true}>
+                    <IconBoltSolid class={LogLoadingIndicatorIconSvg} />
+                  </Match>
+                </Switch>
+              </LogLoadingIndicatorIcon>
+              <Text leading="normal" color="dimmed" size="sm">
+                <Switch>
+                  <Match when={mode() === "live" && !stage.connected}>
+                    Trying to connect to local `sst dev`
+                  </Match>
+                  <Match when={mode() === "live"}>
+                    Tailing logs from local `sst dev`
+                  </Match>
+                  <Match when={mode() === "search"}>
+                    <Show
+                      when={lastSearch.start && lastSearch.end}
+                      fallback="Viewing recent logs"
+                    >
+                      <span>
+                        Viewing from {lastSearch.start?.toLocaleString()} to{" "}
+                        {lastSearch.end?.toLocaleString()}
+                      </span>
                     </Show>
-                  </LogMessage>
-                </LogSummary>
-                <Show when={expanded()}>
-                  <LogDetail>
-                    <LogDetailHeader>
-                      <Row space="5" vertical="center">
-                        <Show when={false}>
-                          <LogDetailHeaderTitle
-                            onClick={() => setTab("error")}
-                            state={tab() === "error" ? "active" : "inactive"}
-                          >
-                            Error
-                          </LogDetailHeaderTitle>
-                        </Show>
-                        <LogDetailHeaderTitle
-                          onClick={() => setTab("logs")}
-                          state={
-                            mode() === "live"
-                              ? tab() === "logs"
-                                ? "active"
-                                : "inactive"
-                              : "inactive"
-                          }
-                        >
-                          Logs
-                        </LogDetailHeaderTitle>
-                        <Show when={mode() === "live"}>
-                          <LogDetailHeaderTitle
-                            onClick={() => setTab("request")}
-                            state={
-                              !invocation.event
-                                ? "disabled"
-                                : tab() === "request"
-                                ? "active"
-                                : "inactive"
-                            }
-                          >
-                            Request
-                          </LogDetailHeaderTitle>
-                          <LogDetailHeaderTitle
-                            onClick={() => setTab("response")}
-                            state={
-                              !invocation.response
-                                ? "disabled"
-                                : tab() === "response"
-                                ? "active"
-                                : "inactive"
-                            }
-                          >
-                            Response
-                          </LogDetailHeaderTitle>
-                        </Show>
-                      </Row>
-                      <Show when={invocation.event}>
-                        <Row space="4">
-                          <TextButton
-                            on="surface"
-                            icon={<IconBookmark />}
-                            onClick={() =>
-                              invokeControl.savePayload(
-                                structuredClone(unwrap(invocation.event))
-                              )
-                            }
-                          >
-                            Save
-                          </TextButton>
-                          <TextButton
-                            on="surface"
-                            completing={replaying()}
-                            icon={<IconArrowPath />}
-                            onClick={() => {
-                              setReplaying(true);
-                              rep().mutate.function_invoke({
-                                stageID: resource()!.stageID,
-                                payload: structuredClone(
-                                  unwrap(invocation.event)
-                                ),
-                                functionARN: resource()!.metadata.arn,
-                              });
-                              setTimeout(() => setReplaying(false), 2000);
-                            }}
-                          >
-                            Replay
-                          </TextButton>
-                        </Row>
-                      </Show>
-                    </LogDetailHeader>
-                    <LogEntries error={tab() === "error"}>
-                      <Switch>
-                        <Match when={tab() === "error"}>
-                          <LogError>
-                            <Text
-                              code
-                              on="surface"
-                              size="mono_base"
-                              weight="medium"
-                              leading="normal"
-                            >
-                              {DUMMY_ERROR_JSON.stack[0]}
-                            </Text>
-                            <LogErrorMessage>
-                              {DUMMY_ERROR_JSON.stack.slice(1).join("\n")}
-                            </LogErrorMessage>
-                          </LogError>
-                        </Match>
-                        <Match when={tab() === "logs"}>
-                          {invocation.logs.map((entry, i) => {
-                            return (
-                              <LogEntry>
-                                <LogEntryTime>
-                                  {entry.timestamp.toLocaleTimeString()}
-                                </LogEntryTime>
-                                <Show when={false}>
-                                  <Stack
-                                    style={{ "min-width": "0" }}
-                                    space="1.5"
-                                  >
-                                    <LogEntryMessageErrorTitle>
-                                      {DUMMY_ERROR_JSON.stack[0]}
-                                    </LogEntryMessageErrorTitle>
-                                    <LogEntryMessage error>
-                                      {DUMMY_ERROR_JSON.stack
-                                        .slice(1)
-                                        .join("\n")}
-                                    </LogEntryMessage>
-                                  </Stack>
-                                </Show>
-                                <Show when={true}>
-                                  <LogEntryMessage>
-                                    {entry.message}
-                                  </LogEntryMessage>
-                                </Show>
-                              </LogEntry>
-                            );
-                          })}
-                        </Match>
-                        <Match when={tab() === "request"}>
-                          <LogEntry>
-                            <LogEntryMessage>
-                              {JSON.stringify(invocation.event, null, 2)}
-                            </LogEntryMessage>
-                          </LogEntry>
-                        </Match>
-                        <Match when={tab() === "response"}>
-                          <LogEntry>
-                            <LogEntryMessage>
-                              {JSON.stringify(
-                                invocation.response || invocation.error,
-                                null,
-                                2
-                              )}
-                            </LogEntryMessage>
-                          </LogEntry>
-                        </Match>
-                      </Switch>
-                    </LogEntries>
-                  </LogDetail>
-                </Show>
-              </LogContainer>
-            );
-          }}
-        </For>
-        <Show when={mode() === "search"}>
-          <Switch>
-            <Match when={search()}>
-              <LogMoreIndicator>
-                <LogMoreIndicatorIcon>
-                  <IconArrowPathSpin />
-                </LogMoreIndicatorIcon>
-                <Text leading="normal" color="dimmed" size="sm">
-                  Loading from{" "}
-                  {new Date(
-                    search()?.timeStart ? search()?.timeStart + "Z" : Date.now()
-                  ).toLocaleString()}
-                  &hellip;
-                </Text>
-              </LogMoreIndicator>
-            </Match>
-            <Match when={true}>
-              <LogMoreIndicator>
-                <Text
-                  leading="normal"
-                  color="dimmed"
-                  size="sm"
+                  </Match>
+                  <Match when={true}>Tailing logs</Match>
+                </Switch>
+                &hellip;
+              </Text>
+            </Row>
+            <Row space="3" vertical="center">
+              <Show when={mode() !== "search" && invocations().length > 0}>
+                <TextButton
                   onClick={() => {
-                    const i = invocations();
-                    console.log(
-                      "scanning from",
-                      i[i.length - 1].start.toISOString()
-                    );
-                    createSearch(i[i.length - 1]!.start.getTime());
+                    clearLogStore(logGroupKey());
+                    bus.emit("log.cleared", {
+                      functionID: logGroup(),
+                    });
                   }}
                 >
-                  Click to load more
-                </Text>
-              </LogMoreIndicator>
-            </Match>
-          </Switch>
-        </Show>
-      </LogList>
-    </Stack>
+                  Clear
+                </TextButton>
+              </Show>
+              <Show when={mode() === "search" && !search()}>
+                <IconButton
+                  title="Reload recent logs"
+                  onClick={() => {
+                    clearLogStore(logGroupKey());
+                    createSearch(
+                      lastSearch.start?.getTime(),
+                      lastSearch.end?.getTime()
+                    );
+                  }}
+                >
+                  <IconArrowPathRoundedSquare
+                    display="block"
+                    width={20}
+                    height={20}
+                  />
+                </IconButton>
+              </Show>
+              <Show when={mode() !== "live"}>
+                <Dropdown size="sm" label="View">
+                  <Dropdown.RadioGroup
+                    value={view()}
+                    onChange={(val) => {
+                      if (val === "custom") {
+                        console.log("showing range");
+                        setTimeout(() => rangeControl.show(), 0);
+                        return;
+                      }
+                      setView(val);
+                      if (val === "tail") return;
+                      clearLogStore(logGroupKey());
+                      if (val === "recent") {
+                        createSearch();
+                        return;
+                      }
+                      if (val === "5min") {
+                        createSearch(Date.now() - 1000 * 60 * 5, Date.now());
+                        return;
+                      }
+                      if (val === "15min") {
+                        createSearch(Date.now() - 1000 * 60 * 15, Date.now());
+                        return;
+                      }
+                      if (val === "1hr") {
+                        createSearch(Date.now() - 1000 * 60 * 60, Date.now());
+                        return;
+                      }
+                      if (val === "6hr") {
+                        const start = Date.now() - 1000 * 60 * 60 * 6;
+                        createSearch(start, start + 1000 * 60 * 60);
+                        return;
+                      }
+                      if (val === "12hr") {
+                        const start = Date.now() - 1000 * 60 * 60 * 12;
+                        createSearch(start, start + 1000 * 60 * 60);
+                        return;
+                      }
+                      if (val === "24hr") {
+                        const start = Date.now() - 1000 * 60 * 60 * 24;
+                        createSearch(start, start + 1000 * 60 * 60);
+                        return;
+                      }
+                    }}
+                  >
+                    <Dropdown.RadioItem closeOnSelect value="tail">
+                      Live
+                    </Dropdown.RadioItem>
+                    <Dropdown.RadioItem closeOnSelect value="recent">
+                      Recent
+                    </Dropdown.RadioItem>
+                    <Dropdown.Seperator />
+                    <Dropdown.RadioItem closeOnSelect value="5min">
+                      5min ago
+                    </Dropdown.RadioItem>
+                    <Dropdown.RadioItem closeOnSelect value="15min">
+                      15min ago
+                    </Dropdown.RadioItem>
+                    <Dropdown.RadioItem closeOnSelect value="1hr">
+                      1hr ago
+                    </Dropdown.RadioItem>
+                    <Dropdown.RadioItem closeOnSelect value="6hr">
+                      6hrs ago
+                    </Dropdown.RadioItem>
+                    <Dropdown.RadioItem closeOnSelect value="12hr">
+                      12hrs ago
+                    </Dropdown.RadioItem>
+                    <Dropdown.RadioItem closeOnSelect value="24hr">
+                      1 day ago
+                    </Dropdown.RadioItem>
+                    <Dropdown.Seperator />
+                    <Dropdown.RadioItem closeOnSelect value="custom">
+                      Specify a time&hellip;
+                    </Dropdown.RadioItem>
+                  </Dropdown.RadioGroup>
+                </Dropdown>
+              </Show>
+            </Row>
+          </LogLoadingIndicator>
+          <Show when={mode() !== "search" && resource()}>
+            {(resource) => (
+              <Invoke
+                control={(c) => (invokeControl = c)}
+                resource={resource()}
+              />
+            )}
+          </Show>
+          <Show
+            when={!search() && lastSearch.start && invocations().length === 0}
+          >
+            <LogEmpty>
+              <IconMagnifyingGlass
+                width={28}
+                height={28}
+                color={theme.color.icon.dimmed}
+              />
+              <Text center color="dimmed">
+                Could not find any logs
+              </Text>
+            </LogEmpty>
+          </Show>
+          <For each={invocations()}>
+            {(invocation) => {
+              const [expanded, setExpanded] = createSignal(false);
+              const [tab, setTab] = createSignal<
+                "logs" | "request" | "response" | "error"
+              >("logs");
+
+              const shortDate = createMemo(() =>
+                new Intl.DateTimeFormat("en-US", shortDateOptions)
+                  .format(invocation.start)
+                  .replace(" at ", ", ")
+              );
+              const longDate = createMemo(() =>
+                new Intl.DateTimeFormat("en-US", longDateOptions).format(
+                  invocation.start
+                )
+              );
+              const empty = createMemo(
+                () => mode() !== "live" && invocation.logs.length === 0
+              );
+              const [replaying, setReplaying] = createSignal(false);
+
+              return (
+                <LogContainer
+                  expanded={expanded()}
+                  level={invocation.error ? "error" : "info"}
+                >
+                  <LogSummary
+                    loading={empty()}
+                    onClick={() => setExpanded((r) => !empty() && !r)}
+                  >
+                    <Row shrink={false} space="2" vertical="center">
+                      <CaretIcon>
+                        <IconCaretRight />
+                      </CaretIcon>
+                      <LogLevel level={invocation.error ? "error" : "info"} />
+                    </Row>
+                    <LogDate title={longDate()}>{shortDate()}</LogDate>
+                    <LogDuration
+                      coldStart={invocation.cold}
+                      title={invocation.cold ? "Cold start" : ""}
+                    >
+                      {invocation.duration
+                        ? formatTime(invocation.duration)
+                        : "-"}
+                    </LogDuration>
+                    <LogRequestId title="Request Id">
+                      {invocation.id}
+                    </LogRequestId>
+                    <LogMessage>
+                      <Show when={invocation.logs.length > 0}>
+                        {invocation.logs[0].message}
+                      </Show>
+                    </LogMessage>
+                  </LogSummary>
+                  <Show when={expanded()}>
+                    <LogDetail>
+                      <LogDetailHeader>
+                        <Row space="5" vertical="center">
+                          <Show when={false}>
+                            <LogDetailHeaderTitle
+                              onClick={() => setTab("error")}
+                              state={tab() === "error" ? "active" : "inactive"}
+                            >
+                              Error
+                            </LogDetailHeaderTitle>
+                          </Show>
+                          <LogDetailHeaderTitle
+                            onClick={() => setTab("logs")}
+                            state={
+                              mode() === "live"
+                                ? tab() === "logs"
+                                  ? "active"
+                                  : "inactive"
+                                : "inactive"
+                            }
+                          >
+                            Logs
+                          </LogDetailHeaderTitle>
+                          <Show when={mode() === "live"}>
+                            <LogDetailHeaderTitle
+                              onClick={() => setTab("request")}
+                              state={
+                                !invocation.event
+                                  ? "disabled"
+                                  : tab() === "request"
+                                  ? "active"
+                                  : "inactive"
+                              }
+                            >
+                              Request
+                            </LogDetailHeaderTitle>
+                            <LogDetailHeaderTitle
+                              onClick={() => setTab("response")}
+                              state={
+                                !invocation.response
+                                  ? "disabled"
+                                  : tab() === "response"
+                                  ? "active"
+                                  : "inactive"
+                              }
+                            >
+                              Response
+                            </LogDetailHeaderTitle>
+                          </Show>
+                        </Row>
+                        <Show when={invocation.event}>
+                          <Row space="4">
+                            <TextButton
+                              on="surface"
+                              icon={<IconBookmark />}
+                              onClick={() =>
+                                invokeControl.savePayload(
+                                  structuredClone(unwrap(invocation.event))
+                                )
+                              }
+                            >
+                              Save
+                            </TextButton>
+                            <TextButton
+                              on="surface"
+                              completing={replaying()}
+                              icon={<IconArrowPath />}
+                              onClick={() => {
+                                setReplaying(true);
+                                rep().mutate.function_invoke({
+                                  stageID: resource()!.stageID,
+                                  payload: structuredClone(
+                                    unwrap(invocation.event)
+                                  ),
+                                  functionARN: resource()!.metadata.arn,
+                                });
+                                setTimeout(() => setReplaying(false), 2000);
+                              }}
+                            >
+                              Replay
+                            </TextButton>
+                          </Row>
+                        </Show>
+                      </LogDetailHeader>
+                      <LogEntries error={tab() === "error"}>
+                        <Switch>
+                          <Match when={tab() === "error"}>
+                            <LogError>
+                              <Text
+                                code
+                                on="surface"
+                                size="mono_base"
+                                weight="medium"
+                                leading="normal"
+                              >
+                                {DUMMY_ERROR_JSON.stack[0]}
+                              </Text>
+                              <LogErrorMessage>
+                                {DUMMY_ERROR_JSON.stack.slice(1).join("\n")}
+                              </LogErrorMessage>
+                            </LogError>
+                          </Match>
+                          <Match when={tab() === "logs"}>
+                            {invocation.logs.map((entry, i) => {
+                              return (
+                                <LogEntry>
+                                  <LogEntryTime>
+                                    {entry.timestamp.toLocaleTimeString()}
+                                  </LogEntryTime>
+                                  <Show when={false}>
+                                    <Stack
+                                      style={{ "min-width": "0" }}
+                                      space="1.5"
+                                    >
+                                      <LogEntryMessageErrorTitle>
+                                        {DUMMY_ERROR_JSON.stack[0]}
+                                      </LogEntryMessageErrorTitle>
+                                      <LogEntryMessage error>
+                                        {DUMMY_ERROR_JSON.stack
+                                          .slice(1)
+                                          .join("\n")}
+                                      </LogEntryMessage>
+                                    </Stack>
+                                  </Show>
+                                  <Show when={true}>
+                                    <LogEntryMessage>
+                                      {entry.message}
+                                    </LogEntryMessage>
+                                  </Show>
+                                </LogEntry>
+                              );
+                            })}
+                          </Match>
+                          <Match when={tab() === "request"}>
+                            <LogEntry>
+                              <LogEntryMessage>
+                                {JSON.stringify(invocation.event, null, 2)}
+                              </LogEntryMessage>
+                            </LogEntry>
+                          </Match>
+                          <Match when={tab() === "response"}>
+                            <LogEntry>
+                              <LogEntryMessage>
+                                {JSON.stringify(
+                                  invocation.response || invocation.error,
+                                  null,
+                                  2
+                                )}
+                              </LogEntryMessage>
+                            </LogEntry>
+                          </Match>
+                        </Switch>
+                      </LogEntries>
+                    </LogDetail>
+                  </Show>
+                </LogContainer>
+              );
+            }}
+          </For>
+          <Show when={mode() === "search"}>
+            <Switch>
+              <Match when={search()}>
+                <LogMoreIndicator>
+                  <LogMoreIndicatorIcon>
+                    <IconArrowPathSpin />
+                  </LogMoreIndicatorIcon>
+                  <Text leading="normal" color="dimmed" size="sm">
+                    <Show when={view() === "recent"} fallback="Loading...">
+                      Loading from{" "}
+                      {new Date(
+                        search()?.timeStart
+                          ? search()?.timeStart + "Z"
+                          : Date.now()
+                      ).toLocaleString()}
+                      &hellip;
+                    </Show>
+                  </Text>
+                </LogMoreIndicator>
+              </Match>
+              <Match when={true && view() === "recent"}>
+                <LogMoreIndicator>
+                  <Text
+                    leading="normal"
+                    color="dimmed"
+                    size="sm"
+                    onClick={() => {
+                      const i = invocations();
+                      console.log(
+                        "scanning from",
+                        i[i.length - 1].start.toISOString()
+                      );
+                      createSearch(i[i.length - 1]!.start.getTime());
+                    }}
+                  >
+                    Click to load more
+                  </Text>
+                </LogMoreIndicator>
+              </Match>
+            </Switch>
+          </Show>
+        </LogList>
+      </Stack>
+      <DialogRange
+        onSelect={(start) => {
+          setView(start.toString());
+          clearLogStore(logGroupKey());
+          console.log(start);
+          createSearch(start.getTime(), start.getTime() + 1000 * 60 * 60);
+        }}
+        control={(control) => (rangeControl = control)}
+      />
+    </>
   );
 }
 

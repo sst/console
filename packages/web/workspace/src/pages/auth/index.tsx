@@ -58,6 +58,7 @@ export function Email() {
   });
 
   const [challenge, setChallenge] = createSignal<string>();
+  const [submitting, setSubmitting] = createSignal<boolean>();
 
   return (
     <>
@@ -78,6 +79,7 @@ export function Email() {
         method="get"
         action={import.meta.env.VITE_AUTH_URL + "/authorize"}
         onSubmit={async (e) => {
+          setSubmitting(true);
           e.preventDefault();
           const form = e.currentTarget;
           const result = await botpoison.challenge();
@@ -96,7 +98,9 @@ export function Email() {
         <input type="hidden" name="provider" value="email" />
         <input type="hidden" name="challenge" value={challenge()} />
         <Stack space="3">
-          <Button type="submit">Continue</Button>
+          <Button type="submit" disabled={submitting()}>
+            {submitting() ? "Submitting" : "Continue"}
+          </Button>
           <Text center size="sm" color="dimmed">
             We'll send a pin code to your email
           </Text>

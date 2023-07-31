@@ -160,7 +160,6 @@ bus.on("function.success", (e) => {
 });
 
 bus.on("function.error", (e) => {
-  console.log("got error", e);
   bus.emit("log", [["e", Date.now(), e.functionID, e.requestID]]);
   setLogStore(
     produce((state) => {

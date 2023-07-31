@@ -38,6 +38,7 @@ export const search = zod(
     logGroup: true,
     stageID: true,
     timeStart: true,
+    timeEnd: true,
   }),
   async (input) =>
     useTransaction(async (tx) => {
@@ -50,6 +51,7 @@ export const search = zod(
           id: input.id,
           workspaceID: useWorkspace(),
           timeStart: input.timeStart,
+          timeEnd: input.timeEnd,
         })
         .execute();
       createTransactionEffect(() =>
