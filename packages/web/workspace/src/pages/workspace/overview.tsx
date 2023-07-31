@@ -64,22 +64,6 @@ const Card = styled("div", {
   },
 });
 
-const CardEmpty = styled("div", {
-  base: {
-    padding: theme.space[4],
-    borderRadius: theme.borderRadius,
-    border: `2px dashed ${theme.color.divider.base}`,
-  },
-});
-
-const CardEmptyIcon = styled("div", {
-  base: {
-    width: 16,
-    height: 16,
-    color: theme.color.icon.dimmed,
-  },
-});
-
 const CardHeader = styled("div", {
   base: {
     ...utility.row(0.5),
@@ -297,7 +281,6 @@ const StageRoot = styled(Link, {
     padding: `0 ${theme.space[4]}`,
     justifyContent: "space-between",
     borderTop: `1px solid ${theme.color.divider.base}`,
-    transition: `background-color ${theme.colorFadeDuration} ease`,
     ":hover": {
       backgroundColor: theme.color.background.hover,
     },
