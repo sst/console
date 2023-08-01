@@ -21,49 +21,68 @@ export type LogEvent =
       string[] /* trace */
     ];
 
+export type Processor = ReturnType<typeof createProcessor>;
+
+export function createProcessor(group: string) {
+  return {
+    group,
+    cold: new Set<string>(),
+    invocations: new Map<string, number>(),
+  };
+}
+
 export function process(input: {
   id: string;
   line: string;
   timestamp: number;
-  group: string;
   stream: string;
-  cold: Set<string>;
-  invocations: Map<string, number>;
+  processor: Processor;
 }): LogEvent | undefined {
   function generateID(id: string) {
     const trimmed = id.trim();
-    const count = input.invocations.get(trimmed);
+    const count = input.processor.invocations.get(trimmed);
     if (!count) return trimmed + "    ";
     return id + "[" + count + "]";
   }
   const tabs = input.line.split("\t");
   if (tabs[0]?.startsWith("INIT_START")) {
-    input.cold.add(input.stream);
+    input.processor.cold.add(input.stream);
     return;
   }
   if (tabs[0]?.startsWith("START")) {
     const splits = tabs[0].split(" ");
-    const cold = input.cold.has(input.stream);
-    input.cold.delete(input.stream);
-    return ["s", input.timestamp, input.group, generateID(splits[2]!), cold];
+    const cold = input.processor.cold.has(input.stream);
+    input.processor.cold.delete(input.stream);
+    return [
+      "s",
+      input.timestamp,
+      input.processor.group,
+      generateID(splits[2]!),
+      cold,
+    ];
   }
 
   if (tabs[0]?.startsWith("END")) {
     const splits = tabs[0].split(" ");
-    return ["e", input.timestamp, input.group, generateID(splits[2]!)];
+    return [
+      "e",
+      input.timestamp,
+      input.processor.group,
+      generateID(splits[2]!),
+    ];
   }
 
   if (tabs[0]?.startsWith("REPORT")) {
     const generated = generateID(tabs[0].split(" ")[2]!);
     const requestID = tabs[0].split(" ")[2]!.trim();
-    input.invocations.set(
+    input.processor.invocations.set(
       requestID,
-      (input.invocations.get(requestID) || 0) + 1
+      (input.processor.invocations.get(requestID) || 0) + 1
     );
     return [
       "r",
       input.timestamp,
-      input.group,
+      input.processor.group,
       generated,
       parseInt(tabs[2]?.split(" ")[2] || "0"),
     ];
@@ -75,7 +94,7 @@ export function process(input: {
       return [
         "t",
         input.timestamp,
-        input.group,
+        input.processor.group,
         generateID(tabs[1]!),
         parsed.errorType,
         parsed.errorMessage,
@@ -85,7 +104,7 @@ export function process(input: {
     return [
       "m",
       input.timestamp,
-      input.group,
+      input.processor.group,
       generateID(tabs[1]!),
       tabs[2]!.trim(),
       tabs.slice(3).join("\t").trim(),

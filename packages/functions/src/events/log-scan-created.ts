@@ -22,8 +22,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
   console.log("scanning logs", search);
 
   let iteration = 0;
-  const cold = new Set<string>();
-  const invocations = new Map<string, number>();
+  const processor = Log.createProcessor(search.id);
 
   let initial = search.timeStart ? new Date(search.timeStart + "Z") : undefined;
   const isFixed = search.timeEnd != null;
@@ -90,12 +89,10 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
               .sort((a, b) => a[0]!.value!.localeCompare(b[0]!.value!))
               .flatMap((result, index) => {
                 const evt = Log.process({
+                  processor,
                   id: index.toString(),
                   timestamp: new Date(result[0]?.value! + " Z").getTime(),
-                  group: search.logGroup + "-search",
                   stream: result[2]?.value!,
-                  cold,
-                  invocations,
                   line: result[1]?.value!,
                 });
                 if (evt) return [evt];
@@ -118,7 +115,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
             batchSize += JSON.stringify(evt).length;
           }
           await Realtime.publish("log", batch);
-          if (invocations.size >= 50 || isFixed) {
+          if (processor.invocations.size >= 50 || isFixed) {
             return;
           }
           break;

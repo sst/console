@@ -7,7 +7,7 @@ import {
 import { provideActor } from "@console/core/actor";
 import { App } from "@console/core/app";
 import { AWS } from "@console/core/aws";
-import { Log } from "@console/core/log";
+import { Log, LogEvent } from "@console/core/log";
 import { LogPoller } from "@console/core/log/poller";
 import { Realtime } from "@console/core/realtime";
 
@@ -23,12 +23,6 @@ interface State {
     attempts: number;
   };
 }
-
-export type Log =
-  | ["e", number, string, string]
-  | ["s", number, string, string, boolean]
-  | ["r", number, string, string, number]
-  | ["m", number, string, string, string, string, string];
 
 export async function handler(input: State) {
   const attempts = input.status?.attempts || 0;
@@ -142,10 +136,9 @@ export async function handler(input: State) {
   }
   if (!start) start = Date.now() - 30 * 1000;
 
-  let count = 0;
   console.log("fetching since", new Date(start + offset).toLocaleString());
-  const cold = new Set<string>();
-  let batch: Log[] = [];
+  const processor = Log.createProcessor(input.logGroup + "-tail");
+  let batch: LogEvent[] = [];
   let batchSize = 0;
 
   for await (const event of fetchEvents(
@@ -159,13 +152,11 @@ export async function handler(input: State) {
       batch = [];
       batchSize = 0;
     }
-    count++;
     const evt = Log.process({
+      processor,
       timestamp: event.timestamp!,
       line: event.message!,
-      cold,
       stream: event.logStreamName!,
-      group: input.logGroup + "-tail",
       id: event.eventId!,
     });
     if (evt) {
@@ -174,7 +165,7 @@ export async function handler(input: State) {
     }
   }
   await Realtime.publish("log", batch);
-  console.log("published", count, "events");
+  console.log("published", processor.invocations.size, "events");
 
   return {
     attempts: attempts + 1,

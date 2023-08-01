@@ -40,7 +40,7 @@ import { DUMMY_LOGS } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
 import { IconMap } from "../resources";
 import { bus } from "$/providers/bus";
-import { createStore, unwrap } from "solid-js/store";
+import { createStore, produce, unwrap } from "solid-js/store";
 import { useLocalContext } from "$/providers/local";
 import { Invoke, InvokeControl } from "./invoke";
 import { createId } from "@paralleldrive/cuid2";
@@ -465,11 +465,11 @@ export function Logs() {
         .replace("function:", "log-group:/aws/lambda/")
         .replace("arn:aws:lambda", "arn:aws:logs");
     }
+
     const r = resource();
     if (!r) return "";
     const logGroup = (() => {
       if (r.type === "Function") {
-        if (r.enrichment.live) return r.addr;
         return r.metadata.arn
           .replace("function:", "log-group:/aws/lambda/")
           .replace("arn:aws:lambda", "arn:aws:logs");
@@ -487,25 +487,10 @@ export function Logs() {
     return "search";
   });
 
-  const logGroupKey = createMemo(() => {
-    const base = logGroup();
-    if (mode() === "live") return base;
-    return base + "-" + mode();
-  });
-
-  const invocations = createMemo(() => {
-    const result = query.dummy ? DUMMY_LOGS : LogStore[logGroupKey()] || [];
-    if (mode() === "tail" || mode() === "live") return result.slice().reverse();
-    return result;
-  });
-
   const rep = useReplicache();
 
   const poller = createSubscription(() =>
     LogPollerStore.fromLogGroup(logGroup())
-  );
-  const search = createSubscription(() =>
-    LogSearchStore.fromLogGroup(logGroup())
   );
 
   createEffect(() => {
@@ -525,25 +510,94 @@ export function Logs() {
     createSearch();
   });
 
-  const [lastSearch, setLastSearch] = createStore<{
+  const [search, setSearch] = createStore<{
+    id: string;
     start?: Date;
     end?: Date;
-  }>({});
+  }>({
+    id: createId(),
+  });
+  const activeSearch = createSubscription(() =>
+    LogSearchStore.fromID(search.id || "")
+  );
+
   function createSearch(start?: number, end?: number) {
-    setLastSearch("start", start ? new Date(start) : undefined);
-    setLastSearch("end", end ? new Date(end) : undefined);
+    setSearch(
+      produce((draft) => {
+        draft.start = start ? new Date(start) : undefined;
+        draft.end = end ? new Date(end) : undefined;
+      })
+    );
 
     rep().mutate.log_search({
+      id: search.id!,
       stageID: stage.stage.id,
       logGroup: logGroup(),
-      id: createId(),
-      timeStart: lastSearch.start?.toISOString().split("Z")[0] || null,
-      timeEnd: lastSearch.end?.toISOString().split("Z")[0] || null,
+      timeStart: search.start?.toISOString().split("Z")[0] || null,
+      timeEnd: search.end?.toISOString().split("Z")[0] || null,
     });
   }
 
+  const logGroupKey = createMemo(() => {
+    const base = logGroup();
+    const searchID = search.id!;
+    const addr = resource()?.addr!;
+    if (mode() === "live") return addr;
+    if (mode() === "search") return searchID;
+    return base + "-tail";
+  });
+
+  const invocations = createMemo(() => {
+    const result = query.dummy ? DUMMY_LOGS : LogStore[logGroupKey()] || [];
+    if (mode() === "tail" || mode() === "live") return result.slice().reverse();
+    return result;
+  });
+
   let invokeControl!: InvokeControl;
   let rangeControl!: DialogRangeControl;
+
+  function switchView(val: string) {
+    if (val === "custom") {
+      console.log("showing range");
+      setTimeout(() => rangeControl.show(), 0);
+      return;
+    }
+    setView(val);
+    if (val === "tail") return;
+    clearLogStore(logGroupKey());
+    setSearch("id", createId());
+    if (val === "recent") {
+      createSearch();
+      return;
+    }
+    if (val === "5min") {
+      createSearch(Date.now() - 1000 * 60 * 5, Date.now());
+      return;
+    }
+    if (val === "15min") {
+      createSearch(Date.now() - 1000 * 60 * 15, Date.now());
+      return;
+    }
+    if (val === "1hr") {
+      createSearch(Date.now() - 1000 * 60 * 60, Date.now());
+      return;
+    }
+    if (val === "6hr") {
+      const start = Date.now() - 1000 * 60 * 60 * 6;
+      createSearch(start, start + 1000 * 60 * 60);
+      return;
+    }
+    if (val === "12hr") {
+      const start = Date.now() - 1000 * 60 * 60 * 12;
+      createSearch(start, start + 1000 * 60 * 60);
+      return;
+    }
+    if (val === "24hr") {
+      const start = Date.now() - 1000 * 60 * 60 * 24;
+      createSearch(start, start + 1000 * 60 * 60);
+      return;
+    }
+  }
 
   return (
     <>
@@ -601,13 +655,12 @@ export function Logs() {
                   </Match>
                   <Match when={mode() === "search"}>
                     <Show
-                      when={lastSearch.start && lastSearch.end}
+                      when={search.start && search.end}
                       fallback="Viewing recent logs"
                     >
                       <span>
-                        Viewing logs between{" "}
-                        {lastSearch.start?.toLocaleString()} —{" "}
-                        {lastSearch.end?.toLocaleString()}
+                        Viewing logs between {search.start?.toLocaleString()} —{" "}
+                        {search.end?.toLocaleString()}
                       </span>
                     </Show>
                   </Match>
@@ -628,16 +681,10 @@ export function Logs() {
                   Clear
                 </TextButton>
               </Show>
-              <Show when={mode() === "search" && !search()}>
+              <Show when={mode() === "search" && !activeSearch()}>
                 <IconButton
                   title="Reload logs"
-                  onClick={() => {
-                    clearLogStore(logGroupKey());
-                    createSearch(
-                      lastSearch.start?.getTime(),
-                      lastSearch.end?.getTime()
-                    );
-                  }}
+                  onClick={() => switchView(view()!)}
                 >
                   <IconArrowPathRoundedSquare
                     display="block"
@@ -648,50 +695,7 @@ export function Logs() {
               </Show>
               <Show when={mode() !== "live"}>
                 <Dropdown size="sm" label="View">
-                  <Dropdown.RadioGroup
-                    value={view()}
-                    onChange={(val) => {
-                      if (val === "custom") {
-                        console.log("showing range");
-                        setTimeout(() => rangeControl.show(), 0);
-                        return;
-                      }
-                      setView(val);
-                      if (val === "tail") return;
-                      clearLogStore(logGroupKey());
-                      if (val === "recent") {
-                        createSearch();
-                        return;
-                      }
-                      if (val === "5min") {
-                        createSearch(Date.now() - 1000 * 60 * 5, Date.now());
-                        return;
-                      }
-                      if (val === "15min") {
-                        createSearch(Date.now() - 1000 * 60 * 15, Date.now());
-                        return;
-                      }
-                      if (val === "1hr") {
-                        createSearch(Date.now() - 1000 * 60 * 60, Date.now());
-                        return;
-                      }
-                      if (val === "6hr") {
-                        const start = Date.now() - 1000 * 60 * 60 * 6;
-                        createSearch(start, start + 1000 * 60 * 60);
-                        return;
-                      }
-                      if (val === "12hr") {
-                        const start = Date.now() - 1000 * 60 * 60 * 12;
-                        createSearch(start, start + 1000 * 60 * 60);
-                        return;
-                      }
-                      if (val === "24hr") {
-                        const start = Date.now() - 1000 * 60 * 60 * 24;
-                        createSearch(start, start + 1000 * 60 * 60);
-                        return;
-                      }
-                    }}
-                  >
+                  <Dropdown.RadioGroup value={view()} onChange={switchView}>
                     <Dropdown.RadioItem closeOnSelect value="tail">
                       Live
                     </Dropdown.RadioItem>
@@ -735,7 +739,11 @@ export function Logs() {
             )}
           </Show>
           <Show
-            when={!search() && lastSearch.start && invocations().length === 0}
+            when={
+              !activeSearch() &&
+              mode() === "search" &&
+              invocations().length === 0
+            }
           >
             <LogEmpty>
               <IconMagnifyingGlass
@@ -916,29 +924,29 @@ export function Logs() {
                                   <LogEntryTime>
                                     {entry.timestamp.toLocaleTimeString()}
                                   </LogEntryTime>
-                                  <Show when={false}>
-                                    <Stack
-                                      style={{ "min-width": "0" }}
-                                      space="1.5"
-                                    >
-                                      <LogEntryMessageErrorTitle>
-                                        {DUMMY_ERROR_JSON.stack[0]}
-                                      </LogEntryMessageErrorTitle>
-                                      <LogEntryMessage error>
-                                        {DUMMY_ERROR_JSON.stack
-                                          .slice(1)
-                                          .join("\n")}
-                                      </LogEntryMessage>
-                                    </Stack>
-                                  </Show>
-                                  <Show when={true}>
-                                    <LogEntryMessage>
-                                      {entry.message}
-                                    </LogEntryMessage>
-                                  </Show>
+                                  <LogEntryMessage>
+                                    {entry.message}
+                                  </LogEntryMessage>
                                 </LogEntry>
                               );
                             })}
+                            <Show when={invocation.error}>
+                              <LogEntry>
+                                <LogEntryTime>
+                                  {invocation.end?.toLocaleTimeString()}
+                                </LogEntryTime>
+                                <Stack style={{ "min-width": "0" }} space="1.5">
+                                  <LogEntryMessageErrorTitle>
+                                    {invocation.error!.type}
+                                  </LogEntryMessageErrorTitle>
+                                  <LogEntryMessage error>
+                                    {invocation.error?.trace
+                                      ?.slice(1)
+                                      ?.join("\n")}
+                                  </LogEntryMessage>
+                                </Stack>
+                              </LogEntry>
+                            </Show>
                           </Match>
                           <Match when={tab() === "request"}>
                             <LogEntry>
@@ -968,7 +976,7 @@ export function Logs() {
           </For>
           <Show when={mode() === "search"}>
             <Switch>
-              <Match when={search()}>
+              <Match when={activeSearch()}>
                 <LogMoreIndicator>
                   <LogMoreIndicatorIcon>
                     <IconArrowPathSpin />
@@ -980,8 +988,8 @@ export function Logs() {
                     >
                       Scanning from{" "}
                       {new Date(
-                        search()?.timeStart
-                          ? search()?.timeStart + "Z"
+                        activeSearch()?.timeStart
+                          ? activeSearch()?.timeStart + "Z"
                           : Date.now()
                       ).toLocaleString()}
                       &hellip;
