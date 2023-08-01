@@ -33,6 +33,7 @@ import {
   createSignal,
   mergeProps,
   onMount,
+  untrack,
 } from "solid-js";
 import { useResourcesContext, useStageContext } from "../context";
 import { Resource } from "@console/core/app/resource";
@@ -446,7 +447,6 @@ const DUMMY_ERROR_JSON = {
 };
 
 export function Logs() {
-  const local = useLocalContext();
   const stage = useStageContext();
   const bar = useCommandBar();
   const params = useParams();
@@ -504,10 +504,11 @@ export function Logs() {
   });
 
   createEffect(() => {
-    if (view()) return;
-    if (mode() !== "search") return;
-    setView("recent");
-    createSearch();
+    const r = resource();
+    if (!r) return;
+    untrack(() => {
+      switchView("recent");
+    });
   });
 
   const [search, setSearch] = createStore<{
