@@ -27,6 +27,7 @@ import {
   Match,
   Show,
   Switch,
+  batch,
   createEffect,
   createMemo,
   createSignal,
@@ -213,6 +214,7 @@ const LogRequestId = styled(LogText, {
   base: {
     paddingLeft: theme.space[2],
     flexShrink: 0,
+    whiteSpace: "pre",
     lineHeight: "normal",
     color: theme.color.text.secondary.base,
     fontSize: theme.font.size.mono_base,
@@ -773,7 +775,14 @@ export function Logs() {
                   expanded={expanded()}
                   level={invocation.error ? "error" : "info"}
                 >
-                  <LogSummary onClick={() => setExpanded((r) => !r)}>
+                  <LogSummary
+                    onClick={() => {
+                      batch(() => {
+                        if (!expanded() && invocation.error) setTab("error");
+                        setExpanded((r) => !r);
+                      });
+                    }}
+                  >
                     <Row shrink={false} space="2" vertical="center">
                       <CaretIcon>
                         <IconCaretRight />
@@ -790,7 +799,7 @@ export function Logs() {
                         : "-"}
                     </LogDuration>
                     <LogRequestId title="Request Id">
-                      {invocation.id}
+                      {invocation.id.slice(0, 36)}
                     </LogRequestId>
                     <LogMessage>
                       {invocation.error?.message || invocation.logs[0]?.message}
@@ -800,6 +809,12 @@ export function Logs() {
                     <LogDetail>
                       <LogDetailHeader>
                         <Row space="5" vertical="center">
+                          <LogDetailHeaderTitle
+                            onClick={() => setTab("logs")}
+                            state={tab() === "logs" ? "active" : "inactive"}
+                          >
+                            Logs
+                          </LogDetailHeaderTitle>
                           <Show when={invocation.error}>
                             <LogDetailHeaderTitle
                               onClick={() => setTab("error")}
@@ -808,12 +823,6 @@ export function Logs() {
                               Error
                             </LogDetailHeaderTitle>
                           </Show>
-                          <LogDetailHeaderTitle
-                            onClick={() => setTab("logs")}
-                            state={tab() === "logs" ? "active" : "inactive"}
-                          >
-                            Logs
-                          </LogDetailHeaderTitle>
                           <Show when={mode() === "live"}>
                             <LogDetailHeaderTitle
                               onClick={() => setTab("request")}

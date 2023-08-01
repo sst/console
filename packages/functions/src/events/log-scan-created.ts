@@ -23,7 +23,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
 
   let iteration = 0;
   const cold = new Set<string>();
-  const invocations = new Set<string>();
+  const invocations = new Map<string, number>();
 
   let initial = search.timeStart ? new Date(search.timeStart + "Z") : undefined;
   const isFixed = search.timeEnd != null;
@@ -86,18 +86,21 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
           let batch: LogEvent[] = [];
           let batchSize = 0;
           const events = pipe(
-            results.flatMap((result, index) => {
-              const evt = Log.process({
-                id: index.toString(),
-                timestamp: new Date(result[0]?.value! + " Z").getTime(),
-                group: search.logGroup + "-search",
-                stream: result[2]?.value!,
-                cold,
-                line: result[1]?.value!,
-              });
-              if (evt) return [evt];
-              return [];
-            }),
+            results
+              .sort((a, b) => a[0]!.value!.localeCompare(b[0]!.value!))
+              .flatMap((result, index) => {
+                const evt = Log.process({
+                  id: index.toString(),
+                  timestamp: new Date(result[0]?.value! + " Z").getTime(),
+                  group: search.logGroup + "-search",
+                  stream: result[2]?.value!,
+                  cold,
+                  invocations,
+                  line: result[1]?.value!,
+                });
+                if (evt) return [evt];
+                return [];
+              }),
             groupBy((evt) => evt[3]),
             values,
             map((evts) => evts.sort((a, b) => a[1] - b[1])),
@@ -106,7 +109,6 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
           console.log("sending", events.length, "events");
 
           for (const evt of events.flat()) {
-            invocations.add(evt[3]);
             if (batchSize >= 100 * 1024) {
               await Realtime.publish("log", batch);
               batch = [];

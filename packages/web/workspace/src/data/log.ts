@@ -111,7 +111,6 @@ bus.on("log", (e) => {
       }
       case "t": {
         const [_, timestamp, logGroup, requestId, type, message, trace] = log;
-        console.log(log);
         setLogStore(
           produce((state) => {
             let invocation = state[logGroup]?.find((i) => i.id === requestId);
