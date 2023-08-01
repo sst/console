@@ -62,15 +62,16 @@ const GraphicStem = styled("div", {
 export type DialogRangeControl = ReturnType<typeof init>["control"];
 
 export function DialogRange(props: {
-  onSelect: (start: Date) => void;
+  onSelect: (start: Date, end: Date) => void;
   control: (control: DialogRangeControl) => void;
 }) {
   const { state, control } = init();
-  let input!: HTMLInputElement;
+  let start!: HTMLInputElement;
+  let end!: HTMLInputElement;
 
   createEffect(() => {
     if (state.show) {
-      setTimeout(() => input.focus(), 0);
+      setTimeout(() => start.focus(), 0);
     }
   });
 
@@ -85,8 +86,9 @@ export function DialogRange(props: {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
           const start = new Date(fd.get("start")?.toString()!);
-          if (!start) return;
-          props.onSelect(start);
+          const end = new Date(fd.get("end")?.toString()!);
+          if (!start || !end) return;
+          props.onSelect(start, end);
           control.hide();
         }}
       >
@@ -99,17 +101,26 @@ export function DialogRange(props: {
           <Row space="1">
             <Grower>
               <FormInput
-                ref={input}
+                onChange={(e) => {
+                  if (end.value) return;
+                  console.log(e.currentTarget.value);
+                  const start = new Date(e.currentTarget.value);
+                  if (!start) return;
+                  start.setHours(start.getHours() + 1);
+                  end.value = new Date(start.getTime())
+                    .toISOString()
+                    .substring(0, 16);
+                }}
+                ref={start}
                 name="start"
                 type="datetime-local"
-                data-element={"save-payload-dialog-name"}
               />
             </Grower>
             <GraphicSpacer>
               <GraphicStem />
             </GraphicSpacer>
             <Grower>
-              <FormInput minLength={1} />
+              <FormInput ref={end} name="end" type="datetime-local" />
             </Grower>
           </Row>
           <Row space="5" vertical="center" horizontal="end">

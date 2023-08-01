@@ -1018,7 +1018,7 @@ export function Logs() {
                   </TextButton>
                 </LogMoreIndicator>
               </Match>
-              <Match when={true}>
+              <Match when={false}>
                 <LogMoreIndicator>
                   <Text leading="normal" color="dimmed" size="sm">
                     Done
@@ -1030,11 +1030,10 @@ export function Logs() {
         </LogList>
       </Stack>
       <DialogRange
-        onSelect={(start) => {
+        onSelect={(start, end) => {
           setView(start.toString());
           clearLogStore(logGroupKey());
-          console.log(start);
-          createSearch(start.getTime(), start.getTime() + 1000 * 60 * 60);
+          createSearch(start.getTime(), end.getTime());
         }}
         control={(control) => (rangeControl = control)}
       />
