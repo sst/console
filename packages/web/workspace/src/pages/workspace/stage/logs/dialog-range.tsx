@@ -13,6 +13,7 @@ import { utility } from "$/ui/utility";
 import { styled } from "@macaron-css/solid";
 import { createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
+import { DateTime } from "luxon";
 
 function init() {
   const [state, setState] = createStore<{
@@ -104,12 +105,12 @@ export function DialogRange(props: {
                 onChange={(e) => {
                   if (end.value) return;
                   console.log(e.currentTarget.value);
-                  const start = new Date(e.currentTarget.value);
+                  const start = DateTime.fromISO(e.currentTarget.value);
                   if (!start) return;
-                  start.setHours(start.getHours() + 1);
-                  end.value = new Date(start.getTime())
-                    .toISOString()
-                    .substring(0, 16);
+                  end.value = start
+                    .plus({ hours: 1 })
+                    .toISO()
+                    ?.substring(0, 16)!;
                 }}
                 ref={start}
                 name="start"

@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -215,6 +215,9 @@ importers:
       '@tanstack/solid-virtual':
         specifier: 3.0.0-beta.6
         version: 3.0.0-beta.6
+      '@types/luxon':
+        specifier: ^3.3.1
+        version: 3.3.1
       aws-iot-device-sdk-v2:
         specifier: ^1.13.1
         version: 1.13.1
@@ -7783,6 +7786,10 @@ packages:
       '@types/through': 0.0.30
       rxjs: 7.8.1
     dev: true
+
+  /@types/luxon@3.3.1:
+    resolution: {integrity: sha512-XOS5nBcgEeP2PpcqJHjCWhUCAzGfXIU8ILOSLpx2FhxqMW9KdxgCGXNOEKGVBfveKtIpztHzKK5vSRVLyW/NqA==}
+    dev: false
 
   /@types/node@18.16.0:
     resolution: {integrity: sha512-BsAaKhB+7X+H4GnSjGhJG9Qi8Tw+inU9nJDwmD5CgOmBLEI6ArdhikpLX7DjbjDRDTbqZzU2LSQNZg8WGPiSZQ==}

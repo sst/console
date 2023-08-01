@@ -114,7 +114,6 @@ bus.on("log", (e) => {
         setLogStore(
           produce((state) => {
             let invocation = state[logGroup]?.find((i) => i.id === requestId);
-            console.log("invocation", invocation);
             if (!invocation) return;
             invocation.error = {
               type,
