@@ -179,6 +179,7 @@ const LogEmpty = styled("div", {
 const LogText = styled("div", {
   base: {
     ...utility.textLine(),
+    lineHeight: "normal",
     fontFamily: theme.font.family.code,
   },
 });
@@ -216,7 +217,6 @@ const LogRequestId = styled(LogText, {
     paddingLeft: theme.space[2],
     flexShrink: 0,
     whiteSpace: "pre",
-    lineHeight: "normal",
     color: theme.color.text.secondary.base,
     fontSize: theme.font.size.mono_base,
   },
@@ -226,7 +226,6 @@ const LogMessage = styled(LogText, {
   base: {
     flexGrow: 1,
     alignSelf: "center",
-    lineHeight: "normal",
     paddingLeft: theme.space[2],
     fontSize: theme.font.size.mono_base,
     selectors: {
@@ -731,7 +730,13 @@ export function Logs() {
               </Show>
             </Row>
           </LogLoadingIndicator>
-          <Show when={mode() !== "search" && resource()}>
+          <Show
+            when={
+              (mode() !== "search" ||
+                (mode() === "search" && !(search.start && search.end))) &&
+              resource()
+            }
+          >
             {(resource) => (
               <Invoke
                 control={(c) => (invokeControl = c)}
@@ -987,12 +992,12 @@ export function Logs() {
                       when={view() === "recent"}
                       fallback={<>Loading&hellip;</>}
                     >
-                      Scanning from{" "}
-                      {new Date(
-                        activeSearch()?.timeStart
-                          ? activeSearch()?.timeStart + "Z"
-                          : Date.now()
-                      ).toLocaleString()}
+                      Scanning
+                      {activeSearch()?.timeStart
+                        ? ` from ${timeAgo(
+                            new Date(activeSearch()?.timeStart + "Z").getTime()
+                          )}`
+                        : ""}
                       &hellip;
                     </Show>
                   </Text>
@@ -1016,13 +1021,6 @@ export function Logs() {
                   >
                     Load more logs
                   </TextButton>
-                </LogMoreIndicator>
-              </Match>
-              <Match when={false}>
-                <LogMoreIndicator>
-                  <Text leading="normal" color="dimmed" size="sm">
-                    Done
-                  </Text>
                 </LogMoreIndicator>
               </Match>
             </Switch>
@@ -1101,6 +1099,51 @@ function formatTime(ms: number): string {
   } else {
     return hours + ":" + (minutes < 10 ? "0" : "") + minutes + "h";
   }
+}
+
+function timeAgo(timestamp: number): string {
+  const currentTimestamp = Date.now();
+  const diffInSeconds = Math.round((currentTimestamp - timestamp) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds}s ago`;
+  }
+
+  const diffInMinutes = Math.round(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  }
+
+  const diffInHours = Math.round(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours}hrs ago`;
+  }
+
+  const diffInDays = Math.round(diffInHours / 24);
+  if (diffInDays < 7) {
+    return diffInDays === 1
+      ? `${diffInDays} day ago`
+      : `${diffInDays} days ago`;
+  }
+
+  const diffInWeeks = Math.round(diffInDays / 7);
+  if (diffInWeeks < 4) {
+    return diffInWeeks === 1
+      ? `${diffInWeeks} week ago`
+      : `${diffInWeeks} weeks ago`;
+  }
+
+  const diffInMonths = Math.round(diffInDays / 30);
+  if (diffInMonths < 12) {
+    return diffInMonths === 1
+      ? `${diffInMonths} month ago`
+      : `${diffInMonths} months ago`;
+  }
+
+  const diffInYears = Math.round(diffInDays / 365);
+  return diffInYears === 1
+    ? `${diffInYears} year ago`
+    : `${diffInYears} years ago`;
 }
 
 const shortDateOptions: Intl.DateTimeFormatOptions = {
