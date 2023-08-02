@@ -309,6 +309,7 @@ export const integrate = zod(
               let stage = await App.Stage.fromName({
                 appID: app,
                 name: stageName,
+                region,
               }).then((s) => s?.id);
               if (!stage)
                 stage = await App.Stage.connect({

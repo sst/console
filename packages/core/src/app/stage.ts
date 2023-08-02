@@ -54,6 +54,7 @@ export const fromName = zod(
   Info.pick({
     appID: true,
     name: true,
+    region: true,
   }),
   async (input) =>
     useTransaction((tx) =>
@@ -64,6 +65,7 @@ export const fromName = zod(
           and(
             eq(stage.workspaceID, useWorkspace()),
             eq(stage.name, input.name),
+            eq(stage.region, input.region),
             eq(stage.appID, input.appID)
           )
         )
