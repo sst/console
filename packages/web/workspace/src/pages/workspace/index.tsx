@@ -19,6 +19,7 @@ import { AppStore } from "$/data/app";
 import { IconApp } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
+import { Debug } from "../debug";
 
 export function Workspace() {
   const params = useParams();
@@ -99,6 +100,7 @@ export function Content() {
       <Route path="connect" component={Connect} />
       <Route path="user" component={User} />
       <Route path="account" component={Account} />
+      <Route path="debug" component={Debug} />
       <Route path=":appName/:stageName/*" component={Stage} />
       <Route path="*" component={Overview} />
     </Routes>

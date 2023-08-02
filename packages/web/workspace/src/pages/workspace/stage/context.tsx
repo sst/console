@@ -53,6 +53,7 @@ export function useStageContext() {
 function createResourcesContext() {
   const ctx = useStageContext();
   const [query] = useSearchParams();
+
   const resources = createSubscription(() =>
     query.dummy
       ? async (): Promise<Resource.Info[]> => {

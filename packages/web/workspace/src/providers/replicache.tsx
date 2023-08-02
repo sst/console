@@ -2,6 +2,7 @@ import { Replicache, ReadTransaction } from "replicache";
 import {
   ParentProps,
   Show,
+  batch,
   createContext,
   createEffect,
   createMemo,
@@ -13,7 +14,7 @@ import { globalKeyframes } from "@macaron-css/core";
 import { theme, Fullscreen } from "$/ui";
 import { styled } from "@macaron-css/solid";
 import { IconApp } from "$/ui/icons/custom";
-import { createStore, reconcile } from "solid-js/store";
+import { createStore, produce, reconcile } from "solid-js/store";
 import { useAuth } from "./auth";
 import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
@@ -186,4 +187,36 @@ export function createSubscription<R, D = undefined>(
   });
 
   return () => store.result as R | D;
+}
+
+export function createWatch<T>(prefix: () => string) {
+  const rep = useReplicache();
+  let unsubscribe: () => void;
+
+  const [data, setStore] = createStore<Record<string, T>>({});
+
+  createEffect(() => {
+    if (unsubscribe) unsubscribe();
+    const p = prefix();
+
+    unsubscribe = rep().experimentalWatch(
+      (diffs) => {
+        batch(() => {
+          for (const diff of diffs) {
+            const key = diff.key.substring(p.length);
+            if (diff.op === "add") setStore(key, diff.newValue as T);
+            if (diff.op === "change")
+              setStore(key, reconcile(diff.newValue as T));
+            if (diff.op === "del") setStore(produce((d) => delete d[key]));
+          }
+        });
+      },
+      {
+        prefix: p,
+        initialValuesInFirstDiff: true,
+      }
+    );
+  });
+
+  return data;
 }
