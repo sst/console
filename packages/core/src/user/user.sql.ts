@@ -13,8 +13,8 @@ export const user = mysqlTable(
     ...timestamps,
     email: varchar("email", { length: 255 }).notNull(),
   },
-  (user) => ({
-    primary: primaryKey(user.id, user.workspaceID),
-    email: uniqueIndex("email").on(user.email, user.workspaceID),
+  (table) => ({
+    primary: primaryKey(table.id, table.workspaceID),
+    email: uniqueIndex("email").on(table.email, table.workspaceID),
   })
 );

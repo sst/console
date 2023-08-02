@@ -1,3 +1,4 @@
+import "./providers/freshpaint";
 import "@fontsource/rubik/latin.css";
 import "@fontsource/ibm-plex-mono/latin.css";
 import { styled } from "@macaron-css/solid";

@@ -162,6 +162,7 @@ export interface InvokeControl {
 interface Props {
   resource: Extract<Resource.Info, { type: "Function" }>;
   control: (control: InvokeControl) => void;
+  onInvoke: () => void;
 }
 
 export function Invoke(props: Props) {
@@ -207,6 +208,7 @@ export function Invoke(props: Props) {
       payload,
       functionARN: props.resource.metadata.arn,
     });
+    props.onInvoke();
   }
   const [invoke, setInvoke] = createStore<{
     invoking: boolean;
