@@ -1,4 +1,7 @@
 import { Invocation } from "$/data/log";
+import { func } from "../resources-dummy";
+
+export const DUMMY_FUNC = func("index", "packages/function.handler");
 
 export const DUMMY_LOGS: Invocation[] = [
   {

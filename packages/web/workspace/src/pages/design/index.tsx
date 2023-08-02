@@ -368,6 +368,19 @@ export function Design() {
             </Row>
           </TextContainer>
         </Variant>
+        <Variant name="No Icon">
+          <TextContainer>
+            <Row space="4">
+              <TextButton on="base">Button</TextButton>
+              <TextButton data-state-hover on="base">
+                Button
+              </TextButton>
+              <TextButton completing on="base">
+                Button
+              </TextButton>
+            </Row>
+          </TextContainer>
+        </Variant>
       </ComponentType>
       <ComponentType name="IconButton">
         <Variant name="Base">

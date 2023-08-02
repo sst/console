@@ -169,6 +169,7 @@ const textButtonSurfaceHover: CSSProperties = {
 
 const TextButtonRoot = styled("span", {
   base: {
+    lineHeight: "normal",
     fontSize: theme.font.size.sm,
     transition: `color ${theme.colorFadeDuration} ease-out`,
   },

@@ -22,7 +22,7 @@ function resource<Type extends Resource.Info["type"]>(
   };
 }
 
-function func(id: string, handler: string, size?: number) {
+export function func(id: string, handler: string, size?: number) {
   return resource(
     "Function",
     id,

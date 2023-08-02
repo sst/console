@@ -37,7 +37,7 @@ import {
 } from "solid-js";
 import { useResourcesContext, useStageContext } from "../context";
 import { Resource } from "@console/core/app/resource";
-import { DUMMY_LOGS } from "./logs-dummy";
+import { DUMMY_FUNC, DUMMY_LOGS } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
 import { IconMap } from "../resources";
 import { bus } from "$/providers/bus";
@@ -451,11 +451,12 @@ export function Logs() {
   const params = useParams();
   const [query] = useSearchParams();
   const resources = useResourcesContext();
-  const resource = createMemo(
-    () =>
-      resources().find((x) => x.id === params.resourceID) as
-        | Extract<Resource.Info, { type: "Function" }>
-        | undefined
+  const resource = createMemo(() =>
+    query.dummy
+      ? DUMMY_FUNC
+      : (resources().find((x) => x.id === params.resourceID) as
+          | Extract<Resource.Info, { type: "Function" }>
+          | undefined)
   );
 
   const logGroup = createMemo(() => {
@@ -630,8 +631,8 @@ export function Logs() {
           <LogLoadingIndicator>
             <Row space="2" vertical="center">
               <LogLoadingIndicatorIcon
-                glow={mode() === "live" || mode() === "tail"}
                 pulse={mode() !== "search"}
+                glow={mode() === "live" || mode() === "tail"}
               >
                 <Switch>
                   <Match when={mode() === "live" && !stage.connected}>
@@ -1002,7 +1003,6 @@ export function Logs() {
                     <IconEllipsisVertical />
                   </LogMoreIndicatorIcon>
                   <TextButton
-                    style={{ "line-height": "normal" }}
                     onClick={() => {
                       const i = invocations();
                       console.log(
@@ -1109,34 +1109,26 @@ function timeAgo(timestamp: number): string {
 
   const diffInHours = Math.round(diffInMinutes / 60);
   if (diffInHours < 24) {
-    return `${diffInHours}hrs ago`;
+    return diffInHours === 1 ? "an hour ago" : `${diffInHours}hrs ago`;
   }
 
   const diffInDays = Math.round(diffInHours / 24);
   if (diffInDays < 7) {
-    return diffInDays === 1
-      ? `${diffInDays} day ago`
-      : `${diffInDays} days ago`;
+    return diffInDays === 1 ? "a day ago" : `${diffInDays} days ago`;
   }
 
   const diffInWeeks = Math.round(diffInDays / 7);
   if (diffInWeeks < 4) {
-    return diffInWeeks === 1
-      ? `${diffInWeeks} week ago`
-      : `${diffInWeeks} weeks ago`;
+    return diffInWeeks === 1 ? "a week ago" : `${diffInWeeks} weeks ago`;
   }
 
   const diffInMonths = Math.round(diffInDays / 30);
   if (diffInMonths < 12) {
-    return diffInMonths === 1
-      ? `${diffInMonths} month ago`
-      : `${diffInMonths} months ago`;
+    return diffInMonths === 1 ? "a month ago" : `${diffInMonths} months ago`;
   }
 
   const diffInYears = Math.round(diffInDays / 365);
-  return diffInYears === 1
-    ? `${diffInYears} year ago`
-    : `${diffInYears} years ago`;
+  return diffInYears === 1 ? "a year ago" : `${diffInYears} years ago`;
 }
 
 const shortDateOptions: Intl.DateTimeFormatOptions = {
