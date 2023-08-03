@@ -273,9 +273,14 @@ export function Overview() {
                 <Col>
                   <Card>
                     <CardHeader>
-                      <Text code size="mono_sm" color="dimmed">
-                        Team: {users().filter((u) => !u.timeDeleted).length}
-                      </Text>
+                      <Row space="0.5">
+                        <Text code size="mono_sm" color="dimmed">
+                          Team:
+                        </Text>
+                        <Text code size="mono_sm" color="dimmed">
+                          {users().filter((u) => !u.timeDeleted).length}
+                        </Text>
+                      </Row>
                     </CardHeader>
                     <div>
                       <For
