@@ -162,34 +162,6 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
-      <ComponentType name="SelectLogTime">
-        <Variant name="Default">
-          <SelectLogTime />
-        </Variant>
-      </ComponentType>
-      <ComponentType name="UnsupportedAppBanner">
-        <Variant name="Default">
-          <Grower>
-            <Alert level="info">
-              Some of the stacks in this app are not supported by the SST
-              Console.{" "}
-              <a
-                target="_blank"
-                href="https://github.com/serverless-stack/sst/releases"
-              >
-                Upgrade them to at least v2.19.1.
-              </a>
-            </Alert>
-          </Grower>
-        </Variant>
-      </ComponentType>
-      <ComponentType name="UnsupportedApp">
-        <Variant name="Default">
-          <Grower>
-            <UnsupportedApp />
-          </Grower>
-        </Variant>
-      </ComponentType>
       <ComponentType name="Accounts">
         <Variant name="Default">
           <Grower>
@@ -222,13 +194,6 @@ export function Design() {
         <Variant name="Default">
           <Grower>
             <FormTest />
-          </Grower>
-        </Variant>
-      </ComponentType>
-      <ComponentType name="LogsEmptyLoadingIndicator">
-        <Variant name="Default">
-          <Grower>
-            <LogsEmptyLoadingIndicator />
           </Grower>
         </Variant>
       </ComponentType>
@@ -483,6 +448,17 @@ export function Design() {
       <ComponentType name="Dropdown">
         <Variant name="Default">
           <Dropdown label="Dropdown">
+            <Dropdown.Item>Live</Dropdown.Item>
+            <Dropdown.Item>Recent</Dropdown.Item>
+            <Dropdown.Seperator />
+            <Dropdown.Item>Selected</Dropdown.Item>
+            <Dropdown.Item>
+              A really really really long dropdown option that should overflow
+            </Dropdown.Item>
+          </Dropdown>
+        </Variant>
+        <Variant name="RadioGroup">
+          <Dropdown label="Dropdown">
             <Dropdown.RadioGroup value="selected">
               <Dropdown.RadioItem value="live">Live</Dropdown.RadioItem>
               <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
@@ -509,6 +485,11 @@ export function Design() {
             <Dropdown.RadioGroup value="selected">
               <Dropdown.RadioItem value="live">Live</Dropdown.RadioItem>
             </Dropdown.RadioGroup>
+          </Dropdown>
+        </Variant>
+        <Variant name="Icon">
+          <Dropdown icon={<IconBookmark width={24} height={24} />}>
+            <Dropdown.Item>Live</Dropdown.Item>
           </Dropdown>
         </Variant>
       </ComponentType>
@@ -540,68 +521,6 @@ export function Design() {
         </Variant>
       </ComponentType>
     </>
-  );
-}
-
-const LogLoadingIndicator = styled("div", {
-  base: {
-    ...utility.row(1.5),
-    alignItems: "center",
-    padding: `${theme.space[2.5]} ${theme.space[1.5]}`,
-    borderTop: `1px solid ${theme.color.divider.base}`,
-    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
-  },
-  variants: {
-    border: {
-      true: {},
-      false: {
-        borderTopWidth: 0,
-      },
-    },
-  },
-  defaultVariants: {
-    border: false,
-  },
-});
-
-const LogLoadingIndicatorIcon = styled("div", {
-  base: {
-    width: 15,
-    height: 15,
-    color: theme.color.text.dimmed.base,
-    opacity: theme.iconOpacity,
-    animation: "pulse 2.5s linear infinite",
-  },
-});
-
-const LogLoadingIndicatorCopy = styled("div", {
-  base: {
-    color: theme.color.text.dimmed.base,
-    fontSize: "0.8125rem",
-  },
-});
-
-const LogsEmptyContainer = styled("div", {
-  base: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 300,
-    borderRadius: theme.borderRadius,
-    border: `1px solid ${theme.color.divider.base}`,
-  },
-});
-
-function LogsEmptyLoadingIndicator() {
-  return (
-    <LogsEmptyContainer>
-      <LogLoadingIndicator>
-        <LogLoadingIndicatorIcon>
-          <IconBoltSolid />
-        </LogLoadingIndicatorIcon>
-        <LogLoadingIndicatorCopy>Tailing logs&hellip;</LogLoadingIndicatorCopy>
-      </LogLoadingIndicator>
-    </LogsEmptyContainer>
   );
 }
 
@@ -1183,107 +1102,6 @@ const FakeModal = styled("form", {
     background: theme.color.background.modal,
   },
 });
-
-const SelectLogTimeForm = styled("form", {
-  base: {
-    padding: theme.space[5],
-    width: theme.modalWidth.sm,
-  },
-});
-
-const GraphicRoot = styled("div", {
-  base: {
-    ...utility.stack(0),
-    alignItems: "flex-end",
-  },
-  variants: {
-    position: {
-      start: {
-        paddingTop: 14,
-      },
-      end: {
-        paddingBottom: 14,
-      },
-    },
-  },
-});
-
-const GraphicSpacer = styled("div", {
-  base: {
-    ...utility.row(0),
-    width: theme.space[8],
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
-
-const GraphicDisc = styled("div", {
-  base: {
-    margin: "0px 0",
-    width: 16,
-    height: 2,
-    backgroundColor: theme.color.divider.base,
-    selectors: {
-      [`${GraphicRoot.selector({ position: "start" })} &`]: {
-        borderRadius: `${theme.borderRadius} 0 0 0`,
-      },
-      [`${GraphicRoot.selector({ position: "end" })} &`]: {
-        borderRadius: `0 0 0 ${theme.borderRadius}`,
-      },
-    },
-  },
-});
-
-const GraphicStem = styled("div", {
-  base: {
-    flex: 1,
-    height: 2,
-    backgroundColor: theme.color.divider.base,
-  },
-});
-
-function SelectLogTime() {
-  return (
-    <FakeModal>
-      <SelectLogTimeForm>
-        <Stack space="5">
-          <Stack space="2">
-            <Text size="lg" weight="medium">
-              View logs between
-            </Text>
-          </Stack>
-          <Row space="1">
-            <Grower>
-              <FormInput
-                data-element={"save-payload-dialog-name"}
-                autofocus
-                name="time"
-                minLength={1}
-                placeholder="2011-10-10T14:48"
-              />
-            </Grower>
-            <GraphicSpacer>
-              <GraphicStem />
-            </GraphicSpacer>
-            <Grower>
-              <FormInput
-                data-element={"save-payload-dialog-name"}
-                autofocus
-                name="time"
-                minLength={1}
-                placeholder="2011-10-10T14:48"
-              />
-            </Grower>
-          </Row>
-          <Row space="5" vertical="center" horizontal="end">
-            <LinkButton>Cancel</LinkButton>
-            <Button color="secondary">View Logs</Button>
-          </Row>
-        </Stack>
-      </SelectLogTimeForm>
-    </FakeModal>
-  );
-}
 
 const UnsupportedAppRoot = styled("div", {
   base: {

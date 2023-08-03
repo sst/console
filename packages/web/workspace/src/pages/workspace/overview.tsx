@@ -16,7 +16,8 @@ import {
   utility,
 } from "$/ui";
 import { Fullscreen } from "$/ui/layout";
-import { IconPlus, IconUserMinus } from "$/ui/icons";
+import { Dropdown } from "$/ui/dropdown";
+import { IconPlus, IconEllipsisVertical } from "$/ui/icons";
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
 import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
@@ -106,23 +107,19 @@ function splitCols(array: Account.Info[]) {
     return [array, []];
   }
 
-  const newArray = [...array];
-  // Insert second element twice as a placeholder for the user's card
-  newArray.splice(2, 0, newArray[1]);
-
   var col1 = [];
   var col2 = [];
 
-  for (var i = 0; i < newArray.length; i++) {
-    if (i % 2 === 0) {
-      col1.push(newArray[i]);
+  for (var i = 0; i < array.length; i++) {
+    // Leave an empty slot for the users card
+    if (i === 0 || i % 2 !== 0) {
+      col1.push(array[i]);
     } else {
-      col2.push(newArray[i]);
+      col2.push(array[i]);
     }
   }
 
-  // Remove the duplicate element
-  return [col1, col2.slice(1)];
+  return [col1, col2];
 }
 
 export function Overview() {
@@ -393,30 +390,30 @@ function UserCard(props: UserCardProps) {
             {user()?.email}
           </Text>
         </Row>
-        <Row space="3" horizontal="center" style={{ flex: "0 0 auto" }}>
+        <Row space="2" horizontal="center" style={{ flex: "0 0 auto" }}>
           <Show when={!user()?.timeSeen}>
             <Tag level="tip">Invited</Tag>
           </Show>
           <Show when={!self()}>
-            <IconButton
-              title="Remove from workspace"
-              onClick={() => {
-                if (
-                  !confirm(
-                    "Are you sure you want to remove them from the workspace?"
-                  )
-                )
-                  return;
-
-                rep().mutate.user_remove(props.id);
-              }}
+            <Dropdown
+              size="sm"
+              icon={<IconEllipsisVertical width={18} height={18} />}
             >
-              <IconUserMinus
-                width={18}
-                height={18}
-                style={{ display: "block" }}
-              />
-            </IconButton>
+              <Dropdown.Item
+                onSelect={() => {
+                  if (
+                    !confirm(
+                      "Are you sure you want to remove them from the workspace?"
+                    )
+                  )
+                    return;
+
+                  rep().mutate.user_remove(props.id);
+                }}
+              >
+                Remove from
+              </Dropdown.Item>
+            </Dropdown>
           </Show>
         </Row>
       </UserRoot>
