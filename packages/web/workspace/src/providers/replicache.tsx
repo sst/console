@@ -31,10 +31,18 @@ const mutators = new Client<ServerType>()
     await LogSearchStore.put(tx, input);
   })
   .mutation("user_create", async (tx, input) => {
-    // await UserStore.put(tx, {
-    //   id: input.id,
-    //   email: input.email,
-    // });
+    await UserStore.put(tx, {
+      id: input.id,
+      email: input.email,
+      timeCreated: new Date().toISOString(),
+    });
+  })
+  .mutation("user_remove", async (tx, input) => {
+    const user = await UserStore.fromID(input)(tx);
+    await UserStore.put(tx, {
+      ...user,
+      timeDeleted: new Date().toISOString(),
+    });
   })
   .mutation("function_invoke", async (tx, input) => {})
   .mutation("function_payload_save", async (tx, input) => {

@@ -1,6 +1,7 @@
 import {
   mysqlTable,
   primaryKey,
+  timestamp,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -12,6 +13,9 @@ export const user = mysqlTable(
     ...workspaceID,
     ...timestamps,
     email: varchar("email", { length: 255 }).notNull(),
+    timeSeen: timestamp("time_seen", {
+      mode: "string",
+    }),
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),

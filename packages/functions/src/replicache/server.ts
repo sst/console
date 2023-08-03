@@ -63,6 +63,7 @@ export const server = new Server()
     });
   })
   .expose("user_create", User.create)
+  .expose("user_remove", User.remove)
   .expose("app_create", App.create);
 
 export type ServerType = typeof server;

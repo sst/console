@@ -5,7 +5,7 @@ import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "../drizzle";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { useTransaction } from "../util/transaction";
 import { user } from "./user.sql";
 import { useWorkspace } from "../actor";
@@ -24,15 +24,36 @@ export const create = zod(
   async (input) => {
     const id = input.id ?? createId();
     return useTransaction(async (tx) => {
-      await tx.insert(user).values({
-        id,
-        email: input.email,
-        workspaceID: useWorkspace(),
-      });
+      await tx
+        .insert(user)
+        .values({
+          id,
+          email: input.email,
+          workspaceID: useWorkspace(),
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            timeDeleted: null,
+          },
+        })
+        .execute();
       return id;
     });
   }
 );
+
+export const remove = zod(Info.shape.id, async (input) => {
+  return useTransaction(async (tx) => {
+    await tx
+      .update(user)
+      .set({
+        timeDeleted: sql`CURRENT_TIMESTAMP()`,
+      })
+      .where(and(eq(user.id, input), eq(user.workspaceID, useWorkspace())))
+      .execute();
+    return input;
+  });
+});
 
 export const fromID = zod(Info.shape.id, async (id) =>
   db.transaction(async (tx) => {

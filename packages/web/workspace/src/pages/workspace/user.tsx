@@ -49,6 +49,7 @@ export function User() {
           >
             <FormInput
               type="email"
+              ref={(r) => setTimeout(() => r?.focus())}
               autofocus
               name="email"
               placeholder="user@example.com"

@@ -4,7 +4,14 @@ import "@fontsource/ibm-plex-mono/latin.css";
 import { styled } from "@macaron-css/solid";
 import { darkClass, lightClass, theme } from "./ui/theme";
 import { globalStyle, macaron$ } from "@macaron-css/core";
-import { Component, Match, Switch, createSignal, onCleanup } from "solid-js";
+import {
+  Component,
+  Match,
+  Switch,
+  createEffect,
+  createSignal,
+  onCleanup,
+} from "solid-js";
 import { Navigate, Route, Router, Routes, useNavigate } from "@solidjs/router";
 import { Auth, Code } from "./pages/auth";
 import { AuthProvider, useAuth } from "./providers/auth";
@@ -160,6 +167,10 @@ export const App: Component = () => {
                             },
                             false,
                             () => auth[existing!].replicache
+                          );
+
+                          createEffect(() =>
+                            console.log("workspaces", workspaces())
                           );
 
                           return (

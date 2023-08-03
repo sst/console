@@ -4,6 +4,7 @@ import { Session } from "sst/node/future/auth";
 import { db } from "@console/core/drizzle";
 import { user } from "@console/core/user/user.sql";
 import { eq } from "drizzle-orm";
+import { DateTime } from "luxon";
 
 export async function handler(evt: any) {
   const tokens = Buffer.from(evt.protocolData.mqtt.password, "base64")
@@ -19,6 +20,14 @@ export async function handler(evt: any) {
         workspaceID: user.workspaceID,
       })
       .from(user)
+      .where(eq(user.email, account.properties.email))
+      .execute();
+
+    await db
+      .update(user)
+      .set({
+        timeSeen: DateTime.now().toSQL({ includeOffset: false }),
+      })
       .where(eq(user.email, account.properties.email))
       .execute();
     workspaces.push(...rows.map((r) => r.workspaceID));

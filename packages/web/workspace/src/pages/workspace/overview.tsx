@@ -4,7 +4,7 @@ import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
 import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
-import { createSubscription } from "$/providers/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import {
   Button,
   Row,
@@ -135,6 +135,9 @@ export function Overview() {
       : AccountStore.list()
   );
   const users = createSubscription(UserStore.list, []);
+  createEffect(() => {
+    console.log([...users()]);
+  });
   const cols = createMemo(() => splitCols(accounts() || []));
   const stages = createSubscription(
     () =>
@@ -236,27 +239,16 @@ export function Overview() {
                   <Card>
                     <CardHeader>
                       <Text code size="mono_sm" color="dimmed">
-                        Team: {users().length}
+                        Team: {users().filter((u) => !u.timeDeleted).length}
                       </Text>
                     </CardHeader>
                     <div>
-                      <For each={users()}>
-                        {(user) => {
-                          const auth = useAuth();
-                          const storage = useStorage();
-                          const currentUser = createMemo(
-                            () => auth[storage.value.account].token
-                          );
-                          return (
-                            <Show when={user.timeDeleted === null}>
-                              <UserCard
-                                email={user.email}
-                                status="active"
-                                self={currentUser().email === user.email}
-                              />
-                            </Show>
-                          );
-                        }}
+                      <For
+                        each={users().sort((a, b) =>
+                          a.timeCreated.localeCompare(b.timeCreated)
+                        )}
+                      >
+                        {(user) => <UserCard id={user.id} />}
                       </For>
                     </div>
                   </Card>
@@ -368,47 +360,59 @@ const UserRoot = styled("div", {
   },
 });
 
-type UserCardProps = ComponentProps<typeof UserRoot> & {
-  self?: boolean;
-  email: string;
-  status: "invited" | "active";
+type UserCardProps = {
+  id: string;
 };
 
 function UserCard(props: UserCardProps) {
+  const rep = useReplicache();
+  const user = createSubscription(() => UserStore.fromID(props.id));
+  const auth = useAuth();
+  const storage = useStorage();
+  const self = createMemo(
+    () => auth[storage.value.account].token.email === user()?.email
+  );
+
   return (
-    <UserRoot>
-      <Row space="2" vertical="center">
-        <AvatarInitialsIcon
-          type="user"
-          text={props.email}
-          style={{ width: "24px", height: "24px" }}
-        />
-        <Text line size="base" leading="normal">
-          {props.email}
-        </Text>
-      </Row>
-      <Row space="3" horizontal="center" style={{ flex: "0 0 auto" }}>
-        <Show when={props.status === "invited"}>
-          <Tag level="tip">Invited</Tag>
-        </Show>
-        {/*<Show when={!props.self}>*/}
-        <Show when={false}>
-          <IconButton
-            title="Remove from workspace"
-            onClick={() =>
-              window.confirm(
-                "Are you sure you want to remove them from the workspace?"
-              )
-            }
-          >
-            <IconUserMinus
-              width={18}
-              height={18}
-              style={{ display: "block" }}
-            />
-          </IconButton>
-        </Show>
-      </Row>
-    </UserRoot>
+    <Show when={!user()?.timeDeleted}>
+      <UserRoot>
+        <Row space="2" vertical="center">
+          <AvatarInitialsIcon
+            type="user"
+            text={user()?.email || ""}
+            style={{ width: "24px", height: "24px" }}
+          />
+          <Text line size="base" leading="normal">
+            {user()?.email}
+          </Text>
+        </Row>
+        <Row space="3" horizontal="center" style={{ flex: "0 0 auto" }}>
+          <Show when={!user()?.timeSeen}>
+            <Tag level="tip">Invited</Tag>
+          </Show>
+          <Show when={!self()}>
+            <IconButton
+              title="Remove from workspace"
+              onClick={() => {
+                if (
+                  !confirm(
+                    "Are you sure you want to remove them from the workspace?"
+                  )
+                )
+                  return;
+
+                rep().mutate.user_remove(props.id);
+              }}
+            >
+              <IconUserMinus
+                width={18}
+                height={18}
+                style={{ display: "block" }}
+              />
+            </IconButton>
+          </Show>
+        </Row>
+      </UserRoot>
+    </Show>
   );
 }

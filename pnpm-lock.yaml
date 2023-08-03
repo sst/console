@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -129,6 +129,9 @@ importers:
       fast-jwt:
         specifier: ^2.2.1
         version: 2.2.1
+      luxon:
+        specifier: ^3.3.0
+        version: 3.3.0
       remeda:
         specifier: ^1.17.1
         version: 1.17.1
@@ -145,6 +148,9 @@ importers:
       '@types/aws-lambda':
         specifier: ^8.10.114
         version: 8.10.114
+      '@types/luxon':
+        specifier: ^3.3.1
+        version: 3.3.1
       '@types/node':
         specifier: ^18.16.0
         version: 18.16.0
@@ -7789,7 +7795,6 @@ packages:
 
   /@types/luxon@3.3.1:
     resolution: {integrity: sha512-XOS5nBcgEeP2PpcqJHjCWhUCAzGfXIU8ILOSLpx2FhxqMW9KdxgCGXNOEKGVBfveKtIpztHzKK5vSRVLyW/NqA==}
-    dev: false
 
   /@types/node@18.16.0:
     resolution: {integrity: sha512-BsAaKhB+7X+H4GnSjGhJG9Qi8Tw+inU9nJDwmD5CgOmBLEI6ArdhikpLX7DjbjDRDTbqZzU2LSQNZg8WGPiSZQ==}

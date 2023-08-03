@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.114",
+    "@types/luxon": "^3.3.1",
     "@types/node": "^18.16.0",
     "sst": "2.21.8"
   },
@@ -21,6 +22,7 @@
     "@octokit/rest": "^19.0.7",
     "drizzle-orm": "0.27.2",
     "fast-jwt": "^2.2.1",
+    "luxon": "^3.3.0",
     "remeda": "^1.17.1",
     "replicache": "^12.2.1",
     "undici": "^5.22.0",
