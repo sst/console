@@ -43,6 +43,8 @@ import {
 } from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
+import { pipe, sort } from "remeda";
+import { User } from "@console/core/user";
 
 const Root = styled("div", {
   base: {
@@ -134,7 +136,7 @@ export function Overview() {
         }
       : AccountStore.list()
   );
-  const users = createSubscription(UserStore.list, []);
+  const users = createSubscription(UserStore.list, [] as User.Info[]);
   createEffect(() => {
     console.log([...users()]);
   });
@@ -178,7 +180,11 @@ export function Overview() {
           </Show>
         </CardHeader>
         <div>
-          <For each={children().sort((a, b) => a.appID.localeCompare(b.appID))}>
+          <For
+            each={children().sort((a, b) =>
+              b.timeCreated.localeCompare(b.timeCreated)
+            )}
+          >
             {(stage) => <StageCard stage={stage} />}
           </For>
           <Show when={children().length === 0}>
@@ -244,8 +250,9 @@ export function Overview() {
                     </CardHeader>
                     <div>
                       <For
-                        each={users().sort((a, b) =>
-                          a.timeCreated.localeCompare(b.timeCreated)
+                        each={pipe(
+                          users(),
+                          sort((a, b) => a.email.length - b.email.length)
                         )}
                       >
                         {(user) => <UserCard id={user.id} />}
