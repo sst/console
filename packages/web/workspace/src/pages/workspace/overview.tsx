@@ -17,7 +17,11 @@ import {
 } from "$/ui";
 import { Fullscreen } from "$/ui/layout";
 import { Dropdown } from "$/ui/dropdown";
-import { IconPlus, IconEllipsisVertical } from "$/ui/icons";
+import {
+  IconPlus,
+  IconEllipsisVertical,
+  IconExclamationTriangle,
+} from "$/ui/icons";
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
 import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
@@ -75,6 +79,29 @@ const CardHeader = styled("div", {
     justifyContent: "space-between",
     padding: `0 ${theme.space[4]}`,
     borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const CardError = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    padding: theme.space[4],
+  },
+});
+
+const CardErrorIcon = styled("div", {
+  base: {
+    width: 16,
+    height: 16,
+    color: `hsla(${theme.color.base.red}, 100%)`,
+  },
+});
+
+const CardErrorCopy = styled(Text, {
+  base: {
+    fontSize: theme.font.size.sm,
+    color: `hsla(${theme.color.base.red}, 100%)`,
   },
 });
 
@@ -170,13 +197,18 @@ export function Overview() {
               {account.accountID}
             </Text>
           </Row>
-          <Show when={account.timeFailed}>
-            <Link href="account">
-              <Tag level="danger">Disconnected</Tag>
-            </Link>
-          </Show>
         </CardHeader>
         <div>
+          <Show when={account.timeFailed}>
+            <CardError>
+              <CardErrorIcon>
+                <IconExclamationTriangle />
+              </CardErrorIcon>
+              <Link href="account">
+                <CardErrorCopy>Reconnect account</CardErrorCopy>
+              </Link>
+            </CardError>
+          </Show>
           <For
             each={children().sort((a, b) =>
               b.timeCreated.localeCompare(b.timeCreated)
@@ -411,7 +443,7 @@ function UserCard(props: UserCardProps) {
                   rep().mutate.user_remove(props.id);
                 }}
               >
-                Remove from
+                Remove
               </Dropdown.Item>
             </Dropdown>
           </Show>
