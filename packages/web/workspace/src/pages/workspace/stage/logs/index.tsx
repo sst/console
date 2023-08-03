@@ -733,7 +733,9 @@ export function Logs() {
           </LogLoadingIndicator>
           <Show when={(mode() === "tail" || view() === "recent") && resource()}>
             <Invoke
-              onInvoke={() => switchView("tail")}
+              onInvoke={() => {
+                if (mode() === "search") switchView("tail");
+              }}
               control={(c) => (invokeControl = c)}
               resource={resource()!}
             />
