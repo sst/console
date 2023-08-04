@@ -1,5 +1,5 @@
 import { AppStore } from "$/data/app";
-import { UserStore } from "$/data/user";
+import { UserInfo, UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
 import { useAuth } from "$/providers/auth";
@@ -48,7 +48,7 @@ import {
 } from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
-import { pipe, sort } from "remeda";
+import { pipe, sortBy } from "remeda";
 import { User } from "@console/core/user";
 
 const Root = styled("div", {
@@ -127,6 +127,15 @@ const CardLoadingIcon = styled("div", {
   },
 });
 
+function sortUsers(users: UserInfo[], selfEmail: string): UserInfo[] {
+  return sortBy(
+    users,
+    (user) => (user.email === selfEmail ? 0 : 1), // Your own user
+    (user) => (!user.timeSeen ? 0 : 1), // Invites
+    (user) => user.email.length // Sort by length
+  );
+}
+
 function splitCols(array: Account.Info[]) {
   if (array.length === 0) {
     return [[], []];
@@ -173,6 +182,9 @@ export function Overview() {
     []
   );
   const nav = useNavigate();
+  const auth = useAuth();
+  const storage = useStorage();
+  const selfEmail = createMemo(() => auth[storage.value.account].token.email);
 
   createEffect(() => {
     const all = accounts();
@@ -289,12 +301,7 @@ export function Overview() {
                       </Row>
                     </CardHeader>
                     <div>
-                      <For
-                        each={pipe(
-                          users(),
-                          sort((a, b) => a.email.length - b.email.length)
-                        )}
-                      >
+                      <For each={sortUsers(users(), selfEmail())}>
                         {(user) => <UserCard id={user.id} />}
                       </For>
                     </div>
