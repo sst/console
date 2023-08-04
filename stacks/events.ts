@@ -29,6 +29,7 @@ export function Events({ stack }: StackContext) {
 
   bus.subscribe("app.stage.connected", {
     handler: "packages/functions/src/events/app-stage-connected.handler",
+    timeout: "5 minute",
     bind: [...Object.values(secrets.database), bus],
     permissions: ["sts", "iot"],
   });
@@ -36,14 +37,14 @@ export function Events({ stack }: StackContext) {
   bus.subscribe("app.stage.updated", {
     handler: "packages/functions/src/events/app-stage-updated.handler",
     bind: [...Object.values(secrets.database), bus],
-    timeout: "1 minute",
+    timeout: "5 minute",
     permissions: ["sts", "iot"],
   });
 
   bus.subscribe("aws.account.created", {
     handler: "packages/functions/src/events/aws-account-created.handler",
     bind: [...Object.values(secrets.database), bus],
-    timeout: "1 minute",
+    timeout: "5 minute",
     permissions: ["sts", "iot"],
     environment: {
       EVENT_BUS_ARN: bus.eventBusArn,
@@ -53,7 +54,7 @@ export function Events({ stack }: StackContext) {
   bus.subscribe("log.search.created", {
     handler: "packages/functions/src/events/log-scan-created.handler",
     bind: [...Object.values(secrets.database), bus],
-    timeout: "1 minute",
+    timeout: "5 minute",
     permissions: ["sts", "iot"],
   });
 
