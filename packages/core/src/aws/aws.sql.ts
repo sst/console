@@ -17,6 +17,9 @@ export const awsAccount = mysqlTable(
     timeFailed: timestamp("time_failed", {
       mode: "string",
     }),
+    timeDiscovered: timestamp("time_discovered", {
+      mode: "string",
+    }),
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),

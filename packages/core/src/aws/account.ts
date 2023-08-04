@@ -7,7 +7,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { Credentials } from ".";
 import {
   CloudFormationClient,
@@ -143,6 +143,8 @@ import { DescribeRegionsCommand, EC2Client } from "@aws-sdk/client-ec2";
 import { App } from "../app";
 import { Replicache } from "../replicache";
 import { Config } from "sst/node/config";
+import { db } from "../drizzle";
+import { Realtime } from "../realtime";
 
 export const regions = zod(
   bootstrap.schema.shape.credentials,
@@ -164,6 +166,19 @@ export const integrate = zod(
   }),
   async (input) => {
     const account = await fromID(input.awsAccountID);
+    await db
+      .update(awsAccount)
+      .set({
+        timeDiscovered: null,
+      })
+      .where(
+        and(
+          eq(awsAccount.id, input.awsAccountID),
+          eq(awsAccount.workspaceID, useWorkspace())
+        )
+      )
+      .execute();
+    await Replicache.poke();
     console.log("integrating account", account);
     if (!account) return;
     const iam = new IAMClient({
@@ -327,6 +342,17 @@ export const integrate = zod(
         await Replicache.poke();
       })
     );
-    return;
+
+    await db
+      .update(awsAccount)
+      .set({
+        timeDiscovered: sql`CURRENT_TIMESTAMP()`,
+      })
+      .where(
+        and(
+          eq(awsAccount.id, input.awsAccountID),
+          eq(awsAccount.workspaceID, useWorkspace())
+        )
+      );
   }
 );

@@ -5,7 +5,7 @@ import { db } from "@console/core/drizzle";
 
 const accounts = await db.select().from(awsAccount).execute();
 
-const filter: string[] = ["985262837467"];
+const filter: string[] = [];
 for (const account of accounts) {
   if (filter.length && !filter.includes(account.accountID)) continue;
   provideActor({

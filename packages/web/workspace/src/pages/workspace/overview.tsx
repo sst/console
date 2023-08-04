@@ -228,7 +228,7 @@ export function Overview() {
           >
             {(stage) => <StageCard stage={stage} />}
           </For>
-          <Show when={children().length === 0}>
+          <Show when={!account.timeDiscovered}>
             <CardLoading>
               <CardLoadingIcon>
                 <IconArrowPathSpin />

@@ -99,6 +99,11 @@ export function API({ stack, app }: StackContext) {
 
   poller.grantStartExecution(api.getFunction("POST /replicache/push")!);
 
+  new Function(stack, "scratch", {
+    bind: [auth, ...Object.values(secrets.database), bus],
+    handler: "packages/functions/src/scratch.handler",
+  });
+
   stack.addOutputs({
     ApiEndpoint: api.customDomainUrl,
   });
