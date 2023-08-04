@@ -326,20 +326,20 @@ export const integrate = zod(
                 name: stageName,
                 region,
               }).then((s) => s?.id);
-              if (!stage)
+              if (!stage) {
                 stage = await App.Stage.connect({
                   name: stageName,
                   appID: app,
                   region: config.region,
                   awsAccountID: account.id,
                 });
+                await Replicache.poke();
+              }
             });
             console.log(region, "found", stageName, appName);
           }
           if (!list.ContinuationToken) break;
         }
-
-        await Replicache.poke();
       })
     );
 
