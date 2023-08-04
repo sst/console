@@ -5,7 +5,7 @@ function resource<Type extends Resource.Info["type"]>(
   id: string,
   metadata: Extract<Resource.Info, { type: Type }>["metadata"],
   enrichment?: Extract<Resource.Info, { type: Type }>["enrichment"]
-): Resource.Info {
+): Extract<Resource.Info, { type: Type }> {
   return {
     id,
     type: type as any,
@@ -19,7 +19,7 @@ function resource<Type extends Resource.Info["type"]>(
     timeDeleted: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
     workspaceID: "workspace",
-  };
+  } as any;
 }
 
 export function func(id: string, handler: string, size?: number) {

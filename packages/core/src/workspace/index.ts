@@ -13,9 +13,10 @@ export const Info = createSelectSchema(workspace, {
   id: (schema) => schema.id.cuid2(),
   slug: (schema) =>
     schema.slug
-      .nonempty()
       .trim()
       .toLowerCase()
+      .nonempty()
+      .min(3)
       .regex(/^[a-z0-9\-]+$/),
 });
 export type Info = z.infer<typeof Info>;
