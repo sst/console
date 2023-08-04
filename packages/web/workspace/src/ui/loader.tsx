@@ -78,7 +78,7 @@ const LoadingIcon = styled("div", {
 
 export function Syncing(props: ParentProps) {
   return (
-    <Stack space="5" horizontal="center">
+    <Stack space="7" horizontal="center">
       <Title>{props.children}</Title>
       <LoadingResourcesIndicator>
         <LoadingRow>

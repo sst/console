@@ -46,6 +46,8 @@ function ref(id: string) {
   };
 }
 
+const EMPTY: Resource.Info[] = [];
+
 const DEFAULT = [
   resource(
     "Stack",
@@ -411,6 +413,7 @@ const PARTLY_SUPPORTED = [
 ];
 
 export const DUMMY_RESOURCES = {
+  EMPTY,
   DEFAULT,
   NOT_SUPPORTED,
   PARTLY_SUPPORTED,

@@ -6,14 +6,14 @@ import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import {
-  Button,
-  Row,
-  Stack,
-  Tag,
-  Text,
-  IconButton,
   theme,
   utility,
+  Row,
+  Tag,
+  Text,
+  Stack,
+  Button,
+  IconButton,
 } from "$/ui";
 import { Fullscreen } from "$/ui/layout";
 import { Dropdown } from "$/ui/dropdown";
@@ -239,14 +239,20 @@ export function Overview() {
           <Match when={accounts() && accounts()?.length === 0}>
             <Fullscreen>
               <Syncing>
-                <Stack space="2.5">
-                  <Text center size="lg" color="secondary">
+                <Stack space="3.5">
+                  <Text center size="xl" color="secondary">
                     Waiting to connect to your AWS account&hellip;
                   </Text>
-                  <Text center size="sm" color="secondary">
-                    Haven't connected one yet?{" "}
-                    <Link href="account">Head over here.</Link>
-                  </Text>
+                  <Stack space="2">
+                    <Text center size="sm" color="secondary">
+                      Double-check that the stack was created in{" "}
+                      <b>us-east-1</b>.
+                    </Text>
+                    <Text center size="sm" color="secondary">
+                      If not, then remove the stack and{" "}
+                      <Link href="account">reconnect it here.</Link>
+                    </Text>
+                  </Stack>
                 </Stack>
               </Syncing>
             </Fullscreen>

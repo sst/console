@@ -263,7 +263,7 @@ export function Resources() {
     <Switch>
       <Match when={!resources().length}>
         <Fullscreen>
-          <Syncing>Waiting for resources</Syncing>
+          <Syncing>Waiting for resources&hellip;</Syncing>
         </Fullscreen>
       </Match>
       <Match when={stacks().length === outdated().length}>
