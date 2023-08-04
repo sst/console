@@ -11,7 +11,7 @@ import {
   useContext,
 } from "solid-js";
 import { globalKeyframes } from "@macaron-css/core";
-import { theme, Fullscreen } from "$/ui";
+import { theme, Fullscreen, Splash } from "$/ui";
 import { styled } from "@macaron-css/solid";
 import { IconApp } from "$/ui/icons/custom";
 import { createStore, produce, reconcile } from "solid-js/store";
@@ -97,18 +97,6 @@ globalKeyframes("delayedFadeIn", {
   },
 });
 
-const LogoIcon = styled("div", {
-  base: {
-    width: 42,
-    height: 42,
-    opacity: 0,
-    animationDelay: "0.3s",
-    animation: "1s delayedFadeIn",
-    animationFillMode: "forwards",
-    color: theme.color.icon.dimmed,
-  },
-});
-
 export function ReplicacheProvider(
   props: ParentProps<{ accountID: string; workspaceID: string }>
 ) {
@@ -137,16 +125,7 @@ export function ReplicacheProvider(
   );
 
   return (
-    <Show
-      when={rep() && init()}
-      fallback={
-        <Fullscreen>
-          <LogoIcon>
-            <IconApp />
-          </LogoIcon>
-        </Fullscreen>
-      }
-    >
+    <Show when={rep() && init()} fallback={<Splash />}>
       <ReplicacheContext.Provider value={rep}>
         {props.children}
       </ReplicacheContext.Provider>

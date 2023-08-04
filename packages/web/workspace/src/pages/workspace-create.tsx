@@ -74,6 +74,7 @@ export function WorkspaceCreate() {
           <FormInput
             autofocus
             pattern="[a-z0-9\-]+"
+            minlength={3}
             onInput={(e) => {
               setSlug(e.currentTarget.value);
               setError(false);

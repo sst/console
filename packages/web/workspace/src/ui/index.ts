@@ -8,3 +8,4 @@ export * from "./layout";
 export * from "./loader";
 export * from "./utility";
 export * from "./avatar-icon";
+export * from "./splash";

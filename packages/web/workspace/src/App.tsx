@@ -28,6 +28,7 @@ import { UserStore } from "./data/user";
 import { IconBuildingOffice, IconPlus } from "./ui/icons";
 import { LocalProvider } from "./providers/local";
 import { useStorage } from "./providers/account";
+import { Fullscreen, Splash } from "./ui";
 
 const Root = styled("div", {
   base: {
@@ -197,6 +198,7 @@ export const App: Component = () => {
                               >
                                 <Navigate href={`/workspace`} />
                               </Match>
+                              <Match when={true}>{/* <Splash /> */}</Match>
                             </Switch>
                           );
                         }}
