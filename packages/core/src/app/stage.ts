@@ -195,7 +195,7 @@ export const syncMetadata = zod(
                   res,
                   input.credentials,
                   row.region
-                )
+                ).catch(() => {})
               : {};
           r.push({
             ...res,
