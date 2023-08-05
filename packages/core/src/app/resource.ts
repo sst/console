@@ -84,7 +84,6 @@ export const Enrichers = {
         FunctionName: resource.data.arn,
       })
     );
-    console.log(info.Configuration?.Environment?.Variables);
     return {
       size: info.Configuration?.CodeSize,
       live: Boolean(
