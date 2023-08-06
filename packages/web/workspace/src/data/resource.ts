@@ -1,35 +1,11 @@
-import { ReadTransaction } from "replicache";
 import type { Resource } from "@console/core/app/resource";
+import { define } from "$/providers/replicache";
 
-export function list() {
-  return async (tx: ReadTransaction) => {
-    const result = await tx.scan({ prefix: `/resource/` }).toArray();
-    return (result || []) as unknown as Resource.Info[];
-  };
-}
-
-export function fromID(id: string) {
-  return async (tx: ReadTransaction) => {
-    const result = await tx.get(`/resource/${id}`);
-    return result as Resource.Info;
-  };
-}
-
-export function fromAddr<T extends Resource.Info["type"]>(
-  id: string,
-  type?: T
-) {
-  return async (tx: ReadTransaction) => {
-    const result = await tx.get(`/resource/${id}`);
-    return result as Resource.Info;
-  };
-}
-
-export function forStage(stageID: string) {
-  return async (tx: ReadTransaction) => {
-    const all = await list()(tx);
-    return all.filter((item) => item.stageID === stageID);
-  };
-}
-
-export * as ResourceStore from "./resource";
+export const ResourceStore = define<Resource.Info>({
+  scan() {
+    return ["resource"];
+  },
+  get(id: string) {
+    return ["resource", id];
+  },
+});

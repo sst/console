@@ -79,14 +79,6 @@ export function AuthProvider(props: ParentProps) {
       pushURL: import.meta.env.VITE_API_URL + "/replicache/push",
       mutators,
     });
-    const oldPush = rep.pusher;
-    rep.pusher = async (req: Request) => {
-      const result = await oldPush(req);
-      setTimeout(() => {
-        rep.pull();
-      }, 10);
-      return result;
-    };
 
     stores[token.accountID] = {
       token,

@@ -26,9 +26,11 @@ export function Stage() {
   const rep = useReplicache();
   const nav = useNavigate();
   const params = useParams();
-  const workspace = useWorkspace();
 
-  const app = createSubscription(() => AppStore.fromName(params.appName));
+  const app = AppStore.watch.find(
+    useReplicache(),
+    (app) => app.name === params.appName
+  );
   const stage = createSubscription(() =>
     app()
       ? StageStore.fromName(app()!.id, params.stageName)

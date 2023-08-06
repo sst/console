@@ -4,7 +4,6 @@ import {
   createSubscription,
   useReplicache,
 } from "$/providers/replicache";
-import { Connect } from "./connect";
 import { useCommandBar } from "./command-bar";
 import { Stage } from "./stage";
 import { Show, createEffect, createMemo } from "solid-js";
@@ -82,9 +81,9 @@ export function Content() {
   const rep = useReplicache();
   const nav = useNavigate();
   const params = useParams();
+  const apps = AppStore.watch.scan(useReplicache());
   bar.register("app-switcher", async () => {
-    const apps = await rep().query(AppStore.list());
-    return apps.map((app) => ({
+    return apps().map((app) => ({
       icon: IconApp,
       category: "App",
       title: `Switch to "${app.name}" app`,
@@ -97,7 +96,6 @@ export function Content() {
   });
   return (
     <Routes>
-      <Route path="connect" component={Connect} />
       <Route path="user" component={User} />
       <Route path="account" component={Account} />
       <Route path="debug" component={Debug} />

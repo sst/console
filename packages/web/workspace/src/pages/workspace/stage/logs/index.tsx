@@ -42,7 +42,6 @@ import { useCommandBar } from "../../command-bar";
 import { IconMap } from "../resources";
 import { bus } from "$/providers/bus";
 import { createStore, produce, unwrap } from "solid-js/store";
-import { useLocalContext } from "$/providers/local";
 import { Invoke, InvokeControl } from "./invoke";
 import { createId } from "@paralleldrive/cuid2";
 import { LogSearchStore } from "$/data/log-search";

@@ -32,6 +32,6 @@ export function Web({ stack }: StackContext) {
 
   stack.addOutputs({
     WorkspaceUrl: workspace.customDomainUrl,
-    Output: "221",
+    Output: "224",
   });
 }

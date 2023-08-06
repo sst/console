@@ -87,3 +87,5 @@
 })(document, window.freshpaint || []);
 freshpaint.init("9374f65f-eb28-4d82-9020-fac5e32e6dad");
 freshpaint.page();
+
+export {};

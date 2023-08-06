@@ -170,9 +170,6 @@ export function Overview() {
       : AccountStore.list()
   );
   const users = createSubscription(UserStore.list, [] as User.Info[]);
-  createEffect(() => {
-    console.log([...users()]);
-  });
   const cols = createMemo(() => splitCols(accounts() || []));
   const stages = createSubscription(
     () =>
@@ -358,11 +355,7 @@ interface StageCardProps {
 }
 function StageCard(props: StageCardProps) {
   const [query] = useSearchParams();
-  const app = createSubscription(() =>
-    query.dummy
-      ? async (): Promise<App.Info> => DUMMY_APP_STORE[props.stage.appID]
-      : AppStore.fromID(props.stage.appID)
-  );
+  const app = AppStore.watch.get(useReplicache(), () => props.stage.appID);
   const local = query.dummy ? () => DUMMY_LOCAL_APP : useLocalContext();
   return (
     <StageRoot href={`${app()?.name}/${props.stage.name}`}>

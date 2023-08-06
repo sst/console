@@ -1,4 +1,4 @@
-import { Replicache, ReadTransaction } from "replicache";
+import { Replicache, ReadTransaction, WriteTransaction } from "replicache";
 import {
   ParentProps,
   Show,
@@ -6,14 +6,12 @@ import {
   createContext,
   createEffect,
   createMemo,
+  createSignal,
   onCleanup,
-  onMount,
   useContext,
 } from "solid-js";
 import { globalKeyframes } from "@macaron-css/core";
-import { theme, Fullscreen, Splash } from "$/ui";
-import { styled } from "@macaron-css/solid";
-import { IconApp } from "$/ui/icons/custom";
+import { Splash } from "$/ui";
 import { createStore, produce, reconcile } from "solid-js/store";
 import { useAuth } from "./auth";
 import { Client } from "@console/functions/replicache/framework";
@@ -174,34 +172,176 @@ export function createSubscription<R, D = undefined>(
   return () => store.result as R | D;
 }
 
-export function createWatch<T>(prefix: () => string) {
-  const rep = useReplicache();
+export function define<
+  T extends Record<string, any>,
+  Get extends (arg: any) => string[] = (arg: any) => string[]
+>(input: { get: Get; scan: () => string[] }) {
+  const result = {
+    watch: {
+      get: (rep: () => Replicache, cb: () => Parameters<Get>[0]) => {
+        return createGet<T>(() => result.path.get(cb()), rep);
+      },
+      scan: (rep: () => Replicache, filter?: (value: T) => boolean) => {
+        return createScan<T>(
+          () => result.path.scan(),
+          rep,
+          filter ? (values) => values.filter(filter) : undefined
+        );
+      },
+      find: (rep: () => Replicache, find: (value: T) => boolean) => {
+        const filtered = createScan<T>(
+          () => result.path.scan(),
+          rep,
+          (values) => [values.find(find)!]
+        );
+
+        return createMemo(() => filtered().at(0));
+      },
+    },
+    path: {
+      get: (args: Parameters<Get>[0]) => {
+        const path = input.get(args);
+        return `/` + path.join("/");
+      },
+      scan: () => {
+        const path = input.scan();
+        return `/` + path.join("/");
+      },
+    },
+    async get(tx: ReadTransaction, args: Parameters<Get>[0]) {
+      const item = await tx.get(result.path.get(args));
+      return item as T | undefined;
+    },
+    async set(
+      tx: WriteTransaction,
+      args: Parameters<Get>[0],
+      item: Partial<T>
+    ) {
+      await tx.put(result.path.get(args), item as any);
+    },
+  };
+  return result;
+}
+
+export function createGet<T extends any>(
+  p: () => string,
+  replicache: () => Replicache
+) {
   let unsubscribe: () => void;
 
-  const [data, setStore] = createStore<Record<string, T>>({});
+  const [data, setData] = createStore({
+    value: undefined as T | undefined,
+  });
+  const [ready, setReady] = createSignal(false);
 
   createEffect(() => {
     if (unsubscribe) unsubscribe();
-    const p = prefix();
+    const path = p();
+    batch(() => {
+      setData("value", undefined);
+      setReady(false);
+    });
+    const rep = replicache();
 
-    unsubscribe = rep().experimentalWatch(
+    unsubscribe = rep.experimentalWatch(
       (diffs) => {
         batch(() => {
           for (const diff of diffs) {
-            const key = diff.key.substring(p.length);
-            if (diff.op === "add") setStore(key, diff.newValue as T);
-            if (diff.op === "change")
-              setStore(key, reconcile(diff.newValue as T));
-            if (diff.op === "del") setStore(produce((d) => delete d[key]));
+            if (diff.op === "add") {
+              setData("value", diff.newValue as T);
+            }
+            if (diff.op === "change") {
+              setData("value", reconcile(diff.newValue as T));
+            }
+            if (diff.op === "del") setData("value", undefined);
           }
+          setReady(true);
         });
+        console.log(diffs);
       },
       {
-        prefix: p,
+        prefix: path,
         initialValuesInFirstDiff: true,
       }
     );
   });
 
-  return data;
+  const result = () => data.value;
+  Object.defineProperty(result, "ready", { get: ready });
+
+  return result as {
+    (): T;
+    ready: boolean;
+  };
+}
+
+export function createScan<T extends any>(
+  p: () => string,
+  replicache: () => Replicache,
+  refine?: (values: T[]) => T[]
+) {
+  let unsubscribe: () => void;
+
+  const [data, setData] = createStore<T[]>([]);
+  const [ready, setReady] = createSignal(false);
+  const pointers = new Map<string, number>();
+
+  createEffect(() => {
+    if (unsubscribe) unsubscribe();
+    const path = p();
+    batch(() => {
+      setReady(false);
+      setData([]);
+    });
+    const rep = replicache();
+
+    unsubscribe = rep.experimentalWatch(
+      (diffs) => {
+        batch(() => {
+          // Faster set if we haven't seen any diffs yet.
+          if (!ready()) {
+            setData(
+              diffs.flatMap((d) => (d.op === "add" ? [d.newValue] : [])) as T[]
+            );
+            setReady(true);
+            return;
+          }
+          for (const diff of diffs) {
+            if (diff.op === "add") {
+              setData(
+                produce((d) => {
+                  const index = d.push(diff.newValue as T);
+                  pointers.set(diff.key, index - 1);
+                })
+              );
+            }
+            if (diff.op === "change") {
+              setData(pointers.get(diff.key)!, reconcile(diff.newValue as T));
+            }
+            if (diff.op === "del") {
+              setData(
+                produce((d) => {
+                  d.splice(pointers.get(diff.key)!, 1);
+                  pointers.delete(diff.key);
+                })
+              );
+            }
+          }
+          setReady(true);
+        });
+      },
+      {
+        prefix: path,
+        initialValuesInFirstDiff: true,
+      }
+    );
+  });
+
+  const result = createMemo(() => (refine ? refine(data) : data));
+  Object.defineProperty(result, "ready", { get: ready });
+
+  return result as {
+    (): T[];
+    ready: boolean;
+  };
 }

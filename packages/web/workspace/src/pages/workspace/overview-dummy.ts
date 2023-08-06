@@ -19,6 +19,7 @@ function account(id: string, failed?: boolean): Account.Info {
     workspaceID: WORKSPACE_ID,
     timeCreated: new Date().toISOString(),
     timeDeleted: new Date().toISOString(),
+    timeDiscovered: null,
     timeFailed: failed ? new Date().toISOString() : null,
     timeUpdated: new Date().toISOString(),
   };

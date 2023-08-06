@@ -1,10 +1,9 @@
-import { createSubscription } from "$/providers/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import {
   Accessor,
   ParentProps,
   Show,
   createContext,
-  createEffect,
   createMemo,
   useContext,
 } from "solid-js";
@@ -23,7 +22,11 @@ export const StageContext =
 
 export function createStageContext() {
   const params = useParams();
-  const app = createSubscription(() => AppStore.fromName(params.appName));
+  const apps = AppStore.watch.scan(
+    useReplicache(),
+    (item) => item.name === params.appName
+  );
+  const app = createMemo(() => apps().at(0));
   const stage = createSubscription(() =>
     app()
       ? StageStore.fromName(app()!.id, params.stageName)
@@ -54,15 +57,15 @@ function createResourcesContext() {
   const ctx = useStageContext();
   const [query] = useSearchParams();
 
-  const resources = createSubscription(() =>
-    query.dummy
-      ? async (): Promise<Resource.Info[]> => {
-          return DUMMY_RESOURCES.hasOwnProperty(query.dummy)
-            ? DUMMY_RESOURCES[query.dummy as keyof typeof DUMMY_RESOURCES]
-            : DUMMY_RESOURCES.DEFAULT;
-        }
-      : ResourceStore.forStage(ctx.stage.id)
+  const resources = ResourceStore.watch.scan(
+    useReplicache(),
+    (item) => item.stageID === ctx.stage.id
   );
+
+  if (query.dummy)
+    return () =>
+      DUMMY_RESOURCES[query.dummy as keyof typeof DUMMY_RESOURCES] ||
+      DUMMY_RESOURCES.DEFAULT;
 
   return resources;
 }
