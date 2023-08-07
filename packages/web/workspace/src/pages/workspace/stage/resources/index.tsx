@@ -331,6 +331,7 @@ export function Resources() {
                 r.type === "Queue" ||
                 r.type === "Topic" ||
                 r.type === "Bucket" ||
+                r.type === "Script" ||
                 r.type === "Cognito" ||
                 r.type === "AppSync" ||
                 r.type === "EventBus" ||
