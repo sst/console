@@ -31,20 +31,20 @@ import {
   IconCognito,
   IconFunction,
   IconEventBus,
+  IconGoRuntime,
   IconAstroSite,
   IconRemixSite,
   IconStaticSite,
   IconNextjsSite,
+  IconJavaRuntime,
   IconNodeRuntime,
   IconWebSocketApi,
   IconSvelteKitSite,
+  IconPythonRuntime,
+  IconDotNetRuntime,
   IconKinesisStream,
   IconSolidStartSite,
   IconApiGatewayV1Api,
-  IconGoRuntime,
-  IconJavaRuntime,
-  IconPythonRuntime,
-  IconDotNetRuntime,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { Link } from "@solidjs/router";
@@ -1016,7 +1016,7 @@ function FunctionChild(props: {
                 );
               }}
             </Show>
-            <ChildIcon>
+            <ChildIcon title={runtime()}>
               <Switch>
                 <Match when={runtime().startsWith("dotnet")}>
                   <IconDotNetRuntime />
@@ -1037,7 +1037,7 @@ function FunctionChild(props: {
                   <IconNodeRuntime />
                 </Match>
                 <Match when={true}>
-                  <IconNodeRuntime />
+                  <IconFunction />
                 </Match>
               </Switch>
             </ChildIcon>

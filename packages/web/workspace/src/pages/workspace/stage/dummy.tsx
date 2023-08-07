@@ -22,7 +22,12 @@ function resource<Type extends Resource.Info["type"]>(
   } as any;
 }
 
-export function func(id: string, handler: string, size?: number) {
+export function func(
+  id: string,
+  handler: string,
+  size?: number,
+  runtime?: Extract<Resource.Info, { type: "Function" }>["metadata"]["runtime"]
+) {
   return resource(
     "Function",
     id,
@@ -31,9 +36,11 @@ export function func(id: string, handler: string, size?: number) {
       localId: id,
       secrets: [],
       handler,
+      runtime: runtime || "nodejs18.x",
     },
     {
       size: size || 2048,
+      runtime: "nodejs18.x",
       live: true,
     }
   );
@@ -201,6 +208,7 @@ const DEFAULT = [
     mode: "deployed",
     secrets: [],
     url: "",
+    runtime: "nodejs18.x",
   }),
   resource("NextjsSite", "nextjs-site", {
     customDomainUrl: "https://nextjs-site.com",
@@ -210,6 +218,7 @@ const DEFAULT = [
     mode: "deployed",
     secrets: [],
     url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+    runtime: "nodejs18.x",
   }),
   resource("SvelteKitSite", "svelte-site", {
     customDomainUrl: "https://svelte-site.com",
@@ -219,6 +228,7 @@ const DEFAULT = [
     mode: "deployed",
     secrets: [],
     url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+    runtime: "nodejs18.x",
   }),
   resource("RemixSite", "remix-site", {
     customDomainUrl: "https://remix-site.com",
@@ -228,6 +238,7 @@ const DEFAULT = [
     mode: "deployed",
     secrets: [],
     url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+    runtime: "nodejs18.x",
   }),
   resource("AstroSite", "astro-site", {
     customDomainUrl: "https://astro-site.com",
@@ -237,6 +248,7 @@ const DEFAULT = [
     mode: "deployed",
     secrets: [],
     url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+    runtime: "nodejs18.x",
   }),
   resource("SolidStartSite", "solid-site", {
     customDomainUrl: "https://solid-site.com",
@@ -246,6 +258,7 @@ const DEFAULT = [
     mode: "deployed",
     secrets: [],
     url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+    runtime: "nodejs18.x",
   }),
   resource("Cognito", "cognito-auth", {
     identityPoolId: "someid",
@@ -301,6 +314,11 @@ const DEFAULT = [
       },
     ],
     subscriberNames: ["subscriber1"],
+  }),
+  resource("Script", "my-script", {
+    createfn: ref("index"),
+    deletefn: ref("index"),
+    updatefn: ref("index"),
   }),
   resource("AppSync", "appsync-api", {
     dataSources: [
@@ -363,6 +381,18 @@ const DEFAULT = [
   func("index", "packages/function.handler"),
   func("notes_get", "packages/notes.handler", 20400800000),
   func("notes_post", "packages/notes.handler", 2048000),
+  func("go_func", "packages/others/go.handler", 204123, "go1.x"),
+  func("java_func", "packages/others/java.handler", 204123, "java17"),
+  func("node_func", "packages/others/node.handler", 204123, "nodejs18.x"),
+  func("python_func", "packages/others/python.handler", 204123, "python3.10"),
+  func("dotnet_func", "packages/others/dotnet.handler", 204123, "dotnet6"),
+  func("rust_func", "packages/others/rust.handler", 204123, "rust"),
+  func(
+    "container_func",
+    "packages/others/container.handler",
+    204123,
+    "container"
+  ),
   func("other_func", "packages/others/func.handler", 2048000),
 ];
 

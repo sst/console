@@ -67,13 +67,16 @@ const Modal = styled("div", {
     boxShadow: theme.color.shadow.drop.long,
     backdropFilter: "blur(10px)",
     background: theme.color.background.modal,
-    transform: "scale(0.95)",
+    // Safari doesn't redraw properly when the height
+    // of the modal changes
+    // Forcing a repaint: https://stackoverflow.com/a/21947628
+    transform: "scale(0.95) translateZ(0)",
     transition: "200ms all",
   },
 });
 
 globalStyle(`${Root.selector({ show: true })} ${Modal}`, {
-  transform: "initial",
+  transform: "scale(1) translateZ(0)",
 });
 
 const Filter = styled("div", {
