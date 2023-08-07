@@ -83,7 +83,7 @@ export function API({ stack, app }: StackContext) {
     routes: {
       "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
-      "GET /error": {
+      "GET /error2": {
         type: "function",
         function: {
           handler: "packages/functions/src/error.handler",
