@@ -14,7 +14,8 @@ export type LogEvent =
       string /* requestID */,
       number /* duration  */,
       number /* size      */,
-      number /* memory    */
+      number /* memory    */,
+      string /* xray */
     ]
   // message
   | ["m", number, string, string, string, string, string]
@@ -95,6 +96,7 @@ export function process(input: {
       parseInt(tabs[2]?.split(" ")[2] || "0"),
       parseFloat(tabs[3]?.split(" ")[2] || "0"),
       parseInt(tabs[4]?.split(" ")[3] || "0"),
+      tabs.find((line) => line.includes("XRAY"))?.split(" ")[2] || "",
     ];
   }
 

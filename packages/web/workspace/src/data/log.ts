@@ -28,6 +28,7 @@ export interface Invocation {
     duration: number;
     size: number;
     memory: number;
+    xray: string;
   };
   start: Date;
   end?: Date;
@@ -103,7 +104,16 @@ bus.on("log", (e) => {
         break;
       }
       case "r": {
-        const [_, timestamp, logGroup, requestId, duration, size, memory] = log;
+        const [
+          _,
+          timestamp,
+          logGroup,
+          requestId,
+          duration,
+          size,
+          memory,
+          xray,
+        ] = log;
         setLogStore(
           produce((state) => {
             let invocation = state[logGroup]?.find((i) => i.id === requestId);
@@ -112,6 +122,7 @@ bus.on("log", (e) => {
               duration,
               size,
               memory,
+              xray,
             };
           })
         );
