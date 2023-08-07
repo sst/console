@@ -9,7 +9,7 @@ import {
   createEffect,
   ComponentProps,
 } from "solid-js";
-import { useFunctionsContext, useResourcesContext } from "./context";
+import { useFunctionsContext, useResourcesContext } from "../context";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
@@ -201,7 +201,9 @@ interface HeaderProps {
 }
 
 export function Header(props: HeaderProps) {
-  const icon = createMemo(() => props.icon || IconMap[props.resource.type]);
+  const icon = createMemo(
+    () => props.icon || IconMap[props.resource.type as keyof typeof IconMap]
+  );
   return (
     <HeaderRoot>
       <Row space="2" vertical="center">
@@ -396,6 +398,9 @@ export function Resources() {
                 </Match>
                 <Match when={resource.type === "Table" && resource}>
                   {(resource) => <TableCard resource={resource()} />}
+                </Match>
+                <Match when={resource.type === "Script" && resource}>
+                  {(resource) => <ScriptCard resource={resource()} />}
                 </Match>
               </Switch>
             </Card>
@@ -644,6 +649,28 @@ export function TableCard(props: CardProps<"Table">) {
             <FunctionChild id={consumer.fn?.node} tag="Consumer" />
           )}
         </For>
+      </Children>
+    </>
+  );
+}
+
+export function ScriptCard(props: CardProps<"Script">) {
+  return (
+    <>
+      <Header resource={props.resource} />
+      <Children>
+        <FunctionChild
+          id={props.resource.metadata.createfn?.node}
+          tag="Create"
+        />
+        <FunctionChild
+          id={props.resource.metadata.deletefn?.node}
+          tag="Delete"
+        />
+        <FunctionChild
+          id={props.resource.metadata.updatefn?.node}
+          tag="Update"
+        />
       </Children>
     </>
   );
@@ -988,7 +1015,7 @@ function FunctionChild(props: {
             </ChildTitleLink>
           </Row>
           <Row shrink={false} space="3" vertical="center">
-            <Show when={fn() && fn()!.enrichment.size}>
+            <Show when={exists().enrichment.size}>
               {(value) => {
                 const formattedSize = formatBytes(value());
                 return (

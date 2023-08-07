@@ -21,7 +21,7 @@ import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
-import { useParams, useSearchParams } from "@solidjs/router";
+import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import {
   For,
   Match,
@@ -432,20 +432,9 @@ const LogMoreIndicatorIcon = styled("div", {
   },
 });
 
-const DUMMY_ERROR_JSON = {
-  errorType: "TypeError",
-  errorMessage: "Cannot read properties of undefined (reading 'charAt')",
-  stack: [
-    "TypeError: Cannot read properties of undefined (reading 'charAt')",
-    "    at capitalize (file:///var/task/packages/functions/src/typeform/intake.mjs:33499:16)",
-    "    at file:///var/task/packages/functions/src/typeform/intake.mjs:33444:14",
-    "    at processTicksAndRejections (node:internal/process/task_queues:96:5)",
-    "    at async file:///var/task/packages/functions/src/typeform/intake.mjs:32376:20",
-  ],
-};
-
 export function Logs() {
   const stage = useStageContext();
+  const nav = useNavigate();
   const bar = useCommandBar();
   const params = useParams();
   const [query] = useSearchParams();

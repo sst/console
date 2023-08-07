@@ -11,7 +11,7 @@ import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { Resource } from "@console/core/app/resource";
-import { DUMMY_RESOURCES } from "./resources-dummy";
+import { DUMMY_RESOURCES } from "./dummy";
 import { ResourceStore } from "$/data/resource";
 import { useCommandBar } from "../command-bar";
 import { IconApi, IconFunction } from "$/ui/icons/custom";
@@ -196,6 +196,48 @@ export function ResourcesProvider(props: ParentProps) {
     const appName = splits[2];
     const stageName = splits[3];
     if (!stageName || !appName) return [];
+    console.log(functions());
+    return [...functions().entries()].flatMap(([fnId, refs]) => {
+      const fn = resources().find((r) => r.id === fnId) as Extract<
+        Resource.Info,
+        { type: "Function" }
+      >;
+      if (!fn) return [];
+      const run = (control: any) => {
+        nav(`/${params.workspaceSlug}/${appName}/${stageName}/logs/${fn.id}`);
+        control.hide();
+      };
+      if (!refs.length)
+        return [
+          {
+            icon: IconFunction,
+            category: `Function`,
+            title: `Go to ${fn.metadata.handler}`,
+            run,
+          },
+        ];
+      return refs.map((resource) => {
+        switch (resource.type) {
+          case "Api":
+            return {
+              icon: IconApi,
+              category: "API Routes",
+              title: `Go to ${
+                resource.metadata.routes.find((r) => r.fn?.node === fn.addr)
+                  ?.route
+              }`,
+              run,
+            };
+          default:
+            return {
+              icon: IconFunction,
+              category: `${resource.type}`,
+              title: `Go to ${fn.metadata.handler}`,
+              run,
+            };
+        }
+      });
+    });
     return (resources() || []).flatMap((resource) => {
       if (resource.type === "Api") {
         return resource.metadata.routes.map((rt) => ({
@@ -228,6 +270,7 @@ export function ResourcesProvider(props: ParentProps) {
           },
         ];
       }
+
       return [];
     });
   });

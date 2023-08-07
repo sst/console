@@ -1,5 +1,5 @@
 import { Invocation } from "$/data/log";
-import { func } from "../resources-dummy";
+import { func } from "../dummy";
 
 export const DUMMY_FUNC = func("index", "packages/function.handler");
 

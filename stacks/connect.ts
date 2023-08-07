@@ -1,7 +1,7 @@
 import { AnyPrincipal } from "aws-cdk-lib/aws-iam";
 import { BucketAccessControl } from "aws-cdk-lib/aws-s3";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
-import { StackContext, Function, Bucket, Script, use } from "sst/constructs";
+import { StackContext, Function, Bucket, use } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 
