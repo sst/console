@@ -86,6 +86,7 @@ export const Enrichers = {
     );
     return {
       size: info.Configuration?.CodeSize,
+      runtime: info.Configuration?.Runtime,
       live: Boolean(
         info.Configuration?.Environment?.Variables?.SST_FUNCTION_ID
       ),

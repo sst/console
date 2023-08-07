@@ -300,9 +300,14 @@ export function createScan<T extends any>(
         batch(() => {
           // Faster set if we haven't seen any diffs yet.
           if (!ready()) {
-            setData(
-              diffs.flatMap((d) => (d.op === "add" ? [d.newValue] : [])) as T[]
-            );
+            const values: T[] = [];
+            for (const diff of diffs) {
+              if (diff.op === "add") {
+                const index = values.push(diff.newValue as T);
+                pointers.set(diff.key, index - 1);
+              }
+            }
+            setData(values);
             setReady(true);
             return;
           }

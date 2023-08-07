@@ -41,6 +41,10 @@ import {
   IconKinesisStream,
   IconSolidStartSite,
   IconApiGatewayV1Api,
+  IconGoRuntime,
+  IconJavaRuntime,
+  IconPythonRuntime,
+  IconDotNetRuntime,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { Link } from "@solidjs/router";
@@ -992,6 +996,9 @@ function FunctionChild(props: {
             r.metadata.arn === props.id)
       ) as Extract<Resource.Info, { type: "Function" }> | undefined
   );
+  const runtime = createMemo(
+    () => fn()?.metadata.runtime || fn()?.enrichment.runtime || ""
+  );
   return (
     <Show when={fn()}>
       {(exists) => (
@@ -1035,7 +1042,29 @@ function FunctionChild(props: {
               }}
             </Show>
             <ChildIcon>
-              <IconNodeRuntime />
+              <Switch>
+                <Match when={runtime().startsWith("dotnet")}>
+                  <IconDotNetRuntime />
+                </Match>
+                <Match when={runtime().startsWith("dotnet")}>
+                  <IconDotNetRuntime />
+                </Match>
+                <Match when={runtime().startsWith("python")}>
+                  <IconPythonRuntime />
+                </Match>
+                <Match when={runtime().startsWith("java")}>
+                  <IconJavaRuntime />
+                </Match>
+                <Match when={runtime().startsWith("go")}>
+                  <IconGoRuntime />
+                </Match>
+                <Match when={runtime().startsWith("nodejs")}>
+                  <IconNodeRuntime />
+                </Match>
+                <Match when={true}>
+                  <IconNodeRuntime />
+                </Match>
+              </Switch>
             </ChildIcon>
           </Row>
         </Child>
