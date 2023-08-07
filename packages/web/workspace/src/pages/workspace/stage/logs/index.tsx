@@ -39,13 +39,13 @@ import { useResourcesContext, useStageContext } from "../context";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_FUNC, DUMMY_LOGS } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
-import { IconMap } from "../resources";
 import { bus } from "$/providers/bus";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { Invoke, InvokeControl } from "./invoke";
 import { createId } from "@paralleldrive/cuid2";
 import { LogSearchStore } from "$/data/log-search";
 import { DialogRange, DialogRangeControl } from "./dialog-range";
+import { ResourceIcon } from "$/common/resource-icon";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -1045,7 +1045,7 @@ function Context(props: {
   type?: Resource.Info["type"];
   extra?: string;
 }) {
-  const icon = createMemo(() => props.type && IconMap[props.type]);
+  const icon = createMemo(() => props.type && ResourceIcon[props.type]);
   return (
     <Row vertical="center" space="3">
       <Show when={props.tag}>

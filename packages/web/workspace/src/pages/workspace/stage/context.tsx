@@ -16,6 +16,7 @@ import { ResourceStore } from "$/data/resource";
 import { useCommandBar } from "../command-bar";
 import { IconApi, IconFunction } from "$/ui/icons/custom";
 import { useLocalContext } from "$/providers/local";
+import { ResourceIcon } from "$/common/resource-icon";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -230,48 +231,13 @@ export function ResourcesProvider(props: ParentProps) {
             };
           default:
             return {
-              icon: IconFunction,
+              icon: ResourceIcon[resource.type] || IconFunction,
               category: `${resource.type}`,
               title: `Go to ${fn.metadata.handler}`,
               run,
             };
         }
       });
-    });
-    return (resources() || []).flatMap((resource) => {
-      if (resource.type === "Api") {
-        return resource.metadata.routes.map((rt) => ({
-          icon: IconApi,
-          category: "API Routes",
-          title: `Go to ${rt.route}`,
-          run: (control) => {
-            nav(
-              `/${params.workspaceSlug}/${appName}/${stageName}/logs/${
-                (resources() || []).find((r) => r.addr === rt.fn?.node)?.id
-              }`
-            );
-            control.hide();
-          },
-        }));
-      }
-
-      if (resource.type === "Function") {
-        return [
-          {
-            icon: IconFunction,
-            category: "Functions",
-            title: `Go to ${resource.metadata.handler}`,
-            run: (control) => {
-              nav(
-                `/${params.workspaceSlug}/${appName}/${stageName}/logs/${resource.id}`
-              );
-              control.hide();
-            },
-          },
-        ];
-      }
-
-      return [];
     });
   });
 

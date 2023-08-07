@@ -55,6 +55,7 @@ import {
   IconExclamationTriangle,
 } from "$/ui/icons";
 import {} from "@solid-primitives/keyboard";
+import { ResourceIcon } from "$/common/resource-icon";
 
 const Card = styled("div", {
   base: {
@@ -206,7 +207,9 @@ interface HeaderProps {
 
 export function Header(props: HeaderProps) {
   const icon = createMemo(
-    () => props.icon || IconMap[props.resource.type as keyof typeof IconMap]
+    () =>
+      props.icon ||
+      ResourceIcon[props.resource.type as keyof typeof ResourceIcon]
   );
   return (
     <HeaderRoot>
@@ -440,34 +443,6 @@ function formatPath(path?: string) {
 interface CardProps<Type extends Resource.Info["type"]> {
   resource: Extract<Resource.Info, { type: Type }>;
 }
-
-export const IconMap = {
-  Api: IconApi,
-  Job: IconJob,
-  RDS: IconRDS,
-  Auth: IconAuth,
-  Cron: IconCron,
-  Queue: IconQueue,
-  Stack: IconStack,
-  Table: IconTable,
-  Topic: IconTopic,
-  Bucket: IconBucket,
-  Script: IconScript,
-  AppSync: IconAppSync,
-  Cognito: IconCognito,
-  EventBus: IconEventBus,
-  Function: IconFunction,
-  AstroSite: IconAstroSite,
-  RemixSite: IconRemixSite,
-  NextjsSite: IconNextjsSite,
-  StaticSite: IconStaticSite,
-  SlsNextjsSite: IconNextjsSite,
-  WebSocketApi: IconWebSocketApi,
-  KinesisStream: IconKinesisStream,
-  SvelteKitSite: IconSvelteKitSite,
-  SolidStartSite: IconSolidStartSite,
-  ApiGatewayV1Api: IconApiGatewayV1Api,
-} satisfies Record<Resource.Info["type"], (props: any) => JSX.Element>;
 
 export function ApiCard(props: CardProps<"Api">) {
   return (
