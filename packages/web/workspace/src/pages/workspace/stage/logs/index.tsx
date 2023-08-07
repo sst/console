@@ -437,7 +437,10 @@ export function Logs() {
   const nav = useNavigate();
   const bar = useCommandBar();
   const params = useParams();
-  const [query] = useSearchParams();
+  const [query, setQuery] = useSearchParams<{
+    dummy?: string;
+    view: string;
+  }>();
   const resources = useResourcesContext();
   const resource = createMemo(() =>
     query.dummy
@@ -468,10 +471,9 @@ export function Logs() {
     return logGroup;
   });
 
-  const [view, setView] = createSignal<string>();
   const mode = createMemo(() => {
     if (resource()?.enrichment.live) return "live";
-    if (view() === "tail") return "tail";
+    if (query.view === "tail") return "tail";
     return "search";
   });
 
@@ -495,7 +497,7 @@ export function Logs() {
     const r = resource();
     if (!r) return;
     untrack(() => {
-      switchView("recent");
+      switchView(query.view || "recent");
     });
   });
 
@@ -551,7 +553,14 @@ export function Logs() {
       setTimeout(() => rangeControl.show(), 0);
       return;
     }
-    setView(val);
+    setQuery(
+      {
+        view: val,
+      },
+      {
+        replace: true,
+      }
+    );
     if (val === "tail") return;
     clearLogStore(logGroupKey());
     setSearch("id", createId());
@@ -673,7 +682,7 @@ export function Logs() {
               <Show when={mode() === "search" && !activeSearch()}>
                 <IconButton
                   title="Reload logs"
-                  onClick={() => switchView(view()!)}
+                  onClick={() => switchView(query.view)}
                 >
                   <IconArrowPathRoundedSquare
                     display="block"
@@ -684,7 +693,7 @@ export function Logs() {
               </Show>
               <Show when={mode() !== "live"}>
                 <Dropdown size="sm" label="View">
-                  <Dropdown.RadioGroup value={view()} onChange={switchView}>
+                  <Dropdown.RadioGroup value={query.view} onChange={switchView}>
                     <Dropdown.RadioItem closeOnSelect value="tail">
                       Live
                     </Dropdown.RadioItem>
@@ -719,7 +728,9 @@ export function Logs() {
               </Show>
             </Row>
           </LogLoadingIndicator>
-          <Show when={(mode() === "tail" || view() === "recent") && resource()}>
+          <Show
+            when={(mode() === "tail" || query.view === "recent") && resource()}
+          >
             <Invoke
               onInvoke={() => {
                 if (mode() === "search") switchView("tail");
@@ -973,7 +984,7 @@ export function Logs() {
                   </LogMoreIndicatorIcon>
                   <Text leading="normal" color="dimmed" size="sm">
                     <Show
-                      when={view() === "recent"}
+                      when={query.view === "recent"}
                       fallback={<>Loading&hellip;</>}
                     >
                       Scanning
@@ -987,7 +998,7 @@ export function Logs() {
                   </Text>
                 </LogMoreIndicator>
               </Match>
-              <Match when={view() === "recent"}>
+              <Match when={query.view === "recent"}>
                 <LogMoreIndicator>
                   <LogMoreIndicatorIcon>
                     <IconEllipsisVertical />
@@ -1012,7 +1023,14 @@ export function Logs() {
       </Stack>
       <DialogRange
         onSelect={(start, end) => {
-          setView(start.toString());
+          setQuery(
+            {
+              view: "customer",
+            },
+            {
+              replace: true,
+            }
+          );
           clearLogStore(logGroupKey());
           createSearch(start.getTime(), end.getTime());
         }}
