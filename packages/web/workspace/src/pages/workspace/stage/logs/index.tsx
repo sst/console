@@ -496,6 +496,7 @@ export function Logs() {
   createEffect(() => {
     const r = resource();
     if (!r) return;
+    if (mode() === "live") return;
     untrack(() => {
       switchView(query.view || "recent");
     });
@@ -549,7 +550,6 @@ export function Logs() {
 
   function switchView(val: string) {
     if (val === "custom") {
-      console.log("showing range");
       setTimeout(() => rangeControl.show(), 0);
       return;
     }
@@ -803,8 +803,8 @@ export function Logs() {
                       coldStart={invocation.cold}
                       title={invocation.cold ? "Cold start" : ""}
                     >
-                      {invocation.duration
-                        ? formatTime(invocation.duration)
+                      {invocation.report?.duration
+                        ? formatTime(invocation.report?.duration)
                         : "-"}
                     </LogDuration>
                     <LogRequestId title="Request Id">

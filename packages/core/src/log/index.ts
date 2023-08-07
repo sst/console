@@ -7,18 +7,26 @@ export type LogEvent =
   // start
   | ["s", number, string, string, boolean]
   // report
-  | ["r", number, string, string, number]
+  | [
+      "r",
+      number /* timestamp */,
+      string /* group     */,
+      string /* requestID */,
+      number /* duration  */,
+      number /* size      */,
+      number /* memory    */
+    ]
   // message
   | ["m", number, string, string, string, string, string]
   // trace
   | [
       "t",
       number /* timestamp */,
-      string /* logGroup */,
+      string /* logGroup  */,
       string /* requestID */,
-      string /* type */,
-      string /* message */,
-      string[] /* trace */
+      string /* type      */,
+      string /* message   */,
+      string[] /* trace   */
     ];
 
 export type Processor = ReturnType<typeof createProcessor>;
@@ -41,7 +49,7 @@ export function process(input: {
   function generateID(id: string) {
     const trimmed = id.trim();
     const count = input.processor.invocations.get(trimmed);
-    if (!count) return trimmed + "    ";
+    if (!count) return trimmed;
     return id + "[" + count + "]";
   }
   const tabs = input.line.split("\t");
@@ -85,6 +93,8 @@ export function process(input: {
       input.processor.group,
       generated,
       parseInt(tabs[2]?.split(" ")[2] || "0"),
+      parseFloat(tabs[3]?.split(" ")[2] || "0"),
+      parseInt(tabs[4]?.split(" ")[3] || "0"),
     ];
   }
 
