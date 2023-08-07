@@ -998,7 +998,7 @@ export function Logs() {
                   </Text>
                 </LogMoreIndicator>
               </Match>
-              <Match when={query.view === "recent"}>
+              <Match when={query.view === "recent" && invocations().length}>
                 <LogMoreIndicator>
                   <LogMoreIndicatorIcon>
                     <IconEllipsisVertical />
