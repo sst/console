@@ -365,7 +365,7 @@ const LogEntryTime = styled("div", {
 
 const LogReportKey = styled(LogEntryTime, {
   base: {
-    minWidth: 125,
+    minWidth: 105,
   },
 });
 
