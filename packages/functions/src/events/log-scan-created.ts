@@ -91,15 +91,13 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
               results
                 .sort((a, b) => a[0]!.value!.localeCompare(b[0]!.value!))
                 .flatMap((result, index) => {
-                  const evt = Log.process({
+                  return Log.process({
                     processor,
                     id: index.toString(),
                     timestamp: new Date(result[0]?.value! + " Z").getTime(),
                     stream: result[2]?.value!,
                     line: result[1]?.value!,
                   });
-                  if (evt) return [evt];
-                  return [];
                 }),
               groupBy((evt) => evt[3]),
               values,

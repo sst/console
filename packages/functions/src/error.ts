@@ -1,5 +1,7 @@
 import { ApiHandler } from "sst/node/api";
 
+console.log("Cold start!");
+
 export const handler = ApiHandler(async () => {
   console.log("counting down...");
   await new Promise((resolve) => setTimeout(resolve, 1000));

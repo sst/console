@@ -152,17 +152,15 @@ export async function handler(input: State) {
       batch = [];
       batchSize = 0;
     }
-    const evt = Log.process({
+    const evts = Log.process({
       processor,
       timestamp: event.timestamp!,
       line: event.message!,
       stream: event.logStreamName!,
       id: event.eventId!,
     });
-    if (evt) {
-      batch.push(evt);
-      batchSize += JSON.stringify(evt).length;
-    }
+    batch.push(...evts);
+    batchSize += JSON.stringify(evts).length;
   }
   await Realtime.publish("log", batch);
   console.log("published", processor.invocations.size, "events");

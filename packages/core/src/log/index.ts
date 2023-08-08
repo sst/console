@@ -46,7 +46,8 @@ export function process(input: {
   timestamp: number;
   stream: string;
   processor: Processor;
-}): LogEvent | undefined {
+}): LogEvent[] {
+  console.log(input.line);
   function generateID(id: string) {
     const trimmed = id.trim();
     const count = input.processor.invocations.get(trimmed);
@@ -56,28 +57,27 @@ export function process(input: {
   const tabs = input.line.split("\t");
   if (tabs[0]?.startsWith("INIT_START")) {
     input.processor.cold.add(input.stream);
-    return;
+    return [];
   }
   if (tabs[0]?.startsWith("START")) {
     const splits = tabs[0].split(" ");
     const cold = input.processor.cold.has(input.stream);
     input.processor.cold.delete(input.stream);
     return [
-      "s",
-      input.timestamp,
-      input.processor.group,
-      generateID(splits[2]!),
-      cold,
+      [
+        "s",
+        input.timestamp,
+        input.processor.group,
+        generateID(splits[2]!),
+        cold,
+      ],
     ];
   }
 
   if (tabs[0]?.startsWith("END")) {
     const splits = tabs[0].split(" ");
     return [
-      "e",
-      input.timestamp,
-      input.processor.group,
-      generateID(splits[2]!),
+      ["e", input.timestamp, input.processor.group, generateID(splits[2]!)],
     ];
   }
 
@@ -89,14 +89,16 @@ export function process(input: {
       (input.processor.invocations.get(requestID) || 0) + 1
     );
     return [
-      "r",
-      input.timestamp,
-      input.processor.group,
-      generated,
-      parseInt(tabs[2]?.split(" ")[2] || "0"),
-      parseFloat(tabs[3]?.split(" ")[2] || "0"),
-      parseInt(tabs[4]?.split(" ")[3] || "0"),
-      tabs.find((line) => line.includes("XRAY"))?.split(" ")[2] || "",
+      [
+        "r",
+        input.timestamp,
+        input.processor.group,
+        generated,
+        parseInt(tabs[2]?.split(" ")[2] || "0"),
+        parseFloat(tabs[3]?.split(" ")[2] || "0"),
+        parseInt(tabs[4]?.split(" ")[3] || "0"),
+        tabs.find((line) => line.includes("XRAY"))?.split(" ")[2] || "",
+      ],
     ];
   }
 
@@ -114,14 +116,17 @@ export function process(input: {
       ];
     }
     return [
-      "m",
-      input.timestamp,
-      input.processor.group,
-      generateID(tabs[1]!),
-      tabs[2]!.trim(),
-      tabs.slice(3).join("\t").trim(),
-      input.id,
+      [
+        "m",
+        input.timestamp,
+        input.processor.group,
+        generateID(tabs[1]!),
+        tabs[2]!.trim(),
+        tabs.slice(3).join("\t").trim(),
+        input.id,
+      ],
     ];
   }
   console.log("unhandled log line", tabs);
+  return [];
 }
