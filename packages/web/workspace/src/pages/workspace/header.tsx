@@ -1,5 +1,6 @@
-import { Row, Stack, AvatarInitialsIcon, Text, theme } from "$/ui";
-import { IconChevronUpDown } from "$/ui/icons";
+import { Row, Stack, AvatarInitialsIcon, Text, Tag, theme } from "$/ui";
+import { IconChevronUpDown, IconMagnifyingGlass } from "$/ui/icons";
+import { utility } from "$/ui/utility";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
 import { useWorkspace } from "./context";
@@ -20,6 +21,12 @@ const Root = styled("div", {
     borderBottom: `1px solid ${theme.color.divider.base}`,
     padding: `0 ${theme.space[4]}`,
     height: 68,
+  },
+});
+
+const WorkspaceLogoLink = styled("Link", {
+  base: {
+    display: "flex",
   },
 });
 
@@ -68,6 +75,33 @@ const SwitcherIcon = styled(IconChevronUpDown, {
   },
 });
 
+const JumpToButton = styled("div", {
+  base: {
+    ...utility.row(9),
+    height: 36,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: theme.borderRadius,
+    backgroundColor: theme.color.input.background,
+    border: `1px solid ${theme.color.divider.surface}`,
+    padding: `0 ${theme.space[1.5]} 0 ${theme.space[2.5]}`,
+  },
+});
+
+const JumpToButtonKeys = styled("div", {
+  base: {
+    letterSpacing: 0.5,
+    fontSize: theme.font.size.mono_xs,
+    padding: `${theme.space[1]} ${theme.space[1.5]}`,
+    alignItems: "center",
+    textTransform: "uppercase",
+    borderRadius: theme.borderRadius,
+    backgroundColor: theme.color.divider.surface,
+    lineHeight: "normal",
+    color: theme.color.text.dimmed.surface,
+  },
+});
+
 const LogoutButton = styled("span", {
   base: {
     fontWeight: 500,
@@ -83,6 +117,10 @@ const LogoutButton = styled("span", {
   },
 });
 
+function isMac() {
+  return navigator.userAgent.toUpperCase().indexOf("MAC") !== -1;
+}
+
 export function Header(props: { app?: string; stage?: string }) {
   const workspace = useWorkspace();
   const bar = useCommandBar();
@@ -90,9 +128,9 @@ export function Header(props: { app?: string; stage?: string }) {
   return (
     <Root>
       <Row space="4" vertical="center">
-        <Link href={`/${workspace().slug}`}>
+        <WorkspaceLogoLink href={`/${workspace().slug}`}>
           <AvatarInitialsIcon type="workspace" text={workspace().slug} />
-        </Link>
+        </WorkspaceLogoLink>
         <StageSwitcher
           onClick={() =>
             props.stage
@@ -118,18 +156,38 @@ export function Header(props: { app?: string; stage?: string }) {
           <SwitcherIcon />
         </StageSwitcher>
       </Row>
-      <LogoutButton
-        onClick={async () => {
-          const dbs = await window.indexedDB.databases();
-          dbs.forEach((db) => {
-            window.indexedDB.deleteDatabase(db.name!);
-          });
-          localStorage.clear();
-          location.href = "/";
-        }}
-      >
-        Logout
-      </LogoutButton>
+      <Row space="4" vertical="center">
+        <JumpToButton onClick={() => bar.show()}>
+          <Row space="1" vertical="center">
+            <IconMagnifyingGlass
+              width="13"
+              height="13"
+              color={theme.color.icon.dimmed}
+            />
+            <Text leading="normal" size="xs" color="dimmed">
+              Jump to
+            </Text>
+          </Row>
+          <Row space="1" vertical="center">
+            <JumpToButtonKeys>
+              {isMac() ? <>&#8984;</> : "Ctrl"}
+            </JumpToButtonKeys>
+            <JumpToButtonKeys>K</JumpToButtonKeys>
+          </Row>
+        </JumpToButton>
+        <LogoutButton
+          onClick={async () => {
+            const dbs = await window.indexedDB.databases();
+            dbs.forEach((db) => {
+              window.indexedDB.deleteDatabase(db.name!);
+            });
+            localStorage.clear();
+            location.href = "/";
+          }}
+        >
+          Logout
+        </LogoutButton>
+      </Row>
       {/*
       <User>
         <UserImage />

@@ -39,6 +39,7 @@ import { useResourcesContext, useStageContext } from "../context";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_FUNC, DUMMY_LOGS } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
+import { formatBytes } from "$/common/format";
 import { bus } from "$/providers/bus";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { Invoke, InvokeControl } from "./invoke";
@@ -362,6 +363,12 @@ const LogEntryTime = styled("div", {
   },
 });
 
+const LogReportKey = styled(LogEntryTime, {
+  base: {
+    minWidth: 125,
+  },
+});
+
 const LogEntryMessage = styled("span", {
   base: {
     minWidth: 0,
@@ -666,7 +673,7 @@ export function Logs() {
                 </Switch>
               </Text>
             </Row>
-            <Row space="3" vertical="center">
+            <Row space="3.5" vertical="center">
               <Show when={mode() !== "search" && invocations().length > 0}>
                 <TextButton
                   onClick={() => {
@@ -761,7 +768,7 @@ export function Logs() {
             {(invocation) => {
               const [expanded, setExpanded] = createSignal(false);
               const [tab, setTab] = createSignal<
-                "logs" | "request" | "response" | "error"
+                "logs" | "request" | "response" | "error" | "report"
               >("logs");
 
               const shortDate = createMemo(() =>
@@ -799,14 +806,16 @@ export function Logs() {
                       <LogLevel level={invocation.error ? "error" : "info"} />
                     </Row>
                     <LogDate title={longDate()}>{shortDate()}</LogDate>
-                    <LogDuration
-                      coldStart={invocation.cold}
-                      title={invocation.cold ? "Cold start" : ""}
-                    >
-                      {invocation.report?.duration
-                        ? formatTime(invocation.report?.duration)
-                        : "-"}
-                    </LogDuration>
+                    <Show when={mode() !== "live"}>
+                      <LogDuration
+                        coldStart={invocation.cold}
+                        title={invocation.cold ? "Cold start" : ""}
+                      >
+                        {invocation.report?.duration
+                          ? formatTime(invocation.report?.duration)
+                          : "-"}
+                      </LogDuration>
+                    </Show>
                     <LogRequestId title="Request Id">
                       {invocation.id.slice(0, 36)}
                     </LogRequestId>
@@ -856,6 +865,14 @@ export function Logs() {
                               }
                             >
                               Response
+                            </LogDetailHeaderTitle>
+                          </Show>
+                          <Show when={invocation.report}>
+                            <LogDetailHeaderTitle
+                              onClick={() => setTab("report")}
+                              state={tab() === "report" ? "active" : "inactive"}
+                            >
+                              Report
                             </LogDetailHeaderTitle>
                           </Show>
                         </Row>
@@ -966,6 +983,44 @@ export function Logs() {
                                 )}
                               </LogEntryMessage>
                             </LogEntry>
+                          </Match>
+                          <Match when={tab() === "report"}>
+                            <LogEntry>
+                              <LogReportKey>Duration</LogReportKey>
+                              <LogEntryMessage>
+                                {formatTime(invocation.report?.duration || 0)}
+                              </LogEntryMessage>
+                            </LogEntry>
+                            <LogEntry>
+                              <LogReportKey>Memory used</LogReportKey>
+                              <LogEntryMessage>
+                                <Show when={invocation.report?.memory}>
+                                  {(size) => {
+                                    const formattedSize = formatBytes(size());
+                                    return `${formattedSize.value}${formattedSize.unit}`;
+                                  }}
+                                </Show>
+                              </LogEntryMessage>
+                            </LogEntry>
+                            <LogEntry>
+                              <LogReportKey>Memory size</LogReportKey>
+                              <LogEntryMessage>
+                                <Show when={invocation.report?.size}>
+                                  {(size) => {
+                                    const formattedSize = formatBytes(size());
+                                    return `${formattedSize.value}${formattedSize.unit}`;
+                                  }}
+                                </Show>
+                              </LogEntryMessage>
+                            </LogEntry>
+                            <Show when={invocation.report?.xray}>
+                              <LogEntry>
+                                <LogReportKey>X-Ray ID</LogReportKey>
+                                <LogEntryMessage>
+                                  {invocation.report?.xray}
+                                </LogEntryMessage>
+                              </LogEntry>
+                            </Show>
                           </Match>
                         </Switch>
                       </LogEntries>
