@@ -113,13 +113,15 @@ export function process(input: {
     if (tabs[3]?.includes("Invoke Error")) {
       const parsed = JSON.parse(tabs[4]!);
       return [
-        "t",
-        input.timestamp,
-        input.processor.group,
-        generateID(tabs[1]!),
-        parsed.errorType,
-        parsed.errorMessage,
-        parsed.stack,
+        [
+          "t",
+          input.timestamp,
+          input.processor.group,
+          generateID(tabs[1]!),
+          parsed.errorType,
+          parsed.errorMessage,
+          parsed.stack,
+        ],
       ];
     }
     const result: LogEvent = [
