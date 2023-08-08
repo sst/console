@@ -1,17 +1,17 @@
 import {
-  Button,
+  Row,
   Text,
-  FormInput,
   Stack,
+  Button,
+  FormInput,
+  Fullscreen,
   theme,
   utility,
-  Row,
-  Fullscreen,
 } from "$/ui";
 import { IconApp } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
 import { Navigate, Route, Routes } from "@solidjs/router";
-import { For, createSignal, onMount } from "solid-js";
+import { For, Show, createSignal, onMount } from "solid-js";
 import Botpoison from "@botpoison/browser";
 import { createSingleSelectListState } from "@kobalte/core";
 
@@ -35,6 +35,16 @@ const LoginIcon = styled("div", {
     width: 42,
     height: 42,
     color: theme.color.accent,
+  },
+});
+
+const OldConsoleSign = styled("div", {
+  base: {
+    ...utility.row(2.5),
+    alignItems: "flex-start",
+    backgroundColor: theme.color.background.surface,
+    borderRadius: theme.borderRadius,
+    padding: `${theme.space[3.5]} ${theme.space[3.5]}`,
   },
 });
 
@@ -66,13 +76,26 @@ export function Email() {
         <LoginIcon>
           <IconApp />
         </LoginIcon>
-        <Stack horizontal="center" space="2">
-          <Text size="lg" weight="medium">
-            Welcome to the SST Console
-          </Text>
-          <Text color="secondary" on="base" center>
-            Sign in with your email to get started
-          </Text>
+        <Stack horizontal="center" space="3">
+          <Stack horizontal="center" space="2">
+            <Text size="lg" weight="medium">
+              Welcome to the SST Console
+            </Text>
+            <Text color="secondary" on="base" center>
+              Sign in with your email to get started
+            </Text>
+          </Stack>
+          <Show when={false}>
+            <OldConsoleSign>
+              <Text size="sm" on="surface" color="secondary">
+                Looking for the old console? Head over{" "}
+                <a target="_blank" href="https://old.console.sst.dev">
+                  here
+                </a>
+                .
+              </Text>
+            </OldConsoleSign>
+          </Show>
         </Stack>
       </Stack>
       <Form
