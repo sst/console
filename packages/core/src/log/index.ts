@@ -36,6 +36,7 @@ export function createProcessor(group: string) {
   return {
     group,
     cold: new Set<string>(),
+    unknown: [] as LogEvent[],
     invocations: new Map<string, number>(),
   };
 }
@@ -47,7 +48,6 @@ export function process(input: {
   stream: string;
   processor: Processor;
 }): LogEvent[] {
-  console.log(input.line);
   function generateID(id: string) {
     const trimmed = id.trim();
     const count = input.processor.invocations.get(trimmed);
@@ -63,6 +63,12 @@ export function process(input: {
     const splits = tabs[0].split(" ");
     const cold = input.processor.cold.has(input.stream);
     input.processor.cold.delete(input.stream);
+    const id = generateID(splits[2]!);
+    const flush = input.processor.unknown.map((evt) => {
+      evt[3] = id;
+      return evt;
+    });
+    input.processor.unknown = [];
     return [
       [
         "s",
@@ -71,6 +77,7 @@ export function process(input: {
         generateID(splits[2]!),
         cold,
       ],
+      ...flush,
     ];
   }
 
@@ -115,18 +122,20 @@ export function process(input: {
         parsed.stack,
       ];
     }
-    return [
-      [
-        "m",
-        input.timestamp,
-        input.processor.group,
-        generateID(tabs[1]!),
-        tabs[2]!.trim(),
-        tabs.slice(3).join("\t").trim(),
-        input.id,
-      ],
+    const result: LogEvent = [
+      "m",
+      input.timestamp,
+      input.processor.group,
+      generateID(tabs[1]!),
+      tabs[2]!.trim(),
+      tabs.slice(3).join("\t").trim(),
+      input.id,
     ];
+    if (result[3] === "undefined") {
+      input.processor.unknown.push(result);
+      return [];
+    }
+    return [result];
   }
-  console.log("unhandled log line", tabs);
   return [];
 }

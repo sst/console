@@ -85,6 +85,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
 
           if (response.status === "Complete") {
             const results = response.results || [];
+            console.log(results);
             let batch: LogEvent[] = [];
             let batchSize = 0;
             const events = pipe(
