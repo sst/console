@@ -736,7 +736,10 @@ export function Logs() {
             </Row>
           </LogLoadingIndicator>
           <Show
-            when={(mode() === "tail" || query.view === "recent") && resource()}
+            when={
+              (["live", "tail"].includes(mode()) || query.view === "recent") &&
+              resource()
+            }
           >
             <Invoke
               onInvoke={() => {

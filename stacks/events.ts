@@ -41,6 +41,13 @@ export function Events({ stack }: StackContext) {
     permissions: ["sts", "iot"],
   });
 
+  bus.subscribe("app.stage.usage_requested", {
+    handler: "packages/functions/src/events/fetch-usage.handler",
+    bind: [...Object.values(secrets.database), bus],
+    timeout: "5 minute",
+    permissions: ["sts", "iot"],
+  });
+
   bus.subscribe("aws.account.created", {
     handler: "packages/functions/src/events/aws-account-created.handler",
     bind: [...Object.values(secrets.database), bus],

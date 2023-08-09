@@ -14,7 +14,7 @@ import { event } from "../event";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { useWorkspace } from "../actor";
 
 export const Events = {
@@ -164,4 +164,25 @@ export const enrich = zod(
         input.region
       );
     })
+);
+
+export const listFromStageID = zod(
+  z.object({
+    stageID: z.string().nonempty(),
+    types: z.array(z.string().nonempty()),
+  }),
+  async (input) =>
+    useTransaction((tx) =>
+      tx
+        .select()
+        .from(resource)
+        .where(
+          and(
+            eq(resource.stageID, input.stageID),
+            inArray(resource.type, input.types)
+          )
+        )
+        .execute()
+        .then((rows) => rows)
+    )
 );

@@ -29,7 +29,7 @@ export const assumeRole = zod(z.string(), async (id) => {
       accessKeyId: result.Credentials!.AccessKeyId!,
       sessionToken: result.Credentials!.SessionToken!,
     };
-  } catch {
+  } catch (e: any) {
     const rows = await useTransaction(async (tx) =>
       tx
         .update(awsAccount)
@@ -43,7 +43,7 @@ export const assumeRole = zod(z.string(), async (id) => {
           )
         )
     );
-    console.log("failed to assume role for account", id);
+    console.log("failed to assume role for account", id, e);
     return;
   }
 });

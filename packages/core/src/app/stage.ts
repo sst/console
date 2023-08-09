@@ -27,6 +27,10 @@ export const Events = {
   Updated: event("app.stage.updated", {
     stageID: z.string().nonempty(),
   }),
+  UsageRequested: event("app.stage.usage_requested", {
+    stageID: z.string().nonempty(),
+    daysOffset: z.number().int().min(1),
+  }),
 };
 
 export const Info = createSelectSchema(stage, {
@@ -72,6 +76,16 @@ export const fromName = zod(
         .execute()
         .then((x) => x[0])
     )
+);
+
+export const list = zod(z.void(), async () =>
+  useTransaction((tx) =>
+    tx
+      .select()
+      .from(stage)
+      .execute()
+      .then((rows) => rows)
+  )
 );
 
 export const connect = zod(
