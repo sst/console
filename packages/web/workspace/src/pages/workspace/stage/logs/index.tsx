@@ -1002,7 +1002,7 @@ export function Logs() {
                                 <Show when={invocation.report?.memory}>
                                   {(size) => {
                                     const formattedSize = formatBytes(
-                                      size() * 1024
+                                      size() * 1024 * 1024
                                     );
                                     return `${formattedSize.value}${formattedSize.unit}`;
                                   }}
@@ -1015,7 +1015,7 @@ export function Logs() {
                                 <Show when={invocation.report?.size}>
                                   {(size) => {
                                     const formattedSize = formatBytes(
-                                      size() * 1024
+                                      size() * 1024 * 1024
                                     );
                                     return `${formattedSize.value}${formattedSize.unit}`;
                                   }}
