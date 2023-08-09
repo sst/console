@@ -18,7 +18,7 @@ export const handler = EventHandler(
 
     console.log("STAGE", stageID);
     const config = await Stage.assumeRole(stageID);
-    if (!config.credentials) throw new Error("Failed to assume role");
+    if (!config.credentials) return;
 
     // Get all function resources
     const functions = await Resource.listFromStageID({
