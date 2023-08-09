@@ -63,7 +63,7 @@ const NewConsoleTips = styled("ul", {
     backgroundColor: theme.color.background.surface,
     borderRadius: theme.borderRadius,
     fontSize: theme.font.size.sm,
-    color: theme.color.text.dimmed.base,
+    color: theme.color.text.secondary.surface,
   },
 });
 
