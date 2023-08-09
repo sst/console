@@ -1,22 +1,6 @@
 {
-  "hosted-zone:account=226609089145:domainName=sst.dev:region=us-east-1": {
-    "Id": "/hostedzone/Z037907517UHCHNGXSKXX",
-    "Name": "sst.dev."
-  },
-  "hosted-zone:account=917397401067:domainName=dev.sst.dev:region=us-east-1": {
-    "Id": "/hostedzone/Z09881375TCA2UZ3XW2R",
-    "Name": "dev.sst.dev."
-  },
-  "hosted-zone:account=226609089145:domainName=production.sst.dev:region=us-east-1": {
-    "Id": "/hostedzone/Z030584024UZPNEEMWU4M",
-    "Name": "production.sst.dev."
-  },
-  "availability-zones:account=917397401067:region=us-east-1": [
-    "us-east-1a",
-    "us-east-1b",
-    "us-east-1c",
-    "us-east-1d",
-    "us-east-1e",
-    "us-east-1f"
-  ]
+  "hosted-zone:account=226609089145:domainName=console.sst.dev:region=us-east-1": {
+    "Id": "/hostedzone/Z01797773UXJPXLN5S1GU",
+    "Name": "console.sst.dev."
+  }
 }

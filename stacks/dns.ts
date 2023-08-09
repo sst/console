@@ -1,19 +1,33 @@
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 import { StackContext } from "sst/constructs";
 
-export function DNS(ctx: StackContext) {
-  const name =
-    ctx.stack.stage === "production" ? "production.sst.dev" : `dev.sst.dev`;
+const PRODUCTION = "console.sst.dev";
+const DEV = "console.dev.sst.dev";
 
-  if (ctx.stack.stage === "production" || ctx.stack.stage === "dev") {
-    new HostedZone(ctx.stack, "HostedZone", {
-      zoneName: name,
-    });
+export function DNS(ctx: StackContext) {
+  if (ctx.stack.stage === "production") {
+    return {
+      zone: new HostedZone(ctx.stack, "zone", {
+        zoneName: PRODUCTION,
+      }),
+      domain: PRODUCTION,
+    };
   }
 
+  if (ctx.stack.stage === "dev") {
+    return {
+      zone: new HostedZone(ctx.stack, "zone", {
+        zoneName: DEV,
+      }),
+      domain: DEV,
+    };
+  }
+
+  const zone = HostedZone.fromLookup(ctx.stack, "zone", {
+    domainName: DEV,
+  });
   return {
-    zone: name,
-    domain:
-      ctx.stack.stage === "production" ? name : `${ctx.stack.stage}.${name}`,
+    zone,
+    domain: `${ctx.stack.stage}.${DEV}`,
   };
 }

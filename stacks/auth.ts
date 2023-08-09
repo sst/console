@@ -27,7 +27,7 @@ export function Auth({ stack, app }: StackContext) {
     },
     customDomain: {
       domainName: "auth." + dns.domain,
-      hostedZone: dns.zone,
+      hostedZone: dns.zone.zoneName,
     },
   });
 
