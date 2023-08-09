@@ -636,7 +636,9 @@ export function Logs() {
             <Row space="2" vertical="center">
               <LogLoadingIndicatorIcon
                 pulse={mode() !== "search"}
-                glow={mode() === "live" || mode() === "tail"}
+                glow={
+                  (mode() === "live" && stage.connected) || mode() === "tail"
+                }
               >
                 <Switch>
                   <Match when={mode() === "live" && !stage.connected}>
@@ -737,7 +739,9 @@ export function Logs() {
           </LogLoadingIndicator>
           <Show
             when={
-              (["live", "tail"].includes(mode()) || query.view === "recent") &&
+              (mode() === "tail" ||
+                mode() === "live" ||
+                query.view === "recent") &&
               resource()
             }
           >
@@ -999,7 +1003,9 @@ export function Logs() {
                               <LogEntryMessage>
                                 <Show when={invocation.report?.memory}>
                                   {(size) => {
-                                    const formattedSize = formatBytes(size());
+                                    const formattedSize = formatBytes(
+                                      size() * 1024 * 1024
+                                    );
                                     return `${formattedSize.value}${formattedSize.unit}`;
                                   }}
                                 </Show>
@@ -1010,7 +1016,9 @@ export function Logs() {
                               <LogEntryMessage>
                                 <Show when={invocation.report?.size}>
                                   {(size) => {
-                                    const formattedSize = formatBytes(size());
+                                    const formattedSize = formatBytes(
+                                      size() * 1024 * 1024
+                                    );
                                     return `${formattedSize.value}${formattedSize.unit}`;
                                   }}
                                 </Show>

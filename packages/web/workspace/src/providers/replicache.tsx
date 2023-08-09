@@ -10,7 +10,6 @@ import {
   onCleanup,
   useContext,
 } from "solid-js";
-import { globalKeyframes } from "@macaron-css/core";
 import { Splash } from "$/ui";
 import { createStore, produce, reconcile } from "solid-js/store";
 import { useAuth } from "./auth";
@@ -85,15 +84,6 @@ function createReplicache(workspaceID: string, token: string) {
 
   return replicache;
 }
-
-globalKeyframes("delayedFadeIn", {
-  "0%": {
-    opacity: 0,
-  },
-  "100%": {
-    opacity: 1,
-  },
-});
 
 export function ReplicacheProvider(
   props: ParentProps<{ accountID: string; workspaceID: string }>
