@@ -26,6 +26,7 @@ export const handler = EventHandler(
       types: ["Function"],
     });
     console.log("> functions", functions.length);
+    if (!functions.length) return;
 
     // Get invocations for all functions
     const client = new CloudWatchClient(config);
