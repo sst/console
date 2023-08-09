@@ -636,7 +636,9 @@ export function Logs() {
             <Row space="2" vertical="center">
               <LogLoadingIndicatorIcon
                 pulse={mode() !== "search"}
-                glow={mode() === "live" || mode() === "tail"}
+                glow={
+                  (mode() === "live" && stage.connected) || mode() === "tail"
+                }
               >
                 <Switch>
                   <Match when={mode() === "live" && !stage.connected}>

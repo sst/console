@@ -15,18 +15,34 @@ import { For, Show, createSignal, onMount } from "solid-js";
 import Botpoison from "@botpoison/browser";
 import { createSingleSelectListState } from "@kobalte/core";
 
+const Root = styled("div", {
+  base: {
+    alignItems: "center",
+    width: 320,
+  },
+  variants: {
+    form: {
+      email: {
+        ...utility.stack(5),
+      },
+      code: {
+        ...utility.stack(8),
+      },
+    },
+  },
+});
+
 const Form = styled("form", {
   base: {
     width: 320,
     ...utility.stack(5),
-  },
-});
-
-const Root = styled("div", {
-  base: {
-    ...utility.stack(8),
-    alignItems: "center",
-    width: 320,
+    selectors: {
+      [`${Root.selector({ form: "email" })} &`]: {
+        paddingTop: theme.space[5],
+        borderTop: `1px solid ${theme.color.divider.base}`,
+      },
+      [`${Root.selector({ form: "code" })} &`]: {},
+    },
   },
 });
 
@@ -35,6 +51,19 @@ const LoginIcon = styled("div", {
     width: 42,
     height: 42,
     color: theme.color.accent,
+  },
+});
+
+const NewConsoleTips = styled("ul", {
+  base: {
+    ...utility.stack(2.5),
+    width: "100%",
+    padding: `${theme.space[4]} ${theme.space[2]} ${theme.space[4]} 30px`,
+    listStyle: "circle",
+    backgroundColor: theme.color.background.surface,
+    borderRadius: theme.borderRadius,
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -51,13 +80,11 @@ const OldConsoleSign = styled("div", {
 export function Auth() {
   return (
     <Fullscreen>
-      <Root>
-        <Routes>
-          <Route path="email" component={Email} />
-          <Route path="code" component={Code} />
-          <Route path="" element={<Navigate href="email" />} />
-        </Routes>
-      </Root>
+      <Routes>
+        <Route path="email" component={Email} />
+        <Route path="code" component={Code} />
+        <Route path="" element={<Navigate href="email" />} />
+      </Routes>
     </Fullscreen>
   );
 }
@@ -71,12 +98,12 @@ export function Email() {
   const [submitting, setSubmitting] = createSignal<boolean>();
 
   return (
-    <>
-      <Stack horizontal="center" space="5">
+    <Root form="email">
+      <Stack horizontal="center" space="5" style={{ width: "100%" }}>
         <LoginIcon>
           <IconApp />
         </LoginIcon>
-        <Stack horizontal="center" space="3">
+        <Stack horizontal="center" space="4" style={{ width: "100%" }}>
           <Stack horizontal="center" space="2">
             <Text size="lg" weight="medium">
               Welcome to the SST Console
@@ -85,17 +112,34 @@ export function Email() {
               Sign in with your email to get started
             </Text>
           </Stack>
-          <Show when={false}>
-            <OldConsoleSign>
-              <Text size="sm" on="surface" color="secondary">
-                Looking for the old console? Head over{" "}
+          <NewConsoleTips>
+            <li>
+              <Text size="sm" on="surface" color="secondary" leading="normal">
+                <a href="https://docs.sst.dev/console" target="_blank">
+                  Learn more
+                </a>{" "}
+                about the new console.
+              </Text>
+            </li>
+            <li>
+              <Text size="sm" on="surface" color="secondary" leading="normal">
+                Need help?{" "}
+                <a href="https://sst.dev/discord" target="_blank">
+                  Join #console
+                </a>{" "}
+                on Discord.
+              </Text>
+            </li>
+            <li>
+              <Text size="sm" on="surface" color="secondary" leading="normal">
+                Looking for the old console?{" "}
                 <a target="_blank" href="https://old.console.sst.dev">
-                  here
+                  Click here
                 </a>
                 .
               </Text>
-            </OldConsoleSign>
-          </Show>
+            </li>
+          </NewConsoleTips>
         </Stack>
       </Stack>
       <Form
@@ -129,7 +173,7 @@ export function Email() {
           </Text>
         </Stack>
       </Form>
-    </>
+    </Root>
   );
 }
 
@@ -150,7 +194,7 @@ export function Code() {
   }
 
   return (
-    <>
+    <Root form="code">
       <Stack horizontal="center" space="5">
         <LoginIcon>
           <IconApp />
@@ -230,6 +274,6 @@ export function Code() {
           </For>
         </Row>
       </Form>
-    </>
+    </Root>
   );
 }

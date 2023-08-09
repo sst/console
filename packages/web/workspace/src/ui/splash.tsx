@@ -2,6 +2,7 @@ import { styled } from "@macaron-css/solid";
 import { IconApp } from "./icons/custom";
 import { Fullscreen } from "./layout";
 import { theme } from "./theme";
+import { globalKeyframes } from "@macaron-css/core";
 
 const LogoIcon = styled("div", {
   base: {
@@ -12,6 +13,15 @@ const LogoIcon = styled("div", {
     animation: "1s delayedFadeIn",
     animationFillMode: "forwards",
     color: theme.color.icon.dimmed,
+  },
+});
+
+globalKeyframes("delayedFadeIn", {
+  "0%": {
+    opacity: 0,
+  },
+  "100%": {
+    opacity: 1,
   },
 });
 

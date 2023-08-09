@@ -32,19 +32,12 @@ const AddAccountGraphicConnectIcon = styled("div", {
   },
 });
 
-const AddAccountHint = styled("div", {
-  base: {
-    borderRadius: theme.borderRadius,
-    boxSizing: "border-box",
-  },
-});
-
-const AddAccountHintSteps = styled("ul", {
+const AddAccountHint = styled("ul", {
   base: {
     ...utility.stack(3),
     listStyle: "circle inside",
-    color: theme.color.text.dimmed.base,
     fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -85,12 +78,10 @@ export function Account() {
             </Text>
           </Stack>
           <AddAccountHint>
-            <AddAccountHintSteps>
-              <li>This deploys a CloudFormation stack to your account</li>
-              <li>It contains an IAM Role and a Lambda function</li>
-              <li>It'll scan all your AWS regions for SST apps</li>
-              <li>And it'll subscribe to them and listen for changes</li>
-            </AddAccountHintSteps>
+            <li>This deploys a CloudFormation stack to your account</li>
+            <li>It contains an IAM Role and a Lambda function</li>
+            <li>It'll scan all your AWS regions for SST apps</li>
+            <li>And it'll subscribe to them and listen for changes</li>
           </AddAccountHint>
           <AddAccountStepsFooter>
             <Text size="sm" color="secondary">
