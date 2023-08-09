@@ -46,6 +46,7 @@ export const handler = AuthHandler({
                 Location: process.env.AUTH_FRONTEND_URL + "/auth/email",
               },
             };
+          console.log("challenge verified");
           const email = new SendEmailCommand({
             Destination: {
               ToAddresses: [claims.email],
