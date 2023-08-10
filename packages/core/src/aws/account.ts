@@ -119,17 +119,19 @@ export const bootstrap = zod(
           StackName: "SSTBootstrap",
         })
       )
-      .then((x) => x?.Stacks?.[0])
-      .catch(() => {});
+      .catch(() => {
+        console.log(input.region, "no bootstrap stack found");
+      });
     if (!bootstrap) {
       return;
     }
 
-    const bucket = bootstrap.Outputs?.find(
+    const bucket = bootstrap.Stacks?.at(0)?.Outputs?.find(
       (x) => x.OutputKey === "BucketName"
     )?.OutputValue;
 
     if (!bucket) {
+      console.log(input.region, "no bucket found");
       return;
     }
 
@@ -269,12 +271,12 @@ export const integrate = zod(
               },
             })
           )
-          .then(() => {
-            console.log(region, "enabled s3 notification");
-          })
-          .catch(() => {
-            console.log(region, "failed to update bucket notification");
-          });
+          .catch(() => {});
+        if (!result) {
+          console.log(region, "failed to update bucket notification");
+          return;
+        }
+        console.log(region, "updated bucket notifications");
 
         await eb.send(
           new PutRuleCommand({
