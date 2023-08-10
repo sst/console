@@ -260,15 +260,21 @@ export const integrate = zod(
 
         console.log(region, "found sst bucket", b.bucket);
 
-        await s3.send(
-          new PutBucketNotificationConfigurationCommand({
-            Bucket: b.bucket,
-            NotificationConfiguration: {
-              EventBridgeConfiguration: {},
-            },
+        const result = await s3
+          .send(
+            new PutBucketNotificationConfigurationCommand({
+              Bucket: b.bucket,
+              NotificationConfiguration: {
+                EventBridgeConfiguration: {},
+              },
+            })
+          )
+          .then(() => {
+            console.log(region, "enabled s3 notification");
           })
-        );
-        console.log(region, "enabled s3 notification");
+          .catch(() => {
+            console.log(region, "failed to update bucket notification");
+          });
 
         await eb.send(
           new PutRuleCommand({
