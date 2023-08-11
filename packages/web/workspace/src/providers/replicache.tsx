@@ -238,10 +238,10 @@ export function createGet<T extends any>(
         batch(() => {
           for (const diff of diffs) {
             if (diff.op === "add") {
-              setData("value", diff.newValue as T);
+              setData("value", structuredClone(diff.newValue) as T);
             }
             if (diff.op === "change") {
-              setData("value", reconcile(diff.newValue as T));
+              setData("value", reconcile(structuredClone(diff.newValue) as T));
             }
             if (diff.op === "del") setData("value", undefined);
           }
@@ -293,7 +293,7 @@ export function createScan<T extends any>(
             const values: T[] = [];
             for (const diff of diffs) {
               if (diff.op === "add") {
-                const index = values.push(diff.newValue as T);
+                const index = values.push(structuredClone(diff.newValue) as T);
                 pointers.set(diff.key, index - 1);
               }
             }
@@ -305,13 +305,16 @@ export function createScan<T extends any>(
             if (diff.op === "add") {
               setData(
                 produce((d) => {
-                  const index = d.push(diff.newValue as T);
+                  const index = d.push(structuredClone(diff.newValue) as T);
                   pointers.set(diff.key, index - 1);
                 })
               );
             }
             if (diff.op === "change") {
-              setData(pointers.get(diff.key)!, reconcile(diff.newValue as T));
+              setData(
+                pointers.get(diff.key)!,
+                reconcile(structuredClone(diff.newValue) as T)
+              );
             }
             if (diff.op === "del") {
               setData(
