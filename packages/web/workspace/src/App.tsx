@@ -270,6 +270,7 @@ function GlobalCommands() {
   bar.register("account", async () => {
     return [
       {
+        category: "Account",
         title: "Logout",
         icon: IconBuildingOffice,
         run: async (control: any) => {

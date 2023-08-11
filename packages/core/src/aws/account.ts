@@ -310,14 +310,20 @@ export const integrate = zod(
         while (true) {
           const list = await s3.send(
             new ListObjectsV2Command({
-              Prefix: "appMetadata",
+              Prefix: "stackMetadata",
               Bucket: b.bucket,
               ContinuationToken: token,
             })
           );
+          const distinct = new Set(
+            list.Contents?.filter((item) => item.Key).map((item) =>
+              item.Key!.split("/").slice(0, 3).join("/")
+            ) || []
+          );
 
-          for (const item of list.Contents || []) {
-            const [, appHint, stageHint] = item.Key?.split("/") || [];
+          console.log("found", distinct);
+          for (const item of distinct) {
+            const [, appHint, stageHint] = item.split("/") || [];
             if (!appHint || !stageHint) return;
             const [, stageName] = stageHint?.split(".");
             const [, appName] = appHint?.split(".");
