@@ -61,7 +61,7 @@ export function AuthProvider(props: ParentProps) {
       token: access_token,
       ...payload.properties,
     };
-    account.set(payload.properties.accountID);
+    account.set('account', payload.properties.accountID);
     set(tokens);
   }
 
