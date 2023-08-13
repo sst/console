@@ -24,7 +24,7 @@ const Root = styled("div", {
   },
 });
 
-const WorkspaceLogoLink = styled("Link", {
+const WorkspaceLogoLink = styled(Link, {
   base: {
     display: "flex",
   },

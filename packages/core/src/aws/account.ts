@@ -119,17 +119,19 @@ export const bootstrap = zod(
           StackName: "SSTBootstrap",
         })
       )
-      .then((x) => x?.Stacks?.[0])
-      .catch(() => {});
+      .catch(() => {
+        console.log(input.region, "no bootstrap stack found");
+      });
     if (!bootstrap) {
       return;
     }
 
-    const bucket = bootstrap.Outputs?.find(
+    const bucket = bootstrap.Stacks?.at(0)?.Outputs?.find(
       (x) => x.OutputKey === "BucketName"
     )?.OutputValue;
 
     if (!bucket) {
+      console.log(input.region, "no bucket found");
       return;
     }
 
@@ -260,15 +262,21 @@ export const integrate = zod(
 
         console.log(region, "found sst bucket", b.bucket);
 
-        await s3.send(
-          new PutBucketNotificationConfigurationCommand({
-            Bucket: b.bucket,
-            NotificationConfiguration: {
-              EventBridgeConfiguration: {},
-            },
-          })
-        );
-        console.log(region, "enabled s3 notification");
+        const result = await s3
+          .send(
+            new PutBucketNotificationConfigurationCommand({
+              Bucket: b.bucket,
+              NotificationConfiguration: {
+                EventBridgeConfiguration: {},
+              },
+            })
+          )
+          .catch(() => {});
+        if (!result) {
+          console.log(region, "failed to update bucket notification");
+          return;
+        }
+        console.log(region, "updated bucket notifications");
 
         await eb.send(
           new PutRuleCommand({
@@ -302,14 +310,20 @@ export const integrate = zod(
         while (true) {
           const list = await s3.send(
             new ListObjectsV2Command({
-              Prefix: "appMetadata",
+              Prefix: "stackMetadata",
               Bucket: b.bucket,
               ContinuationToken: token,
             })
           );
+          const distinct = new Set(
+            list.Contents?.filter((item) => item.Key).map((item) =>
+              item.Key!.split("/").slice(0, 3).join("/")
+            ) || []
+          );
 
-          for (const item of list.Contents || []) {
-            const [, appHint, stageHint] = item.Key?.split("/") || [];
+          console.log("found", distinct);
+          for (const item of distinct) {
+            const [, appHint, stageHint] = item.split("/") || [];
             if (!appHint || !stageHint) return;
             const [, stageName] = stageHint?.split(".");
             const [, appName] = appHint?.split(".");

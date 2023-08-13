@@ -103,7 +103,7 @@ export function API({ stack, app }: StackContext) {
     },
     customDomain: {
       domainName: "api." + dns.domain,
-      hostedZone: dns.zone,
+      hostedZone: dns.zone.zoneName,
     },
   });
 

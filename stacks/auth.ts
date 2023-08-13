@@ -20,14 +20,14 @@ export function Auth({ stack, app }: StackContext) {
         AUTH_FRONTEND_URL:
           app.mode === "dev"
             ? "http://localhost:3000"
-            : "https://console." + dns.domain,
+            : "https://" + dns.domain,
         EMAIL_DOMAIN: use(DNS).domain,
       },
       permissions: ["ses"],
     },
     customDomain: {
       domainName: "auth." + dns.domain,
-      hostedZone: dns.zone,
+      hostedZone: dns.zone.zoneName,
     },
   });
 

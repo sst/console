@@ -15,8 +15,8 @@ export function Web({ stack }: StackContext) {
     buildOutput: "./dist",
     buildCommand: "pnpm build",
     customDomain: {
-      domainName: "console." + dns.domain,
-      hostedZone: dns.zone,
+      domainName: dns.domain,
+      hostedZone: dns.zone.zoneName,
     },
     environment: {
       VITE_API_URL: api.customDomainUrl || api.url,

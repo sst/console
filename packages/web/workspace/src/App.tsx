@@ -266,5 +266,23 @@ function GlobalCommands() {
       },
     ];
   });
+
+  bar.register("account", async () => {
+    return [
+      {
+        category: "Account",
+        title: "Logout",
+        icon: IconBuildingOffice,
+        run: async (control: any) => {
+          const dbs = await window.indexedDB.databases();
+          dbs.forEach((db) => {
+            window.indexedDB.deleteDatabase(db.name!);
+          });
+          localStorage.clear();
+          location.href = "/";
+        },
+      },
+    ];
+  });
   return undefined;
 }

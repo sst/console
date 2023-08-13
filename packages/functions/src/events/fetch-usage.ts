@@ -24,6 +24,18 @@ export const handler = EventHandler(
     const endDate = startDate.endOf("day");
     console.log("STAGE", stageID, startDate.toSQLDate(), endDate.toSQLDate());
 
+    // Get all function resources
+    const functions = await Resource.listFromStageID({
+      stageID,
+      types: ["Function"],
+    });
+    if (!functions.length) return;
+    console.log("> functions", functions.length);
+
+    // Get stage credentials
+    const config = await Stage.assumeRole(stageID);
+    if (!config.credentials) return;
+
     const invocations = await queryUsageFromAWS();
     await Billing.createUsage({
       stageID,
@@ -37,18 +49,6 @@ export const handler = EventHandler(
     /////////////////
 
     async function queryUsageFromAWS() {
-      // Get all function resources
-      const functions = await Resource.listFromStageID({
-        stageID,
-        types: ["Function"],
-      });
-      console.log("> functions", functions.length);
-
-      // Get stage credentials
-      const config = await Stage.assumeRole(stageID);
-      if (!config.credentials) throw new Error("Failed to assume role");
-
-      // Get invocations for all functions
       const client = new CloudWatchClient(config);
       const metrics = await client.send(
         new GetMetricDataCommand({
