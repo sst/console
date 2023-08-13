@@ -73,7 +73,12 @@ export function API({ stack, app }: StackContext) {
   const api = new Api(stack, "api", {
     defaults: {
       function: {
-        bind: [auth, ...Object.values(secrets.database), bus],
+        bind: [
+          auth,
+          ...Object.values(secrets.database),
+          ...secrets.stripe,
+          bus,
+        ],
         permissions: ["iot", "sts"],
         environment: {
           LOG_POLLER_ARN: poller.stateMachineArn,
@@ -83,6 +88,11 @@ export function API({ stack, app }: StackContext) {
     routes: {
       "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
+      "POST /webhook/stripe": "packages/functions/src/billing/webhook.handler",
+      "POST /rest/create_checkout_session":
+        "packages/functions/src/billing/create-checkout-session.handler",
+      "POST /rest/create_customer_portal_session":
+        "packages/functions/src/billing/create-customer-portal-session.handler",
       "GET /error": {
         type: "function",
         function: {

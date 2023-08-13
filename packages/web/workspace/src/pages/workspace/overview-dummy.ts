@@ -1,6 +1,7 @@
 import type { App } from "@console/core/app";
 import type { Stage } from "@console/core/app/stage";
 import type { Account } from "@console/core/aws/account";
+import type { Usage } from "@console/core/billing";
 
 const WORKSPACE_ID = "1";
 const longAccountID = "983456789012";
@@ -55,6 +56,19 @@ function app(id: string, name: string): App.Info {
   };
 }
 
+function usage(day: string, invocations: number): Usage {
+  return {
+    id: Date.now().toString(),
+    stageID: localStageName,
+    day,
+    invocations,
+    workspaceID: WORKSPACE_ID,
+    timeCreated: new Date().toISOString(),
+    timeDeleted: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
+  };
+}
+
 const EMPTY: Account.Info[] = [];
 const DEFAULT = [
   account(defaultAccountID),
@@ -88,3 +102,8 @@ export const DUMMY_LOCAL_APP = {
   app: localAppName,
   stage: localStageName,
 };
+
+export const DUMMY_USAGES = [
+  usage("2021-01-01", 123),
+  usage("2021-01-02", 234),
+];

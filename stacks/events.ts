@@ -27,6 +27,13 @@ export function Events({ stack }: StackContext) {
     },
   });
 
+  bus.subscribe("workspace.created", {
+    handler: "packages/functions/src/events/workspace-created.handler",
+    timeout: "5 minute",
+    bind: [...Object.values(secrets.database), ...secrets.stripe, bus],
+    permissions: ["sts", "iot"],
+  });
+
   bus.subscribe("app.stage.connected", {
     handler: "packages/functions/src/events/app-stage-connected.handler",
     timeout: "5 minute",
@@ -43,7 +50,7 @@ export function Events({ stack }: StackContext) {
 
   bus.subscribe("app.stage.usage_requested", {
     handler: "packages/functions/src/events/fetch-usage.handler",
-    bind: [...Object.values(secrets.database), bus],
+    bind: [...Object.values(secrets.database), ...secrets.stripe, bus],
     timeout: "5 minute",
     permissions: ["sts", "iot"],
   });

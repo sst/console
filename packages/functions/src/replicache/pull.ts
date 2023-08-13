@@ -1,11 +1,13 @@
+import { DateTime } from "luxon";
 import { useActor, useWorkspace } from "@console/core/actor";
 import { Replicache } from "@console/core/replicache";
 import { user } from "@console/core/user/user.sql";
 import { useTransaction } from "@console/core/util/transaction";
 import { useApiAuth } from "src/api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
-import { eq, and, gt, inArray } from "drizzle-orm";
+import { eq, and, gt, gte, inArray } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
+import { usage } from "@console/core/billing/billing.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { replicache_cvr } from "@console/core/replicache/replicache.sql";
@@ -69,6 +71,7 @@ export const handler = ApiHandler(async () => {
         log_poller,
         log_search,
         lambdaPayload,
+        usage,
       };
       const results: [string, { id: string; time_updated: string }[]][] = [];
       for (const [name, table] of Object.entries(tables)) {
@@ -83,6 +86,14 @@ export const handler = ApiHandler(async () => {
               ),
               ...(name === "log_search" && "userID" in table
                 ? [eq(table.userID, actor.properties.userID)]
+                : []),
+              ...(name === "usage" && "day" in table
+                ? [
+                    gte(
+                      table.day,
+                      DateTime.now().toUTC().startOf("month").toSQLDate()!
+                    ),
+                  ]
                 : [])
             )
           )

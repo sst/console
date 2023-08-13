@@ -2,6 +2,7 @@ import { AppStore } from "$/data/app";
 import { UserInfo, UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
+import { UsageStore } from "$/data/usage";
 import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
 import { createSubscription, useReplicache } from "$/providers/replicache";
@@ -28,10 +29,12 @@ import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
 import type { App } from "@console/core/app";
 import type { Stage } from "@console/core/app";
 import type { Account } from "@console/core/aws/account";
+import type { Usage } from "@console/core/billing";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import {
   DUMMY_STAGES,
+  DUMMY_USAGES,
   DUMMY_ACCOUNTS,
   DUMMY_LOCAL_APP,
   DUMMY_APP_STORE,
@@ -47,6 +50,7 @@ import {
   ComponentProps,
 } from "solid-js";
 import { Header } from "./header";
+import { useWorkspace } from "./context";
 import { useLocalContext } from "$/providers/local";
 import { pipe, sortBy } from "remeda";
 import { User } from "@console/core/user";
@@ -159,6 +163,7 @@ function splitCols(array: Account.Info[]) {
 }
 
 export function Overview() {
+  const rep = useReplicache();
   const [query] = useSearchParams();
   const accounts = createSubscription(() =>
     query.dummy
@@ -178,6 +183,19 @@ export function Overview() {
         : StageStore.list(),
     []
   );
+  const usages = createSubscription(
+    () =>
+      query.dummy
+        ? async (): Promise<Usage[]> => DUMMY_USAGES
+        : UsageStore.list(),
+    []
+  );
+  const invocations = createMemo(() =>
+    usages()
+      .map((usage) => usage.invocations)
+      .reduce((a, b) => a + b, 0)
+  );
+  const workspace = useWorkspace();
   const nav = useNavigate();
   const auth = useAuth();
   const storage = useStorage();
@@ -240,6 +258,40 @@ export function Overview() {
     );
   }
 
+  async function handleManageSubscription(e: MouseEvent) {
+    e.stopPropagation();
+    const response = await fetch(
+      import.meta.env.VITE_API_URL + "/rest/create_customer_portal_session",
+      {
+        method: "POST",
+        body: JSON.stringify({ return_url: window.location.href }),
+        headers: {
+          "x-sst-workspace": workspace().id,
+          Authorization: rep().auth,
+        },
+      }
+    );
+    const result = await response.json();
+    window.location.href = result.url;
+  }
+
+  async function handleSubscribe(e: MouseEvent) {
+    e.stopPropagation();
+    const response = await fetch(
+      import.meta.env.VITE_API_URL + "/rest/create_checkout_session",
+      {
+        method: "POST",
+        body: JSON.stringify({ return_url: window.location.href }),
+        headers: {
+          "x-sst-workspace": workspace().id,
+          Authorization: rep().auth,
+        },
+      }
+    );
+    const result = await response.json();
+    window.location.href = result.url;
+  }
+
   return (
     <>
       <Header />
@@ -273,6 +325,23 @@ export function Overview() {
                   Overview
                 </Text>
                 <Row space="4" vertical="center">
+                  {/*
+                  <Button
+                    color="secondary"
+                    disabled={!!workspace().stripeSubscriptionID}
+                    onClick={handleSubscribe}
+                  >
+                    Subscribe ↗
+                  </Button>
+                  <Button
+                    color="secondary"
+                    disabled={!workspace().stripeSubscriptionID}
+                    onClick={handleManageSubscription}
+                  >
+                    Manage Subscription ↗
+                  </Button>
+                  <Text>Invocations: {invocations()}</Text>
+  */}
                   <Link href="account">
                     <Button color="secondary">Add AWS Account</Button>
                   </Link>

@@ -4,13 +4,14 @@ import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "../drizzle";
-import { eq, and } from "drizzle-orm";
+import { eq, and, lte, gte, between } from "drizzle-orm";
 import { useTransaction } from "../util/transaction";
 import { useWorkspace } from "../actor";
 
 export * as Billing from "./index";
 
 export const Usage = createSelectSchema(usage, {
+  id: (schema) => schema.id.cuid2(),
   workspaceID: (schema) => schema.workspaceID.cuid2(),
   stageID: (schema) => schema.stageID.cuid2(),
 });
@@ -23,6 +24,7 @@ export const createUsage = zod(
       await tx
         .insert(usage)
         .values({
+          id: createId(),
           workspaceID: useWorkspace(),
           stageID: input.stageID,
           day: input.day,
@@ -36,4 +38,20 @@ export const createUsage = zod(
         .execute();
     });
   }
+);
+
+export const listByStartAndEndDay = zod(
+  z.object({
+    startDay: Usage.shape.day,
+    endDay: Usage.shape.day,
+  }),
+  async (input) =>
+    useTransaction((tx) =>
+      tx
+        .select()
+        .from(usage)
+        .where(between(usage.day, input.startDay, input.endDay))
+        .execute()
+        .then((rows) => rows)
+    )
 );

@@ -80,6 +80,9 @@ importers:
       remeda:
         specifier: ^1.17.1
         version: 1.17.1
+      stripe:
+        specifier: ^12.17.0
+        version: 12.17.0
       undici:
         specifier: ^5.22.0
         version: 5.22.0
@@ -12358,6 +12361,14 @@ packages:
     dependencies:
       acorn: 8.8.2
     dev: true
+
+  /stripe@12.17.0:
+    resolution: {integrity: sha512-f8GhS2LQlGCDZ1Akyu57txgSWyLUEYf0yZYS7x2aTKJXVua5lLmmgfJFFYHfTgEdS5P6rurf0Ghcf/HVLggv5g==}
+    engines: {node: '>=12.*'}
+    dependencies:
+      '@types/node': 18.16.0
+      qs: 6.11.0
+    dev: false
 
   /strnum@1.0.5:
     resolution: {integrity: sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==}

@@ -16,6 +16,7 @@ export const usage = mysqlTable(
   {
     workspaceID: workspaceID.workspaceID,
     ...timestamps,
+    id: cuid("id").notNull(),
     stageID: cuid("stage_id").notNull(),
     day: date("day", { mode: "string" }).notNull(),
     invocations: bigint("invocations", { mode: "number" }).notNull(),
