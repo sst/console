@@ -17,6 +17,11 @@ export const handler = EventHandler(
     provideActor(evt.metadata.actor);
 
     const { stageID, daysOffset } = evt.properties;
+
+    // Get stage credentials
+    const config = await Stage.assumeRole(stageID);
+    if (!config) return;
+
     const startDate = DateTime.now()
       .toUTC()
       .startOf("day")
@@ -31,10 +36,6 @@ export const handler = EventHandler(
     });
     if (!functions.length) return;
     console.log("> functions", functions.length);
-
-    // Get stage credentials
-    const config = await Stage.assumeRole(stageID);
-    if (!config) return;
 
     const invocations = await queryUsageFromAWS();
     await Billing.createUsage({
