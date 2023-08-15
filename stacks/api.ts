@@ -86,7 +86,12 @@ export function API({ stack, app }: StackContext) {
       },
     },
     routes: {
-      "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
+      "POST /replicache/pull": {
+        function: {
+          handler: "packages/functions/src/replicache/pull.handler",
+          timeout: "29 seconds",
+        },
+      },
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
       "POST /webhook/stripe": "packages/functions/src/billing/webhook.handler",
       "POST /rest/create_checkout_session":
