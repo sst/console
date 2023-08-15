@@ -22,6 +22,9 @@ export default {
     if (app.stage !== "production") {
       app.setDefaultRemovalPolicy("destroy");
     }
+    app.setDefaultFunctionProps({
+      tracing: "disabled",
+    });
     app
       .stack(DNS)
       .stack(Email)
