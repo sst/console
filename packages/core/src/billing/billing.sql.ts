@@ -22,6 +22,7 @@ export const usage = mysqlTable(
     invocations: bigint("invocations", { mode: "number" }).notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.stageID, table.day),
+    primary: primaryKey(table.id, table.workspaceID),
+    stage: uniqueIndex("stage").on(table.workspaceID, table.stageID, table.day),
   })
 );
