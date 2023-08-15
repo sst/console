@@ -10,6 +10,7 @@ import { Resource } from "@console/core/app/resource";
 import { Billing } from "@console/core/billing";
 import { stripe } from "@console/core/stripe";
 import { Workspace } from "@console/core/workspace";
+import { totalmem } from "os";
 
 export const handler = EventHandler(
   Stage.Events.UsageRequested,
@@ -51,37 +52,47 @@ export const handler = EventHandler(
 
     async function queryUsageFromAWS() {
       const client = new CloudWatchClient(config!);
-      const metrics = await client.send(
-        new GetMetricDataCommand({
-          MetricDataQueries: functions.map((fn, i) => ({
-            Id: `m${i}`,
-            MetricStat: {
-              Metric: {
-                Namespace: "AWS/Lambda",
-                MetricName: "Invocations",
-                Dimensions: [
-                  {
-                    Name: "FunctionName",
-                    // TODO: fix type
-                    // @ts-expect-error
-                    Value: fn?.metadata.arn.split(":").pop(),
-                  },
-                ],
+
+      const queryBatch = async (batch: typeof functions) => {
+        const metrics = await client.send(
+          new GetMetricDataCommand({
+            MetricDataQueries: batch.map((fn, i) => ({
+              Id: `m${i}`,
+              MetricStat: {
+                Metric: {
+                  Namespace: "AWS/Lambda",
+                  MetricName: "Invocations",
+                  Dimensions: [
+                    {
+                      Name: "FunctionName",
+                      // TODO: fix type
+                      // @ts-expect-error
+                      Value: fn?.metadata.arn.split(":").pop(),
+                    },
+                  ],
+                },
+                Period: 86400,
+                Stat: "Sum",
               },
-              Period: 86400,
-              Stat: "Sum",
-            },
-          })),
-          StartTime: startDate.toJSDate(),
-          EndTime: endDate.toJSDate(),
-        })
-      );
-      const invocations = (metrics.MetricDataResults || [])?.reduce(
-        (acc, result) => acc + (result.Values?.[0] ?? 0),
-        0
-      );
-      console.log("> invocations", invocations);
-      return invocations;
+            })),
+            StartTime: startDate.toJSDate(),
+            EndTime: endDate.toJSDate(),
+          })
+        );
+        return (metrics.MetricDataResults || [])?.reduce(
+          (acc, result) => acc + (result.Values?.[0] ?? 0),
+          0
+        );
+      };
+
+      // Query in batches
+      let total = 0;
+      const chunkSize = 500;
+      for (let i = 0; i < functions.length; i += chunkSize) {
+        total += await queryBatch(functions.slice(i, i + chunkSize));
+      }
+      console.log("> invocations", total);
+      return total;
     }
 
     async function reportUsageToStripe() {
