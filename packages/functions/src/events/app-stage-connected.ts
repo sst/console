@@ -4,10 +4,10 @@ import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(Stage.Events.Connected, async (evt) => {
   provideActor(evt.metadata.actor);
-  const { credentials } = await Stage.assumeRole(evt.properties.stageID);
-  if (!credentials) return;
+  const config = await Stage.assumeRole(evt.properties.stageID);
+  if (!config) return;
   await Stage.syncMetadata({
     stageID: evt.properties.stageID,
-    credentials,
+    credentials: config.credentials,
   });
 });

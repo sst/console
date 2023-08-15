@@ -209,7 +209,7 @@ export const syncMetadata = zod(
                   res,
                   input.credentials,
                   row.region
-                ).catch(() => {})
+                ).catch(() => ({}))
               : {};
           r.push({
             ...res,
@@ -296,9 +296,11 @@ export const assumeRole = zod(Info.shape.id, async (stageID) =>
       .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
       .execute()
       .then((rows) => rows.at(0));
-    if (!result) throw new Error("no account found");
+    if (!result) return;
+    const credentials = await AWS.assumeRole(result.accountID);
+    if (!credentials) return;
     return {
-      credentials: await AWS.assumeRole(result.accountID),
+      credentials,
       region: result.region,
     };
   })

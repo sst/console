@@ -17,6 +17,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
   const search = await Log.Search.fromID(evt.properties.id);
   if (!search) return;
   const config = await Stage.assumeRole(search.stageID);
+  if (!config) return;
 
   const client = new CloudWatchLogsClient(config);
   console.log("scanning logs", search);

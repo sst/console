@@ -19,7 +19,7 @@ export const invoke = zod(
   }),
   async (input) => {
     const config = await Stage.assumeRole(input.stageID);
-    if (!config.credentials) return;
+    if (!config) return;
     const client = new LambdaClient(config);
     await client.send(
       new InvokeCommand({

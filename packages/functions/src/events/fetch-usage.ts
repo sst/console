@@ -34,7 +34,7 @@ export const handler = EventHandler(
 
     // Get stage credentials
     const config = await Stage.assumeRole(stageID);
-    if (!config.credentials) return;
+    if (!config) return;
 
     const invocations = await queryUsageFromAWS();
     await Billing.createUsage({
@@ -49,7 +49,7 @@ export const handler = EventHandler(
     /////////////////
 
     async function queryUsageFromAWS() {
-      const client = new CloudWatchClient(config);
+      const client = new CloudWatchClient(config!);
       const metrics = await client.send(
         new GetMetricDataCommand({
           MetricDataQueries: functions.map((fn, i) => ({
