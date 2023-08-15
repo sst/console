@@ -60,7 +60,7 @@ export function API({ stack, app }: StackContext) {
           function: {
             handler: "packages/functions/src/events/log-poller-status.handler",
             bind: [bus, ...Object.values(secrets.database)],
-            permissions: ["states"],
+            permissions: ["states", "iot"],
             environment: {
               LOG_POLLER_ARN: poller.stateMachineArn,
             },
