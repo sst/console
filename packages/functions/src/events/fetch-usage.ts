@@ -10,7 +10,6 @@ import { Resource } from "@console/core/app/resource";
 import { Billing } from "@console/core/billing";
 import { stripe } from "@console/core/stripe";
 import { Workspace } from "@console/core/workspace";
-import { totalmem } from "os";
 
 export const handler = EventHandler(
   Stage.Events.UsageRequested,
