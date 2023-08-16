@@ -80,6 +80,9 @@ importers:
       remeda:
         specifier: ^1.17.1
         version: 1.17.1
+      source-map:
+        specifier: ^0.7.4
+        version: 0.7.4
       stripe:
         specifier: ^12.17.0
         version: 12.17.0
@@ -144,6 +147,9 @@ importers:
       replicache:
         specifier: ^12.2.1
         version: 12.2.1
+      source-map:
+        specifier: ^0.7.4
+        version: 0.7.4
       undici:
         specifier: ^5.22.0
         version: 5.22.0
@@ -12171,6 +12177,11 @@ packages:
   /source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+
+  /source-map@0.7.4:
+    resolution: {integrity: sha512-l3BikUxvPOcn5E74dZiq5BGsTb5yEwhaTSzccU6t4sDOH8NWJCstKO5QT2CvtFoK6F0saL7p9xHAqHOlCPJygA==}
+    engines: {node: '>= 8'}
+    dev: false
 
   /split2@3.2.2:
     resolution: {integrity: sha512-9NThjpgZnifTkJpzTZ7Eue85S49QwpNhZTq6GRJwObb6jnLFNGB7Qm73V5HewTROPyxD0C29xqmaI68bQtV+hg==}

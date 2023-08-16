@@ -5,7 +5,7 @@ import {
   StartQueryCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { provideActor } from "@console/core/actor";
-import { Stage } from "@console/core/app";
+import { App, Stage } from "@console/core/app";
 import { Log, LogEvent } from "@console/core/log";
 import { Realtime } from "@console/core/realtime";
 import { Replicache } from "@console/core/replicache";
@@ -21,11 +21,21 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
 
   const client = new CloudWatchLogsClient(config);
   console.log("scanning logs", search);
+  const stage = await Stage.fromID(search.stageID);
+  const app = await App.fromID(stage!.appID);
 
   try {
     await (async () => {
       let iteration = 0;
-      const processor = Log.createProcessor(search.id);
+      const processor = Log.createProcessor({
+        arn: `${search.logGroup
+          .replace("log-group:/aws/lambda/", "function:")
+          .replace(":logs:", ":lambda:")}`,
+        group: search.id,
+        app: app!.name,
+        stage: stage!.name,
+        ...config,
+      });
 
       let initial = search.timeStart
         ? new Date(search.timeStart + "Z")
@@ -86,21 +96,24 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
 
           if (response.status === "Complete") {
             const results = response.results || [];
-            console.log(results);
-            let batch: LogEvent[] = [];
-            let batchSize = 0;
+
+            const processed: LogEvent[] = [];
+
+            for (const result of results.sort((a, b) =>
+              a[0]!.value!.localeCompare(b[0]!.value!)
+            )) {
+              processed.push(
+                ...(await Log.process({
+                  processor,
+                  id: processed.length.toString(),
+                  timestamp: new Date(result[0]?.value! + " Z").getTime(),
+                  stream: result[2]?.value!,
+                  line: result[1]?.value!,
+                }))
+              );
+            }
             const events = pipe(
-              results
-                .sort((a, b) => a[0]!.value!.localeCompare(b[0]!.value!))
-                .flatMap((result, index) => {
-                  return Log.process({
-                    processor,
-                    id: index.toString(),
-                    timestamp: new Date(result[0]?.value! + " Z").getTime(),
-                    stream: result[2]?.value!,
-                    line: result[1]?.value!,
-                  });
-                }),
+              processed,
               groupBy((evt) => evt[3]),
               values,
               map((evts) => evts.sort((a, b) => a[1] - b[1])),
@@ -108,6 +121,8 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
             );
             console.log("sending", events.length, "events");
 
+            let batch: LogEvent[] = [];
+            let batchSize = 0;
             for (const evt of events.flat()) {
               if (batchSize >= 100 * 1024) {
                 await Realtime.publish("log", batch);
@@ -128,7 +143,9 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
         }
       }
     })();
-  } catch {}
+  } catch (ex) {
+    console.log("error", ex);
+  }
 
   await Log.Search.complete(search.id);
   await Replicache.poke();

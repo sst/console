@@ -44,6 +44,7 @@ export async function handler(input: State) {
     throw new Error(`No poller found for ${input.pollerID}`);
   }
   const stage = await App.Stage.fromID(poller.stageID);
+  const app = await App.fromID(stage!.appID);
   const account = await AWS.Account.fromID(stage!.awsAccountID);
   const credentials = await AWS.assumeRole(account!.accountID);
   if (!credentials)
@@ -137,7 +138,16 @@ export async function handler(input: State) {
   if (!start) start = Date.now() - 30 * 1000;
 
   console.log("fetching since", new Date(start + offset).toLocaleString());
-  const processor = Log.createProcessor(input.logGroup + "-tail");
+  const processor = Log.createProcessor({
+    arn: `${input.logGroup
+      .replace("log-group:/aws/lambda/", "function:")
+      .replace(":logs:", ":lambda:")}`,
+    group: input.logGroup + "-tail",
+    region: stage!.region,
+    app: app!.name,
+    stage: stage!.name,
+    credentials,
+  });
   let batch: LogEvent[] = [];
   let batchSize = 0;
 
@@ -152,7 +162,7 @@ export async function handler(input: State) {
       batch = [];
       batchSize = 0;
     }
-    const evts = Log.process({
+    const evts = await Log.process({
       processor,
       timestamp: event.timestamp!,
       line: event.message!,
