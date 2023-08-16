@@ -75,6 +75,8 @@ export function createProcessor(input: {
     return maps;
   });
 
+  const sourcemapCache = new Map<string, SourceMapConsumer>();
+
   return {
     group: input.group,
     cold: new Set<string>(),
@@ -88,6 +90,9 @@ export function createProcessor(input: {
           maxBy((x) => x.created)
         );
         if (!match) return;
+        if (sourcemapCache.has(match.key)) {
+          return sourcemapCache.get(match.key)!;
+        }
         const bootstrap = await getBootstrap();
         const content = await s3.send(
           new GetObjectCommand({
@@ -102,6 +107,7 @@ export function createProcessor(input: {
           item.replaceAll("../", "")
         );
         const consumer = await new SourceMapConsumer(raw);
+        sourcemapCache.set(match.key, consumer);
         return consumer;
       },
     },
