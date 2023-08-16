@@ -149,7 +149,7 @@ export function createSubscription<R, D = undefined>(
       body(),
       {
         onData: (val) => {
-          setStore(reconcile({ result: val }));
+          setStore(reconcile({ result: structuredClone(val) }));
         },
       }
     );
