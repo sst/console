@@ -56,7 +56,6 @@ const RETRY_STRATEGY = new StandardRetryStrategy(async () => 10000, {
     ) {
       return true;
     }
-    console.error("not retrying", e);
     return false;
   },
   delayDecider: (_, attempts) => {
