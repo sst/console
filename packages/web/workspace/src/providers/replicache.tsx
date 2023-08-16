@@ -259,6 +259,10 @@ export function createGet<T extends any>(
   const result = () => data.value;
   Object.defineProperty(result, "ready", { get: ready });
 
+  onCleanup(() => {
+    if (unsubscribe) unsubscribe();
+  });
+
   return result as {
     (): T;
     ready: boolean;
@@ -337,6 +341,10 @@ export function createScan<T extends any>(
 
   const result = createMemo(() => (refine ? refine(data) : data));
   Object.defineProperty(result, "ready", { get: ready });
+
+  onCleanup(() => {
+    if (unsubscribe) unsubscribe();
+  });
 
   return result as {
     (): T[];
