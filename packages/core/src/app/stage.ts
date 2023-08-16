@@ -227,6 +227,7 @@ export const syncMetadata = zod(
         .select({
           id: resource.id,
           cfnID: resource.cfnID,
+          stackID: resource.stackID,
         })
         .from(resource)
         .where(
@@ -236,11 +237,11 @@ export const syncMetadata = zod(
           )
         )
         .execute()
-        .then((x) => x.map((x) => [x.cfnID, x.id]))
+        .then((x) => x.map((x) => [x.stackID + "-" + x.cfnID, x.id]))
         .then(Object.fromEntries);
       console.log("existing", existing);
       for (const res of results) {
-        const id = existing[res.id] || createId();
+        const id = existing[res.stackID + "-" + res.id] || createId();
         await tx
           .insert(resource)
           .values({
