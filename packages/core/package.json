@@ -32,6 +32,7 @@
     "drizzle-orm": "0.27.2",
     "drizzle-zod": "0.4.4",
     "remeda": "^1.17.1",
+    "source-map": "^0.7.4",
     "stripe": "^12.17.0",
     "undici": "^5.22.0",
     "zod": "^3.21.4"

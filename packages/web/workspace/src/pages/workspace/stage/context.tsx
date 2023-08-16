@@ -197,7 +197,6 @@ export function ResourcesProvider(props: ParentProps) {
     const appName = splits[2];
     const stageName = splits[3];
     if (!stageName || !appName) return [];
-    console.log(functions());
     return [...functions().entries()].flatMap(([fnId, refs]) => {
       const fn = resources().find((r) => r.id === fnId) as Extract<
         Resource.Info,

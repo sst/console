@@ -1,3 +1,15 @@
+import { lazy } from "../util/lazy";
+import zlib from "zlib";
+import {
+  GetObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { AWS, Credentials } from "../aws";
+import { SourceMapConsumer } from "source-map";
+import { Stage } from "../app";
+import { filter, maxBy, minBy, pipe } from "remeda";
+
 export * as Log from "./index";
 export { Search } from "./search";
 
@@ -32,22 +44,77 @@ export type LogEvent =
 
 export type Processor = ReturnType<typeof createProcessor>;
 
-export function createProcessor(group: string) {
+export function createProcessor(input: {
+  arn: string;
+  group: string;
+  app: string;
+  stage: string;
+  credentials: Credentials;
+  region: string;
+}) {
+  const s3 = new S3Client({
+    region: input.region,
+    credentials: input.credentials,
+  });
+
+  const getBootstrap = lazy(() => AWS.Account.bootstrap(input));
+  const sourcemapsMeta = lazy(async () => {
+    const bootstrap = await getBootstrap();
+    if (!bootstrap) return [];
+    const result = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: bootstrap.bucket,
+        Prefix: `sourcemap/${input.app}/${input.stage}/${input.arn}`,
+      })
+    );
+    const maps = (result.Contents || []).map((item) => ({
+      key: item.Key!,
+      created: item.LastModified!.getTime(),
+    }));
+    console.log("source maps found", maps.length);
+    return maps;
+  });
+
   return {
-    group,
+    group: input.group,
     cold: new Set<string>(),
     unknown: [] as LogEvent[],
     invocations: new Map<string, number>(),
+    sourcemaps: {
+      async forTimestamp(number: number) {
+        const match = pipe(
+          await sourcemapsMeta(),
+          // filter((x) => x.created < number),
+          maxBy((x) => x.created)
+        );
+        if (!match) return;
+        const bootstrap = await getBootstrap();
+        const content = await s3.send(
+          new GetObjectCommand({
+            Bucket: bootstrap!.bucket,
+            Key: match.key,
+          })
+        );
+        const raw = JSON.parse(
+          zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
+        );
+        raw.sources = raw.sources.map((item: string) =>
+          item.replaceAll("../", "")
+        );
+        const consumer = await new SourceMapConsumer(raw);
+        return consumer;
+      },
+    },
   };
 }
 
-export function process(input: {
+export async function process(input: {
   id: string;
   line: string;
   timestamp: number;
   stream: string;
   processor: Processor;
-}): LogEvent[] {
+}): Promise<LogEvent[]> {
   function generateID(id: string) {
     const trimmed = id.trim();
     const count = input.processor.invocations.get(trimmed);
@@ -112,6 +179,24 @@ export function process(input: {
   if (tabs[0]?.length === 24) {
     if (tabs[3]?.includes("Invoke Error")) {
       const parsed = JSON.parse(tabs[4]!);
+      const consumer = await input.processor.sourcemaps.forTimestamp(
+        input.timestamp
+      );
+      if (consumer) {
+        for (let i = 0; i < parsed.stack.length; i++) {
+          const splits: string[] = parsed.stack[i].split(":");
+          const column = parseInt(splits.pop()!);
+          const line = parseInt(splits.pop()!);
+          if (!column || !line) continue;
+          const original = consumer.originalPositionFor({
+            line,
+            column,
+          });
+          parsed.stack[
+            i
+          ] = `    at ${original.source}:${original.line}:${original.column}`;
+        }
+      }
       return [
         [
           "t",
