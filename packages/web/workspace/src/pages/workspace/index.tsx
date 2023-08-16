@@ -9,9 +9,16 @@ import { Stage } from "./stage";
 import { Show, createEffect, createMemo } from "solid-js";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
-import { IconArrowsRightLeft, IconUserPlus } from "$/ui/icons";
+import {
+  IconUserPlus,
+  IconArrowsRightLeft,
+  IconCog6Tooth,
+  IconWrench,
+  IconWrenchScrewdriver,
+} from "$/ui/icons";
 import { User } from "./user";
 import { Account } from "./account";
+import { Settings } from "./settings";
 import { Overview } from "./overview";
 import { WorkspaceContext } from "./context";
 import { AppStore } from "$/data/app";
@@ -59,6 +66,16 @@ export function Workspace() {
           nav(`/${workspace()?.slug}/account`);
         },
       },
+      // TODO: Worspace settings
+      //      {
+      //        icon: IconWrenchScrewdriver,
+      //        title: "Manage workspace settings",
+      //        category: "Workspace",
+      //        run: (control) => {
+      //          control.hide();
+      //          nav(`/${workspace()?.slug}/settings`);
+      //        },
+      //      },
     ];
   });
 
@@ -98,6 +115,7 @@ export function Content() {
     <Routes>
       <Route path="user" component={User} />
       <Route path="account" component={Account} />
+      <Route path="settings" component={Settings} />
       <Route path="debug" component={Debug} />
       <Route path=":appName/:stageName/*" component={Stage} />
       <Route path="*" component={Overview} />

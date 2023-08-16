@@ -161,6 +161,11 @@ const light = (() => {
       surface: `hsla(${base.black}, 23%)`,
       inverted: `hsla(${base.white}, 38%)`,
     },
+    danger: {
+      base: `hsla(${base.red}, 73%)`,
+      surface: `hsla(${base.red}, 67%)`,
+      inverted: `hsla(${red.l2}, 100%)`,
+    },
   };
 
   const icon = {
@@ -360,6 +365,11 @@ const dark = ((): typeof light => {
       base: `hsla(${base.white}, 38%)`,
       surface: `hsla(${base.white}, 31%)`,
       inverted: `hsla(${base.black}, 38%)`,
+    },
+    danger: {
+      base: `hsla(${red.l2}, 100%)`,
+      surface: `hsla(${red.l2}, 93%)`,
+      inverted: `hsla(${red.d1}, 100%)`,
     },
   };
 

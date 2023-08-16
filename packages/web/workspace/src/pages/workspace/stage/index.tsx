@@ -43,7 +43,7 @@ export function Stage() {
       .map((stage) => ({
         icon: IconStage,
         category: "Stage",
-        title: `Switch to "${stage.name}" stage`,
+        title: `Switch to "${stage.name}"`,
         run: (control) => {
           nav(`/${params.workspaceSlug}/${app()!.name}/${stage.name}`);
           control.hide();

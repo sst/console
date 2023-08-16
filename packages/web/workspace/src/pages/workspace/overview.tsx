@@ -14,12 +14,15 @@ import {
   Text,
   Stack,
   Button,
+  TextButton,
+  LinkButton,
   IconButton,
 } from "$/ui";
 import { Fullscreen } from "$/ui/layout";
 import { Dropdown } from "$/ui/dropdown";
 import {
   IconPlus,
+  IconChevronRight,
   IconEllipsisVertical,
   IconExclamationTriangle,
 } from "$/ui/icons";
@@ -54,6 +57,24 @@ import { useWorkspace } from "./context";
 import { useLocalContext } from "$/providers/local";
 import { pipe, sortBy } from "remeda";
 import { User } from "@console/core/user";
+
+const PageHeader = styled("div", {
+  base: {
+    ...utility.stack(0),
+    height: 40,
+    // TODO: Workspace settings
+    //justifyContent: "space-between",
+    justifyContent: "center",
+  },
+});
+
+const ManageWorkspaceIcon = styled("div", {
+  base: {
+    top: 2,
+    position: "relative",
+    opacity: theme.iconOpacity,
+  },
+});
 
 const Root = styled("div", {
   base: {
@@ -321,11 +342,27 @@ export function Overview() {
           <Match when={true}>
             <Stack space="4">
               <Row space="5" vertical="center" horizontal="between">
-                <Text size="lg" weight="medium">
-                  Overview
-                </Text>
+                <PageHeader>
+                  <Text size="lg" weight="medium">
+                    Overview
+                  </Text>
+                  {/*
+                  TODO: Workspace settings
+                  <Link href="settings">
+                    <TextButton>
+                      <Row space="0.5" horizontal="center">
+                        Manage workspace
+                        <ManageWorkspaceIcon>
+                          <IconChevronRight width="13" height="13" />
+                        </ManageWorkspaceIcon>
+                      </Row>
+                    </TextButton>
+                  </Link>
+                  */}
+                </PageHeader>
                 <Row space="4" vertical="center">
                   {/*
+                  TODO: Workspace settings
                   <Button
                     color="secondary"
                     disabled={!!workspace().stripeSubscriptionID}

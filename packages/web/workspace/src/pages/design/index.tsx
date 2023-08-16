@@ -209,6 +209,9 @@ export function Design() {
             <Text color="dimmed" on="base">
               TextName
             </Text>
+            <Text color="danger" on="base">
+              TextName
+            </Text>
           </TextContainer>
         </Variant>
         <Variant name="Surface">
@@ -222,6 +225,9 @@ export function Design() {
             <Text color="dimmed" on="surface">
               TextName
             </Text>
+            <Text color="danger" on="surface">
+              TextName
+            </Text>
           </TextContainer>
         </Variant>
         <Variant name="Inverted">
@@ -233,6 +239,9 @@ export function Design() {
               TextName
             </Text>
             <Text color="dimmed" on="inverted">
+              TextName
+            </Text>
+            <Text color="danger" on="inverted">
               TextName
             </Text>
           </TextContainer>
@@ -1133,10 +1142,7 @@ function UnsupportedApp() {
           </Text>
           <Text center size="sm" color="secondary">
             To use the SST Console,{" "}
-            <a
-              target="_blank"
-              href="https://github.com/serverless-stack/sst/releases"
-            >
+            <a target="_blank" href="https://github.com/sst/sst/releases">
               upgrade to v2.19.0
             </a>
           </Text>

@@ -16,35 +16,14 @@ import { utility } from "$/ui/utility";
 import { Fullscreen, Row, Stack } from "$/ui/layout";
 import { Tag, Text, Alert } from "$/ui";
 import {
-  IconApi,
-  IconRDS,
-  IconJob,
-  IconAuth,
-  IconCron,
-  IconTopic,
-  IconStack,
-  IconTable,
-  IconQueue,
-  IconScript,
-  IconBucket,
-  IconAppSync,
-  IconCognito,
   IconFunction,
-  IconEventBus,
   IconGoRuntime,
-  IconAstroSite,
-  IconRemixSite,
-  IconStaticSite,
-  IconNextjsSite,
   IconJavaRuntime,
   IconNodeRuntime,
-  IconWebSocketApi,
-  IconSvelteKitSite,
+  IconRustRuntime,
   IconPythonRuntime,
   IconDotNetRuntime,
-  IconKinesisStream,
-  IconSolidStartSite,
-  IconApiGatewayV1Api,
+  IconContainerRuntime,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { Link } from "@solidjs/router";
@@ -290,10 +269,7 @@ export function Resources() {
                 </Text>
                 <Text center size="sm" color="secondary">
                   To use the SST Console,{" "}
-                  <a
-                    target="_blank"
-                    href="https://github.com/serverless-stack/sst/releases"
-                  >
+                  <a target="_blank" href="https://github.com/sst/sst/releases">
                     upgrade to v{MINIMUM_VERSION}
                   </a>
                 </Text>
@@ -313,10 +289,7 @@ export function Resources() {
               Some of the stacks in this app are not supported by the SST
               Console.
             </span>{" "}
-            <a
-              target="_blank"
-              href="https://github.com/serverless-stack/sst/releases"
-            >
+            <a target="_blank" href="https://github.com/sst/sst/releases">
               Upgrade them to at least v{MINIMUM_VERSION}.
             </a>
           </Alert>
@@ -1024,6 +997,12 @@ function FunctionChild(props: {
                 </Match>
                 <Match when={runtime().startsWith("nodejs")}>
                   <IconNodeRuntime />
+                </Match>
+                <Match when={runtime().startsWith("rust")}>
+                  <IconRustRuntime />
+                </Match>
+                <Match when={runtime().startsWith("container")}>
+                  <IconContainerRuntime />
                 </Match>
                 <Match when={true}>
                   <IconFunction />
