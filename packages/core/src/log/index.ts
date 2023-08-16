@@ -86,7 +86,7 @@ export function createProcessor(input: {
       async forTimestamp(number: number) {
         const match = pipe(
           await sourcemapsMeta(),
-          filter((x) => x.created < number),
+          // filter((x) => x.created < number),
           maxBy((x) => x.created)
         );
         if (!match) return;
