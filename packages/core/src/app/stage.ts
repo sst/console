@@ -6,7 +6,7 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
 import { awsAccount } from "../aws/aws.sql";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { AWS, Credentials } from "../aws";
 import {
   GetObjectCommand,

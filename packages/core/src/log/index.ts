@@ -7,7 +7,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { AWS, Credentials } from "../aws";
 import { SourceMapConsumer } from "source-map";
-import { Stage } from "../app";
 import { filter, maxBy, minBy, pipe } from "remeda";
 
 export * as Log from "./index";
@@ -86,7 +85,7 @@ export function createProcessor(input: {
       async forTimestamp(number: number) {
         const match = pipe(
           await sourcemapsMeta(),
-          // filter((x) => x.created < number),
+          filter((x) => x.created < number),
           maxBy((x) => x.created)
         );
         if (!match) return;
@@ -189,6 +188,7 @@ export async function process(input: {
         input.timestamp
       );
       if (consumer) {
+        let ctx: string[] = [];
         for (let i = 0; i < parsed.stack.length; i++) {
           const splits: string[] = parsed.stack[i].split(":");
           const column = parseInt(splits.pop()!);
@@ -198,10 +198,27 @@ export async function process(input: {
             line,
             column,
           });
+          if (
+            original.source &&
+            !original.source.startsWith("node_modules") &&
+            !ctx.length
+          ) {
+            const lines =
+              consumer.sourceContentFor(original.source, true)?.split("\n") ||
+              [];
+            const min = Math.max(0, original.line! - 4);
+            ctx = lines.slice(
+              min,
+              Math.min(original.line! + 3, lines.length - 1)
+            );
+            const highlight = Math.min(original.line!, 3);
+            ctx[highlight] = "> " + ctx[highlight]?.substring(2);
+          }
           parsed.stack[
             i
           ] = `    at ${original.source}:${original.line}:${original.column}`;
         }
+        parsed.stack.push("----", ...ctx);
       }
       return [
         [

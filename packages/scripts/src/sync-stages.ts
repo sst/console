@@ -3,7 +3,7 @@ import { db } from "@console/core/drizzle";
 import { stage } from "@console/core/app/app.sql";
 import { Stage } from "@console/core/app";
 
-const workspaceFilter: string[] = ["dw7tloxovs606hoggkpruh2a"];
+const workspaceFilter: string[] = ["yj968ox9udw2plc8hfyt5m6x"];
 const stages = await db.select().from(stage).execute();
 
 for (const stage of stages) {
