@@ -138,7 +138,8 @@ export async function handler(input: State) {
   }
   if (!streams.length)
     return {
-      done: true,
+      ...input.status,
+      done: false,
     };
   if (!start) start = Date.now() - 30 * 1000;
 
