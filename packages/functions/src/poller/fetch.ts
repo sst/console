@@ -115,6 +115,7 @@ export async function handler(input: State) {
   console.log("running loop", attempts);
 
   const streams: string[] = [];
+
   for await (const stream of fetchStreams(input.logGroup)) {
     streams.push(stream.logStreamName || "");
     if (!start && stream.lastEventTimestamp) {
@@ -135,6 +136,10 @@ export async function handler(input: State) {
     }
     if (streams.length === 100) break;
   }
+  if (!streams.length)
+    return {
+      done: true,
+    };
   if (!start) start = Date.now() - 30 * 1000;
 
   console.log("fetching since", new Date(start + offset).toLocaleString());
