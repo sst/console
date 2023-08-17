@@ -17,11 +17,6 @@ export const handler = EventHandler(
     provideActor(evt.metadata.actor);
 
     const { stageID, daysOffset } = evt.properties;
-
-    // Get stage credentials
-    const config = await Stage.assumeRole(stageID);
-    if (!config) return;
-
     const startDate = DateTime.now()
       .toUTC()
       .startOf("day")
@@ -30,12 +25,21 @@ export const handler = EventHandler(
     console.log("STAGE", stageID, startDate.toSQLDate(), endDate.toSQLDate());
 
     // Get all function resources
-    const functions = await Resource.listFromStageID({
+    const allFunctions = await Resource.listFromStageID({
       stageID,
       types: ["Function"],
     });
+    const functions = allFunctions.filter(
+      // TODO fix type error
+      // @ts-expect-error
+      (fn) => fn.type === "Function" && !fn.enrichment.live
+    );
+    console.log(`> functions ${functions.length}/${allFunctions.length}`);
     if (!functions.length) return;
-    console.log("> functions", functions.length);
+
+    // Get stage credentials
+    const config = await Stage.assumeRole(stageID);
+    if (!config) return;
 
     const invocations = await queryUsageFromAWS();
     await Billing.createUsage({
