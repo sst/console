@@ -228,8 +228,8 @@ function GlobalCommands() {
   const bar = useCommandBar();
   const auth = useAuth();
   const nav = useNavigate();
-  const account = useStorage();
-  const selfEmail = createMemo(() => auth[account.value.account].token.email);
+  const storage = useStorage();
+  const selfEmail = createMemo(() => auth[storage.value.account].token.email);
 
   bar.register("workspace-switcher", async () => {
     const workspaces = await Promise.all(
@@ -257,7 +257,7 @@ function GlobalCommands() {
           category: "Workspace",
           icon: IconBuildingOffice,
           run: (control: any) => {
-            account.set("account", w.account.token.accountID);
+            storage.set("account", w.account.token.accountID);
             nav(`/${w.workspace.slug}`);
             control.hide();
           },

@@ -51,7 +51,7 @@ export function AuthProvider(props: ParentProps) {
   const tokens = get();
   const fragment = new URLSearchParams(location.hash.substring(1));
   const access_token = fragment.get("access_token");
-  const account = useStorage();
+  const storage = useStorage();
   if (access_token) {
     const [_headerEncoded, payloadEncoded] = access_token.split(".");
     const payload = JSON.parse(
@@ -61,7 +61,7 @@ export function AuthProvider(props: ParentProps) {
       token: access_token,
       ...payload.properties,
     };
-    account.set('account', payload.properties.accountID);
+    storage.set("account", payload.properties.accountID);
     set(tokens);
   }
 
