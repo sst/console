@@ -209,9 +209,15 @@ export function Overview() {
   });
 
   function renderAccount(account: Account.Info) {
-    const children = createMemo(() =>
-      stages().filter((stage) => stage.awsAccountID === account.id)
-    );
+    const apps = AppStore.watch.scan(rep);
+    const local = useLocalContext();
+    const children = createMemo(() => {
+      return sortBy(
+        stages().filter((stage) => stage.awsAccountID === account.id),
+        (c) => apps().find((app) => app.id === c.appID)?.name || "",
+        (c) => c.name
+      );
+    });
     return (
       <Card>
         <CardHeader>
@@ -235,13 +241,7 @@ export function Overview() {
               </Link>
             </CardError>
           </Show>
-          <For
-            each={children().sort((a, b) =>
-              b.timeCreated.localeCompare(b.timeCreated)
-            )}
-          >
-            {(stage) => <StageCard stage={stage} />}
-          </For>
+          <For each={children()}>{(stage) => <StageCard stage={stage} />}</For>
           <Show when={!account.timeDiscovered && !account.timeFailed}>
             <CardLoading>
               <CardLoadingIcon>
