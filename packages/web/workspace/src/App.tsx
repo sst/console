@@ -5,12 +5,13 @@ import { styled } from "@macaron-css/solid";
 import { darkClass, lightClass, theme } from "./ui/theme";
 import { globalStyle, macaron$ } from "@macaron-css/core";
 import {
-  Component,
   Match,
   Switch,
+  onCleanup,
+  Component,
+  createMemo,
   createEffect,
   createSignal,
-  onCleanup,
 } from "solid-js";
 import { Navigate, Route, Router, Routes, useNavigate } from "@solidjs/router";
 import { Auth, Code } from "./pages/auth";
@@ -25,7 +26,11 @@ import { WorkspaceCreate } from "./pages/workspace-create";
 import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
 import { UserStore } from "./data/user";
-import { IconBuildingOffice, IconPlus } from "./ui/icons";
+import {
+  IconPlus,
+  IconArrowLeftOnRectangle,
+  IconBuildingOffice,
+} from "./ui/icons";
 import { LocalProvider } from "./providers/local";
 import { useStorage } from "./providers/account";
 import { Fullscreen, Splash } from "./ui";
@@ -224,6 +229,8 @@ function GlobalCommands() {
   const auth = useAuth();
   const nav = useNavigate();
   const account = useStorage();
+  const selfEmail = createMemo(() => auth[account.value.account].token.email);
+
   bar.register("workspace-switcher", async () => {
     const workspaces = await Promise.all(
       Object.values(auth).map(async (account) => {
@@ -271,8 +278,8 @@ function GlobalCommands() {
     return [
       {
         category: "Account",
-        title: "Logout",
-        icon: IconBuildingOffice,
+        title: `Logout from ${selfEmail()}`,
+        icon: IconArrowLeftOnRectangle,
         run: async (control: any) => {
           const dbs = await window.indexedDB.databases();
           dbs.forEach((db) => {
