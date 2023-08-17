@@ -26,9 +26,8 @@ export function StorageProvider(props: ParentProps) {
 
 export function useStorage() {
   const ctx = useContext(context);
-  console.log(ctx);
   if (!ctx) {
-    throw new Error("No account context");
+    throw new Error("No storage context");
   }
   return ctx;
 }
