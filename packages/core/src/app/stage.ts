@@ -202,6 +202,7 @@ export const syncMetadata = zod(
           data: {},
         });
         for (let res of body) {
+          console.log("enriching", res);
           const { type } = res;
           const enrichment =
             type in Enrichers
@@ -266,7 +267,7 @@ export const syncMetadata = zod(
           })
           .execute();
 
-        delete existing[res.id];
+        delete existing[res.stackID + "-" + res.id];
       }
 
       const toDelete = Object.values(existing);
