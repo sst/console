@@ -41,7 +41,18 @@ export const handler = EventHandler(
     const config = await Stage.assumeRole(stageID);
     if (!config) return;
 
-    const invocations = await queryUsageFromAWS();
+    // Get usage
+    let invocations: number;
+    try {
+      invocations = await queryUsageFromAWS();
+    } catch (e: any) {
+      if (e.name === "AccessDenied") {
+        console.error(e);
+        return;
+      }
+      throw e;
+    }
+
     await Billing.createUsage({
       stageID,
       day: startDate.toSQLDate()!,
