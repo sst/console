@@ -12,7 +12,7 @@ import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { IconArrowsRightLeft } from "$/ui/icons";
 import { IconAws } from "$/ui/icons/custom";
-import { UsageStore } from "$/data/usage";
+import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "./header";
 import { DUMMY_SETTINGS } from "./overview-dummy";
 import type { Usage } from "@console/core/billing";
@@ -22,20 +22,6 @@ import { create } from "@console/core/workspace";
 const PANEL_CONTENT_SPACE = "8";
 const PANEL_HEADER_SPACE = "3";
 const TIER_LABEL_SPACE = "2";
-
-type PricingTier = {
-  from: number;
-  to: number;
-  rate: number;
-};
-
-type PricingPlan = PricingTier[];
-
-const PRICING_PLAN: PricingPlan = [
-  { from: 0, to: 1000000, rate: 0 },
-  { from: 1000000, to: 10000000, rate: 0.00002 },
-  { from: 10000000, to: Infinity, rate: 0.000002 },
-];
 
 function calculateCost(units: number, pricingPlan: PricingPlan) {
   let cost = 0;

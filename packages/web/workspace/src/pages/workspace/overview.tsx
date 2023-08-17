@@ -2,6 +2,7 @@ import { AppStore } from "$/data/app";
 import { UserInfo, UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
+import { PRICING_PLAN, UsageStore } from "$/data/usage";
 import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
 import { createSubscription, useReplicache } from "$/providers/replicache";
@@ -190,6 +191,12 @@ export function Overview() {
         : StageStore.list(),
     []
   );
+  const usages = UsageStore.watch.scan(rep);
+  const invocations = createMemo(() =>
+    usages()
+      .map((usage) => usage.invocations)
+      .reduce((a, b) => a + b, 0)
+  );
   const nav = useNavigate();
   const auth = useAuth();
   const storage = useStorage();
@@ -285,17 +292,15 @@ export function Overview() {
                   <Text size="lg" weight="medium">
                     Overview
                   </Text>
+                  {/*
                   <Link href="settings">
-                    {/*
                     <TextButton>
                       <Row space="0.5" horizontal="center">
                         Manage workspace
                         <ManageWorkspaceIcon>
                           <IconChevronRight width="13" height="13" />
                         </ManageWorkspaceIcon>
-                        <Show
-                          when={invocations() > PRICING_PLAN[0].to}
-                        >
+                        <Show when={invocations() > PRICING_PLAN[0].to}>
                           <Text color="danger" size="sm">
                             Your current usage is above the free tier. Please
                             add your billing details.
@@ -303,8 +308,8 @@ export function Overview() {
                         </Show>
                       </Row>
                     </TextButton>
-*/}
                   </Link>
+*/}
                 </PageHeader>
                 <Row space="4" vertical="center">
                   <Link href="account">
