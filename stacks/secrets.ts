@@ -17,7 +17,10 @@ export function Secrets(ctx: StackContext) {
       new Config.Secret(ctx.stack, "STRIPE_SECRET_KEY"),
       new Config.Secret(ctx.stack, "STRIPE_WEBHOOK_SIGNING_SECRET"),
       new Config.Parameter(ctx.stack, "STRIPE_PRICE_ID", {
-        value: "price_1NeK7rEAHP8a0ogp7XP3KVXK",
+        value:
+          ctx.stack.stage === "production"
+            ? "price_1NdPBlEAHP8a0ogpCiiqlMZM"
+            : "price_1NgB4oEAHP8a0ogpxqUXHKee",
       }),
     ],
   };

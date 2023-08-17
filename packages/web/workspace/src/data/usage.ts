@@ -1,11 +1,11 @@
-import { ReadTransaction } from "replicache";
 import type { Usage } from "@console/core/billing";
+import { define } from "$/providers/replicache";
 
-export function list() {
-  return async (tx: ReadTransaction) => {
-    const result = await tx.scan({ prefix: `/usage/` }).toArray();
-    return (result || []) as unknown as Usage[];
-  };
-}
-
-export * as UsageStore from "./usage";
+export const UsageStore = define<Usage>({
+  scan() {
+    return ["usage"];
+  },
+  get(id: string) {
+    return ["usage", id];
+  },
+});

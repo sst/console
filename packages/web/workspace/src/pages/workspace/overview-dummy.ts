@@ -103,7 +103,17 @@ export const DUMMY_LOCAL_APP = {
   stage: localStageName,
 };
 
-export const DUMMY_USAGES = [
-  usage("2021-01-01", 123),
-  usage("2021-01-02", 234),
-];
+export const DUMMY_SETTINGS = {
+  free: {
+    usages: [usage("2021-01-01", 123), usage("2021-01-02", 234)],
+    workspace: { id: "1", stripeSubscriptionID: null },
+  },
+  subscribed: {
+    usages: [usage("2021-01-01", 1230000), usage("2021-01-02", 234)],
+    workspace: { id: "1", stripeSubscriptionID: "sub_123" },
+  },
+  unsubscribed: {
+    usages: [usage("2021-01-01", 1230000), usage("2021-01-02", 234)],
+    workspace: { id: "1", stripeSubscriptionID: null },
+  },
+};

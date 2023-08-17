@@ -41,5 +41,21 @@ export const handler = ApiHandler(async (event) => {
     await Workspace.deleteStripeSubscription(subscriptionID);
   }
 
+  // Stripe has already retried charging the customer and failed. Stripe
+  // will not retry again.
+  else if (body.type === "invoice.marked_uncollectible") {
+    // @ts-expect-error
+    const { id, created, customer, customer_email, amount_due } =
+      body.data.object;
+    console.error(
+      `Invoice ${amount_due} for ${customer_email} is uncollectible`,
+      {
+        invoice: id,
+        customer,
+        created: new Date(created * 1000),
+      }
+    );
+  }
+
   return { statusCode: 200 };
 });

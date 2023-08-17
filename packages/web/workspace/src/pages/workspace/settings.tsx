@@ -1,3 +1,5 @@
+import { Show, createMemo } from "solid-js";
+import { DateTime } from "luxon";
 import { Alert, Button, Row, Stack, Text, theme } from "$/ui";
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { styled } from "@macaron-css/solid";
@@ -6,13 +8,16 @@ import { utility } from "$/ui/utility";
 import { FormInput } from "$/ui/form";
 import { formatNumber } from "$/common/format";
 import { createId } from "@paralleldrive/cuid2";
-import { useReplicache } from "$/providers/replicache";
-import { Link, useNavigate } from "@solidjs/router";
+import { createSubscription, useReplicache } from "$/providers/replicache";
+import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { IconArrowsRightLeft } from "$/ui/icons";
 import { IconAws } from "$/ui/icons/custom";
+import { UsageStore } from "$/data/usage";
 import { Header } from "./header";
-
-const DUMMY_INOVACATION_COUNT = 4108819913;
+import { DUMMY_SETTINGS } from "./overview-dummy";
+import type { Usage } from "@console/core/billing";
+import { usage } from "@console/core/billing/billing.sql";
+import { create } from "@console/core/workspace";
 
 const PANEL_CONTENT_SPACE = "8";
 const PANEL_HEADER_SPACE = "3";
@@ -27,9 +32,9 @@ type PricingTier = {
 type PricingPlan = PricingTier[];
 
 const PRICING_PLAN: PricingPlan = [
-  { from: 0, to: 200000, rate: 0 },
-  { from: 200000, to: 1000000, rate: 0.0001 },
-  { from: 1000000, to: Infinity, rate: 0.000001 },
+  { from: 0, to: 1000000, rate: 0 },
+  { from: 1000000, to: 10000000, rate: 0.00002 },
+  { from: 10000000, to: Infinity, rate: 0.000002 },
 ];
 
 function calculateCost(units: number, pricingPlan: PricingPlan) {
@@ -116,6 +121,84 @@ const UsageStatTier = styled("span", {
 });
 
 export function Settings() {
+  const rep = useReplicache();
+  const [query] = useSearchParams();
+  const usages = query.dummy
+    ? () => DUMMY_SETTINGS[query.dummy as keyof typeof DUMMY_SETTINGS].usages
+    : UsageStore.watch.scan(rep);
+  const invocations = createMemo(() =>
+    usages()
+      .map((usage) => usage.invocations)
+      .reduce((a, b) => a + b, 0)
+  );
+  const workspace = query.dummy
+    ? () => DUMMY_SETTINGS[query.dummy as keyof typeof DUMMY_SETTINGS].workspace
+    : useWorkspace();
+  const cycle = createMemo(() => {
+    const data = usages();
+    const start = data[0] ? DateTime.fromSQL(data[0].day) : DateTime.now();
+    return {
+      start: start.startOf("month").toFormat("LLL d"),
+      end: start.endOf("month").toFormat("LLL d"),
+    };
+  });
+
+  let portalLink: Promise<Response> | undefined;
+  let checkoutLink: Promise<Response> | undefined;
+
+  function generatePortalLink() {
+    return fetch(
+      import.meta.env.VITE_API_URL + "/rest/create_customer_portal_session",
+      {
+        method: "POST",
+        body: JSON.stringify({ return_url: window.location.href }),
+        headers: {
+          "x-sst-workspace": workspace().id,
+          Authorization: rep().auth,
+        },
+      }
+    );
+  }
+  function generateCheckoutLink() {
+    return fetch(
+      import.meta.env.VITE_API_URL + "/rest/create_checkout_session",
+      {
+        method: "POST",
+        body: JSON.stringify({ return_url: window.location.href }),
+        headers: {
+          "x-sst-workspace": workspace().id,
+          Authorization: rep().auth,
+        },
+      }
+    );
+  }
+
+  function handleHoverManageSubscription(e: MouseEvent) {
+    if (portalLink) return;
+    console.log("generate portal link");
+    portalLink = generatePortalLink();
+  }
+
+  function handleHoverSubscribe(e: MouseEvent) {
+    if (checkoutLink) return;
+    console.log("generate checkout link");
+    checkoutLink = generateCheckoutLink();
+  }
+
+  async function handleClickManageSubscription(e: MouseEvent) {
+    e.stopPropagation();
+    const response = await (portalLink || generatePortalLink());
+    const result = await response.json();
+    window.location.href = result.url;
+  }
+
+  async function handleClickSubscribe(e: MouseEvent) {
+    e.stopPropagation();
+    const response = await (checkoutLink || generateCheckoutLink());
+    const result = await response.json();
+    window.location.href = result.url;
+  }
+
   return (
     <>
       <Header />
@@ -143,7 +226,7 @@ export function Settings() {
                   Invocations
                 </Text>
                 <Text code size="xl">
-                  {DUMMY_INOVACATION_COUNT}
+                  {invocations()}
                 </Text>
               </UsageStat>
               <UsageStat>
@@ -155,7 +238,7 @@ export function Settings() {
                     $
                   </Text>
                   <Text code weight="medium" size="xl">
-                    {calculateCost(DUMMY_INOVACATION_COUNT, PRICING_PLAN)}
+                    {calculateCost(invocations(), PRICING_PLAN)}
                   </Text>
                 </Row>
               </UsageStat>
@@ -202,7 +285,7 @@ export function Settings() {
               </UsageStat>
             </UsagePanel>
             <Text size="sm" color="dimmed">
-              Calculated for the period of Aug 1 - Aug 14.
+              Calculated for the period of {cycle().start} - {cycle().end}.
             </Text>
           </Stack>
         </Stack>
@@ -215,16 +298,30 @@ export function Settings() {
             </Text>
           </Stack>
           <Stack space="3" horizontal="start">
-            {/*
-            <Button color="secondary">Manage Billing Details</Button>
-          */}
-            <Button color="primary">Add Billing Details</Button>
-            {/*
-            <Text color="danger" size="sm">
-              Your current usage is above the free tier. Please add your billing
-              details.
-            </Text>
-          */}
+            <Show when={workspace().stripeSubscriptionID}>
+              <Button
+                color="secondary"
+                onMouseEnter={handleHoverManageSubscription}
+                onClick={handleClickManageSubscription}
+              >
+                Manage Billing Details
+              </Button>
+            </Show>
+            <Show when={!workspace().stripeSubscriptionID}>
+              <Button
+                color="primary"
+                onMouseEnter={handleHoverSubscribe}
+                onClick={handleClickSubscribe}
+              >
+                Add Billing Details
+              </Button>
+              <Show when={invocations() > PRICING_PLAN[0].to}>
+                <Text color="danger" size="sm">
+                  Your current usage is above the free tier. Please add your
+                  billing details.
+                </Text>
+              </Show>
+            </Show>
           </Stack>
         </Stack>
       </SettingsRoot>
