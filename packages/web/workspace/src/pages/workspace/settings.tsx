@@ -75,11 +75,6 @@ const UsageStat = styled("div", {
     justifyContent: "center",
     borderRight: `1px solid ${theme.color.divider.base}`,
     padding: `${theme.space[6]} ${theme.space[6]} ${theme.space[6]}`,
-    selectors: {
-      "&:last-child": {
-        borderRight: "none",
-      },
-    },
   },
   variants: {
     stretch: {
@@ -96,13 +91,23 @@ const UsageStat = styled("div", {
   },
 });
 
+const UsageTiers = styled("div", {
+  base: {
+    ...utility.stack(4),
+    flex: "0 0 auto",
+    justifyContent: "center",
+    backgroundColor: theme.color.background.surface,
+    padding: `${theme.space[6]} ${theme.space[6]} ${theme.space[6]}`,
+  },
+});
+
 const UsageStatTier = styled("span", {
   base: {
     minWidth: 60,
     lineHeight: 1,
     fontSize: theme.font.size.mono_xs,
     fontFamily: theme.font.family.code,
-    color: theme.color.text.secondary.base,
+    color: theme.color.text.secondary.surface,
   },
 });
 
@@ -205,7 +210,7 @@ export function Settings() {
               Usage for the current billing period
             </Text>
           </Stack>
-          <Stack space="3">
+          <Stack space="3.5">
             <UsagePanel>
               <UsageStat stretch>
                 <Text code uppercase size="mono_xs" color="dimmed">
@@ -228,19 +233,17 @@ export function Settings() {
                   </Text>
                 </Row>
               </UsageStat>
-              <UsageStat
-                style={{ "background-color": theme.color.background.surface }}
-              >
+              <UsageTiers>
                 <Stack space="1">
                   <Row space={TIER_LABEL_SPACE}>
                     <UsageStatTier>
                       {formatNumber(PRICING_PLAN[0].from)} -{" "}
                       {formatNumber(PRICING_PLAN[0].to)}
                     </UsageStatTier>
-                    <Text color="dimmed" size="xs">
+                    <Text color="dimmed" on="surface" size="xs">
                       →
                     </Text>
-                    <Text size="mono_xs" color="secondary">
+                    <Text size="mono_xs" on="surface" color="secondary">
                       Free
                     </Text>
                   </Row>
@@ -249,10 +252,10 @@ export function Settings() {
                       {formatNumber(PRICING_PLAN[1].from)} -{" "}
                       {formatNumber(PRICING_PLAN[1].to)}
                     </UsageStatTier>
-                    <Text color="dimmed" size="xs">
+                    <Text color="dimmed" on="surface" size="xs">
                       →
                     </Text>
-                    <Text code size="mono_xs" color="secondary">
+                    <Text code size="mono_xs" on="surface" color="secondary">
                       ${PRICING_PLAN[1].rate} per
                     </Text>
                   </Row>
@@ -260,18 +263,23 @@ export function Settings() {
                     <UsageStatTier>
                       {formatNumber(PRICING_PLAN[2].from)} +
                     </UsageStatTier>
-                    <Text color="dimmed" size="xs">
+                    <Text color="dimmed" on="surface" size="xs">
                       →
                     </Text>
-                    <Text code size="mono_xs" color="secondary">
+                    <Text code size="mono_xs" on="surface" color="secondary">
                       ${PRICING_PLAN[2].rate} per
                     </Text>
                   </Row>
                 </Stack>
-              </UsageStat>
+              </UsageTiers>
             </UsagePanel>
-            <Text size="sm" color="dimmed">
-              Calculated for the period of {cycle().start} - {cycle().end}.
+            <Text size="sm" color="secondary">
+              Calculated for the period of {cycle().start} — {cycle().end}. Read
+              more about our{" "}
+              <a href="https://docs.sst.dev/console#pricing" target="_blank">
+                pricing plan
+              </a>
+              .
             </Text>
           </Stack>
         </Stack>
@@ -283,7 +291,7 @@ export function Settings() {
               Manage your billing details, and download your invoices
             </Text>
           </Stack>
-          <Stack space="3" horizontal="start">
+          <Stack space="3.5" horizontal="start">
             <Show when={workspace().stripeSubscriptionID}>
               <Button
                 color="secondary"

@@ -66,16 +66,15 @@ export function Workspace() {
           nav(`/${workspace()?.slug}/account`);
         },
       },
-      // TODO: Worspace settings
-      //      {
-      //        icon: IconWrenchScrewdriver,
-      //        title: "Manage workspace settings",
-      //        category: "Workspace",
-      //        run: (control) => {
-      //          control.hide();
-      //          nav(`/${workspace()?.slug}/settings`);
-      //        },
-      //      },
+      {
+        icon: IconWrenchScrewdriver,
+        title: "Manage workspace settings",
+        category: "Workspace",
+        run: (control) => {
+          control.hide();
+          nav(`/${workspace()?.slug}/settings`);
+        },
+      },
     ];
   });
 

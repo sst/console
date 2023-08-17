@@ -49,9 +49,7 @@ const PageHeader = styled("div", {
   base: {
     ...utility.stack(0),
     height: 40,
-    // TODO: Workspace settings
-    //justifyContent: "space-between",
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
 });
 
@@ -292,24 +290,24 @@ export function Overview() {
                   <Text size="lg" weight="medium">
                     Overview
                   </Text>
-                  {/*
                   <Link href="settings">
                     <TextButton>
                       <Row space="0.5" horizontal="center">
-                        Manage workspace
+                        <Show when={invocations() > PRICING_PLAN[0].to}>
+                          <Text color="danger" size="sm">
+                            Your usage is above the free tier, add your billing
+                            details
+                          </Text>
+                        </Show>
+                        <Show when={invocations() <= PRICING_PLAN[0].to}>
+                          Manage workspace
+                        </Show>
                         <ManageWorkspaceIcon>
                           <IconChevronRight width="13" height="13" />
                         </ManageWorkspaceIcon>
-                        <Show when={invocations() > PRICING_PLAN[0].to}>
-                          <Text color="danger" size="sm">
-                            Your current usage is above the free tier. Please
-                            add your billing details.
-                          </Text>
-                        </Show>
                       </Row>
                     </TextButton>
                   </Link>
-*/}
                 </PageHeader>
                 <Row space="4" vertical="center">
                   <Link href="account">
