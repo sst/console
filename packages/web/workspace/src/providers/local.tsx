@@ -58,7 +58,7 @@ export function LocalProvider(props: ParentProps) {
   });
 
   onCleanup(() => {
-    ws.close();
+    if (ws) ws.close();
     if (reconnect) clearTimeout(reconnect);
   });
 
