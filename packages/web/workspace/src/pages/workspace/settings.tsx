@@ -274,12 +274,12 @@ export function Settings() {
               </UsageTiers>
             </UsagePanel>
             <Text size="sm" color="secondary">
-              Calculated for the period of {cycle().start} — {cycle().end}. Read
-              more about our{" "}
+              Calculated for the period of {cycle().start} — {cycle().end}.{" "}
               <a href="https://docs.sst.dev/console#pricing" target="_blank">
-                pricing plan
-              </a>
-              .
+                Learn more
+              </a>{" "}
+              or <a href="mailto:hello@sst.dev">contact us</a> for volume
+              pricing.
             </Text>
           </Stack>
         </Stack>
