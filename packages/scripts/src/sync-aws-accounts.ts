@@ -5,9 +5,11 @@ import { db } from "@console/core/drizzle";
 
 const accounts = await db.select().from(awsAccount).execute();
 
-const filter: string[] = ["331093400597"];
+const workspaceFilter: string[] = ["b2b38s9gakw4ins2r9fasls7"];
+
 for (const account of accounts) {
-  if (filter.length && !filter.includes(account.accountID)) continue;
+  if (workspaceFilter.length && !workspaceFilter.includes(account.workspaceID))
+    continue;
   provideActor({
     type: "system",
     properties: {

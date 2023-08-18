@@ -119,25 +119,37 @@ export const bootstrap = zod(
           StackName: "SSTBootstrap",
         })
       )
-      .catch(() => {
-        console.log(input.region, "no bootstrap stack found");
-      });
-    if (!bootstrap) {
-      return;
+      .catch(() => {});
+
+    if (bootstrap) {
+      const bucket = bootstrap.Stacks?.at(0)?.Outputs?.find(
+        (x) => x.OutputKey === "BucketName"
+      )?.OutputValue;
+
+      if (!bucket) {
+        console.log(input.region, "no bucket found");
+        return;
+      }
+
+      return {
+        bucket,
+      };
     }
 
-    const bucket = bootstrap.Stacks?.at(0)?.Outputs?.find(
-      (x) => x.OutputKey === "BucketName"
-    )?.OutputValue;
+    // try to find stack if it's named something different
+    /*
+    let paging: string | undefined;
+    while (true) {
+      const all = await cf.send(new DescribeStacksCommand({}));
+      paging = all.NextToken;
 
-    if (!bucket) {
-      console.log(input.region, "no bucket found");
-      return;
+      const [bucket] = (all.Stacks || []).map(
+        (s) => s.Outputs?.find((o) => o.OutputKey === "BucketName")?.OutputValue
+      );
+      if (bucket) return { bucket };
+      if (!paging) break;
     }
-
-    return {
-      bucket,
-    };
+    */
   }
 );
 
