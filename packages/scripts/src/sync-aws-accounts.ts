@@ -1,11 +1,19 @@
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { AWS } from "@console/core/aws";
 import { provideActor } from "@console/core/actor";
-import { db } from "@console/core/drizzle";
+import { db, eq, inArray, or, sql } from "@console/core/drizzle";
 
-const accounts = await db.select().from(awsAccount).execute();
+const workspaceFilter: string[] = ["w0ht67gl5u5r8mhlihddp8l2"];
 
-const workspaceFilter: string[] = ["b2b38s9gakw4ins2r9fasls7"];
+const accounts = await db
+  .select()
+  .from(awsAccount)
+  .where(
+    workspaceFilter.length
+      ? inArray(awsAccount.workspaceID, workspaceFilter)
+      : undefined
+  )
+  .execute();
 
 for (const account of accounts) {
   if (workspaceFilter.length && !workspaceFilter.includes(account.workspaceID))
