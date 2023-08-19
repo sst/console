@@ -11,7 +11,7 @@ export const AccountActor = z.object({
   type: z.literal("account"),
   properties: z.object({
     accountID: z.string().cuid2(),
-    email: z.string().email(),
+    email: z.string().nonempty(),
   }),
 });
 export type AccountActor = z.infer<typeof AccountActor>;

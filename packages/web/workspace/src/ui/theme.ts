@@ -1,20 +1,42 @@
 import { createTheme } from "@macaron-css/core";
 
-const fonts = {
-  heading: '"IBM Plex Mono", monospace',
-  body: "Rubik, sans-serif",
-  code: '"IBM Plex Mono", monospace',
+const font = {
+  lineHeight: "1.6",
+  family: {
+    heading: '"IBM Plex Mono", monospace',
+    body: "Rubik, sans-serif",
+    code: '"IBM Plex Mono", monospace',
+  },
+  size: {
+    mono_xs: "0.6875rem",
+    xs: "0.75rem",
+    mono_sm: "0.8125rem",
+    sm: "0.875rem",
+    mono_base: "0.9375rem",
+    base: "1rem",
+    mono_lg: "1.0625rem",
+    lg: "1.125rem",
+    xl: "1.25rem",
+    "2xl": "1.5rem",
+    "3xl": "1.875rem",
+    "4xl": "2.25rem",
+    "5xl": "3rem",
+    "6xl": "3.75rem",
+    "7xl": "4.5rem",
+    "8xl": "6rem",
+    "9xl": "8rem",
+  },
 };
 
-const navbarPadding = "0.75rem";
-
 const constants = {
-  colorFadeDuration: "0.20s",
+  colorFadeDuration: "0.15s",
   borderRadius: "4px",
   textBoldWeight: "600",
-  navbarPadding,
-  contentPadding: navbarPadding,
   iconOpacity: "0.85",
+  modalWidth: {
+    sm: "480px",
+    md: "640px",
+  },
 };
 
 const space = {
@@ -65,426 +87,418 @@ const color = {
   },
 };
 
-const light = {
-  accent: "",
-  base: {
-    brand: "",
-    white: "",
-    black: "",
-    blue: "",
-    red: "",
-    gray: "",
-  },
-  brand: {
-    d4: "",
-    d3: "",
-    d2: "",
-    d1: "",
-    l1: "",
-    l2: "",
-  },
-  blue: {
-    d1: "",
-  },
-  black: {
-    d1: "",
-  },
-  red: {
-    d4: "",
-    d3: "",
-    d2: "",
-    d1: "",
-    l1: "",
-    l2: "",
-  },
-  background: {
-    base: "",
-    hover: "",
-    surface: "",
-    modal: "",
-    overlay: "",
-    navbar: "",
-  },
-  divider: {
-    base: ``,
-    surface: ``,
-  },
-  text: {
+const light = (() => {
+  const base = {
+    brand: `${color.base.brand}, 60%`,
+    white: `${color.base.white}, 100%`,
+    black: `${color.base.black}, 14%`,
+    blue: `${color.base.blue}, 51%`,
+    red: `${color.base.red}, 55%`,
+    gray: `${color.base.white}, 97%`,
+  };
+
+  const brand = {
+    d4: `${color.base.brand}, 36%`,
+    d3: `${color.base.brand}, 42%`,
+    d2: `${color.base.brand}, 48%`,
+    d1: `${color.base.brand}, 54%`,
+    l1: `${color.base.brand}, 66%`,
+    l2: `${color.base.brand}, 72%`,
+  };
+
+  const blue = {
+    d1: `${color.base.blue}, 45%`,
+    l1: `${color.base.blue}, 57%`,
+    l2: `${color.base.blue}, 63%`,
+  };
+
+  const black = {
+    d1: `${color.base.black}, 10%`,
+  };
+
+  const red = {
+    d4: `${color.base.red}, 31%`,
+    d3: `${color.base.red}, 37%`,
+    d2: `${color.base.red}, 43%`,
+    d1: `${color.base.red}, 49%`,
+    l1: `${color.base.red}, 61%`,
+    l2: `${color.base.red}, 67%`,
+  };
+
+  const accent = `hsla(${base.brand}, 100%)`;
+
+  const background = {
+    base: `hsla(${base.white}, 100%)`,
+    hover: `hsla(${base.black}, 4%)`,
+    selected: `hsla(${base.black}, 7%)`,
+    surface: `hsla(${base.black}, 3%)`,
+    modal: `hsla(${base.gray}, 93%)`,
+    overlay: `hsla(${base.black}, 3%)`,
+    navbar: `hsla(${base.white}, 80%)`,
+    blue: `hsla(${base.blue}, 25%)`,
+    red: `hsla(${base.red}, 25%)`,
+    accent: `hsla(${base.brand}, 25%)`,
+  };
+
+  const divider = {
+    base: `hsla(${base.black}, 8%)`,
+    surface: `hsla(${base.black}, 6%)`,
+  };
+
+  const text = {
     primary: {
-      base: "",
-      surface: "",
-      accent: "",
-      danger: "",
-    },
-    secondary: "",
-    dimmed: "",
-  },
-  icon: {
-    primary: "",
-    secondary: "",
-    dimmed: "",
-  },
-  link: {
-    primary: {
-      base: "",
-      hover: "",
-    },
-  },
-  button: {
-    primary: {
-      color: "",
-      active: "",
-      border: "",
-      hover: {
-        color: "",
-        border: "",
-      },
-      disabled: {
-        opacity: "",
-      },
+      base: `hsla(${base.black}, 93%)`,
+      surface: `hsla(${base.black}, 78%)`,
+      inverted: `hsla(${base.white}, 87%)`,
     },
     secondary: {
-      color: "",
-      active: "",
-      border: "",
-      hover: {
-        color: "",
-        border: "",
-      },
-      disabled: {
-        opacity: "",
-      },
+      base: `hsla(${base.black}, 60%)`,
+      surface: `hsla(${base.black}, 45%)`,
+      inverted: `hsla(${base.white}, 60%)`,
+    },
+    dimmed: {
+      base: `hsla(${base.black}, 38%)`,
+      surface: `hsla(${base.black}, 23%)`,
+      inverted: `hsla(${base.white}, 38%)`,
     },
     danger: {
-      color: "",
-      active: "",
-      border: "",
+      base: `hsla(${base.red}, 73%)`,
+      surface: `hsla(${base.red}, 67%)`,
+      inverted: `hsla(${red.l2}, 100%)`,
+    },
+  };
+
+  const icon = {
+    primary: `hsla(${base.black}, 91%)`,
+    secondary: `hsla(${base.black}, 51%)`,
+    dimmed: `hsla(${base.black}, 32%)`,
+  };
+
+  const link = {
+    primary: {
+      base: `hsla(${base.blue}, 100%)`,
+      hover: `hsla(${blue.d1}, 100%)`,
+    },
+  };
+
+  const input = {
+    border: `hsla(${base.black}, 14%)`,
+    shadow: `0 1px 2px hsla(${black.d1}, 0.02)`,
+    background: "transparent",
+  };
+
+  const shadow = {
+    inset: {
+      surface: `0 1px 0 inset hsla(${base.white}, 54%)`,
+      accent: `0 1px 0 inset hsla(${brand.l2}, 80%)`,
+      danger: `0 1px 0 inset hsla(${red.l2}, 80%)`,
+    },
+    drop: {
+      short: `0 1px 1px hsla(${black.d1}, 0.03),
+      0 2px 2px hsla(${black.d1}, 0.03)`,
+      shortDark: `0 1px 1px hsla(${black.d1}, 0.1),
+        0 2px 2px hsla(${black.d1}, 0.1)`,
+      medium: `0 1px 1px hsla(${black.d1}, 0.01),
+          0 2px 2px hsla(${black.d1}, 0.01),
+          0 4px 4px hsla(${black.d1}, 0.01),
+          0 8px 8px hsla(${black.d1}, 0.01),
+          0 10px 10px hsla(${black.d1}, 0.01)
+          `,
+      long: `
+        0 2px 4px hsla(${black.d1}, 0.05),
+        0 4px 8px hsla(${black.d1}, 0.05),
+        0 8px 16px hsla(${black.d1}, 0.07),
+        0 16px 32px hsla(${black.d1}, 0.07),
+        0 32px 64px hsla(${black.d1}, 0.07),
+        0 48px 96px hsla(${black.d1}, 0.07)
+      `,
+    },
+  };
+
+  const button = {
+    primary: {
+      text: text.primary.inverted,
+      color: accent,
+      active: `hsla(${brand.d1}, 100%)`,
+      border: `hsla(${brand.d2}, 100%)`,
       hover: {
-        color: "",
-        border: "",
+        color: `hsla(${brand.l1}, 100%)`,
+        border: `hsla(${brand.d1}, 100%)`,
       },
       disabled: {
-        opacity: "",
+        opacity: "0.65",
       },
+      shadow: `${shadow.inset.accent}, ${shadow.drop.shortDark}`,
     },
-  },
-  shadow: {
+    secondary: {
+      text: text.primary.surface,
+      color: background.surface,
+      active: `hsla(${base.black}, 8%)`,
+      border: `hsla(${base.black}, 5%)`,
+      hover: {
+        color: `hsla(${base.black}, 3%)`,
+        border: `hsla(${base.black}, 5%)`,
+      },
+      disabled: {
+        opacity: "0.6",
+      },
+      shadow: `${shadow.inset.surface}, ${shadow.drop.short}`,
+    },
+    danger: {
+      text: text.primary.inverted,
+      color: `hsla(${base.red}, 100%)`,
+      active: `hsla(${red.d1}, 100%)`,
+      border: `hsla(${red.d2}, 100%)`,
+      hover: {
+        color: `hsla(${red.l1}, 100%)`,
+        border: `hsla(${red.d1}, 100%)`,
+      },
+      disabled: {
+        opacity: "0.65",
+      },
+      shadow: `${shadow.inset.accent}, ${shadow.drop.shortDark}`,
+    },
+    github: {
+      text: text.primary.inverted,
+      color: "hsla(0, 0%, 20%, 100%)",
+      active: "hsla(0, 0%, 14%, 100%)",
+      border: "hsla(0, 0%, 8%, 100%)",
+      hover: {
+        color: "hsla(0, 0%, 26%, 100%)",
+        border: "hsla(0, 0%, 14%, 100%)",
+      },
+      disabled: {
+        opacity: "0.65",
+      },
+      shadow: shadow.drop.shortDark,
+    },
+  };
+
+  return {
+    base,
+    brand,
+    blue,
+    black,
+    red,
+    accent,
+    background,
+    divider,
+    text,
+    icon,
+    link,
+    input,
+    shadow,
+    button,
+  };
+})();
+
+const dark = ((): typeof light => {
+  const base = {
+    brand: `${color.base.brand}, 58%`,
+    white: `${color.base.white}, 100%`,
+    black: `${color.base.black}, 14%`,
+    blue: `${color.base.blue}, 61%`,
+    red: `${color.base.red}, 60%`,
+    gray: `240, 19%, 18%`,
+  };
+
+  const brand = {
+    d4: `${color.base.brand}, 34%`,
+    d3: `${color.base.brand}, 40%`,
+    d2: `${color.base.brand}, 46%`,
+    d1: `${color.base.brand}, 52%`,
+    l1: `${color.base.brand}, 64%`,
+    l2: `${color.base.brand}, 70%`,
+  };
+
+  const blue = {
+    d1: `${color.base.blue}, 55%`,
+    l1: `${color.base.blue}, 67%`,
+    l2: `${color.base.blue}, 73%`,
+  };
+
+  const black = {
+    d1: `${color.base.black}, 10%`,
+  };
+
+  const red = {
+    d4: `${color.base.red}, 36%`,
+    d3: `${color.base.red}, 42%`,
+    d2: `${color.base.red}, 48%`,
+    d1: `${color.base.red}, 54%`,
+    l1: `${color.base.red}, 68%`,
+    l2: `${color.base.red}, 74%`,
+  };
+
+  const accent = `hsla(${base.brand}, 100%)`;
+
+  const background = {
+    base: `hsla(${base.black}, 100%)`,
+    hover: `hsla(${base.white}, 4%)`,
+    selected: `hsla(${base.white}, 7%)`,
+    surface: `hsla(${base.white}, 5%)`,
+    modal: `hsla(${base.gray}, 91%)`,
+    overlay: `hsla(${base.black}, 50%)`,
+    navbar: `hsla(${base.black}, 75%)`,
+    blue: `hsla(${base.blue}, 25%)`,
+    red: `hsla(${base.red}, 25%)`,
+    accent: `hsla(${base.brand}, 25%)`,
+  };
+
+  const divider = {
+    base: `hsla(${base.white}, 6%)`,
+    surface: `hsla(${base.white}, 8%)`,
+  };
+
+  const text = {
+    primary: {
+      base: `hsla(${base.white}, 87%)`,
+      surface: `hsla(${base.white}, 80%)`,
+      inverted: `hsla(${base.black}, 93%)`,
+    },
+    secondary: {
+      base: `hsla(${base.white}, 60%)`,
+      surface: `hsla(${base.white}, 53%)`,
+      inverted: `hsla(${base.black}, 60%)`,
+    },
+    dimmed: {
+      base: `hsla(${base.white}, 38%)`,
+      surface: `hsla(${base.white}, 31%)`,
+      inverted: `hsla(${base.black}, 38%)`,
+    },
+    danger: {
+      base: `hsla(${red.l2}, 100%)`,
+      surface: `hsla(${red.l2}, 93%)`,
+      inverted: `hsla(${red.d1}, 100%)`,
+    },
+  };
+
+  const icon = {
+    primary: `hsla(${base.white}, 74%)`,
+    secondary: `hsla(${base.white}, 51%)`,
+    dimmed: `hsla(${base.white}, 32%)`,
+  };
+
+  const link = {
+    primary: {
+      base: `hsla(${base.blue}, 100%)`,
+      hover: `hsla(${blue.d1}, 100%)`,
+    },
+  };
+
+  const input = {
+    border: `hsla(${base.white}, 12%)`,
+    shadow: `0 1px 2px hsla(${black.d1}, 0.2)`,
+    background: `hsla(${base.white}, 4%)`,
+  };
+
+  const shadow = {
     inset: {
       surface: "",
       accent: "",
       danger: "",
     },
     drop: {
-      short: "",
-      shortDark: "",
-      medium: "",
-      long: "",
-    },
-    on: {
-      surface2: "",
-      accent210: "",
-      danger210: "",
-    },
-    button: {
-      base: "",
-      accent: "",
-      danger: "",
-    },
-  },
-};
-
-const dark: typeof light = JSON.parse(JSON.stringify(light));
-
-light.base = {
-  brand: `${color.base.brand}, 60%`,
-  white: `${color.base.white}, 100%`,
-  black: `${color.base.black}, 14%`,
-  blue: `${color.base.blue}, 51%`,
-  red: `${color.base.red}, 55%`,
-  gray: `${color.base.white}, 97%`,
-};
-
-light.brand = {
-  d4: `${color.base.brand}, 36%`,
-  d3: `${color.base.brand}, 42%`,
-  d2: `${color.base.brand}, 48%`,
-  d1: `${color.base.brand}, 54%`,
-  l1: `${color.base.brand}, 66%`,
-  l2: `${color.base.brand}, 72%`,
-};
-
-light.blue = {
-  d1: `${color.base.blue}, 46%`,
-};
-
-light.black = {
-  d1: `${color.base.black}, 10%`,
-};
-
-light.red = {
-  d4: `${color.base.red}, 31%`,
-  d3: `${color.base.red}, 37%`,
-  d2: `${color.base.red}, 43%`,
-  d1: `${color.base.red}, 49%`,
-  l1: `${color.base.red}, 61%`,
-  l2: `${color.base.red}, 67%`,
-};
-
-light.accent = `hsla(${light.base.brand}, 100%)`;
-
-light.background = {
-  base: `hsla(${light.base.white}, 100%)`,
-  hover: `hsla(${light.base.black}, 4%)`,
-  surface: `hsla(${light.base.black}, 3%)`,
-  modal: `hsla(${light.base.gray}, 80%)`,
-  overlay: `hsla(${light.base.black}, 3%)`,
-  navbar: `hsla(${light.base.white}, 80%)`,
-};
-light.divider = {
-  base: `hsla(${light.base.black}, 8%)`,
-  surface: `hsla(${light.base.black}, 6%)`,
-};
-light.text = {
-  primary: {
-    base: `hsla(${light.base.black}, 93%)`,
-    surface: `hsla(${light.base.black}, 78%)`,
-    accent: `hsla(${light.base.white}, 93%)`,
-    danger: `hsla(${light.base.white}, 93%)`,
-  },
-  secondary: `hsla(${light.base.black}, 60%)`,
-  dimmed: `hsla(${light.base.black}, 38%)`,
-};
-
-light.icon = {
-  primary: `hsla(${light.base.black}, 91%)`,
-  secondary: `hsla(${light.base.black}, 51%)`,
-  dimmed: `hsla(${light.base.black}, 32%)`,
-};
-
-light.link.primary = {
-  base: `hsla(${light.base.blue}, 100%)`,
-  hover: `hsla(${light.blue.d1}, 100%)`,
-};
-
-light.button.primary = {
-  color: light.accent,
-  active: `hsla(${light.brand.d1}, 100%)`,
-  border: `hsla(${light.brand.d2}, 100%)`,
-  hover: {
-    color: `hsla(${light.brand.l1}, 100%)`,
-    border: `hsla(${light.brand.d1}, 100%)`,
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-light.button.secondary = {
-  color: light.background.surface,
-  active: `hsla(${light.base.black}, 8%)`,
-  border: `hsla(${light.base.black}, 5%)`,
-  hover: {
-    color: `hsla(${light.base.black}, 3%)`,
-    border: `hsla(${light.base.black}, 5%)`,
-  },
-  disabled: {
-    opacity: "0.6",
-  },
-};
-
-light.button.danger = {
-  color: `hsla(${light.base.red}, 100%)`,
-  active: `hsla(${light.red.d1}, 100%)`,
-  border: `hsla(${light.red.d2}, 100%)`,
-  hover: {
-    color: `hsla(${light.red.l1}, 100%)`,
-    border: `hsla(${light.red.d1}, 100%)`,
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-light.shadow.inset = {
-  surface: `0 1px 0 inset hsla(${light.base.white}, 54%)`,
-  accent: `0 1px 0 inset hsla(${light.brand.l2}, 80%)`,
-  danger: `0 1px 0 inset hsla(${light.red.l2}, 80%)`,
-};
-
-light.shadow.drop = {
-  short: `0 1px 1px hsla(${light.black.d1}, 0.03),
-      0 2px 2px hsla(${light.black.d1}, 0.03)`,
-  shortDark: `0 1px 1px hsla(${light.black.d1}, 0.1),
-        0 2px 2px hsla(${light.black.d1}, 0.1)`,
-  medium: `0 1px 1px hsla(${light.black.d1}, 0.01),
-    0 2px 2px hsla(${light.black.d1}, 0.01),
-    0 4px 4px hsla(${light.black.d1}, 0.01),
-    0 8px 8px hsla(${light.black.d1}, 0.01),
-    0 10px 10px hsla(${light.black.d1}, 0.01)
-    `,
-  long: `
-    0 2px 4px hsla(${light.black.d1}, 0.05),
-    0 4px 8px hsla(${light.black.d1}, 0.05),
-    0 8px 16px hsla(${light.black.d1}, 0.07),
-    0 16px 32px hsla(${light.black.d1}, 0.07),
-    0 32px 64px hsla(${light.black.d1}, 0.07),
-    0 48px 96px hsla(${light.black.d1}, 0.07)
-  `,
-};
-
-light.shadow.on = {
-  surface2: `${light.shadow.inset.surface}, ${light.shadow.drop.short}`,
-  accent210: ` ${light.shadow.inset.accent}, ${light.shadow.drop.shortDark}`,
-  danger210: ` ${light.shadow.inset.danger}, ${light.shadow.drop.shortDark}`,
-};
-
-light.shadow.button = {
-  base: light.shadow.on.surface2,
-  accent: light.shadow.on.accent210,
-  danger: light.shadow.on.danger210,
-};
-
-dark.base = {
-  brand: `${color.base.brand}, 62%`,
-  white: `${color.base.white}, 100%`,
-  black: `${color.base.black}, 14%`,
-  blue: `${color.base.blue}, 61%`,
-  red: `${color.base.red}, 60%`,
-  gray: `240, 19%, 18%`,
-};
-
-dark.brand = {
-  d4: `${color.base.brand}, 38%`,
-  d3: `${color.base.brand}, 44%`,
-  d2: `${color.base.brand}, 50%`,
-  d1: `${color.base.brand}, 56%`,
-  l1: `${color.base.brand}, 71%`,
-  l2: `${color.base.brand}, 77%`,
-};
-
-dark.blue = {
-  d1: `${color.base.blue}, 55%`,
-};
-
-dark.black = {
-  d1: `${color.base.black}, 10%`,
-};
-
-dark.red = {
-  d4: `${color.base.red}, 36%`,
-  d3: `${color.base.red}, 42%`,
-  d2: `${color.base.red}, 48%`,
-  d1: `${color.base.red}, 54%`,
-  l1: `${color.base.red}, 68%`,
-  l2: `${color.base.red}, 74%`,
-};
-
-dark.accent = `hsla(${dark.base.brand}, 100%)`;
-
-dark.background = {
-  base: `hsla(${dark.base.black}, 100%)`,
-  hover: `hsla(${dark.base.white}, 4%)`,
-  surface: `hsla(${dark.base.white}, 5%)`,
-  modal: `hsla(${dark.base.gray}, 90%)`,
-  overlay: `hsla(${dark.base.black}, 50%)`,
-  navbar: `hsla(${light.base.black}, 75%)`,
-};
-
-dark.divider = {
-  base: `hsla(${dark.base.white}, 6%)`,
-  surface: `hsla(${dark.base.white}, 8%)`,
-};
-
-dark.text = {
-  primary: {
-    base: `hsla(${dark.base.white}, 87%)`,
-    surface: `hsla(${dark.base.white}, 80%)`,
-    accent: `hsla(${dark.base.white}, 87%)`,
-    danger: `hsla(${dark.base.white}, 87%)`,
-  },
-  secondary: `hsla(${dark.base.white}, 60%)`,
-  dimmed: `hsla(${dark.base.white}, 38%)`,
-};
-
-dark.icon = {
-  primary: `hsla(${dark.base.white}, 74%)`,
-  secondary: `hsla(${dark.base.white}, 51%)`,
-  dimmed: `hsla(${dark.base.white}, 32%)`,
-};
-
-dark.link.primary = {
-  base: `hsla(${dark.base.blue}, 100%)`,
-  hover: `hsla(${dark.blue.d1}, 100%)`,
-};
-
-dark.button.primary = {
-  color: dark.accent,
-  active: `hsla(${dark.brand.d1}, 100%)`,
-  border: `hsla(${dark.brand.d2}, 100%)`,
-  hover: {
-    color: `hsla(${dark.brand.l1}, 100%)`,
-    border: `hsla(${dark.brand.d1}, 100%)`,
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-dark.button.secondary = {
-  color: dark.background.surface,
-  active: `hsla(${dark.base.white}, 4%)`,
-  border: `hsla(${dark.base.white}, 4%)`,
-  hover: {
-    color: `hsla(${dark.base.white}, 9%)`,
-    border: `hsla(${dark.base.white}, 3%)`,
-  },
-  disabled: {
-    opacity: "0.6",
-  },
-};
-
-dark.button.danger = {
-  color: `hsla(${dark.base.red}, 100%)`,
-  active: `hsla(${dark.red.d1}, 100%)`,
-  border: `hsla(${dark.red.d2}, 100%)`,
-  hover: {
-    color: `hsla(${dark.red.l1}, 100%)`,
-    border: `hsla(${dark.base.red}, 100%)`,
-  },
-  disabled: {
-    opacity: "0.65",
-  },
-};
-
-dark.shadow.drop = {
-  short: `0 1px 1px hsla(${dark.black.d1}, 0.4),
-    0 2px 2px hsla(${dark.black.d1}, 0.4)`,
-  shortDark: `0 1px 1px hsla(${dark.black.d1}, 80%),
-    0 2px 2px hsla(${dark.black.d1}, 80%)`,
-  medium: `0 1px 1px hsla(${dark.black.d1}, 0.075),
-    0 2px 2px hsla(${dark.black.d1}, 0.075),
-    0 4px 4px hsla(${dark.black.d1}, 0.075),
-    0 8px 8px hsla(${dark.black.d1}, 0.075),
-    0 10px 10px hsla(${dark.black.d1}, 0.075)`,
-  long: `
+      short: `0 1px 1px hsla(${black.d1}, 0.4),
+    0 2px 2px hsla(${black.d1}, 0.4)`,
+      shortDark: `0 1px 1px hsla(${black.d1}, 80%),
+    0 2px 2px hsla(${black.d1}, 80%)`,
+      medium: `0 1px 1px hsla(${black.d1}, 0.075),
+    0 2px 2px hsla(${black.d1}, 0.075),
+    0 4px 4px hsla(${black.d1}, 0.075),
+    0 8px 8px hsla(${black.d1}, 0.075),
+    0 10px 10px hsla(${black.d1}, 0.075)`,
+      long: `
     0 2px 10px rgba(0, 0, 0, 0.1),
     0 8px 20px rgba(0, 0, 0, 0.1),
     0 16px 40px rgba(0, 0, 0, 0.1),
     0 32px 80px rgba(0, 0, 0, 0.15),
     0 48px 120px rgba(0, 0, 0, 0.15)
   `,
-};
+    },
+  };
 
-dark.shadow.button = {
-  base: dark.shadow.drop.short,
-  accent: dark.shadow.drop.shortDark,
-  danger: "",
-};
+  const button = {
+    primary: {
+      text: text.primary.surface,
+      color: accent,
+      active: `hsla(${brand.d1}, 100%)`,
+      border: accent,
+      hover: {
+        color: `hsla(${brand.l1}, 100%)`,
+        border: `hsla(${brand.l1}, 100%)`,
+      },
+      disabled: {
+        opacity: "0.65",
+      },
+      shadow: shadow.drop.shortDark,
+    },
+    secondary: {
+      text: text.primary.surface,
+      color: background.surface,
+      active: `hsla(${base.white}, 4%)`,
+      border: `hsla(${base.white}, 4%)`,
+      hover: {
+        color: `hsla(${base.white}, 9%)`,
+        border: `hsla(${base.white}, 3%)`,
+      },
+      disabled: {
+        opacity: "0.6",
+      },
+      shadow: shadow.drop.shortDark,
+    },
+    danger: {
+      text: text.primary.surface,
+      color: `hsla(${base.red}, 100%)`,
+      active: `hsla(${red.d1}, 100%)`,
+      border: `hsla(${base.red}, 100%)`,
+      hover: {
+        color: `hsla(${red.l1}, 100%)`,
+        border: `hsla(${red.l1}, 100%)`,
+      },
+      disabled: {
+        opacity: "0.65",
+      },
+      shadow: shadow.drop.shortDark,
+    },
+    github: {
+      text: text.primary.inverted,
+      color: "hsla(0, 0%, 96%, 100%)",
+      active: "hsla(0, 0%, 86%, 100%)",
+      border: "hsla(0, 0%, 96%, 100%)",
+      hover: {
+        color: "hsla(0, 0%, 100%, 100%)",
+        border: "hsla(0, 0%, 100%, 100%)",
+      },
+      disabled: {
+        opacity: "0.65",
+      },
+      shadow: shadow.drop.shortDark,
+    },
+  };
+
+  return {
+    base,
+    brand,
+    blue,
+    black,
+    red,
+    accent,
+    background,
+    divider,
+    text,
+    icon,
+    link,
+    input,
+    shadow,
+    button,
+  };
+})();
 
 export const [lightClass, theme] = createTheme({
   ...constants,
   space,
-  fonts,
+  font,
   color: light,
 });
 
@@ -492,6 +506,6 @@ export const darkClass = createTheme(theme, {
   ...theme,
   ...constants,
   space,
-  fonts,
+  font,
   color: dark,
 });

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "noUncheckedIndexedAccess": true,
     "module": "esnext",
+    "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
       "@console/core/*": ["../core/src/*"]

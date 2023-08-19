@@ -1,21 +1,24 @@
 import {
   mysqlTable,
   primaryKey,
+  timestamp,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { cuid, id, timestamps } from "../util/sql";
+import { timestamps, workspaceID } from "../util/sql";
 
 export const user = mysqlTable(
   "user",
   {
-    ...id,
-    workspaceID: cuid("workspace_id").notNull(),
+    ...workspaceID,
     ...timestamps,
     email: varchar("email", { length: 255 }).notNull(),
+    timeSeen: timestamp("time_seen", {
+      mode: "string",
+    }),
   },
-  (user) => ({
-    primary: primaryKey(user.id, user.workspaceID),
-    email: uniqueIndex("email").on(user.email, user.workspaceID),
+  (table) => ({
+    primary: primaryKey(table.id, table.workspaceID),
+    email: uniqueIndex("email").on(table.email, table.workspaceID),
   })
 );

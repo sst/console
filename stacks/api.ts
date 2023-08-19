@@ -6,15 +6,16 @@ import {
   Wait,
   WaitTime,
 } from "aws-cdk-lib/aws-stepfunctions";
+import * as events from "aws-cdk-lib/aws-events";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
-import { StackContext, Api, use, Function } from "sst/constructs";
+import { StackContext, Api, use, Function, EventBus } from "sst/constructs";
 import { Auth } from "./auth";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { DNS } from "./dns";
 import { Duration } from "aws-cdk-lib/core";
 
-export function API({ stack }: StackContext) {
+export function API({ stack, app }: StackContext) {
   const auth = use(Auth);
   const secrets = use(Secrets);
   const bus = use(Events);
@@ -24,7 +25,10 @@ export function API({ stack }: StackContext) {
     lambdaFunction: Function.fromDefinition(stack, "log-poller-fetch", {
       handler: "packages/functions/src/poller/fetch.handler",
       bind: [...Object.values(secrets.database)],
-      timeout: "60 seconds",
+      nodejs: {
+        install: ["source-map"],
+      },
+      timeout: "120 seconds",
       permissions: ["logs", "sts", "iot"],
     }),
     payloadResponseOnly: true,
@@ -44,31 +48,82 @@ export function API({ stack }: StackContext) {
     ),
   });
 
+  new EventBus(stack, "defaultBus", {
+    cdk: {
+      eventBus: events.EventBus.fromEventBusName(stack, "default", "default"),
+    },
+  }).addRules(stack, {
+    "log-poller-status": {
+      pattern: {
+        detailType: ["Step Functions Execution Status Change"],
+        source: ["aws.states"],
+      },
+      targets: {
+        handler: {
+          function: {
+            handler: "packages/functions/src/events/log-poller-status.handler",
+            bind: [bus, ...Object.values(secrets.database)],
+            permissions: ["states", "iot"],
+            environment: {
+              LOG_POLLER_ARN: poller.stateMachineArn,
+            },
+          },
+        },
+      },
+    },
+  });
+
   const api = new Api(stack, "api", {
     defaults: {
       function: {
-        bind: [auth, ...Object.values(secrets.database), bus],
-        permissions: ["iot"],
+        bind: [
+          auth,
+          ...Object.values(secrets.database),
+          ...secrets.stripe,
+          bus,
+        ],
+        permissions: ["iot", "sts"],
         environment: {
           LOG_POLLER_ARN: poller.stateMachineArn,
         },
       },
     },
     routes: {
-      "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
+      "POST /replicache/pull": {
+        function: {
+          handler: "packages/functions/src/replicache/pull.handler",
+          timeout: "29 seconds",
+        },
+      },
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
+      "POST /webhook/stripe": "packages/functions/src/billing/webhook.handler",
+      "POST /rest/create_checkout_session":
+        "packages/functions/src/billing/create-checkout-session.handler",
+      "POST /rest/create_customer_portal_session":
+        "packages/functions/src/billing/create-customer-portal-session.handler",
+      "GET /error": {
+        type: "function",
+        function: {
+          handler: "packages/functions/src/error.handler",
+          enableLiveDev: false,
+        },
+      },
     },
     customDomain: {
       domainName: "api." + dns.domain,
-      hostedZone: dns.zone,
+      hostedZone: dns.zone.zoneName,
     },
   });
 
   poller.grantStartExecution(api.getFunction("POST /replicache/push")!);
 
+  new Function(stack, "scratch", {
+    bind: [auth, ...Object.values(secrets.database), bus],
+    handler: "packages/functions/src/scratch.handler",
+  });
+
   stack.addOutputs({
     ApiEndpoint: api.customDomainUrl,
-    Output: "",
   });
 
   return api;

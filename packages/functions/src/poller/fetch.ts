@@ -2,11 +2,13 @@ import {
   CloudWatchLogsClient,
   DescribeLogStreamsCommand,
   FilterLogEventsCommand,
+  GetLogEventsCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { provideActor } from "@console/core/actor";
 import { App } from "@console/core/app";
 import { AWS } from "@console/core/aws";
-import { LogPoller } from "@console/core/log-poller";
+import { Log, LogEvent } from "@console/core/log";
+import { LogPoller } from "@console/core/log/poller";
 import { Realtime } from "@console/core/realtime";
 
 interface State {
@@ -24,10 +26,9 @@ interface State {
 
 export async function handler(input: State) {
   const attempts = input.status?.attempts || 0;
-  const start = input.status?.start || Date.now();
+  let start = input.status?.start;
   const offset = input.status?.offset || -30 * 1000;
   if (attempts === 100) {
-    await LogPoller.clear(input.pollerID);
     return {
       done: true,
     };
@@ -43,8 +44,11 @@ export async function handler(input: State) {
     throw new Error(`No poller found for ${input.pollerID}`);
   }
   const stage = await App.Stage.fromID(poller.stageID);
+  const app = await App.fromID(stage!.appID);
   const account = await AWS.Account.fromID(stage!.awsAccountID);
   const credentials = await AWS.assumeRole(account!.accountID);
+  if (!credentials)
+    throw new Error("Unable to assume role for " + account!.accountID);
   const client = new CloudWatchLogsClient({
     region: stage!.region,
     credentials,
@@ -55,21 +59,25 @@ export async function handler(input: State) {
     console.log("fetching streams for", logGroup);
 
     while (true) {
-      const response = await client.send(
-        new DescribeLogStreamsCommand({
-          logGroupIdentifier: logGroup,
-          nextToken: nextToken,
-          orderBy: "LastEventTime",
-          descending: true,
-        })
-      );
+      try {
+        const response = await client.send(
+          new DescribeLogStreamsCommand({
+            logGroupIdentifier: logGroup,
+            nextToken: nextToken,
+            orderBy: "LastEventTime",
+            descending: true,
+          })
+        );
 
-      for (const logStream of response.logStreams || []) {
-        yield logStream;
-      }
+        for (const logStream of response.logStreams || []) {
+          yield logStream;
+        }
 
-      nextToken = response.nextToken;
-      if (!nextToken) {
+        nextToken = response.nextToken;
+        if (!nextToken) {
+          break;
+        }
+      } catch (e) {
         break;
       }
     }
@@ -107,44 +115,71 @@ export async function handler(input: State) {
   console.log("running loop", attempts);
 
   const streams: string[] = [];
+
   for await (const stream of fetchStreams(input.logGroup)) {
     streams.push(stream.logStreamName || "");
+    if (!start && stream.lastEventTimestamp) {
+      const result = await client
+        .send(
+          new GetLogEventsCommand({
+            startFromHead: false,
+            limit: 1,
+            logGroupIdentifier: input.logGroup,
+            logStreamName: stream.logStreamName,
+          })
+        )
+        .then((r) => r.events?.[0]);
+      if (result) {
+        console.log("found last event", result.timestamp, stream.logStreamName);
+        start = (result.timestamp || 0) - 60 * 1000;
+      }
+    }
     if (streams.length === 100) break;
   }
+  if (!streams.length)
+    return {
+      ...input.status,
+      done: false,
+    };
+  if (!start) start = Date.now() - 30 * 1000;
 
-  let count = 0;
-  console.log("fetching since", offset);
+  console.log("fetching since", new Date(start + offset).toLocaleString());
+  const processor = Log.createProcessor({
+    arn: `${input.logGroup
+      .replace("log-group:/aws/lambda/", "function:")
+      .replace(":logs:", ":lambda:")}`,
+    group: input.logGroup + "-tail",
+    region: stage!.region,
+    app: app!.name,
+    stage: stage!.name,
+    credentials,
+  });
+  let batch: LogEvent[] = [];
+  let batchSize = 0;
+
   for await (const event of fetchEvents(
     input.logGroup,
     start + offset,
     streams
   )) {
-    count++;
-    const tabs = (event.message || "").split("\t");
-
-    if (tabs[0]?.startsWith("START")) {
-      const splits = tabs[0].split(" ");
-      await Realtime.publish("log.start", {
-        t: event.timestamp,
-        l: input.logGroup,
-        r: splits[2],
-      });
-      continue;
+    if (batchSize >= 100 * 1024) {
+      console.log("publishing batch sized", batchSize);
+      await Realtime.publish("log", batch);
+      batch = [];
+      batchSize = 0;
     }
-
-    if (tabs[0]?.length === 24) {
-      await Realtime.publish("log.entry", {
-        t: event.timestamp,
-        l: input.logGroup,
-        r: tabs[1],
-        k: tabs[2],
-        m: tabs[3],
-        i: event.eventId,
-      });
-      continue;
-    }
+    const evts = await Log.process({
+      processor,
+      timestamp: event.timestamp!,
+      line: event.message!,
+      stream: event.logStreamName!,
+      id: event.eventId!,
+    });
+    batch.push(...evts);
+    batchSize += JSON.stringify(evts).length;
   }
-  console.log("published", count, "events");
+  await Realtime.publish("log", batch);
+  console.log("published", processor.invocations.size, "events");
 
   return {
     attempts: attempts + 1,

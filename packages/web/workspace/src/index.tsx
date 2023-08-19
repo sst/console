@@ -3,6 +3,7 @@ import { render } from "solid-js/web";
 
 import "modern-normalize/modern-normalize.css";
 import { App } from "./App";
+import { StorageProvider } from "./providers/account";
 
 const root = document.getElementById("root");
 
@@ -12,4 +13,11 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-render(() => <App />, root!);
+render(
+  () => (
+    <StorageProvider>
+      <App />
+    </StorageProvider>
+  ),
+  root!
+);

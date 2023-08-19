@@ -8,6 +8,11 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "es2020",
+    },
+  },
   build: {
     target: "esnext",
   },

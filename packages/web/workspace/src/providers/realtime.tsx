@@ -1,6 +1,6 @@
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { iot, mqtt } from "aws-iot-device-sdk-v2";
-import { createEffect, onCleanup } from "solid-js";
+import { createEffect, onCleanup, onMount } from "solid-js";
 import { useAuth } from "./auth";
 import { WorkspaceStore } from "$/data/workspace";
 import { bus } from "./bus";
@@ -66,7 +66,6 @@ export function RealtimeProvider() {
       } else {
         bus.emit(topic as any, parsed.properties);
       }
-      console.log("Got message", topic, parsed);
     });
     connection.on("disconnect", console.log);
     await connection.connect();

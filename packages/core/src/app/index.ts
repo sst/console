@@ -2,7 +2,7 @@ export * as App from "./";
 export { Stage } from "./stage";
 
 import { createSelectSchema } from "drizzle-zod";
-import { app, stage, resource } from "./app.sql";
+import { app } from "./app.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
@@ -13,6 +13,8 @@ import { useWorkspace } from "../actor";
 
 export const Info = createSelectSchema(app, {
   id: (schema) => schema.id.cuid2(),
+  workspaceID: (schema) => schema.workspaceID.cuid2(),
+  name: (schema) => schema.name.trim().nonempty(),
 }).omit({
   workspaceID: true,
 });

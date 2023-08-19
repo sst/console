@@ -1,5 +1,7 @@
 import { styled } from "@macaron-css/solid";
+import { JSX, Show, ComponentProps } from "solid-js";
 import { theme } from "./theme";
+import { IconCheck } from "$/ui/icons";
 import { CSSProperties } from "@macaron-css/core";
 
 const primaryHover: CSSProperties = {
@@ -31,17 +33,28 @@ const dangerActive: CSSProperties = {
   borderColor: "transparent",
   boxShadow: "none",
 };
+const githubHover: CSSProperties = {
+  borderColor: theme.color.button.github.hover.border,
+  backgroundColor: theme.color.button.github.hover.color,
+};
+const githubActive: CSSProperties = {
+  backgroundColor: theme.color.button.github.active,
+  transform: "translateY(1px)",
+  borderColor: "transparent",
+  boxShadow: "none",
+};
 
 export const Button = styled("button", {
   base: {
     appearance: "none",
     borderRadius: 4,
     border: "1px solid",
-    padding: `0.625rem 1rem`,
+    padding: `0 1rem`,
+    height: 40,
     fontSize: `0.8125rem`,
     fontWeight: 500,
-    lineHeight: 1,
-    fontFamily: theme.fonts.code,
+    lineHeight: "normal",
+    fontFamily: theme.font.family.code,
     transitionDelay: "0s, 0s",
     transitionDuration: "0.2s, 0.2s",
     transitionProperty: "background-color, border",
@@ -55,8 +68,8 @@ export const Button = styled("button", {
       primary: {
         backgroundColor: theme.color.button.primary.color,
         borderColor: theme.color.button.primary.border,
-        boxShadow: theme.color.shadow.button.accent,
-        color: theme.color.text.primary.accent,
+        boxShadow: theme.color.button.primary.shadow,
+        color: theme.color.button.primary.text,
         ":disabled": {
           borderColor: "transparent",
           boxShadow: "none",
@@ -72,8 +85,8 @@ export const Button = styled("button", {
       secondary: {
         backgroundColor: theme.color.button.secondary.color,
         borderColor: theme.color.button.secondary.border,
-        boxShadow: theme.color.shadow.button.base,
-        color: theme.color.text.primary.surface,
+        boxShadow: theme.color.button.secondary.shadow,
+        color: theme.color.button.secondary.text,
         ":disabled": {
           boxShadow: "none",
           opacity: theme.color.button.secondary.disabled.opacity,
@@ -88,8 +101,8 @@ export const Button = styled("button", {
       danger: {
         backgroundColor: theme.color.button.danger.color,
         borderColor: theme.color.button.danger.border,
-        boxShadow: theme.color.shadow.button.danger,
-        color: theme.color.text.primary.danger,
+        boxShadow: theme.color.button.danger.shadow,
+        color: theme.color.button.danger.text,
         ":disabled": {
           borderColor: "transparent",
           boxShadow: "none",
@@ -102,6 +115,189 @@ export const Button = styled("button", {
           "&[data-state-active]": dangerActive,
         },
       },
+      github: {
+        backgroundColor: theme.color.button.github.color,
+        borderColor: theme.color.button.github.border,
+        boxShadow: theme.color.button.github.shadow,
+        color: theme.color.button.github.text,
+        ":disabled": {
+          borderColor: "transparent",
+          boxShadow: "none",
+          opacity: theme.color.button.github.disabled.opacity,
+        },
+        selectors: {
+          "&:hover": githubHover,
+          "&:active": githubActive,
+          "&[data-state-hover]": githubHover,
+          "&[data-state-active]": githubActive,
+        },
+      },
+    },
+  },
+  defaultVariants: {
+    color: "primary",
+  },
+});
+
+export const LinkButton = styled("span", {
+  base: {
+    fontWeight: 500,
+    fontSize: theme.font.size.mono_sm,
+    fontFamily: theme.font.family.code,
+    color: theme.color.link.primary.base,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":hover": {
+      color: theme.color.link.primary.hover,
+    },
+  },
+  variants: {
+    disabled: {
+      true: {
+        opacity: 0.65,
+      },
+      false: {},
     },
   },
 });
+
+const textButtonBaseHover: CSSProperties = {
+  color: theme.color.text.primary.base,
+};
+const textButtonSurfaceHover: CSSProperties = {
+  color: theme.color.text.primary.surface,
+};
+
+const TextButtonRoot = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+  },
+  variants: {
+    disabled: {
+      true: {
+        opacity: 0.4,
+        pointerEvents: "none",
+      },
+      false: {},
+    },
+    on: {
+      base: {
+        color: theme.color.text.secondary.base,
+        selectors: {
+          "&:hover": textButtonBaseHover,
+          "&[data-state-hover]": textButtonBaseHover,
+        },
+      },
+      surface: {
+        color: theme.color.text.secondary.surface,
+        selectors: {
+          "&:hover": textButtonSurfaceHover,
+          "&[data-state-hover]": textButtonSurfaceHover,
+        },
+      },
+    },
+    completing: {
+      true: {},
+      false: {},
+    },
+  },
+  compoundVariants: [
+    {
+      variants: {
+        completing: true,
+        on: "base",
+      },
+      style: {
+        color: theme.color.text.secondary.base,
+        ":hover": {
+          color: theme.color.text.secondary.base,
+        },
+      },
+    },
+    {
+      variants: {
+        completing: true,
+        on: "surface",
+      },
+      style: {
+        color: theme.color.text.secondary.surface,
+        ":hover": {
+          color: theme.color.text.secondary.surface,
+        },
+      },
+    },
+  ],
+  defaultVariants: {
+    on: "base",
+    disabled: false,
+    completing: false,
+  },
+});
+
+const TextButtonIcon = styled("span", {
+  base: {
+    width: 14,
+    height: 14,
+    marginRight: 4,
+    verticalAlign: -2,
+    display: "inline-block",
+    opacity: theme.iconOpacity,
+    selectors: {
+      [`${TextButtonRoot.selector({ completing: true })} &`]: {
+        color: theme.color.accent,
+      },
+    },
+  },
+});
+
+type TextButtonProps = ComponentProps<typeof TextButtonRoot> & {
+  icon?: JSX.Element;
+  completing?: boolean;
+};
+
+export function TextButton(props: TextButtonProps) {
+  return (
+    <TextButtonRoot {...props}>
+      <Show when={props.icon}>
+        {props.completing ? (
+          <TextButtonIcon>
+            <IconCheck />
+          </TextButtonIcon>
+        ) : (
+          <TextButtonIcon>{props.icon}</TextButtonIcon>
+        )}
+      </Show>
+      {props.children}
+    </TextButtonRoot>
+  );
+}
+
+const IconButtonRoot = styled("button", {
+  base: {
+    padding: 0,
+    border: "none",
+    appearance: "none",
+    background: "none",
+    display: "inline-block",
+    color: theme.color.icon.secondary,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    ":disabled": {
+      pointerEvents: "none",
+      opacity: 0.4,
+    },
+    selectors: {
+      "&:hover": {
+        color: theme.color.icon.primary,
+      },
+
+      "&[data-state-hover]": {
+        color: theme.color.icon.primary,
+      },
+    },
+  },
+});
+
+export function IconButton(props: ComponentProps<typeof IconButtonRoot>) {
+  return <IconButtonRoot {...props}>{props.children}</IconButtonRoot>;
+}

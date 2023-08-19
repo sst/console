@@ -8,7 +8,7 @@ export const Stack = styled("div", {
   },
   variants: {
     space: (() => {
-      const result = {} as Record<`${keyof (typeof theme)["space"]}`, any>;
+      const result = {} as Record<`${keyof typeof theme["space"]}`, any>;
       for (const key in theme.space) {
         const value = theme.space[key as keyof typeof theme.space];
         result[key as keyof typeof theme.space] = {
@@ -51,7 +51,7 @@ export const Row = styled("div", {
   },
   variants: {
     space: (() => {
-      const result = {} as Record<`${keyof (typeof theme)["space"]}`, any>;
+      const result = {} as Record<`${keyof typeof theme["space"]}`, any>;
       for (const key in theme.space) {
         const value = theme.space[key as keyof typeof theme.space];
         result[key as keyof typeof theme.space] = {
@@ -89,6 +89,9 @@ export const Row = styled("div", {
       end: {
         justifyContent: "flex-end",
       },
+      between: {
+        justifyContent: "space-between",
+      },
     },
   },
 });
@@ -96,5 +99,26 @@ export const Row = styled("div", {
 export const Grower = styled("div", {
   base: {
     flexGrow: 1,
+    minWidth: 0,
+  },
+});
+
+export const Fullscreen = styled("div", {
+  base: {
+    inset: 0,
+    display: "flex",
+    position: "fixed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
+export const Hr = styled("hr", {
+  base: {
+    margin: 0,
+    height: 1,
+    border: 0,
+    width: "100%",
+    backgroundColor: theme.color.divider.base,
   },
 });

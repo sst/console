@@ -20,6 +20,7 @@ export const handler = ApiHandler(async () => {
     })();
 
     for (const mutation of body.mutations) {
+      console.log("processing", mutation);
       const expectedMutationID = mutationID + 1;
 
       if (mutation.id < expectedMutationID) {
@@ -50,7 +51,8 @@ export const handler = ApiHandler(async () => {
       mutationID,
     });
   });
-  await Realtime.publish("poke", {});
+  const actor = useActor();
+  if (actor.type === "user") await Replicache.poke();
   return {
     statusCode: 200,
   };

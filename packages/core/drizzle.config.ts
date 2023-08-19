@@ -8,5 +8,9 @@ const connection = {
 export default {
   out: "./migrations/",
   schema: "./src/**/*.sql.ts",
-  connectionString: `mysql://${connection.user}:${connection.password}@${connection.host}:3306/sst?ssl={"rejectUnauthorized":true}`,
+  verbose: true,
+  driver: "mysql2",
+  dbCredentials: {
+    connectionString: `mysql://${connection.user}:${connection.password}@${connection.host}:3306/sst?ssl={"rejectUnauthorized":true}`,
+  },
 } satisfies Config;

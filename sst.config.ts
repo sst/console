@@ -1,10 +1,13 @@
 import { SSTConfig } from "sst";
+import { DNS } from "./stacks/dns";
 import { API } from "./stacks/api";
 import { Web } from "./stacks/web";
 import { Auth } from "./stacks/auth";
-import { Secrets } from "./stacks/secrets";
+import { Email } from "./stacks/email";
 import { Events } from "./stacks/events";
-import { DNS } from "./stacks/dns";
+import { Billing } from "./stacks/billing";
+import { Secrets } from "./stacks/secrets";
+import { Connect } from "./stacks/connect";
 import { Realtime } from "./stacks/realtime";
 
 export default {
@@ -19,13 +22,19 @@ export default {
     if (app.stage !== "production") {
       app.setDefaultRemovalPolicy("destroy");
     }
+    app.setDefaultFunctionProps({
+      tracing: "disabled",
+    });
     app
       .stack(DNS)
+      .stack(Email)
       .stack(Secrets)
       .stack(Auth)
       .stack(Events)
       .stack(API)
       .stack(Realtime)
-      .stack(Web);
+      .stack(Connect)
+      .stack(Web)
+      .stack(Billing);
   },
 } satisfies SSTConfig;

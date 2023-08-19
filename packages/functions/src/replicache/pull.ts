@@ -1,18 +1,22 @@
+import { DateTime } from "luxon";
 import { useActor, useWorkspace } from "@console/core/actor";
 import { Replicache } from "@console/core/replicache";
 import { user } from "@console/core/user/user.sql";
 import { useTransaction } from "@console/core/util/transaction";
 import { useApiAuth } from "src/api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
-import { eq, and, gt, inArray } from "drizzle-orm";
+import { eq, and, gt, gte, inArray } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
+import { usage } from "@console/core/billing/billing.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { replicache_cvr } from "@console/core/replicache/replicache.sql";
+import { lambdaPayload } from "@console/core/lambda/lambda.sql";
 import { createId } from "@console/core/util/sql";
 import { mapValues } from "remeda";
+import { log_poller, log_search } from "@console/core/log/log.sql";
 
-const VERSION = 2;
+const VERSION = 4;
 export const handler = ApiHandler(async () => {
   await useApiAuth();
   const actor = useActor();
@@ -57,7 +61,18 @@ export const handler = ApiHandler(async () => {
           op: "clear",
         });
       }
-      const tables = { workspace, user, awsAccount, app, stage, resource };
+      const tables = {
+        workspace,
+        user,
+        awsAccount,
+        app,
+        stage,
+        resource,
+        log_poller,
+        log_search,
+        lambdaPayload,
+        usage,
+      };
       const results: [string, { id: string; time_updated: string }[]][] = [];
       for (const [name, table] of Object.entries(tables)) {
         const rows = await tx
@@ -68,7 +83,18 @@ export const handler = ApiHandler(async () => {
               eq(
                 "workspaceID" in table ? table.workspaceID : table.id,
                 workspaceID
-              )
+              ),
+              ...(name === "log_search" && "userID" in table
+                ? [eq(table.userID, actor.properties.userID)]
+                : []),
+              ...(name === "usage" && "day" in table
+                ? [
+                    gte(
+                      table.day,
+                      DateTime.now().toUTC().startOf("month").toSQLDate()!
+                    ),
+                  ]
+                : [])
             )
           )
           .execute();
@@ -121,6 +147,14 @@ export const handler = ApiHandler(async () => {
         });
       }
 
+      if (!oldCvrID) {
+        result.patch.push({
+          op: "put",
+          key: "/init",
+          value: true,
+        });
+      }
+
       if (result.patch.length > 0) {
         const nextCvrID = createId();
         await tx
@@ -137,7 +171,8 @@ export const handler = ApiHandler(async () => {
 
     if (actor.type === "account") {
       console.log("syncing account", actor.properties);
-      if (new Date(lastSync).getTime() === 0) {
+      const first = new Date(lastSync).getTime() === 0;
+      if (first) {
         result.patch.push({
           op: "clear",
         });
@@ -169,26 +204,6 @@ export const handler = ApiHandler(async () => {
         .then((rows) => rows.map((row) => row.workspace));
       console.log("workspaces", workspaces);
 
-      /*
-      const workspaces =
-        users.length > 0
-          ? await tx
-              .select()
-              .from(workspace)
-              .where(
-                and(
-                  inArray(
-                    workspace.id,
-                    users.map((u) => u.workspaceID)
-                  ),
-                  gt(workspace.timeUpdated, lastSync)
-                )
-              )
-              .execute()
-          : [];
-          */
-      console.log("found workspaces", workspaces);
-
       result.patch.push(
         ...users.map((item) => ({
           op: "put",
@@ -205,6 +220,13 @@ export const handler = ApiHandler(async () => {
         [...workspaces, ...users].sort((a, b) =>
           b.timeUpdated > a.timeUpdated ? 1 : -1
         )[0]?.timeUpdated || lastSync;
+      if (first) {
+        result.patch.push({
+          op: "put",
+          key: "/init",
+          value: true,
+        });
+      }
     }
 
     return {

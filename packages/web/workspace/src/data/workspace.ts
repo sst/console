@@ -1,4 +1,4 @@
-import { ReadTransaction } from "replicache";
+import { ReadTransaction, WriteTransaction } from "replicache";
 import type { Workspace } from "../../../../core/src/workspace";
 
 export function list() {
@@ -19,6 +19,12 @@ export function fromID(id: string) {
   return async (tx: ReadTransaction) => {
     const result = await tx.get(`/workspace/${id}`);
     return result as unknown as Workspace.Info;
+  };
+}
+
+export function put(item: Workspace.Info) {
+  return async (tx: WriteTransaction) => {
+    await tx.put(`/workspace/${item.id}`, item);
   };
 }
 

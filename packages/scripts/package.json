@@ -7,7 +7,13 @@
   },
   "dependencies": {
     "@tsconfig/node16": "^1.0.3",
-    "sst": "2.13.5",
+    "luxon": "^3.3.0",
+    "sst": "2.24.7",
     "tsx": "^3.12.7"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.3",
+    "@types/luxon": "^3.3.1",
+    "inquirer": "^9.2.7"
   }
 }

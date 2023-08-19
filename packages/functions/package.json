@@ -8,18 +8,26 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.114",
+    "@types/luxon": "^3.3.1",
     "@types/node": "^18.16.0",
-    "sst": "2.13.5"
+    "sst": "2.24.7"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudformation": "^3.326.0",
+    "@aws-sdk/client-cloudwatch": "^3.352.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.332.0",
+    "@aws-sdk/client-sesv2": "^3.369.0",
     "@aws-sdk/client-sqs": "^3.332.0",
+    "@botpoison/node": "^0.1.10",
     "@octokit/rest": "^19.0.7",
-    "drizzle-orm": "0.25.3",
+    "drizzle-orm": "0.27.2",
     "fast-jwt": "^2.2.1",
+    "luxon": "^3.3.0",
     "remeda": "^1.17.1",
     "replicache": "^12.2.1",
+    "source-map": "^0.7.4",
+    "undici": "^5.22.0",
     "zod": "^3.21.4"
   }
 }

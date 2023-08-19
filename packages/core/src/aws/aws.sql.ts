@@ -2,6 +2,7 @@ import {
   index,
   mysqlTable,
   primaryKey,
+  timestamp,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -13,6 +14,12 @@ export const awsAccount = mysqlTable(
     ...workspaceID,
     ...timestamps,
     accountID: varchar("account_id", { length: 12 }).notNull(),
+    timeFailed: timestamp("time_failed", {
+      mode: "string",
+    }),
+    timeDiscovered: timestamp("time_discovered", {
+      mode: "string",
+    }),
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),

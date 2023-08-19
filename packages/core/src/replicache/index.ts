@@ -5,6 +5,7 @@ import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
 import { replicache_client } from "./replicache.sql";
 import { eq } from "drizzle-orm";
+import { Realtime } from "../realtime";
 
 export const fromID = zod(z.string(), (input) =>
   useTransaction(async (tx) => {
@@ -40,3 +41,9 @@ export const setMutationID = zod(
         .where(eq(replicache_client.id, input.clientID));
     })
 );
+
+export async function poke() {
+  console.log("sending poke");
+  await Realtime.publish("poke", {});
+  console.log("poke sent");
+}
