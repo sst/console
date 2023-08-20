@@ -22,7 +22,7 @@ export async function useApiAuth() {
       },
     });
     const user = await User.fromEmail(account.properties.email);
-    if (!user)
+    if (!user || user.timeDeleted)
       throw new Error(
         `User not found for email ${account.properties.email} in workspace ${workspaceID}`
       );

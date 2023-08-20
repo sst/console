@@ -43,6 +43,9 @@ const mutators = new Client<ServerType>()
       timeUpdated: null as any,
       timeCreated: null as any,
       timeDeleted: null,
+      stripeCustomerID: null,
+      stripeSubscriptionID: null,
+      stripeSubscriptionItemID: null,
     })(tx);
   })
   .build();
@@ -75,13 +78,13 @@ export function AuthProvider(props: ParentProps) {
       name: token.accountID,
       auth: `Bearer ${token.token}`,
       licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
-      pullURL: import.meta.env.VITE_API_URL + "/replicache/pull",
-      pushURL: import.meta.env.VITE_API_URL + "/replicache/push",
+      pullURL: import.meta.env.VITE_API_URL + "/replicache/pull1",
+      pushURL: import.meta.env.VITE_API_URL + "/replicache/push1",
       mutators,
     });
     const oldPush = rep.pusher;
-    rep.pusher = async (req: Request) => {
-      const result = await oldPush(req);
+    rep.pusher = async (req, data) => {
+      const result = await oldPush(req, data);
       setTimeout(() => {
         rep.pull();
       }, 0);

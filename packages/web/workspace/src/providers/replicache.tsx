@@ -64,22 +64,48 @@ function createReplicache(workspaceID: string, token: string) {
     name: workspaceID,
     auth: `Bearer ${token}`,
     licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
-    pullURL: import.meta.env.VITE_API_URL + "/replicache/pull",
-    pushURL: import.meta.env.VITE_API_URL + "/replicache/push",
+    pullURL: import.meta.env.VITE_API_URL + "/replicache/pull1",
+    pushURL: import.meta.env.VITE_API_URL + "/replicache/push1",
     pullInterval: 60 * 1000,
     mutators,
   });
 
-  const oldPuller = replicache.puller;
-  replicache.puller = (opts) => {
-    opts.headers.append("x-sst-workspace", workspaceID);
-    return oldPuller(opts);
+  replicache.puller = async (req) => {
+    const result = await fetch(replicache.pullURL, {
+      headers: {
+        "x-sst-workspace": workspaceID,
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(req),
+      method: "POST",
+    });
+    return {
+      response: await result.json(),
+      httpRequestInfo: {
+        httpStatusCode: result.status,
+        errorMessage: result.statusText,
+      },
+    };
   };
 
-  const oldPusher = replicache.pusher;
-  replicache.pusher = (opts) => {
-    opts.headers.append("x-sst-workspace", workspaceID);
-    return oldPusher(opts);
+  replicache.pusher = async (req) => {
+    const result = await fetch(replicache.pushURL, {
+      headers: {
+        "x-sst-workspace": workspaceID,
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(req),
+      method: "POST",
+    });
+    return {
+      response: await result.json(),
+      httpRequestInfo: {
+        httpStatusCode: result.status,
+        errorMessage: result.statusText,
+      },
+    };
   };
 
   return replicache;

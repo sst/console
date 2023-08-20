@@ -5,7 +5,7 @@ import { user } from "@console/core/user/user.sql";
 import { useTransaction } from "@console/core/util/transaction";
 import { useApiAuth } from "src/api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
-import { eq, and, gt, gte, inArray } from "drizzle-orm";
+import { eq, and, gt, gte, inArray, isNull } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { usage } from "@console/core/billing/billing.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
@@ -184,6 +184,7 @@ export const handler = ApiHandler(async () => {
           .where(
             and(
               eq(user.email, actor.properties.email),
+              isNull(user.timeDeleted),
               gt(user.timeUpdated, lastSync)
             )
           )

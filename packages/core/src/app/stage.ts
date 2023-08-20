@@ -202,7 +202,6 @@ export const syncMetadata = zod(
           data: {},
         });
         for (let res of body) {
-          console.log("enriching", res);
           const { type } = res;
           const enrichment =
             type in Enrichers

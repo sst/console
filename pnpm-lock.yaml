@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -18,8 +18,8 @@ importers:
         specifier: 10.2.69
         version: 10.2.69
       sst:
-        specifier: 2.24.7
-        version: 2.24.7
+        specifier: 2.24.8
+        version: 2.24.8
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -100,8 +100,8 @@ importers:
         specifier: 0.19.10
         version: 0.19.10
       sst:
-        specifier: 2.24.7
-        version: 2.24.7
+        specifier: 2.24.8
+        version: 2.24.8
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -145,8 +145,8 @@ importers:
         specifier: ^1.17.1
         version: 1.17.1
       replicache:
-        specifier: ^12.2.1
-        version: 12.2.1
+        specifier: ^13.0.0
+        version: 13.0.0
       source-map:
         specifier: ^0.7.4
         version: 0.7.4
@@ -167,8 +167,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.24.7
-        version: 2.24.7
+        specifier: 2.24.8
+        version: 2.24.8
 
   packages/scripts:
     dependencies:
@@ -179,8 +179,8 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0
       sst:
-        specifier: 2.24.7
-        version: 2.24.7
+        specifier: 2.24.8
+        version: 2.24.8
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -255,8 +255,8 @@ importers:
         specifier: ^1.17.1
         version: 1.17.1
       replicache:
-        specifier: ^12.2.1
-        version: 12.2.1
+        specifier: ^13.0.0
+        version: 13.0.0
       solid-js:
         specifier: ^1.7.3
         version: 1.7.3
@@ -265,8 +265,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.24.7
-        version: 2.24.7
+        specifier: 2.24.8
+        version: 2.24.8
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -739,7 +739,7 @@ packages:
       '@smithy/node-http-handler': 2.0.1
       '@smithy/protocol-http': 2.0.1
       '@smithy/smithy-client': 2.0.1
-      '@smithy/types': 2.0.2
+      '@smithy/types': 2.2.1
       '@smithy/url-parser': 2.0.1
       '@smithy/util-base64': 2.0.0
       '@smithy/util-body-length-browser': 2.0.0
@@ -4654,7 +4654,7 @@ packages:
       '@smithy/property-provider': 2.0.1
       '@smithy/protocol-http': 2.0.1
       '@smithy/signature-v4': 2.0.4
-      '@smithy/types': 2.0.2
+      '@smithy/types': 2.2.1
       '@smithy/util-middleware': 2.0.0
       tslib: 2.5.0
 
@@ -7682,6 +7682,22 @@ packages:
   /@repeaterjs/repeater@3.0.4:
     resolution: {integrity: sha512-AW8PKd6iX3vAZ0vA43nOUOnbq/X5ihgU+mSXXqunMkeQADGiqw/PY0JNeYtD5sr0PAy51YPgAPbDoeapv9r8WA==}
 
+  /@rocicorp/lock@1.0.1:
+    resolution: {integrity: sha512-sYbcbiyEf61guk2DfcA6zzgDrW6ncJJW11JIFNSbByqYx80olhyp0IyXUMA3xmNK0YQSkAuufWvLExaWQXuzUQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dependencies:
+      '@rocicorp/resolver': 1.0.0
+    dev: false
+
+  /@rocicorp/logger@5.2.0:
+    resolution: {integrity: sha512-PhnXnTxq8EdD/5e+eI/BQv1aSMG7bjVDI7Ngkje9rbo7RepsppdbwYW1CYfMXr2ZYmA46yhQbFz8bceTyRwRfA==}
+    dev: false
+
+  /@rocicorp/resolver@1.0.0:
+    resolution: {integrity: sha512-iK0QW74BKR0ogY4QwBEAMoevqypi5S/jjKqL6mc7KH7z2PFuOinOebsD1Ol8VIxrh23IPrMNwDNSrnfhKga9Vw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dev: false
+
   /@smithy/abort-controller@1.0.2:
     resolution: {integrity: sha512-tb2h0b+JvMee+eAxTmhnyqyNk51UXIK949HnE14lFeezKsVJTB30maan+CO2IMwnig2wVYQH84B5qk6ylmKCuA==}
     engines: {node: '>=14.0.0'}
@@ -8103,12 +8119,6 @@ packages:
 
   /@smithy/types@1.1.1:
     resolution: {integrity: sha512-tMpkreknl2gRrniHeBtdgQwaOlo39df8RxSrwsHVNIGXULy5XP6KqgScUw2m12D15wnJCKWxVhCX+wbrBW/y7g==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      tslib: 2.5.0
-
-  /@smithy/types@2.0.2:
-    resolution: {integrity: sha512-wcymEjIXQ9+NEfE5Yt5TInAqe1o4n+Nh+rh00AwoazppmUt8tdo6URhc5gkDcOYrcvlDVAZE7uG69nDpEGUKxw==}
     engines: {node: '>=14.0.0'}
     dependencies:
       tslib: 2.5.0
@@ -8964,21 +8974,6 @@ packages:
       - bufferutil
       - supports-color
       - utf-8-validate
-
-  /aws-sdk@2.1384.0:
-    resolution: {integrity: sha512-5b1ShZ8508yamZKjpRJJlMcztH2EBxnuH8KZObEH4FY/+pHqGIfUtrSVO0IaPNj7RmOnQJ93zCzBc7dhTnEK4A==}
-    engines: {node: '>= 10.0.0'}
-    dependencies:
-      buffer: 4.9.2
-      events: 1.1.1
-      ieee754: 1.1.13
-      jmespath: 0.16.0
-      querystring: 0.2.0
-      sax: 1.2.1
-      url: 0.10.3
-      util: 0.12.5
-      uuid: 8.0.0
-      xml2js: 0.5.0
 
   /aws-sdk@2.1438.0:
     resolution: {integrity: sha512-xessrWtoMD2icLPnm4KlTl3tiudJlYh3RtqBx+BggBc3ie9l98za1tSB4NunabTEbBUj4YMmzN1lpMsNEZ0NGw==}
@@ -11982,10 +11977,14 @@ packages:
   /remeda@1.17.1:
     resolution: {integrity: sha512-hWXiHrf3bdq/l0V6ovPUpDlrCzVKIDgxEz0j9QMu+JxU9JmxJJlpiHDf+xeS5nU58+4RIwCqEAT+D3SkIj0YEg==}
 
-  /replicache@12.2.1:
-    resolution: {integrity: sha512-IQSAorWVgaEpGuI3HEGDmnBT4oQq7OYteWH0ZNp5U6g8gDTNLvsO/16aBgQdHhHGHJRx2ULoxjovyJGlu+NYjg==}
+  /replicache@13.0.0:
+    resolution: {integrity: sha512-Z4U3xSg7Tj0D+f+FLzVsg2va/9lhvqWORHZmVHPvcbYZXpaz65NITXfw0uEwxXrejRL5+2TpUDeGxWqxF1LTRw==}
     engines: {node: '>=14.8.0'}
     hasBin: true
+    dependencies:
+      '@rocicorp/lock': 1.0.1
+      '@rocicorp/logger': 5.2.0
+      '@rocicorp/resolver': 1.0.0
     dev: false
 
   /require-directory@2.1.1:
@@ -12239,8 +12238,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.24.7:
-    resolution: {integrity: sha512-GT2oBnABV0NSF+YPgbtBdCRoTO1myuexKZ+lwJN5CL5ANIPCCfxFKNrqghvp/g4YBr/E2Ti2s6VYPIrPddhOmQ==}
+  /sst@2.24.8:
+    resolution: {integrity: sha512-KK0Zp6UtznU8B9ijX8e0ljNsQA9IBHdervG/sS0GxHA9YliJKpqRoG/chLkpmJXag0PyXcKBUTgkLc00ePcWeA==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0
@@ -12280,7 +12279,7 @@ packages:
       adm-zip: 0.5.10
       aws-cdk-lib: 2.91.0(constructs@10.2.69)
       aws-iot-device-sdk: 2.2.12
-      aws-sdk: 2.1384.0
+      aws-sdk: 2.1438.0
       builtin-modules: 3.2.0
       cdk-assets: 2.91.0
       chalk: 5.3.0

@@ -96,6 +96,14 @@ export function API({ stack, app }: StackContext) {
         },
       },
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
+      "POST /replicache/pull1": {
+        function: {
+          handler: "packages/functions/src/replicache/pull1.handler",
+          timeout: "29 seconds",
+        },
+      },
+      "POST /replicache/push1":
+        "packages/functions/src/replicache/push1.handler",
       "POST /webhook/stripe": "packages/functions/src/billing/webhook.handler",
       "POST /rest/create_checkout_session":
         "packages/functions/src/billing/create-checkout-session.handler",
