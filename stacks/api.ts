@@ -124,6 +124,7 @@ export function API({ stack, app }: StackContext) {
   });
 
   poller.grantStartExecution(api.getFunction("POST /replicache/push")!);
+  poller.grantStartExecution(api.getFunction("POST /replicache/push1")!);
 
   new Function(stack, "scratch", {
     bind: [auth, ...Object.values(secrets.database), bus],
