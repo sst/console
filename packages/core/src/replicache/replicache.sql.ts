@@ -5,6 +5,7 @@ import {
   json,
   mysqlTable,
   primaryKey,
+  unique,
 } from "drizzle-orm/mysql-core";
 import { timestamps, id } from "../util/sql";
 import { Actor } from "../actor";
@@ -41,6 +42,6 @@ export const replicache_cvr = mysqlTable(
     clientVersion: int("client_version").notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.id),
+    primary: primaryKey(table.clientGroupID, table.id),
   })
 );
