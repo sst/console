@@ -35,7 +35,6 @@ export const replicache_cvr = mysqlTable(
   {
     ...id,
     ...timestamps,
-    actor: json("actor").$type<Actor>(),
     data: json("data").$type<Record<string, number>>().notNull(),
     id: int("id").notNull(),
     clientGroupID: char("client_group_id", { length: 36 }).notNull(),
