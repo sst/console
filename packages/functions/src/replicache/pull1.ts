@@ -261,7 +261,6 @@ export const handler = ApiHandler(async () => {
             data: nextCvr.data,
             clientGroupID: req.clientGroupID,
             clientVersion: group.clientVersion,
-            actor,
           })
           .execute();
 
