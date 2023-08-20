@@ -21,6 +21,7 @@ export const handler = ApiHandler(async (_evt) => {
     };
   }
   const body: PushRequestV1 = useJsonBody();
+  console.log(body);
 
   for (const mutation of body.mutations) {
     await useTransaction(async (tx) => {
