@@ -3,6 +3,7 @@ import { provideActor } from "@console/core/actor";
 
 export async function handler() {
   const stages = await Stage.list();
+  const promises = [];
   for (const stage of stages) {
     provideActor({
       type: "system",
@@ -10,9 +11,13 @@ export async function handler() {
         workspaceID: stage.workspaceID,
       },
     });
-    await Stage.Events.UsageRequested.publish({
-      stageID: stage.id,
-      daysOffset: 1,
-    });
+    promises.push(
+      Stage.Events.UsageRequested.publish({
+        stageID: stage.id,
+        daysOffset: 1,
+      })
+    );
   }
+
+  console.log(await Promise.all(promises));
 }
