@@ -19,9 +19,13 @@ import { lambdaPayload } from "@console/core/lambda/lambda.sql";
 import { createId } from "@console/core/util/sql";
 import { equals, groupBy, keys, map, mapValues, pipe } from "remeda";
 import { log_poller, log_search } from "@console/core/log/log.sql";
-import { PatchOperation, PullRequestV1, PullResponseV1 } from "replicache";
+import {
+  PatchOperation,
+  PullRequest,
+  PullRequestV1,
+  PullResponseV1,
+} from "replicache";
 
-const VERSION = 4;
 export const handler = ApiHandler(async () => {
   await useApiAuth();
   const actor = useActor();
@@ -32,7 +36,15 @@ export const handler = ApiHandler(async () => {
     };
   }
 
-  const req: PullRequestV1 = useJsonBody();
+  const req: PullRequest = useJsonBody();
+  console.log("request", req);
+  if (req.pullVersion !== 1)
+    return {
+      statusCode: 307,
+      headers: {
+        location: "/replicache/pull",
+      },
+    };
 
   const resp = await useTransaction(
     async (tx): Promise<PullResponseV1 | undefined> => {
@@ -299,7 +311,7 @@ export const handler = ApiHandler(async () => {
   return {
     statusCode: 200,
     headers: {
-      "Content-Type": "application/json",
+      "content-type": "application/json",
     },
     body: JSON.stringify(resp),
   };
