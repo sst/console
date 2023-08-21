@@ -49,7 +49,7 @@ export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
   }
 }
 
-export function createTransactionEffect(effect: () => void | Promise<void>) {
+export function createTransactionEffect(effect: () => any | Promise<any>) {
   const { effects } = TransactionContext.use();
   effects.push(effect);
 }
