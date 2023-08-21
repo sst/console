@@ -11,6 +11,7 @@ import { ApiHandler, useJsonBody } from "sst/node/api";
 import { server } from "./server";
 import { equals } from "remeda";
 import { Replicache } from "@console/core/replicache";
+import { workspaceID } from "@console/core/util/sql";
 
 export const handler = ApiHandler(async (_evt) => {
   await useApiAuth();
@@ -141,7 +142,7 @@ export const handler = ApiHandler(async (_evt) => {
     });
   }
 
-  await Replicache.poke();
+  if (actor.type === "user") await Replicache.poke();
   return {
     statusCode: 200,
   };
