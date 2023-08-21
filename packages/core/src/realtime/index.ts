@@ -7,7 +7,6 @@ import {
 import { Config } from "sst/node/config";
 import { useWorkspace } from "../actor";
 
-const iot = new IoTClient({});
 const data = new IoTDataPlaneClient({});
 
 export async function publish(topic: string, properties: any) {

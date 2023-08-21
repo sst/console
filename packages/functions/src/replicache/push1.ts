@@ -143,6 +143,7 @@ export const handler = ApiHandler(async (_evt) => {
   }
 
   if (actor.type === "user") await Replicache.poke();
+
   return {
     statusCode: 200,
   };
