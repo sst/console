@@ -5,7 +5,7 @@ import { user } from "@console/core/user/user.sql";
 import { useTransaction } from "@console/core/util/transaction";
 import { useApiAuth } from "src/api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
-import { eq, and, gt, gte, inArray, isNull, lte, sql } from "drizzle-orm";
+import { eq, and, gt, gte, inArray, isNull, lte, sql, lt } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { usage } from "@console/core/billing/billing.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
@@ -275,6 +275,15 @@ export const handler = ApiHandler(async () => {
             clientVersion: group.clientVersion,
           })
           .execute();
+
+        await tx
+          .delete(replicache_cvr)
+          .where(
+            and(
+              eq(replicache_cvr.clientGroupID, req.clientGroupID),
+              lt(replicache_cvr.id, nextCvr.version - 10)
+            )
+          );
 
         const clients = await tx
           .select({
