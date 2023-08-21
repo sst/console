@@ -109,7 +109,8 @@ const Content = styled(DropdownMenu.Content, {
 const Item = styled(DropdownMenu.Item, {
   base: {
     ...utility.textLine(),
-    padding: `${theme.space[3]} ${theme.space[3.5]}`,
+    lineHeight: "normal",
+    padding: `${theme.space[2.5]} ${theme.space[3]}`,
     fontSize: theme.font.size.sm,
     color: theme.color.text.secondary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
