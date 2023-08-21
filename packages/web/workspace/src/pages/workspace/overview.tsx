@@ -318,7 +318,7 @@ export function Overview() {
               </Text>
               <Text size="sm" on="surface" color="secondary">
                 Use a restricted IAM policy and connect your prod AWS accounts.{" "}
-                <a href="https://docs.sst.dev" target="_blank">
+                <a href="https://docs.sst.dev/console-updates#restricted-iam-policy" target="_blank">
                   Learn more
                   <AnnouncementLinkIcon>
                     <IconChevronRight width="13" height="13" />
