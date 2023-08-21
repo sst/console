@@ -1,6 +1,10 @@
 import { ReadTransaction, WriteTransaction } from "replicache";
 import type { Workspace } from "../../../../core/src/workspace";
 
+export function key(id = "") {
+  return `/workspace/${id}`;
+}
+
 export function list() {
   return async (tx: ReadTransaction) => {
     const result = await tx.scan({ prefix: `/workspace/` }).toArray();

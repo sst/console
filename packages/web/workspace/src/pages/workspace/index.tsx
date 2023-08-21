@@ -1,6 +1,8 @@
 import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import {
   ReplicacheProvider,
+  createGet,
+  createScan,
   createSubscription,
   useReplicache,
 } from "$/providers/replicache";
@@ -12,8 +14,6 @@ import { useAuth } from "$/providers/auth";
 import {
   IconUserPlus,
   IconArrowsRightLeft,
-  IconCog6Tooth,
-  IconWrench,
   IconWrenchScrewdriver,
 } from "$/ui/icons";
 import { User } from "./user";
@@ -26,6 +26,7 @@ import { IconApp } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
 import { Debug } from "../debug";
+import type { Info as WorkspaceInfo } from "@console/core/workspace";
 
 export function Workspace() {
   const params = useParams();
@@ -33,15 +34,22 @@ export function Workspace() {
   const storage = useStorage();
   const nav = useNavigate();
   const rep = createMemo(() => auth[storage.value.account].replicache);
-  const workspace = createSubscription(
-    () => WorkspaceStore.fromSlug(params.workspaceSlug),
-    undefined,
-    rep
+  const workspaces = createScan<WorkspaceInfo>(
+    () => WorkspaceStore.key(),
+    rep,
+    (workspaces) => workspaces.filter((w) => w.slug === params.workspaceSlug)
   );
+  const workspace = createMemo(() => workspaces().at(0));
 
   const bar = useCommandBar();
 
   createEffect(() => {
+    if (!workspaces.ready) return;
+    if (!workspace()) {
+      nav("/");
+      return;
+    }
+    console.log("workspace", workspace());
     const id = workspace()?.id;
     if (id) storage.set("workspace", id);
   });
