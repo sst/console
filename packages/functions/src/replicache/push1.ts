@@ -5,7 +5,7 @@ import {
 } from "@console/core/replicache/replicache.sql";
 import { useTransaction } from "@console/core/util/transaction";
 import { and, eq } from "drizzle-orm";
-import { PushRequestV1 } from "replicache";
+import { PushRequest, PushRequestV1 } from "replicache";
 import { useApiAuth } from "src/api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { server } from "./server";
@@ -20,8 +20,15 @@ export const handler = ApiHandler(async (_evt) => {
       statusCode: 401,
     };
   }
-  const body: PushRequestV1 = useJsonBody();
-  console.log(body);
+
+  const body: PushRequest = useJsonBody();
+  if (body.pushVersion !== 1)
+    return {
+      statusCode: 307,
+      headers: {
+        Location: "/replicache/push",
+      },
+    };
 
   for (const mutation of body.mutations) {
     await useTransaction(async (tx) => {
