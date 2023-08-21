@@ -177,6 +177,7 @@ export const listFromStageID = zod(
         .from(resource)
         .where(
           and(
+            eq(resource.workspaceID, useWorkspace()),
             eq(resource.stageID, input.stageID),
             inArray(resource.type, input.types)
           )
