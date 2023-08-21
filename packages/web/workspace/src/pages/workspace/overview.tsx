@@ -45,6 +45,29 @@ import { useLocalContext } from "$/providers/local";
 import { pipe, sortBy } from "remeda";
 import { User } from "@console/core/user";
 
+const Root = styled("div", {
+  base: {
+    padding: theme.space[4],
+  },
+});
+
+const Announcement = styled("div", {
+  base: {
+    backgroundColor: theme.color.background.surface,
+    padding: theme.space[3],
+    textAlign: "center",
+  },
+});
+
+const AnnouncementLinkIcon = styled("span", {
+  base: {
+    top: 2,
+    paddingLeft: 1,
+    position: "relative",
+    opacity: theme.iconOpacity,
+  },
+});
+
 const PageHeader = styled("div", {
   base: {
     ...utility.stack(0),
@@ -58,12 +81,6 @@ const ManageWorkspaceIcon = styled("div", {
     top: 2,
     position: "relative",
     opacity: theme.iconOpacity,
-  },
-});
-
-const Root = styled("div", {
-  base: {
-    padding: theme.space[4],
   },
 });
 
@@ -260,93 +277,121 @@ export function Overview() {
   return (
     <>
       <Header />
-      <Root>
-        <Switch>
-          <Match when={accounts() && accounts()?.length === 0}>
-            <Fullscreen>
-              <Syncing>
-                <Stack space="3.5">
-                  <Text center size="xl" color="secondary">
-                    Waiting to connect to your AWS account&hellip;
+      <Switch>
+        <Match when={accounts() && accounts()?.length === 0}>
+          <Fullscreen>
+            <Syncing>
+              <Stack space="3.5">
+                <Text center size="xl" color="secondary">
+                  Waiting to connect to your AWS account&hellip;
+                </Text>
+                <Stack space="2">
+                  <Text center size="sm" color="secondary">
+                    Double-check that the stack was created in <b>us-east-1</b>.
                   </Text>
-                  <Stack space="2">
-                    <Text center size="sm" color="secondary">
-                      Double-check that the stack was created in{" "}
-                      <b>us-east-1</b>.
-                    </Text>
-                    <Text center size="sm" color="secondary">
-                      If not, then remove the stack and{" "}
-                      <Link href="account">reconnect it here.</Link>
-                    </Text>
-                  </Stack>
+                  <Text center size="sm" color="secondary">
+                    If not, then remove the stack and{" "}
+                    <Link href="account">reconnect it here.</Link>
+                  </Text>
                 </Stack>
-              </Syncing>
-            </Fullscreen>
-          </Match>
-          <Match when={true}>
-            <Stack space="4">
-              <Row space="5" vertical="center" horizontal="between">
-                <PageHeader>
-                  <Text size="lg" weight="medium">
-                    Overview
-                  </Text>
-                  <Link href="settings">
-                    <TextButton>
-                      <Row space="0.5" horizontal="center">
-                        <Show when={invocations() > PRICING_PLAN[0].to}>
-                          <Text color="danger" size="sm">
-                            Your usage is above the free tier, add your billing
-                            details
-                          </Text>
-                        </Show>
-                        <Show when={invocations() <= PRICING_PLAN[0].to}>
-                          Manage workspace
-                        </Show>
-                        <ManageWorkspaceIcon>
-                          <IconChevronRight width="13" height="13" />
-                        </ManageWorkspaceIcon>
-                      </Row>
-                    </TextButton>
-                  </Link>
-                </PageHeader>
-                <Row space="4" vertical="center">
-                  <Link href="account">
-                    <Button color="secondary">Add AWS Account</Button>
-                  </Link>
-                  <Link href="user">
-                    <Button color="primary">Invite Team</Button>
-                  </Link>
+              </Stack>
+            </Syncing>
+          </Fullscreen>
+        </Match>
+        <Match when={true}>
+          <>
+            {/*
+            <Announcement>
+              <Text
+                code
+                uppercase
+                on="surface"
+                size="mono_sm"
+                weight="medium"
+                color="secondary"
+              >
+                New
+              </Text>
+              <Text size="sm" on="surface" color="dimmed">
+                {" "}
+                —{" "}
+              </Text>
+              <Text size="sm" on="surface" color="secondary">
+                Use a restricted IAM policy and connect your prod AWS accounts.{" "}
+                <a href="https://docs.sst.dev" target="_blank">
+                  Learn more
+                  <AnnouncementLinkIcon>
+                    <IconChevronRight width="13" height="13" />
+                  </AnnouncementLinkIcon>
+                </a>
+              </Text>
+            </Announcement>
+            */}
+            <Root>
+              <Stack space="4">
+                <Row space="5" vertical="center" horizontal="between">
+                  <PageHeader>
+                    <Text size="lg" weight="medium">
+                      Overview
+                    </Text>
+                    <Link href="settings">
+                      <TextButton>
+                        <Row space="0.5" horizontal="center">
+                          <Show when={invocations() > PRICING_PLAN[0].to}>
+                            <Text color="danger" size="sm">
+                              Your usage is above the free tier, add your
+                              billing details
+                            </Text>
+                          </Show>
+                          <Show when={invocations() <= PRICING_PLAN[0].to}>
+                            Manage workspace
+                          </Show>
+                          <ManageWorkspaceIcon>
+                            <IconChevronRight width="13" height="13" />
+                          </ManageWorkspaceIcon>
+                        </Row>
+                      </TextButton>
+                    </Link>
+                  </PageHeader>
+                  <Row space="4" vertical="center">
+                    <Link href="account">
+                      <Button color="secondary">Add AWS Account</Button>
+                    </Link>
+                    <Link href="user">
+                      <Button color="primary">Invite Team</Button>
+                    </Link>
+                  </Row>
                 </Row>
-              </Row>
-              <Row space="4">
-                <Col>
-                  <For each={cols()[0]}>{renderAccount}</For>
-                </Col>
-                <Col>
-                  <Card>
-                    <CardHeader>
-                      <Row space="0.5">
-                        <Text code size="mono_sm" color="dimmed">
-                          Team:
-                        </Text>
-                        <Text code size="mono_sm" color="dimmed">
-                          {users().filter((u) => !u.timeDeleted).length}
-                        </Text>
-                      </Row>
-                    </CardHeader>
-                    <div>
-                      <For each={sortUsers(users(), selfEmail())}>
-                        {(user) => <UserCard id={user.id} />}
-                      </For>
-                    </div>
-                  </Card>
-                  <For each={cols()[1]}>{renderAccount}</For>
-                </Col>
-              </Row>
-            </Stack>
-          </Match>
-        </Switch>
-      </Root>
+                <Row space="4">
+                  <Col>
+                    <For each={cols()[0]}>{renderAccount}</For>
+                  </Col>
+                  <Col>
+                    <Card>
+                      <CardHeader>
+                        <Row space="0.5">
+                          <Text code size="mono_sm" color="dimmed">
+                            Team:
+                          </Text>
+                          <Text code size="mono_sm" color="dimmed">
+                            {users().filter((u) => !u.timeDeleted).length}
+                          </Text>
+                        </Row>
+                      </CardHeader>
+                      <div>
+                        <For each={sortUsers(users(), selfEmail())}>
+                          {(user) => <UserCard id={user.id} />}
+                        </For>
+                      </div>
+                    </Card>
+                    <For each={cols()[1]}>{renderAccount}</For>
+                  </Col>
+                </Row>
+              </Stack>
+            </Root>
+          </>
+        </Match>
+      </Switch>
     </>
   );
 }
