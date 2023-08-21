@@ -3,18 +3,32 @@ import { useStorage } from "$/providers/account";
 import { useAuth } from "$/providers/auth";
 import { createSubscription } from "$/providers/replicache";
 import {
+  Text,
+  theme,
+  Stack,
   Button,
+  utility,
   FormInput,
   Fullscreen,
-  Stack,
   AvatarInitialsIcon,
-  Text,
-  utility,
 } from "$/ui";
 import { styled } from "@macaron-css/solid";
 import { createId } from "@paralleldrive/cuid2";
 import { useNavigate } from "@solidjs/router";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
+
+const CreateWorkspaceHint = styled("ul", {
+  base: {
+    ...utility.stack(2.5),
+    width: "100%",
+    padding: `${theme.space[4]} ${theme.space[3]} ${theme.space[4]} 30px`,
+    listStyle: "circle",
+    backgroundColor: theme.color.background.surface,
+    borderRadius: theme.borderRadius,
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary.surface,
+  },
+});
 
 const Form = styled("form", {
   base: {
@@ -59,6 +73,10 @@ export function WorkspaceCreate() {
               Start by giving your workspace a name
             </Text>
           </Stack>
+          <CreateWorkspaceHint>
+            <li>Create a workspace for your organization</li>
+            <li>Invite your team & connect your accounts</li>
+          </CreateWorkspaceHint>
         </Stack>
         <Form
           onSubmit={(e) => {
