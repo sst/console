@@ -9,7 +9,7 @@ export function Web({ stack }: StackContext) {
   const dns = use(DNS);
   const api = use(API);
   const auth = use(Auth);
-  const realtime = use(Realtime)
+  const realtime = use(Realtime);
   const connect = use(Connect);
 
   const workspace = new StaticSite(stack, "workspace", {
@@ -31,6 +31,6 @@ export function Web({ stack }: StackContext) {
 
   stack.addOutputs({
     WorkspaceUrl: workspace.customDomainUrl,
-    Output: "226",
+    Output: "228",
   });
 }

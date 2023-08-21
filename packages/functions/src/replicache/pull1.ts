@@ -221,7 +221,14 @@ export const handler = ApiHandler(async () => {
         const rows = await tx
           .select()
           .from(table)
-          .where(inArray(table.id, ids))
+          .where(
+            and(
+              "workspaceID" in table && actor.type === "user"
+                ? eq(table.workspaceID, useWorkspace())
+                : undefined,
+              inArray(table.id, ids)
+            )
+          )
           .execute();
         for (const row of rows) {
           patch.push({
