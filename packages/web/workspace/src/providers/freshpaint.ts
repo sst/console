@@ -79,7 +79,7 @@
     b.src =
       "undefined" !== typeof FRESHPAINT_CUSTOM_LIB_URL
         ? FRESHPAINT_CUSTOM_LIB_URL
-        : import.meta.env.VITE_API_URL + "/freshpaint/freshpaint.js";
+        : import.meta.env.VITE_API_URL + "/freshpaint/static/js/freshpaint.js";
     (d = c.getElementsByTagName("script")[0])
       ? d.parentNode.insertBefore(b, d)
       : c.head.appendChild(b);

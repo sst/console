@@ -116,21 +116,13 @@ export function API({ stack, app }: StackContext) {
           enableLiveDev: false,
         },
       },
-      "POST /freshpaint/track": {
-        type: "url",
-        url: "https://api.perfalytics.com/track",
-      },
       "GET /freshpaint/track": {
         type: "url",
         url: "https://api.perfalytics.com/track",
       },
-      "GET /freshpaint/freshpaint.js": {
+      "GET /freshpaint/{proxy+}": {
         type: "url",
-        url: "https://perfalytics.com/static/js/freshpaint.js",
-      },
-      "GET /freshpaint/static/js/integrations.js": {
-        type: "url",
-        url: "https://perfalytics.com/static/js/integrations.js",
+        url: "https://perfalytics.com/{proxy}",
       },
     },
     customDomain: {
