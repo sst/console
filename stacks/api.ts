@@ -120,6 +120,10 @@ export function API({ stack, app }: StackContext) {
         type: "url",
         url: "https://api.perfalytics.com/track",
       },
+      "POST /freshpaint/track": {
+        type: "url",
+        url: "https://api.perfalytics.com/track",
+      },
       "GET /freshpaint/{proxy+}": {
         type: "url",
         url: "https://perfalytics.com/{proxy}",
