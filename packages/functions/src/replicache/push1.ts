@@ -54,11 +54,11 @@ export const handler = ApiHandler(async (_evt) => {
             }
         );
 
-      if (!equals(group.actor, actor)) {
-        throw new Error(
-          `${actor} is not authorized to push to ${body.clientGroupID}}`
-        );
-      }
+      // if (!equals(group.actor, actor)) {
+      //   throw new Error(
+      //     `${actor} is not authorized to push to ${body.clientGroupID}}`
+      //   );
+      // }
 
       const client = await tx
         .select({
