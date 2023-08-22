@@ -100,7 +100,6 @@ function createReplicache(workspaceID: string, token: string) {
       method: "POST",
     });
     return {
-      response: await result.json(),
       httpRequestInfo: {
         httpStatusCode: result.status,
         errorMessage: result.statusText,
