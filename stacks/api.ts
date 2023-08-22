@@ -120,9 +120,17 @@ export function API({ stack, app }: StackContext) {
         type: "url",
         url: "https://api.perfalytics.com/track",
       },
+      "GET /freshpaint/track": {
+        type: "url",
+        url: "https://api.perfalytics.com/track",
+      },
       "GET /freshpaint/freshpaint.js": {
         type: "url",
         url: "https://perfalytics.com/static/js/freshpaint.js",
+      },
+      "GET /freshpaint/static/js/integrations.js": {
+        type: "url",
+        url: "https://perfalytics.com/static/js/integrations.js",
       },
     },
     customDomain: {
