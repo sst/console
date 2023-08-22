@@ -8,6 +8,8 @@ import { Workspace } from "@console/core/workspace";
 import { Lambda } from "@console/core/lambda";
 import { assertActor, provideActor } from "@console/core/actor";
 import { User } from "@console/core/user";
+import { useTransaction } from "@console/core/util/transaction";
+import { DateTime } from "luxon";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
@@ -60,6 +62,7 @@ export const server = new Server()
     });
     await User.create({
       email: actor.properties.email,
+      first: true,
     });
   })
   .expose("user_create", User.create)

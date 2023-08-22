@@ -18,9 +18,13 @@ export const Info = createSelectSchema(user, {
 export type Info = z.infer<typeof Info>;
 
 export const create = zod(
-  Info.pick({ email: true, id: true }).partial({
-    id: true,
-  }),
+  Info.pick({ email: true, id: true })
+    .partial({
+      id: true,
+    })
+    .extend({
+      first: z.boolean().optional(),
+    }),
   async (input) => {
     const id = input.id ?? createId();
     return useTransaction(async (tx) => {
@@ -30,6 +34,7 @@ export const create = zod(
           id,
           email: input.email,
           workspaceID: useWorkspace(),
+          timeSeen: input.first ? sql`CURRENT_TIMESTAMP()` : null,
         })
         .onDuplicateKeyUpdate({
           set: {
