@@ -79,14 +79,14 @@
     b.src =
       "undefined" !== typeof FRESHPAINT_CUSTOM_LIB_URL
         ? FRESHPAINT_CUSTOM_LIB_URL
-        : "//perfalytics.com/static/js/freshpaint.js";
+        : import.meta.env.VITE_API_URL + "/freshpaint/freshpaint.js";
     (d = c.getElementsByTagName("script")[0])
       ? d.parentNode.insertBefore(b, d)
       : c.head.appendChild(b);
   }
 })(document, window.freshpaint || []);
 freshpaint.init("9374f65f-eb28-4d82-9020-fac5e32e6dad", {
-  api_host: import.meta.env.VITE_API_URL,
+  api_host: import.meta.env.VITE_API_URL + "/freshpaint",
 });
 freshpaint.page();
 

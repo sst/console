@@ -116,9 +116,13 @@ export function API({ stack, app }: StackContext) {
           enableLiveDev: false,
         },
       },
-      "POST /track": {
+      "POST /freshpaint/track": {
         type: "url",
         url: "https://api.perfalytics.com/track",
+      },
+      "GET /freshpaint/freshpaint.js": {
+        type: "url",
+        url: "https://perfalytics.com/static/js/freshpaint.js",
       },
     },
     customDomain: {
