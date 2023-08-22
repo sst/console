@@ -116,6 +116,10 @@ export function API({ stack, app }: StackContext) {
           enableLiveDev: false,
         },
       },
+      "POST /track": {
+        type: "url",
+        url: "https://api.perfalytics.com/track",
+      },
     },
     customDomain: {
       domainName: "api." + dns.domain,

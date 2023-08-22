@@ -85,7 +85,9 @@
       : c.head.appendChild(b);
   }
 })(document, window.freshpaint || []);
-freshpaint.init("9374f65f-eb28-4d82-9020-fac5e32e6dad");
+freshpaint.init("9374f65f-eb28-4d82-9020-fac5e32e6dad", {
+  api_host: import.meta.env.VITE_API_URL,
+});
 freshpaint.page();
 
 export {};
