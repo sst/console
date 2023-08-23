@@ -67,7 +67,7 @@ export const handler = ApiHandler(async () => {
               id: req.clientGroupID,
               actor,
               cvrVersion: 0,
-              clientVersion: 0,
+              clientVersion: req.cookie ?? 0,
             }
         );
 
