@@ -247,6 +247,24 @@ export const handler = ApiHandler(async () => {
         });
       }
 
+      const clients = await tx
+        .select({
+          id: replicache_client.id,
+          mutationID: replicache_client.mutationID,
+          clientVersion: replicache_client.clientVersion,
+        })
+        .from(replicache_client)
+        .where(
+          and(
+            eq(replicache_client.clientGroupID, req.clientGroupID),
+            gt(replicache_client.clientVersion, cvr.clientVersion)
+          )
+        )
+        .execute();
+
+      const lastMutationIDChanges = Object.fromEntries(
+        clients.map((c) => [c.id, c.mutationID] as const)
+      );
       if (patch.length > 0) {
         await tx
           .delete(replicache_cvr)
@@ -292,34 +310,17 @@ export const handler = ApiHandler(async () => {
             )
           );
 
-        const clients = await tx
-          .select({
-            id: replicache_client.id,
-            mutationID: replicache_client.mutationID,
-            clientVersion: replicache_client.clientVersion,
-          })
-          .from(replicache_client)
-          .where(
-            and(
-              eq(replicache_client.clientGroupID, req.clientGroupID),
-              gt(replicache_client.clientVersion, cvr.clientVersion)
-            )
-          )
-          .execute();
-
         return {
           patch,
           cookie: nextCvr.version,
-          lastMutationIDChanges: Object.fromEntries(
-            clients.map((c) => [c.id, c.mutationID] as const)
-          ),
+          lastMutationIDChanges,
         };
       }
 
       return {
         patch: [],
         cookie: req.cookie,
-        lastMutationIDChanges: {},
+        lastMutationIDChanges,
       };
     }
   );

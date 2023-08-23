@@ -81,7 +81,7 @@ function createReplicache(workspaceID: string, token: string) {
       method: "POST",
     });
     return {
-      response: await result.json(),
+      response: result.status === 200 ? await result.json() : undefined,
       httpRequestInfo: {
         httpStatusCode: result.status,
         errorMessage: result.statusText,
