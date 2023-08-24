@@ -4,6 +4,7 @@ import { createEffect, onCleanup, onMount } from "solid-js";
 import { useAuth } from "./auth";
 import { WorkspaceStore } from "$/data/workspace";
 import { bus } from "./bus";
+import { createId } from "@paralleldrive/cuid2";
 
 export function RealtimeProvider() {
   let connection: mqtt.MqttClientConnection;
@@ -28,7 +29,7 @@ export function RealtimeProvider() {
     }
     const config = iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()
       .with_clean_session(true)
-      .with_client_id("client_" + Date.now().toString())
+      .with_client_id("client_" + createId())
       .with_endpoint(url)
       .with_custom_authorizer(
         "",
