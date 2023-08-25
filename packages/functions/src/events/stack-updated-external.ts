@@ -3,6 +3,10 @@ import { App, Stage } from "@console/core/app";
 import { app, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { db } from "@console/core/drizzle";
+import {
+  createTransactionEffect,
+  useTransaction,
+} from "@console/core/util/transaction";
 import { and, eq } from "drizzle-orm";
 
 interface Events {
@@ -54,19 +58,23 @@ export const handler = async (evt: Payload) => {
     console.log("matches", rows);
 
     for (const row of rows) {
-      provideActor({
-        type: "system",
-        properties: {
-          workspaceID: row.workspaceID,
-        },
-      });
-
-      if (row.stageID)
-        await Stage.Events.Updated.publish({
-          stageID: row.stageID,
+      await useTransaction(async () => {
+        provideActor({
+          type: "system",
+          properties: {
+            workspaceID: row.workspaceID,
+          },
         });
 
-      if (!row.stageID) {
+        if (row.stageID) {
+          createTransactionEffect(() =>
+            Stage.Events.Updated.publish({
+              stageID: row.stageID!,
+            })
+          );
+          return;
+        }
+
         let appID = await App.fromName(appName!).then((x) => x?.id);
         if (!appID)
           appID = await App.create({
@@ -79,7 +87,7 @@ export const handler = async (evt: Payload) => {
           name: stageName!,
           awsAccountID: row.id,
         });
-      }
+      });
     }
   }
 };
