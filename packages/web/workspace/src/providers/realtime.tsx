@@ -40,36 +40,44 @@ export function RealtimeProvider() {
       .with_keep_alive_seconds(30)
       .build();
 
-    const client = new mqtt.MqttClient();
-    connection = client.new_connection(config);
+    async function createConnection() {
+      if (connection) await connection.disconnect();
+      const client = new mqtt.MqttClient();
+      connection = client.new_connection(config);
 
-    connection.on("connect", async () => {
-      console.log("WS connected");
-      for (const workspace of workspaces.keys()) {
-        console.log("subscribing to", workspace);
-        await connection.subscribe(
-          `console/${import.meta.env.VITE_STAGE}/${workspace}/#`,
-          mqtt.QoS.AtLeastOnce
-        );
-      }
-    });
-    connection.on("interrupt", console.log);
-    connection.on("error", console.log);
-    connection.on("resume", console.log);
-    connection.on("message", (fullTopic, payload) => {
-      const splits = fullTopic.split("/");
-      const workspaceID = splits[2];
-      const topic = splits[3];
-      const message = new TextDecoder("utf8").decode(new Uint8Array(payload));
-      const parsed = JSON.parse(message);
-      if (topic === "poke") {
-        bus.emit("poke", { workspaceID });
-      } else {
-        bus.emit(topic as any, parsed.properties);
-      }
-    });
-    connection.on("disconnect", console.log);
-    await connection.connect();
+      connection.on("connect", async () => {
+        console.log("WS connected");
+        for (const workspace of workspaces.keys()) {
+          console.log("subscribing to", workspace);
+          await connection.subscribe(
+            `console/${import.meta.env.VITE_STAGE}/${workspace}/#`,
+            mqtt.QoS.AtLeastOnce
+          );
+        }
+      });
+      connection.on("interrupt", () => {
+        console.log("interrupted, restarting");
+        createConnection();
+      });
+      connection.on("error", console.log);
+      connection.on("resume", console.log);
+      connection.on("message", (fullTopic, payload) => {
+        const splits = fullTopic.split("/");
+        const workspaceID = splits[2];
+        const topic = splits[3];
+        const message = new TextDecoder("utf8").decode(new Uint8Array(payload));
+        const parsed = JSON.parse(message);
+        if (topic === "poke") {
+          bus.emit("poke", { workspaceID });
+        } else {
+          bus.emit(topic as any, parsed.properties);
+        }
+      });
+      connection.on("disconnect", console.log);
+      await connection.connect();
+    }
+
+    createConnection();
   });
 
   onCleanup(() => {
