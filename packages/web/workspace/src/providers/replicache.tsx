@@ -71,6 +71,7 @@ function createReplicache(workspaceID: string, token: string) {
   });
 
   replicache.puller = async (req) => {
+    console.log(workspaceID);
     const result = await fetch(replicache.pullURL, {
       headers: {
         "x-sst-workspace": workspaceID,
@@ -90,6 +91,7 @@ function createReplicache(workspaceID: string, token: string) {
   };
 
   replicache.pusher = async (req) => {
+    console.log(workspaceID);
     const result = await fetch(replicache.pushURL, {
       headers: {
         "x-sst-workspace": workspaceID,

@@ -1,23 +1,21 @@
-import { AuthHandler, CodeAdapter, GithubAdapter } from "sst/node/future/auth";
+import {
+  AuthHandler,
+  CodeAdapter,
+  GithubAdapter,
+  createSessionBuilder,
+} from "sst/node/future/auth";
 import { Config } from "sst/node/config";
 import { Account } from "@console/core/account";
 import { useTransaction } from "@console/core/util/transaction";
 import { provideActor } from "@console/core/actor";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import Botpoison from "@botpoison/node";
-
-declare module "sst/node/future/auth" {
-  export interface SessionTypes {
-    account: {
-      accountID: string;
-      email: string;
-    };
-  }
-}
+import { sessions } from "./sessions";
 
 const ses = new SESv2Client({});
 
 export const handler = AuthHandler({
+  sessions,
   providers: {
     github: GithubAdapter({
       mode: "oauth",

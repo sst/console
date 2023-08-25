@@ -18,8 +18,8 @@ importers:
         specifier: 10.2.69
         version: 10.2.69
       sst:
-        specifier: 2.24.14
-        version: 2.24.14
+        specifier: 2.24.15
+        version: 2.24.15
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -100,8 +100,8 @@ importers:
         specifier: 0.19.10
         version: 0.19.10
       sst:
-        specifier: 2.24.14
-        version: 2.24.14
+        specifier: 2.24.15
+        version: 2.24.15
       vitest:
         specifier: ^0.25.3
         version: 0.25.3
@@ -167,8 +167,8 @@ importers:
         specifier: ^18.16.0
         version: 18.16.0
       sst:
-        specifier: 2.24.14
-        version: 2.24.14
+        specifier: 2.24.15
+        version: 2.24.15
 
   packages/scripts:
     dependencies:
@@ -179,8 +179,8 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0
       sst:
-        specifier: 2.24.14
-        version: 2.24.14
+        specifier: 2.24.15
+        version: 2.24.15
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -265,8 +265,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(vite@3.2.6)
       sst:
-        specifier: 2.24.14
-        version: 2.24.14
+        specifier: 2.24.15
+        version: 2.24.15
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -7454,6 +7454,10 @@ packages:
       solid-js: 1.7.3
     dev: false
 
+  /@lukeed/ms@2.0.1:
+    resolution: {integrity: sha512-Xs/4RZltsAL7pkvaNStUQt7netTkyxrS0K+RILcVr3TRMS/ToOg4I6uNfhB9SlGsnWBym4U+EaXq0f0cEMNkHA==}
+    engines: {node: '>=8'}
+
   /@macaron-css/babel@1.1.3:
     resolution: {integrity: sha512-KTmNqWcwe9Az9+sHrhX8ASOJpmXmEnUnsXkHImbLVTq93kn/33u751trUyi3oCktMs+P2GoQ2eI+qZVrSX+ZxA==}
     dependencies:
@@ -10487,14 +10491,6 @@ packages:
   /fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
 
-  /fast-jwt@1.7.2:
-    resolution: {integrity: sha512-OEInypGXJhtURzq9GbFM5KaALUu9+4IV3kJEbWPuqOBN5JBe7A51Tx0CaQYHGC9GNfZnr5npA0lCIMaWiZmz/A==}
-    engines: {node: '>=14 <20'}
-    dependencies:
-      asn1.js: 5.4.1
-      ecdsa-sig-formatter: 1.0.11
-      mnemonist: 0.39.5
-
   /fast-jwt@2.2.1:
     resolution: {integrity: sha512-r5zKugIE/4ZgGv98fE6wtIglkOwMVJOlYVa/nXyivAV56sLtAtH1eJX+WiZAwOgy387PJeZdBQsjfJhoPwOqvA==}
     engines: {node: '>=14 <20'}
@@ -10503,6 +10499,15 @@ packages:
       ecdsa-sig-formatter: 1.0.11
       mnemonist: 0.39.5
     dev: false
+
+  /fast-jwt@3.2.0:
+    resolution: {integrity: sha512-RELkgZpWwu5BsUgylCjuu9RBwg3mofXd1bVzqD3V3aH4uew2bF2A+nYp1sZbmvPGf/k7sLBnKuzpQA00CM+gnA==}
+    engines: {node: '>=14 <22'}
+    dependencies:
+      '@lukeed/ms': 2.0.1
+      asn1.js: 5.4.1
+      ecdsa-sig-formatter: 1.0.11
+      mnemonist: 0.39.5
 
   /fast-querystring@1.1.1:
     resolution: {integrity: sha512-qR2r+e3HvhEFmpdHMv//U8FnFlnYjaC6QKDuaXALDkw2kvHO8WDjxH+f/rHGR4Me4pnk8p9JAkRNTjYHAKRn2Q==}
@@ -12238,8 +12243,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.24.14:
-    resolution: {integrity: sha512-fLmFBBrIjT9wf/qViCDFFdJKss5hI5CGoaS6ghgUCQkrNP8sa3IIQNeO98kLcUhLib+RrDzmCx4qmFJ1O8GiTA==}
+  /sst@2.24.15:
+    resolution: {integrity: sha512-MB2UECmoJFS689eZknoLzJm4Uo9p7NoNEoAppYzBQ+BDgO9rUxlfoRHnJC4FnvsUQooyH9HwOjo5tSgsB+bJrA==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0
@@ -12293,7 +12298,7 @@ packages:
       dotenv: 16.0.3
       esbuild: 0.18.13
       express: 4.18.2
-      fast-jwt: 1.7.2
+      fast-jwt: 3.2.0
       get-port: 6.1.2
       glob: 8.1.0
       graphql: 16.6.0

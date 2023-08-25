@@ -1,13 +1,13 @@
-import { useSession } from "sst/node/future/auth";
 import { assertActor, provideActor, useActor } from "@console/core/actor";
 import { useHeader } from "sst/node/api";
 import { User } from "@console/core/user";
+import { sessions } from "./sessions";
 
 export async function useApiAuth() {
   try {
     useActor();
   } catch {
-    const session = useSession();
+    const session = sessions.use();
     provideActor(session);
   }
 
