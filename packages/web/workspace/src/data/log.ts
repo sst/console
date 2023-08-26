@@ -46,7 +46,7 @@ interface Log {
 
 // stash log entries that come out of order before log start
 const pendingEntries = new Map<string, Log[]>();
-const invocations = new Map<string, Map<string, Invocation>>();
+const invocations = new Map<string, Map<string, number>>();
 
 bus.on("log.url", async (e) => {
   const data: LogEvent[] = await fetch(e).then((r) => r.json());
@@ -75,10 +75,10 @@ bus.on("log", (data) => {
               cold: event.cold,
               logs: pending,
             };
-            group.push(invocation);
+            const index = group.push(invocation);
             let all = invocations.get(event.group);
             if (!all) invocations.set(event.group, (all = new Map()));
-            all.set(event.requestID, invocation);
+            all.set(event.requestID, index - 1);
 
             // let set = invocations.get(event.group);
             // if (!set) invocations.set(event.group, (set = new Set()));
@@ -91,9 +91,9 @@ bus.on("log", (data) => {
               timestamp: new Date(event.timestamp),
               message: event.message,
             };
-            const invocation = invocations
-              .get(event.group)
-              ?.get(event.requestID);
+            const invocation = state[event.group]?.at(
+              invocations.get(event.group)?.get(event.requestID) || 0
+            );
             let logs = invocation?.logs;
             if (!logs) {
               logs = pendingEntries.get(event.requestID);
@@ -105,17 +105,17 @@ bus.on("log", (data) => {
             break;
           }
           case "end": {
-            const invocation = invocations
-              .get(event.group)
-              ?.get(event.requestID);
+            const invocation = state[event.group]?.at(
+              invocations.get(event.group)?.get(event.requestID) || 0
+            );
             if (!invocation) break;
             invocation.end = new Date(event.timestamp);
             break;
           }
           case "report": {
-            const invocation = invocations
-              .get(event.group)
-              ?.get(event.requestID);
+            const invocation = state[event.group]?.at(
+              invocations.get(event.group)?.get(event.requestID) || 0
+            );
             if (!invocation) break;
             invocation.report = {
               duration: event.duration,
@@ -126,9 +126,9 @@ bus.on("log", (data) => {
             break;
           }
           case "error": {
-            const invocation = invocations
-              .get(event.group)
-              ?.get(event.requestID);
+            const invocation = state[event.group]?.at(
+              invocations.get(event.group)?.get(event.requestID) || 0
+            );
             if (!invocation) break;
             invocation.error = {
               type: event.error,
@@ -144,7 +144,7 @@ bus.on("log", (data) => {
       }
     })
   );
-  console.log(track);
+  // console.log(track);
 });
 
 bus.on("function.invoked", (e) => {

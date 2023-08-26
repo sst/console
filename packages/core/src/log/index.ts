@@ -207,53 +207,58 @@ export function createProcessor(input: {
         if (message.level === "ERROR")
           console.log(message.level, message.message);
 
-        if (tabs[3]?.includes("Invoke Error")) {
-          const parsed = JSON.parse(tabs[4]!);
-          const consumer = await getSourcemap(input.timestamp);
-          if (consumer) {
-            let ctx: string[] = [];
-            for (let i = 0; i < parsed.stack.length; i++) {
-              const splits: string[] = parsed.stack[i].split(":");
-              const column = parseInt(splits.pop()!);
-              const line = parseInt(splits.pop()!);
-              if (!column || !line) continue;
-              const original = consumer.originalPositionFor({
-                line,
-                column,
-              });
-              if (
-                original.source &&
-                !original.source.startsWith("node_modules") &&
-                !ctx.length
-              ) {
-                const lines =
-                  consumer
-                    .sourceContentFor(original.source, true)
-                    ?.split("\n") || [];
-                const min = Math.max(0, original.line! - 4);
-                ctx = lines.slice(
-                  min,
-                  Math.min(original.line! + 3, lines.length - 1)
-                );
-                const highlight = Math.min(original.line!, 3);
-                ctx[highlight] = "> " + ctx[highlight]?.substring(2);
-              }
-              parsed.stack[
-                i
-              ] = `    at ${original.source}:${original.line}:${original.column}`;
-            }
-            parsed.stack.push("----", ...ctx);
-          }
+        if (message.level === "ERROR") {
+          const parsed = (() => {
+            if (tabs[3]?.includes("Invoke Error")) return JSON.parse(tabs[4]!);
+          })();
 
-          results.push({
-            type: "error",
-            timestamp: input.timestamp,
-            group,
-            requestID: generateInvocationID(tabs[1]!),
-            error: parsed.errorType,
-            message: parsed.errorMessage,
-            trace: parsed.stack,
-          });
+          if (parsed) {
+            const consumer = await getSourcemap(input.timestamp);
+            if (consumer) {
+              let ctx: string[] = [];
+              for (let i = 0; i < parsed.stack.length; i++) {
+                const splits: string[] = parsed.stack[i].split(":");
+                const column = parseInt(splits.pop()!);
+                const line = parseInt(splits.pop()!);
+                if (!column || !line) continue;
+                const original = consumer.originalPositionFor({
+                  line,
+                  column,
+                });
+                if (
+                  original.source &&
+                  !original.source.startsWith("node_modules") &&
+                  !ctx.length
+                ) {
+                  const lines =
+                    consumer
+                      .sourceContentFor(original.source, true)
+                      ?.split("\n") || [];
+                  const min = Math.max(0, original.line! - 4);
+                  ctx = lines.slice(
+                    min,
+                    Math.min(original.line! + 3, lines.length - 1)
+                  );
+                  const highlight = Math.min(original.line!, 3);
+                  ctx[highlight] = "> " + ctx[highlight]?.substring(2);
+                }
+                parsed.stack[
+                  i
+                ] = `    at ${original.source}:${original.line}:${original.column}`;
+              }
+              parsed.stack.push("----", ...ctx);
+            }
+
+            results.push({
+              type: "error",
+              timestamp: input.timestamp,
+              group,
+              requestID: generateInvocationID(tabs[1]!),
+              error: parsed.errorType,
+              message: parsed.errorMessage,
+              trace: parsed.stack,
+            });
+          }
         }
       }
     },
