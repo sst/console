@@ -215,7 +215,11 @@ export function createProcessor(input: {
 
         if (message.level === "ERROR") {
           const parsed = (() => {
-            if (tabs[3]?.includes("Invoke Error")) return JSON.parse(tabs[4]!);
+            if (
+              tabs[3]?.includes("Invoke Error") ||
+              tabs[3]?.includes("Uncaught Exception")
+            )
+              return JSON.parse(tabs[4]!);
             if (message.level === "ERROR" && tabs[3]) {
               const lines = tabs[3].split("\n");
               if (!lines[0]) return;
@@ -301,7 +305,7 @@ export function createProcessor(input: {
             (evt) => evt.timestamp
           )
         ),
-        sortBy((evts) => evts[0]?.timestamp || 0)
+        sortBy((evts) => -1 * (evts[0]?.timestamp || 0))
       );
       console.log("sending", events.length, "events");
       const key = `logevents/${id}.json`;
