@@ -49,107 +49,92 @@ const invocations = new Map<string, Set<string>>();
 
 bus.on("log.url", async (e) => {
   const data: LogEvent[] = await fetch(e).then((r) => r.json());
+  console.time("log");
+  console.log("processing", data.length);
   bus.emit("log", data);
+  console.timeEnd("log");
 });
 
-bus.on("log", async (data) => {
-  batch(() => {
-    for (const event of data) {
-      console.log("processing", event);
-      switch (event.type) {
-        case "start": {
-          setLogStore(
-            produce((state) => {
-              if (invocations.get(event.group)?.has(event.requestID)) return;
-              let group = state[event.group];
-              if (!group) state[event.group] = group = [];
-              const pending = pendingEntries.get(event.requestID) || [];
-              pendingEntries.delete(event.requestID);
-              group.push({
-                id: event.requestID,
-                start: new Date(event.timestamp),
-                cold: event.cold,
-                logs: pending,
-              });
-              let set = invocations.get(event.group);
-              if (!set) invocations.set(event.group, (set = new Set()));
-              set.add(event.requestID);
-            })
-          );
-          break;
+bus.on("log", (data) => {
+  setLogStore(
+    produce((state) => {
+      for (const event of data) {
+        performance.mark(event.type);
+        switch (event.type) {
+          case "start": {
+            if (invocations.get(event.group)?.has(event.requestID)) return;
+            let group = state[event.group];
+            if (!group) state[event.group] = group = [];
+            const pending = pendingEntries.get(event.requestID) || [];
+            pendingEntries.delete(event.requestID);
+            group.push({
+              id: event.requestID,
+              start: new Date(event.timestamp),
+              cold: event.cold,
+              logs: pending,
+            });
+            let set = invocations.get(event.group);
+            if (!set) invocations.set(event.group, (set = new Set()));
+            set.add(event.requestID);
+            break;
+          }
+          case "message": {
+            const log: Log = {
+              id: event.id,
+              timestamp: new Date(event.timestamp),
+              message: event.message,
+            };
+            const invocation = state[event.group]?.find(
+              (i) => i.id === event.requestID
+            );
+            let logs = invocation?.logs;
+            if (!logs) {
+              logs = pendingEntries.get(event.requestID);
+              if (!logs) pendingEntries.set(event.requestID, (logs = []));
+            }
+            if (logs.find((l) => l.id === log.id)) return;
+            logs.push(log);
+            logs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+            break;
+          }
+          case "end": {
+            let invocation = state[event.group]?.find(
+              (i) => i.id === event.requestID
+            );
+            if (!invocation) return;
+            invocation.end = new Date(event.timestamp);
+            break;
+          }
+          case "report": {
+            let invocation = state[event.group]?.find(
+              (i) => i.id === event.requestID
+            );
+            if (!invocation) return;
+            invocation.report = {
+              duration: event.duration,
+              size: event.size,
+              memory: event.memory,
+              xray: event.xray,
+            };
+            break;
+          }
+          case "error": {
+            let invocation = state[event.group]?.find(
+              (i) => i.id === event.requestID
+            );
+            if (!invocation) return;
+            invocation.error = {
+              type: event.error,
+              message: event.message,
+              trace: event.trace,
+            };
+          }
         }
-        case "message": {
-          setLogStore(
-            produce((state) => {
-              const log: Log = {
-                id: event.id,
-                timestamp: new Date(event.timestamp),
-                message: event.message,
-              };
-              const invocation = state[event.group]?.find(
-                (i) => i.id === event.requestID
-              );
-              let logs = invocation?.logs;
-              if (!logs) {
-                logs = pendingEntries.get(event.requestID);
-                if (!logs) pendingEntries.set(event.requestID, (logs = []));
-              }
-              if (logs.find((l) => l.id === log.id)) return;
-              logs.push(log);
-              logs.sort(
-                (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
-              );
-            })
-          );
-          break;
-        }
-        case "end": {
-          setLogStore(
-            produce((state) => {
-              let invocation = state[event.group]?.find(
-                (i) => i.id === event.requestID
-              );
-              if (!invocation) return;
-              invocation.end = new Date(event.timestamp);
-            })
-          );
-          break;
-        }
-        case "report": {
-          setLogStore(
-            produce((state) => {
-              let invocation = state[event.group]?.find(
-                (i) => i.id === event.requestID
-              );
-              if (!invocation) return;
-              invocation.report = {
-                duration: event.duration,
-                size: event.size,
-                memory: event.memory,
-                xray: event.xray,
-              };
-            })
-          );
-          break;
-        }
-        case "error": {
-          setLogStore(
-            produce((state) => {
-              let invocation = state[event.group]?.find(
-                (i) => i.id === event.requestID
-              );
-              if (!invocation) return;
-              invocation.error = {
-                type: event.error,
-                message: event.message,
-                trace: event.trace,
-              };
-            })
-          );
-        }
+        performance.mark(event.type + "-end");
+        performance.measure(event.type, event.type, event.type + "-end");
       }
-    }
-  });
+    })
+  );
 });
 
 bus.on("function.invoked", (e) => {
