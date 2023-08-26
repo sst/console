@@ -10,7 +10,7 @@ export function RealtimeProvider() {
   let connection: mqtt.MqttClientConnection;
   const auth = useAuth();
 
-  createEffect(async () => {
+  onMount(async () => {
     const url = import.meta.env.VITE_IOT_HOST;
     const tokens = Object.values(auth)
       .map((account) => account.token.token)

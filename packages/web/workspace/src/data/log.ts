@@ -147,7 +147,6 @@ bus.on("log", (data) => {
   console.log(track);
 });
 
-/*
 bus.on("function.invoked", (e) => {
   bus.emit("log", [
     {
@@ -226,4 +225,3 @@ bus.on("function.error", (e) => {
     })
   );
 });
-*/

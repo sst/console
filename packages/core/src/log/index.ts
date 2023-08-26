@@ -190,6 +190,23 @@ export function createProcessor(input: {
       }
 
       if (tabs[0]?.length === 24) {
+        const message: LogEvent = {
+          type: "message",
+          timestamp: input.timestamp,
+          group,
+          requestID: generateInvocationID(tabs[1]!),
+          id: input.id,
+          level: tabs[2]!.trim(),
+          message: tabs.slice(3).join("\t").trim(),
+        };
+        if (message.requestID === "undefined") {
+          unknown.push(message);
+          return;
+        }
+        results.push(message);
+        if (message.level === "ERROR")
+          console.log(message.level, message.message);
+
         if (tabs[3]?.includes("Invoke Error")) {
           const parsed = JSON.parse(tabs[4]!);
           const consumer = await getSourcemap(input.timestamp);
@@ -238,20 +255,6 @@ export function createProcessor(input: {
             trace: parsed.stack,
           });
         }
-        const result: LogEvent = {
-          type: "message",
-          timestamp: input.timestamp,
-          group,
-          requestID: generateInvocationID(tabs[1]!),
-          id: input.id,
-          level: tabs[2]!.trim(),
-          message: tabs.slice(3).join("\t").trim(),
-        };
-        if (result.requestID === "undefined") {
-          unknown.push(result);
-          return;
-        }
-        return results.push(result);
       }
     },
     async flush() {
