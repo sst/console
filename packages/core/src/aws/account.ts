@@ -266,7 +266,7 @@ export const integrate = zod(
       console.log("integrating region", region);
 
       const b = await bootstrap(config);
-      if (!b) return;
+      if (!b) continue;
 
       const s3 = new S3Client(config);
       const eb = new EventBridgeClient(config);
@@ -285,7 +285,7 @@ export const integrate = zod(
         .catch(() => {});
       if (!result) {
         console.log(region, "failed to update bucket notification");
-        return;
+        continue;
       }
       console.log(region, "updated bucket notifications");
 
@@ -335,10 +335,10 @@ export const integrate = zod(
         console.log("found", distinct);
         for (const item of distinct) {
           const [, appHint, stageHint] = item.split("/") || [];
-          if (!appHint || !stageHint) return;
+          if (!appHint || !stageHint) continue;
           const [, stageName] = stageHint?.split(".");
           const [, appName] = appHint?.split(".");
-          if (!stageName || !appName) return;
+          if (!stageName || !appName) continue;
           await useTransaction(async () => {
             let app = await App.fromName(appName).then((a) => a?.id);
             if (!app)
