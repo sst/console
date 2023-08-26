@@ -109,7 +109,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
               });
               index++;
             }
-            await processor.flush();
+            await processor.flush(-1);
 
             if (processor.invocations.size >= 50 || isFixed) {
               return;

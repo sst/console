@@ -284,7 +284,7 @@ export function createProcessor(input: {
         return;
       }
     },
-    async flush() {
+    async flush(order = 1) {
       const id = createId();
       const events = pipe(
         results,
@@ -305,7 +305,7 @@ export function createProcessor(input: {
             (evt) => evt.timestamp
           )
         ),
-        sortBy((evts) => -1 * (evts[0]?.timestamp || 0))
+        sortBy((evts) => order * (evts[0]?.timestamp || 0))
       );
       console.log("sending", events.length, "events");
       const key = `logevents/${id}.json`;
