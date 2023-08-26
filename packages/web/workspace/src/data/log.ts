@@ -9,6 +9,7 @@ export const [LogStore, setLogStore] = createStore<
 
 export function clearLogStore(input: string) {
   invocations.delete(input);
+  invocations.delete(input);
   setLogStore(
     produce((state) => {
       state[input] = [];
@@ -45,7 +46,7 @@ interface Log {
 
 // stash log entries that come out of order before log start
 const pendingEntries = new Map<string, Log[]>();
-const invocations = new Map<string, Set<string>>();
+const invocations = new Map<string, Map<string, Invocation>>();
 
 bus.on("log.url", async (e) => {
   const data: LogEvent[] = await fetch(e).then((r) => r.json());
@@ -56,9 +57,11 @@ bus.on("log.url", async (e) => {
 });
 
 bus.on("log", (data) => {
+  const track = new Map<string, number>();
   setLogStore(
     produce((state) => {
       for (const event of data) {
+        performance.mark("start");
         switch (event.type) {
           case "start": {
             if (invocations.get(event.group)?.has(event.requestID)) break;
@@ -66,15 +69,20 @@ bus.on("log", (data) => {
             if (!group) state[event.group] = group = [];
             const pending = pendingEntries.get(event.requestID) || [];
             pendingEntries.delete(event.requestID);
-            group.push({
+            const invocation: Invocation = {
               id: event.requestID,
               start: new Date(event.timestamp),
               cold: event.cold,
               logs: pending,
-            });
-            let set = invocations.get(event.group);
-            if (!set) invocations.set(event.group, (set = new Set()));
-            set.add(event.requestID);
+            };
+            group.push(invocation);
+            let all = invocations.get(event.group);
+            if (!all) invocations.set(event.group, (all = new Map()));
+            all.set(event.requestID, invocation);
+
+            // let set = invocations.get(event.group);
+            // if (!set) invocations.set(event.group, (set = new Set()));
+            // set.add(event.requestID);
             break;
           }
           case "message": {
@@ -83,9 +91,9 @@ bus.on("log", (data) => {
               timestamp: new Date(event.timestamp),
               message: event.message,
             };
-            const invocation = state[event.group]?.find(
-              (i) => i.id === event.requestID
-            );
+            const invocation = invocations
+              .get(event.group)
+              ?.get(event.requestID);
             let logs = invocation?.logs;
             if (!logs) {
               logs = pendingEntries.get(event.requestID);
@@ -97,17 +105,17 @@ bus.on("log", (data) => {
             break;
           }
           case "end": {
-            let invocation = state[event.group]?.find(
-              (i) => i.id === event.requestID
-            );
+            const invocation = invocations
+              .get(event.group)
+              ?.get(event.requestID);
             if (!invocation) break;
             invocation.end = new Date(event.timestamp);
             break;
           }
           case "report": {
-            let invocation = state[event.group]?.find(
-              (i) => i.id === event.requestID
-            );
+            const invocation = invocations
+              .get(event.group)
+              ?.get(event.requestID);
             if (!invocation) break;
             invocation.report = {
               duration: event.duration,
@@ -118,9 +126,9 @@ bus.on("log", (data) => {
             break;
           }
           case "error": {
-            let invocation = state[event.group]?.find(
-              (i) => i.id === event.requestID
-            );
+            const invocation = invocations
+              .get(event.group)
+              ?.get(event.requestID);
             if (!invocation) break;
             invocation.error = {
               type: event.error,
@@ -129,9 +137,14 @@ bus.on("log", (data) => {
             };
           }
         }
+        performance.mark("end");
+        const result = performance.measure(event.type, "start", "end");
+        const avg = result.duration + (track.get(event.type) || 0);
+        track.set(event.type, avg / 2);
       }
     })
   );
+  console.log(track);
 });
 
 /*
