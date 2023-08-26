@@ -59,10 +59,9 @@ bus.on("log", (data) => {
   setLogStore(
     produce((state) => {
       for (const event of data) {
-        performance.mark(event.type);
         switch (event.type) {
           case "start": {
-            if (invocations.get(event.group)?.has(event.requestID)) return;
+            if (invocations.get(event.group)?.has(event.requestID)) break;
             let group = state[event.group];
             if (!group) state[event.group] = group = [];
             const pending = pendingEntries.get(event.requestID) || [];
@@ -92,7 +91,7 @@ bus.on("log", (data) => {
               logs = pendingEntries.get(event.requestID);
               if (!logs) pendingEntries.set(event.requestID, (logs = []));
             }
-            if (logs.find((l) => l.id === log.id)) return;
+            if (logs.find((l) => l.id === log.id)) break;
             logs.push(log);
             logs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
             break;
@@ -101,7 +100,7 @@ bus.on("log", (data) => {
             let invocation = state[event.group]?.find(
               (i) => i.id === event.requestID
             );
-            if (!invocation) return;
+            if (!invocation) break;
             invocation.end = new Date(event.timestamp);
             break;
           }
@@ -109,7 +108,7 @@ bus.on("log", (data) => {
             let invocation = state[event.group]?.find(
               (i) => i.id === event.requestID
             );
-            if (!invocation) return;
+            if (!invocation) break;
             invocation.report = {
               duration: event.duration,
               size: event.size,
@@ -122,7 +121,7 @@ bus.on("log", (data) => {
             let invocation = state[event.group]?.find(
               (i) => i.id === event.requestID
             );
-            if (!invocation) return;
+            if (!invocation) break;
             invocation.error = {
               type: event.error,
               message: event.message,
@@ -130,13 +129,12 @@ bus.on("log", (data) => {
             };
           }
         }
-        performance.mark(event.type + "-end");
-        performance.measure(event.type, event.type, event.type + "-end");
       }
     })
   );
 });
 
+/*
 bus.on("function.invoked", (e) => {
   bus.emit("log", [
     {
@@ -215,3 +213,4 @@ bus.on("function.error", (e) => {
     })
   );
 });
+*/
