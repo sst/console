@@ -1,5 +1,6 @@
 import { EventBus, StackContext, use } from "sst/constructs";
 import { Secrets } from "./secrets";
+import { Storage } from "./storage";
 
 export function Events({ stack }: StackContext) {
   const bus = new EventBus(stack, "bus", {
@@ -9,6 +10,7 @@ export function Events({ stack }: StackContext) {
   });
 
   const secrets = use(Secrets);
+  const storage = use(Storage);
 
   bus.addRules(stack, {
     "cross-account": {
@@ -70,7 +72,7 @@ export function Events({ stack }: StackContext) {
     nodejs: {
       install: ["source-map"],
     },
-    bind: [...Object.values(secrets.database), bus],
+    bind: [...Object.values(secrets.database), storage.ephemeral, bus],
     timeout: "5 minute",
     permissions: ["sts", "iot"],
   });

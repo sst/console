@@ -27,21 +27,22 @@ export function RealtimeProvider() {
         arr.push(accountID);
       }
     }
-    const config = iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()
-      .with_clean_session(true)
-      .with_client_id("client_" + createId())
-      .with_endpoint(url)
-      .with_custom_authorizer(
-        "",
-        `${import.meta.env.VITE_STAGE}-console-authorizer`,
-        "",
-        tokens
-      )
-      .with_keep_alive_seconds(30)
-      .build();
 
     async function createConnection() {
+      console.log("creating new connection");
       if (connection) await connection.disconnect();
+      const config = iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()
+        .with_clean_session(true)
+        .with_client_id("client_" + createId())
+        .with_endpoint(url)
+        .with_custom_authorizer(
+          "",
+          `${import.meta.env.VITE_STAGE}-console-authorizer`,
+          "",
+          tokens
+        )
+        .with_keep_alive_seconds(30)
+        .build();
       const client = new mqtt.MqttClient();
       connection = client.new_connection(config);
 

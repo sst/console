@@ -8,23 +8,32 @@ import {
 } from "aws-cdk-lib/aws-stepfunctions";
 import * as events from "aws-cdk-lib/aws-events";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
-import { StackContext, Api, use, Function, EventBus } from "sst/constructs";
+import {
+  StackContext,
+  Api,
+  use,
+  Function,
+  EventBus,
+  Bucket,
+} from "sst/constructs";
 import { Auth } from "./auth";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { DNS } from "./dns";
 import { Duration } from "aws-cdk-lib/core";
+import { Storage } from "./storage";
 
 export function API({ stack, app }: StackContext) {
   const auth = use(Auth);
   const secrets = use(Secrets);
   const bus = use(Events);
   const dns = use(DNS);
+  const storage = use(Storage);
 
   const pollerFetchStep = new LambdaInvoke(stack, "pollerFetchStep", {
     lambdaFunction: Function.fromDefinition(stack, "log-poller-fetch", {
       handler: "packages/functions/src/poller/fetch.handler",
-      bind: [...Object.values(secrets.database)],
+      bind: [...Object.values(secrets.database), storage.ephemeral],
       nodejs: {
         install: ["source-map"],
       },

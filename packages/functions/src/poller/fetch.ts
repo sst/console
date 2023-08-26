@@ -10,6 +10,7 @@ import { AWS } from "@console/core/aws";
 import { Log, LogEvent } from "@console/core/log";
 import { LogPoller } from "@console/core/log/poller";
 import { Realtime } from "@console/core/realtime";
+import { groupBy, map, pipe, sort, values } from "remeda";
 
 interface State {
   pollerID: string;
@@ -154,32 +155,20 @@ export async function handler(input: State) {
     stage: stage!.name,
     credentials,
   });
-  let batch: LogEvent[] = [];
-  let batchSize = 0;
 
   for await (const event of fetchEvents(
     input.logGroup,
     start + offset,
     streams
   )) {
-    if (batchSize >= 100 * 1024) {
-      console.log("publishing batch sized", batchSize);
-      await Realtime.publish("log", batch);
-      batch = [];
-      batchSize = 0;
-    }
-    const evts = await Log.process({
-      processor,
+    await processor.process({
       timestamp: event.timestamp!,
       line: event.message!,
       stream: event.logStreamName!,
       id: event.eventId!,
     });
-    batch.push(...evts);
-    batchSize += JSON.stringify(evts).length;
   }
-  await Realtime.publish("log", batch);
-  console.log("published", processor.invocations.size, "events");
+  await processor.flush();
 
   return {
     attempts: attempts + 1,
