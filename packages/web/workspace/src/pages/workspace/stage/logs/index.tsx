@@ -796,12 +796,13 @@ export function Logs() {
               return (
                 <LogContainer
                   expanded={expanded()}
-                  level={invocation.error ? "error" : "info"}
+                  level={invocation.errors.length ? "error" : "info"}
                 >
                   <LogSummary
                     onClick={() => {
                       batch(() => {
-                        if (!expanded() && invocation.error) setTab("error");
+                        if (!expanded() && invocation.errors.length)
+                          setTab("error");
                         setExpanded((r) => !r);
                       });
                     }}
@@ -810,7 +811,9 @@ export function Logs() {
                       <CaretIcon>
                         <IconCaretRight />
                       </CaretIcon>
-                      <LogLevel level={invocation.error ? "error" : "info"} />
+                      <LogLevel
+                        level={invocation.errors.length ? "error" : "info"}
+                      />
                     </Row>
                     <LogDate title={longDate()}>{shortDate()}</LogDate>
                     <Show when={mode() !== "live"}>
@@ -827,7 +830,8 @@ export function Logs() {
                       {invocation.id.slice(0, 36)}
                     </LogRequestId>
                     <LogMessage>
-                      {invocation.error?.message || invocation.logs[0]?.message}
+                      {invocation.errors[0]?.message ||
+                        invocation.logs[0]?.message}
                     </LogMessage>
                   </LogSummary>
                   <Show when={expanded()}>
@@ -840,7 +844,7 @@ export function Logs() {
                           >
                             Logs
                           </LogDetailHeaderTitle>
-                          <Show when={invocation.error}>
+                          <Show when={invocation.errors.length}>
                             <LogDetailHeaderTitle
                               onClick={() => setTab("error")}
                               state={tab() === "error" ? "active" : "inactive"}
@@ -920,20 +924,24 @@ export function Logs() {
                       <LogEntries error={tab() === "error"}>
                         <Switch>
                           <Match when={tab() === "error"}>
-                            <LogError>
-                              <Text
-                                code
-                                on="surface"
-                                size="mono_base"
-                                weight="medium"
-                                leading="normal"
-                              >
-                                {invocation.error?.trace[0]}
-                              </Text>
-                              <LogErrorMessage>
-                                {invocation.error?.trace.slice(1).join("\n")}
-                              </LogErrorMessage>
-                            </LogError>
+                            <For each={invocation.errors}>
+                              {(error) => (
+                                <LogError>
+                                  <Text
+                                    code
+                                    on="surface"
+                                    size="mono_base"
+                                    weight="medium"
+                                    leading="normal"
+                                  >
+                                    {error.stack[0]}
+                                  </Text>
+                                  <LogErrorMessage>
+                                    {error.stack.slice(1).join("\n")}
+                                  </LogErrorMessage>
+                                </LogError>
+                              )}
+                            </For>
                           </Match>
                           <Match when={tab() === "logs"}>
                             <Show when={invocation.logs.length === 0}>
@@ -955,23 +963,6 @@ export function Logs() {
                                 </LogEntry>
                               );
                             })}
-                            <Show when={invocation.error}>
-                              <LogEntry>
-                                <LogEntryTime>
-                                  {invocation.end?.toLocaleTimeString()}
-                                </LogEntryTime>
-                                <Stack style={{ "min-width": "0" }} space="1.5">
-                                  <LogEntryMessageErrorTitle>
-                                    {invocation.error!.type}
-                                  </LogEntryMessageErrorTitle>
-                                  <LogEntryMessage error>
-                                    {invocation.error?.trace
-                                      ?.slice(1)
-                                      ?.join("\n")}
-                                  </LogEntryMessage>
-                                </Stack>
-                              </LogEntry>
-                            </Show>
                           </Match>
                           <Match when={tab() === "request"}>
                             <LogEntry>
@@ -984,7 +975,7 @@ export function Logs() {
                             <LogEntry>
                               <LogEntryMessage>
                                 {JSON.stringify(
-                                  invocation.response || invocation.error,
+                                  invocation.response || invocation.errors,
                                   null,
                                   2
                                 )}

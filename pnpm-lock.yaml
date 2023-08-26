@@ -19,7 +19,7 @@ importers:
         version: 10.2.69
       sst:
         specifier: 2.24.15
-        version: 2.24.15
+        version: link:../sst/packages/sst/dist
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
@@ -52,7 +52,7 @@ importers:
         version: 3.332.0
       '@aws-sdk/client-s3':
         specifier: ^3.400.0
-        version: 3.400.0(@aws-sdk/signature-v4-crt@3.310.0)
+        version: 3.400.0
       '@aws-sdk/client-sfn':
         specifier: ^3.352.0
         version: 3.352.0
@@ -140,7 +140,7 @@ importers:
         version: 19.0.7
       drizzle-orm:
         specifier: 0.27.2
-        version: 0.27.2(@aws-sdk/client-rds-data@3.319.0)(@planetscale/database@1.7.0)(kysely@0.25.0)
+        version: 0.27.2(@aws-sdk/client-rds-data@3.319.0)(kysely@0.25.0)
       fast-jwt:
         specifier: ^2.2.1
         version: 2.2.1
@@ -1131,7 +1131,7 @@ packages:
       - '@aws-sdk/signature-v4-crt'
       - aws-crt
 
-  /@aws-sdk/client-s3@3.400.0(@aws-sdk/signature-v4-crt@3.310.0):
+  /@aws-sdk/client-s3@3.400.0:
     resolution: {integrity: sha512-lnv0pb79Czl8fCMs/z7yM56LvoKTri1I4jX/V33trHMFKPQDoy8i24wxG8+TZl3MUmnUyoQS7tlukh7IFkii1Q==}
     engines: {node: '>=14.0.0'}
     dependencies:
@@ -1151,7 +1151,7 @@ packages:
       '@aws-sdk/middleware-signing': 3.398.0
       '@aws-sdk/middleware-ssec': 3.398.0
       '@aws-sdk/middleware-user-agent': 3.398.0
-      '@aws-sdk/signature-v4-multi-region': 3.398.0(@aws-sdk/signature-v4-crt@3.310.0)
+      '@aws-sdk/signature-v4-multi-region': 3.398.0
       '@aws-sdk/types': 3.398.0
       '@aws-sdk/util-endpoints': 3.398.0
       '@aws-sdk/util-user-agent-browser': 3.398.0
@@ -5432,7 +5432,7 @@ packages:
     resolution: {integrity: sha512-6XFzm+sXBy85VKkd9GjGUAHtyfmfCcznvdohQ/1eqqYHWUQrTN4w0hGSWRhu4w7u4mpwoJhR71UF864iWvoCaQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@aws-sdk/signature-v4-multi-region': 3.398.0(@aws-sdk/signature-v4-crt@3.310.0)
+      '@aws-sdk/signature-v4-multi-region': 3.398.0
       '@aws-sdk/types': 3.398.0
       '@aws-sdk/util-format-url': 3.398.0
       '@smithy/middleware-endpoint': 2.0.5
@@ -5545,7 +5545,7 @@ packages:
       '@aws-sdk/types': 3.342.0
       tslib: 2.5.0
 
-  /@aws-sdk/signature-v4-multi-region@3.398.0(@aws-sdk/signature-v4-crt@3.310.0):
+  /@aws-sdk/signature-v4-multi-region@3.398.0:
     resolution: {integrity: sha512-8fTqTxRDWE03T7ClaWlCfbwuSae//01XMNVy2a9g5QgaelQh7ZZyU3ZIJiV8gIj8v6ZM0NGn9Bz1liI/vmNmcw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -5554,7 +5554,6 @@ packages:
       '@aws-sdk/signature-v4-crt':
         optional: true
     dependencies:
-      '@aws-sdk/signature-v4-crt': 3.310.0
       '@aws-sdk/types': 3.398.0
       '@smithy/protocol-http': 2.0.5
       '@smithy/signature-v4': 2.0.4
@@ -10529,6 +10528,72 @@ packages:
     dependencies:
       '@aws-sdk/client-rds-data': 3.319.0
       '@planetscale/database': 1.7.0
+      kysely: 0.25.0
+    dev: false
+
+  /drizzle-orm@0.27.2(@aws-sdk/client-rds-data@3.319.0)(kysely@0.25.0):
+    resolution: {integrity: sha512-ZvBvceff+JlgP7FxHKe0zOU9CkZ4RcOtibumIrqfYzDGuOeF0YUY0F9iMqYpRM7pxnLRfC+oO7rWOUH3T5oFQA==}
+    peerDependencies:
+      '@aws-sdk/client-rds-data': '>=3'
+      '@cloudflare/workers-types': '>=3'
+      '@libsql/client': '*'
+      '@neondatabase/serverless': '>=0.1'
+      '@opentelemetry/api': ^1.4.1
+      '@planetscale/database': '>=1'
+      '@types/better-sqlite3': '*'
+      '@types/pg': '*'
+      '@types/sql.js': '*'
+      '@vercel/postgres': '*'
+      better-sqlite3: '>=7'
+      bun-types: '*'
+      knex: '*'
+      kysely: '*'
+      mysql2: '>=2'
+      pg: '>=8'
+      postgres: '>=3'
+      sql.js: '>=1'
+      sqlite3: '>=5'
+    peerDependenciesMeta:
+      '@aws-sdk/client-rds-data':
+        optional: true
+      '@cloudflare/workers-types':
+        optional: true
+      '@libsql/client':
+        optional: true
+      '@neondatabase/serverless':
+        optional: true
+      '@opentelemetry/api':
+        optional: true
+      '@planetscale/database':
+        optional: true
+      '@types/better-sqlite3':
+        optional: true
+      '@types/pg':
+        optional: true
+      '@types/sql.js':
+        optional: true
+      '@vercel/postgres':
+        optional: true
+      better-sqlite3:
+        optional: true
+      bun-types:
+        optional: true
+      knex:
+        optional: true
+      kysely:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      postgres:
+        optional: true
+      sql.js:
+        optional: true
+      sqlite3:
+        optional: true
+    dependencies:
+      '@aws-sdk/client-rds-data': 3.319.0
       kysely: 0.25.0
     dev: false
 

@@ -97,15 +97,17 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
           if (response.status === "Complete") {
             const results = response.results || [];
 
+            let index = 0;
             for (const result of results.sort((a, b) =>
               a[0]!.value!.localeCompare(b[0]!.value!)
             )) {
               await processor.process({
-                id: processor.results.length.toString(),
+                id: index.toString(),
                 timestamp: new Date(result[0]?.value! + " Z").getTime(),
                 stream: result[2]?.value!,
                 line: result[1]?.value!,
               });
+              index++;
             }
             await processor.flush();
 

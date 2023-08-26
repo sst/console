@@ -22,11 +22,11 @@ export interface Invocation {
   cold: boolean;
   event?: any;
   response?: any;
-  error?: {
+  errors: {
     type: string;
     message: string;
-    trace: string[];
-  };
+    stack: string[];
+  }[];
   report?: {
     duration: number;
     size: number;
@@ -72,6 +72,7 @@ bus.on("log", (data) => {
             const invocation: Invocation = {
               id: event.requestID,
               start: new Date(event.timestamp),
+              errors: [],
               cold: event.cold,
               logs: pending,
             };
@@ -130,11 +131,11 @@ bus.on("log", (data) => {
               invocations.get(event.group)?.get(event.requestID) || 0
             );
             if (!invocation) break;
-            invocation.error = {
+            invocation.errors.push({
               type: event.error,
               message: event.message,
-              trace: event.trace,
-            };
+              stack: event.stack,
+            });
           }
         }
         performance.mark("end");

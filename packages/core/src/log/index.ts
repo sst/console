@@ -9,7 +9,17 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AWS, Credentials } from "../aws";
 import { SourceMapConsumer } from "source-map";
-import { filter, groupBy, map, maxBy, minBy, pipe, sort, values } from "remeda";
+import {
+  filter,
+  groupBy,
+  map,
+  maxBy,
+  minBy,
+  pipe,
+  sort,
+  sortBy,
+  values,
+} from "remeda";
 import { createId } from "@paralleldrive/cuid2";
 import { compress } from "../util/compress";
 import { Config } from "sst/node/config";
@@ -48,7 +58,7 @@ export type LogEvent = LogEventBase &
         type: "error";
         error: string;
         message: string;
-        trace: string[];
+        stack: string[];
       }
   );
 
@@ -201,15 +211,22 @@ export function createProcessor(input: {
         };
         if (message.requestID === "undefined") {
           unknown.push(message);
-          return;
-        }
-        results.push(message);
-        if (message.level === "ERROR")
-          console.log(message.level, message.message);
+        } else results.push(message);
 
         if (message.level === "ERROR") {
           const parsed = (() => {
             if (tabs[3]?.includes("Invoke Error")) return JSON.parse(tabs[4]!);
+            if (message.level === "ERROR" && tabs[3]) {
+              const lines = tabs[3].split("\n");
+              if (!lines[0]) return;
+              const [error, message] = lines[0].split(": ");
+              if (!error || !message) return;
+              return {
+                errorType: error,
+                errorMessage: message,
+                stack: lines,
+              };
+            }
           })();
 
           if (parsed) {
@@ -256,10 +273,11 @@ export function createProcessor(input: {
               requestID: generateInvocationID(tabs[1]!),
               error: parsed.errorType,
               message: parsed.errorMessage,
-              trace: parsed.stack,
+              stack: parsed.stack,
             });
           }
         }
+        return;
       }
     },
     async flush() {
@@ -268,8 +286,22 @@ export function createProcessor(input: {
         results,
         groupBy((evt) => evt.requestID),
         values,
-        map((evts) => evts.sort((a, b) => a.timestamp - b.timestamp)),
-        sort((b, a) => a[0].timestamp - b[0].timestamp)
+        map((evts) =>
+          sortBy(
+            evts,
+            (evt) => {
+              return {
+                start: 0,
+                message: 1,
+                error: 2,
+                end: 3,
+                report: 4,
+              }[evt.type];
+            },
+            (evt) => evt.timestamp
+          )
+        ),
+        sortBy((evts) => evts[0]?.timestamp || 0)
       );
       console.log("sending", events.length, "events");
       const key = `logevents/${id}.json`;
