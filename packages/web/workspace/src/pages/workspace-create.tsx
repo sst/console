@@ -99,7 +99,7 @@ export function WorkspaceCreate() {
             }}
             name="slug"
             color={error() ? "danger" : "primary"}
-            placeholder="acme"
+            placeholder="your-company-name"
             hint="Needs to be lowercase, unique, and URL friendly."
           />
           <Button type="submit" disabled={Boolean(pending())}>
