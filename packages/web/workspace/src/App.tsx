@@ -61,6 +61,10 @@ globalStyle("b", {
   fontWeight: 500,
 });
 
+globalStyle("pre", {
+  margin: 0,
+});
+
 globalStyle("a", {
   textDecoration: "none",
   color: theme.color.link.primary.base,

@@ -1,5 +1,5 @@
 import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
-import { Grower, Stack, Row, Hr } from "$/ui/layout";
+import { SpanSpacer, Grower, Stack, Row, Hr } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import {
@@ -8,6 +8,8 @@ import {
   IconBookmark,
   IconBoltSolid,
   IconChevronLeft,
+  IconChevronDown,
+  IconChevronRight,
   IconExclamationTriangle,
 } from "$/ui/icons";
 import { Text } from "$/ui/text";
@@ -162,6 +164,165 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
+      <ComponentType name="Stack Trace">
+        <Variant name="Node.js">
+          <Grower>
+            <ErrorDetails>
+              <ErrorDetailsTitle>
+                NoSuchKey: The specified key does not exist.
+              </ErrorDetailsTitle>
+              <StackTrace
+                expanded={true}
+                isAppCode={true}
+                fn="Object.use"
+                file="packages/functions/src/events/aws-account-created.mjs"
+                line={123}
+                column={4}
+                context={[
+                  {
+                    number: 99,
+                    code: "    id: true,",
+                  },
+                  {
+                    number: 100,
+                    code: "    executionARN: true,",
+                  },
+                  {
+                    number: 101,
+                    code: "  }),",
+                  },
+                  {
+                    number: 102,
+                    code: "  async (input) =>",
+                    highlight: true,
+                  },
+                  {
+                    number: 103,
+                    code: "    useTransaction((tx) =>",
+                  },
+                  {
+                    number: 104,
+                    code: "      tx",
+                  },
+                  {
+                    number: 105,
+                    code: "        .update(log_poller)",
+                  },
+                  {
+                    number: 106,
+                    code: '        .where(and(eq(log_poller.id, id), eq(log_poller.workspaceID, useWorkspace())), "this-is-a-very-long-string-that-should-wrap-around-thestagenameisreallylonganditwillcausethelinetooverflow"),)',
+                  },
+                ]}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={true}
+                fn="createTransactionEffect"
+                file="packages/functions/src/events/aws-account-created.mjs"
+                line={919}
+                column={48}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={false}
+                file="node:internal/process/task_queues"
+                line={96}
+                column={5}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={false}
+                fn="runMicrotasks"
+                file="<anonymous>"
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={true}
+                file="packages/functions/src/events/aws-account-created.mjs"
+                line={779}
+                column={6}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={true}
+                fn="async db.transaction.isolationLevel"
+                file="packages/functions/src/events/aws-account-created.mjs"
+                line={391}
+                column={21}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={true}
+                fn="async db.transaction.isolationLevel.readCommitted.readWrite.execute"
+                file="packages/functions/src/events/really-really-long-file-path-that-should-overflow/aws-account-created.mjs"
+                line={391}
+                column={21}
+              />
+              <ErrorDetailsTitle>
+                ValidationError: Session not found
+              </ErrorDetailsTitle>
+              <StackTrace
+                expanded={false}
+                isAppCode={true}
+                fn="createTransactionEffect"
+                file="packages/functions/src/events/aws-account-created.mjs"
+                line={919}
+                column={48}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={false}
+                file="node:internal/process/task_queues"
+                line={96}
+                column={5}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={false}
+                fn="runMicrotasks"
+                file="<anonymous>"
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={true}
+                file="packages/functions/src/events/aws-account-created.mjs"
+                line={779}
+                column={6}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={true}
+                fn="async db.transaction.isolationLevel"
+                file="packages/functions/src/events/aws-account-created.mjs"
+                line={391}
+                column={21}
+              />
+              <StackTrace
+                expanded={false}
+                isAppCode={true}
+                fn="async db.transaction.isolationLevel.readCommitted.readWrite.execute"
+                file="packages/functions/src/events/really-really-long-file-path-that-should-overflow/aws-account-created.mjs"
+                line={391}
+                column={21}
+              />
+            </ErrorDetails>
+          </Grower>
+        </Variant>
+        <Variant name="Other">
+          <Grower>
+            <ErrorDetails>
+              <ErrorDetailsTitle>
+                ValidationError: Session not found
+              </ErrorDetailsTitle>
+              <StackTrace raw="at Object.use (file:///var/task/packages/functions/src/events/aws-account-created.mjs:27672:17)" />
+              <StackTrace raw="at createTransactionEffect (file:///var/task/packages/functions/src/events/aws-account-created.mjs:47186:42)" />
+              <StackTrace raw="at file:///var/task/packages/functions/src/events/aws-account-created.mjs:94005:7" />
+              <StackTrace raw="at runMicrotasks (<anonymous>)" />
+              <StackTrace raw="at async db.transaction.isolationLevel.readCommitted.readWrite.execute (packages/functions/src/events/really-really-long-file-path-that-should-overflow/aws-account-created.mjs:96:5)" />
+            </ErrorDetails>
+          </Grower>
+        </Variant>
+      </ComponentType>
       <ComponentType name="Accounts">
         <Variant name="Default">
           <Grower>
@@ -530,6 +691,278 @@ export function Design() {
         </Variant>
       </ComponentType>
     </>
+  );
+}
+
+const StackTraceRoot = styled("div", {
+  base: {
+    ...utility.stack(0),
+    flex: "1 1 auto",
+    borderTop: `1px solid ${theme.color.divider.surface}`,
+  },
+});
+
+const StackTraceExpandIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    marginTop: 5,
+    width: 12,
+    height: 12,
+    textAlign: "center",
+    opacity: theme.iconOpacity,
+    color: theme.color.text.primary.surface,
+    lineHeight: theme.font.lineHeight,
+  },
+});
+
+const StackTraceContent = styled("div", {
+  base: {
+    ...utility.row(2),
+    padding: `0 ${theme.space[5]}`,
+  },
+  variants: {
+    dimmed: {
+      true: {
+        opacity: 0.4,
+      },
+      false: {},
+    },
+  },
+  defaultVariants: {
+    dimmed: false,
+  },
+});
+
+const StackTraceSummary = styled("div", {
+  base: {
+    padding: `${theme.space[1]} 0`,
+    lineHeight: theme.font.lineHeight,
+  },
+});
+
+const StackTraceContext = styled("div", {
+  base: {
+    marginLeft: theme.space[5],
+    padding: `${theme.space[1]} ${theme.space[5]} ${theme.space[1]} 0`,
+    borderTop: `1px solid ${theme.color.divider.surface}`,
+  },
+});
+
+const StackTraceContextRow = styled("div", {
+  base: {
+    ...utility.row(0),
+    alignItems: "flex-start",
+    padding: `${theme.space[0.5]} 0`,
+  },
+});
+
+const StackTraceContextLineNumber = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    minWidth: 32,
+  },
+});
+
+interface CodeLine {
+  number: number;
+  code: string;
+  highlight?: boolean;
+}
+
+interface StackTraceProps {
+  fn?: string;
+  raw?: string;
+  file?: string;
+  line?: number;
+  column?: number;
+  expanded?: boolean;
+  isAppCode?: boolean;
+  context?: CodeLine[];
+}
+
+function StackTrace({
+  fn,
+  raw,
+  file,
+  line,
+  column,
+  context,
+  expanded = false,
+  isAppCode = true,
+}: StackTraceProps) {
+  return (
+    <StackTraceRoot>
+      <StackTraceContent dimmed={!raw && !isAppCode}>
+        <StackTraceExpandIcon>
+          <Show when={!raw}>
+            <Show when={expanded}>
+              <IconChevronDown width="12" height="12" />
+            </Show>
+            <Show when={!expanded}>
+              <IconChevronRight width="12" height="12" />
+            </Show>
+          </Show>
+        </StackTraceExpandIcon>
+        <StackTraceSummary>
+          <Show when={raw}>
+            <Text
+              code
+              leading="loose"
+              color="primary"
+              on="surface"
+              size="mono_sm"
+            >
+              {raw}
+            </Text>
+          </Show>
+          <Show when={!raw}>
+            <Show when={fn}>
+              <Text
+                code
+                on="surface"
+                size="mono_sm"
+                color="primary"
+                leading="normal"
+                weight={expanded ? "semibold" : "regular"}
+              >
+                {fn}
+              </Text>
+              <SpanSpacer space="3" />
+            </Show>
+            <span>
+              <Text
+                code
+                on="surface"
+                size="mono_sm"
+                color="primary"
+                leading="normal"
+                weight={
+                  fn
+                    ? expanded
+                      ? "medium"
+                      : "regular"
+                    : expanded
+                    ? "semibold"
+                    : "regular"
+                }
+              >
+                {file}
+              </Text>
+              <Show when={line && column}>
+                <SpanSpacer space="2" />
+                <Text
+                  code
+                  leading="normal"
+                  on="surface"
+                  color="secondary"
+                  size="mono_sm"
+                >
+                  {line}
+                </Text>
+                <Text
+                  code
+                  leading="normal"
+                  on="surface"
+                  color="dimmed"
+                  size="mono_sm"
+                >
+                  :
+                </Text>
+                <Text
+                  code
+                  leading="normal"
+                  on="surface"
+                  color="secondary"
+                  size="mono_sm"
+                >
+                  {column}
+                </Text>
+              </Show>
+            </span>
+          </Show>
+        </StackTraceSummary>
+      </StackTraceContent>
+      <Show when={expanded && context && context.length > 0}>
+        <StackTraceContext>
+          <For each={context}>
+            {({ number, code, highlight }) => (
+              <StackTraceContextRow>
+                <StackTraceContextLineNumber>
+                  <Text
+                    code
+                    on="surface"
+                    size="mono_xs"
+                    leading="loose"
+                    color={highlight ? "primary" : "dimmed"}
+                    weight={highlight ? "semibold" : "regular"}
+                  >
+                    {number}
+                  </Text>
+                </StackTraceContextLineNumber>
+                <Text
+                  code
+                  on="surface"
+                  size="mono_xs"
+                  leading="loose"
+                  color={highlight ? "primary" : "secondary"}
+                  weight={highlight ? "medium" : "regular"}
+                >
+                  <pre
+                    style={{
+                      "white-space": "pre-wrap",
+                      "word-break": "break-word",
+                    }}
+                  >
+                    {code}
+                  </pre>
+                </Text>
+              </StackTraceContextRow>
+            )}
+          </For>
+        </StackTraceContext>
+      </Show>
+    </StackTraceRoot>
+  );
+}
+
+const ErrorDetailsRoot = styled("div", {
+  base: {
+    ...utility.stack(0),
+    paddingBottom: theme.space[2],
+    borderRadius: theme.borderRadius,
+    backgroundColor: theme.color.background.surface,
+  },
+});
+
+const ErrorDetailsTitleRoot = styled("div", {
+  base: {
+    borderTop: `1px solid ${theme.color.divider.surface}`,
+    padding: `${theme.space[4]} ${theme.space[5]} ${theme.space[3.5]}`,
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
+  },
+});
+
+function ErrorDetailsTitle(
+  props: ComponentProps<typeof ErrorDetailsTitleRoot>
+) {
+  return (
+    <ErrorDetailsTitleRoot>
+      <Text code weight="medium" size="mono_base" on="surface" color="danger">
+        {props.children}
+      </Text>
+    </ErrorDetailsTitleRoot>
+  );
+}
+
+function ErrorDetails(props: ComponentProps<typeof ErrorDetailsRoot>) {
+  return (
+    <ErrorDetailsRoot>
+      <Stack space="0.5">{props.children}</Stack>
+    </ErrorDetailsRoot>
   );
 }
 

@@ -163,7 +163,7 @@ const light = (() => {
     },
     danger: {
       base: `hsla(${base.red}, 73%)`,
-      surface: `hsla(${base.red}, 67%)`,
+      surface: `hsla(${base.red}, 70%)`,
       inverted: `hsla(${red.l2}, 100%)`,
     },
   };
