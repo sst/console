@@ -257,7 +257,7 @@ export function createProcessor(input: {
                     column,
                   });
 
-                  if (!original.source) return [{ raw: item }];
+                  if (!original.source) return [];
                   const lines =
                     consumer
                       .sourceContentFor(original.source, true)
