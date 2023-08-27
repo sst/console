@@ -96,7 +96,10 @@ const FrameContextNumber = styled("div", {
 
 export function ErrorItem(props: { error: Invocation["errors"][number] }) {
   const [expand, setExpand] = createSignal(
-    props.error.stack.findIndex((frame) => frame.important) || 0
+    Math.min(
+      props.error.stack.findIndex((frame) => frame.important),
+      0
+    )
   );
   return (
     <>
