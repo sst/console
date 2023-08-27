@@ -4,6 +4,6 @@ console.log("Cold start!");
 
 export const handler = ApiHandler(async () => {
   console.log("counting down...");
-  console.error(new Error("logged error"));
+  // console.error(new Error("logged error"));
   throw new Error("some stupid error");
 });

@@ -47,6 +47,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { LogSearchStore } from "$/data/log-search";
 import { DialogRange, DialogRangeControl } from "./dialog-range";
 import { ResourceIcon } from "$/common/resource-icon";
+import { ErrorItem, ErrorList } from "./error";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -317,8 +318,7 @@ const LogEntries = styled("div", {
   variants: {
     error: {
       true: {
-        padding: `0 ${theme.space[5]}`,
-        backgroundColor: theme.color.background.red,
+        padding: `0`,
       },
       false: {},
     },
@@ -924,24 +924,11 @@ export function Logs() {
                       <LogEntries error={tab() === "error"}>
                         <Switch>
                           <Match when={tab() === "error"}>
-                            <For each={invocation.errors}>
-                              {(error) => (
-                                <LogError>
-                                  <Text
-                                    code
-                                    on="surface"
-                                    size="mono_base"
-                                    weight="medium"
-                                    leading="normal"
-                                  >
-                                    {error.stack[0]}
-                                  </Text>
-                                  <LogErrorMessage>
-                                    {error.stack.slice(1).join("\n")}
-                                  </LogErrorMessage>
-                                </LogError>
-                              )}
-                            </For>
+                            <ErrorList>
+                              <For each={invocation.errors}>
+                                {(error) => <ErrorItem error={error} />}
+                              </For>
+                            </ErrorList>
                           </Match>
                           <Match when={tab() === "logs"}>
                             <Show when={invocation.logs.length === 0}>

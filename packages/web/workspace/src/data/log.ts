@@ -1,5 +1,5 @@
 import { bus } from "$/providers/bus";
-import { LogEvent } from "@console/core/log";
+import { LogEvent, StackFrame } from "@console/core/log";
 import { batch } from "solid-js";
 import { createStore, produce, reconcile } from "solid-js/store";
 
@@ -25,7 +25,7 @@ export interface Invocation {
   errors: {
     type: string;
     message: string;
-    stack: string[];
+    stack: StackFrame[];
   }[];
   report?: {
     duration: number;

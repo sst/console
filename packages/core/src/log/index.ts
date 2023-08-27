@@ -35,6 +35,16 @@ type LogEventBase = {
   requestID: string;
 };
 
+export type StackFrame = {
+  raw?: string;
+  file?: string;
+  line?: number;
+  column?: number;
+  fn?: string;
+  context?: string[];
+  important?: boolean;
+};
+
 export type LogEvent = LogEventBase &
   (
     | {
@@ -58,7 +68,7 @@ export type LogEvent = LogEventBase &
         type: "error";
         error: string;
         message: string;
-        stack: string[];
+        stack: StackFrame[];
       }
   );
 
@@ -232,41 +242,46 @@ export function createProcessor(input: {
           })();
 
           if (parsed) {
-            const consumer = await getSourcemap(input.timestamp);
-            if (consumer) {
-              let ctx: string[] = [];
-              for (let i = 0; i < parsed.stack.length; i++) {
-                const splits: string[] = parsed.stack[i].split(":");
-                const column = parseInt(splits.pop()!);
-                const line = parseInt(splits.pop()!);
-                if (!column || !line) continue;
-                const original = consumer.originalPositionFor({
-                  line,
-                  column,
-                });
-                if (
-                  original.source &&
-                  !original.source.startsWith("node_modules") &&
-                  !ctx.length
-                ) {
+            const stack = await (async (): Promise<StackFrame[]> => {
+              // drop first line, only has error in it
+              const stack: string[] = parsed.stack.slice(1);
+              const consumer = await getSourcemap(input.timestamp);
+              if (consumer) {
+                return stack.flatMap((item) => {
+                  const splits: string[] = item.split(":");
+                  const column = parseInt(splits.pop()!);
+                  const line = parseInt(splits.pop()!);
+                  if (!column || !line) return [];
+                  const original = consumer.originalPositionFor({
+                    line,
+                    column,
+                  });
+
+                  if (!original.source) return [{ raw: item }];
                   const lines =
                     consumer
                       .sourceContentFor(original.source, true)
                       ?.split("\n") || [];
                   const min = Math.max(0, original.line! - 4);
-                  ctx = lines.slice(
+                  const ctx = lines.slice(
                     min,
                     Math.min(original.line! + 3, lines.length - 1)
                   );
-                  const highlight = Math.min(original.line!, 3);
-                  ctx[highlight] = "> " + ctx[highlight]?.substring(2);
-                }
-                parsed.stack[
-                  i
-                ] = `    at ${original.source}:${original.line}:${original.column}`;
+
+                  return [
+                    {
+                      file: original.source,
+                      line: original.line!,
+                      column: original.column!,
+                      context: ctx,
+                      important: !original.source.startsWith("node_modules"),
+                    },
+                  ];
+                });
               }
-              parsed.stack.push("----", ...ctx);
-            }
+
+              return stack.map((raw) => ({ raw }));
+            })();
 
             target.push({
               type: "error",
@@ -275,7 +290,7 @@ export function createProcessor(input: {
               requestID: message.requestID,
               error: parsed.errorType,
               message: parsed.errorMessage,
-              stack: parsed.stack,
+              stack,
             });
           }
         }
