@@ -209,9 +209,7 @@ export function createProcessor(input: {
           level: tabs[2]!.trim(),
           message: tabs.slice(3).join("\t").trim(),
         };
-        if (message.requestID === "undefined") {
-          unknown.push(message);
-        } else results.push(message);
+        const target = message.requestID === "undefined" ? unknown : results;
 
         if (message.level === "ERROR") {
           const parsed = (() => {
@@ -270,17 +268,18 @@ export function createProcessor(input: {
               parsed.stack.push("----", ...ctx);
             }
 
-            results.push({
+            target.push({
               type: "error",
               timestamp: input.timestamp,
               group,
-              requestID: generateInvocationID(tabs[1]!),
+              requestID: message.requestID,
               error: parsed.errorType,
               message: parsed.errorMessage,
               stack: parsed.stack,
             });
           }
         }
+        target.push(message);
         return;
       }
     },
