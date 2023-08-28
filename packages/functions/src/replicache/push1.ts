@@ -13,6 +13,7 @@ import { Replicache } from "@console/core/replicache";
 
 export const handler = ApiHandler(async (_evt) => {
   await NotPublic();
+  const actor = useActor();
 
   const body: PushRequest = useJsonBody();
   if (body.pushVersion !== 1)
