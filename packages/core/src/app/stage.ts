@@ -240,34 +240,35 @@ export const syncMetadata = zod(
         .then((x) => x.map((x) => [x.stackID + "-" + x.cfnID, x.id]))
         .then(Object.fromEntries);
       console.log("existing", existing);
-      for (const res of results) {
-        const id = existing[res.stackID + "-" + res.id] || createId();
-        await tx
-          .insert(resource)
-          .values({
-            workspaceID: useWorkspace(),
-            cfnID: res.id,
-            addr: res.addr,
-            stackID: res.stackID,
-            stageID: input.stageID,
-            id,
-            type: res.type,
-            metadata: res.data,
-            enrichment: res.enrichment,
-          })
-          .onDuplicateKeyUpdate({
-            set: {
+      await tx
+        .insert(resource)
+        .values(
+          results.map((res) => {
+            const id = existing[res.stackID + "-" + res.id] || createId();
+            delete existing[res.stackID + "-" + res.id];
+            return {
+              workspaceID: useWorkspace(),
+              cfnID: res.id,
               addr: res.addr,
               stackID: res.stackID,
+              stageID: input.stageID,
+              id,
               type: res.type,
               metadata: res.data,
               enrichment: res.enrichment,
-            },
+            };
           })
-          .execute();
-
-        delete existing[res.stackID + "-" + res.id];
-      }
+        )
+        .onDuplicateKeyUpdate({
+          set: {
+            addr: sql`VALUES(addr)`,
+            stackID: sql`VALUES(stack_id)`,
+            type: sql`VALUES(type)`,
+            metadata: sql`VALUES(metadata)`,
+            enrichment: sql`VALUES(enrichment)`,
+          },
+        })
+        .execute();
 
       const toDelete = Object.values(existing);
       console.log("deleting", toDelete.length, "resources");
