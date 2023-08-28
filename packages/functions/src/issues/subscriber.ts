@@ -21,15 +21,17 @@ export const handler = ApiHandler(async (event) => {
 
 function handleRecord(record: any) {
   console.log(record);
-  if (record.messageType !== "DATA_MESSAGE") return;
+  const { messageType, logGroup, logStream, subscriptionFilters, logEvents } =
+    record;
 
-  const [prefix, accountId, app, stage] =
-    record.subscriptionFilters[0].split("#");
+  if (messageType !== "DATA_MESSAGE") return;
+
+  const [prefix, accountId, app, stage] = subscriptionFilters[0].split("#");
 
   if (prefix !== "sst") return;
 
-  for (const logEvent of record.logEvents) {
-    const result = parseLogMessage(logEvent.message, "test");
+  for (const logEvent of logEvents) {
+    const result = parseLogMessage(logEvent.message, logGroup);
 
     console.log(result?.errorIdentity);
 
