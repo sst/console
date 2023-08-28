@@ -5,7 +5,11 @@ import { StageStore } from "$/data/stage";
 import { PRICING_PLAN, UsageStore } from "$/data/usage";
 import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
-import { createSubscription, useReplicache } from "$/providers/replicache";
+import {
+  createGet,
+  createSubscription,
+  useReplicache,
+} from "$/providers/replicache";
 import {
   theme,
   utility,
@@ -44,6 +48,8 @@ import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
 import { pipe, sortBy } from "remeda";
 import { User } from "@console/core/user";
+import { WorkspaceStore } from "$/data/workspace";
+import { useWorkspace } from "./context";
 
 const Root = styled("div", {
   base: {
@@ -206,6 +212,7 @@ export function Overview() {
         : StageStore.list(),
     []
   );
+  const workspace = useWorkspace();
   const usages = UsageStore.watch.scan(rep);
   const invocations = createMemo(() =>
     usages()
@@ -338,7 +345,12 @@ export function Overview() {
                     <Link href="settings">
                       <TextButton>
                         <Row space="0.5" horizontal="center">
-                          <Show when={invocations() > PRICING_PLAN[0].to}>
+                          <Show
+                            when={
+                              invocations() > PRICING_PLAN[0].to &&
+                              !workspace().stripeSubscriptionID
+                            }
+                          >
                             <Text color="danger" size="sm">
                               Your usage is above the free tier, add your
                               billing details

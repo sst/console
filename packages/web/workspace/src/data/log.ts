@@ -218,11 +218,13 @@ bus.on("function.error", (e) => {
       if (!group) return;
       const invocation = group.find((i) => i.id === e.requestID);
       if (!invocation) return;
-      invocation.error = {
+      invocation.errors.push({
         type: e.errorType,
         message: e.errorMessage,
-        trace: e.trace,
-      };
+        stack: e.trace.map((t) => ({
+          raw: t,
+        })),
+      });
     })
   );
 });
