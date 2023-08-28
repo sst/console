@@ -56,8 +56,8 @@ export function RealtimeProvider() {
           );
         }
       });
-      connection.on("interrupt", () => {
-        console.log("interrupted, restarting");
+      connection.on("interrupt", (e) => {
+        console.log("interrupted, restarting", e, JSON.stringify(e));
         createConnection();
       });
       connection.on("error", console.log);
