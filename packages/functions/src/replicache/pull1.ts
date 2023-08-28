@@ -3,7 +3,7 @@ import { useActor, useWorkspace } from "@console/core/actor";
 import { Replicache } from "@console/core/replicache";
 import { user } from "@console/core/user/user.sql";
 import { useTransaction } from "@console/core/util/transaction";
-import { useApiAuth } from "src/api";
+import { NotPublic } from "../api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { eq, and, gt, gte, inArray, isNull, lte, sql, lt } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
@@ -27,14 +27,8 @@ import {
 } from "replicache";
 
 export const handler = ApiHandler(async () => {
-  await useApiAuth();
+  await NotPublic();
   const actor = useActor();
-
-  if (actor.type === "public") {
-    return {
-      statusCode: 401,
-    };
-  }
 
   const req: PullRequest = useJsonBody();
   console.log("request", req);
@@ -124,7 +118,7 @@ export const handler = ApiHandler(async () => {
       const results: [string, { id: string; time_updated: string }[]][] = [];
 
       if (actor.type === "user") {
-        console.log("syncing user", actor.properties);
+        console.log("syncing user");
 
         const workspaceID = useWorkspace();
         for (const [name, table] of Object.entries(tables)) {
@@ -156,7 +150,7 @@ export const handler = ApiHandler(async () => {
       }
 
       if (actor.type === "account") {
-        console.log("syncing account", actor.properties);
+        console.log("syncing account");
 
         const [users] = await Promise.all([
           await tx

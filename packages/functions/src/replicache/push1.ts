@@ -5,22 +5,14 @@ import {
 } from "@console/core/replicache/replicache.sql";
 import { useTransaction } from "@console/core/util/transaction";
 import { and, eq } from "drizzle-orm";
-import { PushRequest, PushRequestV1 } from "replicache";
-import { useApiAuth } from "src/api";
+import { PushRequest } from "replicache";
+import { NotPublic, useApiAuth } from "../api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { server } from "./server";
-import { equals } from "remeda";
 import { Replicache } from "@console/core/replicache";
-import { workspaceID } from "@console/core/util/sql";
 
 export const handler = ApiHandler(async (_evt) => {
-  await useApiAuth();
-  const actor = useActor();
-  if (actor.type === "public") {
-    return {
-      statusCode: 401,
-    };
-  }
+  await NotPublic();
 
   const body: PushRequest = useJsonBody();
   if (body.pushVersion !== 1)
