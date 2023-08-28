@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@aws-cdk/aws-kinesisfirehose-alpha": "^2.91.0-alpha.0",
     "@tsconfig/node16": "^16.1.0",
     "aws-cdk-lib": "2.91.0",
     "constructs": "10.2.69",

@@ -5,6 +5,7 @@ import { Web } from "./stacks/web";
 import { Auth } from "./stacks/auth";
 import { Email } from "./stacks/email";
 import { Events } from "./stacks/events";
+import { Issues } from "./stacks/issues";
 import { Billing } from "./stacks/billing";
 import { Secrets } from "./stacks/secrets";
 import { Connect } from "./stacks/connect";
@@ -33,6 +34,7 @@ export default {
       .stack(Secrets)
       .stack(Auth)
       .stack(Events)
+      .stack(Issues)
       .stack(API)
       .stack(Realtime)
       .stack(Connect)

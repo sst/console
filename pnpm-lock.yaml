@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@aws-cdk/aws-kinesisfirehose-alpha':
+        specifier: ^2.91.0-alpha.0
+        version: 2.91.0-alpha.0(aws-cdk-lib@2.91.0)(constructs@10.2.69)
       '@tsconfig/node16':
         specifier: ^16.1.0
         version: 16.1.0
@@ -334,6 +337,17 @@ packages:
       '@aws-cdk/aws-apigatewayv2-alpha': 2.91.0-alpha.0(aws-cdk-lib@2.91.0)(constructs@10.2.69)
       aws-cdk-lib: 2.91.0(constructs@10.2.69)
       constructs: 10.2.69
+
+  /@aws-cdk/aws-kinesisfirehose-alpha@2.91.0-alpha.0(aws-cdk-lib@2.91.0)(constructs@10.2.69):
+    resolution: {integrity: sha512-i2q1EEuT/oBgnfMUslQh+YcLno1A6hbuEpwtwHsR+SOH4urpq5GE/1ET/tUijiy4RyNocbjmcUYD39lJkvFZMg==}
+    engines: {node: '>= 14.15.0'}
+    peerDependencies:
+      aws-cdk-lib: 2.91.0
+      constructs: ^10.0.0
+    dependencies:
+      aws-cdk-lib: 2.91.0(constructs@10.2.69)
+      constructs: 10.2.69
+    dev: true
 
   /@aws-cdk/cfnspec@2.91.0-alpha.0:
     resolution: {integrity: sha512-3Or0ZphyFR1dd53XwVqE2IbXIVvQiU/CgrVY9lWKR2jvEFtdwh3CXd5jsQwrc1MOgkGbrhOTjcXt8UeZZ+pKeg==}
