@@ -348,6 +348,7 @@ export function Overview() {
                       <TextButton>
                         <Row space="0.5" horizontal="center">
                           <Show
+                            fallback="Manage workspace"
                             when={
                               invocations() > PRICING_PLAN[0].to &&
                               !workspace().stripeSubscriptionID
@@ -357,9 +358,6 @@ export function Overview() {
                               Your usage is above the free tier, add your
                               billing details
                             </Text>
-                          </Show>
-                          <Show when={invocations() <= PRICING_PLAN[0].to}>
-                            Manage workspace
                           </Show>
                           <ManageWorkspaceIcon>
                             <IconChevronRight width="13" height="13" />
