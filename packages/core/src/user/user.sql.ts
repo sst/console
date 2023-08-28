@@ -19,6 +19,6 @@ export const user = mysqlTable(
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),
-    email: uniqueIndex("email").on(table.email, table.workspaceID),
+    email: uniqueIndex("email").on(table.workspaceID, table.email),
   })
 );
