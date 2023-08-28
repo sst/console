@@ -240,35 +240,36 @@ export const syncMetadata = zod(
         .then((x) => x.map((x) => [x.stackID + "-" + x.cfnID, x.id]))
         .then(Object.fromEntries);
       console.log("existing", existing);
-      await tx
-        .insert(resource)
-        .values(
-          results.map((res) => {
-            const id = existing[res.stackID + "-" + res.id] || createId();
-            delete existing[res.stackID + "-" + res.id];
-            return {
-              workspaceID: useWorkspace(),
-              cfnID: res.id,
-              addr: res.addr,
-              stackID: res.stackID,
-              stageID: input.stageID,
-              id,
-              type: res.type,
-              metadata: res.data,
-              enrichment: res.enrichment,
-            };
+      if (results.length)
+        await tx
+          .insert(resource)
+          .values(
+            results.map((res) => {
+              const id = existing[res.stackID + "-" + res.id] || createId();
+              delete existing[res.stackID + "-" + res.id];
+              return {
+                workspaceID: useWorkspace(),
+                cfnID: res.id,
+                addr: res.addr,
+                stackID: res.stackID,
+                stageID: input.stageID,
+                id,
+                type: res.type,
+                metadata: res.data,
+                enrichment: res.enrichment,
+              };
+            })
+          )
+          .onDuplicateKeyUpdate({
+            set: {
+              addr: sql`VALUES(addr)`,
+              stackID: sql`VALUES(stack_id)`,
+              type: sql`VALUES(type)`,
+              metadata: sql`VALUES(metadata)`,
+              enrichment: sql`VALUES(enrichment)`,
+            },
           })
-        )
-        .onDuplicateKeyUpdate({
-          set: {
-            addr: sql`VALUES(addr)`,
-            stackID: sql`VALUES(stack_id)`,
-            type: sql`VALUES(type)`,
-            metadata: sql`VALUES(metadata)`,
-            enrichment: sql`VALUES(enrichment)`,
-          },
-        })
-        .execute();
+          .execute();
 
       const toDelete = Object.values(existing);
       console.log("deleting", toDelete.length, "resources");
