@@ -60,7 +60,18 @@ export function RealtimeProvider() {
         console.log("interrupted, restarting", e, JSON.stringify(e));
         createConnection();
       });
-      connection.on("error", console.log);
+      connection.on("error", (e) => {
+        console.log(
+          "connection error",
+          e,
+          e.error,
+          e.name,
+          e.cause,
+          e.message,
+          e.error_code,
+          e.error_name
+        );
+      });
       connection.on("resume", console.log);
       connection.on("message", (fullTopic, payload) => {
         const splits = fullTopic.split("/");
