@@ -71,7 +71,6 @@ function createReplicache(workspaceID: string, token: string) {
   });
 
   replicache.puller = async (req) => {
-    console.log(workspaceID);
     const result = await fetch(replicache.pullURL, {
       headers: {
         "x-sst-workspace": workspaceID,
@@ -91,7 +90,6 @@ function createReplicache(workspaceID: string, token: string) {
   };
 
   replicache.pusher = async (req) => {
-    console.log(workspaceID);
     const result = await fetch(replicache.pushURL, {
       headers: {
         "x-sst-workspace": workspaceID,
@@ -254,7 +252,6 @@ export function createGet<T extends any>(
   createEffect(() => {
     if (unsubscribe) unsubscribe();
     const path = p();
-    console.log("getting", path);
     batch(() => {
       setData("value", undefined);
       setReady(false);
@@ -275,7 +272,6 @@ export function createGet<T extends any>(
           }
           setReady(true);
         });
-        console.log(diffs);
       },
       {
         prefix: path,
