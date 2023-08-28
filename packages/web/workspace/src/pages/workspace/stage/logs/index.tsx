@@ -244,7 +244,6 @@ const CaretIcon = styled("div", {
     flexShrink: 0,
     lineHeight: 0,
     color: theme.color.icon.dimmed,
-    transition: "transform 0.2s ease-out",
     selectors: {
       [`${LogContainer.selector({ expanded: true })} &`]: {
         transform: "rotate(90deg)",

@@ -16,7 +16,7 @@ export const ErrorList = styled("div", {
 const Title = styled("div", {
   base: {
     borderTop: `1px solid ${theme.color.divider.surface}`,
-    padding: `${theme.space[4]} ${theme.space[5]} ${theme.space[3.5]}`,
+    padding: `${theme.space[3]} ${theme.space[5]} ${theme.space[2.5]}`,
     selectors: {
       "&:first-child": {
         borderTop: "none",
@@ -104,7 +104,14 @@ export function ErrorItem(props: { error: Invocation["errors"][number] }) {
   return (
     <>
       <Title>
-        <Text code weight="medium" size="mono_base" on="surface" color="danger">
+        <Text
+          code
+          weight="medium"
+          size="mono_base"
+          on="surface"
+          color="danger"
+          leading="loose"
+        >
           {props.error.type}: {props.error.message}
         </Text>
       </Title>
