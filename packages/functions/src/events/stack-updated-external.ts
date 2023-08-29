@@ -44,14 +44,15 @@ export const handler = async (evt: Payload) => {
       .select({
         workspaceID: awsAccount.workspaceID,
         stageID: stage.id,
+        appID: app.id,
         id: awsAccount.id,
       })
       .from(awsAccount)
       .leftJoin(
-        stage,
-        and(eq(stage.name, stageName!), eq(stage.awsAccountID, awsAccount.id))
+        app,
+        and(eq(app.name, appName!), eq(app.workspaceID, awsAccount.workspaceID))
       )
-      .leftJoin(app, and(eq(app.name, appName!), eq(stage.appID, app.id)))
+      .leftJoin(stage, and(eq(stage.name, stageName!), eq(stage.appID, app.id)))
       .where(and(eq(awsAccount.accountID, account)))
       .execute();
 
@@ -75,11 +76,12 @@ export const handler = async (evt: Payload) => {
           return;
         }
 
-        let appID = await App.fromName(appName!).then((x) => x?.id);
-        if (!appID)
+        let appID = row.appID;
+        if (!appID) {
           appID = await App.create({
             name: appName!,
           });
+        }
 
         await App.Stage.connect({
           appID,
