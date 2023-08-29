@@ -11,6 +11,8 @@ import { AWS, Credentials } from "../aws";
 import { SourceMapConsumer } from "source-map";
 import {
   filter,
+  flatMap,
+  flattenDeep,
   groupBy,
   map,
   maxBy,
@@ -25,6 +27,8 @@ import { compress } from "../util/compress";
 import { Config } from "sst/node/config";
 import { Bucket } from "sst/node/bucket";
 import { Realtime } from "../realtime";
+import { zod } from "../util/zod";
+import { z } from "zod";
 
 export * as Log from "./index";
 export { Search } from "./search";
@@ -347,3 +351,110 @@ export function createProcessor(input: {
     invocations,
   };
 }
+
+import {
+  CloudWatchLogsClient,
+  FilterLogEventsCommand,
+  GetLogEventsCommand,
+  OutputLogEvent,
+} from "@aws-sdk/client-cloudwatch-logs";
+import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
+
+export const expand = zod(
+  z.object({
+    timestamp: z.number(),
+    requestID: z.string(),
+    logGroup: z.string(),
+    logStream: z.string(),
+    region: z.string(),
+    functionArn: z.string(),
+    credentials: z.custom<Credentials>(),
+  }),
+  async (input) => {
+    const cw = new CloudWatchLogsClient({
+      region: input.region,
+      credentials: input.credentials,
+    });
+    const lambda = new LambdaClient({
+      region: input.region,
+      credentials: input.credentials,
+    });
+
+    const func = await lambda.send(
+      new GetFunctionCommand({
+        FunctionName: input.functionArn,
+      })
+    );
+
+    const app = func.Tags?.["sst:app"]!;
+    const stage = func.Tags?.["sst:stage"]!;
+
+    const offset = 1000 * 60 * 15;
+
+    const processor = createProcessor({
+      region: input.region,
+      credentials: input.credentials,
+      group: input.logGroup,
+      app: app,
+      stage: stage,
+      arn: input.functionArn,
+    });
+
+    async function fetchEvents(start: number, end: number) {
+      let nextToken: string | undefined;
+      const result = [];
+      const backwards = end === input.timestamp;
+      while (true) {
+        const response = await cw.send(
+          new GetLogEventsCommand({
+            logGroupName: input.logGroup,
+            logStreamName: input.logStream,
+            startTime: start,
+            endTime: end,
+            startFromHead: !backwards,
+            nextToken,
+          })
+        );
+        const events = pipe(
+          response.events || [],
+          sortBy((evt) => (backwards ? -1 : 1) * evt.timestamp!)
+        );
+
+        for (const event of events) {
+          if (backwards && event.message!.startsWith("REPORT")) break;
+          result.push(event);
+          if (!backwards && event.message!.startsWith("REPORT")) break;
+        }
+
+        nextToken = response.nextForwardToken;
+        if (!response.events?.length) {
+          break;
+        }
+      }
+
+      if (backwards) result.reverse();
+      return result;
+    }
+
+    const events = await Promise.all([
+      fetchEvents(input.timestamp - offset, input.timestamp),
+      fetchEvents(input.timestamp, input.timestamp + offset),
+    ]).then((r) => r.flat());
+
+    for (let i = 0; i < events.length; i++) {
+      const event = events[i]!;
+      await processor.process({
+        stream: input.logStream,
+        timestamp: event.timestamp!,
+        id: i.toString(),
+        line: event.message!,
+      });
+    }
+
+    const results = processor.results.filter(
+      (result) => result.requestID === input.requestID
+    );
+
+    return results;
+  }
+);

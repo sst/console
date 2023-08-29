@@ -245,9 +245,6 @@ export function Resources() {
         .sort()[0]
   );
 
-  createEffect(() => {
-    console.log(outdated().length, stacks().length);
-  });
   return (
     <Switch>
       <Match when={!resources().length}>

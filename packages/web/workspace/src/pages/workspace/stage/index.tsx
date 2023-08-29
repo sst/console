@@ -51,8 +51,6 @@ export function Stage() {
       }));
   });
 
-  createEffect(() => console.log({ ...params }));
-
   const stageContext = createStageContext();
 
   return (
