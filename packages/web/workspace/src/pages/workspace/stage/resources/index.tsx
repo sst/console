@@ -176,6 +176,7 @@ export const ChildIconButton = styled(ChildIcon, {
 });
 
 function cleanFilepath(path: string) {
+  if (!path) return;
   return path.replace(/^\.?\//, "");
 }
 
