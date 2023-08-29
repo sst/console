@@ -41,7 +41,7 @@ export function RealtimeProvider() {
           "",
           tokens
         )
-        .with_keep_alive_seconds(30)
+        .with_keep_alive_seconds(1200)
         .build();
       const client = new mqtt.MqttClient();
       connection = client.new_connection(config);
