@@ -15,6 +15,7 @@ const stages = await db
   )
   .execute();
 console.log("found", stages.length, "stages");
+const promises = [];
 for (const stage of stages) {
   provideActor({
     type: "system",
@@ -25,9 +26,12 @@ for (const stage of stages) {
   // await Stage.Events.Updated.publish({
   //   stageID: stage.id,
   // });
-  await Stage.Events.ResourcesUpdated.publish({
-    stageID: stage.id,
-  });
+  promises.push(
+    Stage.Events.ResourcesUpdated.publish({
+      stageID: stage.id,
+    })
+  );
 }
+await Promise.all(promises);
 
 export {};
