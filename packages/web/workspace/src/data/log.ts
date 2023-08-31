@@ -23,6 +23,7 @@ export interface Invocation {
   event?: any;
   response?: any;
   errors: {
+    id: string;
     type: string;
     message: string;
     stack: StackFrame[];
@@ -81,9 +82,6 @@ bus.on("log", (data) => {
             if (!all) invocations.set(event.group, (all = new Map()));
             all.set(event.requestID, index - 1);
 
-            // let set = invocations.get(event.group);
-            // if (!set) invocations.set(event.group, (set = new Set()));
-            // set.add(event.requestID);
             break;
           }
           case "message": {
@@ -93,7 +91,8 @@ bus.on("log", (data) => {
               message: event.message,
             };
             const invocation = state[event.group]?.at(
-              invocations.get(event.group)?.get(event.requestID) || 0
+              invocations.get(event.group)?.get(event.requestID) ||
+                Number.MAX_VALUE
             );
             let logs = invocation?.logs;
             if (!logs) {
@@ -107,7 +106,8 @@ bus.on("log", (data) => {
           }
           case "end": {
             const invocation = state[event.group]?.at(
-              invocations.get(event.group)?.get(event.requestID) || 0
+              invocations.get(event.group)?.get(event.requestID) ||
+                Number.MAX_VALUE
             );
             if (!invocation) break;
             invocation.end = new Date(event.timestamp);
@@ -115,7 +115,8 @@ bus.on("log", (data) => {
           }
           case "report": {
             const invocation = state[event.group]?.at(
-              invocations.get(event.group)?.get(event.requestID) || 0
+              invocations.get(event.group)?.get(event.requestID) ||
+                Number.MAX_VALUE
             );
             if (!invocation) break;
             invocation.report = {
@@ -128,10 +129,13 @@ bus.on("log", (data) => {
           }
           case "error": {
             const invocation = state[event.group]?.at(
-              invocations.get(event.group)?.get(event.requestID) || 0
+              invocations.get(event.group)?.get(event.requestID) ||
+                Number.MAX_VALUE
             );
             if (!invocation) break;
+            if (invocation.errors.find((e) => e.id === event.id)) break;
             invocation.errors.push({
+              id: event.id,
               type: event.error,
               message: event.message,
               stack: event.stack,

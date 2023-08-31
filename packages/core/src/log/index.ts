@@ -107,7 +107,7 @@ export function createProcessor(input: {
     const trimmed = id.trim();
     const count = invocations.get(trimmed);
     if (!count) return trimmed;
-    return id + "[" + count + "]";
+    return trimmed + "[" + count + "]";
   }
 
   async function getSourcemap(number: number) {

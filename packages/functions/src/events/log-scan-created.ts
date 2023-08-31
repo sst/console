@@ -21,8 +21,6 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
 
   const client = new CloudWatchLogsClient(config);
   console.log("scanning logs", search);
-  const stage = await Stage.fromID(search.stageID);
-  const app = await App.fromID(stage!.appID);
 
   try {
     await (async () => {
@@ -53,8 +51,6 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
           .replace("log-group:/aws/lambda/", "function:")
           .replace(":logs:", ":lambda:")}`,
         group: search.id,
-        app: app!.name,
-        stage: stage!.name,
         ...config,
       });
       while (true) {
