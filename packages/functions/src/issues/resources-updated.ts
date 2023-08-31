@@ -61,13 +61,13 @@ export const handler = EventHandler(
       const createFilter = async () => {
         // @ts-expect-error
         const logGroupName = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
-        const all = await userClient.send(
-          new DescribeSubscriptionFiltersCommand({
-            logGroupName,
-          })
-        );
 
         if (false) {
+          const all = await userClient.send(
+            new DescribeSubscriptionFiltersCommand({
+              logGroupName,
+            })
+          );
           for (const filter of all.subscriptionFilters ?? []) {
             if (
               filter.filterName === uniqueIdentifier &&

@@ -1,5 +1,5 @@
 import { provideActor } from "@console/core/actor";
-import { db, inArray } from "@console/core/drizzle";
+import { and, db, gt, inArray } from "@console/core/drizzle";
 import { stage } from "@console/core/app/app.sql";
 import { Stage } from "@console/core/app";
 
@@ -9,9 +9,12 @@ const stages = await db
   .select()
   .from(stage)
   .where(
-    workspaceFilter.length
-      ? inArray(stage.workspaceID, workspaceFilter)
-      : undefined
+    and(
+      workspaceFilter.length
+        ? inArray(stage.workspaceID, workspaceFilter)
+        : undefined,
+      gt(stage.id, "wh3zo63vrqlfrpdaco7hekv2")
+    )
   )
   .execute();
 console.log("found", stages.length, "stages");
