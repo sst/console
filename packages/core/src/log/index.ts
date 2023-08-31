@@ -249,7 +249,7 @@ export function createProcessor(input: {
             tabs[3]?.includes("Uncaught Exception")
           ) {
             const parsed = JSON.parse(tabs[4]!);
-            if ("name" in parsed && "message" in parsed) {
+            if (parsed.name && parsed.message) {
               return {
                 errorType: parsed.name,
                 errorMessage: parsed.message,
@@ -289,15 +289,18 @@ export function createProcessor(input: {
                 const column = parseInt(splits.pop()!);
                 const line = parseInt(splits.pop()!);
                 if (!column || !line) return [];
-                if (column < 0 || line < 0) {
-                  console.log(item, column, line);
-                }
-                const original = consumer.originalPositionFor({
-                  line,
-                  column,
-                });
+                const original = (() => {
+                  try {
+                    return consumer.originalPositionFor({
+                      line,
+                      column,
+                    });
+                  } catch {
+                    console.log(item, column, line);
+                  }
+                })();
 
-                if (!original.source) return [];
+                if (!original?.source) return [];
                 const lines =
                   consumer
                     .sourceContentFor(original.source, true)
