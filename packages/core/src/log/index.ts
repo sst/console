@@ -269,6 +269,7 @@ export function createProcessor(input: {
             if (!lines[0]) return;
             const [error, message] = lines[0].split(": ");
             if (!error || !message) return;
+            if (error.startsWith("(node:")) return;
             return {
               errorType: error,
               errorMessage: message,
