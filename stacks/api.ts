@@ -118,10 +118,18 @@ export function API({ stack, app }: StackContext) {
         "packages/functions/src/billing/create-checkout-session.handler",
       "POST /rest/create_customer_portal_session":
         "packages/functions/src/billing/create-customer-portal-session.handler",
-      "GET /error": {
+      "GET /test/error": {
         type: "function",
         function: {
           handler: "packages/functions/src/error.handler",
+          enableLiveDev: false,
+        },
+      },
+      "GET /test/go": {
+        type: "function",
+        function: {
+          runtime: "go",
+          handler: "./go/handler.go",
           enableLiveDev: false,
         },
       },

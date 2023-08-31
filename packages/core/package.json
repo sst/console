@@ -8,6 +8,7 @@
     "db:push": "sst bind drizzle-kit push:mysql"
   },
   "devDependencies": {
+    "@types/luxon": "^3.3.1",
     "@types/node": "^18.16.0",
     "drizzle-kit": "0.19.10",
     "sst": "2.24.21",
@@ -32,6 +33,7 @@
     "@planetscale/database": "^1.7.0",
     "drizzle-orm": "0.27.2",
     "drizzle-zod": "0.4.4",
+    "luxon": "^3.3.0",
     "remeda": "^1.17.1",
     "source-map": "^0.7.4",
     "stripe": "^12.17.0",

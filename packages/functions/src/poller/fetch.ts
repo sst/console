@@ -164,7 +164,7 @@ export async function handler(input: State) {
     await processor.process({
       timestamp: event.timestamp!,
       line: event.message!,
-      stream: event.logStreamName!,
+      streamName: event.logStreamName!,
       id: event.eventId!,
     });
   }

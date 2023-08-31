@@ -64,6 +64,11 @@ export type LogEvent = LogEventBase &
       }
   );
 
+export type LogEventType<T extends LogEvent["type"]> = Extract<
+  LogEvent,
+  { type: T }
+>;
+
 export type Processor = ReturnType<typeof createProcessor>;
 
 const s3 = new S3Client({});
@@ -81,8 +86,14 @@ export function createProcessor(input: {
     credentials: input.credentials,
   });
   const invocations = new Map<string, number>();
-  const cold = new Set<string>();
-  let unknown = [] as LogEvent[];
+  const streams = new Map<
+    string,
+    {
+      cold: boolean;
+      unknown: LogEvent[];
+      requestID?: string;
+    }
+  >();
   const sourcemapCache = new Map<string, SourceMapConsumer>();
   let results = [] as LogEvent[];
 
@@ -143,25 +154,34 @@ export function createProcessor(input: {
       id: string;
       line: string;
       timestamp: number;
-      stream: string;
+      streamName: string;
     }) {
+      let stream = streams.get(input.streamName);
+      if (!stream) {
+        stream = {
+          cold: false,
+          unknown: [],
+        };
+        streams.set(input.streamName, stream);
+      }
       const tabs = input.line.split("\t");
 
       if (tabs[0]?.startsWith("INIT_START")) {
-        cold.add(input.stream);
+        stream.cold = true;
         return [];
       }
 
       if (tabs[0]?.startsWith("START")) {
         const splits = tabs[0].split(" ");
-        const isCold = cold.has(input.stream);
-        cold.delete(input.stream);
+        const isCold = stream.cold;
+        stream.cold = false;
         const id = generateInvocationID(splits[2]!);
-        const flush = unknown.map((evt) => {
+        const flush = stream.unknown.map((evt) => {
           evt.requestID = id;
           return evt;
         });
-        unknown = [];
+        stream.unknown = [];
+        stream.requestID = id;
         return results.push(
           {
             type: "start",
@@ -200,95 +220,109 @@ export function createProcessor(input: {
         });
       }
 
-      if (tabs[0]?.length === 24) {
-        const message: LogEvent = {
+      const message = ((): LogEventType<"message"> => {
+        // NodeJS format
+        if (tabs[0]?.length === 24 && tabs[1]?.length === 36) {
+          return {
+            type: "message",
+            timestamp: input.timestamp,
+            group,
+            requestID: stream.requestID || "",
+            id: input.id,
+            level: tabs[2]!.trim(),
+            message: tabs.slice(3).join("\t").trim(),
+          };
+        }
+
+        return {
           type: "message",
           timestamp: input.timestamp,
           group,
-          requestID: generateInvocationID(tabs[1]!),
+          requestID: stream.requestID || "",
           id: input.id,
-          level: tabs[2]!.trim(),
-          message: tabs.slice(3).join("\t").trim(),
+          level: "INFO",
+          message: tabs.join("\t").trim(),
         };
-        const target = message.requestID === "undefined" ? unknown : results;
+      })();
 
-        if (message.level === "ERROR") {
-          const parsed = (() => {
-            if (
-              tabs[3]?.includes("Invoke Error") ||
-              tabs[3]?.includes("Uncaught Exception")
-            )
-              return JSON.parse(tabs[4]!);
-            if (message.level === "ERROR" && tabs[3]) {
-              const lines = tabs[3].split("\n");
-              if (!lines[0]) return;
-              const [error, message] = lines[0].split(": ");
-              if (!error || !message) return;
-              return {
-                errorType: error,
-                errorMessage: message,
-                stack: lines,
-              };
+      const target = message.requestID === "" ? stream.unknown : results;
+
+      if (message.level === "ERROR") {
+        const parsed = (() => {
+          if (
+            tabs[3]?.includes("Invoke Error") ||
+            tabs[3]?.includes("Uncaught Exception")
+          )
+            return JSON.parse(tabs[4]!);
+          if (message.level === "ERROR" && tabs[3]) {
+            const lines = tabs[3].split("\n");
+            if (!lines[0]) return;
+            const [error, message] = lines[0].split(": ");
+            if (!error || !message) return;
+            return {
+              errorType: error,
+              errorMessage: message,
+              stack: lines,
+            };
+          }
+        })();
+
+        if (parsed) {
+          const stack = await (async (): Promise<StackFrame[]> => {
+            // drop first line, only has error in it
+            const stack: string[] = parsed.stack.slice(1);
+            const consumer = await getSourcemap(input.timestamp);
+            if (consumer) {
+              return stack.flatMap((item) => {
+                const splits: string[] = item.split(":");
+                const column = parseInt(splits.pop()!);
+                const line = parseInt(splits.pop()!);
+                if (!column || !line) return [];
+                const original = consumer.originalPositionFor({
+                  line,
+                  column,
+                });
+
+                if (!original.source) return [];
+                const lines =
+                  consumer
+                    .sourceContentFor(original.source, true)
+                    ?.split("\n") || [];
+                const min = Math.max(0, original.line! - 4);
+                const ctx = lines.slice(
+                  min,
+                  Math.min(original.line! + 3, lines.length - 1)
+                );
+
+                return [
+                  {
+                    file: original.source,
+                    line: original.line!,
+                    column: original.column!,
+                    context: ctx,
+                    important: !original.source.startsWith("node_modules"),
+                  },
+                ];
+              });
             }
+
+            return stack.map((raw) => ({ raw }));
           })();
 
-          if (parsed) {
-            const stack = await (async (): Promise<StackFrame[]> => {
-              // drop first line, only has error in it
-              const stack: string[] = parsed.stack.slice(1);
-              const consumer = await getSourcemap(input.timestamp);
-              if (consumer) {
-                return stack.flatMap((item) => {
-                  const splits: string[] = item.split(":");
-                  const column = parseInt(splits.pop()!);
-                  const line = parseInt(splits.pop()!);
-                  if (!column || !line) return [];
-                  const original = consumer.originalPositionFor({
-                    line,
-                    column,
-                  });
-
-                  if (!original.source) return [];
-                  const lines =
-                    consumer
-                      .sourceContentFor(original.source, true)
-                      ?.split("\n") || [];
-                  const min = Math.max(0, original.line! - 4);
-                  const ctx = lines.slice(
-                    min,
-                    Math.min(original.line! + 3, lines.length - 1)
-                  );
-
-                  return [
-                    {
-                      file: original.source,
-                      line: original.line!,
-                      column: original.column!,
-                      context: ctx,
-                      important: !original.source.startsWith("node_modules"),
-                    },
-                  ];
-                });
-              }
-
-              return stack.map((raw) => ({ raw }));
-            })();
-
-            target.push({
-              id: message.id,
-              type: "error",
-              timestamp: input.timestamp,
-              group,
-              requestID: message.requestID,
-              error: parsed.errorType,
-              message: parsed.errorMessage,
-              stack,
-            });
-          }
+          target.push({
+            id: message.id,
+            type: "error",
+            timestamp: input.timestamp,
+            group,
+            requestID: message.requestID,
+            error: parsed.errorType,
+            message: parsed.errorMessage,
+            stack,
+          });
         }
-        target.push(message);
-        return;
       }
+      target.push(message);
+      return;
     },
     async flush(order = 1) {
       const id = createId();
@@ -312,7 +346,7 @@ export function createProcessor(input: {
           )
         ),
         sortBy((evts) => order * (evts[0]?.timestamp || 0))
-      );
+      ).flat();
       console.log("sending", events.length, "events");
       const key = `logevents/${id}.json`;
       await s3.send(
@@ -321,7 +355,7 @@ export function createProcessor(input: {
           Bucket: Bucket.ephemeral.bucketName,
           ContentEncoding: "gzip",
           ContentType: "application/json",
-          Body: await compress(JSON.stringify(events.flat())),
+          Body: await compress(JSON.stringify(events)),
         })
       );
       const url = await getSignedUrl(
@@ -434,7 +468,7 @@ export const expand = zod(
     for (let i = 0; i < events.length; i++) {
       const event = events[i]!;
       await processor.process({
-        stream: input.logStream,
+        streamName: input.logStream,
         timestamp: event.timestamp!,
         id: i.toString(),
         line: event.message!,

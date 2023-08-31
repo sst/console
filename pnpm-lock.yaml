@@ -83,6 +83,9 @@ importers:
       drizzle-zod:
         specifier: 0.4.4
         version: 0.4.4(drizzle-orm@0.27.2)(zod@3.22.2)
+      luxon:
+        specifier: ^3.3.0
+        version: 3.4.2
       remeda:
         specifier: ^1.17.1
         version: 1.25.2
@@ -99,6 +102,9 @@ importers:
         specifier: ^3.21.4
         version: 3.22.2
     devDependencies:
+      '@types/luxon':
+        specifier: ^3.3.1
+        version: 3.3.2
       '@types/node':
         specifier: ^18.16.0
         version: 18.17.12
@@ -365,6 +371,9 @@ packages:
   /@aws-cdk/cloud-assembly-schema@2.91.0:
     resolution: {integrity: sha512-H7pbe7VMnX2siipaT6rVDWjp0p9clrKc+8C+FG+6woqQIuQBuBZxZGVVSNtR0hdtAj7UWFX/CHGS4ihFtJnmIQ==}
     engines: {node: '>= 14.15.0'}
+    dependencies:
+      jsonschema: 1.4.1
+      semver: 7.5.4
     bundledDependencies:
       - jsonschema
       - semver
@@ -387,6 +396,7 @@ packages:
       '@aws-cdk/cloud-assembly-schema': 2.91.0
     dependencies:
       '@aws-cdk/cloud-assembly-schema': 2.91.0
+      semver: 7.5.4
     bundledDependencies:
       - semver
 

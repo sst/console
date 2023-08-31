@@ -55,6 +55,7 @@ export async function process(input: {
     },
   });
   const credentials = await AWS.assumeRole(accountID!);
+  if (!credentials) return;
 
   const functionArn =
     `arn:aws:lambda:${region}:${accountID}:function:` +

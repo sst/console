@@ -6,7 +6,8 @@ import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { useWorkspace } from "../actor";
 import { useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+import { DateTime } from "luxon";
 
 export * as AWS from ".";
 
@@ -30,20 +31,22 @@ export const assumeRole = zod(z.string(), async (id) => {
       sessionToken: result.Credentials!.SessionToken!,
     };
   } catch (e: any) {
-    const rows = await useTransaction(async (tx) =>
-      tx
-        .update(awsAccount)
-        .set({
-          timeFailed: new Date().toISOString().split("Z")[0],
-        })
-        .where(
-          and(
-            eq(awsAccount.accountID, id),
-            eq(awsAccount.workspaceID, workspaceID)
+    const rows = await useTransaction(
+      async (tx) =>
+        await tx
+          .update(awsAccount)
+          .set({
+            timeFailed: sql`now()`,
+          })
+          .where(
+            and(
+              eq(awsAccount.accountID, id),
+              eq(awsAccount.workspaceID, workspaceID)
+            )
           )
-        )
+          .execute()
     );
-    console.log("failed to assume role for account", id, e);
+    console.log("failed to assume role for account", id);
     return;
   }
 });

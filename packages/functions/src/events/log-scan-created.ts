@@ -100,7 +100,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
               await processor.process({
                 id: index.toString(),
                 timestamp: new Date(result[0]?.value! + " Z").getTime(),
-                stream: result[2]?.value!,
+                streamName: result[2]?.value!,
                 line: result[1]?.value!,
               });
               index++;
