@@ -247,8 +247,23 @@ export function createProcessor(input: {
           if (
             tabs[3]?.includes("Invoke Error") ||
             tabs[3]?.includes("Uncaught Exception")
-          )
-            return JSON.parse(tabs[4]!);
+          ) {
+            const parsed = JSON.parse(tabs[4]!);
+            if ("name" in parsed && "message" in parsed) {
+              return {
+                errorType: parsed.name,
+                errorMessage: parsed.message,
+                stack: [],
+              };
+            }
+            if (!parsed.stack) {
+              console.log("parsed weird", parsed);
+              console.log(tabs);
+              return;
+            }
+            return parsed;
+          }
+
           if (message.level === "ERROR" && tabs[3]) {
             const lines = tabs[3].split("\n");
             if (!lines[0]) return;
@@ -264,10 +279,6 @@ export function createProcessor(input: {
 
         if (parsed) {
           const stack = await (async (): Promise<StackFrame[]> => {
-            if (!parsed.stack) {
-              console.log("parsed", parsed);
-              return [];
-            }
             // drop first line, only has error in it
             const stack: string[] = parsed.stack.slice(1);
             const consumer = await getSourcemap(input.timestamp);
