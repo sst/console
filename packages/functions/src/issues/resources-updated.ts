@@ -88,7 +88,7 @@ export const handler = EventHandler(
             }
           }
         }
-        userClient.send(
+        await userClient.send(
           new PutSubscriptionFilterCommand({
             destinationArn: destination.destination?.arn,
             filterName: uniqueIdentifier,
