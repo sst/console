@@ -289,6 +289,9 @@ export function createProcessor(input: {
                 const column = parseInt(splits.pop()!);
                 const line = parseInt(splits.pop()!);
                 if (!column || !line) return [];
+                if (column < 0 || line < 0) {
+                  console.log(item, column, line);
+                }
                 const original = consumer.originalPositionFor({
                   line,
                   column,
