@@ -295,9 +295,7 @@ export function createProcessor(input: {
                       line,
                       column,
                     });
-                  } catch {
-                    console.log(item, column, line);
-                  }
+                  } catch {}
                 })();
 
                 if (!original?.source) return [];
