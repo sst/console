@@ -77,6 +77,12 @@ importers:
       '@planetscale/database':
         specifier: ^1.7.0
         version: 1.11.0
+      '@smithy/middleware-retry':
+        specifier: ^2.0.5
+        version: 2.0.5
+      '@smithy/util-retry':
+        specifier: ^2.0.0
+        version: 2.0.0
       drizzle-orm:
         specifier: 0.27.2
         version: 0.27.2(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0)

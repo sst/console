@@ -31,6 +31,8 @@
     "@octokit/rest": "^19.0.7",
     "@paralleldrive/cuid2": "^2.2.0",
     "@planetscale/database": "^1.7.0",
+    "@smithy/middleware-retry": "^2.0.5",
+    "@smithy/util-retry": "^2.0.0",
     "drizzle-orm": "0.27.2",
     "drizzle-zod": "0.4.4",
     "luxon": "^3.3.0",

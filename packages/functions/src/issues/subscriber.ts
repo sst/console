@@ -10,7 +10,7 @@ export const handler = ApiHandler(async (event) => {
       zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
     );
     if (decoded.messageType !== "DATA_MESSAGE") continue;
-    await Issue.process(decoded);
+    await Issue.extract(decoded);
   }
 
   return {
