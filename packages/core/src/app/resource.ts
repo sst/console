@@ -16,6 +16,7 @@ import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
 import { and, eq, inArray } from "drizzle-orm";
 import { useWorkspace } from "../actor";
+import { RETRY_STRATEGY } from "../util/aws";
 
 export const Events = {
   Updated: event("app.resource.updated", {
@@ -41,35 +42,6 @@ export type Info = {
       : {};
   };
 }[Metadata["type"]];
-
-const RETRY_STRATEGY = new StandardRetryStrategy(async () => 10000, {
-  retryDecider: (e: any) => {
-    if (
-      [
-        "ThrottlingException",
-        "Throttling",
-        "TooManyRequestsException",
-        "OperationAbortedException",
-        "TimeoutError",
-        "NetworkingError",
-      ].includes(e.name)
-    ) {
-      return true;
-    }
-    return false;
-  },
-  delayDecider: (_, attempts) => {
-    return Math.min(1.5 ** attempts * 100, 5000);
-  },
-  // AWS SDK v3 has an idea of "retry tokens" which are used to
-  // prevent multiple retries from happening at the same time.
-  // This is a workaround to disable that.
-  retryQuota: {
-    hasRetryTokens: () => true,
-    releaseRetryTokens: () => {},
-    retrieveRetryTokens: () => 1,
-  },
-});
 
 export const Enrichers = {
   async Function(resource, credentials, region) {

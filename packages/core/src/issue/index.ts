@@ -23,6 +23,7 @@ import { Resource } from "../app/resource";
 import { App } from "../app";
 import { z } from "zod";
 import { StandardRetryStrategy } from "@smithy/util-retry";
+import { RETRY_STRATEGY } from "../util/aws";
 
 export * as Issue from "./index";
 
@@ -164,7 +165,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
 
   const userClient = new CloudWatchLogsClient({
     ...config,
-    retryStrategy: new StandardRetryStrategy(100),
+    retryStrategy: RETRY_STRATEGY,
   });
 
   // Get all function resources
@@ -234,7 +235,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
       );
 
     try {
-      const result = await createFilter();
+      await createFilter();
     } catch (e: any) {
       console.log("caught error");
       if (
