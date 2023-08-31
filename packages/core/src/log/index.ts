@@ -220,21 +220,8 @@ export function createProcessor(input: {
         });
       }
 
-      const message = ((): LogEventType<"message"> => {
-        // NodeJS format
-        if (tabs[0]?.length === 24 && tabs[1]?.length === 36) {
-          return {
-            type: "message",
-            timestamp: input.timestamp,
-            group,
-            requestID: stream.requestID || "",
-            id: input.id,
-            level: tabs[2]!.trim(),
-            message: tabs.slice(3).join("\t").trim(),
-          };
-        }
-
-        return {
+      const message = (() => {
+        const result: LogEventType<"message"> = {
           type: "message",
           timestamp: input.timestamp,
           group,
@@ -243,6 +230,14 @@ export function createProcessor(input: {
           level: "INFO",
           message: tabs.join("\t").trim(),
         };
+
+        // NodeJS format
+        if (tabs[0]?.length === 24 && tabs[1]?.length === 36) {
+          result.level = tabs[2]!.trim();
+          result.message = tabs.slice(3).join("\t").trim();
+        }
+
+        return result;
       })();
 
       const target = message.requestID === "" ? stream.unknown : results;
