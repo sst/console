@@ -88,6 +88,7 @@ export const handler = EventHandler(
             }
           }
         }
+
         await userClient.send(
           new PutSubscriptionFilterCommand({
             destinationArn: destination.destination?.arn,
@@ -119,6 +120,7 @@ export const handler = EventHandler(
       try {
         const result = await createFilter();
       } catch (e: any) {
+        console.log("caught error");
         if (
           e instanceof ResourceNotFoundException &&
           e.message.startsWith("The specified log group does not exist")
