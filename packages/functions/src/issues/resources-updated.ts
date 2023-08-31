@@ -1,13 +1,11 @@
-import { ResourceNotFoundException } from "@aws-sdk/client-cloudwatch";
 import {
   CloudWatchLogsClient,
   CreateLogGroupCommand,
+  ResourceNotFoundException,
   PutDestinationCommand,
-  DescribeDestinationsCommand,
   PutDestinationPolicyCommand,
   PutSubscriptionFilterCommand,
   DescribeSubscriptionFiltersCommand,
-  DeleteSubscriptionFilterCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { provideActor } from "@console/core/actor";
 import { App } from "@console/core/app";
