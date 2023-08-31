@@ -264,6 +264,10 @@ export function createProcessor(input: {
 
         if (parsed) {
           const stack = await (async (): Promise<StackFrame[]> => {
+            if (!parsed.stack) {
+              console.log("parsed", parsed);
+              return [];
+            }
             // drop first line, only has error in it
             const stack: string[] = parsed.stack.slice(1);
             const consumer = await getSourcemap(input.timestamp);
