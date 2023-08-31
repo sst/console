@@ -9,7 +9,7 @@ export const DUMMY_LOGS: Invocation[] = [
     logs: [],
     cold: false,
     start: new Date(),
-    duration: undefined,
+    errors: [],
   },
   {
     id: crypto.randomUUID(),
@@ -47,7 +47,7 @@ export const DUMMY_LOGS: Invocation[] = [
     ],
     cold: false,
     start: new Date(),
-    duration: 234,
+    errors: [],
   },
   {
     id: crypto.randomUUID(),
@@ -64,7 +64,7 @@ export const DUMMY_LOGS: Invocation[] = [
     ],
     cold: true,
     start: new Date("1995-12-17T12:24:00"),
-    duration: 59123,
+    errors: [],
   },
   {
     id: crypto.randomUUID(),
@@ -76,7 +76,7 @@ export const DUMMY_LOGS: Invocation[] = [
     ],
     cold: false,
     start: new Date("1995-12-17T12:24:00"),
-    duration: 72123,
+    errors: [],
   },
   {
     id: crypto.randomUUID(),
@@ -88,7 +88,7 @@ export const DUMMY_LOGS: Invocation[] = [
     ],
     cold: false,
     start: new Date("1995-12-17T12:24:00"),
-    duration: 3600100,
+    errors: [],
   },
   {
     id: crypto.randomUUID(),
@@ -99,12 +99,14 @@ export const DUMMY_LOGS: Invocation[] = [
       },
     ],
     cold: false,
-    error: {
-      type: "Error",
-      message: "Error message",
-      trace: [],
-    },
+    errors: [
+      {
+        id: "1",
+        type: "Error",
+        message: "Error message",
+        stack: [],
+      },
+    ],
     start: new Date(),
-    duration: 7504000,
   },
 ];

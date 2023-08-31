@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "git config --local core.hooksPath .githooks",
     "dev": "sst dev",
     "sso": "aws sso login --sso-session=sst",
     "build": "sst build",
     "deploy": "sst deploy",
     "remove": "sst remove",
     "console": "sst console",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "turbo typecheck"
   },
   "devDependencies": {
     "@aws-cdk/aws-kinesisfirehose-alpha": "^2.91.0-alpha.0",
@@ -18,6 +19,7 @@
     "aws-cdk-lib": "2.91.0",
     "constructs": "10.2.69",
     "sst": "2.24.21",
+    "turbo": "^1.10.13",
     "typescript": "^5.0.4"
   },
   "workspaces": [

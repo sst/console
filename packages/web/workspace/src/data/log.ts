@@ -1,7 +1,6 @@
 import { bus } from "$/providers/bus";
 import { LogEvent, StackFrame } from "@console/core/log";
-import { batch } from "solid-js";
-import { createStore, produce, reconcile } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 
 export const [LogStore, setLogStore] = createStore<
   Record<string, Invocation[]>
@@ -216,6 +215,7 @@ bus.on("function.error", (e) => {
       const invocation = group.find((i) => i.id === e.requestID);
       if (!invocation) return;
       invocation.errors.push({
+        id: invocation.id,
         type: e.errorType,
         message: e.errorMessage,
         stack: e.trace.map((t) => ({

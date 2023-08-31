@@ -23,6 +23,9 @@ importers:
       sst:
         specifier: 2.24.21
         version: 2.24.21
+      turbo:
+        specifier: ^1.10.13
+        version: 1.10.13
       typescript:
         specifier: ^5.0.4
         version: 5.2.2
@@ -84,11 +87,11 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       drizzle-orm:
-        specifier: 0.27.2
-        version: 0.27.2(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0)
+        specifier: 0.28.5
+        version: 0.28.5(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0)
       drizzle-zod:
-        specifier: 0.4.4
-        version: 0.4.4(drizzle-orm@0.27.2)(zod@3.22.2)
+        specifier: 0.5.1
+        version: 0.5.1(drizzle-orm@0.28.5)(zod@3.22.2)
       luxon:
         specifier: ^3.3.0
         version: 3.4.2
@@ -115,8 +118,8 @@ importers:
         specifier: ^18.16.0
         version: 18.17.12
       drizzle-kit:
-        specifier: 0.19.10
-        version: 0.19.10
+        specifier: 0.19.13
+        version: 0.19.13
       sst:
         specifier: 2.24.21
         version: 2.24.21
@@ -154,8 +157,8 @@ importers:
         specifier: ^19.0.7
         version: 19.0.13
       drizzle-orm:
-        specifier: 0.27.2
-        version: 0.27.2(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0)
+        specifier: 0.28.5
+        version: 0.28.5(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0)
       fast-jwt:
         specifier: ^2.2.1
         version: 2.2.3
@@ -4875,8 +4878,8 @@ packages:
       wordwrap: 1.0.0
     dev: true
 
-  /drizzle-kit@0.19.10:
-    resolution: {integrity: sha512-v7bd+7YUO3NJJTY7hwt9k+DPJVw+31iejG/ztkvNS0hK8zWjJvA6NAECYZVswKQ+efCjzLgPCx+I9X105Zqt6Q==}
+  /drizzle-kit@0.19.13:
+    resolution: {integrity: sha512-Rba5VW1O2JfJlwVBeZ8Zwt2E2us5oZ08PQBDiVSGlug53TOc8hzXjblZFuF+dnll9/RQEHrkzBmJFgqTvn5Rxg==}
     hasBin: true
     dependencies:
       '@drizzle-team/studio': 0.0.5
@@ -4895,8 +4898,8 @@ packages:
       - supports-color
     dev: true
 
-  /drizzle-orm@0.27.2(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0):
-    resolution: {integrity: sha512-ZvBvceff+JlgP7FxHKe0zOU9CkZ4RcOtibumIrqfYzDGuOeF0YUY0F9iMqYpRM7pxnLRfC+oO7rWOUH3T5oFQA==}
+  /drizzle-orm@0.28.5(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0):
+    resolution: {integrity: sha512-6r6Iw4c38NAmW6TiKH3TUpGUQ1YdlEoLJOQptn8XPx3Z63+vFNKfAiANqrIiYZiMjKR9+NYAL219nFrmo1duXA==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=3'
@@ -4962,13 +4965,13 @@ packages:
       kysely: 0.25.0
     dev: false
 
-  /drizzle-zod@0.4.4(drizzle-orm@0.27.2)(zod@3.22.2):
-    resolution: {integrity: sha512-XNn0mjQ306Hvg+CuyKV98wnsWBWeTqv+kgE/N79Zj0EdCvjD2kaoN5sFDGFkMVqPQuP7IB1IPs0lEcOij1RvBA==}
+  /drizzle-zod@0.5.1(drizzle-orm@0.28.5)(zod@3.22.2):
+    resolution: {integrity: sha512-C/8bvzUH/zSnVfwdSibOgFjLhtDtbKYmkbPbUCq46QZyZCH6kODIMSOgZ8R7rVjoI+tCj3k06MRJMDqsIeoS4A==}
     peerDependencies:
       drizzle-orm: '>=0.23.13'
       zod: '*'
     dependencies:
-      drizzle-orm: 0.27.2(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0)
+      drizzle-orm: 0.28.5(@aws-sdk/client-rds-data@3.398.0)(@planetscale/database@1.11.0)(kysely@0.25.0)
       zod: 3.22.2
     dev: false
 
@@ -7514,6 +7517,66 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
     dev: false
+
+  /turbo-darwin-64@1.10.13:
+    resolution: {integrity: sha512-vmngGfa2dlYvX7UFVncsNDMuT4X2KPyPJ2Jj+xvf5nvQnZR/3IeDEGleGVuMi/hRzdinoxwXqgk9flEmAYp0Xw==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-darwin-arm64@1.10.13:
+    resolution: {integrity: sha512-eMoJC+k7gIS4i2qL6rKmrIQGP6Wr9nN4odzzgHFngLTMimok2cGLK3qbJs5O5F/XAtEeRAmuxeRnzQwTl/iuAw==}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-linux-64@1.10.13:
+    resolution: {integrity: sha512-0CyYmnKTs6kcx7+JRH3nPEqCnzWduM0hj8GP/aodhaIkLNSAGAa+RiYZz6C7IXN+xUVh5rrWTnU2f1SkIy7Gdg==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-linux-arm64@1.10.13:
+    resolution: {integrity: sha512-0iBKviSGQQlh2OjZgBsGjkPXoxvRIxrrLLbLObwJo3sOjIH0loGmVIimGS5E323soMfi/o+sidjk2wU1kFfD7Q==}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-windows-64@1.10.13:
+    resolution: {integrity: sha512-S5XySRfW2AmnTeY1IT+Jdr6Goq7mxWganVFfrmqU+qqq3Om/nr0GkcUX+KTIo9mPrN0D3p5QViBRzulwB5iuUQ==}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-windows-arm64@1.10.13:
+    resolution: {integrity: sha512-nKol6+CyiExJIuoIc3exUQPIBjP9nIq5SkMJgJuxsot2hkgGrafAg/izVDRDrRduQcXj2s8LdtxJHvvnbI8hEQ==}
+    cpu: [arm64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo@1.10.13:
+    resolution: {integrity: sha512-vOF5IPytgQPIsgGtT0n2uGZizR2N3kKuPIn4b5p5DdeLoI0BV7uNiydT7eSzdkPRpdXNnO8UwS658VaI4+YSzQ==}
+    hasBin: true
+    optionalDependencies:
+      turbo-darwin-64: 1.10.13
+      turbo-darwin-arm64: 1.10.13
+      turbo-linux-64: 1.10.13
+      turbo-linux-arm64: 1.10.13
+      turbo-windows-64: 1.10.13
+      turbo-windows-arm64: 1.10.13
+    dev: true
 
   /type-detect@4.0.8:
     resolution: {integrity: sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==}

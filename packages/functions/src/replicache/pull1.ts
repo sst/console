@@ -1,10 +1,9 @@
 import { DateTime } from "luxon";
 import { useActor, useWorkspace } from "@console/core/actor";
-import { Replicache } from "@console/core/replicache";
 import { user } from "@console/core/user/user.sql";
 import { useTransaction } from "@console/core/util/transaction";
 import { NotPublic } from "../api";
-import { ApiHandler, useJsonBody } from "sst/node/api";
+import { ApiHandler, Response, useJsonBody } from "sst/node/api";
 import { eq, and, gt, gte, inArray, isNull, lte, sql, lt } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { usage } from "@console/core/billing/billing.sql";
@@ -16,15 +15,9 @@ import {
   replicache_cvr,
 } from "@console/core/replicache/replicache.sql";
 import { lambdaPayload } from "@console/core/lambda/lambda.sql";
-import { createId } from "@console/core/util/sql";
-import { equals, groupBy, keys, map, mapValues, pipe } from "remeda";
+import { equals, mapValues } from "remeda";
 import { log_poller, log_search } from "@console/core/log/log.sql";
-import {
-  PatchOperation,
-  PullRequest,
-  PullRequestV1,
-  PullResponseV1,
-} from "replicache";
+import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 
 export const handler = ApiHandler(async () => {
   await NotPublic();
@@ -32,13 +25,14 @@ export const handler = ApiHandler(async () => {
 
   const req: PullRequest = useJsonBody();
   console.log("request", req);
-  if (req.pullVersion !== 1)
-    return {
+  if (req.pullVersion !== 1) {
+    throw new Response({
       statusCode: 307,
       headers: {
         location: "/replicache/pull",
       },
-    };
+    });
+  }
 
   const resp = await useTransaction(
     async (tx): Promise<PullResponseV1 | undefined> => {
@@ -61,7 +55,7 @@ export const handler = ApiHandler(async () => {
               id: req.clientGroupID,
               actor,
               cvrVersion: 0,
-              clientVersion: req.cookie ?? 0,
+              clientVersion: (req.cookie as number) ?? 0,
             }
         );
 

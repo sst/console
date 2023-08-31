@@ -9,7 +9,6 @@ import {
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
 import type { Credentials } from "../aws";
-import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 import { event } from "../event";
 import { z } from "zod";
 import { zod } from "../util/zod";

@@ -4,7 +4,7 @@ import { macaronVitePlugin } from "@macaron-css/vite";
 import path from "path";
 
 export default defineConfig({
-  plugins: [macaronVitePlugin(), solidPlugin()],
+  plugins: [macaronVitePlugin(), solidPlugin() as any],
   server: {
     port: 3000,
   },

@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "sst bind vitest",
-    "typecheck": "tsc -noEmit"
+    "typecheck": "tsc --noEmit --incremental"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.114",
@@ -22,7 +22,7 @@
     "@aws-sdk/s3-request-presigner": "^3.400.0",
     "@botpoison/node": "^0.1.10",
     "@octokit/rest": "^19.0.7",
-    "drizzle-orm": "0.27.2",
+    "drizzle-orm": "0.28.5",
     "fast-jwt": "^2.2.1",
     "luxon": "^3.3.0",
     "remeda": "^1.17.1",

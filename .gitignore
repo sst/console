@@ -1,3 +1,5 @@
 node_modules
 .sst
 *.DS_Store
+*.tsbuildinfo
+.turbo

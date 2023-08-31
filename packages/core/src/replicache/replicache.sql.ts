@@ -14,8 +14,8 @@ export const replicache_client_group = mysqlTable("replicache_client_group", {
   ...timestamps,
   id: char("id", { length: 36 }).primaryKey().notNull(),
   actor: json("actor").$type<Actor>(),
-  clientVersion: int("client_version").notNull(),
   cvrVersion: int("cvr_version").notNull(),
+  clientVersion: int("client_version").notNull(),
 });
 
 export const replicache_client = mysqlTable("replicache_client", {
