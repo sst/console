@@ -27,6 +27,9 @@ export const Events = {
   Updated: event("app.stage.updated", {
     stageID: z.string().nonempty(),
   }),
+  ResourcesUpdated: event("app.stage.resources_updated", {
+    stageID: z.string().nonempty(),
+  }),
   UsageRequested: event("app.stage.usage_requested", {
     stageID: z.string().nonempty(),
     daysOffset: z.number().int().min(1),
@@ -223,6 +226,11 @@ export const syncMetadata = zod(
 
     return useTransaction(async (tx) => {
       createTransactionEffect(() => Replicache.poke());
+      createTransactionEffect(() =>
+        Events.ResourcesUpdated.publish({
+          stageID: input.stageID,
+        })
+      );
       const existing = await tx
         .select({
           id: resource.id,
@@ -293,9 +301,12 @@ export const assumeRole = zod(Info.shape.id, async (stageID) =>
       .select({
         accountID: awsAccount.accountID,
         region: stage.region,
+        name: stage.name,
+        app: app.name,
       })
       .from(awsAccount)
       .innerJoin(stage, eq(stage.awsAccountID, awsAccount.id))
+      .innerJoin(app, eq(stage.appID, app.id))
       .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
       .execute()
       .then((rows) => rows.at(0));
@@ -305,6 +316,9 @@ export const assumeRole = zod(Info.shape.id, async (stageID) =>
     return {
       credentials,
       region: result.region,
+      stage: result.name,
+      app: result.app,
+      awsAccountID: result.accountID,
     };
   })
 );

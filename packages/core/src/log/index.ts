@@ -9,22 +9,9 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AWS, Credentials } from "../aws";
 import { SourceMapConsumer } from "source-map";
-import {
-  filter,
-  flatMap,
-  flattenDeep,
-  groupBy,
-  map,
-  maxBy,
-  minBy,
-  pipe,
-  sort,
-  sortBy,
-  values,
-} from "remeda";
+import { filter, groupBy, map, maxBy, pipe, sortBy, values } from "remeda";
 import { createId } from "@paralleldrive/cuid2";
 import { compress } from "../util/compress";
-import { Config } from "sst/node/config";
 import { Bucket } from "sst/node/bucket";
 import { Realtime } from "../realtime";
 import { zod } from "../util/zod";
@@ -69,6 +56,7 @@ export type LogEvent = LogEventBase &
         id: string;
       }
     | {
+        id: string;
         type: "error";
         error: string;
         message: string;
@@ -112,7 +100,6 @@ export function createProcessor(input: {
       key: item.Key!,
       created: item.LastModified!.getTime(),
     }));
-    console.log("source maps found", maps.length);
     return maps;
   });
 
@@ -288,6 +275,7 @@ export function createProcessor(input: {
             })();
 
             target.push({
+              id: message.id,
               type: "error",
               timestamp: input.timestamp,
               group,
@@ -354,16 +342,13 @@ export function createProcessor(input: {
 
 import {
   CloudWatchLogsClient,
-  FilterLogEventsCommand,
   GetLogEventsCommand,
-  OutputLogEvent,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
 
 export const expand = zod(
   z.object({
     timestamp: z.number(),
-    requestID: z.string(),
     logGroup: z.string(),
     logStream: z.string(),
     region: z.string(),
@@ -421,7 +406,12 @@ export const expand = zod(
         );
 
         for (const event of events) {
-          if (backwards && event.message!.startsWith("REPORT")) break;
+          if (
+            backwards &&
+            (event.message!.startsWith("REPORT") ||
+              event.message!.startsWith("END"))
+          )
+            break;
           result.push(event);
           if (!backwards && event.message!.startsWith("REPORT")) break;
         }
@@ -451,10 +441,6 @@ export const expand = zod(
       });
     }
 
-    const results = processor.results.filter(
-      (result) => result.requestID === input.requestID
-    );
-
-    return results;
+    return processor.results;
   }
 );

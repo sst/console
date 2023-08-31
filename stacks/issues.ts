@@ -23,8 +23,12 @@ export function Issues({ stack }: StackContext) {
   const subscriber = new Function(stack, "issues-subscriber", {
     handler: "packages/functions/src/issues/subscriber.handler",
     timeout: "15 minutes",
+    nodejs: {
+      install: ["source-map"],
+    },
     url: true,
     bind: [bus, ...Object.values(secrets.database)],
+    permissions: ["sts"],
   });
 
   const backup = new Bucket(stack, "issues-backup");
@@ -53,11 +57,12 @@ export function Issues({ stack }: StackContext) {
     allRegions().map((region) => `logs.${region}.amazonaws.com`)
   );
 
-  const creator = new Function(stack, "subscription-creator", {
-    handler: "packages/functions/src/issues/subscription-creator.handler",
+  bus.subscribe(stack, "app.stage.resources_updated", {
+    handler: "packages/functions/src/issues/resources-updated.handler",
     timeout: "15 minutes",
     permissions: [
       "sts",
+      "logs:DescribeDestinations",
       "logs:PutDestination",
       "logs:PutDestinationPolicy",
       "logs:PutSubscriptionFilter",
@@ -66,6 +71,9 @@ export function Issues({ stack }: StackContext) {
         resources: [role.roleArn],
       }),
     ],
+    nodejs: {
+      install: ["source-map"],
+    },
     bind: [bus, ...Object.values(secrets.database)],
     environment: {
       ISSUES_STREAM_ARN: stream.deliveryStreamArn,

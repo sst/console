@@ -1,13 +1,16 @@
 import zlib from "zlib";
 import crypto from "crypto";
 import { ApiHandler, useJsonBody } from "sst/node/api";
+import { Issue } from "@console/core/issue";
 
 export const handler = ApiHandler(async (event) => {
   const body = useJsonBody();
   for (const record of body.records) {
-    await handleRecord(
-      JSON.parse(zlib.unzipSync(Buffer.from(record.data, "base64")).toString())
+    const decoded = JSON.parse(
+      zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
     );
+    if (decoded.messageType !== "DATA_MESSAGE") continue;
+    await Issue.process(decoded);
   }
 
   return {

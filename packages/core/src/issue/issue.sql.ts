@@ -20,16 +20,20 @@ export const issue = mysqlTable(
     stageID: cuid("stage_id").notNull(),
     error: text("error").notNull(),
     message: text("message").notNull(),
-    stack: json("stack").$type<StackFrame[]>().notNull(),
+    errorID: varchar("error_id", { length: 255 }).notNull(),
     group: varchar("group", { length: 255 }).notNull(),
     timeResolved: timestamp("time_resolved", {
       mode: "string",
     }),
-    resolver: json("resolver").$type<Actor>().notNull(),
+    resolver: json("resolver").$type<Actor>(),
+    timeIgnored: timestamp("time_ignored", {
+      mode: "string",
+    }),
+    ignorer: json("ignorer").$type<Actor>(),
   },
   (table) => ({
     primary: primaryKey(table.workspaceID, table.stageID, table.id),
-    group: unique("group").on(table.workspaceID, table.group),
+    group: unique("group").on(table.workspaceID, table.stageID, table.group),
     updated: index("updated").on(table.workspaceID, table.timeUpdated),
   })
 );
