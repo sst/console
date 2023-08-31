@@ -66,20 +66,26 @@ export const handler = EventHandler(
             logGroupName,
           })
         );
-        for (const filter of all.subscriptionFilters ?? []) {
-          if (filter.filterName === uniqueIdentifier) {
-            return;
-          }
 
-          if (filter.filterName?.startsWith("sst#")) {
-            // TODO: disable for now
-            // await userClient.send(
-            //   new DeleteSubscriptionFilterCommand({
-            //     logGroupName,
-            //     filterName: filter.filterName,
-            //   })
-            // );
-            continue;
+        if (false) {
+          for (const filter of all.subscriptionFilters ?? []) {
+            if (
+              filter.filterName === uniqueIdentifier &&
+              filter.destinationArn === destination.destination?.arn
+            ) {
+              return;
+            }
+
+            if (filter.filterName?.startsWith("sst#")) {
+              // TODO: disable for now
+              // await userClient.send(
+              //   new DeleteSubscriptionFilterCommand({
+              //     logGroupName,
+              //     filterName: filter.filterName,
+              //   })
+              // );
+              continue;
+            }
           }
         }
         userClient.send(
