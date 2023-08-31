@@ -23,7 +23,6 @@ export const handler = EventHandler(
 
     const uniqueIdentifier = `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}`;
     const cw = new CloudWatchLogsClient({ region: config.region });
-    console.log(await cw.send(new DescribeDestinationsCommand({})));
     const destination = await cw.send(
       new PutDestinationCommand({
         destinationName: uniqueIdentifier,
@@ -69,18 +68,17 @@ export const handler = EventHandler(
         );
         for (const filter of all.subscriptionFilters ?? []) {
           if (filter.filterName === uniqueIdentifier) {
-            console.log("filter already exists");
             return;
           }
 
           if (filter.filterName?.startsWith("sst#")) {
-            console.log("removing old filter", filter.filterName);
-            await userClient.send(
-              new DeleteSubscriptionFilterCommand({
-                logGroupName,
-                filterName: filter.filterName,
-              })
-            );
+            // TODO: disable for now
+            // await userClient.send(
+            //   new DeleteSubscriptionFilterCommand({
+            //     logGroupName,
+            //     filterName: filter.filterName,
+            //   })
+            // );
             continue;
           }
         }
@@ -114,7 +112,6 @@ export const handler = EventHandler(
 
       try {
         const result = await createFilter();
-        console.log("filter created");
       } catch (e: any) {
         if (
           e instanceof ResourceNotFoundException &&

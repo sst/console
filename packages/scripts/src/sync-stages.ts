@@ -29,7 +29,10 @@ for (const stage of stages) {
       workspaceID: stage.workspaceID,
     },
   });
-  await Stage.Events.Updated.publish({
+  // await Stage.Events.Updated.publish({
+  //   stageID: stage.id,
+  // });
+  await Stage.Events.ResourcesUpdated.publish({
     stageID: stage.id,
   });
 }
