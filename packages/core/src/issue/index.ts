@@ -134,8 +134,8 @@ export async function extract(input: {
             id: createId(),
             errorID: err.id,
             workspaceID: row.workspaceID,
-            error: err.error || "",
-            message: err.message || "",
+            error: err.error,
+            message: err.message,
             stageID: row.stageID,
           }))
         )

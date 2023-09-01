@@ -241,22 +241,14 @@ export function createProcessor(input: {
             tabs[3]?.includes("Uncaught Exception")
           ) {
             const parsed = JSON.parse(tabs[4]!);
-            if (parsed.name && parsed.message && !parsed.stack) {
-              return {
-                errorType: parsed.name,
-                errorMessage: parsed.message,
-                stack: [],
-              };
-            }
-            if (!parsed.stack) {
-              console.log("parsed weird", parsed);
-              console.log(tabs);
-              return;
-            }
             if (typeof parsed.stack == "string") {
               parsed.stack = parsed.stack.split("\n");
             }
-            return parsed;
+            return {
+              errorType: parsed.errorType || parsed.name,
+              errorMessage: parsed.errorMessage || parsed.message,
+              stack: parsed.stack || [],
+            };
           }
 
           if (message.level === "ERROR" && tabs[3]) {
