@@ -114,6 +114,7 @@ export async function extract(input: {
             .join("\n")
         )
         .digest("hex");
+      console.log("found error", err.type, err.message);
       for (const workspace of workspaces) {
         const key = `issues/${workspace.workspaceID}/${group}`;
         await s3.send(
