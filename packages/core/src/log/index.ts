@@ -254,7 +254,7 @@ export function createProcessor(input: {
               return;
             }
             if (typeof parsed.stack == "string") {
-              parsed.stack = parsed.stack.split("\n").slice(1);
+              parsed.stack = parsed.stack.split("\n");
             }
             return parsed;
           }
