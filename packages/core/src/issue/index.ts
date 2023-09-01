@@ -24,11 +24,16 @@ import { App } from "../app";
 import { z } from "zod";
 import { StandardRetryStrategy } from "@smithy/util-retry";
 import { RETRY_STRATEGY } from "../util/aws";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { Bucket } from "sst/node/bucket";
+import { compress } from "../util/compress";
 
 export * as Issue from "./index";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = z.infer<typeof Info>;
+
+const s3 = new S3Client({});
 
 export async function extract(input: {
   logGroup: string;
@@ -91,6 +96,8 @@ export async function extract(input: {
       credentials: credentials!,
     });
 
+    const body = await compress(JSON.stringify(logs));
+
     for (const err of logs) {
       if (err.type !== "error") continue;
       const group = createHash("sha256")
@@ -105,7 +112,17 @@ export async function extract(input: {
             .join("\n")
         )
         .digest("hex");
-
+      for (const workspace of workspaces) {
+        const key = `issues/${workspace.workspaceID}/${group}`;
+        await s3.send(
+          new PutObjectCommand({
+            Key: key,
+            Bucket: Bucket.storage.bucketName,
+            ContentEncoding: "gzip",
+            Body: body,
+          })
+        );
+      }
       await db
         .insert(issue)
         .values(

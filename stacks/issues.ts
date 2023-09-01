@@ -15,6 +15,7 @@ import {
 import { Bucket, Function, StackContext, use } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
+import { Storage } from "./storage";
 
 export function Issues({ stack }: StackContext) {
   const secrets = use(Secrets);
@@ -27,7 +28,7 @@ export function Issues({ stack }: StackContext) {
       install: ["source-map"],
     },
     url: true,
-    bind: [bus, ...Object.values(secrets.database)],
+    bind: [bus, use(Storage), ...Object.values(secrets.database)],
     permissions: ["sts"],
   });
 

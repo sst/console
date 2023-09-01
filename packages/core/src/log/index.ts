@@ -341,7 +341,7 @@ export function createProcessor(input: {
       target.push(message);
       return;
     },
-    async flush(order = 1) {
+    flush(order = 1) {
       const id = createId();
       const events = pipe(
         results,
@@ -364,27 +364,8 @@ export function createProcessor(input: {
         ),
         sortBy((evts) => order * (evts[0]?.timestamp || 0))
       ).flat();
-      console.log("sending", events.length, "events");
-      const key = `logevents/${id}.json`;
-      await s3.send(
-        new PutObjectCommand({
-          Key: key,
-          Bucket: Bucket.ephemeral.bucketName,
-          ContentEncoding: "gzip",
-          ContentType: "application/json",
-          Body: await compress(JSON.stringify(events)),
-        })
-      );
-      const url = await getSignedUrl(
-        s3,
-        new GetObjectCommand({
-          Bucket: Bucket.ephemeral.bucketName,
-          Key: key,
-        })
-      );
-
-      await Realtime.publish("log.url", url);
       results = [];
+      return events;
     },
     results,
     invocations,
@@ -492,6 +473,6 @@ export const expand = zod(
       });
     }
 
-    return processor.results;
+    return processor.flush();
   }
 );

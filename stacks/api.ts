@@ -33,7 +33,7 @@ export function API({ stack, app }: StackContext) {
   const pollerFetchStep = new LambdaInvoke(stack, "pollerFetchStep", {
     lambdaFunction: Function.fromDefinition(stack, "log-poller-fetch", {
       handler: "packages/functions/src/poller/fetch.handler",
-      bind: [...Object.values(secrets.database), storage.ephemeral],
+      bind: [...Object.values(secrets.database), storage],
       nodejs: {
         install: ["source-map"],
       },
