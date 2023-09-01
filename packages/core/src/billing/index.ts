@@ -50,7 +50,12 @@ export const listByStartAndEndDay = zod(
       tx
         .select()
         .from(usage)
-        .where(between(usage.day, input.startDay, input.endDay))
+        .where(
+          and(
+            eq(usage.workspaceID, useWorkspace()),
+            between(usage.day, input.startDay, input.endDay)
+          )
+        )
         .execute()
         .then((rows) => rows)
     )
