@@ -247,22 +247,25 @@ export function createProcessor(input: {
             return {
               errorType: parsed.errorType || parsed.name,
               errorMessage: parsed.errorMessage || parsed.message,
-              stack: parsed.stack || [],
+              stack: (parsed.stack || [])
+                .map((l: string) => l.trim())
+                .filter((l: string) => l.startsWith("at ")),
             };
           }
 
-          if (message.level === "ERROR" && tabs[3]) {
+          if (tabs[3]) {
             const lines = tabs[3].trim().split("\n");
             if (lines.length < 2) return;
-            const [first, ...rest] = lines;
-            if (!rest.every((item) => item.trim().startsWith("at"))) return;
+            const [first] = lines;
             const [_, error, message] = first!.match(/(\w+): (.+)$/) ?? [];
             if (!error || !message) return;
             if (error.startsWith("(node:")) return;
             return {
               errorType: error,
               errorMessage: message,
-              stack: lines,
+              stack: lines
+                .map((l) => l.trim())
+                .filter((l) => l.startsWith("at ")),
             };
           }
         })();
@@ -270,8 +273,7 @@ export function createProcessor(input: {
         if (parsed) {
           console.log("parsed", parsed);
           const stack = await (async (): Promise<StackFrame[]> => {
-            // drop first line, only has error in it
-            const stack: string[] = parsed.stack.slice(1);
+            const stack: string[] = parsed.stack;
             const consumer = await getSourcemap(input.timestamp);
             if (consumer) {
               return stack.flatMap((item) => {
