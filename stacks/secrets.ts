@@ -19,7 +19,7 @@ export function Secrets(ctx: StackContext) {
       new Config.Parameter(ctx.stack, "STRIPE_PRICE_ID", {
         value:
           ctx.stack.stage === "production"
-            ? "price_1NdPBlEAHP8a0ogpCiiqlMZM"
+            ? "price_1NlZmAEAHP8a0ogpglxmSac1"
             : "price_1NgB4oEAHP8a0ogpxqUXHKee",
       }),
     ],
