@@ -279,7 +279,6 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
     try {
       await createFilter();
     } catch (e: any) {
-      console.log("caught error");
       if (
         e instanceof ResourceNotFoundException &&
         e.message.startsWith("The specified log group does not exist")
@@ -288,7 +287,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
         await createFilter();
         continue;
       }
-      throw e;
+      console.error(e);
     }
   }
 });
