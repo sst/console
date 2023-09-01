@@ -368,6 +368,7 @@ import {
   GetLogEventsCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
+import { RETRY_STRATEGY } from "../util/aws";
 
 export const expand = zod(
   z.object({
@@ -382,10 +383,12 @@ export const expand = zod(
     const cw = new CloudWatchLogsClient({
       region: input.region,
       credentials: input.credentials,
+      retryStrategy: RETRY_STRATEGY,
     });
     const lambda = new LambdaClient({
       region: input.region,
       credentials: input.credentials,
+      retryStrategy: RETRY_STRATEGY,
     });
 
     const func = await lambda.send(
