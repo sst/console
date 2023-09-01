@@ -214,11 +214,12 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
 
   console.log("updating", functions.length, "functions");
   for (const logGroup of logGroups) {
+    if (exists.has(logGroup)) continue;
     const createFilter = async () => {
       if (false) {
         const all = await userClient.send(
           new DescribeSubscriptionFiltersCommand({
-            logGroupName,
+            logGroupName: logGroup,
           })
         );
         for (const filter of all.subscriptionFilters ?? []) {
