@@ -8,8 +8,7 @@ import {
   unique,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { cuid, id, timestamps, workspaceID } from "../util/sql";
-import { StackFrame } from "../log";
+import { cuid, timestamps, workspaceID } from "../util/sql";
 import { Actor } from "../actor";
 
 export const issue = mysqlTable(
@@ -35,5 +34,23 @@ export const issue = mysqlTable(
     primary: primaryKey(table.workspaceID, table.stageID, table.id),
     group: unique("group").on(table.workspaceID, table.stageID, table.group),
     updated: index("updated").on(table.workspaceID, table.timeUpdated),
+  })
+);
+
+export const issueSubscriber = mysqlTable(
+  "issue_subscriber",
+  {
+    ...workspaceID,
+    ...timestamps,
+    stageID: cuid("stage_id").notNull(),
+    logGroup: varchar("log_group", { length: 255 }).notNull(),
+  },
+  (table) => ({
+    primary: primaryKey(table.workspaceID, table.stageID, table.id),
+    logGroup: unique("logGroup").on(
+      table.workspaceID,
+      table.stageID,
+      table.logGroup
+    ),
   })
 );

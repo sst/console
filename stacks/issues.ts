@@ -15,6 +15,7 @@ import {
 import { Bucket, Function, StackContext, use } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
+import { Storage } from "./storage";
 
 export function Issues({ stack }: StackContext) {
   const secrets = use(Secrets);
@@ -23,11 +24,12 @@ export function Issues({ stack }: StackContext) {
   const subscriber = new Function(stack, "issues-subscriber", {
     handler: "packages/functions/src/issues/subscriber.handler",
     timeout: "15 minutes",
+    memorySize: "2 GB",
     nodejs: {
       install: ["source-map"],
     },
     url: true,
-    bind: [bus, ...Object.values(secrets.database)],
+    bind: [bus, use(Storage), ...Object.values(secrets.database)],
     permissions: ["sts"],
   });
 

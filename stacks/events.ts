@@ -72,7 +72,7 @@ export function Events({ stack }: StackContext) {
     nodejs: {
       install: ["source-map"],
     },
-    bind: [...Object.values(secrets.database), storage.ephemeral, bus],
+    bind: [...Object.values(secrets.database), storage, bus],
     timeout: "5 minute",
     permissions: ["sts", "iot"],
   });

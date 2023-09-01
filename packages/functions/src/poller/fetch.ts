@@ -4,13 +4,14 @@ import {
   FilterLogEventsCommand,
   GetLogEventsCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
+import { S3Client } from "@aws-sdk/client-s3";
 import { provideActor } from "@console/core/actor";
 import { App } from "@console/core/app";
 import { AWS } from "@console/core/aws";
-import { Log, LogEvent } from "@console/core/log";
+import { Log } from "@console/core/log";
 import { LogPoller } from "@console/core/log/poller";
 import { Realtime } from "@console/core/realtime";
-import { groupBy, map, pipe, sort, values } from "remeda";
+import { Storage } from "@console/core/storage";
 
 interface State {
   pollerID: string;
@@ -168,7 +169,12 @@ export async function handler(input: State) {
       id: event.eventId!,
     });
   }
-  await processor.flush();
+
+  const data = processor.flush();
+  const url = await Storage.putEphemeral(JSON.stringify(data), {
+    ContentType: "application/json",
+  });
+  await Realtime.publish("log.url", url);
 
   return {
     attempts: attempts + 1,

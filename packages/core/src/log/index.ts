@@ -3,17 +3,11 @@ import zlib from "zlib";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
-  PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AWS, Credentials } from "../aws";
 import { SourceMapConsumer } from "source-map";
 import { filter, groupBy, map, maxBy, pipe, sortBy, values } from "remeda";
-import { createId } from "@paralleldrive/cuid2";
-import { compress } from "../util/compress";
-import { Bucket } from "sst/node/bucket";
-import { Realtime } from "../realtime";
 import { zod } from "../util/zod";
 import { z } from "zod";
 
@@ -70,8 +64,6 @@ export type LogEventType<T extends LogEvent["type"]> = Extract<
 >;
 
 export type Processor = ReturnType<typeof createProcessor>;
-
-const s3 = new S3Client({});
 
 export function createProcessor(input: {
   arn: string;
@@ -249,7 +241,7 @@ export function createProcessor(input: {
             tabs[3]?.includes("Uncaught Exception")
           ) {
             const parsed = JSON.parse(tabs[4]!);
-            if (parsed.name && parsed.message) {
+            if (parsed.name && parsed.message && !parsed.stack) {
               return {
                 errorType: parsed.name,
                 errorMessage: parsed.message,
@@ -281,6 +273,7 @@ export function createProcessor(input: {
         })();
 
         if (parsed) {
+          console.log("parsed", parsed);
           const stack = await (async (): Promise<StackFrame[]> => {
             // drop first line, only has error in it
             const stack: string[] = parsed.stack.slice(1);
@@ -341,8 +334,7 @@ export function createProcessor(input: {
       target.push(message);
       return;
     },
-    async flush(order = 1) {
-      const id = createId();
+    flush(order = 1) {
       const events = pipe(
         results,
         groupBy((evt) => evt.requestID),
@@ -364,27 +356,8 @@ export function createProcessor(input: {
         ),
         sortBy((evts) => order * (evts[0]?.timestamp || 0))
       ).flat();
-      console.log("sending", events.length, "events");
-      const key = `logevents/${id}.json`;
-      await s3.send(
-        new PutObjectCommand({
-          Key: key,
-          Bucket: Bucket.ephemeral.bucketName,
-          ContentEncoding: "gzip",
-          ContentType: "application/json",
-          Body: await compress(JSON.stringify(events)),
-        })
-      );
-      const url = await getSignedUrl(
-        s3,
-        new GetObjectCommand({
-          Bucket: Bucket.ephemeral.bucketName,
-          Key: key,
-        })
-      );
-
-      await Realtime.publish("log.url", url);
       results = [];
+      return events;
     },
     results,
     invocations,
@@ -396,6 +369,7 @@ import {
   GetLogEventsCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
+import { RETRY_STRATEGY } from "../util/aws";
 
 export const expand = zod(
   z.object({
@@ -410,10 +384,12 @@ export const expand = zod(
     const cw = new CloudWatchLogsClient({
       region: input.region,
       credentials: input.credentials,
+      retryStrategy: RETRY_STRATEGY,
     });
     const lambda = new LambdaClient({
       region: input.region,
       credentials: input.credentials,
+      retryStrategy: RETRY_STRATEGY,
     });
 
     const func = await lambda.send(
@@ -492,6 +468,6 @@ export const expand = zod(
       });
     }
 
-    return processor.results;
+    return processor.flush();
   }
 );

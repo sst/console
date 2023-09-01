@@ -33,7 +33,7 @@ export function API({ stack, app }: StackContext) {
   const pollerFetchStep = new LambdaInvoke(stack, "pollerFetchStep", {
     lambdaFunction: Function.fromDefinition(stack, "log-poller-fetch", {
       handler: "packages/functions/src/poller/fetch.handler",
-      bind: [...Object.values(secrets.database), storage.ephemeral],
+      bind: [...Object.values(secrets.database), storage],
       nodejs: {
         install: ["source-map"],
       },
@@ -118,21 +118,6 @@ export function API({ stack, app }: StackContext) {
         "packages/functions/src/billing/create-checkout-session.handler",
       "POST /rest/create_customer_portal_session":
         "packages/functions/src/billing/create-customer-portal-session.handler",
-      "GET /test/error": {
-        type: "function",
-        function: {
-          handler: "packages/functions/src/error.handler",
-          enableLiveDev: false,
-        },
-      },
-      "GET /test/go": {
-        type: "function",
-        function: {
-          runtime: "go",
-          handler: "./go/handler.go",
-          enableLiveDev: false,
-        },
-      },
       "GET /freshpaint/track": {
         type: "url",
         url: "https://api.perfalytics.com/track",
@@ -151,6 +136,26 @@ export function API({ stack, app }: StackContext) {
       hostedZone: dns.zone.zoneName,
     },
   });
+
+  if (stack.stage !== "production") {
+    api.addRoutes(stack, {
+      "GET /test/error": {
+        type: "function",
+        function: {
+          handler: "packages/functions/src/error.handler",
+          enableLiveDev: false,
+        },
+      },
+      "GET /test/go": {
+        type: "function",
+        function: {
+          runtime: "go",
+          handler: "./go/handler.go",
+          enableLiveDev: false,
+        },
+      },
+    });
+  }
 
   poller.grantStartExecution(api.getFunction("POST /replicache/push")!);
   poller.grantStartExecution(api.getFunction("POST /replicache/push1")!);
