@@ -8,7 +8,6 @@ import {
 import { AWS, Credentials } from "../aws";
 import { SourceMapConsumer } from "source-map";
 import { filter, groupBy, map, maxBy, pipe, sortBy, values } from "remeda";
-import { createId } from "@paralleldrive/cuid2";
 import { zod } from "../util/zod";
 import { z } from "zod";
 
@@ -242,7 +241,7 @@ export function createProcessor(input: {
             tabs[3]?.includes("Uncaught Exception")
           ) {
             const parsed = JSON.parse(tabs[4]!);
-            if (parsed.name && parsed.message) {
+            if (parsed.name && parsed.message && !parsed.stack) {
               return {
                 errorType: parsed.name,
                 errorMessage: parsed.message,
