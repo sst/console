@@ -253,6 +253,9 @@ export function createProcessor(input: {
               console.log(tabs);
               return;
             }
+            if (typeof parsed.stack == "string") {
+              parsed.stack = parsed.stack.split("\n").slice(1);
+            }
             return parsed;
           }
 
