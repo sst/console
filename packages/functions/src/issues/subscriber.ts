@@ -4,7 +4,6 @@ import { ApiHandler, useJsonBody } from "sst/node/api";
 import { Issue } from "@console/core/issue";
 
 export const handler = ApiHandler(async (event) => {
-  return;
   const body = useJsonBody();
   for (const record of body.records) {
     const decoded = JSON.parse(
