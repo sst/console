@@ -273,6 +273,7 @@ export function createProcessor(input: {
         })();
 
         if (parsed) {
+          console.log("parsed", parsed);
           const stack = await (async (): Promise<StackFrame[]> => {
             // drop first line, only has error in it
             const stack: string[] = parsed.stack.slice(1);
