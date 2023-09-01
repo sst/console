@@ -192,6 +192,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
     stageID: stageID,
     types: ["Function"],
   });
+  if (!functions.length) return;
   const logGroups = functions.map(
     // @ts-expect-error
     (fn) => `/aws/lambda/${fn.metadata.arn.split(":")[6]}`
@@ -213,7 +214,9 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
     .then((rows) => new Set(rows.map((row) => row.logGroup)));
 
   console.log("updating", functions.length, "functions");
-  for (const logGroup of logGroups) {
+  for (const fn of functions) {
+    // @ts-expect-error
+    const logGroup = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
     if (exists.has(logGroup)) continue;
     const createFilter = async () => {
       if (false) {
