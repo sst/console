@@ -24,7 +24,7 @@ export function Issues({ stack }: StackContext) {
   const subscriber = new Function(stack, "issues-subscriber", {
     handler: "packages/functions/src/issues/subscriber.handler",
     timeout: "15 minutes",
-    memorySize: "4 GB",
+    memorySize: "2 GB",
     nodejs: {
       install: ["source-map"],
     },
