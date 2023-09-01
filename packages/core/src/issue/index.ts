@@ -1,11 +1,11 @@
 import { createHash } from "crypto";
-import { provideActor } from "../actor";
+import { provideActor, useWorkspace } from "../actor";
 import { AWS } from "../aws";
 import { awsAccount } from "../aws/aws.sql";
-import { and, db, eq, sql } from "../drizzle";
+import { and, db, eq, inArray, isNull, sql } from "../drizzle";
 import { Log } from "../log";
 import { app, stage } from "../app/app.sql";
-import { issue } from "./issue.sql";
+import { issue, issueSubscriber } from "./issue.sql";
 import { createId } from "@paralleldrive/cuid2";
 import {} from "@smithy/middleware-retry";
 import { zod } from "../util/zod";
@@ -70,7 +70,9 @@ export async function extract(input: {
         eq(stage.name, stageName!)
       )
     )
-    .where(eq(awsAccount.accountID, accountID!))
+    .where(
+      and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
+    )
     .execute();
 
   provideActor({
@@ -190,12 +192,29 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
     stageID: stageID,
     types: ["Function"],
   });
-  console.log("updating", functions.length, "functions");
-  for (const fn of functions) {
-    const createFilter = async () => {
-      // @ts-expect-error
-      const logGroupName = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
+  const logGroups = functions.map(
+    // @ts-expect-error
+    (fn) => `/aws/lambda/${fn.metadata.arn.split(":")[6]}`
+  );
 
+  const exists = await db
+    .select({
+      logGroup: issueSubscriber.logGroup,
+    })
+    .from(issueSubscriber)
+    .where(
+      and(
+        eq(issueSubscriber.stageID, stageID),
+        eq(issueSubscriber.workspaceID, useWorkspace()),
+        inArray(issueSubscriber.logGroup, logGroups)
+      )
+    )
+    .execute()
+    .then((rows) => new Set(rows.map((row) => row.logGroup)));
+
+  console.log("updating", functions.length, "functions");
+  for (const logGroup of logGroups) {
+    const createFilter = async () => {
       if (false) {
         const all = await userClient.send(
           new DescribeSubscriptionFiltersCommand({
@@ -238,16 +257,21 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
               ? [`?"\tERROR\t"`]
               : []),
           ].join(" "),
-          logGroupName,
+          logGroupName: logGroup,
         })
       );
+      await db.insert(issueSubscriber).ignore().values({
+        stageID,
+        workspaceID: useWorkspace(),
+        logGroup,
+        id: createId(),
+      });
     };
 
     const createLogGroup = () =>
       userClient.send(
         new CreateLogGroupCommand({
-          // @ts-expect-error
-          logGroupName: `/aws/lambda/${fn.metadata.arn.split(":")[6]}`,
+          logGroupName: logGroup,
         })
       );
 
