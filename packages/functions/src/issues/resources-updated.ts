@@ -6,6 +6,7 @@ import { EventHandler } from "sst/node/event-bus";
 export const handler = EventHandler(
   App.Stage.Events.ResourcesUpdated,
   async (evt) => {
+    return;
     provideActor(evt.metadata.actor);
     await Issue.subscribe(evt.properties.stageID);
   }

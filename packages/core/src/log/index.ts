@@ -3,17 +3,12 @@ import zlib from "zlib";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
-  PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AWS, Credentials } from "../aws";
 import { SourceMapConsumer } from "source-map";
 import { filter, groupBy, map, maxBy, pipe, sortBy, values } from "remeda";
 import { createId } from "@paralleldrive/cuid2";
-import { compress } from "../util/compress";
-import { Bucket } from "sst/node/bucket";
-import { Realtime } from "../realtime";
 import { zod } from "../util/zod";
 import { z } from "zod";
 
@@ -70,8 +65,6 @@ export type LogEventType<T extends LogEvent["type"]> = Extract<
 >;
 
 export type Processor = ReturnType<typeof createProcessor>;
-
-const s3 = new S3Client({});
 
 export function createProcessor(input: {
   arn: string;
@@ -342,7 +335,6 @@ export function createProcessor(input: {
       return;
     },
     flush(order = 1) {
-      const id = createId();
       const events = pipe(
         results,
         groupBy((evt) => evt.requestID),
