@@ -31,6 +31,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { Bucket } from "sst/node/bucket";
 import { compress } from "../util/compress";
+import { benchmark } from "../util/benchmark";
 
 export * as Issue from "./index";
 
@@ -56,30 +57,32 @@ export async function extract(input: {
   if (!filter) return;
   const [_prefix, region, accountID, appName, stageName] = filter.split("#");
 
-  const workspaces = await db
-    .select({
-      accountID: awsAccount.id,
-      workspaceID: awsAccount.workspaceID,
-      appID: app.id,
-      stageID: stage.id,
-    })
-    .from(awsAccount)
-    .leftJoin(
-      app,
-      and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
-    )
-    .innerJoin(
-      stage,
-      and(
-        eq(stage.workspaceID, app.workspaceID),
-        eq(stage.appID, app.id),
-        eq(stage.name, stageName!)
+  const workspaces = await benchmark("workspace_select", () =>
+    db
+      .select({
+        accountID: awsAccount.id,
+        workspaceID: awsAccount.workspaceID,
+        appID: app.id,
+        stageID: stage.id,
+      })
+      .from(awsAccount)
+      .leftJoin(
+        app,
+        and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
       )
-    )
-    .where(
-      and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
-    )
-    .execute();
+      .innerJoin(
+        stage,
+        and(
+          eq(stage.workspaceID, app.workspaceID),
+          eq(stage.appID, app.id),
+          eq(stage.name, stageName!)
+        )
+      )
+      .where(
+        and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
+      )
+      .execute()
+  );
 
   provideActor({
     type: "system",
@@ -87,7 +90,10 @@ export async function extract(input: {
       workspaceID: workspaces[0]!.workspaceID,
     },
   });
-  const credentials = await AWS.assumeRole(accountID!);
+
+  const credentials = await benchmark("assume_role", () =>
+    AWS.assumeRole(accountID!)
+  );
   if (!credentials) return;
 
   const functionArn =
@@ -95,14 +101,16 @@ export async function extract(input: {
     input.logGroup.split("/").pop();
 
   for (const event of input.logEvents) {
-    const logs = await Log.expand({
-      functionArn,
-      logStream,
-      logGroup,
-      timestamp: event.timestamp,
-      region: region!,
-      credentials: credentials!,
-    });
+    const logs = await benchmark("expand_log", () =>
+      Log.expand({
+        functionArn,
+        logStream,
+        logGroup,
+        timestamp: event.timestamp,
+        region: region!,
+        credentials: credentials!,
+      })
+    );
 
     const body = await compress(JSON.stringify(logs));
 
@@ -122,45 +130,52 @@ export async function extract(input: {
         .digest("hex");
       console.log("found error", err.type, err.message);
       const source = `ephemeral/issues/${group}`;
-      await s3.send(
-        new PutObjectCommand({
-          Key: source,
-          Bucket: Bucket.storage.bucketName,
-          ContentEncoding: "gzip",
-          Body: body,
-        })
+      await benchmark("put_s3", () =>
+        s3.send(
+          new PutObjectCommand({
+            Key: source,
+            Bucket: Bucket.storage.bucketName,
+            ContentEncoding: "gzip",
+            Body: body,
+          })
+        )
       );
       for (const workspace of workspaces) {
         const key = `issues/${workspace.workspaceID}/${group}`;
-        await s3.send(
-          new CopyObjectCommand({
-            Bucket: Bucket.storage.bucketName,
-            CopySource: Bucket.storage.bucketName + "/" + source,
-            Key: key,
-          })
+        await benchmark("copy_s3", () =>
+          s3.send(
+            new CopyObjectCommand({
+              Bucket: Bucket.storage.bucketName,
+              CopySource: Bucket.storage.bucketName + "/" + source,
+              Key: key,
+            })
+          )
         );
       }
-      await db
-        .insert(issue)
-        .values(
-          workspaces.map((row) => ({
-            group,
-            id: createId(),
-            errorID: err.id,
-            workspaceID: row.workspaceID,
-            error: err.error,
-            message: err.message,
-            stageID: row.stageID,
-          }))
-        )
-        .onDuplicateKeyUpdate({
-          set: {
-            error: sql`VALUES(error)`,
-            errorID: sql`VALUES(error_id)`,
-            message: sql`VALUES(message)`,
-          },
-        })
-        .execute();
+
+      await benchmark("insert_issue", () =>
+        db
+          .insert(issue)
+          .values(
+            workspaces.map((row) => ({
+              group,
+              id: createId(),
+              errorID: err.id,
+              workspaceID: row.workspaceID,
+              error: err.error,
+              message: err.message,
+              stageID: row.stageID,
+            }))
+          )
+          .onDuplicateKeyUpdate({
+            set: {
+              error: sql`VALUES(error)`,
+              errorID: sql`VALUES(error_id)`,
+              message: sql`VALUES(message)`,
+            },
+          })
+          .execute()
+      );
     }
   }
 }

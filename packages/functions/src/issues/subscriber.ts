@@ -3,18 +3,18 @@ import crypto from "crypto";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { Issue } from "@console/core/issue";
 import { chunk } from "remeda";
+import { benchmark } from "@console/core/util/benchmark";
 
 export const handler = ApiHandler(async (event) => {
-  return;
   const body = useJsonBody();
-  for (const records of chunk(body.records, 100)) {
+  for (const records of chunk(body.records, 1)) {
     await Promise.all(
       records.map(async (record: any) => {
         const decoded = JSON.parse(
           zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
         );
         if (decoded.messageType !== "DATA_MESSAGE") return;
-        await Issue.extract(decoded);
+        await benchmark("issue", () => Issue.extract(decoded));
       })
     );
   }
