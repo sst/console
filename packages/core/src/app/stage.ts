@@ -223,6 +223,7 @@ export const syncMetadata = zod(
         return r;
       }) || []
     ).then((x) => x.flat());
+    s3.destroy();
 
     return useTransaction(async (tx) => {
       createTransactionEffect(() => Replicache.poke());

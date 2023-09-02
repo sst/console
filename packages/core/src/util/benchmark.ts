@@ -4,6 +4,6 @@ export async function benchmark<T>(
 ): Promise<T> {
   const start = performance.now();
   const result = await cb();
-  console.log(label + "=" + (performance.now() - start).toString());
+  console.log(label + "=" + Math.ceil(performance.now() - start).toString());
   return result;
 }

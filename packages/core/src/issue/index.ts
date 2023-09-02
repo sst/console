@@ -100,84 +100,82 @@ export async function extract(input: {
     `arn:aws:lambda:${region}:${accountID}:function:` +
     input.logGroup.split("/").pop();
 
-  for (const event of input.logEvents) {
-    const logs = await benchmark("expand_log", () =>
-      Log.expand({
-        functionArn,
-        logStream,
-        logGroup,
-        timestamp: event.timestamp,
-        region: region!,
-        credentials: credentials!,
-      })
-    );
-
-    const body = await compress(JSON.stringify(logs));
-
-    for (const err of logs) {
-      if (err.type !== "error") continue;
-      const group = createHash("sha256")
-        .update(
-          [
-            err.error,
-            err.message,
-            err.stack[0]?.file,
-            err.stack[0]?.context?.[0] || err.stack[0]?.raw,
-          ]
-            .filter(Boolean)
-            .join("\n")
-        )
-        .digest("hex");
-      console.log("found error", err.type, err.message);
-      const source = `ephemeral/issues/${group}`;
-      await benchmark("put_s3", () =>
-        s3.send(
-          new PutObjectCommand({
-            Key: source,
-            Bucket: Bucket.storage.bucketName,
-            ContentEncoding: "gzip",
-            Body: body,
-          })
-        )
+  await Promise.all(
+    input.logEvents.map(async (event) => {
+      const err = Log.extractError(
+        event.message.split("\t").map((l) => l.trim())
       );
-      for (const workspace of workspaces) {
-        const key = `issues/${workspace.workspaceID}/${group}`;
-        await benchmark("copy_s3", () =>
-          s3.send(
-            new CopyObjectCommand({
-              Bucket: Bucket.storage.bucketName,
-              CopySource: Bucket.storage.bucketName + "/" + source,
-              Key: key,
-            })
+      if (!err) {
+        // console.log("no errors found", event.message);
+        return;
+      }
+      const logs = await benchmark("expand_log", () =>
+        Log.expand({
+          functionArn,
+          logStream,
+          logGroup,
+          timestamp: event.timestamp,
+          region: region!,
+          credentials: credentials!,
+        })
+      );
+
+      const body = await compress(JSON.stringify(logs));
+
+      for (const err of logs) {
+        if (err.type !== "error") continue;
+        const group = createHash("sha256")
+          .update(
+            [
+              err.error,
+              err.message,
+              err.stack[0]?.file,
+              err.stack[0]?.context?.[0] || err.stack[0]?.raw,
+            ]
+              .filter(Boolean)
+              .join("\n")
           )
+          .digest("hex");
+        for (const workspace of workspaces) {
+          const key = `issues/${workspace.workspaceID}/${group}`;
+          await benchmark("put_s3", () =>
+            s3.send(
+              new PutObjectCommand({
+                Key: key,
+                Bucket: Bucket.storage.bucketName,
+                ContentEncoding: "gzip",
+                Body: body,
+              })
+            )
+          );
+        }
+
+        await benchmark("insert_issue", () =>
+          db
+            .insert(issue)
+            .values(
+              workspaces.map((row) => ({
+                group,
+                id: createId(),
+                errorID: err.id,
+                workspaceID: row.workspaceID,
+                error: err.error,
+                message: err.message,
+                stageID: row.stageID,
+              }))
+            )
+            .onDuplicateKeyUpdate({
+              set: {
+                error: sql`VALUES(error)`,
+                errorID: sql`VALUES(error_id)`,
+                message: sql`VALUES(message)`,
+              },
+            })
+            .execute()
         );
       }
-
-      await benchmark("insert_issue", () =>
-        db
-          .insert(issue)
-          .values(
-            workspaces.map((row) => ({
-              group,
-              id: createId(),
-              errorID: err.id,
-              workspaceID: row.workspaceID,
-              error: err.error,
-              message: err.message,
-              stageID: row.stageID,
-            }))
-          )
-          .onDuplicateKeyUpdate({
-            set: {
-              error: sql`VALUES(error)`,
-              errorID: sql`VALUES(error_id)`,
-              message: sql`VALUES(message)`,
-            },
-          })
-          .execute()
-      );
-    }
-  }
+    })
+  );
 }
 
 export const subscribe = zod(Info.shape.stageID, async (stageID) => {
@@ -193,6 +191,11 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
       targetArn: process.env.ISSUES_STREAM_ARN,
     })
   );
+  const userClient = new CloudWatchLogsClient({
+    ...config,
+    retryStrategy: RETRY_STRATEGY,
+  });
+
   await cw.send(
     new PutDestinationPolicyCommand({
       destinationName: uniqueIdentifier,
@@ -212,115 +215,115 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
     })
   );
 
-  const userClient = new CloudWatchLogsClient({
-    ...config,
-    retryStrategy: RETRY_STRATEGY,
-  });
+  try {
+    // Get all function resources
+    const functions = await Resource.listFromStageID({
+      stageID: stageID,
+      types: ["Function"],
+    });
+    if (!functions.length) return;
+    const logGroups = functions.map(
+      // @ts-expect-error
+      (fn) => `/aws/lambda/${fn.metadata.arn.split(":")[6]}`
+    );
 
-  // Get all function resources
-  const functions = await Resource.listFromStageID({
-    stageID: stageID,
-    types: ["Function"],
-  });
-  if (!functions.length) return;
-  const logGroups = functions.map(
-    // @ts-expect-error
-    (fn) => `/aws/lambda/${fn.metadata.arn.split(":")[6]}`
-  );
-
-  const exists = await db
-    .select({
-      logGroup: issueSubscriber.logGroup,
-    })
-    .from(issueSubscriber)
-    .where(
-      and(
-        eq(issueSubscriber.stageID, stageID),
-        eq(issueSubscriber.workspaceID, useWorkspace()),
-        inArray(issueSubscriber.logGroup, logGroups)
+    const exists = await db
+      .select({
+        logGroup: issueSubscriber.logGroup,
+      })
+      .from(issueSubscriber)
+      .where(
+        and(
+          eq(issueSubscriber.stageID, stageID),
+          eq(issueSubscriber.workspaceID, useWorkspace()),
+          inArray(issueSubscriber.logGroup, logGroups)
+        )
       )
-    )
-    .execute()
-    .then((rows) => new Set(rows.map((row) => row.logGroup)));
+      .execute()
+      .then((rows) => new Set(rows.map((row) => row.logGroup)));
 
-  console.log("updating", functions.length, "functions");
-  for (const fn of functions) {
-    // @ts-expect-error
-    const logGroup = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
-    if (exists.has(logGroup)) continue;
-    const createFilter = async () => {
-      if (false) {
-        const all = await userClient.send(
-          new DescribeSubscriptionFiltersCommand({
+    console.log("updating", functions.length, "functions");
+    for (const fn of functions) {
+      // @ts-expect-error
+      const logGroup = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
+      if (exists.has(logGroup)) continue;
+      const createFilter = async () => {
+        if (false) {
+          const all = await userClient.send(
+            new DescribeSubscriptionFiltersCommand({
+              logGroupName: logGroup,
+            })
+          );
+          for (const filter of all.subscriptionFilters ?? []) {
+            if (
+              filter.filterName === uniqueIdentifier &&
+              filter.destinationArn === destination.destination?.arn
+            ) {
+              return;
+            }
+
+            if (filter.filterName?.startsWith("sst#")) {
+              // TODO: disable for now
+              // await userClient.send(
+              //   new DeleteSubscriptionFilterCommand({
+              //     logGroupName,
+              //     filterName: filter.filterName,
+              //   })
+              // );
+              continue;
+            }
+          }
+        }
+
+        await userClient.send(
+          new PutSubscriptionFilterCommand({
+            destinationArn: destination.destination?.arn,
+            filterName: uniqueIdentifier,
+            filterPattern: [
+              // OOM and other runtime error
+              `?"Error: Runtime exited"`,
+              // Timeout
+              `?"Task timed out after"`,
+              // NodeJS Uncaught and console.error
+              // @ts-expect-error
+              ...(fn.enrichment.runtime?.startsWith("nodejs")
+                ? [`?"\tERROR\t"`]
+                : []),
+            ].join(" "),
             logGroupName: logGroup,
           })
         );
-        for (const filter of all.subscriptionFilters ?? []) {
-          if (
-            filter.filterName === uniqueIdentifier &&
-            filter.destinationArn === destination.destination?.arn
-          ) {
-            return;
-          }
+        await db.insert(issueSubscriber).ignore().values({
+          stageID,
+          workspaceID: useWorkspace(),
+          logGroup,
+          id: createId(),
+        });
+      };
 
-          if (filter.filterName?.startsWith("sst#")) {
-            // TODO: disable for now
-            // await userClient.send(
-            //   new DeleteSubscriptionFilterCommand({
-            //     logGroupName,
-            //     filterName: filter.filterName,
-            //   })
-            // );
-            continue;
-          }
-        }
-      }
+      const createLogGroup = () =>
+        userClient.send(
+          new CreateLogGroupCommand({
+            logGroupName: logGroup,
+          })
+        );
 
-      await userClient.send(
-        new PutSubscriptionFilterCommand({
-          destinationArn: destination.destination?.arn,
-          filterName: uniqueIdentifier,
-          filterPattern: [
-            // OOM and other runtime error
-            `?"Error: Runtime exited"`,
-            // Timeout
-            `?"Task timed out after"`,
-            // NodeJS Uncaught and console.error
-            // @ts-expect-error
-            ...(fn.enrichment.runtime?.startsWith("nodejs")
-              ? [`?"\tERROR\t"`]
-              : []),
-          ].join(" "),
-          logGroupName: logGroup,
-        })
-      );
-      await db.insert(issueSubscriber).ignore().values({
-        stageID,
-        workspaceID: useWorkspace(),
-        logGroup,
-        id: createId(),
-      });
-    };
-
-    const createLogGroup = () =>
-      userClient.send(
-        new CreateLogGroupCommand({
-          logGroupName: logGroup,
-        })
-      );
-
-    try {
-      await createFilter();
-    } catch (e: any) {
-      if (
-        e instanceof ResourceNotFoundException &&
-        e.message.startsWith("The specified log group does not exist")
-      ) {
-        await createLogGroup();
+      try {
         await createFilter();
-        continue;
+      } catch (e: any) {
+        if (
+          e instanceof ResourceNotFoundException &&
+          e.message.startsWith("The specified log group does not exist")
+        ) {
+          await createLogGroup();
+          await createFilter();
+          continue;
+        }
+        console.error(e);
       }
-      console.error(e);
     }
+  } finally {
+    cw.destroy();
+    userClient.destroy();
   }
 });

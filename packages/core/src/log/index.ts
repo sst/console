@@ -235,43 +235,9 @@ export function createProcessor(input: {
       const target = message.requestID === "" ? stream.unknown : results;
 
       if (message.level === "ERROR") {
-        const parsed = (() => {
-          if (
-            tabs[3]?.includes("Invoke Error") ||
-            tabs[3]?.includes("Uncaught Exception")
-          ) {
-            const parsed = JSON.parse(tabs[4]!);
-            if (typeof parsed.stack == "string") {
-              parsed.stack = parsed.stack.split("\n");
-            }
-            return {
-              errorType: parsed.errorType || parsed.name,
-              errorMessage: parsed.errorMessage || parsed.message,
-              stack: (parsed.stack || [])
-                .map((l: string) => l.trim())
-                .filter((l: string) => l.startsWith("at ")),
-            };
-          }
-
-          if (tabs[3]) {
-            const lines = tabs[3].trim().split("\n");
-            if (lines.length < 2) return;
-            const [first] = lines;
-            const [_, error, message] = first!.match(/(\w+): (.+)$/) ?? [];
-            if (!error || !message) return;
-            if (error.startsWith("(node:")) return;
-            return {
-              errorType: error,
-              errorMessage: message,
-              stack: lines
-                .map((l) => l.trim())
-                .filter((l) => l.startsWith("at ")),
-            };
-          }
-        })();
+        const parsed = extractError(tabs);
 
         if (parsed) {
-          console.log("parsed", parsed);
           const stack = await (async (): Promise<StackFrame[]> => {
             const stack: string[] = parsed.stack;
             const consumer = await getSourcemap(input.timestamp);
@@ -465,6 +431,48 @@ export const expand = zod(
       });
     }
 
+    cw.destroy();
+    lambda.destroy();
     return processor.flush();
   }
 );
+
+export function extractError(tabs: string[]):
+  | {
+      errorType: string;
+      errorMessage: string;
+      stack: string[];
+    }
+  | undefined {
+  // Generic AWS error handling
+  if (
+    tabs[3]?.includes("Invoke Error") ||
+    tabs[3]?.includes("Uncaught Exception")
+  ) {
+    const parsed = JSON.parse(tabs[4]!);
+    if (typeof parsed.stack == "string") {
+      parsed.stack = parsed.stack.split("\n");
+    }
+    return {
+      errorType: parsed.errorType || parsed.name,
+      errorMessage: parsed.errorMessage || parsed.message,
+      stack: (parsed.stack || [])
+        .map((l: string) => l.trim())
+        .filter((l: string) => l.startsWith("at ")),
+    };
+  }
+
+  if (tabs[3]) {
+    const lines = tabs[3].trim().split("\n");
+    if (lines.length < 2) return;
+    const [first] = lines;
+    const [_, error, message] = first!.match(/(\w+): (.+)$/) ?? [];
+    if (!error || !message) return;
+    if (error.startsWith("(node:")) return;
+    return {
+      errorType: error,
+      errorMessage: message,
+      stack: lines.map((l) => l.trim()).filter((l) => l.startsWith("at ")),
+    };
+  }
+}

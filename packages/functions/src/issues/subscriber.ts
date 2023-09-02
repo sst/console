@@ -7,7 +7,7 @@ import { benchmark } from "@console/core/util/benchmark";
 
 export const handler = ApiHandler(async (event) => {
   const body = useJsonBody();
-  for (const records of chunk(body.records, 1)) {
+  for (const records of chunk(body.records, 25)) {
     await Promise.all(
       records.map(async (record: any) => {
         const decoded = JSON.parse(
