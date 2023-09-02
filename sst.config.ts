@@ -26,6 +26,7 @@ export default {
     }
     app.setDefaultFunctionProps({
       tracing: "disabled",
+      architecture: "arm_64",
     });
     app
       .stack(DNS)
