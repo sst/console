@@ -135,7 +135,7 @@ export async function extract(input: {
         await s3.send(
           new CopyObjectCommand({
             Bucket: Bucket.storage.bucketName,
-            CopySource: source,
+            CopySource: Bucket.storage.bucketName + "/" + source,
             Key: key,
           })
         );
