@@ -24,7 +24,11 @@ import { App } from "../app";
 import { z } from "zod";
 import { StandardRetryStrategy } from "@smithy/util-retry";
 import { RETRY_STRATEGY } from "../util/aws";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  CopyObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { Bucket } from "sst/node/bucket";
 import { compress } from "../util/compress";
 
@@ -117,14 +121,22 @@ export async function extract(input: {
         )
         .digest("hex");
       console.log("found error", err.type, err.message);
+      const source = `ephemeral/issues/${group}`;
+      await s3.send(
+        new PutObjectCommand({
+          Key: source,
+          Bucket: Bucket.storage.bucketName,
+          ContentEncoding: "gzip",
+          Body: body,
+        })
+      );
       for (const workspace of workspaces) {
         const key = `issues/${workspace.workspaceID}/${group}`;
         await s3.send(
-          new PutObjectCommand({
-            Key: key,
+          new CopyObjectCommand({
             Bucket: Bucket.storage.bucketName,
-            ContentEncoding: "gzip",
-            Body: body,
+            CopySource: source,
+            Key: key,
           })
         );
       }
