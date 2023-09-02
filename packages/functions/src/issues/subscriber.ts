@@ -6,7 +6,7 @@ import { chunk } from "remeda";
 
 export const handler = ApiHandler(async (event) => {
   const body = useJsonBody();
-  for (const records of chunk(body.records, 10)) {
+  for (const records of chunk(body.records, 100)) {
     await Promise.all(
       records.map(async (record: any) => {
         const decoded = JSON.parse(
