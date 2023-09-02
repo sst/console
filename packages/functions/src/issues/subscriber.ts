@@ -2,18 +2,21 @@ import zlib from "zlib";
 import crypto from "crypto";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { Issue } from "@console/core/issue";
+import { chunk } from "remeda";
 
 export const handler = ApiHandler(async (event) => {
   const body = useJsonBody();
-  await Promise.all(
-    body.records.map(async (record: any) => {
-      const decoded = JSON.parse(
-        zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
-      );
-      if (decoded.messageType !== "DATA_MESSAGE") return;
-      await Issue.extract(decoded);
-    })
-  );
+  for (const records of chunk(body.records, 10)) {
+    await Promise.all(
+      records.map(async (record: any) => {
+        const decoded = JSON.parse(
+          zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
+        );
+        if (decoded.messageType !== "DATA_MESSAGE") return;
+        await Issue.extract(decoded);
+      })
+    );
+  }
 
   return {
     statusCode: 200,
