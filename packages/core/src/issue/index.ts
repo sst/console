@@ -33,7 +33,9 @@ export * as Issue from "./index";
 export const Info = createSelectSchema(issue, {});
 export type Info = z.infer<typeof Info>;
 
-const s3 = new S3Client({});
+const s3 = new S3Client({
+  retryStrategy: RETRY_STRATEGY,
+});
 
 export async function extract(input: {
   logGroup: string;
