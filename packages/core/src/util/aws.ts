@@ -10,6 +10,7 @@ export const RETRY_STRATEGY = new StandardRetryStrategy(async () => 10000, {
         "OperationAbortedException",
         "TimeoutError",
         "NetworkingError",
+        "SlowDown",
       ].includes(e.name)
     ) {
       return true;
