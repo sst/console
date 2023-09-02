@@ -5,6 +5,7 @@ import { Issue } from "@console/core/issue";
 import { chunk } from "remeda";
 
 export const handler = ApiHandler(async (event) => {
+  return;
   const body = useJsonBody();
   for (const records of chunk(body.records, 100)) {
     await Promise.all(
