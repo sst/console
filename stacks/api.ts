@@ -137,7 +137,7 @@ export function API({ stack, app }: StackContext) {
     },
   });
 
-  if (stack.stage !== "production") {
+  if (stack.stage !== "production" && false) {
     api.addRoutes(stack, {
       "GET /test/error": {
         type: "function",

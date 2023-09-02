@@ -5,13 +5,15 @@ import { Issue } from "@console/core/issue";
 
 export const handler = ApiHandler(async (event) => {
   const body = useJsonBody();
-  for (const record of body.records) {
-    const decoded = JSON.parse(
-      zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
-    );
-    if (decoded.messageType !== "DATA_MESSAGE") continue;
-    await Issue.extract(decoded);
-  }
+  await Promise.all(
+    body.records.map(async (record: any) => {
+      const decoded = JSON.parse(
+        zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
+      );
+      if (decoded.messageType !== "DATA_MESSAGE") return;
+      await Issue.extract(decoded);
+    })
+  );
 
   return {
     statusCode: 200,
