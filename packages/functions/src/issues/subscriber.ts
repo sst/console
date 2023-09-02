@@ -6,6 +6,7 @@ import { chunk } from "remeda";
 import { benchmark } from "@console/core/util/benchmark";
 
 export const handler = ApiHandler(async (event) => {
+  return;
   const body = useJsonBody();
   for (const records of chunk(body.records, 25)) {
     await Promise.all(
