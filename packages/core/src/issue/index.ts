@@ -32,6 +32,7 @@ import {
 import { Bucket } from "sst/node/bucket";
 import { compress } from "../util/compress";
 import { benchmark } from "../util/benchmark";
+import { StageCredentials } from "../app/stage";
 
 export * as Issue from "./index";
 
@@ -178,11 +179,15 @@ export async function extract(input: {
   );
 }
 
+function destinationIdentifier(config: StageCredentials) {
+  return `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}`;
+}
+
 export const subscribe = zod(Info.shape.stageID, async (stageID) => {
   const config = await App.Stage.assumeRole(stageID);
   if (!config) return;
 
-  const uniqueIdentifier = `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}`;
+  const uniqueIdentifier = destinationIdentifier(config);
   const cw = new CloudWatchLogsClient({ region: config.region });
   const destination = await cw.send(
     new PutDestinationCommand({
@@ -327,3 +332,8 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
     userClient.destroy();
   }
 });
+
+export const createDestination = zod(
+  z.custom<StageCredentials>(),
+  async (config) => {}
+);

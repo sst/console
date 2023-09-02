@@ -296,6 +296,11 @@ export const syncMetadata = zod(
   }
 );
 
+export type StageCredentials = Exclude<
+  Awaited<ReturnType<typeof assumeRole>>,
+  undefined
+>;
+
 export const assumeRole = zod(Info.shape.id, async (stageID) =>
   useTransaction(async (tx) => {
     const result = await tx

@@ -73,9 +73,6 @@ export function Issues({ stack }: StackContext) {
         resources: [role.roleArn],
       }),
     ],
-    nodejs: {
-      install: ["source-map"],
-    },
     bind: [bus, ...Object.values(secrets.database)],
     environment: {
       ISSUES_STREAM_ARN: stream.deliveryStreamArn,
