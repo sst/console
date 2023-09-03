@@ -32,7 +32,8 @@ import {
 import { Bucket } from "sst/node/bucket";
 import { compress } from "../util/compress";
 import { benchmark } from "../util/benchmark";
-import { StageCredentials } from "../app/stage";
+import { Stage, StageCredentials } from "../app/stage";
+import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
 
 export * as Issue from "./index";
 
@@ -101,80 +102,76 @@ export async function extract(input: {
     `arn:aws:lambda:${region}:${accountID}:function:` +
     input.logGroup.split("/").pop();
 
+  const lambda = new LambdaClient({
+    region: region!,
+    credentials,
+    retryStrategy: RETRY_STRATEGY,
+  });
+
+  const func = await lambda.send(
+    new GetFunctionCommand({
+      FunctionName: functionArn,
+    })
+  );
   await Promise.all(
     input.logEvents.map(async (event) => {
-      const err = Log.extractError(
-        event.message.split("\t").map((l) => l.trim())
-      );
+      const processor = Log.createProcessor({
+        arn: functionArn,
+        config: {
+          credentials: credentials,
+          app: func.Tags?.["sst:app"]!,
+          stage: func.Tags?.["sst:stage"]!,
+          awsAccountID: accountID!,
+          region: region!,
+        },
+        group: input.logGroup,
+      });
+
+      processor.process({
+        id: event.id,
+        timestamp: event.timestamp,
+        line: event.message,
+        streamName: logStream,
+      });
+      const err = processor.streams
+        .get(logStream)
+        ?.unknown.map((x) => x.type === "error" && x)
+        .at(0);
       if (!err) {
-        // console.log("no errors found", event.message);
         return;
       }
-      const logs = await benchmark("expand_log", () =>
-        Log.expand({
-          functionArn,
-          logStream,
-          logGroup,
-          timestamp: event.timestamp,
-          region: region!,
-          credentials: credentials!,
-        })
-      );
 
-      const body = await compress(JSON.stringify(logs));
+      const group = createHash("sha256")
+        .update(
+          [err.type, err.message, err.stack[0]?.file || err.stack[0]?.raw]
+            .filter(Boolean)
+            .join("\n")
+        )
+        .digest("hex");
 
-      for (const err of logs) {
-        if (err.type !== "error") continue;
-        const group = createHash("sha256")
-          .update(
-            [
-              err.error,
-              err.message,
-              err.stack[0]?.file,
-              err.stack[0]?.context?.[0] || err.stack[0]?.raw,
-            ]
-              .filter(Boolean)
-              .join("\n")
+      await benchmark("insert_issue", () =>
+        db
+          .insert(issue)
+          .values(
+            workspaces.map((row) => ({
+              group,
+              id: createId(),
+              errorID: "none",
+              workspaceID: row.workspaceID,
+              error: err.error,
+              message: err.message,
+              stageID: row.stageID,
+            }))
           )
-          .digest("hex");
-        for (const workspace of workspaces) {
-          const key = `issues/${workspace.workspaceID}/${group}`;
-          await benchmark("put_s3", () =>
-            s3.send(
-              new PutObjectCommand({
-                Key: key,
-                Bucket: Bucket.storage.bucketName,
-                ContentEncoding: "gzip",
-                Body: body,
-              })
-            )
-          );
-        }
-
-        await benchmark("insert_issue", () =>
-          db
-            .insert(issue)
-            .values(
-              workspaces.map((row) => ({
-                group,
-                id: createId(),
-                errorID: err.id,
-                workspaceID: row.workspaceID,
-                error: err.error,
-                message: err.message,
-                stageID: row.stageID,
-              }))
-            )
-            .onDuplicateKeyUpdate({
-              set: {
-                error: sql`VALUES(error)`,
-                errorID: sql`VALUES(error_id)`,
-                message: sql`VALUES(message)`,
-              },
-            })
-            .execute()
-        );
-      }
+          .onDuplicateKeyUpdate({
+            set: {
+              error: sql`VALUES(error)`,
+              errorID: sql`VALUES(error_id)`,
+              message: sql`VALUES(message)`,
+            },
+          })
+          .execute()
+      );
     })
   );
 }

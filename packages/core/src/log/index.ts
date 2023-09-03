@@ -5,7 +5,7 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { AWS, Credentials } from "../aws";
+import { AWS } from "../aws";
 import { SourceMapConsumer } from "source-map";
 import { filter, groupBy, map, maxBy, pipe, sortBy, values } from "remeda";
 import { zod } from "../util/zod";
@@ -65,38 +65,21 @@ export type LogEventType<T extends LogEvent["type"]> = Extract<
 
 export type Processor = ReturnType<typeof createProcessor>;
 
-export function createProcessor(input: {
-  arn: string;
-  group: string;
-  app: string;
-  stage: string;
-  credentials: Credentials;
-  region: string;
+export function createSourcemapCache(input: {
+  config: StageCredentials;
+  functionArn: string;
 }) {
-  const s3bootstrap = new S3Client({
-    region: input.region,
-    credentials: input.credentials,
-  });
-  const invocations = new Map<string, number>();
-  const streams = new Map<
-    string,
-    {
-      cold: boolean;
-      unknown: LogEvent[];
-      requestID?: string;
-    }
-  >();
+  const s3bootstrap = new S3Client(input.config);
   const sourcemapCache = new Map<string, SourceMapConsumer>();
-  let results = [] as LogEvent[];
 
-  const getBootstrap = lazy(() => AWS.Account.bootstrap(input));
+  const getBootstrap = lazy(() => AWS.Account.bootstrap(input.config));
   const sourcemapsMeta = lazy(async () => {
     const bootstrap = await getBootstrap();
     if (!bootstrap) return [];
     const result = await s3bootstrap.send(
       new ListObjectsV2Command({
         Bucket: bootstrap.bucket,
-        Prefix: `sourcemap/${input.app}/${input.stage}/${input.arn}`,
+        Prefix: `sourcemap/${input.config.app}/${input.config.stage}/${input.functionArn}`,
       })
     );
     const maps = (result.Contents || []).map((item) => ({
@@ -106,14 +89,7 @@ export function createProcessor(input: {
     return maps;
   });
 
-  function generateInvocationID(id: string) {
-    const trimmed = id.trim();
-    const count = invocations.get(trimmed);
-    if (!count) return trimmed;
-    return trimmed + "[" + count + "]";
-  }
-
-  async function getSourcemap(number: number) {
+  return async (number: number) => {
     const match = pipe(
       await sourcemapsMeta(),
       filter((x) => x.created < number),
@@ -137,6 +113,35 @@ export function createProcessor(input: {
     const consumer = await new SourceMapConsumer(raw);
     sourcemapCache.set(match.key, consumer);
     return consumer;
+  };
+}
+
+export function createProcessor(input: {
+  arn: string;
+  group: string;
+  config: StageCredentials;
+}) {
+  const invocations = new Map<string, number>();
+  const streams = new Map<
+    string,
+    {
+      cold: boolean;
+      unknown: LogEvent[];
+      requestID?: string;
+    }
+  >();
+  let results = [] as LogEvent[];
+
+  const getSourcemap = createSourcemapCache({
+    functionArn: input.arn,
+    config: input.config,
+  });
+
+  function generateInvocationID(id: string) {
+    const trimmed = id.trim();
+    const count = invocations.get(trimmed);
+    if (!count) return trimmed;
+    return trimmed + "[" + count + "]";
   }
 
   const { group } = input;
@@ -153,6 +158,7 @@ export function createProcessor(input: {
         stream = {
           cold: false,
           unknown: [],
+          requestID: "",
         };
         streams.set(input.streamName, stream);
       }
@@ -324,6 +330,9 @@ export function createProcessor(input: {
     },
     results,
     invocations,
+    get streams() {
+      return streams;
+    },
   };
 }
 
@@ -331,8 +340,9 @@ import {
   CloudWatchLogsClient,
   GetLogEventsCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
-import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
+import { LambdaClient } from "@aws-sdk/client-lambda";
 import { RETRY_STRATEGY } from "../util/aws";
+import { StageCredentials } from "../app/stage";
 
 export const expand = zod(
   z.object({
@@ -341,37 +351,23 @@ export const expand = zod(
     logStream: z.string(),
     region: z.string(),
     functionArn: z.string(),
-    credentials: z.custom<Credentials>(),
+    config: z.custom<StageCredentials>(),
   }),
   async (input) => {
     const cw = new CloudWatchLogsClient({
-      region: input.region,
-      credentials: input.credentials,
+      ...input.config,
       retryStrategy: RETRY_STRATEGY,
     });
     const lambda = new LambdaClient({
-      region: input.region,
-      credentials: input.credentials,
+      ...input.config,
       retryStrategy: RETRY_STRATEGY,
     });
-
-    const func = await lambda.send(
-      new GetFunctionCommand({
-        FunctionName: input.functionArn,
-      })
-    );
-
-    const app = func.Tags?.["sst:app"]!;
-    const stage = func.Tags?.["sst:stage"]!;
 
     const offset = 1000 * 60 * 15;
 
     const processor = createProcessor({
-      region: input.region,
-      credentials: input.credentials,
+      config: input.config,
       group: input.logGroup,
-      app: app,
-      stage: stage,
       arn: input.functionArn,
     });
 

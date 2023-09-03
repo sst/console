@@ -4,24 +4,15 @@ import {
   GetQueryResultsCommand,
   StartQueryCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { provideActor } from "@console/core/actor";
 import { Stage } from "@console/core/app";
 import { Log } from "@console/core/log";
 import { Realtime } from "@console/core/realtime";
 import { Replicache } from "@console/core/replicache";
-import { createId } from "@console/core/util/sql";
 import { EventHandler } from "sst/node/event-bus";
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { Bucket } from "sst/node/bucket";
-import { compress } from "@console/core/util/compress";
+import { S3Client } from "@aws-sdk/client-s3";
 import { Storage } from "@console/core/storage";
 
-const s3 = new S3Client({});
 export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
   provideActor(evt.metadata.actor);
   const search = await Log.Search.fromID(evt.properties.id);
@@ -61,7 +52,7 @@ export const handler = EventHandler(Log.Search.Events.Created, async (evt) => {
           .replace("log-group:/aws/lambda/", "function:")
           .replace(":logs:", ":lambda:")}`,
         group: search.id,
-        ...config,
+        config,
       });
       while (true) {
         iteration++;

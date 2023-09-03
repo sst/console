@@ -7,16 +7,12 @@ import { benchmark } from "@console/core/util/benchmark";
 
 export const handler = ApiHandler(async (event) => {
   const body = useJsonBody();
-  for (const records of chunk(body.records, 25)) {
-    await Promise.all(
-      records.map(async (record: any) => {
-        const decoded = JSON.parse(
-          zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
-        );
-        if (decoded.messageType !== "DATA_MESSAGE") return;
-        await benchmark("issue", () => Issue.extract(decoded));
-      })
+  for (const record of body.records) {
+    const decoded = JSON.parse(
+      zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
     );
+    if (decoded.messageType !== "DATA_MESSAGE") continue;
+    await benchmark("issue", () => Issue.extract(decoded));
   }
 
   return {

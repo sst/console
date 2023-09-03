@@ -11,7 +11,7 @@
     "@types/luxon": "^3.3.1",
     "@types/node": "^18.16.0",
     "drizzle-kit": "0.19.13",
-    "sst": "2.24.21",
+    "sst": "0.0.0-20230903050741",
     "vitest": "^0.25.3"
   },
   "dependencies": {

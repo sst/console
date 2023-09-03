@@ -22,6 +22,7 @@ import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 export const handler = ApiHandler(async () => {
   await NotPublic();
   const actor = useActor();
+  console.log(actor);
 
   const req: PullRequest = useJsonBody();
   console.log("request", req);
@@ -59,6 +60,7 @@ export const handler = ApiHandler(async () => {
             }
         );
 
+      console.log("compare", group, actor);
       if (!equals(group.actor, actor)) return;
 
       const oldCvr = await tx
@@ -312,6 +314,7 @@ export const handler = ApiHandler(async () => {
       };
     }
   );
+  console.log("here", resp);
 
   return {
     statusCode: 200,

@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-cloudwatch-logs";
 import { S3Client } from "@aws-sdk/client-s3";
 import { provideActor } from "@console/core/actor";
-import { App } from "@console/core/app";
+import { App, Stage } from "@console/core/app";
 import { AWS } from "@console/core/aws";
 import { Log } from "@console/core/log";
 import { LogPoller } from "@console/core/log/poller";
@@ -45,16 +45,12 @@ export async function handler(input: State) {
   if (!poller) {
     throw new Error(`No poller found for ${input.pollerID}`);
   }
-  const stage = await App.Stage.fromID(poller.stageID);
-  const app = await App.fromID(stage!.appID);
-  const account = await AWS.Account.fromID(stage!.awsAccountID);
-  const credentials = await AWS.assumeRole(account!.accountID);
-  if (!credentials)
-    throw new Error("Unable to assume role for " + account!.accountID);
-  const client = new CloudWatchLogsClient({
-    region: stage!.region,
-    credentials,
-  });
+  const config = await Stage.assumeRole(poller.stageID);
+  if (!config)
+    return {
+      done: true,
+    };
+  const client = new CloudWatchLogsClient(config);
 
   async function* fetchStreams(logGroup: string) {
     let nextToken: string | undefined;
@@ -151,10 +147,7 @@ export async function handler(input: State) {
       .replace("log-group:/aws/lambda/", "function:")
       .replace(":logs:", ":lambda:")}`,
     group: input.logGroup + "-tail",
-    region: stage!.region,
-    app: app!.name,
-    stage: stage!.name,
-    credentials,
+    config,
   });
 
   for await (const event of fetchEvents(
