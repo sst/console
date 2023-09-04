@@ -24,7 +24,6 @@ import { App } from "../app";
 import { z } from "zod";
 import { RETRY_STRATEGY } from "../util/aws";
 import { StageCredentials } from "../app/stage";
-import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
 
 export * as Issue from "./index";
 
@@ -115,6 +114,7 @@ export async function extract(input: {
         .get(logStream)
         ?.unknown.map((x) => x.type === "error" && x)
         .at(0);
+      processor.destroy();
       if (!err) {
         return;
       }

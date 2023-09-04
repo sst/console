@@ -89,30 +89,37 @@ export function createSourcemapCache(input: {
     return maps;
   });
 
-  return async (number: number) => {
-    const match = pipe(
-      await sourcemapsMeta(),
-      filter((x) => x.created < number),
-      maxBy((x) => x.created)
-    );
-    if (!match) return;
-    if (sourcemapCache.has(match.key)) {
-      return sourcemapCache.get(match.key)!;
-    }
-    const bootstrap = await getBootstrap();
-    const content = await s3bootstrap.send(
-      new GetObjectCommand({
-        Bucket: bootstrap!.bucket,
-        Key: match.key,
-      })
-    );
-    const raw = JSON.parse(
-      zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
-    );
-    raw.sources = raw.sources.map((item: string) => item.replaceAll("../", ""));
-    const consumer = await new SourceMapConsumer(raw);
-    sourcemapCache.set(match.key, consumer);
-    return consumer;
+  return {
+    get: async (number: number) => {
+      const match = pipe(
+        await sourcemapsMeta(),
+        filter((x) => x.created < number),
+        maxBy((x) => x.created)
+      );
+      if (!match) return;
+      if (sourcemapCache.has(match.key)) {
+        return sourcemapCache.get(match.key)!;
+      }
+      const bootstrap = await getBootstrap();
+      const content = await s3bootstrap.send(
+        new GetObjectCommand({
+          Bucket: bootstrap!.bucket,
+          Key: match.key,
+        })
+      );
+      const raw = JSON.parse(
+        zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
+      );
+      raw.sources = raw.sources.map((item: string) =>
+        item.replaceAll("../", "")
+      );
+      const consumer = await new SourceMapConsumer(raw);
+      sourcemapCache.set(match.key, consumer);
+      return consumer;
+    },
+    destroy() {
+      s3bootstrap.destroy();
+    },
   };
 }
 
@@ -132,7 +139,7 @@ export function createProcessor(input: {
   >();
   let results = [] as LogEvent[];
 
-  const getSourcemap = createSourcemapCache({
+  const sourcemapCache = createSourcemapCache({
     functionArn: input.arn,
     config: input.config,
   });
@@ -245,7 +252,7 @@ export function createProcessor(input: {
         if (parsed) {
           const stack = await (async (): Promise<StackFrame[]> => {
             const stack: string[] = parsed.stack;
-            const consumer = await getSourcemap(input.timestamp);
+            const consumer = await sourcemapCache.get(input.timestamp);
             if (consumer) {
               return stack.flatMap((item) => {
                 const splits: string[] = item.split(":");
@@ -326,6 +333,9 @@ export function createProcessor(input: {
       ).flat();
       results = [];
       return events;
+    },
+    destroy() {
+      sourcemapCache.destroy();
     },
     results,
     invocations,
