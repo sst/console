@@ -82,7 +82,7 @@ export function Issues({ stack }: StackContext) {
 
   bus.subscribe(stack, "issue.error_detected", {
     handler: "packages/functions/src/issues/error-detected.handler",
-    timeout: "15 minutes",
+    timeout: "1 minute",
     memorySize: "2 GB",
     nodejs: {
       install: ["source-map"],

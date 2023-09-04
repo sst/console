@@ -56,11 +56,13 @@ export const extract = zod(
     // do not process self
     if (input.logGroup.startsWith("/aws/lambda/production-console-Issues"))
       return;
+    console.log("logGroup", input.logGroup);
 
     const { logStream } = input;
     const [filter] = input.subscriptionFilters;
     if (!filter) return;
     const [_prefix, region, accountID, appName, stageName] = filter.split("#");
+    console.log("filter", filter);
 
     const workspaces = await db
       .select({
@@ -103,6 +105,8 @@ export const extract = zod(
       `arn:aws:lambda:${region}:${accountID}:function:` +
       input.logGroup.split("/").pop();
 
+    console.log("functionArn", functionArn);
+
     await Promise.all(
       input.logEvents.map(async (event) => {
         const processor = Log.createProcessor({
@@ -130,13 +134,28 @@ export const extract = zod(
         processor.destroy();
         if (!err) return;
 
-        const group = createHash("sha256")
-          .update(
-            [err.type, err.message, err.stack[0]?.file || err.stack[0]?.raw]
-              .filter(Boolean)
-              .join("\n")
-          )
-          .digest("hex");
+        const group = (() => {
+          const frames = err.stack
+            .flatMap((x) => {
+              if (x.file) {
+                if (!x.important) return [];
+                return x.context?.[3] || x.file;
+              }
+
+              return x.raw!;
+            })
+            .map((x) => x.trim());
+          const parts = [
+            err.type,
+            err.message,
+            frames[0],
+            ...frames.slice(1, 4).sort(),
+          ]
+            .filter(Boolean)
+            .join("\n");
+
+          return createHash("sha256").update(parts).digest("hex");
+        })();
 
         await db
           .insert(issue)
