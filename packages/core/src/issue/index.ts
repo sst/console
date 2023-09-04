@@ -24,131 +24,145 @@ import { App } from "../app";
 import { z } from "zod";
 import { RETRY_STRATEGY } from "../util/aws";
 import { StageCredentials } from "../app/stage";
+import { event } from "../event";
 
 export * as Issue from "./index";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = z.infer<typeof Info>;
 
-export async function extract(input: {
-  logGroup: string;
-  logStream: string;
-  subscriptionFilters: string[];
-  logEvents: {
-    id: string;
-    timestamp: number;
-    message: string;
-  }[];
-}) {
-  // do not process self
-  if (input.logGroup.startsWith("/aws/lambda/production-console-Issues"))
-    return;
+export const Events = {
+  ErrorDetected: event("issue.error_detected", {
+    records: z
+      .object({
+        logGroup: z.string(),
+        logStream: z.string(),
+        subscriptionFilters: z.string().array(),
+        logEvents: z
+          .object({
+            id: z.string(),
+            timestamp: z.number(),
+            message: z.string(),
+          })
+          .array(),
+      })
+      .array(),
+  }),
+};
 
-  const { logStream } = input;
-  const [filter] = input.subscriptionFilters;
-  if (!filter) return;
-  const [_prefix, region, accountID, appName, stageName] = filter.split("#");
+export const extract = zod(
+  z.custom<(typeof Events.ErrorDetected.shape.properties)[number]>(),
+  async (input) => {
+    // do not process self
+    if (input.logGroup.startsWith("/aws/lambda/production-console-Issues"))
+      return;
 
-  const workspaces = await db
-    .select({
-      accountID: awsAccount.id,
-      workspaceID: awsAccount.workspaceID,
-      appID: app.id,
-      stageID: stage.id,
-    })
-    .from(awsAccount)
-    .leftJoin(
-      app,
-      and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
-    )
-    .innerJoin(
-      stage,
-      and(
-        eq(stage.workspaceID, app.workspaceID),
-        eq(stage.appID, app.id),
-        eq(stage.name, stageName!)
+    const { logStream } = input;
+    const [filter] = input.subscriptionFilters;
+    if (!filter) return;
+    const [_prefix, region, accountID, appName, stageName] = filter.split("#");
+
+    const workspaces = await db
+      .select({
+        accountID: awsAccount.id,
+        workspaceID: awsAccount.workspaceID,
+        appID: app.id,
+        stageID: stage.id,
+      })
+      .from(awsAccount)
+      .leftJoin(
+        app,
+        and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
       )
-    )
-    .where(
-      and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
-    )
-    .execute();
-
-  if (!workspaces.length) return;
-
-  provideActor({
-    type: "system",
-    properties: {
-      workspaceID: workspaces[0]!.workspaceID,
-    },
-  });
-
-  const credentials = await AWS.assumeRole(accountID!);
-  if (!credentials) return;
-
-  const functionArn =
-    `arn:aws:lambda:${region}:${accountID}:function:` +
-    input.logGroup.split("/").pop();
-
-  await Promise.all(
-    input.logEvents.map(async (event) => {
-      const processor = Log.createProcessor({
-        arn: functionArn,
-        config: {
-          credentials: credentials,
-          app: appName!,
-          stage: stageName!,
-          awsAccountID: accountID!,
-          region: region!,
-        },
-        group: input.logGroup,
-      });
-
-      await processor.process({
-        id: event.id,
-        timestamp: event.timestamp,
-        line: event.message,
-        streamName: logStream,
-      });
-      const err = processor.streams
-        .get(logStream)
-        ?.unknown.map((x) => x.type === "error" && x)
-        .at(0);
-      processor.destroy();
-      if (!err) return;
-
-      const group = createHash("sha256")
-        .update(
-          [err.type, err.message, err.stack[0]?.file || err.stack[0]?.raw]
-            .filter(Boolean)
-            .join("\n")
+      .innerJoin(
+        stage,
+        and(
+          eq(stage.workspaceID, app.workspaceID),
+          eq(stage.appID, app.id),
+          eq(stage.name, stageName!)
         )
-        .digest("hex");
+      )
+      .where(
+        and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
+      )
+      .execute();
 
-      await db
-        .insert(issue)
-        .values(
-          workspaces.map((row) => ({
-            group,
-            id: createId(),
-            errorID: "none",
-            workspaceID: row.workspaceID,
-            error: err.error,
-            message: err.message,
-            stageID: row.stageID,
-          }))
-        )
-        .onDuplicateKeyUpdate({
-          set: {
-            error: sql`VALUES(error)`,
-            errorID: sql`VALUES(error_id)`,
-            message: sql`VALUES(message)`,
+    if (!workspaces.length) return;
+
+    provideActor({
+      type: "system",
+      properties: {
+        workspaceID: workspaces[0]!.workspaceID,
+      },
+    });
+
+    const credentials = await AWS.assumeRole(accountID!);
+    if (!credentials) return;
+
+    const functionArn =
+      `arn:aws:lambda:${region}:${accountID}:function:` +
+      input.logGroup.split("/").pop();
+
+    await Promise.all(
+      input.logEvents.map(async (event) => {
+        const processor = Log.createProcessor({
+          arn: functionArn,
+          config: {
+            credentials: credentials,
+            app: appName!,
+            stage: stageName!,
+            awsAccountID: accountID!,
+            region: region!,
           },
-        })
-        .execute();
-    })
-  );
-}
+          group: input.logGroup,
+        });
+
+        await processor.process({
+          id: event.id,
+          timestamp: event.timestamp,
+          line: event.message,
+          streamName: logStream,
+        });
+        const err = processor.streams
+          .get(logStream)
+          ?.unknown.map((x) => x.type === "error" && x)
+          .at(0);
+        processor.destroy();
+        if (!err) return;
+
+        const group = createHash("sha256")
+          .update(
+            [err.type, err.message, err.stack[0]?.file || err.stack[0]?.raw]
+              .filter(Boolean)
+              .join("\n")
+          )
+          .digest("hex");
+
+        await db
+          .insert(issue)
+          .values(
+            workspaces.map((row) => ({
+              group,
+              id: createId(),
+              errorID: "none",
+              workspaceID: row.workspaceID,
+              error: err.error,
+              message: err.message,
+              stageID: row.stageID,
+            }))
+          )
+          .onDuplicateKeyUpdate({
+            set: {
+              error: sql`VALUES(error)`,
+              errorID: sql`VALUES(error_id)`,
+              message: sql`VALUES(message)`,
+            },
+          })
+          .execute();
+      })
+    );
+  }
+);
 
 function destinationIdentifier(config: StageCredentials) {
   return `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}`;

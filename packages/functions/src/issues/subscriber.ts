@@ -1,21 +1,30 @@
-import zlib from "zlib";
 import crypto from "crypto";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { Issue } from "@console/core/issue";
-import { retry } from "@console/core/util/retry";
-import { queue } from "@console/core/util/queue";
-import { benchmark } from "@console/core/util/benchmark";
+import { unzipSync } from "zlib";
+import { provideActor } from "@console/core/actor";
+import { chunk, flatMap, map, pipe } from "remeda";
 
 export const handler = ApiHandler(async (event) => {
+  provideActor({
+    type: "public",
+    properties: {},
+  });
   const body = useJsonBody();
   console.log("processing", body.records.length, "records");
-  await queue(50, body.records, async (record: any) => {
-    const decoded = JSON.parse(
-      zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
-    );
-    if (decoded.messageType !== "DATA_MESSAGE") return;
-    await retry(3, () => benchmark("issue", () => Issue.extract(decoded)));
-  });
+  await Promise.all(
+    pipe(
+      body.records as any[],
+      flatMap((record: any) => {
+        const decoded = JSON.parse(
+          unzipSync(Buffer.from(record.data, "base64")).toString()
+        );
+        if (decoded.messageType !== "DATA_MESSAGE") return [];
+        return [decoded];
+      }),
+      chunk(1)
+    ).map(async (records) => Issue.Events.ErrorDetected.publish({ records }))
+  );
 
   return {
     statusCode: 200,

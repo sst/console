@@ -80,6 +80,18 @@ export function Issues({ stack }: StackContext) {
     },
   });
 
+  bus.subscribe(stack, "issue.error_detected", {
+    handler: "packages/functions/src/issues/error-detected.handler",
+    timeout: "15 minutes",
+    memorySize: "2 GB",
+    nodejs: {
+      install: ["source-map"],
+    },
+    url: true,
+    bind: [bus, use(Storage), ...Object.values(secrets.database)],
+    permissions: ["sts"],
+  });
+
   return stream;
 }
 
