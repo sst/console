@@ -115,9 +115,7 @@ export async function extract(input: {
         ?.unknown.map((x) => x.type === "error" && x)
         .at(0);
       processor.destroy();
-      if (!err) {
-        return;
-      }
+      if (!err) return;
 
       const group = createHash("sha256")
         .update(
@@ -127,7 +125,8 @@ export async function extract(input: {
         )
         .digest("hex");
 
-      db.insert(issue)
+      await db
+        .insert(issue)
         .values(
           workspaces.map((row) => ({
             group,

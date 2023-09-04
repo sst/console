@@ -4,12 +4,12 @@ import { ApiHandler, useJsonBody } from "sst/node/api";
 import { Issue } from "@console/core/issue";
 import { retry } from "@console/core/util/retry";
 import { queue } from "@console/core/util/queue";
-import { chunk } from "remeda";
 import { benchmark } from "@console/core/util/benchmark";
 
 export const handler = ApiHandler(async (event) => {
   const body = useJsonBody();
-  await queue(25, body.records, async (record: any) => {
+  console.log("processing", body.records.length, "records");
+  await queue(50, body.records, async (record: any) => {
     const decoded = JSON.parse(
       zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
     );
