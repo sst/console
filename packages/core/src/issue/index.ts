@@ -51,7 +51,7 @@ export const Events = {
 };
 
 export const extract = zod(
-  z.custom<(typeof Events.ErrorDetected.shape.properties)[number]>(),
+  z.custom<(typeof Events.ErrorDetected.shape.properties)["records"][number]>(),
   async (input) => {
     // do not process self
     if (input.logGroup.startsWith("/aws/lambda/production-console-Issues"))
