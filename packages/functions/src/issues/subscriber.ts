@@ -2,18 +2,20 @@ import zlib from "zlib";
 import crypto from "crypto";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { Issue } from "@console/core/issue";
+import { retry } from "@console/core/util/retry";
+import { queue } from "@console/core/util/queue";
 import { chunk } from "remeda";
 import { benchmark } from "@console/core/util/benchmark";
 
 export const handler = ApiHandler(async (event) => {
   const body = useJsonBody();
-  for (const record of body.records) {
+  await queue(25, body.records, async (record: any) => {
     const decoded = JSON.parse(
       zlib.unzipSync(Buffer.from(record.data, "base64")).toString()
     );
-    if (decoded.messageType !== "DATA_MESSAGE") continue;
-    await benchmark("issue", () => Issue.extract(decoded));
-  }
+    if (decoded.messageType !== "DATA_MESSAGE") return;
+    await retry(3, () => benchmark("issue", () => Issue.extract(decoded)));
+  });
 
   return {
     statusCode: 200,

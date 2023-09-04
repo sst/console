@@ -1,5 +1,6 @@
 import { bus } from "$/providers/bus";
 import { LogEvent, StackFrame } from "@console/core/log";
+import { pipe, sortBy, uniqBy } from "remeda";
 import { createStore, produce } from "solid-js/store";
 
 export const [LogStore, setLogStore] = createStore<
@@ -60,7 +61,9 @@ bus.on("log", (data) => {
   const track = new Map<string, number>();
   setLogStore(
     produce((state) => {
+      let currentGroup: string;
       function getInvocation(group: string, requestID: string) {
+        currentGroup = group;
         const index = invocations.get(group)?.get(requestID);
         if (index === undefined || index < 0) return;
         return state[group]?.at(index);
@@ -100,9 +103,7 @@ bus.on("log", (data) => {
               logs = pendingEntries.get(event.requestID);
               if (!logs) pendingEntries.set(event.requestID, (logs = []));
             }
-            if (logs.find((l) => l.id === log.id)) break;
             logs.push(log);
-            logs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
             break;
           }
           case "end": {
@@ -138,6 +139,14 @@ bus.on("log", (data) => {
         const result = performance.measure(event.type, "start", "end");
         const avg = result.duration + (track.get(event.type) || 0);
         track.set(event.type, avg / 2);
+      }
+
+      for (const invocation of Object.values(state[currentGroup!] || {})) {
+        invocation.logs = pipe(
+          invocation.logs,
+          uniqBy((l) => l.id),
+          sortBy((l) => l.timestamp)
+        );
       }
     })
   );

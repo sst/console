@@ -14,7 +14,6 @@ export * as AWS from ".";
 const sts = new STSClient({});
 
 export const assumeRole = zod(z.string(), async (id) => {
-  console.log("assuming role for account", id);
   const workspaceID = useWorkspace();
   try {
     const result = await sts.send(

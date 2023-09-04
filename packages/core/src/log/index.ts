@@ -162,7 +162,7 @@ export function createProcessor(input: {
         };
         streams.set(input.streamName, stream);
       }
-      const tabs = input.line.split("\t");
+      const tabs = input.line.split("\t").map((t) => t.trim());
 
       if (tabs[0]?.startsWith("INIT_START")) {
         stream.cold = true;
@@ -242,7 +242,6 @@ export function createProcessor(input: {
 
       if (message.level === "ERROR") {
         const parsed = extractError(tabs);
-
         if (parsed) {
           const stack = await (async (): Promise<StackFrame[]> => {
             const stack: string[] = parsed.stack;
@@ -284,7 +283,6 @@ export function createProcessor(input: {
                 ];
               });
             }
-
             return stack.map((raw) => ({ raw }));
           })();
 
@@ -300,6 +298,7 @@ export function createProcessor(input: {
           });
         }
       }
+
       target.push(message);
       return;
     },
@@ -443,7 +442,8 @@ export function extractError(tabs: string[]):
   // Generic AWS error handling
   if (
     tabs[3]?.includes("Invoke Error") ||
-    tabs[3]?.includes("Uncaught Exception")
+    tabs[3]?.includes("Uncaught Exception") ||
+    tabs[3]?.includes("Unhandled Promise Rejection")
   ) {
     const parsed = JSON.parse(tabs[4]!);
     if (typeof parsed.stack == "string") {
@@ -462,7 +462,7 @@ export function extractError(tabs: string[]):
     const lines = tabs[3].trim().split("\n");
     if (lines.length < 2) return;
     const [first] = lines;
-    const [_, error, message] = first!.match(/(\w+): (.+)$/) ?? [];
+    const [_, error, message] = first!.match(/([A-Z]\w+): (.+)$/) ?? [];
     if (!error || !message) return;
     if (error.startsWith("(node:")) return;
     return {

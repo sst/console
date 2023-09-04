@@ -1,4 +1,4 @@
-import { useActor } from "@console/core/actor";
+import { provideActor, useActor } from "@console/core/actor";
 import {
   replicache_client_group,
   replicache_client,
@@ -12,7 +12,8 @@ import { server } from "./server";
 import { Replicache } from "@console/core/replicache";
 
 export const handler = ApiHandler(async (_evt) => {
-  await NotPublic();
+  provideActor(await useApiAuth());
+  NotPublic();
   const actor = useActor();
 
   const body: PushRequest = useJsonBody();

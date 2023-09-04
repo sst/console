@@ -22,27 +22,14 @@ import {
 import { Resource } from "../app/resource";
 import { App } from "../app";
 import { z } from "zod";
-import { StandardRetryStrategy } from "@smithy/util-retry";
 import { RETRY_STRATEGY } from "../util/aws";
-import {
-  CopyObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { Bucket } from "sst/node/bucket";
-import { compress } from "../util/compress";
-import { benchmark } from "../util/benchmark";
-import { Stage, StageCredentials } from "../app/stage";
+import { StageCredentials } from "../app/stage";
 import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
 
 export * as Issue from "./index";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = z.infer<typeof Info>;
-
-const s3 = new S3Client({
-  retryStrategy: RETRY_STRATEGY,
-});
 
 export async function extract(input: {
   logGroup: string;
@@ -54,37 +41,41 @@ export async function extract(input: {
     message: string;
   }[];
 }) {
-  const { logGroup, logStream } = input;
+  // do not process self
+  if (input.logGroup.startsWith("/aws/lambda/production-console-Issues"))
+    return;
+
+  const { logStream } = input;
   const [filter] = input.subscriptionFilters;
   if (!filter) return;
   const [_prefix, region, accountID, appName, stageName] = filter.split("#");
 
-  const workspaces = await benchmark("workspace_select", () =>
-    db
-      .select({
-        accountID: awsAccount.id,
-        workspaceID: awsAccount.workspaceID,
-        appID: app.id,
-        stageID: stage.id,
-      })
-      .from(awsAccount)
-      .leftJoin(
-        app,
-        and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
+  const workspaces = await db
+    .select({
+      accountID: awsAccount.id,
+      workspaceID: awsAccount.workspaceID,
+      appID: app.id,
+      stageID: stage.id,
+    })
+    .from(awsAccount)
+    .leftJoin(
+      app,
+      and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
+    )
+    .innerJoin(
+      stage,
+      and(
+        eq(stage.workspaceID, app.workspaceID),
+        eq(stage.appID, app.id),
+        eq(stage.name, stageName!)
       )
-      .innerJoin(
-        stage,
-        and(
-          eq(stage.workspaceID, app.workspaceID),
-          eq(stage.appID, app.id),
-          eq(stage.name, stageName!)
-        )
-      )
-      .where(
-        and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
-      )
-      .execute()
-  );
+    )
+    .where(
+      and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
+    )
+    .execute();
+
+  if (!workspaces.length) return;
 
   provideActor({
     type: "system",
@@ -93,41 +84,28 @@ export async function extract(input: {
     },
   });
 
-  const credentials = await benchmark("assume_role", () =>
-    AWS.assumeRole(accountID!)
-  );
+  const credentials = await AWS.assumeRole(accountID!);
   if (!credentials) return;
 
   const functionArn =
     `arn:aws:lambda:${region}:${accountID}:function:` +
     input.logGroup.split("/").pop();
 
-  const lambda = new LambdaClient({
-    region: region!,
-    credentials,
-    retryStrategy: RETRY_STRATEGY,
-  });
-
-  const func = await lambda.send(
-    new GetFunctionCommand({
-      FunctionName: functionArn,
-    })
-  );
   await Promise.all(
     input.logEvents.map(async (event) => {
       const processor = Log.createProcessor({
         arn: functionArn,
         config: {
           credentials: credentials,
-          app: func.Tags?.["sst:app"]!,
-          stage: func.Tags?.["sst:stage"]!,
+          app: appName!,
+          stage: stageName!,
           awsAccountID: accountID!,
           region: region!,
         },
         group: input.logGroup,
       });
 
-      processor.process({
+      await processor.process({
         id: event.id,
         timestamp: event.timestamp,
         line: event.message,
@@ -149,29 +127,26 @@ export async function extract(input: {
         )
         .digest("hex");
 
-      await benchmark("insert_issue", () =>
-        db
-          .insert(issue)
-          .values(
-            workspaces.map((row) => ({
-              group,
-              id: createId(),
-              errorID: "none",
-              workspaceID: row.workspaceID,
-              error: err.error,
-              message: err.message,
-              stageID: row.stageID,
-            }))
-          )
-          .onDuplicateKeyUpdate({
-            set: {
-              error: sql`VALUES(error)`,
-              errorID: sql`VALUES(error_id)`,
-              message: sql`VALUES(message)`,
-            },
-          })
-          .execute()
-      );
+      db.insert(issue)
+        .values(
+          workspaces.map((row) => ({
+            group,
+            id: createId(),
+            errorID: "none",
+            workspaceID: row.workspaceID,
+            error: err.error,
+            message: err.message,
+            stageID: row.stageID,
+          }))
+        )
+        .onDuplicateKeyUpdate({
+          set: {
+            error: sql`VALUES(error)`,
+            errorID: sql`VALUES(error_id)`,
+            message: sql`VALUES(message)`,
+          },
+        })
+        .execute();
     })
   );
 }

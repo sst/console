@@ -1,13 +1,13 @@
 import { DateTime } from "luxon";
 import { Workspace } from "@console/core/workspace";
 import { stripe } from "@console/core/stripe";
-import { useActor, useWorkspace } from "@console/core/actor";
+import { provideActor, useActor, useWorkspace } from "@console/core/actor";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { useApiAuth } from "src/api";
 import { Config } from "sst/node/config";
 
 export const handler = ApiHandler(async (event) => {
-  await useApiAuth();
+  provideActor(await useApiAuth());
   const body = useJsonBody();
 
   const workspace = await Workspace.fromID(useWorkspace());

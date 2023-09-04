@@ -1,8 +1,8 @@
 import { DateTime } from "luxon";
-import { useActor, useWorkspace } from "@console/core/actor";
+import { provideActor, useActor, useWorkspace } from "@console/core/actor";
 import { user } from "@console/core/user/user.sql";
 import { useTransaction } from "@console/core/util/transaction";
-import { NotPublic } from "../api";
+import { NotPublic, useApiAuth } from "../api";
 import { ApiHandler, Response, useJsonBody } from "sst/node/api";
 import { eq, and, gt, gte, inArray, isNull, lte, sql, lt } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
@@ -20,7 +20,8 @@ import { log_poller, log_search } from "@console/core/log/log.sql";
 import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 
 export const handler = ApiHandler(async () => {
-  await NotPublic();
+  provideActor(await useApiAuth());
+  NotPublic();
   const actor = useActor();
   console.log(actor);
 

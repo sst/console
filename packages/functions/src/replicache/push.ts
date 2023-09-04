@@ -1,9 +1,11 @@
 import { ApiHandler } from "sst/node/api";
 import { PushResponse } from "replicache";
-import { NotPublic } from "../api";
+import { NotPublic, useApiAuth } from "../api";
+import { provideActor } from "@console/core/actor";
 
 export const handler = ApiHandler(async () => {
-  await NotPublic();
+  provideActor(await useApiAuth());
+  NotPublic();
 
   const response: PushResponse = {
     error: "VersionNotSupported",
