@@ -284,7 +284,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
           for (const filter of all.subscriptionFilters ?? []) {
             if (
               filter.filterName === uniqueIdentifier &&
-              filter.destinationArn === destination.destination?.arn
+              filter.destinationArn === destination
             ) {
               return;
             }
