@@ -17,6 +17,7 @@ import { Enrichers } from "./resource";
 import { db } from "../drizzle";
 import { event } from "../event";
 import { Replicache } from "../replicache";
+import { groupBy, map, mapValues, pipe } from "remeda";
 
 export * as Stage from "./stage";
 
@@ -232,30 +233,34 @@ export const syncMetadata = zod(
           stageID: input.stageID,
         })
       );
-      const existing = await tx
-        .select({
-          id: resource.id,
-          cfnID: resource.cfnID,
-          stackID: resource.stackID,
-        })
-        .from(resource)
-        .where(
-          and(
-            eq(resource.stageID, input.stageID),
-            eq(resource.workspaceID, useWorkspace())
+      const existing = pipe(
+        await tx
+          .select({
+            id: resource.id,
+            cfnID: resource.cfnID,
+            stackID: resource.stackID,
+          })
+          .from(resource)
+          .where(
+            and(
+              eq(resource.stageID, input.stageID),
+              eq(resource.workspaceID, useWorkspace())
+            )
           )
-        )
-        .execute()
-        .then((x) => x.map((x) => [x.stackID + "-" + x.cfnID, x.id]))
-        .then(Object.fromEntries);
+          .execute(),
+        groupBy((x) => x.stackID + "-" + x.cfnID)
+      );
       console.log("existing", existing);
       if (results.length)
         await tx
           .insert(resource)
           .values(
             results.map((res) => {
-              const id = existing[res.stackID + "-" + res.id] || createId();
-              delete existing[res.stackID + "-" + res.id];
+              const id =
+                existing[res.stackID + "-" + res.id]?.at(-1)?.id || createId();
+              existing[res.stackID + "-" + res.id]?.pop();
+              if (!existing[res.stackID + "-" + res.id]?.length)
+                delete existing[res.stackID + "-" + res.id];
               return {
                 workspaceID: useWorkspace(),
                 cfnID: res.id,
@@ -280,7 +285,9 @@ export const syncMetadata = zod(
           })
           .execute();
 
-      const toDelete = Object.values(existing);
+      const toDelete = Object.values(existing)
+        .flat()
+        .map((x) => x.id);
       console.log("deleting", toDelete.length, "resources");
       if (toDelete.length)
         await tx
@@ -289,7 +296,7 @@ export const syncMetadata = zod(
             and(
               eq(resource.stageID, input.stageID),
               eq(resource.workspaceID, useWorkspace()),
-              inArray(resource.id, Object.values(existing))
+              inArray(resource.id, toDelete)
             )
           );
     });

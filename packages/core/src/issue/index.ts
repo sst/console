@@ -13,6 +13,7 @@ import { createSelectSchema } from "drizzle-zod";
 import {
   CloudWatchLogsClient,
   CreateLogGroupCommand,
+  DescribeDestinationsCommand,
   DescribeSubscriptionFiltersCommand,
   PutDestinationCommand,
   PutDestinationPolicyCommand,
@@ -200,6 +201,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
       targetArn: process.env.ISSUES_STREAM_ARN,
     })
   );
+  console.log("destination", destination.destination?.arn);
   const userClient = new CloudWatchLogsClient({
     ...config,
     retryStrategy: RETRY_STRATEGY,

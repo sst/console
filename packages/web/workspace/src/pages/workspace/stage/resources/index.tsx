@@ -886,7 +886,7 @@ export function OrphanFunctionsCard() {
               <IconFunction />
             </HeaderIcon>
             <Text weight="medium" on="surface" style={{ "flex-shrink": "0" }}>
-              Functions
+              Other Functions
             </Text>
           </Row>
           <Text code color="dimmed" size="mono_base" on="surface">
