@@ -17,23 +17,18 @@ const stages = await db
   )
   .execute();
 console.log("found", stages.length, "stages");
-const promises = [];
-for (const stage of stages) {
-  provideActor({
-    type: "system",
-    properties: {
-      workspaceID: stage.workspaceID,
-    },
-  });
-  // await Stage.Events.Updated.publish({
-  //   stageID: stage.id,
-  // });
-  promises.push(
-    Stage.Events.ResourcesUpdated.publish({
+await Promise.all(
+  stages.map((stage) => {
+    provideActor({
+      type: "system",
+      properties: {
+        workspaceID: stage.workspaceID,
+      },
+    });
+    return Stage.Events.Connected.publish({
       stageID: stage.id,
-    })
-  );
-}
-await Promise.all(promises);
+    });
+  })
+);
 
 export {};

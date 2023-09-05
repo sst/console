@@ -18,6 +18,7 @@ import {
   PutDestinationCommand,
   PutDestinationPolicyCommand,
   PutSubscriptionFilterCommand,
+  ResourceAlreadyExistsException,
   ResourceNotFoundException,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { Resource } from "../app/resource";
@@ -329,11 +330,16 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
       };
 
       const createLogGroup = () =>
-        userClient.send(
-          new CreateLogGroupCommand({
-            logGroupName: logGroup,
-          })
-        );
+        userClient
+          .send(
+            new CreateLogGroupCommand({
+              logGroupName: logGroup,
+            })
+          )
+          .catch((e) => {
+            if (e instanceof ResourceAlreadyExistsException) return;
+            throw e;
+          });
 
       try {
         await createFilter();
