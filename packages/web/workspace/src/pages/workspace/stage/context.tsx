@@ -63,10 +63,13 @@ function createResourcesContext() {
     (item) => item.stageID === ctx.stage.id
   );
 
-  if (query.dummy)
-    return () =>
+  if (query.dummy) {
+    const dummy = () =>
       DUMMY_RESOURCES[query.dummy as keyof typeof DUMMY_RESOURCES] ||
       DUMMY_RESOURCES.DEFAULT;
+    dummy.ready = true;
+    return dummy;
+  }
 
   return resources;
 }
@@ -241,7 +244,7 @@ export function ResourcesProvider(props: ParentProps) {
   });
 
   return (
-    <Show when={resources()}>
+    <Show when={resources.ready && resources()}>
       {(val) => (
         <ResourcesContext.Provider value={val}>
           <FunctionsContext.Provider value={functions}>
