@@ -12,7 +12,13 @@ import {
   Role,
   ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
-import { Bucket, Function, StackContext, use } from "sst/constructs";
+import {
+  Bucket,
+  Function,
+  StackContext,
+  KinesisStream,
+  use,
+} from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { Storage } from "./storage";
@@ -20,6 +26,75 @@ import { Storage } from "./storage";
 export function Issues({ stack }: StackContext) {
   const secrets = use(Secrets);
   const bus = use(Events);
+
+  ///////////////////////////
+  // Kinesis Stream: START //
+  ///////////////////////////
+
+  const kinesisStream = new KinesisStream(stack, "issues", {
+    consumers: {
+      consumer: {
+        function: {
+          handler: "packages/functions/src/issues/kinesis-subscriber.handler",
+          timeout: "15 minutes",
+          memorySize: "2 GB",
+          nodejs: {
+            install: ["source-map"],
+          },
+          url: true,
+          bind: [bus, use(Storage), ...Object.values(secrets.database)],
+          permissions: ["sts"],
+        },
+      },
+    },
+    cdk: {
+      stream: {
+        shardCount: 1,
+      },
+    },
+  });
+
+  const kinesisRole = new Role(stack, "issues-subscription", {
+    assumedBy: new ServicePrincipal("logs.amazonaws.com"),
+    inlinePolicies: {
+      firehose: new PolicyDocument({
+        statements: [
+          new PolicyStatement({
+            actions: ["kinesis:PutRecord"],
+            resources: [kinesisStream.streamArn],
+          }),
+        ],
+      }),
+    },
+  });
+  (kinesisRole.node.defaultChild as CfnRole).addPropertyOverride(
+    "AssumeRolePolicyDocument.Statement.0.Principal.Service",
+    allRegions().map((region) => `logs.${region}.amazonaws.com`)
+  );
+
+  new Function(stack, "tester", {
+    handler: "packages/functions/src/issues/kinesis-tester.handler",
+    timeout: "15 minutes",
+    permissions: [
+      "sts",
+      "logs:PutDestination",
+      "logs:PutDestinationPolicy",
+      "logs:PutSubscriptionFilter",
+      new PolicyStatement({
+        actions: ["iam:PassRole"],
+        resources: [kinesisRole.roleArn],
+      }),
+    ],
+    bind: [bus, ...Object.values(secrets.database)],
+    environment: {
+      ISSUES_ROLE_ARN: kinesisRole.roleArn,
+      ISSUES_STREAM_ARN: kinesisStream.streamArn,
+    },
+  });
+
+  /////////////////////////
+  // Kinesis Stream: END //
+  /////////////////////////
 
   const subscriber = new Function(stack, "issues-subscriber", {
     handler: "packages/functions/src/issues/subscriber.handler",
