@@ -5,7 +5,7 @@ import {
   Role,
   ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
-import { StackContext, KinesisStream, use } from "sst/constructs";
+import { StackContext, KinesisStream, use, Config } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { Storage } from "./storage";
@@ -13,10 +13,6 @@ import { Storage } from "./storage";
 export function Issues({ stack }: StackContext) {
   const secrets = use(Secrets);
   const bus = use(Events);
-
-  ///////////////////////////
-  // Kinesis Stream: START //
-  ///////////////////////////
 
   const kinesisStream = new KinesisStream(stack, "issues", {
     consumers: {
@@ -64,6 +60,37 @@ export function Issues({ stack }: StackContext) {
     timeout: "15 minutes",
     permissions: [
       "sts",
+      "logs:PutSubscriptionFilter",
+      new PolicyStatement({
+        actions: ["iam:PassRole"],
+        resources: [kinesisRole.roleArn],
+      }),
+    ],
+    bind: [
+      bus,
+      ...Object.values(secrets.database),
+      new Config.Parameter(stack, "ISSUES_DESTINATION_PREFIX", {
+        value: `arn:aws:logs:<region>:${stack.account}:destination:`,
+      }),
+    ],
+  });
+
+  bus.subscribe(stack, "issue.error_detected", {
+    handler: "packages/functions/src/issues/error-detected.handler",
+    timeout: "1 minute",
+    memorySize: "2 GB",
+    nodejs: {
+      install: ["source-map"],
+    },
+    bind: [bus, use(Storage), ...Object.values(secrets.database)],
+    permissions: ["sts"],
+  });
+
+  bus.subscribe(stack, "app.stage.connected", {
+    handler: "packages/functions/src/issues/stage-connected.handler",
+    bind: [bus, use(Storage), ...Object.values(secrets.database)],
+    permissions: [
+      "sts",
       "logs:DescribeDestinations",
       "logs:PutDestination",
       "logs:PutDestinationPolicy",
@@ -73,27 +100,10 @@ export function Issues({ stack }: StackContext) {
         resources: [kinesisRole.roleArn],
       }),
     ],
-    bind: [bus, ...Object.values(secrets.database)],
     environment: {
       ISSUES_ROLE_ARN: kinesisRole.roleArn,
       ISSUES_STREAM_ARN: kinesisStream.streamArn,
     },
-  });
-
-  /////////////////////////
-  // Kinesis Stream: END //
-  /////////////////////////
-
-  bus.subscribe(stack, "issue.error_detected", {
-    handler: "packages/functions/src/issues/error-detected.handler",
-    timeout: "1 minute",
-    memorySize: "2 GB",
-    nodejs: {
-      install: ["source-map"],
-    },
-    url: true,
-    bind: [bus, use(Storage), ...Object.values(secrets.database)],
-    permissions: ["sts"],
   });
 }
 

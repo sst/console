@@ -26,6 +26,7 @@ import { z } from "zod";
 import { RETRY_STRATEGY } from "../util/aws";
 import { StageCredentials } from "../app/stage";
 import { event } from "../event";
+import { Config } from "sst/node/config";
 
 export * as Issue from "./index";
 
@@ -188,43 +189,58 @@ function destinationIdentifier(config: StageCredentials) {
   return `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}`;
 }
 
+export const connectStage = zod(
+  z.custom<StageCredentials>(),
+  async (config) => {
+    const uniqueIdentifier = destinationIdentifier(config);
+    console.log("creating", uniqueIdentifier);
+    const cw = new CloudWatchLogsClient({
+      region: config.region,
+      retryStrategy: RETRY_STRATEGY,
+    });
+
+    const destination = await cw.send(
+      new PutDestinationCommand({
+        destinationName: uniqueIdentifier,
+        roleArn: process.env.ISSUES_ROLE_ARN,
+        targetArn: process.env.ISSUES_STREAM_ARN,
+      })
+    );
+
+    await cw.send(
+      new PutDestinationPolicyCommand({
+        destinationName: uniqueIdentifier,
+        accessPolicy: JSON.stringify({
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Principal: {
+                AWS: config.awsAccountID,
+              },
+              Action: "logs:PutSubscriptionFilter",
+              Resource: destination.destination!.arn,
+            },
+          ],
+        }),
+      })
+    );
+  }
+);
+
 export const subscribe = zod(Info.shape.stageID, async (stageID) => {
   const config = await App.Stage.assumeRole(stageID);
   if (!config) return;
 
   const uniqueIdentifier = destinationIdentifier(config);
   const cw = new CloudWatchLogsClient({ region: config.region });
-  const destination = await cw.send(
-    new PutDestinationCommand({
-      destinationName: uniqueIdentifier,
-      roleArn: process.env.ISSUES_ROLE_ARN,
-      targetArn: process.env.ISSUES_STREAM_ARN,
-    })
-  );
-  console.log("destination", destination.destination?.arn);
+  const destination =
+    Config.ISSUES_DESTINATION_PREFIX.replace("<region>", config.region) +
+    uniqueIdentifier;
   const userClient = new CloudWatchLogsClient({
     ...config,
     retryStrategy: RETRY_STRATEGY,
   });
-
-  await cw.send(
-    new PutDestinationPolicyCommand({
-      destinationName: uniqueIdentifier,
-      accessPolicy: JSON.stringify({
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Principal: {
-              AWS: config.awsAccountID,
-            },
-            Action: "logs:PutSubscriptionFilter",
-            Resource: destination.destination?.arn,
-          },
-        ],
-      }),
-    })
-  );
 
   try {
     // Get all function resources
@@ -288,7 +304,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
 
         await userClient.send(
           new PutSubscriptionFilterCommand({
-            destinationArn: destination.destination?.arn,
+            destinationArn: destination,
             filterName: uniqueIdentifier,
             filterPattern: [
               // OOM and other runtime error

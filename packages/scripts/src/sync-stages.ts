@@ -12,8 +12,7 @@ const stages = await db
     and(
       workspaceFilter.length
         ? inArray(stage.workspaceID, workspaceFilter)
-        : undefined,
-      gt(stage.id, "wl0zzce2uncsrw8kocnhjoy1")
+        : undefined
     )
   )
   .execute();
