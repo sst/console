@@ -27,7 +27,7 @@ importers:
         specifier: ^1.10.13
         version: 1.10.13
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.2.2
         version: 5.2.2
 
   packages/core:
@@ -123,6 +123,9 @@ importers:
       sst:
         specifier: 0.0.0-20230903050741
         version: 0.0.0-20230903050741
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
       vitest:
         specifier: ^0.25.3
         version: 0.25.8
@@ -196,6 +199,9 @@ importers:
       sst:
         specifier: 0.0.0-20230903050741
         version: 0.0.0-20230903050741
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/scripts:
     dependencies:

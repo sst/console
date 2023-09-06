@@ -12,6 +12,7 @@
     "@types/node": "^18.16.0",
     "drizzle-kit": "0.19.13",
     "sst": "0.0.0-20230903050741",
+    "typescript": "^5.2.2",
     "vitest": "^0.25.3"
   },
   "dependencies": {

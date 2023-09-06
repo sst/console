@@ -20,7 +20,7 @@
     "constructs": "10.2.69",
     "sst": "0.0.0-20230903050741",
     "turbo": "^1.10.13",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "workspaces": [
     "packages/*",

@@ -10,7 +10,8 @@
     "@types/aws-lambda": "^8.10.114",
     "@types/luxon": "^3.3.1",
     "@types/node": "^18.16.0",
-    "sst": "0.0.0-20230903050741"
+    "sst": "0.0.0-20230903050741",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "@aws-sdk/client-cloudformation": "^3.326.0",

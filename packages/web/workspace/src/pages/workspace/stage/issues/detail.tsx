@@ -93,7 +93,7 @@ function Label(props: LabelProps) {
 }
 
 export function Issue() {
-  const status: "ignored" | "resolved" | "active" = "resolved";
+  const status = "resolved" as "ignored" | "resolved" | "active";
   return (
     <>
       <PageHeader>
