@@ -329,30 +329,29 @@ export function createScan<T extends any>(
             setReady(true);
             return;
           }
-          for (const diff of diffs) {
-            if (diff.op === "add") {
-              setData(
-                produce((d) => {
-                  const index = d.push(structuredClone(diff.newValue) as T);
+          setData(
+            produce((state) => {
+              for (const diff of diffs) {
+                if (diff.op === "add") {
+                  const index = state.push(structuredClone(diff.newValue) as T);
                   pointers.set(diff.key, index - 1);
-                })
-              );
-            }
-            if (diff.op === "change") {
-              setData(
-                pointers.get(diff.key)!,
-                reconcile(structuredClone(diff.newValue) as T)
-              );
-            }
-            if (diff.op === "del") {
-              setData(
-                produce((d) => {
-                  d.splice(pointers.get(diff.key)!, 1);
+                }
+                if (diff.op === "change") {
+                  state[pointers.get(diff.key)!] = reconcile(
+                    structuredClone(diff.newValue) as T
+                  )(structuredClone(diff.oldValue));
+                }
+                if (diff.op === "del") {
+                  const toRemove = pointers.get(diff.key);
+                  const last = state[state.length - 1];
+                  state[toRemove!] = last;
+                  state.pop();
                   pointers.delete(diff.key);
-                })
-              );
-            }
-          }
+                }
+              }
+            })
+          );
+
           setReady(true);
         });
       },
