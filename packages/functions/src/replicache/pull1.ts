@@ -18,6 +18,8 @@ import { lambdaPayload } from "@console/core/lambda/lambda.sql";
 import { equals, mapValues } from "remeda";
 import { log_poller, log_search } from "@console/core/log/log.sql";
 import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
+import { warning } from "@console/core/warning/warning.sql";
+import { issue, issueSubscriber } from "@console/core/issue/issue.sql";
 
 export const handler = ApiHandler(async () => {
   provideActor(await useApiAuth());
@@ -109,6 +111,9 @@ export const handler = ApiHandler(async () => {
         log_poller,
         log_search,
         lambdaPayload,
+        warning,
+        issue,
+        issueSubscriber,
         usage,
       };
 

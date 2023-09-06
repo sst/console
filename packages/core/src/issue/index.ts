@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { provideActor, useWorkspace } from "../actor";
 import { AWS } from "../aws";
 import { awsAccount } from "../aws/aws.sql";
-import { and, db, eq, inArray, isNull, sql } from "../drizzle";
+import { and, db, eq, isNull, sql } from "../drizzle";
 import { Log } from "../log";
 import { app, stage } from "../app/app.sql";
 import { issue, issueSubscriber } from "./issue.sql";
@@ -13,8 +13,7 @@ import { createSelectSchema } from "drizzle-zod";
 import {
   CloudWatchLogsClient,
   CreateLogGroupCommand,
-  DescribeDestinationsCommand,
-  DescribeSubscriptionFiltersCommand,
+  LimitExceededException,
   PutDestinationCommand,
   PutDestinationPolicyCommand,
   PutSubscriptionFilterCommand,
@@ -28,6 +27,7 @@ import { RETRY_STRATEGY } from "../util/aws";
 import { StageCredentials } from "../app/stage";
 import { event } from "../event";
 import { Config } from "sst/node/config";
+import { Warning } from "../warning";
 
 export * as Issue from "./index";
 
@@ -59,13 +59,11 @@ export const extract = zod(
     // do not process self
     if (input.logGroup.startsWith("/aws/lambda/production-console-Issues"))
       return;
-    console.log("logGroup", input.logGroup);
 
     const { logStream } = input;
     const [filter] = input.subscriptionFilters;
     if (!filter) return;
     const [_prefix, region, accountID, appName, stageName] = filter.split("#");
-    console.log("filter", filter);
 
     const workspaces = await db
       .select({
@@ -107,8 +105,6 @@ export const extract = zod(
     const functionArn =
       `arn:aws:lambda:${region}:${accountID}:function:` +
       input.logGroup.split("/").pop();
-
-    console.log("functionArn", functionArn);
 
     await Promise.all(
       input.logEvents.map(async (event) => {
@@ -234,11 +230,10 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
   if (!config) return;
 
   const uniqueIdentifier = destinationIdentifier(config);
-  const cw = new CloudWatchLogsClient({ region: config.region });
   const destination =
     Config.ISSUES_DESTINATION_PREFIX.replace("<region>", config.region) +
     uniqueIdentifier;
-  const userClient = new CloudWatchLogsClient({
+  const cw = new CloudWatchLogsClient({
     ...config,
     retryStrategy: RETRY_STRATEGY,
   });
@@ -250,118 +245,125 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
       types: ["Function"],
     });
     if (!functions.length) return;
-    const logGroups = functions.map(
-      // @ts-expect-error
-      (fn) => `/aws/lambda/${fn.metadata.arn.split(":")[6]}`
-    );
 
     const exists = await db
       .select({
-        logGroup: issueSubscriber.logGroup,
+        functionID: issueSubscriber.functionID,
       })
       .from(issueSubscriber)
       .where(
         and(
           eq(issueSubscriber.stageID, stageID),
-          eq(issueSubscriber.workspaceID, useWorkspace()),
-          inArray(issueSubscriber.logGroup, logGroups)
+          eq(issueSubscriber.workspaceID, useWorkspace())
         )
       )
       .execute()
-      .then((rows) => new Set(rows.map((row) => row.logGroup)));
+      .then((rows) => new Set(rows.map((x) => x.functionID)));
 
     console.log("updating", functions.length, "functions");
     for (const fn of functions) {
+      if (exists.has(fn.id)) continue;
       // @ts-expect-error
       const logGroup = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
-      if (exists.has(logGroup)) continue;
-      const createFilter = async () => {
-        if (false) {
-          const all = await userClient.send(
-            new DescribeSubscriptionFiltersCommand({
+
+      while (true) {
+        try {
+          await cw.send(
+            new PutSubscriptionFilterCommand({
+              destinationArn: destination,
+              filterName: uniqueIdentifier,
+              filterPattern: [
+                // OOM and other runtime error
+                `?"Error: Runtime exited"`,
+                // Timeout
+                `?"Task timed out after"`,
+                // NodeJS Uncaught and console.error
+                // @ts-expect-error
+                ...(fn.enrichment.runtime?.startsWith("nodejs")
+                  ? [`?"\tERROR\t"`]
+                  : []),
+              ].join(" "),
               logGroupName: logGroup,
             })
           );
-          for (const filter of all.subscriptionFilters ?? []) {
-            if (
-              filter.filterName === uniqueIdentifier &&
-              filter.destinationArn === destination
-            ) {
-              return;
-            }
 
-            if (filter.filterName?.startsWith("sst#")) {
-              // TODO: disable for now
-              // await userClient.send(
-              //   new DeleteSubscriptionFilterCommand({
-              //     logGroupName,
-              //     filterName: filter.filterName,
-              //   })
-              // );
-              continue;
-            }
-          }
-        }
-
-        await userClient.send(
-          new PutSubscriptionFilterCommand({
-            destinationArn: destination,
-            filterName: uniqueIdentifier,
-            filterPattern: [
-              // OOM and other runtime error
-              `?"Error: Runtime exited"`,
-              // Timeout
-              `?"Task timed out after"`,
-              // NodeJS Uncaught and console.error
-              // @ts-expect-error
-              ...(fn.enrichment.runtime?.startsWith("nodejs")
-                ? [`?"\tERROR\t"`]
-                : []),
-            ].join(" "),
-            logGroupName: logGroup,
-          })
-        );
-        await db.insert(issueSubscriber).ignore().values({
-          stageID,
-          workspaceID: useWorkspace(),
-          logGroup,
-          id: createId(),
-        });
-      };
-
-      const createLogGroup = () =>
-        userClient
-          .send(
-            new CreateLogGroupCommand({
-              logGroupName: logGroup,
+          await db
+            .insert(issueSubscriber)
+            .ignore()
+            .values({
+              stageID: stageID,
+              workspaceID: useWorkspace(),
+              functionID: fn.id,
+              id: createId(),
             })
-          )
-          .catch((e) => {
-            if (e instanceof ResourceAlreadyExistsException) return;
-            throw e;
-          });
+            .execute();
+          break;
+        } catch (e: any) {
+          // Create log group if the function has never been invoked
+          if (
+            e instanceof ResourceNotFoundException &&
+            e.message.startsWith("The specified log group does not exist")
+          ) {
+            await cw
+              .send(
+                new CreateLogGroupCommand({
+                  logGroupName: logGroup,
+                })
+              )
+              .catch((e) => {
+                if (e instanceof ResourceAlreadyExistsException) return;
+                throw e;
+              });
+            continue;
+          }
 
-      try {
-        await createFilter();
-      } catch (e: any) {
-        if (
-          e instanceof ResourceNotFoundException &&
-          e.message.startsWith("The specified log group does not exist")
-        ) {
-          await createLogGroup();
-          await createFilter();
-          continue;
+          // There are too many log subscribers
+          if (e instanceof LimitExceededException) {
+            await Warning.create({
+              stageID,
+              target: fn.id,
+              type: "log_subscription",
+              data: {
+                error: "limited",
+              },
+            });
+            break;
+          }
+
+          // Permissions issue
+          if (e.name === "AccessDeniedException") {
+            await Warning.create({
+              stageID,
+              target: fn.id,
+              type: "log_subscription",
+              data: {
+                error: "permissions",
+              },
+            });
+            break;
+          }
+
+          // The destination hasn't been created yet so try again
+          if (e instanceof ResourceNotFoundException) {
+            await new Promise((r) => setTimeout(r, 1000));
+            continue;
+          }
+
+          console.error(e);
+          await Warning.create({
+            stageID,
+            target: fn.id,
+            type: "log_subscription",
+            data: {
+              error: "unknown",
+              message: e.toString(),
+            },
+          });
+          break;
         }
-        console.error(e);
       }
     }
   } finally {
     cw.destroy();
-    userClient.destroy();
   }
 });
-
-export const createDestination = zod(
-  z.custom<StageCredentials>(),
-  async (config) => {}
-);

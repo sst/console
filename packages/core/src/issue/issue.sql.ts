@@ -43,14 +43,14 @@ export const issueSubscriber = mysqlTable(
     ...workspaceID,
     ...timestamps,
     stageID: cuid("stage_id").notNull(),
-    logGroup: varchar("log_group", { length: 255 }).notNull(),
+    functionID: cuid("function_id").notNull(),
   },
   (table) => ({
     primary: primaryKey(table.workspaceID, table.stageID, table.id),
-    logGroup: unique("logGroup").on(
+    unique: unique("unique").on(
       table.workspaceID,
       table.stageID,
-      table.logGroup
+      table.functionID
     ),
   })
 );
