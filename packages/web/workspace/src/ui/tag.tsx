@@ -8,13 +8,12 @@ export const Tag = styled("div", {
     justifyContent: "center",
     textAlign: "center",
     fontSize: theme.font.size.mono_xs,
-    padding: `0 ${theme.space[3]}`,
     height: 26,
     display: "flex",
     alignItems: "center",
     textTransform: "uppercase",
     borderRadius: theme.borderRadius,
-    lineHeight: "normal",
+    lineHeight: 1,
     userSelect: "none",
     WebkitUserSelect: "none",
   },
@@ -43,11 +42,11 @@ export const Tag = styled("div", {
     },
     style: {
       solid: {
-        padding: "6px 9px 5px",
+        padding: "0 9px",
         fontWeight: 500,
       },
       outline: {
-        padding: "6px 8px 5px",
+        padding: "0 8px",
         borderWidth: 1,
         borderStyle: "solid",
         backgroundColor: "transparent",

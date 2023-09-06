@@ -26,11 +26,8 @@ import { WorkspaceCreate } from "./pages/workspace-create";
 import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
 import { UserStore } from "./data/user";
-import {
-  IconPlus,
-  IconArrowLeftOnRectangle,
-  IconBuildingOffice,
-} from "./ui/icons";
+import { IconWorkspace } from "./ui/icons/custom";
+import { IconPlus, IconArrowLeftOnRectangle } from "./ui/icons";
 import { LocalProvider } from "./providers/local";
 import { useStorage } from "./providers/account";
 import { Fullscreen, Splash } from "./ui";
@@ -259,7 +256,7 @@ function GlobalCommands() {
         .map((w) => ({
           title: `Switch to ${w.workspace?.slug} workspace`,
           category: "Workspace",
-          icon: IconBuildingOffice,
+          icon: IconWorkspace,
           run: (control: any) => {
             storage.set("account", w.account.token.accountID);
             nav(`/${w.workspace.slug}`);

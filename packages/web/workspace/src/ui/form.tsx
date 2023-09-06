@@ -3,6 +3,7 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
 import { utility } from "./utility";
 import { ComponentProps, Show } from "solid-js";
+import { Text } from "./text";
 import { Stack } from "./layout";
 
 const inputStyles: CSSProperties = {
@@ -11,7 +12,8 @@ const inputStyles: CSSProperties = {
   appearance: "none",
   fontSize: theme.font.size.sm,
   borderRadius: theme.borderRadius,
-  padding: `${theme.space[2]} ${theme.space[3]}`,
+  padding: `0 ${theme.space[3]}`,
+  height: theme.input.size.base,
   backgroundColor: theme.color.input.background,
   // transition: `box-shadow ${theme.colorFadeDuration}`,
   boxShadow: `
@@ -73,6 +75,7 @@ export const Textarea = styled("textarea", {
   base: {
     ...inputStyles,
     height: "auto",
+    padding: `${theme.space[2]} ${theme.space[3]}`,
     ":focus": {
       ...inputFocusStyles,
     },
@@ -172,12 +175,12 @@ const Root = styled("label", {
   },
 });
 
-type Props = ComponentProps<typeof Input> & {
+type InputProps = ComponentProps<typeof Input> & {
   hint?: string;
   label?: string;
 };
 
-export function FormInput(props: Props) {
+export function FormInput(props: InputProps) {
   return (
     <Root>
       <Stack space="3">
@@ -191,4 +194,128 @@ export function FormInput(props: Props) {
       </Show>
     </Root>
   );
+}
+
+type TextareaProps = ComponentProps<typeof Textarea> & {
+  hint?: string;
+  label?: string;
+};
+
+export function FormTextArea(props: TextareaProps) {
+  return (
+    <Root>
+      <Stack space="3">
+        <Show when={props.label}>
+          <Label color={props.color}>{props.label}</Label>
+        </Show>
+        <Textarea {...props} />
+      </Stack>
+      <Show when={props.hint}>
+        <Hint color={props.color}>{props.hint}</Hint>
+      </Show>
+    </Root>
+  );
+}
+
+type SelectProps = ComponentProps<typeof Select> & {
+  hint?: string;
+  label?: string;
+};
+
+export function FormSelect(props: SelectProps) {
+  return (
+    <Root>
+      <Stack space="3">
+        <Show when={props.label}>
+          <Label color={props.color}>{props.label}</Label>
+        </Show>
+        <Select {...props}>{props.children}</Select>
+      </Stack>
+      <Show when={props.hint}>
+        <Hint color={props.color}>{props.hint}</Hint>
+      </Show>
+    </Root>
+  );
+}
+
+const SplitOptionsRoot = styled("div", {
+  base: {
+    ...inputStyles,
+    ...utility.row(0),
+    padding: 1,
+  },
+  variants: {
+    size: {
+      base: {
+        height: theme.input.size.base,
+      },
+      sm: {
+        height: theme.input.size.sm,
+      },
+    },
+  },
+  defaultVariants: {
+    size: "base",
+  },
+});
+
+const SplitOptionsOptionRoot = styled("div", {
+  base: {
+    display: "flex",
+    alignItems: "center",
+    padding: inputStyles.padding,
+    borderRight: `1px solid ${theme.color.input.border}`,
+    ":last-child": {
+      borderRight: "none",
+    },
+  },
+  variants: {
+    selected: {
+      true: {
+        backgroundColor: theme.color.background.surface,
+        color: theme.color.text.primary.surface,
+      },
+      false: {},
+    },
+  },
+  defaultVariants: {
+    selected: false,
+  },
+});
+
+const SplitOptionsOptionText = styled("span", {
+  base: {
+    selectors: {
+      [`${SplitOptionsOptionRoot.selector({ selected: true })} &`]: {
+        color: theme.color.text.primary.surface,
+      },
+      [`${SplitOptionsOptionRoot.selector({ selected: false })} &`]: {
+        color: theme.color.text.secondary.base,
+      },
+      [`${SplitOptionsRoot.selector({ size: "base" })} &`]: {
+        fontSize: theme.font.size.sm,
+      },
+      [`${SplitOptionsRoot.selector({ size: "sm" })} &`]: {
+        fontSize: theme.font.size.xs,
+      },
+    },
+  },
+});
+
+type SplitOptionsOptionProps = ComponentProps<
+  typeof SplitOptionsOptionRoot
+> & {};
+
+export function SplitOptionsOption(props: SplitOptionsOptionProps) {
+  return (
+    <SplitOptionsOptionRoot {...props}>
+      <SplitOptionsOptionText>{props.children}</SplitOptionsOptionText>
+    </SplitOptionsOptionRoot>
+  );
+}
+
+type SplitOptionsProps = ComponentProps<typeof SplitOptionsRoot> & {};
+
+export function SplitOptions(props: SplitOptionsProps) {
+  return <SplitOptionsRoot {...props}>{props.children}</SplitOptionsRoot>;
 }

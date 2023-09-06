@@ -8,17 +8,11 @@ import { utility } from "$/ui/utility";
 import { Show, createEffect } from "solid-js";
 import { useCommandBar } from "$/pages/workspace/command-bar";
 import { ResourcesProvider, StageContext, createStageContext } from "./context";
-import { Resources } from "./resources";
 import { Logs } from "./logs";
+import { Issues } from "./issues";
+import { Resources } from "./resources";
 import { IconStage } from "$/ui/icons/custom";
 import { Header } from "../header";
-
-const Content = styled("div", {
-  base: {
-    padding: theme.space[4],
-    ...utility.stack(4),
-  },
-});
 
 export function Stage() {
   const bar = useCommandBar();
@@ -58,12 +52,13 @@ export function Stage() {
       <StageContext.Provider value={stageContext}>
         <ResourcesProvider>
           <Header app={app()?.name} stage={stage()?.name} />
-          <Content>
+          <div>
             <Routes>
               <Route path="" component={Resources} />
+              <Route path="issues" component={Issues} />
               <Route path="logs/:resourceID/*" component={Logs} />
             </Routes>
-          </Content>
+          </div>
         </ResourcesProvider>
       </StageContext.Provider>
     </Show>

@@ -28,6 +28,13 @@ const font = {
   },
 };
 
+const formInput = {
+  size: {
+    base: "40px",
+    sm: "32px",
+  },
+};
+
 const constants = {
   colorFadeDuration: "0.15s",
   borderRadius: "4px",
@@ -500,6 +507,7 @@ export const [lightClass, theme] = createTheme({
   space,
   font,
   color: light,
+  input: formInput,
 });
 
 export const darkClass = createTheme(theme, {
@@ -508,4 +516,5 @@ export const darkClass = createTheme(theme, {
   space,
   font,
   color: dark,
+  input: formInput,
 });

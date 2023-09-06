@@ -1,8 +1,15 @@
 import { styled } from "@macaron-css/solid";
 import { JSX, Show, ComponentProps } from "solid-js";
 import { theme } from "./theme";
+import { Tag } from "$/ui/tag";
+import { Row } from "$/ui/layout";
 import { IconCheck } from "$/ui/icons";
 import { CSSProperties } from "@macaron-css/core";
+
+const activeBase: CSSProperties = {
+  boxShadow: "none",
+  transform: "translateY(1px)",
+};
 
 const primaryHover: CSSProperties = {
   borderColor: theme.color.button.primary.hover.border,
@@ -10,9 +17,7 @@ const primaryHover: CSSProperties = {
 };
 const primaryActive: CSSProperties = {
   backgroundColor: theme.color.button.primary.active,
-  transform: "translateY(1px)",
   borderColor: "transparent",
-  boxShadow: "none",
 };
 const secondaryHover: CSSProperties = {
   borderColor: theme.color.button.secondary.hover.border,
@@ -20,8 +25,6 @@ const secondaryHover: CSSProperties = {
 };
 const secoondaryActive: CSSProperties = {
   backgroundColor: theme.color.button.secondary.active,
-  transform: "translateY(1px)",
-  boxShadow: "none",
 };
 const dangerHover: CSSProperties = {
   borderColor: theme.color.button.danger.hover.border,
@@ -29,9 +32,7 @@ const dangerHover: CSSProperties = {
 };
 const dangerActive: CSSProperties = {
   backgroundColor: theme.color.button.danger.active,
-  transform: "translateY(1px)",
   borderColor: "transparent",
-  boxShadow: "none",
 };
 const githubHover: CSSProperties = {
   borderColor: theme.color.button.github.hover.border,
@@ -39,9 +40,7 @@ const githubHover: CSSProperties = {
 };
 const githubActive: CSSProperties = {
   backgroundColor: theme.color.button.github.active,
-  transform: "translateY(1px)",
   borderColor: "transparent",
-  boxShadow: "none",
 };
 
 export const Button = styled("button", {
@@ -50,8 +49,6 @@ export const Button = styled("button", {
     borderRadius: 4,
     border: "1px solid",
     padding: `0 1rem`,
-    height: 40,
-    fontSize: `0.8125rem`,
     fontWeight: 500,
     lineHeight: "normal",
     fontFamily: theme.font.family.code,
@@ -62,8 +59,22 @@ export const Button = styled("button", {
     ":disabled": {
       pointerEvents: "none",
     },
+    selectors: {
+      "&:active": activeBase,
+      "&[data-state-active]": activeBase,
+    },
   },
   variants: {
+    size: {
+      base: {
+        height: theme.input.size.base,
+        fontSize: theme.font.size.mono_sm,
+      },
+      sm: {
+        height: theme.input.size.sm,
+        fontSize: theme.font.size.mono_xs,
+      },
+    },
     color: {
       primary: {
         backgroundColor: theme.color.button.primary.color,
@@ -133,11 +144,37 @@ export const Button = styled("button", {
         },
       },
     },
+    grouped: {
+      none: {},
+      left: {
+        borderTopRightRadius: 0,
+        borderBottomRightRadius: 0,
+      },
+      middle: {
+        borderRadius: 0,
+      },
+      right: {
+        borderTopLeftRadius: 0,
+        borderBottomLeftRadius: 0,
+      },
+    },
   },
   defaultVariants: {
+    size: "base",
+    grouped: "none",
     color: "primary",
   },
 });
+
+type ButtonGroupProps = ComponentProps<typeof Row> & {};
+
+export function ButtonGroup(props: ButtonGroupProps) {
+  return (
+    <Row space="px" {...props}>
+      {props.children}
+    </Row>
+  );
+}
 
 export const LinkButton = styled("span", {
   base: {
@@ -300,4 +337,104 @@ const IconButtonRoot = styled("button", {
 
 export function IconButton(props: ComponentProps<typeof IconButtonRoot>) {
   return <IconButtonRoot {...props}>{props.children}</IconButtonRoot>;
+}
+
+export const TabTitleRoot = styled("div", {
+  base: {},
+  variants: {
+    state: {
+      active: {},
+      inactive: {},
+      disabled: {},
+    },
+  },
+  defaultVariants: {
+    state: "inactive",
+  },
+});
+
+export const TabTitleText = styled("div", {
+  base: {
+    fontWeight: 500,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    fontFamily: theme.font.family.code,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${TabTitleRoot.selector({ state: "active" })} &`]: {
+        color: theme.color.text.primary.base,
+      },
+      [`${TabTitleRoot.selector({ state: "active" })} &:hover`]: {
+        color: theme.color.text.primary.base,
+      },
+      [`${TabTitleRoot.selector({ state: "inactive" })} &`]: {
+        color: theme.color.text.dimmed.base,
+      },
+      [`${TabTitleRoot.selector({ state: "inactive" })} &:hover`]: {
+        color: theme.color.text.secondary.base,
+      },
+      [`${TabTitleRoot.selector({ state: "disabled" })} &`]: {
+        color: theme.color.text.dimmed.base,
+        opacity: "0.6",
+      },
+    },
+  },
+  variants: {
+    size: (() => {
+      const result = {} as Record<`${keyof typeof theme.font.size}`, any>;
+      for (const [key, value] of Object.entries(theme.font.size)) {
+        result[key as keyof typeof theme.font.size] = {
+          fontSize: value,
+        };
+      }
+      return result;
+    })(),
+  },
+  defaultVariants: {
+    size: "mono_base",
+  },
+});
+
+export const TabTitleCount = styled("div", {
+  base: {
+    lineHeight: 1,
+    display: "flex",
+    flex: "0 0 auto",
+    borderRadius: 50,
+    letterSpacing: 0.5,
+    userSelect: "none",
+    padding: "5px 8px",
+    textAlign: "center",
+    alignItems: "center",
+    WebkitUserSelect: "none",
+    justifyContent: "center",
+    textTransform: "uppercase",
+    fontSize: theme.font.size.mono_xs,
+    borderColor: theme.color.background.red,
+    color: `hsla(${theme.color.red.l2}, 100%)`,
+    backgroundColor: theme.color.background.red,
+    selectors: {
+      [`${TabTitleRoot.selector({ state: "disabled" })} &`]: {
+        opacity: "0.6",
+      },
+    },
+  },
+});
+
+type TabTitleProps = ComponentProps<typeof TabTitleRoot> & {
+  size?: keyof typeof theme.font.size;
+  count?: string;
+};
+
+export function TabTitle(props: TabTitleProps) {
+  return (
+    <TabTitleRoot {...props}>
+      <Row space="2" vertical="center">
+        <TabTitleText size={props.size}>{props.children}</TabTitleText>
+        <Show when={props.count}>
+          <TabTitleCount>{props.count}</TabTitleCount>
+        </Show>
+      </Row>
+    </TabTitleRoot>
+  );
 }

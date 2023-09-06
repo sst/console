@@ -14,7 +14,7 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { Fullscreen, Row, Stack } from "$/ui/layout";
-import { Tag, Text, Alert } from "$/ui";
+import { Tag, Text, Alert, TabTitle } from "$/ui";
 import {
   IconFunction,
   IconGoRuntime,
@@ -36,6 +36,23 @@ import {
 import {} from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
+
+const Content = styled("div", {
+  base: {
+    padding: theme.space[4],
+  },
+});
+
+export const PageHeaderRoot = styled("div", {
+  base: {
+    height: 56,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: `0 ${theme.space[4]}`,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
 
 const Card = styled("div", {
   base: {
@@ -180,6 +197,21 @@ function cleanFilepath(path: string) {
   return path.replace(/^\.?\//, "");
 }
 
+type PageHeaderProps = ComponentProps<typeof PageHeaderRoot> & {
+  right?: JSX.Element;
+};
+
+export function PageHeader(props: PageHeaderProps) {
+  return (
+    <PageHeaderRoot {...props}>
+      <Row space="5" vertical="center">
+        {props.children}
+      </Row>
+      {props.right}
+    </PageHeaderRoot>
+  );
+}
+
 interface HeaderProps {
   resource: Resource.Info;
   icon?: (props: any) => JSX.Element;
@@ -277,117 +309,143 @@ export function Resources() {
         </Fullscreen>
       </Match>
       <Match when={true}>
-        <Show when={outdated().length}>
-          <Alert level="info">
-            <span
-              title={outdated()
-                .map((s) => s.stackID)
-                .join(", ")}
+        {/* TODO: Issues */}
+        <PageHeader>
+          <TabTitle state="active">Resources</TabTitle>
+          <Link href="issues">
+            <TabTitle count="99+" state="inactive">
+              Issues
+            </TabTitle>
+          </Link>
+        </PageHeader>
+        {/* */}
+        <Content>
+          <Stack space="4">
+            <Show when={outdated().length}>
+              <Alert level="info">
+                <span
+                  title={outdated()
+                    .map((s) => s.stackID)
+                    .join(", ")}
+                >
+                  Some of the stacks in this app are not supported by the SST
+                  Console.
+                </span>{" "}
+                <a target="_blank" href="https://github.com/sst/sst/releases">
+                  Upgrade them to at least v{MINIMUM_VERSION}.
+                </a>
+              </Alert>
+            </Show>
+            <For
+              each={resources()
+                .filter(
+                  (r) =>
+                    r.type === "Api" ||
+                    r.type === "RDS" ||
+                    r.type === "Cron" ||
+                    r.type === "Table" ||
+                    r.type === "Queue" ||
+                    r.type === "Topic" ||
+                    r.type === "Bucket" ||
+                    r.type === "Script" ||
+                    r.type === "Cognito" ||
+                    r.type === "AppSync" ||
+                    r.type === "EventBus" ||
+                    r.type === "AstroSite" ||
+                    r.type === "RemixSite" ||
+                    r.type === "StaticSite" ||
+                    r.type === "NextjsSite" ||
+                    r.type === "WebSocketApi" ||
+                    r.type === "KinesisStream" ||
+                    r.type === "SvelteKitSite" ||
+                    r.type === "SolidStartSite" ||
+                    r.type === "ApiGatewayV1Api"
+                )
+                .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
             >
-              Some of the stacks in this app are not supported by the SST
-              Console.
-            </span>{" "}
-            <a target="_blank" href="https://github.com/sst/sst/releases">
-              Upgrade them to at least v{MINIMUM_VERSION}.
-            </a>
-          </Alert>
-        </Show>
-        <For
-          each={resources()
-            .filter(
-              (r) =>
-                r.type === "Api" ||
-                r.type === "RDS" ||
-                r.type === "Cron" ||
-                r.type === "Table" ||
-                r.type === "Queue" ||
-                r.type === "Topic" ||
-                r.type === "Bucket" ||
-                r.type === "Script" ||
-                r.type === "Cognito" ||
-                r.type === "AppSync" ||
-                r.type === "EventBus" ||
-                r.type === "AstroSite" ||
-                r.type === "RemixSite" ||
-                r.type === "StaticSite" ||
-                r.type === "NextjsSite" ||
-                r.type === "WebSocketApi" ||
-                r.type === "KinesisStream" ||
-                r.type === "SvelteKitSite" ||
-                r.type === "SolidStartSite" ||
-                r.type === "ApiGatewayV1Api"
-            )
-            .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
-        >
-          {(resource) => (
-            <Card>
-              <Switch>
-                <Match when={resource.type === "Api" && resource}>
-                  {(resource) => <ApiCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "ApiGatewayV1Api" && resource}>
-                  {(resource) => <ApiGatewayV1ApiCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "AppSync" && resource}>
-                  {(resource) => <AppSyncCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "WebSocketApi" && resource}>
-                  {(resource) => <WebSocketApiCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "EventBus" && resource}>
-                  {(resource) => <EventBusCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "NextjsSite" && resource}>
-                  {(resource) => <NextjsSiteCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "SvelteKitSite" && resource}>
-                  {(resource) => <SvelteKitSiteCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "AstroSite" && resource}>
-                  {(resource) => <AstroSiteCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "RemixSite" && resource}>
-                  {(resource) => <RemixSiteCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "SolidStartSite" && resource}>
-                  {(resource) => <SolidStartSiteCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "StaticSite" && resource}>
-                  {(resource) => <StaticSiteCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "RDS" && resource}>
-                  {(resource) => <RDSCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "Topic" && resource}>
-                  {(resource) => <TopicCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "KinesisStream" && resource}>
-                  {(resource) => <KinesisStreamCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "Queue" && resource}>
-                  {(resource) => <QueueCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "Bucket" && resource}>
-                  {(resource) => <BucketCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "Cognito" && resource}>
-                  {(resource) => <CognitoCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "Cron" && resource}>
-                  {(resource) => <CronCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "Table" && resource}>
-                  {(resource) => <TableCard resource={resource()} />}
-                </Match>
-                <Match when={resource.type === "Script" && resource}>
-                  {(resource) => <ScriptCard resource={resource()} />}
-                </Match>
-              </Switch>
-            </Card>
-          )}
-        </For>
-        <OrphanFunctionsCard />
-        <OutputsCard />
+              {(resource) => (
+                <Card>
+                  <Switch>
+                    <Match when={resource.type === "Api" && resource}>
+                      {(resource) => <ApiCard resource={resource()} />}
+                    </Match>
+                    <Match
+                      when={resource.type === "ApiGatewayV1Api" && resource}
+                    >
+                      {(resource) => (
+                        <ApiGatewayV1ApiCard resource={resource()} />
+                      )}
+                    </Match>
+                    <Match when={resource.type === "AppSync" && resource}>
+                      {(resource) => <AppSyncCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "WebSocketApi" && resource}>
+                      {(resource) => <WebSocketApiCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "EventBus" && resource}>
+                      {(resource) => <EventBusCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "NextjsSite" && resource}>
+                      {(resource) => <NextjsSiteCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "SvelteKitSite" && resource}>
+                      {(resource) => (
+                        <SvelteKitSiteCard resource={resource()} />
+                      )}
+                    </Match>
+                    <Match when={resource.type === "AstroSite" && resource}>
+                      {(resource) => <AstroSiteCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "RemixSite" && resource}>
+                      {(resource) => <RemixSiteCard resource={resource()} />}
+                    </Match>
+                    <Match
+                      when={resource.type === "SolidStartSite" && resource}
+                    >
+                      {(resource) => (
+                        <SolidStartSiteCard resource={resource()} />
+                      )}
+                    </Match>
+                    <Match when={resource.type === "StaticSite" && resource}>
+                      {(resource) => <StaticSiteCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "RDS" && resource}>
+                      {(resource) => <RDSCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "Topic" && resource}>
+                      {(resource) => <TopicCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "KinesisStream" && resource}>
+                      {(resource) => (
+                        <KinesisStreamCard resource={resource()} />
+                      )}
+                    </Match>
+                    <Match when={resource.type === "Queue" && resource}>
+                      {(resource) => <QueueCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "Bucket" && resource}>
+                      {(resource) => <BucketCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "Cognito" && resource}>
+                      {(resource) => <CognitoCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "Cron" && resource}>
+                      {(resource) => <CronCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "Table" && resource}>
+                      {(resource) => <TableCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "Script" && resource}>
+                      {(resource) => <ScriptCard resource={resource()} />}
+                    </Match>
+                  </Switch>
+                </Card>
+              )}
+            </For>
+            <OrphanFunctionsCard />
+            <OutputsCard />
+          </Stack>
+        </Content>
       </Match>
     </Switch>
   );

@@ -1,7 +1,7 @@
 import { LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Tag, Text } from "$/ui";
+import { Tag, Text, TabTitle } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import {
   IconBookmark,
@@ -39,7 +39,7 @@ import { useResourcesContext, useStageContext } from "../context";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_FUNC, DUMMY_LOGS } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
-import { formatBytes } from "$/common/format";
+import { formatBytes, formatDuration, formatSinceTime } from "$/common/format";
 import { bus } from "$/providers/bus";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { Invoke, InvokeControl } from "./invoke";
@@ -267,44 +267,9 @@ const LogDetail = styled("div", {
 const LogDetailHeader = styled("div", {
   base: {
     display: "flex",
-    fontSize: theme.font.size.sm,
     padding: `0 ${theme.space.px}`,
     alignItems: "center",
     justifyContent: "space-between",
-  },
-});
-
-const LogDetailHeaderTitle = styled("div", {
-  base: {
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    fontFamily: theme.font.family.heading,
-    color: theme.color.text.dimmed.base,
-    fontWeight: 500,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      color: theme.color.text.secondary.base,
-    },
-  },
-  variants: {
-    state: {
-      active: {
-        color: theme.color.text.primary.base,
-        ":hover": {
-          color: theme.color.text.primary.base,
-        },
-      },
-      inactive: {},
-      disabled: {
-        opacity: "0.65",
-        ":hover": {
-          color: theme.color.text.dimmed.base,
-        },
-      },
-    },
-  },
-  defaultVariants: {
-    state: "inactive",
   },
 });
 
@@ -605,7 +570,7 @@ export function Logs() {
 
   return (
     <>
-      <Stack space="5">
+      <Stack space="5" style={{ padding: `${theme.space[4]}` }}>
         <Row space="2" horizontal="between" vertical="center">
           <Stack space="2" vertical="center">
             <Text size="lg" weight="medium">
@@ -821,7 +786,7 @@ export function Logs() {
                         title={invocation.cold ? "Cold start" : ""}
                       >
                         {invocation.report?.duration
-                          ? formatTime(invocation.report?.duration)
+                          ? formatDuration(invocation.report?.duration)
                           : "-"}
                       </LogDuration>
                     </Show>
@@ -837,22 +802,25 @@ export function Logs() {
                     <LogDetail>
                       <LogDetailHeader>
                         <Row space="5" vertical="center">
-                          <LogDetailHeaderTitle
+                          <TabTitle
+                            size="mono_sm"
                             onClick={() => setTab("logs")}
                             state={tab() === "logs" ? "active" : "inactive"}
                           >
                             Logs
-                          </LogDetailHeaderTitle>
+                          </TabTitle>
                           <Show when={invocation.errors.length}>
-                            <LogDetailHeaderTitle
+                            <TabTitle
+                              size="mono_sm"
                               onClick={() => setTab("error")}
                               state={tab() === "error" ? "active" : "inactive"}
                             >
                               Error
-                            </LogDetailHeaderTitle>
+                            </TabTitle>
                           </Show>
                           <Show when={mode() === "live"}>
-                            <LogDetailHeaderTitle
+                            <TabTitle
+                              size="mono_sm"
                               onClick={() => setTab("request")}
                               state={
                                 !invocation.event
@@ -863,8 +831,9 @@ export function Logs() {
                               }
                             >
                               Request
-                            </LogDetailHeaderTitle>
-                            <LogDetailHeaderTitle
+                            </TabTitle>
+                            <TabTitle
+                              size="mono_sm"
                               onClick={() => setTab("response")}
                               state={
                                 !invocation.response
@@ -875,15 +844,16 @@ export function Logs() {
                               }
                             >
                               Response
-                            </LogDetailHeaderTitle>
+                            </TabTitle>
                           </Show>
                           <Show when={invocation.report}>
-                            <LogDetailHeaderTitle
+                            <TabTitle
+                              size="mono_sm"
                               onClick={() => setTab("report")}
                               state={tab() === "report" ? "active" : "inactive"}
                             >
                               Report
-                            </LogDetailHeaderTitle>
+                            </TabTitle>
                           </Show>
                         </Row>
                         <Show when={invocation.event}>
@@ -972,7 +942,9 @@ export function Logs() {
                             <LogEntry>
                               <LogReportKey>Duration</LogReportKey>
                               <LogEntryMessage>
-                                {formatTime(invocation.report?.duration || 0)}
+                                {formatDuration(
+                                  invocation.report?.duration || 0
+                                )}
                               </LogEntryMessage>
                             </LogEntry>
                             <LogEntry>
@@ -1032,7 +1004,7 @@ export function Logs() {
                     >
                       Scanning
                       {activeSearch()?.timeStart
-                        ? ` from ${timeAgo(
+                        ? ` from ${formatSinceTime(
                             new Date(activeSearch()?.timeStart + "Z").getTime()
                           )}`
                         : ""}
@@ -1125,61 +1097,6 @@ function LogLevel(props: { level?: string }) {
       {props.level}
     </Tag>
   );
-}
-
-function formatTime(ms: number): string {
-  const milliseconds = ms % 1000;
-  const seconds = Math.floor(ms / 1000) % 60;
-  const totalSeconds = Math.round(ms / 1000);
-  const minutes = Math.floor(ms / (1000 * 60)) % 60;
-  const hours = Math.floor(ms / (1000 * 60 * 60));
-
-  if (ms < 1000) {
-    return milliseconds + "ms";
-  } else if (ms < 1000 * 60) {
-    return (seconds + milliseconds / 1000).toFixed(2) + "s";
-  } else if (ms < 1000 * 60 * 60) {
-    return totalSeconds + "s";
-  } else {
-    return hours + ":" + (minutes < 10 ? "0" : "") + minutes + "h";
-  }
-}
-
-function timeAgo(timestamp: number): string {
-  const currentTimestamp = Date.now();
-  const diffInSeconds = Math.round((currentTimestamp - timestamp) / 1000);
-
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds}s ago`;
-  }
-
-  const diffInMinutes = Math.round(diffInSeconds / 60);
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`;
-  }
-
-  const diffInHours = Math.round(diffInMinutes / 60);
-  if (diffInHours < 24) {
-    return diffInHours === 1 ? "an hour ago" : `${diffInHours}hrs ago`;
-  }
-
-  const diffInDays = Math.round(diffInHours / 24);
-  if (diffInDays < 7) {
-    return diffInDays === 1 ? "a day ago" : `${diffInDays} days ago`;
-  }
-
-  const diffInWeeks = Math.round(diffInDays / 7);
-  if (diffInWeeks < 4) {
-    return diffInWeeks === 1 ? "a week ago" : `${diffInWeeks} weeks ago`;
-  }
-
-  const diffInMonths = Math.round(diffInDays / 30);
-  if (diffInMonths < 12) {
-    return diffInMonths === 1 ? "a month ago" : `${diffInMonths} months ago`;
-  }
-
-  const diffInYears = Math.round(diffInDays / 365);
-  return diffInYears === 1 ? "a year ago" : `${diffInYears} years ago`;
 }
 
 const shortDateOptions: Intl.DateTimeFormatOptions = {
