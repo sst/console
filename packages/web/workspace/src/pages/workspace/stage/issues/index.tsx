@@ -82,6 +82,17 @@ const IssueActions = styled(ButtonGroup, {
   },
 });
 
+const ButtonIcon = styled("span", {
+  base: {
+    width: 12,
+    height: 12,
+    marginRight: 6,
+    verticalAlign: -2,
+    display: "inline-block",
+    opacity: theme.iconOpacity,
+  },
+});
+
 const IssuesList = styled("div", {
   base: {
     borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
@@ -134,9 +145,15 @@ export function Issues() {
                 </Text>
                 <IssueActions>
                   <Button size="sm" grouped="left" color="secondary">
+                    <ButtonIcon>
+                      <IconNoSymbol />
+                    </ButtonIcon>
                     Ignore
                   </Button>
-                  <Button size="sm" grouped="right" color="primary">
+                  <Button size="sm" grouped="right" color="secondary">
+                    <ButtonIcon>
+                      <IconCheck />
+                    </ButtonIcon>
                     Resolve
                   </Button>
                 </IssueActions>

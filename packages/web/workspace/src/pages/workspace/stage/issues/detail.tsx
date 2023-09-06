@@ -63,6 +63,17 @@ const FunctionLink = styled(Link, {
   },
 });
 
+const ButtonIcon = styled("span", {
+  base: {
+    width: 14,
+    height: 14,
+    marginRight: 6,
+    verticalAlign: -2,
+    display: "inline-block",
+    opacity: theme.iconOpacity,
+  },
+});
+
 type LabelProps = ComponentProps<typeof Text> & {};
 
 function Label(props: LabelProps) {
@@ -134,6 +145,9 @@ export function Issue() {
                 color="secondary"
                 style={{ flex: "1 1 auto" }}
               >
+                <ButtonIcon>
+                  <IconNoSymbol />
+                </ButtonIcon>
                 Ignore
               </Button>
               <Button
@@ -142,6 +156,9 @@ export function Issue() {
                 color="secondary"
                 style={{ flex: "1 1 auto" }}
               >
+                <ButtonIcon>
+                  <IconCheck />
+                </ButtonIcon>
                 Resolve
               </Button>
             </ButtonGroup>
