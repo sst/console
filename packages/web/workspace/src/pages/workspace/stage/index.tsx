@@ -10,6 +10,7 @@ import { useCommandBar } from "$/pages/workspace/command-bar";
 import { ResourcesProvider, StageContext, createStageContext } from "./context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
+import { Issue } from "./issues/detail";
 import { Resources } from "./resources";
 import { IconStage } from "$/ui/icons/custom";
 import { Header } from "../header";
@@ -56,6 +57,7 @@ export function Stage() {
             <Routes>
               <Route path="" component={Resources} />
               <Route path="issues" component={Issues} />
+              <Route path="issues/:issueID" component={Issue} />
               <Route path="logs/:resourceID/*" component={Logs} />
             </Routes>
           </div>

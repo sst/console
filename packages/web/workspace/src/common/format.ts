@@ -60,39 +60,82 @@ export function formatDuration(ms: number): string {
   }
 }
 
-export function formatSinceTime(timestamp: number): string {
+export function formatSinceTime(
+  timestamp: number,
+  useFullFormat?: boolean
+): string {
   const currentTimestamp = Date.now();
   const diffInSeconds = Math.round((currentTimestamp - timestamp) / 1000);
 
   if (diffInSeconds < 60) {
-    return `${diffInSeconds}s ago`;
+    return useFullFormat
+      ? diffInSeconds === 1
+        ? "1 second ago"
+        : `${diffInSeconds} seconds ago`
+      : `${diffInSeconds}mins ago`;
   }
 
   const diffInMinutes = Math.round(diffInSeconds / 60);
   if (diffInMinutes < 60) {
-    return diffInMinutes === 1 ? "1min ago" : `${diffInMinutes}mins ago`;
+    return useFullFormat
+      ? diffInMinutes === 1
+        ? "1 minute ago"
+        : `${diffInMinutes} minutes ago`
+      : diffInMinutes === 1
+      ? "1min ago"
+      : `${diffInMinutes}mins ago`;
   }
 
   const diffInHours = Math.round(diffInMinutes / 60);
   if (diffInHours < 24) {
-    return diffInHours === 1 ? "1hr ago" : `${diffInHours}hrs ago`;
+    return useFullFormat
+      ? diffInHours === 1
+        ? "1 hour ago"
+        : `${diffInHours} hours ago`
+      : diffInHours === 1
+      ? "1hr ago"
+      : `${diffInHours}hrs ago`;
   }
 
   const diffInDays = Math.round(diffInHours / 24);
   if (diffInDays < 7) {
-    return diffInDays === 1 ? "1d ago" : `${diffInDays}d ago`;
+    return useFullFormat
+      ? diffInDays === 1
+        ? "1 day ago"
+        : `${diffInDays} days ago`
+      : diffInDays === 1
+      ? "1d ago"
+      : `${diffInDays}d ago`;
   }
 
   const diffInWeeks = Math.round(diffInDays / 7);
   if (diffInWeeks < 4) {
-    return diffInWeeks === 1 ? "1wk ago" : `${diffInWeeks}wks ago`;
+    return useFullFormat
+      ? diffInWeeks === 1
+        ? "1 week ago"
+        : `${diffInWeeks} weeks ago`
+      : diffInWeeks === 1
+      ? "1wk ago"
+      : `${diffInWeeks}wks ago`;
   }
 
   const diffInMonths = Math.round(diffInDays / 30);
   if (diffInMonths < 12) {
-    return diffInMonths === 1 ? "1mo ago" : `${diffInMonths}mos ago`;
+    return useFullFormat
+      ? diffInMonths === 1
+        ? "1 month ago"
+        : `${diffInMonths} months ago`
+      : diffInMonths === 1
+      ? "1mo ago"
+      : `${diffInMonths}mos ago`;
   }
 
   const diffInYears = Math.round(diffInDays / 365);
-  return diffInYears === 1 ? "1yr ago" : `${diffInYears}yrs ago`;
+  return useFullFormat
+    ? diffInYears === 1
+      ? "1 year ago"
+      : `${diffInYears} years ago`
+    : diffInYears === 1
+    ? "1yr ago"
+    : `${diffInYears}yrs ago`;
 }
