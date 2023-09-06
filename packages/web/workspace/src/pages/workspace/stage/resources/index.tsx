@@ -310,14 +310,16 @@ export function Resources() {
       </Match>
       <Match when={true}>
         {/* TODO: Issues */}
-        <PageHeader>
-          <TabTitle state="active">Resources</TabTitle>
-          <Link href="issues">
-            <TabTitle count="99+" state="inactive">
-              Issues
-            </TabTitle>
-          </Link>
-        </PageHeader>
+        <Show when={false}>
+          <PageHeader>
+            <TabTitle state="active">Resources</TabTitle>
+            <Link href="issues">
+              <TabTitle count="99+" state="inactive">
+                Issues
+              </TabTitle>
+            </Link>
+          </PageHeader>
+        </Show>
         {/* */}
         <Content>
           <Stack space="4">
