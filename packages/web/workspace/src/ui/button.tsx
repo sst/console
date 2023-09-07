@@ -26,6 +26,14 @@ const secondaryHover: CSSProperties = {
 const secoondaryActive: CSSProperties = {
   backgroundColor: theme.color.button.secondary.active,
 };
+const successHover: CSSProperties = {
+  borderColor: theme.color.button.success.hover.border,
+  backgroundColor: theme.color.button.success.hover.color,
+};
+const successActive: CSSProperties = {
+  backgroundColor: theme.color.button.success.active,
+  borderColor: "transparent",
+};
 const dangerHover: CSSProperties = {
   borderColor: theme.color.button.danger.hover.border,
   backgroundColor: theme.color.button.danger.hover.color,
@@ -107,6 +115,23 @@ export const Button = styled("button", {
           "&:active": secoondaryActive,
           "&[data-state-hover]": secondaryHover,
           "&[data-state-active]": secoondaryActive,
+        },
+      },
+      success: {
+        backgroundColor: theme.color.button.success.color,
+        borderColor: theme.color.button.success.border,
+        boxShadow: theme.color.button.success.shadow,
+        color: theme.color.button.success.text,
+        ":disabled": {
+          borderColor: "transparent",
+          boxShadow: "none",
+          opacity: theme.color.button.success.disabled.opacity,
+        },
+        selectors: {
+          "&:hover": successHover,
+          "&:active": successActive,
+          "&[data-state-hover]": successHover,
+          "&[data-state-active]": successActive,
         },
       },
       danger: {

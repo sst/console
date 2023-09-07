@@ -116,6 +116,7 @@ const light = (() => {
   };
 
   const blue = {
+    d2: `${color.base.blue}, 39%`,
     d1: `${color.base.blue}, 45%`,
     l1: `${color.base.blue}, 57%`,
     l2: `${color.base.blue}, 63%`,
@@ -201,6 +202,7 @@ const light = (() => {
       surface: `0 1px 0 inset hsla(${base.white}, 54%)`,
       accent: `0 1px 0 inset hsla(${brand.l2}, 80%)`,
       danger: `0 1px 0 inset hsla(${red.l2}, 80%)`,
+      success: `0 1px 0 inset hsla(${blue.l2}, 80%)`,
     },
     drop: {
       short: `0 1px 1px hsla(${black.d1}, 0.03),
@@ -253,6 +255,20 @@ const light = (() => {
       },
       shadow: `${shadow.inset.surface}, ${shadow.drop.short}`,
     },
+    success: {
+      text: text.primary.inverted,
+      color: `hsla(${base.blue}, 100%)`,
+      active: `hsla(${blue.d1}, 100%)`,
+      border: `hsla(${blue.d2}, 100%)`,
+      hover: {
+        color: `hsla(${blue.l1}, 100%)`,
+        border: `hsla(${blue.d1}, 100%)`,
+      },
+      disabled: {
+        opacity: "0.6",
+      },
+      shadow: `${shadow.inset.success}, ${shadow.drop.shortDark}`,
+    },
     danger: {
       text: text.primary.inverted,
       color: `hsla(${base.red}, 100%)`,
@@ -265,7 +281,7 @@ const light = (() => {
       disabled: {
         opacity: "0.65",
       },
-      shadow: `${shadow.inset.accent}, ${shadow.drop.shortDark}`,
+      shadow: `${shadow.inset.danger}, ${shadow.drop.shortDark}`,
     },
     github: {
       text: text.primary.inverted,
@@ -306,7 +322,7 @@ const dark = ((): typeof light => {
     brand: `${color.base.brand}, 58%`,
     white: `${color.base.white}, 100%`,
     black: `${color.base.black}, 14%`,
-    blue: `${color.base.blue}, 61%`,
+    blue: `${color.base.blue}, 56%`,
     red: `${color.base.red}, 60%`,
     gray: `240, 19%, 18%`,
   };
@@ -321,9 +337,10 @@ const dark = ((): typeof light => {
   };
 
   const blue = {
-    d1: `${color.base.blue}, 55%`,
-    l1: `${color.base.blue}, 67%`,
-    l2: `${color.base.blue}, 73%`,
+    d2: `${color.base.blue}, 44%`,
+    d1: `${color.base.blue}, 50%`,
+    l1: `${color.base.blue}, 62%`,
+    l2: `${color.base.blue}, 68%`,
   };
 
   const black = {
@@ -406,6 +423,7 @@ const dark = ((): typeof light => {
       surface: "",
       accent: "",
       danger: "",
+      success: "",
     },
     drop: {
       short: `0 1px 1px hsla(${black.d1}, 0.4),
@@ -453,6 +471,20 @@ const dark = ((): typeof light => {
       },
       disabled: {
         opacity: "0.6",
+      },
+      shadow: shadow.drop.shortDark,
+    },
+    success: {
+      text: text.primary.surface,
+      color: `hsla(${base.blue}, 100%)`,
+      active: `hsla(${blue.d1}, 100%)`,
+      border: `hsla(${base.blue}, 100%)`,
+      hover: {
+        color: `hsla(${blue.l1}, 100%)`,
+        border: `hsla(${blue.l1}, 100%)`,
+      },
+      disabled: {
+        opacity: "0.65",
       },
       shadow: shadow.drop.shortDark,
     },

@@ -219,6 +219,18 @@ export function Design() {
             Button
           </Button>
         </Variant>
+        <Variant name="Success">
+          <Button color="success">Button</Button>
+          <Button data-state-hover color="success">
+            Button
+          </Button>
+          <Button data-state-active color="success">
+            Button
+          </Button>
+          <Button disabled color="success">
+            Button
+          </Button>
+        </Variant>
         <Variant name="Danger">
           <Button color="danger">Button</Button>
           <Button data-state-hover color="danger">
