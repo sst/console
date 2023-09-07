@@ -55,5 +55,6 @@ export const resource = mysqlTable(
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),
+    addr: uniqueIndex("addr").on(table.workspaceID, table.stageID, table.addr),
   })
 );

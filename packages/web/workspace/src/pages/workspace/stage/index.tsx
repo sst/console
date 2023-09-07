@@ -23,7 +23,8 @@ type PageHeaderProps = ComponentProps<typeof PageHeaderRoot> & {
 export const PageHeaderRoot = styled("div", {
   base: {
     height: 56,
-    display: "flex",
+    // display: "flex",
+    display: "none",
     alignItems: "center",
     justifyContent: "space-between",
     padding: `0 ${theme.space[4]}`,

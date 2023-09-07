@@ -202,7 +202,7 @@ export const syncMetadata = zod(
         body.push({
           type: "Stack",
           id: stackID,
-          addr: "",
+          addr: stackID,
           data: {},
         });
         for (let res of body) {
