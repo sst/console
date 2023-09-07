@@ -28,13 +28,18 @@ export const stage = mysqlTable(
     ...workspaceID,
     ...timestamps,
     appID: cuid("app_id").notNull(),
-    awsAccountID: varchar("aws_account_id", { length: 255 }).notNull(),
+    awsAccountID: cuid("aws_account_id").notNull(),
     region: varchar("region", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),
-    name: uniqueIndex("name").on(table.appID, table.name, table.region),
+    name: uniqueIndex("name").on(
+      table.appID,
+      table.awsAccountID,
+      table.region,
+      table.name
+    ),
     updated: index("updated").on(table.timeUpdated),
   })
 );

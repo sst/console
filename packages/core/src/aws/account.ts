@@ -350,6 +350,7 @@ export const integrate = zod(
               appID: app,
               name: stageName,
               region,
+              awsAccountID: input.awsAccountID,
             }).then((s) => s?.id);
             if (!stage) {
               stage = await App.Stage.connect({

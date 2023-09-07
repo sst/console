@@ -63,6 +63,7 @@ export const fromName = zod(
     appID: true,
     name: true,
     region: true,
+    awsAccountID: true,
   }),
   async (input) =>
     useTransaction((tx) =>
@@ -74,7 +75,8 @@ export const fromName = zod(
             eq(stage.workspaceID, useWorkspace()),
             eq(stage.name, input.name),
             eq(stage.region, input.region),
-            eq(stage.appID, input.appID)
+            eq(stage.appID, input.appID),
+            eq(stage.awsAccountID, input.awsAccountID)
           )
         )
         .execute()
