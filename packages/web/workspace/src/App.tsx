@@ -26,8 +26,7 @@ import { WorkspaceCreate } from "./pages/workspace-create";
 import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
 import { UserStore } from "./data/user";
-import { IconWorkspace } from "./ui/icons/custom";
-import { IconPlus, IconArrowLeftOnRectangle } from "./ui/icons";
+import { IconLogout, IconAddCircle, IconWorkspace } from "./ui/icons/custom";
 import { LocalProvider } from "./providers/local";
 import { useStorage } from "./providers/account";
 import { Fullscreen, Splash } from "./ui";
@@ -264,7 +263,7 @@ function GlobalCommands() {
           },
         })),
       {
-        icon: IconPlus,
+        icon: IconAddCircle,
         category: "Workspace",
         title: "Create new workspace",
         run: (control) => {
@@ -280,7 +279,7 @@ function GlobalCommands() {
       {
         category: "Account",
         title: `Logout from ${selfEmail()}`,
-        icon: IconArrowLeftOnRectangle,
+        icon: IconLogout,
         run: async (control: any) => {
           const dbs = await window.indexedDB.databases();
           dbs.forEach((db) => {

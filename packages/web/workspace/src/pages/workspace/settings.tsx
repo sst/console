@@ -10,7 +10,6 @@ import { formatNumber } from "$/common/format";
 import { createId } from "@paralleldrive/cuid2";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import { IconArrowsRightLeft } from "$/ui/icons";
 import { IconAws } from "$/ui/icons/custom";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "./header";

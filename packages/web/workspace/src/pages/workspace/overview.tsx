@@ -25,7 +25,6 @@ import {
 import { Fullscreen } from "$/ui/layout";
 import { Dropdown } from "$/ui/dropdown";
 import {
-  IconPlus,
   IconChevronRight,
   IconEllipsisVertical,
   IconExclamationTriangle,

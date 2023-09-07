@@ -288,6 +288,9 @@ export function Design() {
           <Button size="sm" color="secondary">
             Button
           </Button>
+          <Button size="sm" color="success">
+            Button
+          </Button>
           <Button size="sm" color="danger">
             Button
           </Button>
@@ -299,6 +302,9 @@ export function Design() {
             </Button>
             <Button grouped="middle" color="secondary">
               Ignore
+            </Button>
+            <Button grouped="middle" color="success">
+              Success
             </Button>
             <Button grouped="right" color="danger">
               Remove
@@ -312,6 +318,9 @@ export function Design() {
             </Button>
             <Button size="sm" grouped="middle" color="secondary">
               Ignore
+            </Button>
+            <Button size="sm" grouped="middle" color="success">
+              Success
             </Button>
             <Button size="sm" grouped="right" color="danger">
               Remove

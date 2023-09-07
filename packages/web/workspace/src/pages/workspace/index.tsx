@@ -11,14 +11,14 @@ import { Stage } from "./stage";
 import { Show, createEffect, createMemo } from "solid-js";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
-import { IconArrowsRightLeft, IconWrenchScrewdriver } from "$/ui/icons";
+import { IconWrenchScrewdriver } from "$/ui/icons";
 import { User } from "./user";
 import { Account } from "./account";
 import { Settings } from "./settings";
 import { Overview } from "./overview";
 import { WorkspaceContext } from "./context";
 import { AppStore } from "$/data/app";
-import { IconApp, IconUserAdd } from "$/ui/icons/custom";
+import { IconApp, IconUserAdd, IconConnect } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
 import { Debug } from "../debug";
@@ -62,7 +62,7 @@ export function Workspace() {
         },
       },
       {
-        icon: IconArrowsRightLeft,
+        icon: IconConnect,
         title: "Connect an AWS Account",
         category: "Workspace",
         run: (control) => {
