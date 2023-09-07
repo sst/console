@@ -304,6 +304,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
             e instanceof ResourceNotFoundException &&
             e.message.startsWith("The specified log group does not exist")
           ) {
+            console.log("creating log group");
             await cw
               .send(
                 new CreateLogGroupCommand({
@@ -345,6 +346,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
 
           // The destination hasn't been created yet so try again
           if (e instanceof ResourceNotFoundException) {
+            console.log("cannot find resource", e.message);
             await new Promise((r) => setTimeout(r, 1000));
             continue;
           }
