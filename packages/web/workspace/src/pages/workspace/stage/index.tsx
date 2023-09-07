@@ -1,11 +1,11 @@
 import { styled } from "@macaron-css/solid";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
+import { Link, Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
-import { Show, createEffect } from "solid-js";
+import { ComponentProps, JSX, Show, createEffect } from "solid-js";
 import { useCommandBar } from "$/pages/workspace/command-bar";
 import { ResourcesProvider, StageContext, createStageContext } from "./context";
 import { Logs } from "./logs";
@@ -14,6 +14,33 @@ import { Issue } from "./issues/detail";
 import { Resources } from "./resources";
 import { IconStage } from "$/ui/icons/custom";
 import { Header } from "../header";
+import { Row, TabTitle } from "$/ui";
+
+type PageHeaderProps = ComponentProps<typeof PageHeaderRoot> & {
+  right?: JSX.Element;
+};
+
+export const PageHeaderRoot = styled("div", {
+  base: {
+    height: 56,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: `0 ${theme.space[4]}`,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+export function PageHeader(props: PageHeaderProps) {
+  return (
+    <PageHeaderRoot {...props}>
+      <Row space="5" vertical="center">
+        {props.children}
+      </Row>
+      {props.right}
+    </PageHeaderRoot>
+  );
+}
 
 export function Stage() {
   const bar = useCommandBar();
@@ -53,6 +80,16 @@ export function Stage() {
       <StageContext.Provider value={stageContext}>
         <ResourcesProvider>
           <Header app={app()?.name} stage={stage()?.name} />
+          <PageHeader>
+            <Link href="">
+              <TabTitle state="active">Resources</TabTitle>
+            </Link>
+            <Link href="issues">
+              <TabTitle count="99+" state="inactive">
+                Issues
+              </TabTitle>
+            </Link>
+          </PageHeader>
           <div>
             <Routes>
               <Route path="" component={Resources} />

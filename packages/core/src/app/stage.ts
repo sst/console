@@ -233,37 +233,31 @@ export const syncMetadata = zod(
           stageID: input.stageID,
         })
       );
-      const existing = pipe(
-        await tx
-          .select({
-            id: resource.id,
-            cfnID: resource.cfnID,
-            stackID: resource.stackID,
-          })
-          .from(resource)
-          .where(
-            and(
-              eq(resource.stageID, input.stageID),
-              eq(resource.workspaceID, useWorkspace())
-            )
+      const existing = await tx
+        .select({
+          id: resource.id,
+          addr: resource.addr,
+        })
+        .from(resource)
+        .where(
+          and(
+            eq(resource.stageID, input.stageID),
+            eq(resource.workspaceID, useWorkspace())
           )
-          .execute(),
-        groupBy((x) => x.stackID + "-" + x.cfnID)
-      );
-      console.log("existing", existing);
+        )
+        .execute()
+        .then((x) => new Map(x.map((x) => [x.addr, x.id] as const)));
       if (results.length)
         await tx
           .insert(resource)
           .values(
             results.map((res) => {
-              const id =
-                existing[res.stackID + "-" + res.id]?.at(-1)?.id || createId();
-              existing[res.stackID + "-" + res.id]?.pop();
-              if (!existing[res.stackID + "-" + res.id]?.length)
-                delete existing[res.stackID + "-" + res.id];
+              const id = existing.get(res.addr) || createId();
+              existing.delete(res.addr);
               return {
                 workspaceID: useWorkspace(),
                 cfnID: res.id,
+                constructID: res.id,
                 addr: res.addr,
                 stackID: res.stackID,
                 stageID: input.stageID,
@@ -285,9 +279,7 @@ export const syncMetadata = zod(
           })
           .execute();
 
-      const toDelete = Object.values(existing)
-        .flat()
-        .map((x) => x.id);
+      const toDelete = [...existing.values()];
       console.log("deleting", toDelete.length, "resources");
       if (toDelete.length)
         await tx

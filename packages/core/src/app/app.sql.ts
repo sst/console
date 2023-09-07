@@ -47,6 +47,7 @@ export const resource = mysqlTable(
     type: varchar("type", { length: 255 }).notNull(),
     stackID: varchar("stack_id", { length: 255 }).notNull(),
     cfnID: varchar("cfn_id", { length: 255 }).notNull(),
+    constructID: varchar("construct_id", { length: 255 }),
     stageID: cuid("stage_id").notNull(),
     addr: varchar("addr", { length: 255 }).notNull(),
     metadata: json("metadata").notNull(),
