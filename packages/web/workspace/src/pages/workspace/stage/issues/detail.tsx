@@ -18,6 +18,7 @@ import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { IssueStore } from "$/data/issue";
 import { useReplicache } from "$/providers/replicache";
 import { DateTime } from "luxon";
+import { StackTrace } from "../logs/error";
 
 const Content = styled("div", {
   base: {
@@ -32,11 +33,11 @@ const Sidebar = styled("div", {
   },
 });
 
-const StackTraceMock = styled("div", {
+const StackTraceBackground = styled("div", {
   base: {
     backgroundColor: theme.color.background.surface,
     borderRadius: theme.borderRadius,
-    height: 300,
+    overflow: "hidden",
   },
 });
 
@@ -120,7 +121,9 @@ export function Detail() {
             </Stack>
             <Stack space="2">
               <Label>Stack Trace</Label>
-              <StackTraceMock></StackTraceMock>
+              <StackTraceBackground>
+                <StackTrace stack={issue().stack || []} />
+              </StackTraceBackground>
             </Stack>
             <Stack space="2">
               <Label>Logs</Label>

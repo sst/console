@@ -32,7 +32,7 @@ import { Warning } from "../warning";
 export * as Issue from "./index";
 
 export const Info = createSelectSchema(issue, {});
-export type Info = z.infer<typeof Info>;
+export type Info = typeof issue.$inferSelect;
 
 export const Events = {
   ErrorDetected: event("issue.error_detected", {
@@ -170,6 +170,7 @@ export const extract = zod(
               error: sql`VALUES(error)`,
               errorID: sql`VALUES(error_id)`,
               message: sql`VALUES(message)`,
+              timeUpdated: sql`CURRENT_TIMESTAMP()`,
             },
           })
           .execute();

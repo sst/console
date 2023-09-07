@@ -4,7 +4,7 @@ import { stage } from "@console/core/app/app.sql";
 import { Stage } from "@console/core/app";
 import { queue } from "@console/core/util/queue";
 
-const workspaceFilter: string[] = [];
+const workspaceFilter: string[] = ["tviez52nfa0b6aerfw9wh597"];
 
 const stages = await db
   .select()
