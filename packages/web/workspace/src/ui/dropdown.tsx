@@ -45,7 +45,7 @@ const Trigger = styled(DropdownMenu.Trigger, {
         icon: false,
       },
       style: {
-        height: theme.input.size.base,
+        height: theme.input.size.sm,
       },
     },
     {

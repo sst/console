@@ -410,22 +410,6 @@ export function Design() {
           </TextContainer>
         </Variant>
       </ComponentType>
-      <ComponentType name="Split Options">
-        <Variant name="Base">
-          <SplitOptions size="base">
-            <SplitOptionsOption>Active</SplitOptionsOption>
-            <SplitOptionsOption selected>Ignored</SplitOptionsOption>
-            <SplitOptionsOption>Resolved</SplitOptionsOption>
-          </SplitOptions>
-        </Variant>
-        <Variant name="Small">
-          <SplitOptions size="sm">
-            <SplitOptionsOption>Active</SplitOptionsOption>
-            <SplitOptionsOption selected>Ignored</SplitOptionsOption>
-            <SplitOptionsOption>Resolved</SplitOptionsOption>
-          </SplitOptions>
-        </Variant>
-      </ComponentType>
       <ComponentType name="Alert">
         <Variant name="Info">
           <Grower>
@@ -519,6 +503,22 @@ export function Design() {
             type="workspace"
             style={{ width: "48px", height: "48px" }}
           />
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Split Options">
+        <Variant name="Base">
+          <SplitOptions size="base">
+            <SplitOptionsOption>Active</SplitOptionsOption>
+            <SplitOptionsOption selected>Ignored</SplitOptionsOption>
+            <SplitOptionsOption>Resolved</SplitOptionsOption>
+          </SplitOptions>
+        </Variant>
+        <Variant name="Small">
+          <SplitOptions size="sm">
+            <SplitOptionsOption>Active</SplitOptionsOption>
+            <SplitOptionsOption selected>Ignored</SplitOptionsOption>
+            <SplitOptionsOption>Resolved</SplitOptionsOption>
+          </SplitOptions>
         </Variant>
       </ComponentType>
       <ComponentType name="Dropdown">
