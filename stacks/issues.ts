@@ -54,6 +54,7 @@ export function Issues({ stack }: StackContext) {
     "AssumeRolePolicyDocument.Statement.0.Principal.Service",
     allRegions().map((region) => `logs.${region}.amazonaws.com`)
   );
+
   const kinesisParams = Config.Parameter.create(stack, {
     ISSUES_ROLE_ARN: kinesisRole.roleArn,
     ISSUES_STREAM_ARN: kinesisStream.streamArn,

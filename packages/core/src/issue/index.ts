@@ -276,10 +276,10 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
                 // Timeout
                 `?"Task timed out after"`,
                 // NodeJS Uncaught and console.error
-                // @ts-expect-error
-                ...(fn.enrichment.runtime?.startsWith("nodejs")
-                  ? [`?"\tERROR\t"`]
-                  : []),
+                `?"\tERROR\t"`,
+                // ...(fn.enrichment.runtime?.startsWith("nodejs")
+                //   ? [`?"\tERROR\t"`]
+                //   : []),
               ].join(" "),
               logGroupName: logGroup,
             })

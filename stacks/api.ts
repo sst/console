@@ -145,14 +145,14 @@ export function API({ stack, app }: StackContext) {
         enableLiveDev: false,
       },
     },
-    "GET /test/go": {
-      type: "function",
-      function: {
-        runtime: "go",
-        handler: "./go/handler.go",
-        enableLiveDev: false,
-      },
-    },
+    // "GET /test/go": {
+    //   type: "function",
+    //   function: {
+    //     runtime: "go",
+    //     handler: "./go/handler.go",
+    //     enableLiveDev: false,
+    //   },
+    // },
   });
 
   poller.grantStartExecution(api.getFunction("POST /replicache/push")!);

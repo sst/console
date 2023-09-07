@@ -77,10 +77,10 @@ export async function handler() {
             // Timeout
             `?"Task timed out after"`,
             // NodeJS Uncaught and console.error
-            // @ts-expect-error
-            ...(fn.enrichment.runtime?.stratsWith("nodejs")
-              ? [`?"\tERROR\t"`]
-              : []),
+            `?"\tERROR\t"`,
+            // ...(fn.enrichment.runtime?.stratsWith("nodejs")
+            //   ? [`?"\tERROR\t"`]
+            //   : []),
           ].join(" "),
           // @ts-expect-error
           logGroupName: `/aws/lambda/${fn.metadata.arn.split(":")[6]}`,

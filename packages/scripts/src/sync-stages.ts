@@ -28,9 +28,8 @@ await queue(100, stages, async (stage) => {
   });
   const config = await Stage.assumeRole(stage.id);
   if (!config) return;
-  await Stage.syncMetadata({
+  await Stage.Events.ResourcesUpdated.publish({
     stageID: stage.id,
-    credentials: config.credentials,
   });
 });
 
