@@ -345,9 +345,11 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
           }
 
           // The destination hasn't been created yet so try again
-          if (e instanceof ResourceNotFoundException) {
-            console.log("cannot find resource", e.message);
-            await new Promise((r) => setTimeout(r, 1000));
+          if (
+            e instanceof ResourceNotFoundException &&
+            e.message === "The specified destination does not exist."
+          ) {
+            await connectStage(config);
             continue;
           }
 

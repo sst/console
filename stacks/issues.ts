@@ -60,12 +60,19 @@ export function Issues({ stack }: StackContext) {
     timeout: "15 minutes",
     permissions: [
       "sts",
+      "logs:DescribeDestinations",
+      "logs:PutDestination",
+      "logs:PutDestinationPolicy",
       "logs:PutSubscriptionFilter",
       new PolicyStatement({
         actions: ["iam:PassRole"],
         resources: [kinesisRole.roleArn],
       }),
     ],
+    environment: {
+      ISSUES_ROLE_ARN: kinesisRole.roleArn,
+      ISSUES_STREAM_ARN: kinesisStream.streamArn,
+    },
     bind: [
       bus,
       ...Object.values(secrets.database),
@@ -94,7 +101,6 @@ export function Issues({ stack }: StackContext) {
       "logs:DescribeDestinations",
       "logs:PutDestination",
       "logs:PutDestinationPolicy",
-      "logs:PutSubscriptionFilter",
       new PolicyStatement({
         actions: ["iam:PassRole"],
         resources: [kinesisRole.roleArn],

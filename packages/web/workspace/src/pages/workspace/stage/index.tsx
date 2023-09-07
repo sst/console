@@ -4,17 +4,23 @@ import { Link, Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { theme } from "$/ui/theme";
-import { utility } from "$/ui/utility";
-import { ComponentProps, JSX, Show, createEffect } from "solid-js";
+import { ComponentProps, JSX, Show } from "solid-js";
 import { useCommandBar } from "$/pages/workspace/command-bar";
-import { ResourcesProvider, StageContext, createStageContext } from "./context";
+import {
+  IssuesProvider,
+  ResourcesProvider,
+  StageContext,
+  createStageContext,
+  useIssuesContext,
+  useStageContext,
+} from "./context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
-import { Issue } from "./issues/detail";
 import { Resources } from "./resources";
 import { IconStage } from "$/ui/icons/custom";
 import { Header } from "../header";
-import { Row, TabTitle } from "$/ui";
+import { Row, SplitOptions, SplitOptionsOption, TabTitle } from "$/ui";
+import { IssueStore } from "$/data/issue";
 
 type PageHeaderProps = ComponentProps<typeof PageHeaderRoot> & {
   right?: JSX.Element;
@@ -23,8 +29,7 @@ type PageHeaderProps = ComponentProps<typeof PageHeaderRoot> & {
 export const PageHeaderRoot = styled("div", {
   base: {
     height: 56,
-    // display: "flex",
-    display: "none",
+    display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     padding: `0 ${theme.space[4]}`,
@@ -80,27 +85,50 @@ export function Stage() {
     <Show when={stageContext.app && stageContext.stage}>
       <StageContext.Provider value={stageContext}>
         <ResourcesProvider>
-          <Header app={app()?.name} stage={stage()?.name} />
-          <PageHeader>
-            <Link href="">
-              <TabTitle state="active">Resources</TabTitle>
-            </Link>
-            <Link href="issues">
-              <TabTitle count="99+" state="inactive">
-                Issues
-              </TabTitle>
-            </Link>
-          </PageHeader>
-          <div>
-            <Routes>
-              <Route path="" component={Resources} />
-              <Route path="issues" component={Issues} />
-              <Route path="issues/:issueID" component={Issue} />
-              <Route path="logs/:resourceID/*" component={Logs} />
-            </Routes>
-          </div>
+          <IssuesProvider>
+            <Inner />
+          </IssuesProvider>
         </ResourcesProvider>
       </StageContext.Provider>
     </Show>
+  );
+}
+
+export function Inner() {
+  const ctx = useStageContext();
+  const issues = useIssuesContext();
+  return (
+    <>
+      <Header app={ctx.app.name} stage={ctx.stage.name} />
+      <PageHeaderRoot>
+        <Row space="5" vertical="center">
+          <Link href="" end>
+            <TabTitle>Resources</TabTitle>
+          </Link>
+          <Link href="issues">
+            <TabTitle count={issues().length.toString()}>Issues</TabTitle>
+          </Link>
+        </Row>
+        <Routes>
+          <Route
+            path="issues/*"
+            element={
+              <SplitOptions size="sm">
+                <SplitOptionsOption selected>Active</SplitOptionsOption>
+                <SplitOptionsOption>Ignored</SplitOptionsOption>
+                <SplitOptionsOption>Resolved</SplitOptionsOption>
+              </SplitOptions>
+            }
+          />
+        </Routes>
+      </PageHeaderRoot>
+      <div>
+        <Routes>
+          <Route path="" component={Resources} />
+          <Route path="issues/*" component={Issues} />
+          <Route path="logs/:resourceID/*" component={Logs} />
+        </Routes>
+      </div>
+    </>
   );
 }

@@ -373,9 +373,7 @@ export const TabTitleRoot = styled("div", {
       disabled: {},
     },
   },
-  defaultVariants: {
-    state: "inactive",
-  },
+  defaultVariants: {},
 });
 
 export const TabTitleText = styled("div", {
@@ -385,18 +383,22 @@ export const TabTitleText = styled("div", {
     textTransform: "uppercase",
     fontFamily: theme.font.family.code,
     transition: `color ${theme.colorFadeDuration} ease-out`,
+    color: theme.color.text.dimmed.base,
+    ":hover": {
+      color: theme.color.text.secondary.base,
+    },
     selectors: {
+      [`a.active &`]: {
+        color: theme.color.text.primary.base,
+      },
+      [`a.active &:hover`]: {
+        color: theme.color.text.primary.base,
+      },
       [`${TabTitleRoot.selector({ state: "active" })} &`]: {
         color: theme.color.text.primary.base,
       },
       [`${TabTitleRoot.selector({ state: "active" })} &:hover`]: {
         color: theme.color.text.primary.base,
-      },
-      [`${TabTitleRoot.selector({ state: "inactive" })} &`]: {
-        color: theme.color.text.dimmed.base,
-      },
-      [`${TabTitleRoot.selector({ state: "inactive" })} &:hover`]: {
-        color: theme.color.text.secondary.base,
       },
       [`${TabTitleRoot.selector({ state: "disabled" })} &`]: {
         color: theme.color.text.dimmed.base,

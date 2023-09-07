@@ -1,3 +1,9 @@
+import { DateTime } from "luxon";
+
+export function parseTime(input: string) {
+  return DateTime.fromSQL(input, { zone: "utc" });
+}
+
 export function formatBytes(bytes: number, decimals = 2) {
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
@@ -61,11 +67,11 @@ export function formatDuration(ms: number): string {
 }
 
 export function formatSinceTime(
-  timestamp: number,
+  timestamp: string,
   useFullFormat?: boolean
 ): string {
-  const currentTimestamp = Date.now();
-  const diffInSeconds = Math.round((currentTimestamp - timestamp) / 1000);
+  console.log(parseTime(timestamp));
+  const diffInSeconds = parseTime(timestamp).diffNow().as("seconds") * -1;
 
   if (diffInSeconds < 60) {
     return useFullFormat

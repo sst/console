@@ -14,7 +14,14 @@ import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { Fullscreen, Row, Stack } from "$/ui/layout";
-import { Tag, Text, Alert, TabTitle } from "$/ui";
+import {
+  Tag,
+  Text,
+  Alert,
+  TabTitle,
+  SplitOptions,
+  SplitOptionsOption,
+} from "$/ui";
 import {
   IconFunction,
   IconGoRuntime,
@@ -26,7 +33,7 @@ import {
   IconContainerRuntime,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
-import { Link } from "@solidjs/router";
+import { Link, Route, Routes } from "@solidjs/router";
 import { Syncing } from "$/ui/loader";
 import {
   IconCheck,
@@ -311,14 +318,28 @@ export function Resources() {
       <Match when={true}>
         {/* TODO: Issues */}
         <Show when={false}>
-          <PageHeader>
-            <TabTitle state="active">Resources</TabTitle>
-            <Link href="issues">
-              <TabTitle count="99+" state="inactive">
-                Issues
-              </TabTitle>
-            </Link>
-          </PageHeader>
+          <PageHeaderRoot>
+            <Row space="5" vertical="center">
+              <TabTitle state="active">Resources</TabTitle>
+              <Link href="issues">
+                <TabTitle count="99+" state="inactive">
+                  Issues
+                </TabTitle>
+              </Link>
+            </Row>
+            <Routes>
+              <Route
+                path="issues/*"
+                element={
+                  <SplitOptions size="sm">
+                    <SplitOptionsOption selected>Active</SplitOptionsOption>
+                    <SplitOptionsOption>Ignored</SplitOptionsOption>
+                    <SplitOptionsOption>Resolved</SplitOptionsOption>
+                  </SplitOptions>
+                }
+              />
+            </Routes>
+          </PageHeaderRoot>
         </Show>
         {/* */}
         <Content>

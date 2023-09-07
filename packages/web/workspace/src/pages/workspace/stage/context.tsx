@@ -17,6 +17,8 @@ import { useCommandBar } from "../command-bar";
 import { IconApi, IconFunction } from "$/ui/icons/custom";
 import { useLocalContext } from "$/providers/local";
 import { ResourceIcon } from "$/common/resource-icon";
+import { IssueStore } from "$/data/issue";
+import { createInitializedContext } from "$/common/context";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -75,6 +77,81 @@ function createResourcesContext() {
 }
 
 const ResourcesContext = createContext<Accessor<Resource.Info[]>>();
+
+export function ResourcesProvider(props: ParentProps) {
+  const resources = createResourcesContext();
+  const functions = createFunctionsContext(resources);
+  const params = useParams();
+  const nav = useNavigate();
+  const bar = useCommandBar();
+
+  bar.register("resource", async (filter, global) => {
+    if (global && !filter) return [];
+    const splits = location.pathname.split("/");
+    const appName = splits[2];
+    const stageName = splits[3];
+    if (!stageName || !appName) return [];
+    return [...functions().entries()].flatMap(([fnId, refs]) => {
+      const fn = resources().find((r) => r.id === fnId) as Extract<
+        Resource.Info,
+        { type: "Function" }
+      >;
+      if (!fn) return [];
+      const run = (control: any) => {
+        nav(`/${params.workspaceSlug}/${appName}/${stageName}/logs/${fn.id}`);
+        control.hide();
+      };
+      if (!refs.length)
+        return [
+          {
+            icon: IconFunction,
+            category: `Function`,
+            title: `Go to ${fn.metadata.handler}`,
+            run,
+          },
+        ];
+      return refs.map((resource) => {
+        switch (resource.type) {
+          case "Api":
+            return {
+              icon: IconApi,
+              category: "API Routes",
+              title: `Go to ${
+                resource.metadata.routes.find((r) => r.fn?.node === fn.addr)
+                  ?.route
+              }`,
+              run,
+            };
+          default:
+            return {
+              icon: ResourceIcon[resource.type] || IconFunction,
+              category: `${resource.type}`,
+              title: `Go to ${fn.metadata.handler}`,
+              run,
+            };
+        }
+      });
+    });
+  });
+
+  return (
+    <Show when={resources.ready && resources()}>
+      {(val) => (
+        <ResourcesContext.Provider value={val}>
+          <FunctionsContext.Provider value={functions}>
+            {props.children}
+          </FunctionsContext.Provider>
+        </ResourcesContext.Provider>
+      )}
+    </Show>
+  );
+}
+
+export function useResourcesContext() {
+  const context = useContext(ResourcesContext);
+  if (!context) throw new Error("No resources context");
+  return context;
+}
 
 function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
   return createMemo(() => {
@@ -187,83 +264,19 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
 const FunctionsContext =
   createContext<ReturnType<typeof createFunctionsContext>>();
 
-export function ResourcesProvider(props: ParentProps) {
-  const resources = createResourcesContext();
-  const functions = createFunctionsContext(resources);
-  const params = useParams();
-  const nav = useNavigate();
-  const bar = useCommandBar();
-
-  bar.register("resource", async (filter, global) => {
-    if (global && !filter) return [];
-    const splits = location.pathname.split("/");
-    const appName = splits[2];
-    const stageName = splits[3];
-    if (!stageName || !appName) return [];
-    return [...functions().entries()].flatMap(([fnId, refs]) => {
-      const fn = resources().find((r) => r.id === fnId) as Extract<
-        Resource.Info,
-        { type: "Function" }
-      >;
-      if (!fn) return [];
-      const run = (control: any) => {
-        nav(`/${params.workspaceSlug}/${appName}/${stageName}/logs/${fn.id}`);
-        control.hide();
-      };
-      if (!refs.length)
-        return [
-          {
-            icon: IconFunction,
-            category: `Function`,
-            title: `Go to ${fn.metadata.handler}`,
-            run,
-          },
-        ];
-      return refs.map((resource) => {
-        switch (resource.type) {
-          case "Api":
-            return {
-              icon: IconApi,
-              category: "API Routes",
-              title: `Go to ${
-                resource.metadata.routes.find((r) => r.fn?.node === fn.addr)
-                  ?.route
-              }`,
-              run,
-            };
-          default:
-            return {
-              icon: ResourceIcon[resource.type] || IconFunction,
-              category: `${resource.type}`,
-              title: `Go to ${fn.metadata.handler}`,
-              run,
-            };
-        }
-      });
-    });
-  });
-
-  return (
-    <Show when={resources.ready && resources()}>
-      {(val) => (
-        <ResourcesContext.Provider value={val}>
-          <FunctionsContext.Provider value={functions}>
-            {props.children}
-          </FunctionsContext.Provider>
-        </ResourcesContext.Provider>
-      )}
-    </Show>
-  );
-}
-
-export function useResourcesContext() {
-  const context = useContext(ResourcesContext);
-  if (!context) throw new Error("No resources context");
-  return context;
-}
-
 export function useFunctionsContext() {
   const context = useContext(FunctionsContext);
   if (!context) throw new Error("No resources context");
   return context;
 }
+
+export const { use: useIssuesContext, provider: IssuesProvider } =
+  createInitializedContext("Issues", () => {
+    const rep = useReplicache();
+    const ctx = useStageContext();
+    const issues = IssueStore.watch.scan(
+      rep,
+      (issue) => issue.stageID === ctx.stage.id
+    );
+    return issues;
+  });

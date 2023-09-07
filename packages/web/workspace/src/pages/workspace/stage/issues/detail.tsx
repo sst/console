@@ -1,5 +1,5 @@
 import { theme } from "$/ui/theme";
-import { Link } from "@solidjs/router";
+import { Link, useParams } from "@solidjs/router";
 import { PageHeader } from "../resources";
 import { styled } from "@macaron-css/solid";
 import { JSX, Show, Switch, Match, ComponentProps } from "solid-js";
@@ -14,7 +14,10 @@ import {
   Button,
   ButtonGroup,
 } from "$/ui";
-import { formatNumber, formatSinceTime } from "$/common/format";
+import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
+import { IssueStore } from "$/data/issue";
+import { useReplicache } from "$/providers/replicache";
+import { DateTime } from "luxon";
 
 const Content = styled("div", {
   base: {
@@ -92,30 +95,23 @@ function Label(props: LabelProps) {
   );
 }
 
-export function Issue() {
+export function Detail() {
   const status = "resolved" as "ignored" | "resolved" | "active";
+  const params = useParams();
+  const rep = useReplicache();
+  const issue = IssueStore.watch.get(rep, () => params.issueID);
   return (
-    <>
-      <PageHeader>
-        <Link href="../../">
-          <TabTitle state="inactive">Resources</TabTitle>
-        </Link>
-        <Link href="../">
-          <TabTitle count="99+" state="active">
-            Issues
-          </TabTitle>
-        </Link>
-      </PageHeader>
+    <Show when={issue()}>
       <Row space="6" style={{ padding: `${theme.space[4]}` }}>
         <Content>
           <Stack space="7">
             <Stack space="2">
               <Text code size="mono_2xl" weight="medium">
-                NoSuchBucket
+                {issue().error}
               </Text>
               <Stack space="0">
                 <Text code leading="loose" size="mono_base">
-                  The specified bucket does not exist.
+                  {issue().message}
                 </Text>
                 <FunctionLink href="/link/to/logs">
                   /packages/functions/src/events/log-poller-status.handler
@@ -181,24 +177,23 @@ export function Issue() {
             <Stack space="2">
               <Label>Last Seen</Label>
               <Text
-                title={new Date(
-                  new Date().getTime() - 1000 * 60 * 24 * 2
-                ).toUTCString()}
+                title={parseTime(issue().timeUpdated).toLocaleString(
+                  DateTime.DATETIME_FULL
+                )}
                 color="secondary"
               >
-                {formatSinceTime(
-                  new Date().getTime() - 1000 * 60 * 24 * 2,
-                  true
-                )}
+                {formatSinceTime(issue().timeUpdated, true)}
               </Text>
             </Stack>
             <Stack space="2">
               <Label>First Seen</Label>
               <Text
-                title={new Date(1620000000000).toUTCString()}
+                title={parseTime(issue().timeCreated).toLocaleString(
+                  DateTime.DATETIME_FULL
+                )}
                 color="secondary"
               >
-                {formatSinceTime(1620000000000, true)}
+                {formatSinceTime(issue().timeCreated, true)}
               </Text>
             </Stack>
             <Stack space="2">
@@ -210,6 +205,6 @@ export function Issue() {
           </Stack>
         </Sidebar>
       </Row>
-    </>
+    </Show>
   );
 }
