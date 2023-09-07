@@ -63,6 +63,7 @@ export const extract = zod(
     const { logStream } = input;
     const [filter] = input.subscriptionFilters;
     if (!filter) return;
+    console.log("filter", filter);
     const [_prefix, region, accountID, appName, stageName] = filter.split("#");
 
     const workspaces = await db
