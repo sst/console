@@ -20,13 +20,8 @@ import { Resources } from "./resources";
 import { IconStage } from "$/ui/icons/custom";
 import { Header } from "../header";
 import { Row, SplitOptions, SplitOptionsOption, TabTitle } from "$/ui";
-import { IssueStore } from "$/data/issue";
 
-type PageHeaderProps = ComponentProps<typeof PageHeaderRoot> & {
-  right?: JSX.Element;
-};
-
-export const PageHeaderRoot = styled("div", {
+export const PageHeader = styled("div", {
   base: {
     height: 56,
     display: "flex",
@@ -36,17 +31,6 @@ export const PageHeaderRoot = styled("div", {
     borderBottom: `1px solid ${theme.color.divider.base}`,
   },
 });
-
-export function PageHeader(props: PageHeaderProps) {
-  return (
-    <PageHeaderRoot {...props}>
-      <Row space="5" vertical="center">
-        {props.children}
-      </Row>
-      {props.right}
-    </PageHeaderRoot>
-  );
-}
 
 export function Stage() {
   const bar = useCommandBar();
@@ -100,28 +84,30 @@ export function Inner() {
   return (
     <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
-      <PageHeaderRoot>
-        <Row space="5" vertical="center">
-          <Link href="" end>
-            <TabTitle>Resources</TabTitle>
-          </Link>
-          <Link href="issues">
-            <TabTitle count={issues().length.toString()}>Issues</TabTitle>
-          </Link>
-        </Row>
-        <Routes>
-          <Route
-            path="issues/*"
-            element={
-              <SplitOptions size="sm">
-                <SplitOptionsOption selected>Active</SplitOptionsOption>
-                <SplitOptionsOption>Ignored</SplitOptionsOption>
-                <SplitOptionsOption>Resolved</SplitOptionsOption>
-              </SplitOptions>
-            }
-          />
-        </Routes>
-      </PageHeaderRoot>
+      <Show when={false}>
+        <PageHeader>
+          <Row space="5" vertical="center">
+            <Link href="" end>
+              <TabTitle>Resources</TabTitle>
+            </Link>
+            <Link href="issues">
+              <TabTitle count={issues().length.toString()}>Issues</TabTitle>
+            </Link>
+          </Row>
+          <Routes>
+            <Route
+              path="issues"
+              element={
+                <SplitOptions size="sm">
+                  <SplitOptionsOption selected>Active</SplitOptionsOption>
+                  <SplitOptionsOption>Ignored</SplitOptionsOption>
+                  <SplitOptionsOption>Resolved</SplitOptionsOption>
+                </SplitOptions>
+              }
+            />
+          </Routes>
+        </PageHeader>
+      </Show>
       <div>
         <Routes>
           <Route path="" component={Resources} />
