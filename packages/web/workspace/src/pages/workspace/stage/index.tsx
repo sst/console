@@ -84,7 +84,7 @@ export function Inner() {
   return (
     <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
-      <Show when={false}>
+      <Show when={ctx.app.name === "console"}>
         <PageHeader>
           <Row space="5" vertical="center">
             <Link href="" end>

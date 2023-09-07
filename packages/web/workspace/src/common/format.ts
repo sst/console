@@ -70,7 +70,6 @@ export function formatSinceTime(
   timestamp: string,
   useFullFormat?: boolean
 ): string {
-  console.log(parseTime(timestamp));
   const diffInSeconds = parseTime(timestamp).diffNow().as("seconds") * -1;
 
   if (diffInSeconds < 60) {
