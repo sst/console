@@ -22,7 +22,7 @@ export const issue = mysqlTable(
     message: text("message").notNull(),
     errorID: varchar("error_id", { length: 255 }).notNull(),
     group: varchar("group", { length: 255 }).notNull(),
-    stack: json("stack").$type<StackFrame[]>().notNull(),
+    stack: json("stack").$type<StackFrame[]>(),
     timeResolved: timestamp("time_resolved", {
       mode: "string",
     }),
