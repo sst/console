@@ -137,25 +137,23 @@ export function API({ stack, app }: StackContext) {
     },
   });
 
-  if (stack.stage !== "production") {
-    api.addRoutes(stack, {
-      "GET /test/error": {
-        type: "function",
-        function: {
-          handler: "packages/functions/src/error.handler",
-          enableLiveDev: false,
-        },
+  api.addRoutes(stack, {
+    "GET /test/error": {
+      type: "function",
+      function: {
+        handler: "packages/functions/src/error.handler",
+        enableLiveDev: false,
       },
-      "GET /test/go": {
-        type: "function",
-        function: {
-          runtime: "go",
-          handler: "./go/handler.go",
-          enableLiveDev: false,
-        },
+    },
+    "GET /test/go": {
+      type: "function",
+      function: {
+        runtime: "go",
+        handler: "./go/handler.go",
+        enableLiveDev: false,
       },
-    });
-  }
+    },
+  });
 
   poller.grantStartExecution(api.getFunction("POST /replicache/push")!);
   poller.grantStartExecution(api.getFunction("POST /replicache/push1")!);
