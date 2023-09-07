@@ -1005,7 +1005,7 @@ export function Logs() {
                       Scanning
                       {activeSearch()?.timeStart
                         ? ` from ${formatSinceTime(
-                            new Date(activeSearch()?.timeStart + "Z").getTime()
+                            activeSearch()?.timeStart || ""
                           )}`
                         : ""}
                       &hellip;
