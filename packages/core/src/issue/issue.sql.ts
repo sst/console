@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { cuid, timestamps, workspaceID } from "../util/sql";
 import { Actor } from "../actor";
+import { StackFrame } from "../log";
 
 export const issue = mysqlTable(
   "issue",
@@ -21,6 +22,7 @@ export const issue = mysqlTable(
     message: text("message").notNull(),
     errorID: varchar("error_id", { length: 255 }).notNull(),
     group: varchar("group", { length: 255 }).notNull(),
+    stack: json("stack").$type<StackFrame[]>().notNull(),
     timeResolved: timestamp("time_resolved", {
       mode: "string",
     }),

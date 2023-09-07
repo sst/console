@@ -156,6 +156,7 @@ export const extract = zod(
           .values(
             workspaces.map((row) => ({
               group,
+              stack: err.stack,
               id: createId(),
               errorID: "none",
               workspaceID: row.workspaceID,
