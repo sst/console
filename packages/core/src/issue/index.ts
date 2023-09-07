@@ -197,8 +197,8 @@ export const connectStage = zod(
     const destination = await cw.send(
       new PutDestinationCommand({
         destinationName: uniqueIdentifier,
-        roleArn: process.env.ISSUES_ROLE_ARN,
-        targetArn: process.env.ISSUES_STREAM_ARN,
+        roleArn: Config.ISSUES_ROLE_ARN,
+        targetArn: Config.ISSUES_STREAM_ARN,
       })
     );
 

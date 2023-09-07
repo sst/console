@@ -54,6 +54,10 @@ export function Issues({ stack }: StackContext) {
     "AssumeRolePolicyDocument.Statement.0.Principal.Service",
     allRegions().map((region) => `logs.${region}.amazonaws.com`)
   );
+  const kinesisParams = Config.Parameter.create(stack, {
+    ISSUES_ROLE_ARN: kinesisRole.roleArn,
+    ISSUES_STREAM_ARN: kinesisStream.streamArn,
+  });
 
   bus.subscribe(stack, "app.stage.resources_updated", {
     handler: "packages/functions/src/issues/resources-updated.handler",
@@ -69,13 +73,12 @@ export function Issues({ stack }: StackContext) {
         resources: [kinesisRole.roleArn],
       }),
     ],
-    environment: {
-      ISSUES_ROLE_ARN: kinesisRole.roleArn,
-      ISSUES_STREAM_ARN: kinesisStream.streamArn,
-    },
+    environment: {},
     bind: [
       bus,
       ...Object.values(secrets.database),
+      kinesisParams.ISSUES_ROLE_ARN,
+      kinesisParams.ISSUES_STREAM_ARN,
       new Config.Parameter(stack, "ISSUES_DESTINATION_PREFIX", {
         value: `arn:aws:logs:<region>:${stack.account}:destination:`,
       }),
@@ -95,7 +98,13 @@ export function Issues({ stack }: StackContext) {
 
   bus.subscribe(stack, "app.stage.connected", {
     handler: "packages/functions/src/issues/stage-connected.handler",
-    bind: [bus, use(Storage), ...Object.values(secrets.database)],
+    bind: [
+      bus,
+      use(Storage),
+      ...Object.values(secrets.database),
+      kinesisParams.ISSUES_ROLE_ARN,
+      kinesisParams.ISSUES_STREAM_ARN,
+    ],
     permissions: [
       "sts",
       "logs:DescribeDestinations",
@@ -106,10 +115,6 @@ export function Issues({ stack }: StackContext) {
         resources: [kinesisRole.roleArn],
       }),
     ],
-    environment: {
-      ISSUES_ROLE_ARN: kinesisRole.roleArn,
-      ISSUES_STREAM_ARN: kinesisStream.streamArn,
-    },
   });
 }
 

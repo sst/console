@@ -3,6 +3,7 @@ import { and, db, gt, inArray } from "@console/core/drizzle";
 import { stage } from "@console/core/app/app.sql";
 import { Stage } from "@console/core/app";
 import { queue } from "@console/core/util/queue";
+import { Issue } from "@console/core/issue";
 
 const workspaceFilter: string[] = ["tviez52nfa0b6aerfw9wh597"];
 
@@ -25,9 +26,9 @@ await queue(100, stages, async (stage) => {
       workspaceID: stage.workspaceID,
     },
   });
-  await Stage.Events.Connected.publish({
-    stageID: stage.id,
-  });
+  const config = await Stage.assumeRole(stage.id);
+  if (!config) return;
+  Issue.connectStage(config);
 });
 
 export {};
