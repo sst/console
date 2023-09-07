@@ -144,12 +144,7 @@ export const extract = zod(
               return x.raw!;
             })
             .map((x) => x.trim());
-          const parts = [
-            err.type,
-            err.message,
-            frames[0],
-            ...frames.slice(1, 4).sort(),
-          ]
+          const parts = [err.type, frames[0], ...frames.slice(1, 4).sort()]
             .filter(Boolean)
             .join("\n");
 
