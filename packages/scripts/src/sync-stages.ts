@@ -5,7 +5,7 @@ import { Stage } from "@console/core/app";
 import { queue } from "@console/core/util/queue";
 import { Issue } from "@console/core/issue";
 
-const workspaceFilter: string[] = ["tviez52nfa0b6aerfw9wh597"];
+const workspaceFilter: string[] = ["vn5ubp6sxv52de6cso8kb015"];
 
 const stages = await db
   .select()
@@ -28,7 +28,10 @@ await queue(100, stages, async (stage) => {
   });
   const config = await Stage.assumeRole(stage.id);
   if (!config) return;
-  Issue.connectStage(config);
+  await Stage.syncMetadata({
+    stageID: stage.id,
+    credentials: config.credentials,
+  });
 });
 
 export {};
