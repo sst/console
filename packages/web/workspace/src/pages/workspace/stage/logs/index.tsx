@@ -821,7 +821,9 @@ export function Logs() {
                           <Show when={mode() === "live"}>
                             <TabTitle
                               size="mono_sm"
-                              onClick={() => setTab("request")}
+                              onClick={() =>
+                                invocation.event && setTab("request")
+                              }
                               state={
                                 !invocation.event
                                   ? "disabled"
@@ -834,7 +836,9 @@ export function Logs() {
                             </TabTitle>
                             <TabTitle
                               size="mono_sm"
-                              onClick={() => setTab("response")}
+                              onClick={() =>
+                                invocation.response && setTab("response")
+                              }
                               state={
                                 !invocation.response
                                   ? "disabled"
@@ -930,11 +934,7 @@ export function Logs() {
                           <Match when={tab() === "response"}>
                             <LogEntry>
                               <LogEntryMessage>
-                                {JSON.stringify(
-                                  invocation.response || invocation.errors,
-                                  null,
-                                  2
-                                )}
+                                {JSON.stringify(invocation.response, null, 2)}
                               </LogEntryMessage>
                             </LogEntry>
                           </Match>
