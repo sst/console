@@ -23,6 +23,7 @@ export const handler = Handler("kinesis_stream", async (event) => {
       unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
     );
     if (decoded.messageType !== "DATA_MESSAGE") continue;
+    console.log(decoded);
     await Issue.extract(decoded);
   }
 

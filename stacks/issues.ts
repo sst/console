@@ -19,7 +19,7 @@ export function Issues({ stack }: StackContext) {
       consumer: {
         function: {
           handler: "packages/functions/src/issues/subscriber.handler",
-          timeout: "15 minutes",
+          timeout: "2 minutes",
           memorySize: "2 GB",
           nodejs: {
             install: ["source-map"],
