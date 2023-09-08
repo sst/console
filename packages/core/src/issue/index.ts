@@ -132,7 +132,10 @@ export const extract = zod(
           ?.unknown.map((x) => x.type === "error" && x)
           .at(0);
         processor.destroy();
-        if (!err) return;
+        if (!err) {
+          console.log("no error found in", event.message);
+          return;
+        }
 
         const group = (() => {
           const frames = err.stack

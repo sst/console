@@ -127,7 +127,12 @@ export const bootstrap = zod(
       )?.OutputValue;
 
       if (!bucket) {
-        console.log(input.region, "no bucket found");
+        console.log(
+          useWorkspace(),
+          input.region,
+          bootstrap.Stacks?.at(0),
+          "no bucket found"
+        );
         return;
       }
 
