@@ -22,7 +22,7 @@ export function Issues({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/issues/subscriber.handler",
           timeout: "2 minutes",
-          memorySize: "2 GB",
+          memorySize: "3008 MB",
           nodejs: {
             install: ["source-map"],
           },

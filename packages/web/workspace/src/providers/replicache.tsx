@@ -19,6 +19,7 @@ import { bus } from "./bus";
 import { UserStore } from "$/data/user";
 import { LambdaPayloadStore } from "$/data/lambda-payload";
 import { LogSearchStore } from "$/data/log-search";
+import { createEventListener } from "@solid-primitives/event-listener";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async (tx, input) => {})
@@ -118,6 +119,10 @@ export function ReplicacheProvider(
 
   const rep = createMemo((prev) => {
     return createReplicache(props.workspaceID, token()!);
+  });
+
+  createEventListener(window, "focus", () => {
+    rep().pull();
   });
 
   bus.on("poke", (properties) => {

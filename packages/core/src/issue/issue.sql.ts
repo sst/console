@@ -24,6 +24,11 @@ export const issue = mysqlTable(
     errorID: varchar("error_id", { length: 255 }).notNull(),
     group: varchar("group", { length: 255 }).notNull(),
     stack: json("stack").$type<StackFrame[]>(),
+    pointer: json("pointer").$type<{
+      logGroup: string;
+      logStream: string;
+      timestamp: number;
+    }>(),
     count: bigint("count", {
       mode: "number",
     }),

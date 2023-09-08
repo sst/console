@@ -1,24 +1,15 @@
 import { theme } from "$/ui/theme";
 import { Link, useParams } from "@solidjs/router";
-import { PageHeader } from "../resources";
 import { styled } from "@macaron-css/solid";
-import { JSX, Show, Switch, Match, ComponentProps } from "solid-js";
+import { Show, Switch, Match, ComponentProps, createResource } from "solid-js";
 import { IconCheck, IconNoSymbol, IconViewfinderCircle } from "$/ui/icons";
-import {
-  utility,
-  Tag,
-  Row,
-  Stack,
-  TabTitle,
-  Text,
-  Button,
-  ButtonGroup,
-} from "$/ui";
+import { Tag, Row, Stack, Text, Button, ButtonGroup } from "$/ui";
 import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { IssueStore } from "$/data/issue";
 import { useReplicache } from "$/providers/replicache";
 import { DateTime } from "luxon";
 import { StackTrace } from "../logs/error";
+import { useWorkspace } from "../../context";
 
 const Content = styled("div", {
   base: {
@@ -83,6 +74,27 @@ export function Detail() {
   const params = useParams();
   const rep = useReplicache();
   const issue = IssueStore.watch.get(rep, () => params.issueID);
+  const logs = createResource(
+    () => issue(),
+    async (issue) => {
+      if (!issue) return;
+      const result = await fetch(
+        import.meta.env.VITE_API_URL +
+          "/rest/log?" +
+          new URLSearchParams({
+            pointer: JSON.stringify(issue.pointer),
+            stageID: issue.stageID,
+          }),
+        {
+          headers: {
+            authorization: rep().auth,
+            "x-sst-workspace": issue.workspaceID,
+          },
+        }
+      );
+    }
+  );
+
   return (
     <Show when={issue()}>
       <Row space="6" style={{ padding: `${theme.space[4]}` }}>

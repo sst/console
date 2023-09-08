@@ -73,7 +73,7 @@ export function createSourcemapCache(input: {
     ...input.config,
     retryStrategy: RETRY_STRATEGY,
   });
-  const sourcemapCache = new Map<string, SourceMapConsumer>();
+  const sourcemapCache = new Map<string, any>();
 
   const getBootstrap = lazy(() => AWS.Account.bootstrap(input.config));
   const sourcemapsMeta = lazy(async () => {
@@ -104,7 +104,7 @@ export function createSourcemapCache(input: {
       );
       if (!match) return;
       if (sourcemapCache.has(match.key)) {
-        return sourcemapCache.get(match.key)!;
+        return await new SourceMapConsumer(sourcemapCache.get(match.key)!);
       }
       const bootstrap = await getBootstrap();
       const content = await s3bootstrap.send(
@@ -119,12 +119,13 @@ export function createSourcemapCache(input: {
       raw.sources = raw.sources.map((item: string) =>
         item.replaceAll("../", "")
       );
+      sourcemapCache.set(match.key, raw);
       const consumer = await new SourceMapConsumer(raw);
-      sourcemapCache.set(match.key, consumer);
       return consumer;
     },
     destroy() {
       s3bootstrap.destroy();
+      sourcemapCache.clear();
     },
   };
 }
@@ -321,13 +322,13 @@ import {
 import { LambdaClient } from "@aws-sdk/client-lambda";
 import { RETRY_STRATEGY } from "../util/aws";
 import { StageCredentials } from "../app/stage";
+import { retrySync } from "../util/retry";
 
 export const expand = zod(
   z.object({
     timestamp: z.number(),
     logGroup: z.string(),
     logStream: z.string(),
-    region: z.string(),
     functionArn: z.string(),
     config: z.custom<StageCredentials>(),
   }),
@@ -462,21 +463,20 @@ export async function extractError(
     const stack: string[] = parsed.stack;
     const consumer = await sourcemapCache.get(timestamp);
     if (consumer) {
-      return stack.flatMap((item) => {
-        const splits: string[] = item.split(":");
-        const column = parseInt(splits.pop()!);
-        const line = parseInt(splits.pop()!);
-        if (!column || !line) return [];
-        const original = (() => {
-          try {
-            return consumer.originalPositionFor({
-              line,
-              column,
-            });
-          } catch {}
-        })();
+      const result = stack.flatMap((item): StackFrame[] => {
+        const [lineHint, columnHint] = item.match(/(\d+):(\d+)/) ?? [];
+        if (!columnHint || !lineHint) return [{ raw: item }];
+        const column = parseInt(columnHint);
+        const line = parseInt(lineHint);
+        const original = retrySync(1, () =>
+          consumer.originalPositionFor({
+            line,
+            column,
+          })
+        );
 
-        if (!original?.source) return [];
+        if (!original?.source) return [{ raw: item }];
+
         const lines =
           consumer.sourceContentFor(original.source, true)?.split("\n") || [];
         const min = Math.max(0, original.line! - 4);
@@ -495,6 +495,8 @@ export async function extractError(
           },
         ];
       });
+      consumer.destroy();
+      return result;
     }
     return stack.map((raw) => ({ raw }));
   })();

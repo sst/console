@@ -130,7 +130,7 @@ export const extract = zod(
         if (!err) return;
 
         if (!err.stack.length) {
-          console.log("no stack", event.message);
+          // console.log("no stack", event.message);
         }
 
         const group = (() => {
@@ -158,6 +158,11 @@ export const extract = zod(
               stack: err.stack,
               id: createId(),
               errorID: "none",
+              pointer: {
+                timestamp: event.timestamp,
+                logGroup: input.logGroup,
+                logStream: logStream,
+              },
               workspaceID: row.workspaceID,
               error: err.error,
               message: err.message,
@@ -178,6 +183,8 @@ export const extract = zod(
       })
     );
 
+    sourcemapCache.destroy();
+
     for (const row of workspaces) {
       provideActor({
         type: "system",
@@ -185,7 +192,7 @@ export const extract = zod(
           workspaceID: row.workspaceID,
         },
       });
-      await Replicache.poke();
+      // await Replicache.poke();
     }
   }
 );
