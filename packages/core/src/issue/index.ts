@@ -59,8 +59,6 @@ export const extract = zod(
     // do not process self
     if (input.logGroup.startsWith("/aws/lambda/production-console-Issues"))
       return;
-    // TODO: remove
-    if (input.logGroup.startsWith("/aws/lambda/prod-deca")) return;
 
     const { logStream } = input;
     const [filter] = input.subscriptionFilters;
@@ -130,6 +128,10 @@ export const extract = zod(
           event.message.split(`\t`).map((x) => x.trim())
         );
         if (!err) return;
+
+        if (!err.stack.length) {
+          console.log("no stack", event.message);
+        }
 
         const group = (() => {
           const frames = err.stack
