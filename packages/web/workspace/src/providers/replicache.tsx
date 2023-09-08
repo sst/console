@@ -19,7 +19,7 @@ import { bus } from "./bus";
 import { UserStore } from "$/data/user";
 import { LambdaPayloadStore } from "$/data/lambda-payload";
 import { LogSearchStore } from "$/data/log-search";
-import { createEventListener } from "@solid-primitives/event-listener";
+import { makeEventListener } from "@solid-primitives/event-listener";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async (tx, input) => {})
@@ -121,7 +121,8 @@ export function ReplicacheProvider(
     return createReplicache(props.workspaceID, token()!);
   });
 
-  createEventListener(window, "focus", () => {
+  makeEventListener(window, "focus", () => {
+    console.log("refocused");
     rep().pull();
   });
 
