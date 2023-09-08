@@ -129,6 +129,8 @@ export function createSourcemapCache(input: {
   };
 }
 
+type SourcemapCache = ReturnType<typeof createSourcemapCache>;
+
 export function createProcessor(input: {
   arn: string;
   group: string;
@@ -254,60 +256,21 @@ export function createProcessor(input: {
       const target = message.requestID === "" ? stream.unknown : results;
 
       if (message.level === "ERROR") {
-        const parsed = extractError(tabs);
+        const parsed = await extractError(
+          sourcemapCache,
+          input.timestamp,
+          tabs
+        );
         if (parsed) {
-          const stack = await (async (): Promise<StackFrame[]> => {
-            const stack: string[] = parsed.stack;
-            const consumer = await sourcemapCache.get(input.timestamp);
-            if (consumer) {
-              return stack.flatMap((item) => {
-                const splits: string[] = item.split(":");
-                const column = parseInt(splits.pop()!);
-                const line = parseInt(splits.pop()!);
-                if (!column || !line) return [];
-                const original = (() => {
-                  try {
-                    return consumer.originalPositionFor({
-                      line,
-                      column,
-                    });
-                  } catch {}
-                })();
-
-                if (!original?.source) return [];
-                const lines =
-                  consumer
-                    .sourceContentFor(original.source, true)
-                    ?.split("\n") || [];
-                const min = Math.max(0, original.line! - 4);
-                const ctx = lines.slice(
-                  min,
-                  Math.min(original.line! + 3, lines.length - 1)
-                );
-
-                return [
-                  {
-                    file: original.source,
-                    line: original.line!,
-                    column: original.column!,
-                    context: ctx,
-                    important: !original.source.startsWith("node_modules"),
-                  },
-                ];
-              });
-            }
-            return stack.map((raw) => ({ raw }));
-          })();
-
           target.push({
             id: message.id,
             type: "error",
             timestamp: input.timestamp,
             group,
             requestID: message.requestID,
-            error: parsed.errorType,
-            message: parsed.errorMessage,
-            stack,
+            error: parsed.error,
+            message: parsed.message,
+            stack: parsed.stack,
           });
         }
       }
@@ -448,43 +411,93 @@ export const expand = zod(
   }
 );
 
-export function extractError(tabs: string[]):
-  | {
-      errorType: string;
-      errorMessage: string;
-      stack: string[];
+type ParsedError = {
+  error: string;
+  message: string;
+  stack: StackFrame[];
+};
+export async function extractError(
+  sourcemapCache: SourcemapCache,
+  timestamp: number,
+  tabs: string[]
+): Promise<ParsedError | undefined> {
+  const parsed = (() => {
+    // Generic AWS error handling
+    if (
+      tabs[3]?.includes("Invoke Error") ||
+      tabs[3]?.includes("Uncaught Exception") ||
+      tabs[3]?.includes("Unhandled Promise Rejection")
+    ) {
+      const parsed = JSON.parse(tabs[4]!);
+      if (typeof parsed.stack == "string") {
+        parsed.stack = parsed.stack.split("\n");
+      }
+      return {
+        error: parsed.errorType || parsed.name,
+        message: parsed.errorMessage || parsed.message,
+        stack: (parsed.stack || [])
+          .map((l: string) => l.trim())
+          .filter((l: string) => l.startsWith("at ")),
+      };
     }
-  | undefined {
-  // Generic AWS error handling
-  if (
-    tabs[3]?.includes("Invoke Error") ||
-    tabs[3]?.includes("Uncaught Exception") ||
-    tabs[3]?.includes("Unhandled Promise Rejection")
-  ) {
-    const parsed = JSON.parse(tabs[4]!);
-    if (typeof parsed.stack == "string") {
-      parsed.stack = parsed.stack.split("\n");
-    }
-    return {
-      errorType: parsed.errorType || parsed.name,
-      errorMessage: parsed.errorMessage || parsed.message,
-      stack: (parsed.stack || [])
-        .map((l: string) => l.trim())
-        .filter((l: string) => l.startsWith("at ")),
-    };
-  }
 
-  if (tabs[3]) {
-    const lines = tabs[3].trim().split("\n");
-    if (lines.length < 2) return;
-    const [first] = lines;
-    const [_, error, message] = first!.match(/([A-Z]\w+): (.+)$/) ?? [];
-    if (!error || !message) return;
-    if (error.startsWith("(node:")) return;
-    return {
-      errorType: error,
-      errorMessage: message,
-      stack: lines.map((l) => l.trim()).filter((l) => l.startsWith("at ")),
-    };
-  }
+    if (tabs[3]) {
+      const lines = tabs[3].trim().split("\n");
+      if (lines.length < 2) return;
+      const [first] = lines;
+      const [_, error, message] = first!.match(/([A-Z]\w+): (.+)$/) ?? [];
+      if (!error || !message) return;
+      if (error.startsWith("(node:")) return;
+      return {
+        error: error,
+        message: message,
+        stack: lines.map((l) => l.trim()).filter((l) => l.startsWith("at ")),
+      };
+    }
+  })();
+
+  if (!parsed) return;
+
+  const stack = await (async (): Promise<StackFrame[]> => {
+    const stack: string[] = parsed.stack;
+    const consumer = await sourcemapCache.get(timestamp);
+    if (consumer) {
+      return stack.flatMap((item) => {
+        const splits: string[] = item.split(":");
+        const column = parseInt(splits.pop()!);
+        const line = parseInt(splits.pop()!);
+        if (!column || !line) return [];
+        const original = (() => {
+          try {
+            return consumer.originalPositionFor({
+              line,
+              column,
+            });
+          } catch {}
+        })();
+
+        if (!original?.source) return [];
+        const lines =
+          consumer.sourceContentFor(original.source, true)?.split("\n") || [];
+        const min = Math.max(0, original.line! - 4);
+        const ctx = lines.slice(
+          min,
+          Math.min(original.line! + 3, lines.length - 1)
+        );
+
+        return [
+          {
+            file: original.source,
+            line: original.line!,
+            column: original.column!,
+            context: ctx,
+            important: !original.source.startsWith("node_modules"),
+          },
+        ];
+      });
+    }
+    return stack.map((raw) => ({ raw }));
+  })();
+  parsed.stack = stack;
+  return parsed;
 }

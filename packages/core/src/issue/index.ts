@@ -59,6 +59,8 @@ export const extract = zod(
     // do not process self
     if (input.logGroup.startsWith("/aws/lambda/production-console-Issues"))
       return;
+    // TODO: remove
+    if (input.logGroup.startsWith("/aws/lambda/prod-deca")) return;
 
     const { logStream } = input;
     const [filter] = input.subscriptionFilters;
@@ -109,35 +111,25 @@ export const extract = zod(
 
     console.log("functionArn", functionArn);
 
+    const sourcemapCache = Log.createSourcemapCache({
+      functionArn,
+      config: {
+        credentials: credentials,
+        stageID: workspaces[0]!.stageID,
+        app: appName!,
+        stage: stageName!,
+        awsAccountID: accountID!,
+        region: region!,
+      },
+    });
     await Promise.allSettled(
       input.logEvents.map(async (event) => {
-        const processor = Log.createProcessor({
-          arn: functionArn,
-          config: {
-            credentials: credentials,
-            stageID: workspaces[0]!.stageID,
-            app: appName!,
-            stage: stageName!,
-            awsAccountID: accountID!,
-            region: region!,
-          },
-          group: input.logGroup,
-        });
-
-        await processor.process({
-          id: event.id,
-          timestamp: event.timestamp,
-          line: event.message,
-          streamName: logStream,
-        });
-        const err = processor.streams
-          .get(logStream)
-          ?.unknown.map((x) => x.type === "error" && x)
-          .at(0);
-        processor.destroy();
-        if (!err) {
-          return;
-        }
+        const err = await Log.extractError(
+          sourcemapCache,
+          event.timestamp,
+          event.message.split(`\t`).map((x) => x.trim())
+        );
+        if (!err) return;
 
         const group = (() => {
           const frames = err.stack
@@ -150,7 +142,7 @@ export const extract = zod(
               return x.raw!;
             })
             .map((x) => x.trim());
-          const parts = [err.type, frames[0], ...frames.slice(1, 4).sort()]
+          const parts = [err.error, frames[0], ...frames.slice(1, 4).sort()]
             .filter(Boolean)
             .join("\n");
 
@@ -186,6 +178,7 @@ export const extract = zod(
           .execute();
       })
     );
+    processor.destroy();
 
     for (const row of workspaces) {
       provideActor({
