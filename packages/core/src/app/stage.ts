@@ -323,6 +323,7 @@ export const assumeRole = zod(Info.shape.id, async (stageID) =>
     return {
       credentials,
       region: result.region,
+      stageID,
       stage: result.name,
       app: result.app,
       awsAccountID: result.accountID,

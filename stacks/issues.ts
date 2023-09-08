@@ -9,6 +9,7 @@ import { StackContext, KinesisStream, use, Config } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { Storage } from "./storage";
+import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 
 export function Issues({ stack }: StackContext) {
   const secrets = use(Secrets);
@@ -24,9 +25,14 @@ export function Issues({ stack }: StackContext) {
           nodejs: {
             install: ["source-map"],
           },
-          url: true,
           bind: [bus, use(Storage), ...Object.values(secrets.database)],
-          permissions: ["sts"],
+          permissions: ["sts", "iot"],
+        },
+        cdk: {
+          eventSource: {
+            startingPosition: StartingPosition.TRIM_HORIZON,
+            parallelizationFactor: 10,
+          },
         },
       },
     },

@@ -21,13 +21,13 @@ import {
   ResourceNotFoundException,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { Resource } from "../app/resource";
-import { App } from "../app";
 import { z } from "zod";
 import { RETRY_STRATEGY } from "../util/aws";
 import { StageCredentials } from "../app/stage";
 import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
+import { Replicache } from "../replicache";
 
 export * as Issue from "./index";
 
@@ -113,6 +113,7 @@ export const extract = zod(
           arn: functionArn,
           config: {
             credentials: credentials,
+            stageID: workspaces[0]!.stageID,
             app: appName!,
             stage: stageName!,
             awsAccountID: accountID!,
@@ -133,7 +134,6 @@ export const extract = zod(
           .at(0);
         processor.destroy();
         if (!err) {
-          console.log("no error found in", event.message);
           return;
         }
 
@@ -182,6 +182,16 @@ export const extract = zod(
           .execute();
       })
     );
+
+    for (const row of workspaces) {
+      provideActor({
+        type: "system",
+        properties: {
+          workspaceID: row.workspaceID,
+        },
+      });
+      await Replicache.poke();
+    }
   }
 );
 
@@ -228,10 +238,7 @@ export const connectStage = zod(
   }
 );
 
-export const subscribe = zod(Info.shape.stageID, async (stageID) => {
-  const config = await App.Stage.assumeRole(stageID);
-  if (!config) return;
-
+export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
   const uniqueIdentifier = destinationIdentifier(config);
   const destination =
     Config.ISSUES_DESTINATION_PREFIX.replace("<region>", config.region) +
@@ -244,7 +251,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
   try {
     // Get all function resources
     const functions = await Resource.listFromStageID({
-      stageID: stageID,
+      stageID: config.stageID,
       types: ["Function"],
     });
     if (!functions.length) return;
@@ -256,7 +263,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
       .from(issueSubscriber)
       .where(
         and(
-          eq(issueSubscriber.stageID, stageID),
+          eq(issueSubscriber.stageID, config.stageID),
           eq(issueSubscriber.workspaceID, useWorkspace())
         )
       )
@@ -296,7 +303,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
             .insert(issueSubscriber)
             .ignore()
             .values({
-              stageID: stageID,
+              stageID: config.stageID,
               workspaceID: useWorkspace(),
               functionID: fn.id,
               id: createId(),
@@ -326,7 +333,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
           // There are too many log subscribers
           if (e instanceof LimitExceededException) {
             await Warning.create({
-              stageID,
+              stageID: config.stageID,
               target: fn.id,
               type: "log_subscription",
               data: {
@@ -339,7 +346,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
           // Permissions issue
           if (e.name === "AccessDeniedException") {
             await Warning.create({
-              stageID,
+              stageID: config.stageID,
               target: fn.id,
               type: "log_subscription",
               data: {
@@ -360,7 +367,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
 
           console.error(e);
           await Warning.create({
-            stageID,
+            stageID: config.stageID,
             target: fn.id,
             type: "log_subscription",
             data: {
