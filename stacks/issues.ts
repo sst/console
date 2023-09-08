@@ -20,7 +20,7 @@ export function Issues({ stack }: StackContext) {
       consumer: {
         function: {
           handler: "packages/functions/src/issues/subscriber.handler",
-          timeout: "15 minutes",
+          timeout: "1 minutes",
           memorySize: "2 GB",
           nodejs: {
             install: ["source-map"],
@@ -30,6 +30,8 @@ export function Issues({ stack }: StackContext) {
         },
         cdk: {
           eventSource: {
+            reportBatchItemFailures: true,
+            bisectBatchOnError: true,
             startingPosition: StartingPosition.TRIM_HORIZON,
             parallelizationFactor: 10,
           },

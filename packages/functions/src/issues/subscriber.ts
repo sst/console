@@ -18,17 +18,31 @@ export const handler = Handler("kinesis_stream", async (event) => {
     type: "public",
     properties: {},
   });
+  const incomplete: string[] = event.Records.map((r) => r.eventID).reverse();
+  let timeout = false;
+  setTimeout(() => {
+    timeout = true;
+  }, 1000 * 60);
   for (const record of event.Records) {
+    if (timeout) break;
     const decoded = JSON.parse(
       unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
     );
     if (decoded.messageType !== "DATA_MESSAGE") continue;
     try {
       await Issue.extract(decoded);
+      incomplete.pop();
     } catch (ex) {
       console.error(ex);
     }
   }
 
-  return "success";
+  const response = {
+    batchItemFailures: incomplete.map((id) => ({
+      itemIdentifier: id,
+    })),
+  };
+  console.log(response);
+
+  return response;
 });
