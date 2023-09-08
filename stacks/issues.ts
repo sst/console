@@ -10,6 +10,7 @@ import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { Storage } from "./storage";
 import { StartingPosition } from "aws-cdk-lib/aws-lambda";
+import { StreamMode } from "aws-cdk-lib/aws-kinesis";
 
 export function Issues({ stack }: StackContext) {
   const secrets = use(Secrets);
@@ -20,7 +21,7 @@ export function Issues({ stack }: StackContext) {
       consumer: {
         function: {
           handler: "packages/functions/src/issues/subscriber.handler",
-          timeout: "1 minutes",
+          timeout: "2 minutes",
           memorySize: "2 GB",
           nodejs: {
             install: ["source-map"],
@@ -40,7 +41,7 @@ export function Issues({ stack }: StackContext) {
     },
     cdk: {
       stream: {
-        shardCount: 4,
+        streamMode: StreamMode.ON_DEMAND,
       },
     },
   });

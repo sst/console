@@ -302,7 +302,8 @@ export function createScan<T extends any>(
 
   const [data, setData] = createStore<T[]>([]);
   const [ready, setReady] = createSignal(false);
-  const pointers = new Map<string, number>();
+  const keyToIndex = new Map<string, number>();
+  const indexToKey = new Map<number, string>();
 
   createEffect(() => {
     if (unsubscribe) unsubscribe();
@@ -321,8 +322,10 @@ export function createScan<T extends any>(
             const values: T[] = [];
             for (const diff of diffs) {
               if (diff.op === "add") {
-                const index = values.push(structuredClone(diff.newValue) as T);
-                pointers.set(diff.key, index - 1);
+                const value = structuredClone(diff.newValue) as T;
+                const index = values.push(value);
+                keyToIndex.set(diff.key, index - 1);
+                indexToKey.set(index - 1, diff.key);
               }
             }
             setData(values);
@@ -334,19 +337,28 @@ export function createScan<T extends any>(
               for (const diff of diffs) {
                 if (diff.op === "add") {
                   const index = state.push(structuredClone(diff.newValue) as T);
-                  pointers.set(diff.key, index - 1);
+                  keyToIndex.set(diff.key, index - 1);
+                  indexToKey.set(index - 1, diff.key);
                 }
                 if (diff.op === "change") {
-                  state[pointers.get(diff.key)!] = reconcile(
+                  state[keyToIndex.get(diff.key)!] = reconcile(
                     structuredClone(diff.newValue) as T
                   )(structuredClone(diff.oldValue));
                 }
                 if (diff.op === "del") {
-                  const toRemove = pointers.get(diff.key);
+                  const toRemove = keyToIndex.get(diff.key)!;
                   const last = state[state.length - 1];
-                  state[toRemove!] = last;
+                  const lastKey = indexToKey.get(state.length - 1)!;
+
+                  state[toRemove] = last;
+                  keyToIndex.delete(diff.key);
+                  indexToKey.delete(toRemove);
+
+                  keyToIndex.set(lastKey, toRemove);
+                  indexToKey.set(toRemove, lastKey);
+                  indexToKey.delete(state.length - 1);
+
                   state.pop();
-                  pointers.delete(diff.key);
                 }
               }
             })
