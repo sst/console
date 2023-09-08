@@ -75,8 +75,11 @@ const FrameTitle = styled("div", {
 
 const FrameContext = styled("div", {
   base: {
-    padding: `${theme.space[1]} ${theme.space[5]} ${theme.space[1]} ${theme.space[5]}`,
+    padding: `${theme.space[1]} ${theme.space[5]}`,
     borderTop: `1px solid ${theme.color.divider.surface}`,
+    ":first-child": {
+      borderTop: "none",
+    },
   },
 });
 
@@ -227,6 +230,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                         <Text
                           code
                           on="surface"
+                          disableSelect
                           size="mono_sm"
                           leading="loose"
                           color={index() === 3 ? "primary" : "dimmed"}

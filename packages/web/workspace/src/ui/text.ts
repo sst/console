@@ -50,6 +50,12 @@ export const Text = styled("span", {
         textOverflow: "ellipsis",
       },
     },
+    disableSelect: {
+      true: {
+        userSelect: "none",
+        WebkitUserSelect: "none",
+      },
+    },
     size: (() => {
       const result = {} as Record<`${keyof typeof theme.font.size}`, any>;
       for (const [key, value] of Object.entries(theme.font.size)) {
