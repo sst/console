@@ -370,7 +370,9 @@ export const TabTitleRoot = styled("div", {
     state: {
       active: {},
       inactive: {},
-      disabled: {},
+      disabled: {
+        pointerEvents: "none",
+      },
     },
   },
   defaultVariants: {},

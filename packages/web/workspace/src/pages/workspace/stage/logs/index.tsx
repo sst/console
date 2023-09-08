@@ -821,9 +821,7 @@ export function Logs() {
                           <Show when={mode() === "live"}>
                             <TabTitle
                               size="mono_sm"
-                              onClick={() =>
-                                invocation.event && setTab("request")
-                              }
+                              onClick={() => setTab("request")}
                               state={
                                 !invocation.event
                                   ? "disabled"
@@ -836,9 +834,7 @@ export function Logs() {
                             </TabTitle>
                             <TabTitle
                               size="mono_sm"
-                              onClick={() =>
-                                invocation.response && setTab("response")
-                              }
+                              onClick={() => setTab("response")}
                               state={
                                 !invocation.response
                                   ? "disabled"
