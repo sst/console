@@ -152,6 +152,8 @@ export const extract = zod(
           return createHash("sha256").update(parts).digest("hex");
         })();
 
+        console.log("found error", err.error, err.message);
+
         await db
           .insert(issue)
           .values(
@@ -263,6 +265,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
       if (exists.has(fn.id)) continue;
       // @ts-expect-error
       const logGroup = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
+      console.log("subscribing", logGroup);
 
       while (true) {
         try {
@@ -271,6 +274,7 @@ export const subscribe = zod(Info.shape.stageID, async (stageID) => {
               destinationArn: destination,
               filterName: uniqueIdentifier,
               filterPattern: [
+                `?"Invoke Error"`,
                 // OOM and other runtime error
                 `?"Error: Runtime exited"`,
                 // Timeout

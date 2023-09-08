@@ -32,7 +32,7 @@ export function Issues({ stack }: StackContext) {
     },
     cdk: {
       stream: {
-        shardCount: 2,
+        shardCount: 1,
       },
     },
   });
