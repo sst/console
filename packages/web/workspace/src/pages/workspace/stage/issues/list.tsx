@@ -184,7 +184,6 @@ export function List() {
                 <IssueRow
                   issue={issue}
                   unread
-                  count={119}
                   handler="/packages/functions/src/events/log-poller-status.handler"
                 />
               )}
@@ -237,7 +236,6 @@ type IssueProps = {
   issue: Issue.Info;
   handler: string;
   unread: boolean;
-  count: number;
 };
 
 function IssueRow(props: IssueProps) {
@@ -266,8 +264,8 @@ function IssueRow(props: IssueProps) {
         </Stack>
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_COUNT_WIDTH}px` }}>
-        <Text code size="mono_base" title={props.count.toString()}>
-          {formatNumber(props.count, true)}
+        <Text code size="mono_base" title={props.issue.count?.toString()}>
+          {formatNumber(props.issue.count || 1, true)}
         </Text>
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_TIME_WIDTH}px` }}>

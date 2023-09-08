@@ -168,12 +168,14 @@ export const extract = zod(
               workspaceID: row.workspaceID,
               error: err.error,
               message: err.message,
+              count: 1,
               stageID: row.stageID,
             }))
           )
           .onDuplicateKeyUpdate({
             set: {
               error: sql`VALUES(error)`,
+              count: sql`count + 1`,
               errorID: sql`VALUES(error_id)`,
               message: sql`VALUES(message)`,
               timeUpdated: sql`CURRENT_TIMESTAMP()`,

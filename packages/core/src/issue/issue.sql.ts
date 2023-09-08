@@ -1,5 +1,6 @@
 import {
   index,
+  bigint,
   json,
   mysqlTable,
   primaryKey,
@@ -23,6 +24,9 @@ export const issue = mysqlTable(
     errorID: varchar("error_id", { length: 255 }).notNull(),
     group: varchar("group", { length: 255 }).notNull(),
     stack: json("stack").$type<StackFrame[]>(),
+    count: bigint("count", {
+      mode: "number",
+    }),
     timeResolved: timestamp("time_resolved", {
       mode: "string",
     }),
