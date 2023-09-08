@@ -1,13 +1,15 @@
 import { JSX } from "solid-js";
 import { theme } from "$/ui/theme";
-import { utility } from "$/ui/utility";
+import { utility, Row } from "$/ui";
 import { styled } from "@macaron-css/solid";
+import { ComponentProps, Show } from "solid-js";
 import { IconXCircle, IconExclamationTriangle } from "$/ui/icons";
 
 const AlertRoot = styled("div", {
   base: {
-    ...utility.row(2.5),
-    alignItems: "flex-start",
+    ...utility.row(3),
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: theme.color.background.surface,
     borderRadius: theme.borderRadius,
     padding: `${theme.space[4]} ${theme.space[4]}`,
@@ -59,21 +61,32 @@ const AlertText = styled("div", {
   },
 });
 
-interface AlertProps {
-  children: JSX.Element;
-  level?: "info" | "danger";
-}
+const AlertDetails = styled(AlertText, {
+  base: {
+    textDecoration: "underline",
+    textUnderlineOffset: 2,
+  },
+});
+
+type AlertProps = ComponentProps<typeof AlertRoot> & {
+  hasDetails?: boolean;
+};
 export function Alert(props: AlertProps) {
   return (
-    <AlertRoot level={props.level}>
-      <AlertIcon>
-        {props.level === "danger" ? (
-          <IconXCircle />
-        ) : (
-          <IconExclamationTriangle />
-        )}
-      </AlertIcon>
-      <AlertText>{props.children}</AlertText>
+    <AlertRoot {...props}>
+      <Row space="2.5" vertical="start">
+        <AlertIcon>
+          {props.level === "danger" ? (
+            <IconXCircle />
+          ) : (
+            <IconExclamationTriangle />
+          )}
+        </AlertIcon>
+        <AlertText>{props.children}</AlertText>
+      </Row>
+      <Show when={props.hasDetails}>
+        <AlertDetails>Details</AlertDetails>
+      </Show>
     </AlertRoot>
   );
 }

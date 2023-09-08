@@ -436,8 +436,6 @@ export function Design() {
           <Grower>
             <Alert level="info">
               This is an info alert. You don't need to take it very seriously.
-              But it is a long info alert that will overflow. And we want to
-              test how long it can really get. So here is some more text.
             </Alert>
           </Grower>
         </Variant>
@@ -445,6 +443,31 @@ export function Design() {
           <Grower>
             <Alert level="danger">
               This is a danger alert. You need to take it very seriously.
+            </Alert>
+          </Grower>
+        </Variant>
+        <Variant name="Details">
+          <Grower>
+            <Alert hasDetails level="danger">
+              This is a danger alert. You need to take it very seriously.
+            </Alert>
+          </Grower>
+        </Variant>
+        <Variant name="Multi Line">
+          <Grower>
+            <Alert level="info">
+              This is an info alert. You don't need to take it very seriously.
+              But it is a long info alert that will overflow. And we want to
+              test how long it can really get. So here is some more text.
+            </Alert>
+          </Grower>
+        </Variant>
+        <Variant name="Multi Line Details">
+          <Grower>
+            <Alert hasDetails level="info">
+              This is an info alert. You don't need to take it very seriously.
+              But it is a long info alert that will overflow. And we want to
+              test how long it can really get. So here is some more text.
             </Alert>
           </Grower>
         </Variant>
