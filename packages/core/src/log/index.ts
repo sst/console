@@ -69,7 +69,10 @@ export function createSourcemapCache(input: {
   config: StageCredentials;
   functionArn: string;
 }) {
-  const s3bootstrap = new S3Client(input.config);
+  const s3bootstrap = new S3Client({
+    ...input.config,
+    retryStrategy: RETRY_STRATEGY,
+  });
   const sourcemapCache = new Map<string, SourceMapConsumer>();
 
   const getBootstrap = lazy(() => AWS.Account.bootstrap(input.config));
@@ -93,7 +96,7 @@ export function createSourcemapCache(input: {
   });
 
   return {
-    get: async (number: number) => {
+    async get(number: number) {
       const match = pipe(
         await sourcemapsMeta(),
         filter((x) => x.created < number),
