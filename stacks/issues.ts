@@ -20,7 +20,7 @@ export function Issues({ stack }: StackContext) {
       consumer: {
         function: {
           handler: "packages/functions/src/issues/subscriber.handler",
-          timeout: "2 minutes",
+          timeout: "15 minutes",
           memorySize: "2 GB",
           nodejs: {
             install: ["source-map"],
@@ -38,7 +38,7 @@ export function Issues({ stack }: StackContext) {
     },
     cdk: {
       stream: {
-        shardCount: 1,
+        shardCount: 4,
       },
     },
   });
