@@ -133,18 +133,15 @@ export const extract = zod(
 
         const group = (() => {
           const frames = err.stack
-            .flatMap((x) => {
+            .map((x) => {
               if (x.file) {
-                if (!x.important) return [];
                 return x.context?.[3] || x.file;
               }
 
               return x.raw!;
             })
             .map((x) => x.trim());
-          const parts = [err.error, frames[0], ...frames.slice(1, 4).sort()]
-            .filter(Boolean)
-            .join("\n");
+          const parts = [err.error, frames[0]].filter(Boolean).join("\n");
 
           return createHash("sha256").update(parts).digest("hex");
         })();
@@ -178,7 +175,6 @@ export const extract = zod(
           .execute();
       })
     );
-    processor.destroy();
 
     for (const row of workspaces) {
       provideActor({
