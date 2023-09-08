@@ -448,7 +448,15 @@ export function Design() {
         </Variant>
         <Variant name="Details">
           <Grower>
-            <Alert hasDetails level="danger">
+            <Alert
+              level="danger"
+              details={`We could not enable issues for these functions:
+  - function1 (not found)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+
+Read more about it over on our docs`}
+            >
               This is a danger alert. You need to take it very seriously.
             </Alert>
           </Grower>
@@ -464,7 +472,7 @@ export function Design() {
         </Variant>
         <Variant name="Multi Line Details">
           <Grower>
-            <Alert hasDetails level="info">
+            <Alert details="Read more about it on our docs." level="info">
               This is an info alert. You don't need to take it very seriously.
               But it is a long info alert that will overflow. And we want to
               test how long it can really get. So here is some more text.
@@ -640,7 +648,7 @@ export function Design() {
             <OverflowSpan>
               /notes/settings/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long
             </OverflowSpan>
-            <Row shrink={false} space="1">
+            <Row flex={false} space="1">
               <span>11.2 MB</span>
               <span>us-east-1</span>
             </Row>

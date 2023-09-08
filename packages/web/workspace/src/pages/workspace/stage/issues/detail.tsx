@@ -78,24 +78,6 @@ const ButtonIcon = styled("span", {
   },
 });
 
-type LabelProps = ComponentProps<typeof Text> & {};
-
-function Label(props: LabelProps) {
-  return (
-    <Text
-      code
-      uppercase
-      on="surface"
-      size="mono_sm"
-      weight="medium"
-      color="dimmed"
-      {...props}
-    >
-      {props.children}
-    </Text>
-  );
-}
-
 export function Detail() {
   const status = "resolved" as "ignored" | "resolved" | "active";
   const params = useParams();
@@ -120,13 +102,17 @@ export function Detail() {
               </Stack>
             </Stack>
             <Stack space="2">
-              <Label>Stack Trace</Label>
+              <Text label on="surface" size="mono_sm" color="dimmed">
+                Stack Trace
+              </Text>
               <StackTraceBackground>
                 <StackTrace stack={issue().stack || []} />
               </StackTraceBackground>
             </Stack>
             <Stack space="2">
-              <Label>Logs</Label>
+              <Text label on="surface" size="mono_sm" color="dimmed">
+                Logs
+              </Text>
               <LogsMock>
                 <LogsMockRow />
                 <LogsMockRow />
@@ -162,7 +148,9 @@ export function Detail() {
               </Button>
             </ButtonGroup>
             <Stack space="2">
-              <Label>Status</Label>
+              <Text label on="surface" size="mono_sm" color="dimmed">
+                Status
+              </Text>
               <Row>
                 <Switch>
                   <Match when={status === "active"}>
@@ -178,7 +166,9 @@ export function Detail() {
               </Row>
             </Stack>
             <Stack space="2">
-              <Label>Last Seen</Label>
+              <Text label on="surface" size="mono_sm" color="dimmed">
+                Last Seen
+              </Text>
               <Text
                 title={parseTime(issue().timeUpdated).toLocaleString(
                   DateTime.DATETIME_FULL
@@ -189,7 +179,9 @@ export function Detail() {
               </Text>
             </Stack>
             <Stack space="2">
-              <Label>First Seen</Label>
+              <Text label on="surface" size="mono_sm" color="dimmed">
+                First Seen
+              </Text>
               <Text
                 title={parseTime(issue().timeCreated).toLocaleString(
                   DateTime.DATETIME_FULL
@@ -200,7 +192,9 @@ export function Detail() {
               </Text>
             </Stack>
             <Stack space="2">
-              <Label>Events in last 24hrs</Label>
+              <Text label on="surface" size="mono_sm" color="dimmed">
+                Events in last 24hrs
+              </Text>
               <Text color="secondary" title={(7321).toString()}>
                 {formatNumber(7321, true)}
               </Text>

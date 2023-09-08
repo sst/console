@@ -1,18 +1,16 @@
-import { JSX } from "solid-js";
+import { JSX, createSignal } from "solid-js";
 import { theme } from "$/ui/theme";
-import { utility, Row } from "$/ui";
+import { utility, Row, Text, Stack } from "$/ui";
+import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { ComponentProps, Show } from "solid-js";
 import { IconXCircle, IconExclamationTriangle } from "$/ui/icons";
 
 const AlertRoot = styled("div", {
   base: {
-    ...utility.row(3),
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: theme.color.background.surface,
+    padding: theme.space[4],
     borderRadius: theme.borderRadius,
-    padding: `${theme.space[4]} ${theme.space[4]}`,
+    backgroundColor: theme.color.background.surface,
   },
   variants: {
     level: {
@@ -24,16 +22,14 @@ const AlertRoot = styled("div", {
       },
     },
   },
-  defaultVariants: {
-    level: "info",
-  },
 });
 
 const AlertIcon = styled("div", {
   base: {
+    flex: "0 0 auto",
     width: 16,
     height: 16,
-    paddingTop: 3,
+    marginTop: 3,
     opacity: theme.iconOpacity,
     selectors: {
       [`${AlertRoot.selector({ level: "info" })} &`]: {
@@ -61,32 +57,76 @@ const AlertText = styled("div", {
   },
 });
 
-const AlertDetails = styled(AlertText, {
+const alertDetailsTextCs = style({
+  selectors: {
+    [`${AlertRoot.selector({ level: "info" })} &`]: {
+      color: theme.color.text.secondary.base,
+    },
+    [`${AlertRoot.selector({ level: "danger" })} &`]: {
+      color: `hsla(${theme.color.red.l2}, 100%)`,
+    },
+  },
+});
+
+const AlertTextDetails = styled("div", {
   base: {
-    textDecoration: "underline",
-    textUnderlineOffset: 2,
+    borderStyle: "solid",
+    borderWidth: "1px 0 0 0",
+    paddingTop: theme.space[3],
+    selectors: {
+      [`${AlertRoot.selector({ level: "info" })} &`]: {
+        borderColor: theme.color.divider.surface,
+      },
+      [`${AlertRoot.selector({ level: "danger" })} &`]: {
+        borderColor: theme.color.divider.danger,
+      },
+    },
   },
 });
 
 type AlertProps = ComponentProps<typeof AlertRoot> & {
-  hasDetails?: boolean;
+  details?: JSX.Element;
 };
 export function Alert(props: AlertProps) {
+  const [expanded, setExpanded] = createSignal(false);
+
   return (
     <AlertRoot {...props}>
-      <Row space="2.5" vertical="start">
-        <AlertIcon>
-          {props.level === "danger" ? (
-            <IconXCircle />
-          ) : (
-            <IconExclamationTriangle />
-          )}
-        </AlertIcon>
-        <AlertText>{props.children}</AlertText>
+      <Row space="4" vertical="start" horizontal="between">
+        <Row flex space="2.5" vertical="start">
+          <AlertIcon>
+            {props.level === "danger" ? (
+              <IconXCircle />
+            ) : (
+              <IconExclamationTriangle />
+            )}
+          </AlertIcon>
+          <Stack flex space="3" style={{ flex: "1" }}>
+            <AlertText>{props.children}</AlertText>
+            <Show when={props.details && expanded()}>
+              <AlertTextDetails>
+                <Text pre size="sm" leading="loose" class={alertDetailsTextCs}>
+                  {props.details}
+                </Text>
+              </AlertTextDetails>
+            </Show>
+          </Stack>
+        </Row>
+        <Show when={props.details}>
+          <Text
+            label
+            underline
+            size="mono_xs"
+            class={alertDetailsTextCs}
+            style={{ "margin-top": "4px" }}
+            onClick={() => setExpanded(!expanded())}
+          >
+            <Show when={!expanded()} fallback="Hide">
+              Details
+            </Show>
+          </Text>
+        </Show>
       </Row>
-      <Show when={props.hasDetails}>
-        <AlertDetails>Details</AlertDetails>
-      </Show>
     </AlertRoot>
   );
 }

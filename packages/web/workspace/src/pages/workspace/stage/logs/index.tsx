@@ -771,7 +771,7 @@ export function Logs() {
                       });
                     }}
                   >
-                    <Row shrink={false} space="2" vertical="center">
+                    <Row flex={false} space="2" vertical="center">
                       <CaretIcon>
                         <IconCaretRight />
                       </CaretIcon>

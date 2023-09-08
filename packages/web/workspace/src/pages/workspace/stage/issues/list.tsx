@@ -6,7 +6,7 @@ import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { Link } from "@solidjs/router";
 import { theme } from "$/ui/theme";
 import type { Issue } from "@console/core/issue";
-import { For, createEffect } from "solid-js";
+import { For, Show, createEffect } from "solid-js";
 import { useIssuesContext } from "../context";
 
 const COL_COUNT_WIDTH = 80;
@@ -102,6 +102,15 @@ const IssuesList = styled("div", {
   },
 });
 
+const EmptyIssuesSign = styled("div", {
+  base: {
+    ...utility.stack(0),
+    alignItems: "center",
+    justifyContent: "center",
+    padding: `${theme.space[32]} ${theme.space[4]}`,
+  },
+});
+
 export function List() {
   const issues = useIssuesContext();
   createEffect(() => {
@@ -179,15 +188,26 @@ export function List() {
             </IssuesHeaderCol>
           </IssuesHeader>
           <IssuesList>
-            <For each={issues()}>
-              {(issue) => (
-                <IssueRow
-                  issue={issue}
-                  unread
-                  handler="/packages/functions/src/events/log-poller-status.handler"
-                />
-              )}
-            </For>
+            <Show
+              when={issues().length !== 0}
+              fallback={
+                <EmptyIssuesSign>
+                  <Text size="lg" color="dimmed">
+                    No issues found
+                  </Text>
+                </EmptyIssuesSign>
+              }
+            >
+              <For each={issues()}>
+                {(issue) => (
+                  <IssueRow
+                    issue={issue}
+                    unread
+                    handler="/packages/functions/src/events/log-poller-status.handler"
+                  />
+                )}
+              </For>
+            </Show>
           </IssuesList>
         </div>
       </Stack>

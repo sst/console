@@ -17,6 +17,14 @@ export const Stack = styled("div", {
       }
       return result;
     })(),
+    flex: {
+      true: {
+        flex: "1 1 auto",
+      },
+      false: {
+        flex: "0 0 auto",
+      },
+    },
     horizontal: {
       center: {
         alignItems: "center",
@@ -60,12 +68,12 @@ export const Row = styled("div", {
       }
       return result;
     })(),
-    shrink: {
+    flex: {
       true: {
-        flex: 1,
+        flex: "1 1 auto",
       },
       false: {
-        flex: "none",
+        flex: "0 0 auto",
       },
     },
     vertical: {

@@ -56,6 +56,26 @@ export const Text = styled("span", {
         WebkitUserSelect: "none",
       },
     },
+    pre: {
+      true: {
+        whiteSpace: "pre-wrap",
+        overflowWrap: "break-word",
+      },
+    },
+    underline: {
+      true: {
+        textUnderlineOffset: 2,
+        textDecoration: "underline",
+      },
+    },
+    label: {
+      true: {
+        fontWeight: 500,
+        letterSpacing: 0.5,
+        textTransform: "uppercase",
+        fontFamily: theme.font.family.code,
+      },
+    },
     size: (() => {
       const result = {} as Record<`${keyof typeof theme.font.size}`, any>;
       for (const [key, value] of Object.entries(theme.font.size)) {

@@ -136,132 +136,135 @@ export function StackTrace(props: { stack: StackFrame[] }) {
       {(frame, index) => {
         const expanded = createMemo(() => expand() === index());
         return (
-          <Frame>
-            <FrameInfo
-              dimmed={!frame.important && Boolean(frame.file)}
-              onClick={() => {
-                if (!frame.context) return;
-                setExpand(index());
-              }}
-            >
-              <FrameExpand>
-                <Show when={frame.context}>
-                  <Show
-                    when={expand() === index()}
-                    fallback={<IconChevronRight width="12" height="12" />}
-                  >
-                    <IconChevronDown width="12" height="12" />
+          // If raw, remove empty lines
+          <Show
+            when={
+              frame.raw === undefined ||
+              (frame.raw !== undefined && frame.raw.trim() !== "")
+            }
+          >
+            <Frame>
+              <FrameInfo
+                dimmed={!frame.important && Boolean(frame.file)}
+                onClick={() => {
+                  if (!frame.context) return;
+                  setExpand(index());
+                }}
+              >
+                <FrameExpand>
+                  <Show when={frame.context}>
+                    <Show
+                      when={expand() === index()}
+                      fallback={<IconChevronRight width="12" height="12" />}
+                    >
+                      <IconChevronDown width="12" height="12" />
+                    </Show>
                   </Show>
-                </Show>
-              </FrameExpand>
-              <FrameTitle>
-                <Show when={frame.raw}>
-                  <Text
-                    code
-                    leading="loose"
-                    color="primary"
-                    on="surface"
-                    size="mono_sm"
-                  >
-                    {frame.raw}
-                  </Text>
-                </Show>
-                <Show when={!frame.raw}>
-                  <Show when={frame.fn}>
+                </FrameExpand>
+                <FrameTitle>
+                  <Show when={frame.raw}>
+                    <Text
+                      pre
+                      code
+                      on="surface"
+                      leading="loose"
+                      color="primary"
+                      size="mono_sm"
+                    >
+                      {frame.raw}
+                    </Text>
+                  </Show>
+                  <Show when={!frame.raw}>
+                    <Show when={frame.fn}>
+                      <Text
+                        code
+                        on="surface"
+                        size="mono_sm"
+                        color="primary"
+                        leading="normal"
+                        weight={expand() === index() ? "semibold" : undefined}
+                      >
+                        {frame.fn!}
+                      </Text>
+                      <SpanSpacer space="3" />
+                    </Show>
                     <Text
                       code
                       on="surface"
                       size="mono_sm"
                       color="primary"
                       leading="normal"
-                      weight={expand() === index() ? "semibold" : undefined}
-                    >
-                      {frame.fn!}
-                    </Text>
-                    <SpanSpacer space="3" />
-                  </Show>
-                  <Text
-                    code
-                    on="surface"
-                    size="mono_sm"
-                    color="primary"
-                    leading="normal"
-                    weight={
-                      frame.fn
-                        ? expand() === index()
-                          ? "medium"
+                      weight={
+                        frame.fn
+                          ? expand() === index()
+                            ? "medium"
+                            : undefined
+                          : expand() === index()
+                          ? "semibold"
                           : undefined
-                        : expand() === index()
-                        ? "semibold"
-                        : undefined
-                    }
-                  >
-                    {frame.file!}
-                  </Text>
-                  <SpanSpacer space="2" />
-                  <Text
-                    code
-                    leading="normal"
-                    on="surface"
-                    color="secondary"
-                    size="mono_sm"
-                  >
-                    {frame.line!}
+                      }
+                    >
+                      {frame.file!}
+                    </Text>
+                    <SpanSpacer space="2" />
                     <Text
                       code
                       leading="normal"
                       on="surface"
-                      color="dimmed"
+                      color="secondary"
                       size="mono_sm"
                     >
-                      :
-                    </Text>
-                    {frame.column!}
-                  </Text>
-                </Show>
-              </FrameTitle>
-            </FrameInfo>
-            <Show when={frame.context && expanded()}>
-              <FrameContext>
-                <For each={frame.context}>
-                  {(line, index) => (
-                    <FrameContextRow>
-                      <FrameContextNumber>
-                        <Text
-                          code
-                          on="surface"
-                          disableSelect
-                          size="mono_sm"
-                          leading="loose"
-                          color={index() === 3 ? "primary" : "dimmed"}
-                          weight={index() === 3 ? "semibold" : "regular"}
-                        >
-                          {index() + frame.line! - 3}
-                        </Text>
-                      </FrameContextNumber>
+                      {frame.line!}
                       <Text
                         code
+                        leading="normal"
                         on="surface"
+                        color="dimmed"
                         size="mono_sm"
-                        leading="loose"
-                        color={index() === 3 ? "primary" : "secondary"}
-                        weight={index() === 3 ? "medium" : "regular"}
                       >
-                        <pre
-                          style={{
-                            "white-space": "pre-wrap",
-                            "word-break": "break-word",
-                          }}
+                        :
+                      </Text>
+                      {frame.column!}
+                    </Text>
+                  </Show>
+                </FrameTitle>
+              </FrameInfo>
+              <Show when={frame.context && expanded()}>
+                <FrameContext>
+                  <For each={frame.context}>
+                    {(line, index) => (
+                      <FrameContextRow>
+                        <FrameContextNumber>
+                          <Text
+                            code
+                            on="surface"
+                            disableSelect
+                            size="mono_sm"
+                            leading="loose"
+                            color={index() === 3 ? "primary" : "dimmed"}
+                            weight={index() === 3 ? "semibold" : "regular"}
+                          >
+                            {index() + frame.line! - 3}
+                          </Text>
+                        </FrameContextNumber>
+                        <Text
+                          pre
+                          code
+                          on="surface"
+                          size="mono_sm"
+                          leading="loose"
+                          weight={index() === 3 ? "medium" : "regular"}
+                          color={index() === 3 ? "primary" : "secondary"}
                         >
                           {line}
-                        </pre>
-                      </Text>
-                    </FrameContextRow>
-                  )}
-                </For>
-              </FrameContext>
-            </Show>
-          </Frame>
+                        </Text>
+                      </FrameContextRow>
+                    )}
+                  </For>
+                </FrameContext>
+              </Show>
+            </Frame>
+          </Show>
         );
       }}
     </For>

@@ -153,6 +153,7 @@ const light = (() => {
   const divider = {
     base: `hsla(${base.black}, 8%)`,
     surface: `hsla(${base.black}, 6%)`,
+    danger: `hsla(${red.l2}, 20%)`,
   };
 
   const text = {
@@ -374,6 +375,7 @@ const dark = ((): typeof light => {
   const divider = {
     base: `hsla(${base.white}, 6%)`,
     surface: `hsla(${base.white}, 8%)`,
+    danger: `hsla(${red.l2}, 13%)`,
   };
 
   const text = {

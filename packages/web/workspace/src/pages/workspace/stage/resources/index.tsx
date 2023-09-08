@@ -784,7 +784,7 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
               {formatPath(props.resource.metadata.path)}
             </ChildTitleLink>
           </Row>
-          <Row shrink={false} space="3" vertical="center">
+          <Row flex={false} space="3" vertical="center">
             <ChildIcon>
               <IconNodeRuntime />
             </ChildIcon>
@@ -851,7 +851,7 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
               {formatPath(props.resource.metadata.path)}
             </ChildTitleLink>
           </Row>
-          <Row shrink={false} space="3" vertical="center">
+          <Row flex={false} space="3" vertical="center">
             <ChildIcon>
               <IconNodeRuntime />
             </ChildIcon>
@@ -1037,7 +1037,7 @@ function FunctionChild(props: {
               </Show>
             </ChildTitleLink>
           </Row>
-          <Row shrink={false} space="3" vertical="center">
+          <Row flex={false} space="3" vertical="center">
             <Show when={exists().enrichment.size}>
               {(value) => {
                 const formattedSize = formatBytes(value());
