@@ -76,12 +76,15 @@ export function createSourcemapCache(input: {
   const sourcemapsMeta = lazy(async () => {
     const bootstrap = await getBootstrap();
     if (!bootstrap) return [];
-    const result = await s3bootstrap.send(
-      new ListObjectsV2Command({
-        Bucket: bootstrap.bucket,
-        Prefix: `sourcemap/${input.config.app}/${input.config.stage}/${input.functionArn}`,
-      })
-    );
+    const result = await s3bootstrap
+      .send(
+        new ListObjectsV2Command({
+          Bucket: bootstrap.bucket,
+          Prefix: `sourcemap/${input.config.app}/${input.config.stage}/${input.functionArn}`,
+        })
+      )
+      .catch(() => {});
+    if (!result) return [];
     const maps = (result.Contents || []).map((item) => ({
       key: item.Key!,
       created: item.LastModified!.getTime(),

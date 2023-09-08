@@ -107,7 +107,7 @@ export const extract = zod(
       `arn:aws:lambda:${region}:${accountID}:function:` +
       input.logGroup.split("/").pop();
 
-    await Promise.all(
+    await Promise.allSettled(
       input.logEvents.map(async (event) => {
         const processor = Log.createProcessor({
           arn: functionArn,
