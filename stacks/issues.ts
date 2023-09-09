@@ -83,7 +83,6 @@ export function Issues({ stack }: StackContext) {
         resources: [kinesisRole.roleArn],
       }),
     ],
-    environment: {},
     bind: [
       bus,
       ...Object.values(secrets.database),
@@ -93,17 +92,6 @@ export function Issues({ stack }: StackContext) {
         value: `arn:aws:logs:<region>:${stack.account}:destination:`,
       }),
     ],
-  });
-
-  bus.subscribe(stack, "issue.error_detected", {
-    handler: "packages/functions/src/issues/error-detected.handler",
-    timeout: "1 minute",
-    memorySize: "2 GB",
-    nodejs: {
-      install: ["source-map"],
-    },
-    bind: [bus, use(Storage), ...Object.values(secrets.database)],
-    permissions: ["sts"],
   });
 
   bus.subscribe(stack, "app.stage.connected", {
