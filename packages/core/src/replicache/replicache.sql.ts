@@ -5,7 +5,6 @@ import {
   json,
   mysqlTable,
   primaryKey,
-  unique,
 } from "drizzle-orm/mysql-core";
 import { timestamps, id } from "../util/sql";
 import { Actor } from "../actor";

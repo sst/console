@@ -19,7 +19,9 @@ const TransactionContext = Context.create<{
   effects: (() => void | Promise<void>)[];
 }>();
 
-export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
+export async function useTransaction<T>(
+  callback: (trx: Transaction) => Promise<T>
+) {
   try {
     const { tx } = TransactionContext.use();
     try {
@@ -28,12 +30,11 @@ export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
       throw err;
     }
   } catch {
-    return db.transaction(
+    const effects: (() => void | Promise<void>)[] = [];
+    const result = db.transaction(
       async (tx) => {
-        const effects: (() => void | Promise<void>)[] = [];
         TransactionContext.provide({ tx, effects });
         const result = await callback(tx);
-        await Promise.all(effects.map((x) => x()));
         TransactionContext.reset();
         return result;
       },
@@ -41,6 +42,8 @@ export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
         isolationLevel: "serializable",
       }
     );
+    await Promise.all(effects.map((x) => x()));
+    return result;
   }
 }
 

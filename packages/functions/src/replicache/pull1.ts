@@ -20,6 +20,7 @@ import { log_poller, log_search } from "@console/core/log/log.sql";
 import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 import { warning } from "@console/core/warning/warning.sql";
 import { issue, issueSubscriber } from "@console/core/issue/issue.sql";
+import { compress } from "@console/core/util/compress";
 
 export const handler = ApiHandler(async () => {
   provideActor(await useApiAuth());
@@ -287,6 +288,13 @@ export const handler = ApiHandler(async () => {
           })
           .execute();
 
+        const data = JSON.stringify(nextCvr.data);
+        const compressed = await compress(data);
+        console.log(
+          "compare",
+          compressed.toString("base64").length,
+          Buffer.from(data).toString("base64").length
+        );
         await tx
           .insert(replicache_cvr)
           .values({

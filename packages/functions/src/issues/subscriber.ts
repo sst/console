@@ -18,7 +18,6 @@ export const handler = Handler("kinesis_stream", async (event) => {
     type: "public",
     properties: {},
   });
-  return;
   const incomplete: string[] = event.Records.map((r) => r.eventID).reverse();
   let timeout = false;
   setTimeout(() => {

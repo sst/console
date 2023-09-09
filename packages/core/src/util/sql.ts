@@ -34,3 +34,17 @@ export const timestamps = {
     mode: "string",
   }),
 };
+
+import { customType } from "drizzle-orm/pg-core";
+
+/*
+const blob = <TData>(name: string) =>
+  customType<{ data: TData; driverData: Buffer }>({
+    dataType() {
+      return "jsonb";
+    },
+    toDriver(value: TData): string {
+      return JSON.stringify(value);
+    },
+  })(name);
+  */

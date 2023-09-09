@@ -1,4 +1,5 @@
 import {
+  index,
   mysqlTable,
   primaryKey,
   timestamp,
@@ -20,5 +21,6 @@ export const user = mysqlTable(
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),
     email: uniqueIndex("email").on(table.workspaceID, table.email),
+    emailGlobal: index("email_global").on(table.email),
   })
 );
