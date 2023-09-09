@@ -45,7 +45,6 @@ export const handler = Handler("kinesis_stream", async (event) => {
       itemIdentifier: id,
     })),
   };
-  console.log(response);
 
   return response;
 });
