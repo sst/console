@@ -2,10 +2,10 @@ import { createHash } from "crypto";
 import { provideActor, useWorkspace } from "../actor";
 import { AWS } from "../aws";
 import { awsAccount } from "../aws/aws.sql";
-import { and, db, eq, isNull, sql } from "../drizzle";
+import { and, db, eq, inArray, isNull, sql } from "../drizzle";
 import { Log } from "../log";
 import { app, stage } from "../app/app.sql";
-import { issue, issueSubscriber } from "./issue.sql";
+import { issue, issueCounts, issueSubscriber } from "./issue.sql";
 import { createId } from "@paralleldrive/cuid2";
 import {} from "@smithy/middleware-retry";
 import { zod } from "../util/zod";
@@ -28,6 +28,8 @@ import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
 import { Replicache } from "../replicache";
+import { createTransaction } from "../util/transaction";
+import { DateTime } from "luxon";
 
 export * as Issue from "./index";
 
@@ -150,36 +152,76 @@ export const extract = zod(
 
         console.log("found error", err.error, err.message);
 
-        await db
-          .insert(issue)
-          .values(
-            workspaces.map((row) => ({
-              group,
-              stack: err.stack,
-              id: createId(),
-              errorID: "none",
-              pointer: {
-                timestamp: event.timestamp,
-                logGroup: input.logGroup,
-                logStream: logStream,
+        await createTransaction(async (tx) => {
+          const result = await tx
+            .insert(issue)
+            .values(
+              workspaces.map((row) => ({
+                group,
+                stack: err.stack,
+                id: createId(),
+                errorID: "none",
+                pointer: {
+                  timestamp: event.timestamp,
+                  logGroup: input.logGroup,
+                  logStream: logStream,
+                },
+                workspaceID: row.workspaceID,
+                error: err.error,
+                message: err.message,
+                count: 1,
+                stageID: row.stageID,
+              }))
+            )
+            .onDuplicateKeyUpdate({
+              set: {
+                error: sql`VALUES(error)`,
+                count: sql`count + 1`,
+                errorID: sql`VALUES(error_id)`,
+                message: sql`VALUES(message)`,
+                timeUpdated: sql`CURRENT_TIMESTAMP()`,
               },
-              workspaceID: row.workspaceID,
-              error: err.error,
-              message: err.message,
-              count: 1,
-              stageID: row.stageID,
-            }))
-          )
-          .onDuplicateKeyUpdate({
-            set: {
-              error: sql`VALUES(error)`,
-              count: sql`count + 1`,
-              errorID: sql`VALUES(error_id)`,
-              message: sql`VALUES(message)`,
-              timeUpdated: sql`CURRENT_TIMESTAMP()`,
-            },
-          })
-          .execute();
+            })
+            .execute();
+
+          const inserted = await tx
+            .select({
+              id: issue.id,
+              workspaceID: issue.workspaceID,
+            })
+            .from(issue)
+            .where(
+              and(
+                inArray(
+                  sql`(${issue.workspaceID}, ${issue.stageID})`,
+                  workspaces.map((row) => [row.workspaceID, row.stageID])
+                ),
+                eq(issue.group, group)
+              )
+            )
+            .execute();
+
+          const hour = DateTime.now().startOf("hour").toUTC().toSQL()!;
+          await tx
+            .insert(issueCounts)
+            .values(
+              inserted.map((item) => ({
+                workspaceID: item.workspaceID,
+                issueID: item.id,
+                count: 1,
+                hour,
+                id: createId(),
+              }))
+            )
+            .onDuplicateKeyUpdate({
+              set: {
+                count: sql`count + 1`,
+              },
+            })
+            .execute();
+
+          console.log(result);
+        });
       })
     );
 
