@@ -256,11 +256,6 @@ export const connectStage = zod(
     const cw = new CloudWatchLogsClient({
       region: config.region,
       retryStrategy: RETRY_STRATEGY,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        sessionToken: process.env.AWS_SESSION_TOKEN!,
-      },
     });
 
     const destination = await cw.send(
