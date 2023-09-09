@@ -201,11 +201,9 @@ export const extract = zod(
             )
             .execute();
 
-          console.log("inserted", inserted);
           const hour = DateTime.now()
             .startOf("hour")
             .toSQL({ includeOffset: false })!;
-          console.log("hour", hour);
 
           const result = await tx
             .insert(issueCount)
@@ -224,7 +222,6 @@ export const extract = zod(
               },
             })
             .execute();
-          console.log("result", result);
         });
       })
     );

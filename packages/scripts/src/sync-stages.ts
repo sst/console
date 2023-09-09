@@ -26,14 +26,9 @@ await queue(100, stages, async (stage) => {
       workspaceID: stage.workspaceID,
     },
   });
-  const config = await Stage.assumeRole(stage.id);
-  if (!config) return;
-  try {
-    await Issue.connectStage(config);
-    await Issue.subscribe(config);
-  } catch (ex) {
-    console.error(ex);
-  }
+  await Stage.Events.Updated.publish({
+    stageID: stage.id,
+  });
 });
 
 export {};
