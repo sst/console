@@ -251,6 +251,7 @@ export const connectStage = zod(
     console.log("creating", uniqueIdentifier);
     const cw = new CloudWatchLogsClient({
       region: config.region,
+      credentials: config.credentials,
       retryStrategy: RETRY_STRATEGY,
     });
 
