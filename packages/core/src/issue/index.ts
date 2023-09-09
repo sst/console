@@ -5,7 +5,7 @@ import { awsAccount } from "../aws/aws.sql";
 import { and, db, eq, inArray, isNull, sql } from "../drizzle";
 import { Log } from "../log";
 import { app, stage } from "../app/app.sql";
-import { issue, issueCounts, issueSubscriber } from "./issue.sql";
+import { issue, issueCounts as issueCount, issueSubscriber } from "./issue.sql";
 import { createId } from "@paralleldrive/cuid2";
 import {} from "@smithy/middleware-retry";
 import { zod } from "../util/zod";
@@ -153,7 +153,7 @@ export const extract = zod(
         console.log("found error", err.error, err.message);
 
         await createTransaction(async (tx) => {
-          const result = await tx
+          await tx
             .insert(issue)
             .values(
               workspaces.map((row) => ({
@@ -201,9 +201,14 @@ export const extract = zod(
             )
             .execute();
 
-          const hour = DateTime.now().startOf("hour").toUTC().toSQL()!;
-          await tx
-            .insert(issueCounts)
+          console.log("inserted", inserted);
+          const hour = DateTime.now()
+            .startOf("hour")
+            .toSQL({ includeOffset: false })!;
+          console.log("hour", hour);
+
+          const result = await tx
+            .insert(issueCount)
             .values(
               inserted.map((item) => ({
                 workspaceID: item.workspaceID,
@@ -219,8 +224,7 @@ export const extract = zod(
               },
             })
             .execute();
-
-          console.log(result);
+          console.log("result", result);
         });
       })
     );
