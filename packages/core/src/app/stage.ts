@@ -2,7 +2,11 @@ import { createSelectSchema } from "drizzle-zod";
 import { app, resource, stage } from "./app.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
-import { createTransactionEffect, useTransaction } from "../util/transaction";
+import {
+  createTransaction,
+  createTransactionEffect,
+  useTransaction,
+} from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
 import { awsAccount } from "../aws/aws.sql";
@@ -17,7 +21,6 @@ import { Enrichers } from "./resource";
 import { db } from "../drizzle";
 import { event } from "../event";
 import { Replicache } from "../replicache";
-import { groupBy, map, mapValues, pipe } from "remeda";
 
 export * as Stage from "./stage";
 
@@ -47,7 +50,7 @@ export const Info = createSelectSchema(stage, {
 });
 export type Info = z.infer<typeof Info>;
 
-export const fromID = zod(Info.shape.id, async (stageID) =>
+export const fromID = zod(Info.shape.id, (stageID) =>
   useTransaction((tx) =>
     tx
       .select()
@@ -65,7 +68,7 @@ export const fromName = zod(
     region: true,
     awsAccountID: true,
   }),
-  async (input) =>
+  (input) =>
     useTransaction((tx) =>
       tx
         .select()
@@ -84,7 +87,7 @@ export const fromName = zod(
     )
 );
 
-export const list = zod(z.void(), async () =>
+export const list = zod(z.void(), () =>
   useTransaction((tx) =>
     tx
       .select()
@@ -104,9 +107,9 @@ export const connect = zod(
   }).partial({
     id: true,
   }),
-  async (input) => {
-    const id = input.id ?? createId();
-    return useTransaction(async (tx) => {
+  (input) =>
+    createTransaction(async (tx) => {
+      const id = input.id ?? createId();
       await tx
         .insert(stage)
         .values({
@@ -137,14 +140,13 @@ export const connect = zod(
         )
         .execute()
         .then((x) => x[0]!);
-      createTransactionEffect(() =>
+      await createTransactionEffect(() =>
         Events.Connected.publish({
           stageID: insertID,
         })
       );
       return insertID;
-    });
-  }
+    })
 );
 
 export const syncMetadata = zod(
@@ -228,13 +230,7 @@ export const syncMetadata = zod(
     ).then((x) => x.flat());
     s3.destroy();
 
-    return useTransaction(async (tx) => {
-      createTransactionEffect(() => Replicache.poke());
-      createTransactionEffect(() =>
-        Events.ResourcesUpdated.publish({
-          stageID: input.stageID,
-        })
-      );
+    return createTransaction(async (tx) => {
       const existing = await tx
         .select({
           id: resource.id,
@@ -293,6 +289,12 @@ export const syncMetadata = zod(
               inArray(resource.id, toDelete)
             )
           );
+      await createTransactionEffect(() => Replicache.poke());
+      await createTransactionEffect(() =>
+        Events.ResourcesUpdated.publish({
+          stageID: input.stageID,
+        })
+      );
     });
   }
 );
@@ -302,9 +304,9 @@ export type StageCredentials = Exclude<
   undefined
 >;
 
-export const assumeRole = zod(Info.shape.id, async (stageID) =>
-  useTransaction(async (tx) => {
-    const result = await tx
+export const assumeRole = zod(Info.shape.id, async (stageID) => {
+  const result = await useTransaction((tx) =>
+    tx
       .select({
         accountID: awsAccount.accountID,
         region: stage.region,
@@ -316,17 +318,17 @@ export const assumeRole = zod(Info.shape.id, async (stageID) =>
       .innerJoin(app, eq(stage.appID, app.id))
       .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
       .execute()
-      .then((rows) => rows.at(0));
-    if (!result) return;
-    const credentials = await AWS.assumeRole(result.accountID);
-    if (!credentials) return;
-    return {
-      credentials,
-      region: result.region,
-      stageID,
-      stage: result.name,
-      app: result.app,
-      awsAccountID: result.accountID,
-    };
-  })
-);
+      .then((rows) => rows.at(0))
+  );
+  if (!result) return;
+  const credentials = await AWS.assumeRole(result.accountID);
+  if (!credentials) return;
+  return {
+    credentials,
+    region: result.region,
+    stageID,
+    stage: result.name,
+    app: result.app,
+    awsAccountID: result.accountID,
+  };
+});

@@ -37,36 +37,34 @@ export const create = zod(
   Info.pick({ slug: true, id: true }).partial({
     id: true,
   }),
-  async (input) => {
-    const id = input.id ?? createId();
-    return useTransaction(async (tx) => {
+  (input) =>
+    useTransaction(async (tx) => {
+      const id = input.id ?? createId();
       await tx.insert(workspace).values({
         id,
         slug: input.slug,
       });
-      createTransactionEffect(() =>
+      await createTransactionEffect(() =>
         Events.Created.publish({
           workspaceID: id,
         })
       );
       return id;
-    });
-  }
+    })
 );
 
 export const setStripeCustomerID = zod(
   Info.pick({ id: true, stripeCustomerID: true }),
-  async (input) => {
-    return useTransaction(async (tx) => {
-      await db
+  (input) =>
+    useTransaction((tx) =>
+      tx
         .update(workspace)
         .set({
           stripeCustomerID: input.stripeCustomerID,
         })
         .where(eq(workspace.id, input.id))
-        .execute();
-    });
-  }
+        .execute()
+    )
 );
 
 export const setStripeSubscription = zod(
@@ -75,21 +73,20 @@ export const setStripeSubscription = zod(
     stripeSubscriptionID: true,
     stripeSubscriptionItemID: true,
   }),
-  async (input) => {
-    return useTransaction(async (tx) => {
-      await db
+  (input) =>
+    useTransaction((tx) =>
+      tx
         .update(workspace)
         .set({
           stripeSubscriptionID: input.stripeSubscriptionID,
           stripeSubscriptionItemID: input.stripeSubscriptionItemID,
         })
         .where(eq(workspace.id, input.id))
-        .execute();
-    });
-  }
+        .execute()
+    )
 );
 
-export const list = zod(z.void(), async () =>
+export const list = zod(z.void(), () =>
   useTransaction((tx) =>
     tx
       .select()
@@ -112,28 +109,28 @@ export const fromID = zod(Info.shape.id, async (id) =>
 
 export const fromStripeCustomerID = zod(
   z.string().nonempty(),
-  async (stripeCustomerID) =>
-    useTransaction(async (tx) => {
-      return tx
+  (stripeCustomerID) =>
+    useTransaction((tx) =>
+      tx
         .select()
         .from(workspace)
         .where(eq(workspace.stripeCustomerID, stripeCustomerID))
         .execute()
-        .then((rows) => rows[0]);
-    })
+        .then((rows) => rows[0])
+    )
 );
 
 export const deleteStripeSubscription = zod(
   z.string().nonempty(),
-  async (stripeSubscriptionID) =>
-    useTransaction(async (tx) => {
-      await db
+  (stripeSubscriptionID) =>
+    useTransaction((tx) =>
+      tx
         .update(workspace)
         .set({
           stripeSubscriptionID: null,
           stripeSubscriptionItemID: null,
         })
         .where(eq(workspace.stripeSubscriptionID, stripeSubscriptionID))
-        .execute();
-    })
+        .execute()
+    )
 );

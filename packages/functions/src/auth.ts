@@ -106,10 +106,8 @@ export const handler = AuthHandler({
     let accountID = await Account.fromEmail(email).then((x) => x?.id);
     if (!accountID) {
       console.log("creating account for", email);
-      await useTransaction(async () => {
-        accountID = await Account.create({
-          email: email!,
-        });
+      accountID = await Account.create({
+        email: email!,
       });
     }
 

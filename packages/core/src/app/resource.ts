@@ -103,7 +103,7 @@ export const Enrichers = {
   ) => Promise<any>;
 };
 
-export const fromID = zod(z.string().nonempty(), async (id) =>
+export const fromID = zod(z.string().nonempty(), (id) =>
   useTransaction((tx) =>
     tx
       .select()
@@ -120,7 +120,7 @@ export const enrich = zod(
     credentials: z.custom<Credentials>(),
     region: z.string(),
   }),
-  async (input) =>
+  (input) =>
     useTransaction(async () => {
       const resource = await fromID(input.resourceID);
       if (!resource) return;
@@ -142,7 +142,7 @@ export const listFromStageID = zod(
     stageID: z.string().nonempty(),
     types: z.array(z.string().nonempty()),
   }),
-  async (input) =>
+  (input) =>
     useTransaction((tx) =>
       tx
         .select()

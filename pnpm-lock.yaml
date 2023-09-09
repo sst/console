@@ -21,8 +21,8 @@ importers:
         specifier: 10.2.69
         version: 10.2.69
       sst:
-        specifier: 0.0.0-20230903050741
-        version: 0.0.0-20230903050741
+        specifier: 2.24.26
+        version: 2.24.26
       turbo:
         specifier: ^1.10.13
         version: 1.10.13
@@ -121,8 +121,8 @@ importers:
         specifier: 0.19.13
         version: 0.19.13
       sst:
-        specifier: 0.0.0-20230903050741
-        version: 0.0.0-20230903050741
+        specifier: 2.24.26
+        version: 2.24.26
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -197,8 +197,8 @@ importers:
         specifier: ^18.16.0
         version: 18.17.12
       sst:
-        specifier: 0.0.0-20230903050741
-        version: 0.0.0-20230903050741
+        specifier: 2.24.26
+        version: 2.24.26
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -212,8 +212,8 @@ importers:
         specifier: ^3.3.0
         version: 3.4.2
       sst:
-        specifier: 0.0.0-20230903050741
-        version: 0.0.0-20230903050741
+        specifier: 2.24.26
+        version: 2.24.26
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -298,8 +298,8 @@ importers:
         specifier: ^1.3.0
         version: 1.4.3(vite@3.2.7)
       sst:
-        specifier: 0.0.0-20230903050741
-        version: 0.0.0-20230903050741
+        specifier: 2.24.26
+        version: 2.24.26
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -1801,7 +1801,7 @@ packages:
     dependencies:
       '@aws-sdk/client-cognito-identity': 3.405.0
       '@aws-sdk/types': 3.398.0
-      '@smithy/property-provider': 2.0.5
+      '@smithy/property-provider': 2.0.6
       '@smithy/types': 2.2.2
       tslib: 2.6.2
     transitivePeerDependencies:
@@ -1843,8 +1843,8 @@ packages:
       '@aws-sdk/credential-provider-sso': 3.405.0
       '@aws-sdk/credential-provider-web-identity': 3.398.0
       '@aws-sdk/types': 3.398.0
-      '@smithy/credential-provider-imds': 2.0.5
-      '@smithy/property-provider': 2.0.5
+      '@smithy/credential-provider-imds': 2.0.7
+      '@smithy/property-provider': 2.0.6
       '@smithy/shared-ini-file-loader': 2.0.6
       '@smithy/types': 2.2.2
       tslib: 2.6.2
@@ -1904,7 +1904,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-sdk/types': 3.398.0
-      '@smithy/property-provider': 2.0.5
+      '@smithy/property-provider': 2.0.6
       '@smithy/shared-ini-file-loader': 2.0.6
       '@smithy/types': 2.2.2
       tslib: 2.6.2
@@ -3831,6 +3831,7 @@ packages:
       '@smithy/types': 2.2.2
       '@smithy/url-parser': 2.0.5
       tslib: 2.6.2
+    dev: false
 
   /@smithy/credential-provider-imds@2.0.7:
     resolution: {integrity: sha512-XivkZj/pipzpQPxgleE1odwJQ6oDsVViB4VUO/HRDI4EdEfZjud44USupOUOa/xOjS39/75DYB4zgTbyV+totw==}
@@ -4018,6 +4019,7 @@ packages:
       '@smithy/shared-ini-file-loader': 2.0.5
       '@smithy/types': 2.2.2
       tslib: 2.6.2
+    dev: false
 
   /@smithy/node-config-provider@2.0.7:
     resolution: {integrity: sha512-GuLxhnf0aVQsfQp4ZWaM1TRCIndpQjAswyFcmDFRNf4yFqpxpLPDeV540+O0Z21Hmu3deoQm/dCPXbVn90PYzg==}
@@ -4113,6 +4115,7 @@ packages:
     dependencies:
       '@smithy/types': 2.2.2
       tslib: 2.6.2
+    dev: false
 
   /@smithy/shared-ini-file-loader@2.0.6:
     resolution: {integrity: sha512-NO6dHqho6APbVR0DxPtYoL4KXBqUeSM3Slsd103MOgL50YbzzsQmMLtDMZ87W8MlvvCN0tuiq+OrAO/rM7hTQg==}
@@ -7875,8 +7878,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@0.0.0-20230903050741:
-    resolution: {integrity: sha512-pm5LZfwFyMk6IVcCP5YJHAWmtcvl1YeFbpvqc9M9j3LJJfg8hfK4Wb1iWqkjTTKsVh90yrpz+vx71RCe8BWrsg==}
+  /sst@2.24.26:
+    resolution: {integrity: sha512-gPbbBIF+/mHHmO0HoXW6KWkl42IZCLc4flKIDpPeF2k43Uc0KQ4MZGCEZ9q/YL3mVrLAhBSIH/n4bH3NNAQVBg==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

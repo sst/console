@@ -45,10 +45,9 @@ export const savePayload = zod(
   }).partial({
     id: true,
   }),
-  async (input) =>
+  (input) =>
     useTransaction(async (tx) => {
       const id = input.id || createId();
-      console.log(id);
       await tx.insert(lambdaPayload).values({
         id,
         key: input.key,
@@ -60,7 +59,7 @@ export const savePayload = zod(
     })
 );
 
-export const removePayload = zod(LambdaPayload.shape.id, async (input) =>
+export const removePayload = zod(LambdaPayload.shape.id, (input) =>
   useTransaction(async (tx) => {
     await tx
       .delete(lambdaPayload)

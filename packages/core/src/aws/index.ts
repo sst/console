@@ -7,7 +7,6 @@ import { useWorkspace } from "../actor";
 import { useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { and, eq, sql } from "drizzle-orm";
-import { DateTime } from "luxon";
 
 export * as AWS from ".";
 
@@ -24,26 +23,39 @@ export const assumeRole = zod(z.string(), async (id) => {
         DurationSeconds: 900,
       })
     );
+    await useTransaction((tx) =>
+      tx
+        .update(awsAccount)
+        .set({
+          timeFailed: null,
+        })
+        .where(
+          and(
+            eq(awsAccount.accountID, id),
+            eq(awsAccount.workspaceID, workspaceID)
+          )
+        )
+        .execute()
+    );
     return {
       secretAccessKey: result.Credentials!.SecretAccessKey!,
       accessKeyId: result.Credentials!.AccessKeyId!,
       sessionToken: result.Credentials!.SessionToken!,
     };
   } catch (e: any) {
-    const rows = await useTransaction(
-      async (tx) =>
-        await tx
-          .update(awsAccount)
-          .set({
-            timeFailed: sql`now()`,
-          })
-          .where(
-            and(
-              eq(awsAccount.accountID, id),
-              eq(awsAccount.workspaceID, workspaceID)
-            )
+    await useTransaction((tx) =>
+      tx
+        .update(awsAccount)
+        .set({
+          timeFailed: sql`now()`,
+        })
+        .where(
+          and(
+            eq(awsAccount.accountID, id),
+            eq(awsAccount.workspaceID, workspaceID)
           )
-          .execute()
+        )
+        .execute()
     );
     console.log("failed to assume role for account", id);
     return;

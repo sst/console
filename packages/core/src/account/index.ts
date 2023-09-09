@@ -19,16 +19,15 @@ export const create = zod(
   Info.pick({ email: true, id: true }).partial({
     id: true,
   }),
-  async (input) => {
-    const id = input.id ?? createId();
-    return useTransaction(async (tx) => {
+  (input) =>
+    useTransaction(async (tx) => {
+      const id = input.id ?? createId();
       await tx.insert(account).values({
         id,
         email: input.email,
       });
       return id;
-    });
-  }
+    })
 );
 
 export const fromID = zod(Info.shape.id, async (id) =>

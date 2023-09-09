@@ -5,10 +5,6 @@ import {
 } from "aws-lambda";
 import { AWS } from "@console/core/aws";
 import { provideActor } from "@console/core/actor";
-import {
-  createTransactionEffect,
-  useTransaction,
-} from "@console/core/util/transaction";
 import { Replicache } from "@console/core/replicache";
 
 export async function handler(event: CloudFormationCustomResourceEvent) {
@@ -25,12 +21,10 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
         event.ResourceProperties.accountID
       );
       if (credentials) {
-        await useTransaction(async () => {
-          createTransactionEffect(() => Replicache.poke());
-          return await AWS.Account.create({
-            accountID: event.ResourceProperties.accountID,
-          });
+        await AWS.Account.create({
+          accountID: event.ResourceProperties.accountID,
         });
+        await Replicache.poke();
         console.log(credentials);
         status = "SUCCESS";
       } else {

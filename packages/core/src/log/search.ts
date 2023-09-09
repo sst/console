@@ -3,7 +3,7 @@ import { event } from "../event";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { zod } from "../util/zod";
 import { log_search } from "./log.sql";
-import { assertActor, useActor, useWorkspace } from "../actor";
+import { assertActor, useWorkspace } from "../actor";
 import { createSelectSchema } from "drizzle-zod";
 import { and, eq } from "drizzle-orm";
 
@@ -19,7 +19,7 @@ export const Events = {
   }),
 };
 
-export const fromID = zod(Info.shape.id, async (id) =>
+export const fromID = zod(Info.shape.id, (id) =>
   useTransaction((tx) =>
     tx
       .select()
@@ -40,7 +40,7 @@ export const search = zod(
     timeStart: true,
     timeEnd: true,
   }),
-  async (input) =>
+  (input) =>
     useTransaction(async (tx) => {
       await tx
         .insert(log_search)
@@ -54,7 +54,7 @@ export const search = zod(
           timeEnd: input.timeEnd,
         })
         .execute();
-      createTransactionEffect(() =>
+      await createTransactionEffect(() =>
         Events.Created.publish({
           id: input.id,
         })
@@ -67,9 +67,9 @@ export const setStart = zod(
     id: true,
     timeStart: true,
   }),
-  async (input) =>
-    useTransaction(async (tx) => {
-      await tx
+  (input) =>
+    useTransaction((tx) =>
+      tx
         .update(log_search)
         .set({
           id: input.id,
@@ -81,13 +81,13 @@ export const setStart = zod(
             eq(log_search.workspaceID, useWorkspace())
           )
         )
-        .execute();
-    })
+        .execute()
+    )
 );
 
-export const complete = zod(Info.shape.id, async (input) =>
-  useTransaction(async (tx) => {
-    await tx
+export const complete = zod(Info.shape.id, (input) =>
+  useTransaction((tx) =>
+    tx
       .delete(log_search)
       .where(
         and(
@@ -95,6 +95,6 @@ export const complete = zod(Info.shape.id, async (input) =>
           eq(log_search.workspaceID, useWorkspace())
         )
       )
-      .execute();
-  })
+      .execute()
+  )
 );

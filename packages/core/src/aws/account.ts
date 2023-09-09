@@ -4,7 +4,11 @@ import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
-import { createTransactionEffect, useTransaction } from "../util/transaction";
+import {
+  createTransaction,
+  createTransactionEffect,
+  useTransaction,
+} from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
 import { and, eq, sql } from "drizzle-orm";
@@ -49,7 +53,7 @@ export const create = zod(
   Info.pick({ id: true, accountID: true }).partial({
     id: true,
   }),
-  async (input) =>
+  (input) =>
     useTransaction(async (tx) => {
       const id = input.id ?? createId();
       await tx
@@ -64,7 +68,7 @@ export const create = zod(
             timeFailed: null,
           },
         });
-      createTransactionEffect(() =>
+      await createTransactionEffect(() =>
         Events.Created.publish({
           awsAccountID: id,
         })
@@ -73,7 +77,7 @@ export const create = zod(
     })
 );
 
-export const fromID = zod(Info.shape.id, async (accountID) =>
+export const fromID = zod(Info.shape.id, (accountID) =>
   useTransaction((tx) =>
     tx
       .select()
@@ -89,7 +93,7 @@ export const fromID = zod(Info.shape.id, async (accountID) =>
   )
 );
 
-export const fromAccountID = zod(Info.shape.accountID, async (accountID) =>
+export const fromAccountID = zod(Info.shape.accountID, (accountID) =>
   useTransaction((tx) =>
     tx
       .select()
@@ -344,7 +348,7 @@ export const integrate = zod(
           const [, stageName] = stageHint?.split(".");
           const [, appName] = appHint?.split(".");
           if (!stageName || !appName) continue;
-          await useTransaction(async () => {
+          await createTransaction(async () => {
             let app = await App.fromName(appName).then((a) => a?.id);
             if (!app)
               app = await App.create({

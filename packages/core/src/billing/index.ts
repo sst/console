@@ -3,8 +3,7 @@ import { usage } from "./billing.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
-import { db } from "../drizzle";
-import { eq, and, lte, gte, between } from "drizzle-orm";
+import { eq, and, between } from "drizzle-orm";
 import { useTransaction } from "../util/transaction";
 import { useWorkspace } from "../actor";
 
@@ -19,9 +18,9 @@ export type Usage = z.infer<typeof Usage>;
 
 export const createUsage = zod(
   Usage.pick({ stageID: true, day: true, invocations: true }),
-  async (input) => {
-    return useTransaction(async (tx) => {
-      await tx
+  (input) =>
+    useTransaction((tx) =>
+      tx
         .insert(usage)
         .values({
           id: createId(),
@@ -35,9 +34,8 @@ export const createUsage = zod(
             invocations: input.invocations,
           },
         })
-        .execute();
-    });
-  }
+        .execute()
+    )
 );
 
 export const listByStartAndEndDay = zod(
@@ -45,7 +43,7 @@ export const listByStartAndEndDay = zod(
     startDay: Usage.shape.day,
     endDay: Usage.shape.day,
   }),
-  async (input) =>
+  (input) =>
     useTransaction((tx) =>
       tx
         .select()

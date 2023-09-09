@@ -25,9 +25,9 @@ export const create = zod(
     .extend({
       first: z.boolean().optional(),
     }),
-  async (input) => {
-    const id = input.id ?? createId();
-    return useTransaction(async (tx) => {
+  (input) =>
+    useTransaction(async (tx) => {
+      const id = input.id ?? createId();
       await tx
         .insert(user)
         .values({
@@ -43,12 +43,11 @@ export const create = zod(
         })
         .execute();
       return id;
-    });
-  }
+    })
 );
 
-export const remove = zod(Info.shape.id, async (input) => {
-  return useTransaction(async (tx) => {
+export const remove = zod(Info.shape.id, (input) =>
+  useTransaction(async (tx) => {
     await tx
       .update(user)
       .set({
@@ -57,8 +56,8 @@ export const remove = zod(Info.shape.id, async (input) => {
       .where(and(eq(user.id, input), eq(user.workspaceID, useWorkspace())))
       .execute();
     return input;
-  });
-});
+  })
+);
 
 export const fromID = zod(Info.shape.id, async (id) =>
   db.transaction(async (tx) => {

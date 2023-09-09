@@ -4,6 +4,7 @@ import { app, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { db } from "@console/core/drizzle";
 import {
+  createTransaction,
   createTransactionEffect,
   useTransaction,
 } from "@console/core/util/transaction";
@@ -59,7 +60,7 @@ export const handler = async (evt: Payload) => {
     console.log("matches", rows);
 
     for (const row of rows) {
-      await useTransaction(async () => {
+      await createTransaction(async () => {
         provideActor({
           type: "system",
           properties: {
@@ -68,7 +69,8 @@ export const handler = async (evt: Payload) => {
         });
 
         if (row.stageID) {
-          createTransactionEffect(() =>
+          console.log("creating effect");
+          await createTransactionEffect(() =>
             Stage.Events.Updated.publish({
               stageID: row.stageID!,
             })
@@ -90,6 +92,7 @@ export const handler = async (evt: Payload) => {
           awsAccountID: row.id,
         });
       });
+      console.log("done", row);
     }
   }
 };

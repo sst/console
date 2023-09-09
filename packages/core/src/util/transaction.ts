@@ -14,24 +14,42 @@ export type Transaction = MySqlTransaction<
   ExtractTablesWithRelations<Record<string, never>>
 >;
 
+type TxOrDb = Transaction | typeof db;
+
 const TransactionContext = Context.create<{
-  tx: Transaction;
+  tx: TxOrDb;
   effects: (() => void | Promise<void>)[];
 }>();
 
-export async function useTransaction<T>(
-  callback: (trx: Transaction) => Promise<T>
+export async function useTransaction<T>(callback: (trx: TxOrDb) => Promise<T>) {
+  try {
+    const { tx } = TransactionContext.use();
+    return callback(tx);
+  } catch {
+    return callback(db);
+  }
+}
+
+export async function createTransactionEffect(
+  effect: () => any | Promise<any>
+) {
+  try {
+    const { effects } = TransactionContext.use();
+    effects.push(effect);
+  } catch {
+    await effect();
+  }
+}
+
+export async function createTransaction<T>(
+  callback: (tx: TxOrDb) => Promise<T>
 ) {
   try {
     const { tx } = TransactionContext.use();
-    try {
-      return callback(tx);
-    } catch (err) {
-      throw err;
-    }
+    return callback(tx);
   } catch {
     const effects: (() => void | Promise<void>)[] = [];
-    const result = db.transaction(
+    const result = await db.transaction(
       async (tx) => {
         TransactionContext.provide({ tx, effects });
         const result = await callback(tx);
@@ -45,9 +63,4 @@ export async function useTransaction<T>(
     await Promise.all(effects.map((x) => x()));
     return result;
   }
-}
-
-export function createTransactionEffect(effect: () => any | Promise<any>) {
-  const { effects } = TransactionContext.use();
-  effects.push(effect);
 }

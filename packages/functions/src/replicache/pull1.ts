@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import { provideActor, useActor, useWorkspace } from "@console/core/actor";
 import { user } from "@console/core/user/user.sql";
-import { useTransaction } from "@console/core/util/transaction";
+import { createTransaction } from "@console/core/util/transaction";
 import { NotPublic, useApiAuth } from "../api";
 import { ApiHandler, Response, useJsonBody } from "sst/node/api";
 import { eq, and, gt, gte, inArray, isNull, lte, sql, lt } from "drizzle-orm";
@@ -39,7 +39,7 @@ export const handler = ApiHandler(async () => {
     });
   }
 
-  const resp = await useTransaction(
+  const resp = await createTransaction(
     async (tx): Promise<PullResponseV1 | undefined> => {
       const patch: PatchOperation[] = [];
 
@@ -328,6 +328,7 @@ export const handler = ApiHandler(async () => {
       };
     }
   );
+
   console.log("here", resp);
 
   return {

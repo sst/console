@@ -3,7 +3,11 @@ export * as LogPoller from "./poller";
 import { createSelectSchema } from "drizzle-zod";
 import { log_poller } from "./log.sql";
 import { zod } from "../util/zod";
-import { createTransactionEffect, useTransaction } from "../util/transaction";
+import {
+  createTransaction,
+  createTransactionEffect,
+  useTransaction,
+} from "../util/transaction";
 import { and, eq } from "drizzle-orm";
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
 import { useWorkspace } from "../actor";
@@ -26,7 +30,7 @@ export const subscribe = zod(
     logGroup: true,
   }),
   (input) =>
-    useTransaction(async (tx) => {
+    createTransaction(async (tx) => {
       let existing = await tx
         .select({
           id: log_poller.id,
@@ -53,8 +57,8 @@ export const subscribe = zod(
             stageID: input.stageID,
           })
           .execute();
-        createTransactionEffect(async () => {
-          await sfn.send(
+        await createTransactionEffect(() =>
+          sfn.send(
             new StartExecutionCommand({
               stateMachineArn: process.env.LOG_POLLER_ARN,
               name: existing!,
@@ -64,15 +68,15 @@ export const subscribe = zod(
                 pollerID: existing,
               }),
             })
-          );
-        });
+          )
+        );
         return true;
       }
       return false;
     })
 );
 
-export const fromID = zod(Info.shape.id, async (id) =>
+export const fromID = zod(Info.shape.id, (id) =>
   useTransaction((tx) =>
     tx
       .select()
@@ -84,7 +88,7 @@ export const fromID = zod(Info.shape.id, async (id) =>
   )
 );
 
-export const remove = zod(Info.shape.id, async (id) =>
+export const remove = zod(Info.shape.id, (id) =>
   useTransaction((tx) =>
     tx
       .delete(log_poller)
@@ -99,7 +103,7 @@ export const setExecution = zod(
     id: true,
     executionARN: true,
   }),
-  async (input) =>
+  (input) =>
     useTransaction((tx) =>
       tx
         .update(log_poller)

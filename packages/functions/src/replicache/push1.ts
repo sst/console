@@ -3,7 +3,7 @@ import {
   replicache_client_group,
   replicache_client,
 } from "@console/core/replicache/replicache.sql";
-import { useTransaction } from "@console/core/util/transaction";
+import { createTransaction } from "@console/core/util/transaction";
 import { and, eq } from "drizzle-orm";
 import { PushRequest } from "replicache";
 import { NotPublic, useApiAuth } from "../api";
@@ -26,7 +26,7 @@ export const handler = ApiHandler(async (_evt) => {
     };
 
   for (const mutation of body.mutations) {
-    await useTransaction(async (tx) => {
+    await createTransaction(async (tx) => {
       const group = await tx
         .select({
           id: replicache_client_group.id,
@@ -132,7 +132,6 @@ export const handler = ApiHandler(async (_evt) => {
           },
         })
         .execute();
-      return;
     });
   }
 

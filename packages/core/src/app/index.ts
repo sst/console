@@ -24,17 +24,16 @@ export const create = zod(
   Info.pick({ name: true, id: true }).partial({
     id: true,
   }),
-  async (input) => {
-    const id = input.id ?? createId();
-    return useTransaction(async (tx) => {
+  (input) =>
+    useTransaction(async (tx) => {
+      const id = input.id ?? createId();
       await tx.insert(app).values({
         id,
         workspaceID: useWorkspace(),
         name: input.name,
       });
       return id;
-    });
-  }
+    })
 );
 
 export const fromID = zod(Info.shape.id, async (id) =>
