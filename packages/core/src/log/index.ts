@@ -468,12 +468,16 @@ export async function extractError(
         if (!columnHint || !lineHint) return [{ raw: item }];
         const column = parseInt(columnHint);
         const line = parseInt(lineHint);
-        const original = retrySync(1, () =>
-          consumer.originalPositionFor({
-            line,
-            column,
-          })
-        );
+        const original = (() => {
+          try {
+            return consumer.originalPositionFor({
+              line,
+              column,
+            });
+          } catch (ex) {
+            console.error(ex);
+          }
+        })();
 
         if (!original?.source) return [{ raw: item }];
 
