@@ -7,10 +7,13 @@ import { useWorkspace } from "../actor";
 import { useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { and, eq, sql } from "drizzle-orm";
+import { RETRY_STRATEGY } from "../util/aws";
 
 export * as AWS from ".";
 
-const sts = new STSClient({});
+const sts = new STSClient({
+  retryStrategy: RETRY_STRATEGY,
+});
 
 export const assumeRole = zod(z.string(), async (id) => {
   const workspaceID = useWorkspace();
