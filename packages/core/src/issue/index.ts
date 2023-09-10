@@ -263,34 +263,36 @@ export const connectStage = zod(
       retryStrategy: RETRY_STRATEGY,
     });
 
-    const destination = await cw.send(
-      new PutDestinationCommand({
-        destinationName: uniqueIdentifier,
-        roleArn: Config.ISSUES_ROLE_ARN,
-        targetArn: Config.ISSUES_STREAM_ARN,
-      })
-    );
+    try {
+      const destination = await cw.send(
+        new PutDestinationCommand({
+          destinationName: uniqueIdentifier,
+          roleArn: Config.ISSUES_ROLE_ARN,
+          targetArn: Config.ISSUES_STREAM_ARN,
+        })
+      );
 
-    await cw.send(
-      new PutDestinationPolicyCommand({
-        destinationName: uniqueIdentifier,
-        accessPolicy: JSON.stringify({
-          Version: "2012-10-17",
-          Statement: [
-            {
-              Effect: "Allow",
-              Principal: {
-                AWS: config.awsAccountID,
+      await cw.send(
+        new PutDestinationPolicyCommand({
+          destinationName: uniqueIdentifier,
+          accessPolicy: JSON.stringify({
+            Version: "2012-10-17",
+            Statement: [
+              {
+                Effect: "Allow",
+                Principal: {
+                  AWS: config.awsAccountID,
+                },
+                Action: "logs:PutSubscriptionFilter",
+                Resource: destination.destination!.arn,
               },
-              Action: "logs:PutSubscriptionFilter",
-              Resource: destination.destination!.arn,
-            },
-          ],
-        }),
-      })
-    );
-
-    cw.destroy();
+            ],
+          }),
+        })
+      );
+    } finally {
+      cw.destroy();
+    }
   }
 );
 

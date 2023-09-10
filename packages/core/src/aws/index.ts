@@ -43,23 +43,25 @@ export const assumeRole = zod(z.string(), async (id) => {
       sessionToken: result.Credentials!.SessionToken!,
     };
   } catch (e: any) {
-    console.error(e);
-    await useTransaction((tx) =>
-      tx
-        .update(awsAccount)
-        .set({
-          timeFailed: sql`now()`,
-        })
-        .where(
-          and(
-            eq(awsAccount.accountID, id),
-            eq(awsAccount.workspaceID, workspaceID)
+    if (e instanceof Error && e.name === "AccessDenied") {
+      await useTransaction((tx) =>
+        tx
+          .update(awsAccount)
+          .set({
+            timeFailed: sql`now()`,
+          })
+          .where(
+            and(
+              eq(awsAccount.accountID, id),
+              eq(awsAccount.workspaceID, workspaceID)
+            )
           )
-        )
-        .execute()
-    );
-    console.log("failed to assume role for account", id);
-    return;
+          .execute()
+      );
+      return;
+    }
+
+    throw e;
   }
 });
 
