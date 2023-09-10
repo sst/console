@@ -43,6 +43,7 @@ export const assumeRole = zod(z.string(), async (id) => {
       sessionToken: result.Credentials!.SessionToken!,
     };
   } catch (e: any) {
+    console.error(e);
     await useTransaction((tx) =>
       tx
         .update(awsAccount)
