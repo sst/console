@@ -252,7 +252,12 @@ export const connectStage = zod(
   z.custom<StageCredentials>(),
   async (config) => {
     const uniqueIdentifier = destinationIdentifier(config);
-    console.log("creating", uniqueIdentifier);
+    console.log(
+      "creating",
+      uniqueIdentifier,
+      Config.ISSUES_ROLE_ARN,
+      Config.ISSUES_STREAM_ARN
+    );
     const cw = new CloudWatchLogsClient({
       region: config.region,
       retryStrategy: RETRY_STRATEGY,
