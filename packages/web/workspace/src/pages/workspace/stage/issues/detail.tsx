@@ -221,12 +221,12 @@ export function Detail() {
                 Last Seen
               </Text>
               <Text
-                title={parseTime(issue().timeUpdated).toLocaleString(
+                title={parseTime(issue().timeSeen).toLocaleString(
                   DateTime.DATETIME_FULL,
                 )}
                 color="secondary"
               >
-                {formatSinceTime(issue().timeUpdated, true)}
+                {formatSinceTime(issue().timeSeen, true)}
               </Text>
             </Stack>
             <Stack space="2">

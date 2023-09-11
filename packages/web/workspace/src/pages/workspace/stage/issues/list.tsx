@@ -394,8 +394,8 @@ function IssueRow(props: IssueProps) {
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_TIME_WIDTH}px` }}>
         <Text line leading="normal" size="sm" color="dimmed">
-          <span title={parseTime(props.issue.timeUpdated).toLocaleString()}>
-            {formatSinceTime(props.issue.timeUpdated)}
+          <span title={parseTime(props.issue.timeSeen).toLocaleString()}>
+            {formatSinceTime(props.issue.timeSeen)}
           </span>{" "}
           &mdash;{" "}
           <span title={parseTime(props.issue.timeCreated).toLocaleString()}>
