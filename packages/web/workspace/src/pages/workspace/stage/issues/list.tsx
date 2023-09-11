@@ -14,7 +14,15 @@ import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { Link, useSearchParams } from "@solidjs/router";
 import { theme } from "$/ui/theme";
 import type { Issue } from "@console/core/issue";
-import { For, Show, Switch, Match, createEffect, createMemo } from "solid-js";
+import {
+  For,
+  Show,
+  Switch,
+  Match,
+  createEffect,
+  createMemo,
+  createSignal,
+} from "solid-js";
 import { useIssuesContext } from "../context";
 import { useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
@@ -136,21 +144,17 @@ export function List() {
       if (view() === "active") return !item.timeResolved && !item.timeIgnored;
       if (view() === "ignored") return item.timeIgnored;
       if (view() === "resolved") return item.timeResolved;
-    })
+    }),
   );
 
-  function getCheckboxes() {
-    return [
-      ...document.querySelectorAll<HTMLInputElement>("input[type='checkbox']"),
-    ];
-  }
+  const [selected, setSelected] = createSignal<string[]>([]);
+  let form!: HTMLFormElement;
 
-  function getCheckedIssues() {
-    return getCheckboxes()
-      .filter((i) => i.checked)
-      .filter((i) => i.name)
-      .map((i) => i.name);
-  }
+  createEffect(() => {
+    view();
+    form.reset();
+    setSelected([]);
+  });
 
   return (
     <>
@@ -182,13 +186,25 @@ export function List() {
             There was a problem enabling Issues for your account.{" "}
             <a href="htts://sst.dev/discord">Contact us on Discord.</a>
           </Alert>
-          <div>
+          <form
+            ref={form}
+            onSubmit={(e) => e.preventDefault()}
+            onChange={(e) => {
+              const issues = [
+                ...e.currentTarget.querySelectorAll<HTMLInputElement>(
+                  "input[name='issue']:checked",
+                ),
+              ].map((i) => i.value);
+              setSelected(issues);
+            }}
+          >
             <IssuesHeader>
               <IssuesHeaderCol>
                 <IssueCheckbox
+                  name="select-all"
                   onChange={(e) => {
-                    for (const input of document.querySelectorAll<HTMLInputElement>(
-                      "input[type='checkbox']"
+                    for (const input of form.querySelectorAll<HTMLInputElement>(
+                      "input[type='checkbox']",
                     )) {
                       input.checked = e.currentTarget.checked;
                     }
@@ -210,9 +226,10 @@ export function List() {
                 <IssueActions>
                   <Button
                     onClick={() => {
-                      rep().mutate.issue_ignore(getCheckedIssues());
-                      getCheckboxes().forEach((item) => (item.checked = false));
+                      rep().mutate.issue_ignore(selected());
+                      form.reset();
                     }}
+                    disabled={selected().length === 0}
                     size="sm"
                     grouped="left"
                     color="secondary"
@@ -223,9 +240,10 @@ export function List() {
                     Ignore
                   </Button>
                   <Button
+                    disabled={selected().length === 0}
                     onClick={() => {
-                      rep().mutate.issue_resolve(getCheckedIssues());
-                      getCheckboxes().forEach((item) => (item.checked = false));
+                      rep().mutate.issue_resolve(selected());
+                      form.reset();
                     }}
                     size="sm"
                     grouped="right"
@@ -301,7 +319,7 @@ export function List() {
                 </For>
               </Show>
             </IssuesList>
-          </div>
+          </form>
         </Stack>
       </Content>
     </>
@@ -365,14 +383,14 @@ function IssueRow(props: IssueProps) {
     rep,
     (item) =>
       item.group === props.issue.group &&
-      item.hour > DateTime.now().toSQLDate()!
+      item.hour > DateTime.now().toSQLDate()!,
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
 
   return (
     <IssueRoot>
       <IssueCol>
-        <IssueCheckbox name={props.issue.id} type="checkbox" />
+        <IssueCheckbox name="issue" value={props.issue.id} type="checkbox" />
       </IssueCol>
       <IssueCol grow>
         <Stack space="2">
