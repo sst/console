@@ -9,3 +9,12 @@ export const IssueStore = define<Issue.Info>({
     return ["issue", id];
   },
 });
+
+export const IssueCountStore = define<Issue.Count>({
+  scan() {
+    return ["issueCount"];
+  },
+  get(id: string) {
+    return ["issueCount", id];
+  },
+});

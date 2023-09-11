@@ -4,7 +4,18 @@ import { user } from "@console/core/user/user.sql";
 import { createTransaction } from "@console/core/util/transaction";
 import { NotPublic, useApiAuth } from "../api";
 import { ApiHandler, Response, useJsonBody } from "sst/node/api";
-import { eq, and, gt, gte, inArray, isNull, lte, sql, lt } from "drizzle-orm";
+import {
+  eq,
+  and,
+  gt,
+  gte,
+  inArray,
+  isNull,
+  lte,
+  sql,
+  lt,
+  SQLWrapper,
+} from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { usage } from "@console/core/billing/billing.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
@@ -19,7 +30,11 @@ import { equals, mapValues } from "remeda";
 import { log_poller, log_search } from "@console/core/log/log.sql";
 import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 import { warning } from "@console/core/warning/warning.sql";
-import { issue, issueSubscriber } from "@console/core/issue/issue.sql";
+import {
+  issue,
+  issueSubscriber,
+  issueCount,
+} from "@console/core/issue/issue.sql";
 import { compress } from "@console/core/util/compress";
 
 export const handler = ApiHandler(async () => {
@@ -115,6 +130,7 @@ export const handler = ApiHandler(async () => {
         warning,
         issue,
         issueSubscriber,
+        issueCount,
         usage,
       };
 
@@ -123,9 +139,27 @@ export const handler = ApiHandler(async () => {
       if (actor.type === "user") {
         console.log("syncing user");
 
+        const filters = {
+          log_search: eq(log_search.userID, actor.properties.userID),
+          usage: gte(
+            usage.day,
+            DateTime.now().toUTC().startOf("month").toSQLDate()!,
+          ),
+          issueCount: gte(
+            issueCount.hour,
+            DateTime.now()
+              .toUTC()
+              .startOf("day")
+              .minus({ day: 1 })
+              .toSQL({ includeOffset: false })!,
+          ),
+        } satisfies {
+          [key in keyof typeof tables]?: SQLWrapper;
+        };
+
         const workspaceID = useWorkspace();
         for (const [name, table] of Object.entries(tables)) {
-          const rows = await tx
+          const query = tx
             .select({ id: table.id, time_updated: table.timeUpdated })
             .from(table)
             .where(
@@ -134,20 +168,12 @@ export const handler = ApiHandler(async () => {
                   "workspaceID" in table ? table.workspaceID : table.id,
                   workspaceID,
                 ),
-                ...(name === "log_search" && "userID" in table
-                  ? [eq(table.userID, actor.properties.userID)]
-                  : []),
-                ...(name === "usage" && "day" in table
-                  ? [
-                      gte(
-                        table.day,
-                        DateTime.now().toUTC().startOf("month").toSQLDate()!,
-                      ),
-                    ]
+                ...(name in filters
+                  ? [filters[name as keyof typeof filters]]
                   : []),
               ),
-            )
-            .execute();
+            );
+          const rows = await query.execute();
           results.push([name, rows]);
         }
       }

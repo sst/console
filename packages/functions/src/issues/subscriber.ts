@@ -2,13 +2,13 @@ import { Issue } from "@console/core/issue";
 import { unzipSync } from "zlib";
 import { provideActor } from "@console/core/actor";
 import { Handler } from "sst/context";
-import { KinesisStreamEvent } from "aws-lambda";
+import { KinesisStreamEvent, KinesisStreamBatchResponse } from "aws-lambda";
 
 declare module "sst/context" {
   interface Handlers {
     kinesis_stream: {
       event: KinesisStreamEvent;
-      response: string;
+      response: KinesisStreamBatchResponse;
     };
   }
 }

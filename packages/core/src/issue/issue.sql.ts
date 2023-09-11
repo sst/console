@@ -36,6 +36,9 @@ export const issue = mysqlTable(
     timeResolved: timestamp("time_resolved", {
       mode: "string",
     }),
+    timeSeen: timestamp("time_seen", {
+      mode: "string",
+    }).notNull(),
     resolver: json("resolver").$type<Actor>(),
     timeIgnored: timestamp("time_ignored", {
       mode: "string",
@@ -67,7 +70,7 @@ export const issueSubscriber = mysqlTable(
   }),
 );
 
-export const issueCounts = mysqlTable(
+export const issueCount = mysqlTable(
   "issue_count",
   {
     ...workspaceID,
@@ -76,7 +79,6 @@ export const issueCounts = mysqlTable(
       mode: "string",
     }).notNull(),
     group: varchar("group", { length: 255 }).notNull(),
-    issueID: cuid("issue_id").notNull(),
     count: bigint("count", { mode: "number" }).notNull(),
   },
   (table) => ({

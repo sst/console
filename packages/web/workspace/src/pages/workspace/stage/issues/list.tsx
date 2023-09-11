@@ -14,10 +14,13 @@ import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { Link, useSearchParams } from "@solidjs/router";
 import { theme } from "$/ui/theme";
 import type { Issue } from "@console/core/issue";
-import { For, Show, createMemo } from "solid-js";
+import { For, Show, createEffect, createMemo } from "solid-js";
 import { useIssuesContext } from "../context";
 import { useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
+import { IssueCountStore } from "$/data/issue";
+import { DateTime } from "luxon";
+import { sumBy } from "remeda";
 
 const COL_COUNT_WIDTH = 80;
 const COL_TIME_WIDTH = 200;
@@ -349,6 +352,15 @@ type IssueProps = {
 };
 
 function IssueRow(props: IssueProps) {
+  const rep = useReplicache();
+  const counts = IssueCountStore.watch.scan(
+    rep,
+    (item) =>
+      item.group === props.issue.group &&
+      item.hour > DateTime.now().toSQLDate()!,
+  );
+  const total = createMemo(() => sumBy(counts(), (item) => item.count));
+
   return (
     <IssueRoot>
       <IssueCol>
@@ -376,8 +388,8 @@ function IssueRow(props: IssueProps) {
         </Stack>
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_COUNT_WIDTH}px` }}>
-        <Text code size="mono_base" title={props.issue.count?.toString()}>
-          {formatNumber(props.issue.count || 1, true)}
+        <Text code size="mono_base" title={total().toString()}>
+          {formatNumber(total() || 1, true)}
         </Text>
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_TIME_WIDTH}px` }}>

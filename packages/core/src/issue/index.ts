@@ -5,7 +5,7 @@ import { awsAccount } from "../aws/aws.sql";
 import { and, db, eq, inArray, isNull, sql } from "../drizzle";
 import { Log } from "../log";
 import { app, stage } from "../app/app.sql";
-import { issue, issueCounts as issueCount, issueSubscriber } from "./issue.sql";
+import { issue, issueCount as issueCount, issueSubscriber } from "./issue.sql";
 import { createId } from "@paralleldrive/cuid2";
 import {} from "@smithy/middleware-retry";
 import { zod } from "../util/zod";
@@ -44,6 +44,7 @@ export * as Issue from "./index";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = typeof issue.$inferSelect;
+export type Count = typeof issueCount.$inferSelect;
 
 export const Events = {
   ErrorDetected: event("issue.error_detected", {
@@ -278,6 +279,7 @@ export const extract = zod(
               message: items[0].err.message,
               count: items.length,
               stageID: row.stageID,
+              timeSeen: sql`now()`,
               timeResolved: null,
               resolver: null,
             })),
@@ -292,8 +294,32 @@ export const extract = zod(
             stack: sql`VALUES(stack)`,
             timeUpdated: sql`CURRENT_TIMESTAMP()`,
             pointer: sql`VALUES(pointer)`,
+            timeSeen: sql`VALUES(time_seen)`,
             timeResolved: null,
             resolver: null,
+          },
+        })
+        .execute();
+
+      const hour = DateTime.now()
+        .startOf("hour")
+        .toSQL({ includeOffset: false })!;
+      await tx
+        .insert(issueCount)
+        .values(
+          errors.flatMap((items) =>
+            workspaces.map((row) => ({
+              id: createId(),
+              hour,
+              count: items.length,
+              workspaceID: row.workspaceID,
+              group: items[0].group,
+            })),
+          ),
+        )
+        .onDuplicateKeyUpdate({
+          set: {
+            count: sql`count + VALUES(count)`,
           },
         })
         .execute();

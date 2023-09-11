@@ -14,7 +14,7 @@ import {
 import { IconCheck, IconNoSymbol, IconViewfinderCircle } from "$/ui/icons";
 import { Tag, Row, Stack, Text, Button, ButtonGroup } from "$/ui";
 import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
-import { IssueStore } from "$/data/issue";
+import { IssueCountStore, IssueStore } from "$/data/issue";
 import { useReplicache } from "$/providers/replicache";
 import { DateTime } from "luxon";
 import { StackTrace } from "../logs/error";
@@ -22,6 +22,7 @@ import { useWorkspace } from "../../context";
 import { bus } from "$/providers/bus";
 import { LogStore, clearLogStore } from "$/data/log";
 import { LogEntry, LogEntryMessage, LogEntryTime } from "../logs";
+import { sumBy } from "remeda";
 
 const Content = styled("div", {
   base: {
@@ -110,6 +111,13 @@ export function Detail() {
     clearLogStore(issue()!.id);
     bus.emit("log", result);
   });
+
+  const counts = IssueCountStore.watch.scan(
+    rep,
+    (item) =>
+      item.group === issue()?.group && item.hour > DateTime.now().toSQLDate()!,
+  );
+  const total = createMemo(() => sumBy(counts(), (item) => item.count));
 
   const invocation = createMemo(() =>
     Object.values(LogStore[issue()?.id] || {}).at(0),
@@ -238,8 +246,8 @@ export function Detail() {
               <Text label on="surface" size="mono_sm" color="dimmed">
                 Events in last 24hrs
               </Text>
-              <Text color="secondary" title={(7321).toString()}>
-                {formatNumber(7321, true)}
+              <Text color="secondary" title={total().toString()}>
+                {formatNumber(total(), true)}
               </Text>
             </Stack>
           </Stack>
