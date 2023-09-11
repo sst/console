@@ -16,14 +16,15 @@ const primaryHover: CSSProperties = {
   backgroundColor: theme.color.button.primary.hover.color,
 };
 const primaryActive: CSSProperties = {
-  backgroundColor: theme.color.button.primary.active,
   borderColor: "transparent",
+  backgroundColor: theme.color.button.primary.active,
 };
 const secondaryHover: CSSProperties = {
   borderColor: theme.color.button.secondary.hover.border,
   backgroundColor: theme.color.button.secondary.hover.color,
 };
-const secoondaryActive: CSSProperties = {
+const secondaryActive: CSSProperties = {
+  borderColor: theme.color.button.secondary.border,
   backgroundColor: theme.color.button.secondary.active,
 };
 const successHover: CSSProperties = {
@@ -31,24 +32,24 @@ const successHover: CSSProperties = {
   backgroundColor: theme.color.button.success.hover.color,
 };
 const successActive: CSSProperties = {
-  backgroundColor: theme.color.button.success.active,
   borderColor: "transparent",
+  backgroundColor: theme.color.button.success.active,
 };
 const dangerHover: CSSProperties = {
   borderColor: theme.color.button.danger.hover.border,
   backgroundColor: theme.color.button.danger.hover.color,
 };
 const dangerActive: CSSProperties = {
-  backgroundColor: theme.color.button.danger.active,
   borderColor: "transparent",
+  backgroundColor: theme.color.button.danger.active,
 };
 const githubHover: CSSProperties = {
   borderColor: theme.color.button.github.hover.border,
   backgroundColor: theme.color.button.github.hover.color,
 };
 const githubActive: CSSProperties = {
-  backgroundColor: theme.color.button.github.active,
   borderColor: "transparent",
+  backgroundColor: theme.color.button.github.active,
 };
 
 export const Button = styled("button", {
@@ -69,10 +70,13 @@ export const Button = styled("button", {
     },
     selectors: {
       "&:active": activeBase,
-      "&[data-state-active]": activeBase,
     },
   },
   variants: {
+    active: {
+      true: {},
+      false: {},
+    },
     size: {
       base: {
         height: theme.input.size.base,
@@ -90,15 +94,14 @@ export const Button = styled("button", {
         boxShadow: theme.color.button.primary.shadow,
         color: theme.color.button.primary.text,
         ":disabled": {
-          borderColor: "transparent",
           boxShadow: "none",
+          borderColor: "transparent",
           opacity: theme.color.button.primary.disabled.opacity,
         },
         selectors: {
           "&:hover": primaryHover,
           "&:active": primaryActive,
           "&[data-state-hover]": primaryHover,
-          "&[data-state-active]": primaryActive,
         },
       },
       secondary: {
@@ -112,9 +115,8 @@ export const Button = styled("button", {
         },
         selectors: {
           "&:hover": secondaryHover,
-          "&:active": secoondaryActive,
+          "&:active": secondaryActive,
           "&[data-state-hover]": secondaryHover,
-          "&[data-state-active]": secoondaryActive,
         },
       },
       success: {
@@ -131,7 +133,6 @@ export const Button = styled("button", {
           "&:hover": successHover,
           "&:active": successActive,
           "&[data-state-hover]": successHover,
-          "&[data-state-active]": successActive,
         },
       },
       danger: {
@@ -148,7 +149,6 @@ export const Button = styled("button", {
           "&:hover": dangerHover,
           "&:active": dangerActive,
           "&[data-state-hover]": dangerHover,
-          "&[data-state-active]": dangerActive,
         },
       },
       github: {
@@ -165,7 +165,6 @@ export const Button = styled("button", {
           "&:hover": githubHover,
           "&:active": githubActive,
           "&[data-state-hover]": githubHover,
-          "&[data-state-active]": githubActive,
         },
       },
     },
@@ -184,9 +183,65 @@ export const Button = styled("button", {
       },
     },
   },
+  compoundVariants: [
+    {
+      variants: {
+        active: true,
+        color: "primary",
+      },
+      style: {
+        ...activeBase,
+        ...primaryActive,
+        ":hover": primaryActive,
+      },
+    },
+    {
+      variants: {
+        active: true,
+        color: "secondary",
+      },
+      style: {
+        ...activeBase,
+        ...secondaryActive,
+        ":hover": secondaryActive,
+      },
+    },
+    {
+      variants: {
+        active: true,
+        color: "success",
+      },
+      style: {
+        ...activeBase,
+        ...successActive,
+        ":hover": successActive,
+      },
+    },
+    {
+      variants: {
+        active: true,
+        color: "danger",
+      },
+      style: {
+        ...activeBase,
+        ...dangerActive,
+        ":hover": dangerActive,
+      },
+    },
+    {
+      variants: {
+        active: true,
+        color: "github",
+      },
+      style: {
+        ...activeBase,
+        ...githubActive,
+        ":hover": githubActive,
+      },
+    },
+  ],
   defaultVariants: {
     size: "base",
-    grouped: "none",
     color: "primary",
   },
 });

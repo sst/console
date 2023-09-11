@@ -14,7 +14,7 @@ import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { Link, useSearchParams } from "@solidjs/router";
 import { theme } from "$/ui/theme";
 import type { Issue } from "@console/core/issue";
-import { For, Show, createEffect, createMemo } from "solid-js";
+import { For, Show, Switch, Match, createEffect, createMemo } from "solid-js";
 import { useIssuesContext } from "../context";
 import { useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
@@ -23,7 +23,7 @@ import { DateTime } from "luxon";
 import { sumBy } from "remeda";
 
 const COL_COUNT_WIDTH = 80;
-const COL_TIME_WIDTH = 200;
+const COL_TIME_WIDTH = 140;
 
 const Content = styled("div", {
   base: {
@@ -136,7 +136,7 @@ export function List() {
       if (view() === "active") return !item.timeResolved && !item.timeIgnored;
       if (view() === "ignored") return item.timeIgnored;
       if (view() === "resolved") return item.timeResolved;
-    }),
+    })
   );
 
   function getCheckboxes() {
@@ -188,7 +188,7 @@ export function List() {
                 <IssueCheckbox
                   onChange={(e) => {
                     for (const input of document.querySelectorAll<HTMLInputElement>(
-                      "input[type='checkbox']",
+                      "input[type='checkbox']"
                     )) {
                       input.checked = e.currentTarget.checked;
                     }
@@ -229,7 +229,7 @@ export function List() {
                     }}
                     size="sm"
                     grouped="right"
-                    color="secondary"
+                    color="success"
                   >
                     <ButtonIcon>
                       <IconCheck />
@@ -248,8 +248,8 @@ export function List() {
                   uppercase
                   on="surface"
                   size="mono_sm"
-                  weight="medium"
                   color="dimmed"
+                  weight="medium"
                 >
                   Last day
                 </Text>
@@ -257,15 +257,15 @@ export function List() {
               <IssuesHeaderCol
                 align="right"
                 style={{ width: `${COL_TIME_WIDTH}px` }}
-                title="Last and first occurrence of the error"
+                title="Latest occurrence of the error"
               >
                 <Text
                   code
                   uppercase
                   on="surface"
+                  color="dimmed"
                   size="mono_sm"
                   weight="medium"
-                  color="dimmed"
                 >
                   Time
                 </Text>
@@ -277,7 +277,15 @@ export function List() {
                 fallback={
                   <EmptyIssuesSign>
                     <Text size="lg" color="dimmed">
-                      No issues found
+                      <Switch>
+                        <Match when={view() === "active"}>No new issues</Match>
+                        <Match when={view() === "ignored"}>
+                          No ignored issues
+                        </Match>
+                        <Match when={view() === "resolved"}>
+                          No resolved issues
+                        </Match>
+                      </Switch>
                     </Text>
                   </EmptyIssuesSign>
                 }
@@ -357,7 +365,7 @@ function IssueRow(props: IssueProps) {
     rep,
     (item) =>
       item.group === props.issue.group &&
-      item.hour > DateTime.now().toSQLDate()!,
+      item.hour > DateTime.now().toSQLDate()!
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
 
@@ -393,14 +401,14 @@ function IssueRow(props: IssueProps) {
         </Text>
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_TIME_WIDTH}px` }}>
-        <Text line leading="normal" size="sm" color="dimmed">
-          <span title={parseTime(props.issue.timeSeen).toLocaleString()}>
-            {formatSinceTime(props.issue.timeSeen)}
-          </span>{" "}
-          &mdash;{" "}
-          <span title={parseTime(props.issue.timeCreated).toLocaleString()}>
-            {formatSinceTime(props.issue.timeCreated)}
-          </span>
+        <Text
+          line
+          size="sm"
+          color="dimmed"
+          leading="normal"
+          title={parseTime(props.issue.timeSeen).toLocaleString()}
+        >
+          {formatSinceTime(props.issue.timeSeen)}
         </Text>
       </IssueCol>
     </IssueRoot>

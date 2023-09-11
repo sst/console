@@ -18,10 +18,8 @@ const Title = styled("div", {
   base: {
     borderTop: `1px solid ${theme.color.divider.surface}`,
     padding: `${theme.space[3]} ${theme.space[5]} ${theme.space[2.5]}`,
-    selectors: {
-      "&:first-child": {
-        borderTop: "none",
-      },
+    ":first-child": {
+      borderTop: "none",
     },
   },
 });
@@ -31,6 +29,9 @@ const Frame = styled("div", {
     ...utility.stack(0),
     flex: "1 1 auto",
     borderTop: `1px solid ${theme.color.divider.surface}`,
+    ":first-child": {
+      borderTop: "none",
+    },
   },
 });
 
@@ -76,7 +77,7 @@ const FrameTitle = styled("div", {
 const FrameContext = styled("div", {
   base: {
     padding: `${theme.space[1]} ${theme.space[5]}`,
-    borderTop: `1px solid ${theme.color.divider.surface}`,
+    //borderTop: `1px solid ${theme.color.divider.surface}`,
     ":first-child": {
       borderTop: "none",
     },

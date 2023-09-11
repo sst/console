@@ -106,7 +106,7 @@ export function Detail() {
           authorization: rep().auth,
           "x-sst-workspace": issue()!.workspaceID,
         },
-      },
+      }
     ).then((x) => x.json());
     clearLogStore(issue()!.id);
     bus.emit("log", result);
@@ -115,12 +115,12 @@ export function Detail() {
   const counts = IssueCountStore.watch.scan(
     rep,
     (item) =>
-      item.group === issue()?.group && item.hour > DateTime.now().toSQLDate()!,
+      item.group === issue()?.group && item.hour > DateTime.now().toSQLDate()!
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
 
   const invocation = createMemo(() =>
-    Object.values(LogStore[issue()?.id] || {}).at(0),
+    Object.values(LogStore[issue()?.id] || {}).at(0)
   );
 
   return (
@@ -132,7 +132,7 @@ export function Detail() {
               <Text code size="mono_2xl" weight="medium">
                 {issue().error}
               </Text>
-              <Stack space="0">
+              <Stack space="0" horizontal="start">
                 <Text code leading="loose" size="mono_base">
                   {issue().message}
                 </Text>
@@ -175,10 +175,14 @@ export function Detail() {
             <ButtonGroup>
               <Button
                 grouped="left"
-                data-state-active={Boolean(issue().timeIgnored)}
-                onClick={() => rep().mutate.issue_ignore([issue()!.id])}
                 color="secondary"
                 style={{ flex: "1 1 auto" }}
+                active={Boolean(issue().timeIgnored)}
+                onClick={() =>
+                  issue().timeIgnored
+                    ? rep().mutate.issue_unignore([issue()!.id])
+                    : rep().mutate.issue_ignore([issue()!.id])
+                }
               >
                 <ButtonIcon>
                   <IconNoSymbol />
@@ -186,11 +190,15 @@ export function Detail() {
                 Ignore
               </Button>
               <Button
-                onClick={() => rep().mutate.issue_resolve([issue()!.id])}
-                data-state-active={Boolean(issue().timeResolved)}
                 grouped="right"
-                color="secondary"
+                color="success"
                 style={{ flex: "1 1 auto" }}
+                active={Boolean(issue().timeResolved)}
+                onClick={() =>
+                  issue().timeResolved
+                    ? rep().mutate.issue_unresolve([issue()!.id])
+                    : rep().mutate.issue_resolve([issue()!.id])
+                }
               >
                 <ButtonIcon>
                   <IconCheck />
@@ -222,7 +230,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeSeen).toLocaleString(
-                  DateTime.DATETIME_FULL,
+                  DateTime.DATETIME_FULL
                 )}
                 color="secondary"
               >
@@ -235,7 +243,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeCreated).toLocaleString(
-                  DateTime.DATETIME_FULL,
+                  DateTime.DATETIME_FULL
                 )}
                 color="secondary"
               >

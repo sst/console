@@ -212,7 +212,7 @@ export function Design() {
           <Button data-state-hover color="primary">
             Button
           </Button>
-          <Button data-state-active color="primary">
+          <Button active color="primary">
             Button
           </Button>
           <Button disabled color="primary">
@@ -224,7 +224,7 @@ export function Design() {
           <Button data-state-hover color="success">
             Button
           </Button>
-          <Button data-state-active color="success">
+          <Button active color="success">
             Button
           </Button>
           <Button disabled color="success">
@@ -236,7 +236,7 @@ export function Design() {
           <Button data-state-hover color="danger">
             Button
           </Button>
-          <Button data-state-active color="danger">
+          <Button active color="danger">
             Button
           </Button>
           <Button disabled color="danger">
@@ -248,7 +248,7 @@ export function Design() {
           <Button data-state-hover color="secondary">
             Button
           </Button>
-          <Button data-state-active color="secondary">
+          <Button active color="secondary">
             Button
           </Button>
           <Button disabled color="secondary">
@@ -268,7 +268,7 @@ export function Design() {
             </ButtonIcon>
             Login with GitHub
           </Button>
-          <Button data-state-active color="github">
+          <Button active color="github">
             <ButtonIcon>
               <IconGitHub />
             </ButtonIcon>
