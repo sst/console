@@ -59,41 +59,31 @@ const mutators = new Client<ServerType>()
   })
   .mutation("issue_resolve", async (tx, input) => {
     for (const id of input) {
-      const existing = await IssueStore.get(tx, id);
-      await IssueStore.set(tx, id, {
-        ...existing,
-        timeResolved: DateTime.now().toSQL({ includeOffset: false }),
-        timeIgnored: null,
+      await IssueStore.update(tx, id, (item) => {
+        item.timeResolved = DateTime.now().toSQL({ includeOffset: false });
+        item.timeIgnored = null;
       });
     }
   })
   .mutation("issue_unresolve", async (tx, input) => {
     for (const id of input) {
-      const existing = await IssueStore.get(tx, id);
-      await IssueStore.set(tx, id, {
-        ...existing,
-        timeIgnored: null,
-        timeResolved: null,
+      await IssueStore.update(tx, id, (item) => {
+        item.timeResolved = null;
       });
     }
   })
   .mutation("issue_ignore", async (tx, input) => {
     for (const id of input) {
-      const existing = await IssueStore.get(tx, id);
-      await IssueStore.set(tx, id, {
-        ...existing,
-        timeIgnored: DateTime.now().toSQL({ includeOffset: false }),
-        timeResolved: null,
+      await IssueStore.update(tx, id, (item) => {
+        item.timeIgnored = DateTime.now().toSQL({ includeOffset: false });
+        item.timeResolved = null;
       });
     }
   })
   .mutation("issue_unignore", async (tx, input) => {
     for (const id of input) {
-      const existing = await IssueStore.get(tx, id);
-      await IssueStore.set(tx, id, {
-        ...existing,
-        timeIgnored: null,
-        timeResolved: null,
+      await IssueStore.update(tx, id, (item) => {
+        item.timeIgnored = null;
       });
     }
   })
@@ -154,7 +144,7 @@ function createReplicache(workspaceID: string, token: string) {
 }
 
 export function ReplicacheProvider(
-  props: ParentProps<{ accountID: string; workspaceID: string }>
+  props: ParentProps<{ accountID: string; workspaceID: string }>,
 ) {
   const tokens = useAuth();
   const token = createMemo(() => tokens[props.accountID]?.token.token);
@@ -182,7 +172,7 @@ export function ReplicacheProvider(
       return tx.get("/init");
     },
     false,
-    rep
+    rep,
   );
 
   return (
@@ -206,7 +196,7 @@ export function useReplicache() {
 export function createSubscription<R, D = undefined>(
   body: () => (tx: ReadTransaction) => Promise<R>,
   initial?: D,
-  replicache?: () => Replicache
+  replicache?: () => Replicache,
 ) {
   const [store, setStore] = createStore({ result: initial as any });
 
@@ -224,7 +214,7 @@ export function createSubscription<R, D = undefined>(
         onData: (val) => {
           setStore(reconcile({ result: structuredClone(val) }));
         },
-      }
+      },
     );
   });
 
@@ -237,7 +227,7 @@ export function createSubscription<R, D = undefined>(
 
 export function define<
   T extends Record<string, any>,
-  Get extends (arg: any) => string[] = (arg: any) => string[]
+  Get extends (arg: any) => string[] = (arg: any) => string[],
 >(input: { get: Get; scan: () => string[] }) {
   const result = {
     watch: {
@@ -248,14 +238,14 @@ export function define<
         return createScan<T>(
           () => result.path.scan(),
           rep,
-          filter ? (values) => values.filter(filter) : undefined
+          filter ? (values) => values.filter(filter) : undefined,
         );
       },
       find: (rep: () => Replicache, find: (value: T) => boolean) => {
         const filtered = createScan<T>(
           () => result.path.scan(),
           rep,
-          (values) => [values.find(find)!]
+          (values) => [values.find(find)!],
         );
 
         return createMemo(() => filtered().at(0));
@@ -278,9 +268,19 @@ export function define<
     async set(
       tx: WriteTransaction,
       args: Parameters<Get>[0],
-      item: Partial<T>
+      item: Partial<T>,
     ) {
       await tx.put(result.path.get(args), item as any);
+    },
+    async update(
+      tx: WriteTransaction,
+      args: Parameters<Get>[0],
+      updator: (input: T) => void,
+    ) {
+      const value = structuredClone(await result.get(tx, args));
+      if (!value) throw new Error("Not found");
+      updator(value);
+      await result.set(tx, args, value);
     },
   };
   return result;
@@ -288,7 +288,7 @@ export function define<
 
 export function createGet<T extends any>(
   p: () => string,
-  replicache: () => Replicache
+  replicache: () => Replicache,
 ) {
   let unsubscribe: () => void;
 
@@ -324,7 +324,7 @@ export function createGet<T extends any>(
       {
         prefix: path,
         initialValuesInFirstDiff: true,
-      }
+      },
     );
   });
 
@@ -344,7 +344,7 @@ export function createGet<T extends any>(
 export function createScan<T extends any>(
   p: () => string,
   replicache: () => Replicache,
-  refine?: (values: T[]) => T[]
+  refine?: (values: T[]) => T[],
 ) {
   let unsubscribe: () => void;
 
@@ -390,7 +390,7 @@ export function createScan<T extends any>(
                 }
                 if (diff.op === "change") {
                   state[keyToIndex.get(diff.key)!] = reconcile(
-                    structuredClone(diff.newValue) as T
+                    structuredClone(diff.newValue) as T,
                   )(structuredClone(diff.oldValue));
                 }
                 if (diff.op === "del") {
@@ -409,7 +409,7 @@ export function createScan<T extends any>(
                   state.pop();
                 }
               }
-            })
+            }),
           );
 
           setReady(true);
@@ -418,7 +418,7 @@ export function createScan<T extends any>(
       {
         prefix: path,
         initialValuesInFirstDiff: true,
-      }
+      },
     );
   });
 
