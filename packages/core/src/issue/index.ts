@@ -217,6 +217,7 @@ export const extract = zod(
             count: sql`count + VALUES(count)`,
             errorID: sql`VALUES(error_id)`,
             message: sql`VALUES(message)`,
+            stack: sql`VALUES(stack)`,
             timeUpdated: sql`CURRENT_TIMESTAMP()`,
           },
         })
