@@ -161,6 +161,8 @@ export function Detail() {
             <ButtonGroup>
               <Button
                 grouped="left"
+                data-state-active={Boolean(issue().timeIgnored)}
+                onClick={() => rep().mutate.issue_ignore([issue()!.id])}
                 color="secondary"
                 style={{ flex: "1 1 auto" }}
               >
@@ -170,7 +172,8 @@ export function Detail() {
                 Ignore
               </Button>
               <Button
-                data-state-active
+                onClick={() => rep().mutate.issue_resolve([issue()!.id])}
+                data-state-active={Boolean(issue().timeResolved)}
                 grouped="right"
                 color="secondary"
                 style={{ flex: "1 1 auto" }}

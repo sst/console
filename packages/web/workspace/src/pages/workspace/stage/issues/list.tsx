@@ -1,13 +1,23 @@
 import { styled } from "@macaron-css/solid";
-import { Stack } from "$/ui/layout";
+import { Row, Stack } from "$/ui/layout";
 import { IconCheck, IconNoSymbol } from "$/ui/icons";
-import { utility, Alert, Text, Button, ButtonGroup } from "$/ui";
+import {
+  utility,
+  Alert,
+  Text,
+  Button,
+  ButtonGroup,
+  SplitOptions,
+  SplitOptionsOption,
+} from "$/ui";
 import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
-import { Link } from "@solidjs/router";
+import { Link, useSearchParams } from "@solidjs/router";
 import { theme } from "$/ui/theme";
 import type { Issue } from "@console/core/issue";
-import { For, Show, createEffect } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import { useIssuesContext } from "../context";
+import { useReplicache } from "$/providers/replicache";
+import { HeaderSlot } from "../../header";
 
 const COL_COUNT_WIDTH = 80;
 const COL_TIME_WIDTH = 200;
@@ -113,112 +123,185 @@ const EmptyIssuesSign = styled("div", {
 
 export function List() {
   const issues = useIssuesContext();
-  createEffect(() => {
-    console.log(issues());
-  });
+  const [search, setSearch] = useSearchParams<{
+    view: "active" | "ignored" | "resolved";
+  }>();
+  const view = createMemo(() => search.view || "active");
+  const rep = useReplicache();
+  const filtered = createMemo(() =>
+    issues().filter((item) => {
+      if (view() === "active") return !item.timeResolved && !item.timeIgnored;
+      if (view() === "ignored") return item.timeIgnored;
+      if (view() === "resolved") return item.timeResolved;
+    }),
+  );
+
+  function getCheckboxes() {
+    return [
+      ...document.querySelectorAll<HTMLInputElement>("input[type='checkbox']"),
+    ];
+  }
+
+  function getCheckedIssues() {
+    return getCheckboxes()
+      .filter((i) => i.checked)
+      .filter((i) => i.name)
+      .map((i) => i.name);
+  }
+
   return (
-    <Content>
-      <Stack space="4">
-        <Alert level="info">
-          There was a problem enabling Issues for your account.{" "}
-          <a href="htts://sst.dev/discord">Contact us on Discord.</a>
-        </Alert>
-        <div>
-          <IssuesHeader>
-            <IssuesHeaderCol>
-              <input type="checkbox" />
-            </IssuesHeaderCol>
-            <IssuesHeaderCol grow>
-              <Text
-                code
-                uppercase
-                on="surface"
-                size="mono_sm"
-                weight="medium"
-                color="dimmed"
+    <>
+      <HeaderSlot>
+        <SplitOptions size="sm">
+          <SplitOptionsOption
+            onClick={() => setSearch({ view: "active" })}
+            selected={view() === "active"}
+          >
+            Active
+          </SplitOptionsOption>
+          <SplitOptionsOption
+            onClick={() => setSearch({ view: "ignored" })}
+            selected={view() === "ignored"}
+          >
+            Ignored
+          </SplitOptionsOption>
+          <SplitOptionsOption
+            onClick={() => setSearch({ view: "resolved" })}
+            selected={view() === "resolved"}
+          >
+            Resolved
+          </SplitOptionsOption>
+        </SplitOptions>
+      </HeaderSlot>
+      <Content>
+        <Stack space="4">
+          <Alert level="info">
+            There was a problem enabling Issues for your account.{" "}
+            <a href="htts://sst.dev/discord">Contact us on Discord.</a>
+          </Alert>
+          <div>
+            <IssuesHeader>
+              <IssuesHeaderCol>
+                <IssueCheckbox
+                  onChange={(e) => {
+                    for (const input of document.querySelectorAll<HTMLInputElement>(
+                      "input[type='checkbox']",
+                    )) {
+                      input.checked = e.currentTarget.checked;
+                    }
+                  }}
+                  type="checkbox"
+                />
+              </IssuesHeaderCol>
+              <IssuesHeaderCol grow>
+                <Text
+                  code
+                  uppercase
+                  on="surface"
+                  size="mono_sm"
+                  weight="medium"
+                  color="dimmed"
+                >
+                  Error
+                </Text>
+                <IssueActions>
+                  <Button
+                    onClick={() => {
+                      rep().mutate.issue_ignore(getCheckedIssues());
+                      getCheckboxes().forEach((item) => (item.checked = false));
+                    }}
+                    size="sm"
+                    grouped="left"
+                    color="secondary"
+                  >
+                    <ButtonIcon>
+                      <IconNoSymbol />
+                    </ButtonIcon>
+                    Ignore
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      rep().mutate.issue_resolve(getCheckedIssues());
+                      getCheckboxes().forEach((item) => (item.checked = false));
+                    }}
+                    size="sm"
+                    grouped="right"
+                    color="secondary"
+                  >
+                    <ButtonIcon>
+                      <IconCheck />
+                    </ButtonIcon>
+                    Resolve
+                  </Button>
+                </IssueActions>
+              </IssuesHeaderCol>
+              <IssuesHeaderCol
+                align="right"
+                style={{ width: `${COL_COUNT_WIDTH}px` }}
+                title="Number of events in the last 24 hours"
               >
-                Error
-              </Text>
-              <IssueActions>
-                <Button size="sm" grouped="left" color="secondary">
-                  <ButtonIcon>
-                    <IconNoSymbol />
-                  </ButtonIcon>
-                  Ignore
-                </Button>
-                <Button size="sm" grouped="right" color="secondary">
-                  <ButtonIcon>
-                    <IconCheck />
-                  </ButtonIcon>
-                  Resolve
-                </Button>
-              </IssueActions>
-            </IssuesHeaderCol>
-            <IssuesHeaderCol
-              align="right"
-              style={{ width: `${COL_COUNT_WIDTH}px` }}
-              title="Number of events in the last 24 hours"
-            >
-              <Text
-                code
-                uppercase
-                on="surface"
-                size="mono_sm"
-                weight="medium"
-                color="dimmed"
+                <Text
+                  code
+                  uppercase
+                  on="surface"
+                  size="mono_sm"
+                  weight="medium"
+                  color="dimmed"
+                >
+                  Last day
+                </Text>
+              </IssuesHeaderCol>
+              <IssuesHeaderCol
+                align="right"
+                style={{ width: `${COL_TIME_WIDTH}px` }}
+                title="Last and first occurrence of the error"
               >
-                Last day
-              </Text>
-            </IssuesHeaderCol>
-            <IssuesHeaderCol
-              align="right"
-              style={{ width: `${COL_TIME_WIDTH}px` }}
-              title="Last and first occurrence of the error"
-            >
-              <Text
-                code
-                uppercase
-                on="surface"
-                size="mono_sm"
-                weight="medium"
-                color="dimmed"
+                <Text
+                  code
+                  uppercase
+                  on="surface"
+                  size="mono_sm"
+                  weight="medium"
+                  color="dimmed"
+                >
+                  Time
+                </Text>
+              </IssuesHeaderCol>
+            </IssuesHeader>
+            <IssuesList>
+              <Show
+                when={issues().length !== 0}
+                fallback={
+                  <EmptyIssuesSign>
+                    <Text size="lg" color="dimmed">
+                      No issues found
+                    </Text>
+                  </EmptyIssuesSign>
+                }
               >
-                Time
-              </Text>
-            </IssuesHeaderCol>
-          </IssuesHeader>
-          <IssuesList>
-            <Show
-              when={issues().length !== 0}
-              fallback={
-                <EmptyIssuesSign>
-                  <Text size="lg" color="dimmed">
-                    No issues found
-                  </Text>
-                </EmptyIssuesSign>
-              }
-            >
-              <For each={issues()}>
-                {(issue) => (
-                  <IssueRow
-                    issue={issue}
-                    unread
-                    handler="/packages/functions/src/events/log-poller-status.handler"
-                  />
-                )}
-              </For>
-            </Show>
-          </IssuesList>
-        </div>
-      </Stack>
-    </Content>
+                <For each={filtered()}>
+                  {(issue) => (
+                    <IssueRow
+                      issue={issue}
+                      unread
+                      handler="/packages/functions/src/events/log-poller-status.handler"
+                    />
+                  )}
+                </For>
+              </Show>
+            </IssuesList>
+          </div>
+        </Stack>
+      </Content>
+    </>
   );
 }
 
-const IssueRoot = styled("div", {
+const IssueRoot = styled("label", {
   base: {
     ...utility.row(4),
     padding: theme.space[4],
+    overflow: "hidden",
     borderTop: `1px solid ${theme.color.divider.base}`,
     alignItems: "center",
     ":first-child": {
@@ -232,6 +315,7 @@ const IssueError = styled(Link, {
     overflow: "hidden",
     lineHeight: "normal",
     whiteSpace: "nowrap",
+    cursor: "pointer",
     textOverflow: "ellipsis",
   },
   variants: {
@@ -252,6 +336,12 @@ const IssueError = styled(Link, {
   },
 });
 
+const IssueCheckbox = styled("input", {
+  base: {
+    cursor: "pointer",
+  },
+});
+
 type IssueProps = {
   issue: Issue.Info;
   handler: string;
@@ -262,16 +352,18 @@ function IssueRow(props: IssueProps) {
   return (
     <IssueRoot>
       <IssueCol>
-        <input type="checkbox" />
+        <IssueCheckbox name={props.issue.id} type="checkbox" />
       </IssueCol>
       <IssueCol grow>
         <Stack space="2">
-          <IssueError
-            href={props.issue.id}
-            weight={props.unread ? "medium" : "regular"}
-          >
-            {props.issue.error}
-          </IssueError>
+          <Row horizontal="start">
+            <IssueError
+              href={props.issue.id}
+              weight={props.unread ? "medium" : "regular"}
+            >
+              {props.issue.error}
+            </IssueError>
+          </Row>
           <Stack space="1">
             <Text line size="sm" leading="normal">
               {props.issue.message}

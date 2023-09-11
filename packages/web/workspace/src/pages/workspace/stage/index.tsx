@@ -18,19 +18,8 @@ import { Logs } from "./logs";
 import { Issues } from "./issues";
 import { Resources } from "./resources";
 import { IconStage } from "$/ui/icons/custom";
-import { Header } from "../header";
+import { Header, HeaderProvider } from "../header";
 import { Row, SplitOptions, SplitOptionsOption, TabTitle } from "$/ui";
-
-export const PageHeader = styled("div", {
-  base: {
-    height: 56,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: `0 ${theme.space[4]}`,
-    borderBottom: `1px solid ${theme.color.divider.base}`,
-  },
-});
 
 export function Stage() {
   const bar = useCommandBar();
@@ -40,12 +29,12 @@ export function Stage() {
 
   const app = AppStore.watch.find(
     useReplicache(),
-    (app) => app.name === params.appName
+    (app) => app.name === params.appName,
   );
   const stage = createSubscription(() =>
     app()
       ? StageStore.fromName(app()!.id, params.stageName)
-      : async () => undefined
+      : async () => undefined,
   );
 
   bar.register("stage-switcher", async () => {
@@ -80,34 +69,9 @@ export function Stage() {
 
 export function Inner() {
   const ctx = useStageContext();
-  const issues = useIssuesContext();
   return (
-    <>
+    <HeaderProvider>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
-      <Show when={ctx.app.name === "console"}>
-        <PageHeader>
-          <Row space="5" vertical="center">
-            <Link href="" end>
-              <TabTitle>Resources</TabTitle>
-            </Link>
-            <Link href="issues">
-              <TabTitle count={issues().length.toString()}>Issues</TabTitle>
-            </Link>
-          </Row>
-          <Routes>
-            <Route
-              path="issues"
-              element={
-                <SplitOptions size="sm">
-                  <SplitOptionsOption selected>Active</SplitOptionsOption>
-                  <SplitOptionsOption>Ignored</SplitOptionsOption>
-                  <SplitOptionsOption>Resolved</SplitOptionsOption>
-                </SplitOptions>
-              }
-            />
-          </Routes>
-        </PageHeader>
-      </Show>
       <div>
         <Routes>
           <Route path="" component={Resources} />
@@ -115,6 +79,6 @@ export function Inner() {
           <Route path="logs/:resourceID/*" component={Logs} />
         </Routes>
       </div>
-    </>
+    </HeaderProvider>
   );
 }

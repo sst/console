@@ -61,7 +61,7 @@ export const handler = ApiHandler(async () => {
               actor,
               cvrVersion: 0,
               clientVersion: (req.cookie as number) ?? 0,
-            }
+            },
         );
 
       console.log("compare", group, actor);
@@ -76,8 +76,8 @@ export const handler = ApiHandler(async () => {
         .where(
           and(
             eq(replicache_cvr.clientGroupID, req.clientGroupID),
-            eq(replicache_cvr.id, req.cookie as number)
-          )
+            eq(replicache_cvr.id, req.cookie as number),
+          ),
         )
         .execute()
         .then((rows) => rows.at(0));
@@ -88,7 +88,7 @@ export const handler = ApiHandler(async () => {
       const toPut: Record<string, string[]> = {};
       const nextCvr = {
         data: {} as Record<string, number>,
-        version: group.cvrVersion + 1,
+        version: Math.max(req.cookie as number, group.cvrVersion) + 1,
       };
 
       if (!oldCvr) {
@@ -132,7 +132,7 @@ export const handler = ApiHandler(async () => {
               and(
                 eq(
                   "workspaceID" in table ? table.workspaceID : table.id,
-                  workspaceID
+                  workspaceID,
                 ),
                 ...(name === "log_search" && "userID" in table
                   ? [eq(table.userID, actor.properties.userID)]
@@ -141,11 +141,11 @@ export const handler = ApiHandler(async () => {
                   ? [
                       gte(
                         table.day,
-                        DateTime.now().toUTC().startOf("month").toSQLDate()!
+                        DateTime.now().toUTC().startOf("month").toSQLDate()!,
                       ),
                     ]
-                  : [])
-              )
+                  : []),
+              ),
             )
             .execute();
           results.push([name, rows]);
@@ -166,8 +166,8 @@ export const handler = ApiHandler(async () => {
             .where(
               and(
                 eq(user.email, actor.properties.email),
-                isNull(user.timeDeleted)
-              )
+                isNull(user.timeDeleted),
+              ),
             )
             .execute(),
         ]);
@@ -183,8 +183,8 @@ export const handler = ApiHandler(async () => {
           .where(
             and(
               eq(user.email, actor.properties.email),
-              isNull(user.timeDeleted)
-            )
+              isNull(user.timeDeleted),
+            ),
           )
           .execute();
         results.push(["workspace", workspaces]);
@@ -206,7 +206,7 @@ export const handler = ApiHandler(async () => {
 
       console.log(
         "toPut",
-        mapValues(toPut, (value) => value.length)
+        mapValues(toPut, (value) => value.length),
       );
 
       console.log("toDel", cvr.data);
@@ -223,8 +223,8 @@ export const handler = ApiHandler(async () => {
               "workspaceID" in table && actor.type === "user"
                 ? eq(table.workspaceID, useWorkspace())
                 : undefined,
-              inArray(table.id, ids)
-            )
+              inArray(table.id, ids),
+            ),
           )
           .execute();
         for (const row of rows) {
@@ -254,13 +254,13 @@ export const handler = ApiHandler(async () => {
         .where(
           and(
             eq(replicache_client.clientGroupID, req.clientGroupID),
-            gt(replicache_client.clientVersion, cvr.clientVersion)
-          )
+            gt(replicache_client.clientVersion, cvr.clientVersion),
+          ),
         )
         .execute();
 
       const lastMutationIDChanges = Object.fromEntries(
-        clients.map((c) => [c.id, c.mutationID] as const)
+        clients.map((c) => [c.id, c.mutationID] as const),
       );
       if (patch.length > 0) {
         await tx
@@ -268,8 +268,8 @@ export const handler = ApiHandler(async () => {
           .where(
             and(
               eq(replicache_cvr.clientGroupID, req.clientGroupID),
-              lte(replicache_cvr.timeUpdated, sql`now() - interval 7 day`)
-            )
+              lte(replicache_cvr.timeUpdated, sql`now() - interval 7 day`),
+            ),
           )
           .execute();
 
@@ -293,7 +293,7 @@ export const handler = ApiHandler(async () => {
         console.log(
           "compare",
           compressed.toString("base64").length,
-          Buffer.from(data).toString("base64").length
+          Buffer.from(data).toString("base64").length,
         );
         await tx
           .insert(replicache_cvr)
@@ -310,8 +310,8 @@ export const handler = ApiHandler(async () => {
           .where(
             and(
               eq(replicache_cvr.clientGroupID, req.clientGroupID),
-              lt(replicache_cvr.id, nextCvr.version - 10)
-            )
+              lt(replicache_cvr.id, nextCvr.version - 10),
+            ),
           );
 
         return {
@@ -326,7 +326,7 @@ export const handler = ApiHandler(async () => {
         cookie: req.cookie,
         lastMutationIDChanges,
       };
-    }
+    },
   );
 
   console.log("here", resp);

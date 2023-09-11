@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { provideActor, useWorkspace } from "../actor";
+import { provideActor, useActor, useWorkspace } from "../actor";
 import { AWS } from "../aws";
 import { awsAccount } from "../aws/aws.sql";
 import { and, db, eq, inArray, isNull, sql } from "../drizzle";
@@ -28,7 +28,7 @@ import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
 import { Replicache } from "../replicache";
-import { createTransaction } from "../util/transaction";
+import { createTransaction, useTransaction } from "../util/transaction";
 import { DateTime } from "luxon";
 import {
   createPipe,
@@ -63,6 +63,66 @@ export const Events = {
       .array(),
   }),
 };
+
+export const ignore = zod(Info.shape.id.array(), async (input) =>
+  useTransaction((tx) =>
+    tx
+      .update(issue)
+      .set({
+        timeIgnored: sql`now()`,
+        ignorer: useActor(),
+        timeResolved: null,
+        resolver: null,
+      })
+      .where(
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
+      ),
+  ),
+);
+
+export const unignore = zod(Info.shape.id.array(), async (input) =>
+  useTransaction((tx) =>
+    tx
+      .update(issue)
+      .set({
+        timeIgnored: null,
+        ignorer: null,
+      })
+      .where(
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
+      ),
+  ),
+);
+
+export const resolve = zod(Info.shape.id.array(), async (input) =>
+  useTransaction((tx) =>
+    tx
+      .update(issue)
+      .set({
+        timeResolved: sql`now()`,
+        resolver: useActor(),
+        timeIgnored: null,
+        ignorer: null,
+      })
+      .where(
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
+      ),
+  ),
+);
+
+export const unresolve = zod(Info.shape.id.array(), async (input) =>
+  useTransaction((tx) =>
+    tx
+      .update(issue)
+      .set({
+        timeResolved: null,
+        resolver: null,
+      })
+      .where(
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
+      ),
+  ),
+);
 
 export const extract = zod(
   z.custom<(typeof Events.ErrorDetected.shape.properties)["records"][number]>(),
@@ -218,6 +278,8 @@ export const extract = zod(
               message: items[0].err.message,
               count: items.length,
               stageID: row.stageID,
+              timeResolved: null,
+              resolver: null,
             })),
           ),
         )
@@ -230,6 +292,8 @@ export const extract = zod(
             stack: sql`VALUES(stack)`,
             timeUpdated: sql`CURRENT_TIMESTAMP()`,
             pointer: sql`VALUES(pointer)`,
+            timeResolved: null,
+            resolver: null,
           },
         })
         .execute();

@@ -1,11 +1,31 @@
-import { Row, Stack, AvatarInitialsIcon, Text, Tag, theme } from "$/ui";
+import {
+  Row,
+  Stack,
+  AvatarInitialsIcon,
+  Text,
+  Tag,
+  theme,
+  TabTitle,
+} from "$/ui";
 import { IconChevronUpDown, IconMagnifyingGlass } from "$/ui/icons";
 import { utility } from "$/ui/utility";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
 import { useWorkspace } from "./context";
 import { useCommandBar } from "./command-bar";
-import { Show } from "solid-js";
+import {
+  JSX,
+  ParentProps,
+  Show,
+  createContext,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
+import { createInitializedContext } from "$/common/context";
+import { useIssuesContext } from "./stage/context";
 
 const Root = styled("div", {
   base: {
@@ -102,6 +122,17 @@ const JumpToButtonKeys = styled("div", {
   },
 });
 
+export const PageHeader = styled("div", {
+  base: {
+    height: 56,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: `0 ${theme.space[4]}`,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
 const LogoutButton = styled("span", {
   base: {
     fontWeight: 500,
@@ -121,74 +152,110 @@ function isMac() {
   return navigator.userAgent.toUpperCase().indexOf("MAC") !== -1;
 }
 
+export const { provider: HeaderProvider, use: useHeaderContext } =
+  createInitializedContext("HeaderContext", () => {
+    const [children, setChildren] = createSignal<JSX.Element>();
+    return {
+      set: setChildren,
+      clear: () => setChildren(undefined),
+      get children() {
+        return children();
+      },
+      get ready() {
+        return true;
+      },
+    };
+  });
+
+export function HeaderSlot(props: ParentProps) {
+  const ctx = useHeaderContext();
+  createEffect(() => {
+    ctx.set(props.children);
+  });
+
+  onCleanup(() => {
+    ctx.clear();
+  });
+
+  return null;
+}
+
 export function Header(props: { app?: string; stage?: string }) {
   const workspace = useWorkspace();
   const bar = useCommandBar();
 
+  const issues = useIssuesContext();
+  const issuesCount = createMemo(
+    () =>
+      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length,
+  );
+  const ctx = useHeaderContext();
+
   return (
-    <Root>
-      <Row space="4" vertical="center">
-        <WorkspaceLogoLink href={`/${workspace().slug}`}>
-          <AvatarInitialsIcon type="workspace" text={workspace().slug} />
-        </WorkspaceLogoLink>
-        <StageSwitcher
-          onClick={() =>
-            props.stage
-              ? bar.show("stage-switcher", "app-switcher")
-              : bar.show("workspace-switcher")
-          }
-        >
-          <Show
-            when={props.stage}
-            fallback={
-              <Text size="lg" weight="medium" color="secondary">
-                {workspace().slug}
-              </Text>
+    <>
+      <Root>
+        <Row space="4" vertical="center">
+          <WorkspaceLogoLink href={`/${workspace().slug}`}>
+            <AvatarInitialsIcon type="workspace" text={workspace().slug} />
+          </WorkspaceLogoLink>
+          <StageSwitcher
+            onClick={() =>
+              props.stage
+                ? bar.show("stage-switcher", "app-switcher")
+                : bar.show("workspace-switcher")
             }
           >
-            <Stack space="1.5">
-              <Text size="lg" weight="medium" color="secondary">
-                {props.app}
+            <Show
+              when={props.stage}
+              fallback={
+                <Text size="lg" weight="medium" color="secondary">
+                  {workspace().slug}
+                </Text>
+              }
+            >
+              <Stack space="1.5">
+                <Text size="lg" weight="medium" color="secondary">
+                  {props.app}
+                </Text>
+                <Text color="dimmed">{props.stage}</Text>
+              </Stack>
+            </Show>
+            <SwitcherIcon />
+          </StageSwitcher>
+        </Row>
+        <Row space="4" vertical="center">
+          <JumpToButton onClick={() => bar.show()}>
+            <Row space="1" vertical="center">
+              <IconMagnifyingGlass
+                width="13"
+                height="13"
+                color={theme.color.icon.dimmed}
+              />
+              <Text leading="normal" size="xs" color="dimmed">
+                Jump to
               </Text>
-              <Text color="dimmed">{props.stage}</Text>
-            </Stack>
-          </Show>
-          <SwitcherIcon />
-        </StageSwitcher>
-      </Row>
-      <Row space="4" vertical="center">
-        <JumpToButton onClick={() => bar.show()}>
-          <Row space="1" vertical="center">
-            <IconMagnifyingGlass
-              width="13"
-              height="13"
-              color={theme.color.icon.dimmed}
-            />
-            <Text leading="normal" size="xs" color="dimmed">
-              Jump to
-            </Text>
-          </Row>
-          <Row space="1" vertical="center">
-            <JumpToButtonKeys>
-              {isMac() ? <>&#8984;</> : "Ctrl"}
-            </JumpToButtonKeys>
-            <JumpToButtonKeys>K</JumpToButtonKeys>
-          </Row>
-        </JumpToButton>
-        <LogoutButton
-          onClick={async () => {
-            const dbs = await window.indexedDB.databases();
-            dbs.forEach((db) => {
-              window.indexedDB.deleteDatabase(db.name!);
-            });
-            localStorage.clear();
-            location.href = "/";
-          }}
-        >
-          Logout
-        </LogoutButton>
-      </Row>
-      {/*
+            </Row>
+            <Row space="1" vertical="center">
+              <JumpToButtonKeys>
+                {isMac() ? <>&#8984;</> : "Ctrl"}
+              </JumpToButtonKeys>
+              <JumpToButtonKeys>K</JumpToButtonKeys>
+            </Row>
+          </JumpToButton>
+          <LogoutButton
+            onClick={async () => {
+              const dbs = await window.indexedDB.databases();
+              dbs.forEach((db) => {
+                window.indexedDB.deleteDatabase(db.name!);
+              });
+              localStorage.clear();
+              location.href = "/";
+            }}
+          >
+            Logout
+          </LogoutButton>
+        </Row>
+        {/*
       <User>
         <UserImage />
         <Text
@@ -205,6 +272,22 @@ export function Header(props: { app?: string; stage?: string }) {
         </Text>
       </User>
       */}
-    </Root>
+      </Root>
+      <PageHeader>
+        <Row space="5" vertical="center">
+          <Link href="" end>
+            <TabTitle>Resources</TabTitle>
+          </Link>
+          <Link href="issues">
+            <TabTitle
+              count={issuesCount() ? issuesCount().toString() : undefined}
+            >
+              Issues
+            </TabTitle>
+          </Link>
+        </Row>
+        <Show when={ctx.children}>{ctx.children}</Show>
+      </PageHeader>
+    </>
   );
 }
