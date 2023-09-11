@@ -1,7 +1,16 @@
 import { theme } from "$/ui/theme";
 import { Link, useParams } from "@solidjs/router";
 import { styled } from "@macaron-css/solid";
-import { Show, Switch, Match, ComponentProps, createResource } from "solid-js";
+import {
+  Show,
+  Switch,
+  Match,
+  ComponentProps,
+  createResource,
+  createMemo,
+  createEffect,
+  For,
+} from "solid-js";
 import { IconCheck, IconNoSymbol, IconViewfinderCircle } from "$/ui/icons";
 import { Tag, Row, Stack, Text, Button, ButtonGroup } from "$/ui";
 import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
@@ -10,6 +19,9 @@ import { useReplicache } from "$/providers/replicache";
 import { DateTime } from "luxon";
 import { StackTrace } from "../logs/error";
 import { useWorkspace } from "../../context";
+import { bus } from "$/providers/bus";
+import { LogStore, clearLogStore } from "$/data/log";
+import { LogEntry, LogEntryMessage, LogEntryTime } from "../logs";
 
 const Content = styled("div", {
   base: {
@@ -74,25 +86,29 @@ export function Detail() {
   const params = useParams();
   const rep = useReplicache();
   const issue = IssueStore.watch.get(rep, () => params.issueID);
-  const logs = createResource(
-    () => issue(),
-    async (issue) => {
-      if (!issue) return;
-      const result = await fetch(
-        import.meta.env.VITE_API_URL +
-          "/rest/log?" +
-          new URLSearchParams({
-            pointer: JSON.stringify(issue.pointer),
-            stageID: issue.stageID,
-          }),
-        {
-          headers: {
-            authorization: rep().auth,
-            "x-sst-workspace": issue.workspaceID,
-          },
-        }
-      );
-    }
+  createEffect(async () => {
+    if (!issue()) return;
+    const result = await fetch(
+      import.meta.env.VITE_API_URL +
+        "/rest/log?" +
+        new URLSearchParams({
+          pointer: JSON.stringify(issue()!.pointer),
+          stageID: issue()!.stageID,
+          groupID: issue()!.id,
+        }),
+      {
+        headers: {
+          authorization: rep().auth,
+          "x-sst-workspace": issue()!.workspaceID,
+        },
+      },
+    ).then((x) => x.json());
+    clearLogStore(issue()!.id);
+    bus.emit("log", result);
+  });
+
+  const invocation = createMemo(() =>
+    Object.values(LogStore[issue()?.id] || {}).at(0),
   );
 
   return (
@@ -126,10 +142,16 @@ export function Detail() {
                 Logs
               </Text>
               <LogsMock>
-                <LogsMockRow />
-                <LogsMockRow />
-                <LogsMockRow />
-                <LogsMockRow />
+                <For each={invocation()?.logs || []}>
+                  {(entry, i) => (
+                    <LogEntry>
+                      <LogEntryTime>
+                        {entry.timestamp.toLocaleTimeString()}
+                      </LogEntryTime>
+                      <LogEntryMessage>{entry.message}</LogEntryMessage>
+                    </LogEntry>
+                  )}
+                </For>
               </LogsMock>
             </Stack>
           </Stack>
@@ -183,7 +205,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeUpdated).toLocaleString(
-                  DateTime.DATETIME_FULL
+                  DateTime.DATETIME_FULL,
                 )}
                 color="secondary"
               >
@@ -196,7 +218,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeCreated).toLocaleString(
-                  DateTime.DATETIME_FULL
+                  DateTime.DATETIME_FULL,
                 )}
                 color="secondary"
               >

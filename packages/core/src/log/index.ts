@@ -84,7 +84,7 @@ export function createSourcemapCache(input: {
         new ListObjectsV2Command({
           Bucket: bootstrap.bucket,
           Prefix: `sourcemap/${input.config.app}/${input.config.stage}/${input.functionArn}`,
-        })
+        }),
       )
       .catch(() => {});
     if (!result) return [];
@@ -100,7 +100,7 @@ export function createSourcemapCache(input: {
       const match = pipe(
         await sourcemapsMeta(),
         filter((x) => x.created < number),
-        maxBy((x) => x.created)
+        maxBy((x) => x.created),
       );
       if (!match) return;
       if (sourcemapCache.has(match.key)) {
@@ -111,13 +111,13 @@ export function createSourcemapCache(input: {
         new GetObjectCommand({
           Bucket: bootstrap!.bucket,
           Key: match.key,
-        })
+        }),
       );
       const raw = JSON.parse(
-        zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
+        zlib.unzipSync(await content.Body!.transformToByteArray()).toString(),
       );
       raw.sources = raw.sources.map((item: string) =>
-        item.replaceAll("../", "")
+        item.replaceAll("../", ""),
       );
       sourcemapCache.set(match.key, raw);
       const consumer = await new SourceMapConsumer(raw);
@@ -204,7 +204,7 @@ export function createProcessor(input: {
             requestID: generateInvocationID(splits[2]!),
             cold: isCold,
           },
-          ...flush
+          ...flush,
         );
       }
 
@@ -260,7 +260,7 @@ export function createProcessor(input: {
         const parsed = await extractError(
           sourcemapCache,
           input.timestamp,
-          tabs
+          tabs,
         );
         if (parsed) {
           target.push({
@@ -296,10 +296,10 @@ export function createProcessor(input: {
                 report: 4,
               }[evt.type];
             },
-            (evt) => evt.timestamp
-          )
+            (evt) => evt.timestamp,
+          ),
         ),
-        sortBy((evts) => order * (evts[0]?.timestamp || 0))
+        sortBy((evts) => order * (evts[0]?.timestamp || 0)),
       ).flat();
       results = [];
       return events;
@@ -327,6 +327,7 @@ import { retrySync } from "../util/retry";
 export const expand = zod(
   z.object({
     timestamp: z.number(),
+    group: z.string(),
     logGroup: z.string(),
     logStream: z.string(),
     functionArn: z.string(),
@@ -346,7 +347,7 @@ export const expand = zod(
 
     const processor = createProcessor({
       config: input.config,
-      group: input.logGroup,
+      group: input.group,
       arn: input.functionArn,
     });
 
@@ -363,11 +364,11 @@ export const expand = zod(
             endTime: end,
             startFromHead: !backwards,
             nextToken,
-          })
+          }),
         );
         const events = pipe(
           response.events || [],
-          sortBy((evt) => (backwards ? -1 : 1) * evt.timestamp!)
+          sortBy((evt) => (backwards ? -1 : 1) * evt.timestamp!),
         );
 
         for (const event of events) {
@@ -409,7 +410,7 @@ export const expand = zod(
     cw.destroy();
     lambda.destroy();
     return processor.flush();
-  }
+  },
 );
 
 type ParsedError = {
@@ -420,7 +421,7 @@ type ParsedError = {
 export async function extractError(
   sourcemapCache: SourcemapCache,
   timestamp: number,
-  tabs: string[]
+  tabs: string[],
 ): Promise<ParsedError | undefined> {
   const parsed = (() => {
     // Generic AWS error handling
@@ -486,7 +487,7 @@ export async function extractError(
         const min = Math.max(0, original.line! - 4);
         const ctx = lines.slice(
           min,
-          Math.min(original.line! + 3, lines.length - 1)
+          Math.min(original.line! + 3, lines.length - 1),
         );
 
         return [

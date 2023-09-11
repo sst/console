@@ -46,7 +46,7 @@ export const issue = mysqlTable(
     primary: primaryKey(table.workspaceID, table.id),
     group: unique("group").on(table.workspaceID, table.stageID, table.group),
     updated: index("updated").on(table.workspaceID, table.timeUpdated),
-  })
+  }),
 );
 
 export const issueSubscriber = mysqlTable(
@@ -62,9 +62,9 @@ export const issueSubscriber = mysqlTable(
     unique: unique("unique").on(
       table.workspaceID,
       table.stageID,
-      table.functionID
+      table.functionID,
     ),
-  })
+  }),
 );
 
 export const issueCounts = mysqlTable(
@@ -75,11 +75,12 @@ export const issueCounts = mysqlTable(
     hour: timestamp("hour", {
       mode: "string",
     }).notNull(),
+    group: varchar("group", { length: 255 }).notNull(),
     issueID: cuid("issue_id").notNull(),
     count: bigint("count", { mode: "number" }).notNull(),
   },
   (table) => ({
     primary: primaryKey(table.workspaceID, table.id),
-    unique: unique("unique").on(table.workspaceID, table.issueID, table.hour),
-  })
+    unique: unique("unique").on(table.workspaceID, table.group, table.hour),
+  }),
 );

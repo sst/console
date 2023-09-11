@@ -30,7 +30,15 @@ import { Warning } from "../warning";
 import { Replicache } from "../replicache";
 import { createTransaction } from "../util/transaction";
 import { DateTime } from "luxon";
-import { flatMap, groupBy, map, pipe, uniqBy, values } from "remeda";
+import {
+  createPipe,
+  flatMap,
+  groupBy,
+  map,
+  pipe,
+  uniqBy,
+  values,
+} from "remeda";
 
 export * as Issue from "./index";
 
@@ -167,9 +175,8 @@ export const extract = zod(
           err,
         };
       }),
-    ).then((x) =>
-      pipe(
-        x,
+    ).then(
+      createPipe(
         flatMap((item) => {
           return item.status === "fulfilled" && item.value ? [item.value] : [];
         }),
@@ -178,12 +185,15 @@ export const extract = zod(
       ),
     );
 
+    if (errors.length === 0) return;
+
     for (const items of errors) {
       const [item] = items;
       console.log(
         "found error",
         item.err.error,
         item.err.message,
+        item.timestamp,
         items.length,
       );
     }
@@ -219,6 +229,7 @@ export const extract = zod(
             message: sql`VALUES(message)`,
             stack: sql`VALUES(stack)`,
             timeUpdated: sql`CURRENT_TIMESTAMP()`,
+            pointer: sql`VALUES(pointer)`,
           },
         })
         .execute();

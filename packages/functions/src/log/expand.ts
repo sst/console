@@ -10,6 +10,7 @@ export const handler = ApiHandler(async (req) => {
 
   const pointer = JSON.parse(useQueryParam("pointer")!);
   const stageID = useQueryParam("stageID")!;
+  const groupID = useQueryParam("groupID")!;
 
   const config = await Stage.assumeRole(stageID);
   if (!config)
@@ -18,6 +19,7 @@ export const handler = ApiHandler(async (req) => {
     });
 
   const result = await Log.expand({
+    group: groupID,
     logGroup: pointer.logGroup,
     logStream: pointer.logStream,
     timestamp: pointer.timestamp,
