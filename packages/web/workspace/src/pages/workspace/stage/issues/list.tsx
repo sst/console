@@ -270,7 +270,7 @@ export function List() {
             </IssuesHeader>
             <IssuesList>
               <Show
-                when={issues().length !== 0}
+                when={filtered().length !== 0}
                 fallback={
                   <EmptyIssuesSign>
                     <Text size="lg" color="dimmed">

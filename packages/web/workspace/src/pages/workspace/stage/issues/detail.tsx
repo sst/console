@@ -141,23 +141,25 @@ export function Detail() {
                 <StackTrace stack={issue().stack || []} />
               </StackTraceBackground>
             </Stack>
-            <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                Logs
-              </Text>
-              <LogsMock>
-                <For each={invocation()?.logs || []}>
-                  {(entry, i) => (
-                    <LogEntry>
-                      <LogEntryTime>
-                        {entry.timestamp.toLocaleTimeString()}
-                      </LogEntryTime>
-                      <LogEntryMessage>{entry.message}</LogEntryMessage>
-                    </LogEntry>
-                  )}
-                </For>
-              </LogsMock>
-            </Stack>
+            <Show when={invocation()?.logs.length}>
+              <Stack space="2">
+                <Text label on="surface" size="mono_sm" color="dimmed">
+                  Logs
+                </Text>
+                <LogsMock>
+                  <For each={invocation()?.logs || []}>
+                    {(entry, i) => (
+                      <LogEntry>
+                        <LogEntryTime>
+                          {entry.timestamp.toLocaleTimeString()}
+                        </LogEntryTime>
+                        <LogEntryMessage>{entry.message}</LogEntryMessage>
+                      </LogEntry>
+                    )}
+                  </For>
+                </LogsMock>
+              </Stack>
+            </Show>
           </Stack>
         </Content>
         <Sidebar>
