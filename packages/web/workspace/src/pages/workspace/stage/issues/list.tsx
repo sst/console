@@ -88,21 +88,6 @@ const IssuesHeaderCol = styled(IssueCol, {
   },
 });
 
-const IssueActions = styled(ButtonGroup, {
-  base: {},
-  variants: {
-    active: {
-      true: {},
-      false: {
-        opacity: 0.6,
-      },
-    },
-  },
-  defaultVariants: {
-    active: false,
-  },
-});
-
 const ButtonIcon = styled("span", {
   base: {
     width: 12,
@@ -144,7 +129,7 @@ export function List() {
       if (view() === "active") return !item.timeResolved && !item.timeIgnored;
       if (view() === "ignored") return item.timeIgnored;
       if (view() === "resolved") return item.timeResolved;
-    }),
+    })
   );
 
   const [selected, setSelected] = createSignal<string[]>([]);
@@ -192,7 +177,7 @@ export function List() {
             onChange={(e) => {
               const issues = [
                 ...e.currentTarget.querySelectorAll<HTMLInputElement>(
-                  "input[name='issue']:checked",
+                  "input[name='issue']:checked"
                 ),
               ].map((i) => i.value);
               setSelected(issues);
@@ -204,7 +189,7 @@ export function List() {
                   name="select-all"
                   onChange={(e) => {
                     for (const input of form.querySelectorAll<HTMLInputElement>(
-                      "input[type='checkbox']",
+                      "input[type='checkbox']"
                     )) {
                       input.checked = e.currentTarget.checked;
                     }
@@ -223,7 +208,7 @@ export function List() {
                 >
                   Error
                 </Text>
-                <IssueActions>
+                <ButtonGroup>
                   <Button
                     onClick={() => {
                       rep().mutate.issue_ignore(selected());
@@ -254,7 +239,7 @@ export function List() {
                     </ButtonIcon>
                     Resolve
                   </Button>
-                </IssueActions>
+                </ButtonGroup>
               </IssuesHeaderCol>
               <IssuesHeaderCol
                 align="right"
@@ -383,7 +368,7 @@ function IssueRow(props: IssueProps) {
     rep,
     (item) =>
       item.group === props.issue.group &&
-      item.hour > DateTime.now().toSQLDate()!,
+      item.hour > DateTime.now().toSQLDate()!
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
 
