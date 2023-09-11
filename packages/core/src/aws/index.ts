@@ -46,7 +46,7 @@ export const assumeRole = zod(z.string(), async (id) => {
       sessionToken: result.Credentials!.SessionToken!,
     };
   } catch (e: any) {
-    if (e instanceof Error && e.name === "AccessDenied") {
+    if (e.name === "AccessDenied") {
       await useTransaction((tx) =>
         tx
           .update(awsAccount)

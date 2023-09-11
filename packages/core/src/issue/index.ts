@@ -30,6 +30,7 @@ import { Warning } from "../warning";
 import { Replicache } from "../replicache";
 import { createTransaction } from "../util/transaction";
 import { DateTime } from "luxon";
+import { flatMap, groupBy, map, pipe, uniqBy, values } from "remeda";
 
 export * as Issue from "./index";
 
@@ -61,7 +62,7 @@ export const extract = zod(
     // do not process self
     if (
       input.logGroup.startsWith(
-        "/aws/lambda/production-console-Issues-issuesConsumer"
+        "/aws/lambda/production-console-Issues-issuesConsumer",
       )
     )
       return;
@@ -82,18 +83,24 @@ export const extract = zod(
       .from(awsAccount)
       .leftJoin(
         app,
-        and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
+        and(
+          eq(app.workspaceID, awsAccount.workspaceID),
+          eq(app.name, appName!),
+        ),
       )
       .innerJoin(
         stage,
         and(
           eq(stage.workspaceID, app.workspaceID),
           eq(stage.appID, app.id),
-          eq(stage.name, stageName!)
-        )
+          eq(stage.name, stageName!),
+        ),
       )
       .where(
-        and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
+        and(
+          eq(awsAccount.accountID, accountID!),
+          isNull(awsAccount.timeFailed),
+        ),
       )
       .execute();
 
@@ -126,12 +133,12 @@ export const extract = zod(
         region: region!,
       },
     });
-    await Promise.allSettled(
+    const errors = await Promise.allSettled(
       input.logEvents.map(async (event) => {
         const err = await Log.extractError(
           sourcemapCache,
           event.timestamp,
-          event.message.split(`\t`).map((x) => x.trim())
+          event.message.split(`\t`).map((x) => x.trim()),
         );
         if (!err) return;
 
@@ -154,81 +161,67 @@ export const extract = zod(
           return createHash("sha256").update(parts).digest("hex");
         })();
 
-        console.log("found error", err.error, err.message);
-
-        await createTransaction(async (tx) => {
-          await tx
-            .insert(issue)
-            .values(
-              workspaces.map((row) => ({
-                group,
-                stack: err.stack,
-                id: createId(),
-                errorID: "none",
-                pointer: {
-                  timestamp: event.timestamp,
-                  logGroup: input.logGroup,
-                  logStream: logStream,
-                },
-                workspaceID: row.workspaceID,
-                error: err.error,
-                message: err.message,
-                count: 1,
-                stageID: row.stageID,
-              }))
-            )
-            .onDuplicateKeyUpdate({
-              set: {
-                error: sql`VALUES(error)`,
-                count: sql`count + 1`,
-                errorID: sql`VALUES(error_id)`,
-                message: sql`VALUES(message)`,
-                timeUpdated: sql`CURRENT_TIMESTAMP()`,
-              },
-            })
-            .execute();
-
-          const inserted = await tx
-            .select({
-              id: issue.id,
-              workspaceID: issue.workspaceID,
-            })
-            .from(issue)
-            .where(
-              and(
-                inArray(
-                  sql`(${issue.workspaceID}, ${issue.stageID})`,
-                  workspaces.map((row) => [row.workspaceID, row.stageID])
-                ),
-                eq(issue.group, group)
-              )
-            )
-            .execute();
-
-          const hour = DateTime.now()
-            .startOf("hour")
-            .toSQL({ includeOffset: false })!;
-
-          const result = await tx
-            .insert(issueCount)
-            .values(
-              inserted.map((item) => ({
-                workspaceID: item.workspaceID,
-                issueID: item.id,
-                count: 1,
-                hour,
-                id: createId(),
-              }))
-            )
-            .onDuplicateKeyUpdate({
-              set: {
-                count: sql`count + 1`,
-              },
-            })
-            .execute();
-        });
-      })
+        return {
+          group,
+          timestamp: event.timestamp,
+          err,
+        };
+      }),
+    ).then((x) =>
+      pipe(
+        x,
+        flatMap((item) => {
+          return item.status === "fulfilled" && item.value ? [item.value] : [];
+        }),
+        groupBy((item) => item.group),
+        values,
+      ),
     );
+
+    for (const items of errors) {
+      const [item] = items;
+      console.log(
+        "found error",
+        item.err.error,
+        item.err.message,
+        items.length,
+      );
+    }
+
+    await createTransaction(async (tx) => {
+      await tx
+        .insert(issue)
+        .values(
+          errors.flatMap((items) =>
+            workspaces.map((row) => ({
+              group: items[0].group,
+              stack: items[0].err.stack,
+              id: createId(),
+              errorID: "none",
+              pointer: {
+                timestamp: items[0].timestamp,
+                logGroup: input.logGroup,
+                logStream: logStream,
+              },
+              workspaceID: row.workspaceID,
+              error: items[0].err.error,
+              message: items[0].err.message,
+              count: items.length,
+              stageID: row.stageID,
+            })),
+          ),
+        )
+        .onDuplicateKeyUpdate({
+          set: {
+            error: sql`VALUES(error)`,
+            count: sql`count + VALUES(count)`,
+            errorID: sql`VALUES(error_id)`,
+            message: sql`VALUES(message)`,
+            timeUpdated: sql`CURRENT_TIMESTAMP()`,
+          },
+        })
+        .execute();
+    });
 
     sourcemapCache.destroy();
 
@@ -241,7 +234,7 @@ export const extract = zod(
       });
       // await Replicache.poke();
     }
-  }
+  },
 );
 
 function destinationIdentifier(config: StageCredentials) {
@@ -256,7 +249,7 @@ export const connectStage = zod(
       "creating",
       uniqueIdentifier,
       Config.ISSUES_ROLE_ARN,
-      Config.ISSUES_STREAM_ARN
+      Config.ISSUES_STREAM_ARN,
     );
     const cw = new CloudWatchLogsClient({
       region: config.region,
@@ -269,7 +262,7 @@ export const connectStage = zod(
           destinationName: uniqueIdentifier,
           roleArn: Config.ISSUES_ROLE_ARN,
           targetArn: Config.ISSUES_STREAM_ARN,
-        })
+        }),
       );
 
       await cw.send(
@@ -288,12 +281,12 @@ export const connectStage = zod(
               },
             ],
           }),
-        })
+        }),
       );
     } finally {
       cw.destroy();
     }
-  }
+  },
 );
 
 export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
@@ -323,8 +316,8 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
       .where(
         and(
           eq(issueSubscriber.stageID, config.stageID),
-          eq(issueSubscriber.workspaceID, useWorkspace())
-        )
+          eq(issueSubscriber.workspaceID, useWorkspace()),
+        ),
       )
       .execute()
       .then((rows) => new Set(rows.map((x) => x.functionID)));
@@ -355,7 +348,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
                 //   : []),
               ].join(" "),
               logGroupName: logGroup,
-            })
+            }),
           );
 
           await db
@@ -380,7 +373,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
               .send(
                 new CreateLogGroupCommand({
                   logGroupName: logGroup,
-                })
+                }),
               )
               .catch((e) => {
                 if (e instanceof ResourceAlreadyExistsException) return;
