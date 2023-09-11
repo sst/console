@@ -184,78 +184,70 @@ export function Header(props: { app?: string; stage?: string }) {
   const workspace = useWorkspace();
   const bar = useCommandBar();
 
-  const issues = useIssuesContext();
-  const issuesCount = createMemo(
-    () =>
-      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length,
-  );
-  const ctx = useHeaderContext();
-
   return (
-    <>
-      <Root>
-        <Row space="4" vertical="center">
-          <WorkspaceLogoLink href={`/${workspace().slug}`}>
-            <AvatarInitialsIcon type="workspace" text={workspace().slug} />
-          </WorkspaceLogoLink>
-          <StageSwitcher
-            onClick={() =>
-              props.stage
-                ? bar.show("stage-switcher", "app-switcher")
-                : bar.show("workspace-switcher")
+    <Root>
+      <Row space="4" vertical="center">
+        <WorkspaceLogoLink href={`/${workspace().slug}`}>
+          <AvatarInitialsIcon type="workspace" text={workspace().slug} />
+        </WorkspaceLogoLink>
+        <StageSwitcher
+          onClick={() =>
+            props.stage
+              ? bar.show("stage-switcher", "app-switcher")
+              : bar.show("workspace-switcher")
+          }
+        >
+          <Show
+            when={props.stage}
+            fallback={
+              <Text size="lg" weight="medium" color="secondary">
+                {workspace().slug}
+              </Text>
             }
           >
-            <Show
-              when={props.stage}
-              fallback={
-                <Text size="lg" weight="medium" color="secondary">
-                  {workspace().slug}
-                </Text>
-              }
-            >
-              <Stack space="1.5">
-                <Text size="lg" weight="medium" color="secondary">
-                  {props.app}
-                </Text>
-                <Text color="dimmed">{props.stage}</Text>
-              </Stack>
-            </Show>
-            <SwitcherIcon />
-          </StageSwitcher>
-        </Row>
-        <Row space="4" vertical="center">
-          <JumpToButton onClick={() => bar.show()}>
-            <Row space="1" vertical="center">
-              <IconMagnifyingGlass
-                width="13"
-                height="13"
-                color={theme.color.icon.dimmed}
-              />
-              <Text leading="normal" size="xs" color="dimmed">
-                Jump to
+            <Stack space="1.5">
+              <Text size="lg" weight="medium" color="secondary">
+                {props.app}
               </Text>
-            </Row>
-            <Row space="1" vertical="center">
-              <JumpToButtonKeys>
-                {isMac() ? <>&#8984;</> : "Ctrl"}
-              </JumpToButtonKeys>
-              <JumpToButtonKeys>K</JumpToButtonKeys>
-            </Row>
-          </JumpToButton>
-          <LogoutButton
-            onClick={async () => {
-              const dbs = await window.indexedDB.databases();
-              dbs.forEach((db) => {
-                window.indexedDB.deleteDatabase(db.name!);
-              });
-              localStorage.clear();
-              location.href = "/";
-            }}
-          >
-            Logout
-          </LogoutButton>
-        </Row>
-        {/*
+              <Text color="dimmed">{props.stage}</Text>
+            </Stack>
+          </Show>
+          <SwitcherIcon />
+        </StageSwitcher>
+      </Row>
+      <Row space="4" vertical="center">
+        <JumpToButton onClick={() => bar.show()}>
+          <Row space="1" vertical="center">
+            <IconMagnifyingGlass
+              width="13"
+              height="13"
+              color={theme.color.icon.dimmed}
+            />
+            <Text leading="normal" size="xs" color="dimmed">
+              Jump to
+            </Text>
+          </Row>
+          <Row space="1" vertical="center">
+            <JumpToButtonKeys>
+              {isMac() ? <>&#8984;</> : "Ctrl"}
+            </JumpToButtonKeys>
+            <JumpToButtonKeys>K</JumpToButtonKeys>
+          </Row>
+        </JumpToButton>
+        <LogoutButton
+          onClick={async () => {
+            const dbs = await window.indexedDB.databases();
+            dbs.forEach((db) => {
+              window.indexedDB.deleteDatabase(db.name!);
+            });
+            localStorage.clear();
+            location.href = "/";
+          }}
+        >
+          Logout
+        </LogoutButton>
+      </Row>
+      {/*
       <User>
         <UserImage />
         <Text
@@ -272,22 +264,6 @@ export function Header(props: { app?: string; stage?: string }) {
         </Text>
       </User>
       */}
-      </Root>
-      <PageHeader>
-        <Row space="5" vertical="center">
-          <Link href="" end>
-            <TabTitle>Resources</TabTitle>
-          </Link>
-          <Link href="issues">
-            <TabTitle
-              count={issuesCount() ? issuesCount().toString() : undefined}
-            >
-              Issues
-            </TabTitle>
-          </Link>
-        </Row>
-        <Show when={ctx.children}>{ctx.children}</Show>
-      </PageHeader>
-    </>
+    </Root>
   );
 }

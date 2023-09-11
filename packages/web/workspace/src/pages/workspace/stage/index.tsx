@@ -4,7 +4,7 @@ import { Link, Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { theme } from "$/ui/theme";
-import { ComponentProps, JSX, Show } from "solid-js";
+import { ComponentProps, JSX, Show, createMemo } from "solid-js";
 import { useCommandBar } from "$/pages/workspace/command-bar";
 import {
   IssuesProvider,
@@ -18,7 +18,12 @@ import { Logs } from "./logs";
 import { Issues } from "./issues";
 import { Resources } from "./resources";
 import { IconStage } from "$/ui/icons/custom";
-import { Header, HeaderProvider } from "../header";
+import {
+  Header,
+  HeaderProvider,
+  PageHeader,
+  useHeaderContext,
+} from "../header";
 import { Row, SplitOptions, SplitOptionsOption, TabTitle } from "$/ui";
 
 export function Stage() {
@@ -59,7 +64,9 @@ export function Stage() {
       <StageContext.Provider value={stageContext}>
         <ResourcesProvider>
           <IssuesProvider>
-            <Inner />
+            <HeaderProvider>
+              <Inner />
+            </HeaderProvider>
           </IssuesProvider>
         </ResourcesProvider>
       </StageContext.Provider>
@@ -69,9 +76,32 @@ export function Stage() {
 
 export function Inner() {
   const ctx = useStageContext();
+  const issues = useIssuesContext();
+  const issuesCount = createMemo(
+    () =>
+      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length,
+  );
+  const header = useHeaderContext();
   return (
-    <HeaderProvider>
+    <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
+      <Show when={ctx.app.name === "console"}>
+        <PageHeader>
+          <Row space="5" vertical="center">
+            <Link href="" end>
+              <TabTitle>Resources</TabTitle>
+            </Link>
+            <Link href="issues">
+              <TabTitle
+                count={issuesCount() ? issuesCount().toString() : undefined}
+              >
+                Issues
+              </TabTitle>
+            </Link>
+          </Row>
+          <Show when={header.children}>{header.children}</Show>
+        </PageHeader>
+      </Show>
       <div>
         <Routes>
           <Route path="" component={Resources} />
@@ -79,6 +109,6 @@ export function Inner() {
           <Route path="logs/:resourceID/*" component={Logs} />
         </Routes>
       </div>
-    </HeaderProvider>
+    </>
   );
 }
