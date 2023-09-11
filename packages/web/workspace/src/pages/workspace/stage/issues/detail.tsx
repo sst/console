@@ -82,10 +82,14 @@ const ButtonIcon = styled("span", {
 });
 
 export function Detail() {
-  const status = "resolved" as "ignored" | "resolved" | "active";
   const params = useParams();
   const rep = useReplicache();
   const issue = IssueStore.watch.get(rep, () => params.issueID);
+  const status = createMemo(() => {
+    if (issue()?.timeIgnored) return "ignored";
+    if (issue()?.timeResolved) return "resolved";
+    return "active";
+  });
   createEffect(async () => {
     if (!issue()) return;
     const result = await fetch(
@@ -190,13 +194,13 @@ export function Detail() {
               </Text>
               <Row>
                 <Switch>
-                  <Match when={status === "active"}>
+                  <Match when={status() === "active"}>
                     <Tag level="caution">Active</Tag>
                   </Match>
-                  <Match when={status === "ignored"}>
+                  <Match when={status() === "ignored"}>
                     <Tag level="info">Ignored</Tag>
                   </Match>
-                  <Match when={status === "resolved"}>
+                  <Match when={status() === "resolved"}>
                     <Tag level="tip">Resolved</Tag>
                   </Match>
                 </Switch>
