@@ -441,6 +441,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
     await db.delete(issueSubscriber).where(
       and(
         eq(issueSubscriber.workspaceID, useWorkspace()),
+        eq(issueSubscriber.stageID, config.stageID),
         not(
           inArray(
             issueSubscriber.functionID,
