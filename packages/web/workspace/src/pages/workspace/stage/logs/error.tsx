@@ -77,7 +77,7 @@ const FrameTitle = styled("div", {
 const FrameContext = styled("div", {
   base: {
     padding: `${theme.space[1]} ${theme.space[5]}`,
-    //borderTop: `1px solid ${theme.color.divider.surface}`,
+    borderTop: `1px solid ${theme.color.divider.surface}`,
     ":first-child": {
       borderTop: "none",
     },

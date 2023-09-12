@@ -208,38 +208,38 @@ export function List() {
                 >
                   Error
                 </Text>
-                <ButtonGroup>
-                  <Button
-                    onClick={() => {
-                      rep().mutate.issue_ignore(selected());
-                      form.reset();
-                    }}
-                    disabled={selected().length === 0}
-                    size="sm"
-                    grouped="left"
-                    color="secondary"
-                  >
-                    <ButtonIcon>
-                      <IconNoSymbol />
-                    </ButtonIcon>
-                    Ignore
-                  </Button>
-                  <Button
-                    disabled={selected().length === 0}
-                    onClick={() => {
-                      rep().mutate.issue_resolve(selected());
-                      form.reset();
-                    }}
-                    size="sm"
-                    grouped="right"
-                    color="success"
-                  >
-                    <ButtonIcon>
-                      <IconCheck />
-                    </ButtonIcon>
-                    Resolve
-                  </Button>
-                </ButtonGroup>
+                <Show when={selected().length > 0}>
+                  <ButtonGroup>
+                    <Button
+                      onClick={() => {
+                        rep().mutate.issue_ignore(selected());
+                        form.reset();
+                      }}
+                      size="sm"
+                      grouped="left"
+                      color="secondary"
+                    >
+                      <ButtonIcon>
+                        <IconNoSymbol />
+                      </ButtonIcon>
+                      Ignore
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        rep().mutate.issue_resolve(selected());
+                        form.reset();
+                      }}
+                      size="sm"
+                      grouped="right"
+                      color="success"
+                    >
+                      <ButtonIcon>
+                        <IconCheck />
+                      </ButtonIcon>
+                      Resolve
+                    </Button>
+                  </ButtonGroup>
+                </Show>
               </IssuesHeaderCol>
               <IssuesHeaderCol
                 align="right"

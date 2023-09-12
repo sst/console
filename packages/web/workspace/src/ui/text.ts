@@ -59,7 +59,7 @@ export const Text = styled("span", {
     pre: {
       true: {
         whiteSpace: "pre-wrap",
-        overflowWrap: "break-word",
+        overflowWrap: "anywhere",
       },
     },
     underline: {

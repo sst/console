@@ -337,7 +337,7 @@ export const LogEntryMessage = styled("span", {
   base: {
     minWidth: 0,
     whiteSpace: "pre-wrap",
-    overflowWrap: "break-word",
+    overflowWrap: "anywhere",
     lineHeight: theme.font.lineHeight,
     color: theme.color.text.primary.surface,
     fontFamily: theme.font.family.code,
@@ -418,7 +418,7 @@ export function Logs() {
       ? DUMMY_FUNC
       : (resources().find((x) => x.id === params.resourceID) as
           | Extract<Resource.Info, { type: "Function" }>
-          | undefined),
+          | undefined)
   );
 
   const logGroup = createMemo(() => {
@@ -451,7 +451,7 @@ export function Logs() {
   const rep = useReplicache();
 
   const poller = createSubscription(() =>
-    LogPollerStore.fromLogGroup(logGroup()),
+    LogPollerStore.fromLogGroup(logGroup())
   );
 
   createEffect(() => {
@@ -481,7 +481,7 @@ export function Logs() {
     id: createId(),
   });
   const activeSearch = createSubscription(() =>
-    LogSearchStore.fromID(search.id || ""),
+    LogSearchStore.fromID(search.id || "")
   );
 
   function createSearch(start?: number, end?: number) {
@@ -489,7 +489,7 @@ export function Logs() {
       produce((draft) => {
         draft.start = start ? new Date(start) : undefined;
         draft.end = end ? new Date(end) : undefined;
-      }),
+      })
     );
 
     rep().mutate.log_search({
@@ -530,7 +530,7 @@ export function Logs() {
       },
       {
         replace: true,
-      },
+      }
     );
     if (val === "tail") return;
     clearLogStore(logGroupKey());
@@ -745,12 +745,12 @@ export function Logs() {
               const shortDate = createMemo(() =>
                 new Intl.DateTimeFormat("en-US", shortDateOptions)
                   .format(invocation.start)
-                  .replace(" at ", ", "),
+                  .replace(" at ", ", ")
               );
               const longDate = createMemo(() =>
                 new Intl.DateTimeFormat("en-US", longDateOptions).format(
-                  invocation.start,
-                ),
+                  invocation.start
+                )
               );
               //              const empty = createMemo(
               //                () => mode() !== "live" && invocation.logs.length === 0
@@ -863,7 +863,7 @@ export function Logs() {
                               icon={<IconBookmark />}
                               onClick={() =>
                                 invokeControl.savePayload(
-                                  structuredClone(unwrap(invocation.event)),
+                                  structuredClone(unwrap(invocation.event))
                                 )
                               }
                             >
@@ -878,7 +878,7 @@ export function Logs() {
                                 rep().mutate.function_invoke({
                                   stageID: resource()!.stageID,
                                   payload: structuredClone(
-                                    unwrap(invocation.event),
+                                    unwrap(invocation.event)
                                   ),
                                   functionARN: resource()!.metadata.arn,
                                 });
@@ -939,7 +939,7 @@ export function Logs() {
                               <LogReportKey>Duration</LogReportKey>
                               <LogEntryMessage>
                                 {formatDuration(
-                                  invocation.report?.duration || 0,
+                                  invocation.report?.duration || 0
                                 )}
                               </LogEntryMessage>
                             </LogEntry>
@@ -949,7 +949,7 @@ export function Logs() {
                                 <Show when={invocation.report?.memory}>
                                   {(size) => {
                                     const formattedSize = formatBytes(
-                                      size() * 1024 * 1024,
+                                      size() * 1024 * 1024
                                     );
                                     return `${formattedSize.value}${formattedSize.unit}`;
                                   }}
@@ -962,7 +962,7 @@ export function Logs() {
                                 <Show when={invocation.report?.size}>
                                   {(size) => {
                                     const formattedSize = formatBytes(
-                                      size() * 1024 * 1024,
+                                      size() * 1024 * 1024
                                     );
                                     return `${formattedSize.value}${formattedSize.unit}`;
                                   }}
@@ -1001,7 +1001,7 @@ export function Logs() {
                       Scanning
                       {activeSearch()?.timeStart
                         ? ` from ${formatSinceTime(
-                            activeSearch()?.timeStart || "",
+                            activeSearch()?.timeStart || ""
                           )}`
                         : ""}
                       &hellip;
@@ -1019,7 +1019,7 @@ export function Logs() {
                       const i = invocations();
                       console.log(
                         "scanning from",
-                        i[i.length - 1].start.toISOString(),
+                        i[i.length - 1].start.toISOString()
                       );
                       createSearch(i[i.length - 1]!.start.getTime());
                     }}
@@ -1040,7 +1040,7 @@ export function Logs() {
             },
             {
               replace: true,
-            },
+            }
           );
           clearLogStore(logGroupKey());
           createSearch(start.getTime(), end.getTime());
