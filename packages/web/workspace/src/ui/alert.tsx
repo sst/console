@@ -86,7 +86,7 @@ const AlertDetails = styled("div", {
 
 const AlertDetailsText = styled("div", {
   base: {
-    overflow: "scroll",
+    overflowY: "auto",
     maxHeight: 140,
   },
 });
