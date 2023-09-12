@@ -653,6 +653,9 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
 
           break;
         } catch (e: any) {
+          if (e instanceof ResourceNotFoundException) {
+            break;
+          }
           console.error(e);
           break;
         }
