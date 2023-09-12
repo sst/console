@@ -26,6 +26,7 @@ import {
 } from "solid-js";
 import { createInitializedContext } from "$/common/context";
 import { useIssuesContext } from "./stage/context";
+import { dropAllDatabases } from "replicache";
 
 const Root = styled("div", {
   base: {
@@ -236,10 +237,7 @@ export function Header(props: { app?: string; stage?: string }) {
         </JumpToButton>
         <LogoutButton
           onClick={async () => {
-            const dbs = await window.indexedDB.databases();
-            dbs.forEach((db) => {
-              window.indexedDB.deleteDatabase(db.name!);
-            });
+            await dropAllDatabases();
             localStorage.clear();
             location.href = "/";
           }}
@@ -247,23 +245,6 @@ export function Header(props: { app?: string; stage?: string }) {
           Logout
         </LogoutButton>
       </Row>
-      {/*
-      <User>
-        <UserImage />
-        <Text
-          onClick={async () => {
-            const dbs = await window.indexedDB.databases();
-            dbs.forEach((db) => {
-              window.indexedDB.deleteDatabase(db.name!);
-            });
-            localStorage.clear();
-            location.href = "/";
-          }}
-        >
-          Logout
-        </Text>
-      </User>
-      */}
     </Root>
   );
 }
