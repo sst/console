@@ -78,11 +78,17 @@ export const issueCount = mysqlTable(
     hour: timestamp("hour", {
       mode: "string",
     }).notNull(),
+    stageID: cuid("stage_id"),
     group: varchar("group", { length: 255 }).notNull(),
     count: bigint("count", { mode: "number" }).notNull(),
   },
   (table) => ({
     primary: primaryKey(table.workspaceID, table.id),
-    unique: unique("unique").on(table.workspaceID, table.group, table.hour),
+    unique: unique("unique").on(
+      table.workspaceID,
+      table.stageID,
+      table.group,
+      table.hour,
+    ),
   }),
 );

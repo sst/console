@@ -17,6 +17,7 @@ import {
   PutDestinationCommand,
   PutDestinationPolicyCommand,
   PutSubscriptionFilterCommand,
+  DeleteSubscriptionFilterCommand,
   ResourceAlreadyExistsException,
   ResourceNotFoundException,
 } from "@aws-sdk/client-cloudwatch-logs";
@@ -27,18 +28,9 @@ import { StageCredentials } from "../app/stage";
 import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
-import { Replicache } from "../replicache";
 import { createTransaction, useTransaction } from "../util/transaction";
 import { DateTime } from "luxon";
-import {
-  createPipe,
-  flatMap,
-  groupBy,
-  map,
-  pipe,
-  uniqBy,
-  values,
-} from "remeda";
+import { createPipe, flatMap, groupBy, values } from "remeda";
 
 export * as Issue from "./index";
 
@@ -62,6 +54,9 @@ export const Events = {
           .array(),
       })
       .array(),
+  }),
+  RateLimited: event("issue.rate_limited", {
+    stageID: z.string(),
   }),
 };
 
@@ -142,6 +137,10 @@ export const extract = zod(
     console.log("filter", filter);
     const [_prefix, region, accountID, appName, stageName] = filter.split("#");
 
+    const hour = DateTime.now()
+      .startOf("hour")
+      .toSQL({ includeOffset: false })!;
+
     const workspaces = await db
       .select({
         accountID: awsAccount.id,
@@ -174,6 +173,35 @@ export const extract = zod(
       .execute();
 
     if (!workspaces.length) return;
+
+    const count = await db
+      .select({
+        total: sql<number>`SUM(${issueCount.count})`,
+      })
+      .from(issueCount)
+      .where(
+        and(
+          eq(issueCount.workspaceID, workspaces[0]!.workspaceID),
+          eq(issueCount.stageID, workspaces[0]!.stageID),
+        ),
+      )
+      .execute()
+      .then((rows) => rows.at(0)?.total || 0);
+
+    console.log("rate limit", count);
+
+    if (count > 5) {
+      for (const workspace of workspaces) {
+        provideActor({
+          type: "system",
+          properties: {
+            workspaceID: workspace.workspaceID,
+          },
+        });
+        await Events.RateLimited.publish({ stageID: workspace.stageID });
+      }
+      return;
+    }
 
     provideActor({
       type: "system",
@@ -303,9 +331,6 @@ export const extract = zod(
         })
         .execute();
 
-      const hour = DateTime.now()
-        .startOf("hour")
-        .toSQL({ includeOffset: false })!;
       await tx
         .insert(issueCount)
         .values(
@@ -313,6 +338,7 @@ export const extract = zod(
             workspaces.map((row) => ({
               id: createId(),
               hour,
+              stageID: row.stageID,
               count: items.length,
               workspaceID: row.workspaceID,
               group: items[0].group,
@@ -465,6 +491,13 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
               id: createId(),
             })
             .execute();
+
+          await Warning.remove({
+            target: fn.id,
+            type: "log_subscription",
+            stageID: config.stageID,
+          });
+
           break;
         } catch (e: any) {
           // Create log group if the function has never been invoked
@@ -531,6 +564,84 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
               message: e.toString(),
             },
           });
+          break;
+        }
+      }
+    }
+  } finally {
+    cw.destroy();
+  }
+});
+
+export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
+  const uniqueIdentifier = destinationIdentifier(config);
+  const cw = new CloudWatchLogsClient({
+    region: config.region,
+    credentials: config.credentials,
+    retryStrategy: RETRY_STRATEGY,
+  });
+
+  try {
+    // Get all function resources
+    const functions = await Resource.listFromStageID({
+      stageID: config.stageID,
+      types: ["Function"],
+    });
+    if (!functions.length) return;
+
+    const exists = await db
+      .select({
+        functionID: issueSubscriber.functionID,
+      })
+      .from(issueSubscriber)
+      .where(
+        and(
+          eq(issueSubscriber.stageID, config.stageID),
+          eq(issueSubscriber.workspaceID, useWorkspace()),
+        ),
+      )
+      .execute()
+      .then((rows) => new Set(rows.map((x) => x.functionID)));
+
+    console.log("updating", functions.length, "functions");
+    for (const fn of functions) {
+      if (!exists.has(fn.id)) continue;
+      // @ts-expect-error
+      const logGroup = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
+      console.log("unsubscribing", logGroup);
+
+      while (true) {
+        try {
+          await cw.send(
+            new DeleteSubscriptionFilterCommand({
+              filterName: uniqueIdentifier,
+              logGroupName: logGroup,
+            }),
+          );
+
+          await db
+            .delete(issueSubscriber)
+            .where(
+              and(
+                eq(issueSubscriber.workspaceID, useWorkspace()),
+                eq(issueSubscriber.stageID, config.stageID),
+                eq(issueSubscriber.functionID, fn.id),
+              ),
+            )
+            .execute();
+
+          await Warning.create({
+            stageID: config.stageID,
+            target: fn.id,
+            type: "log_subscription",
+            data: {
+              error: "noisy",
+            },
+          });
+
+          break;
+        } catch (e: any) {
+          console.error(e);
           break;
         }
       }
