@@ -448,15 +448,7 @@ export function Design() {
         </Variant>
         <Variant name="Details">
           <Grower>
-            <Alert
-              level="danger"
-              details={`We could not enable issues for these functions:
-  - function1 (not found)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-
-Read more about it over on our docs`}
-            >
+            <Alert details="Read more about it on our docs." level="danger">
               This is a danger alert. You need to take it very seriously.
             </Alert>
           </Grower>
@@ -472,7 +464,28 @@ Read more about it over on our docs`}
         </Variant>
         <Variant name="Multi Line Details">
           <Grower>
-            <Alert details="Read more about it on our docs." level="info">
+            <Alert
+              level="info"
+              controls={
+                <Row>
+                  <Button color="secondary">Retry</Button>
+                </Row>
+              }
+              details={`We could not enable issues for these functions:
+  - function1 (not found)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+
+Read more about it over on our docs`}
+            >
               This is an info alert. You don't need to take it very seriously.
               But it is a long info alert that will overflow. And we want to
               test how long it can really get. So here is some more text.

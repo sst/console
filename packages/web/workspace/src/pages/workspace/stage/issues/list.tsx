@@ -167,7 +167,28 @@ export function List() {
       </HeaderSlot>
       <Content>
         <Stack space="4">
-          <Alert level="info">
+          <Alert
+            level="info"
+            controls={
+              <Row>
+                <Button color="secondary">Retry Enabling Issues</Button>
+              </Row>
+            }
+            details={`We could not enable issues for these functions:
+  - function1 (not found)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+  - function2 (subscriber limit)
+  - function3 (no iam permissions)
+
+Read more about it over on our docs`}
+          >
             There was a problem enabling Issues for your account.{" "}
             <a href="htts://sst.dev/discord">Contact us on Discord.</a>
           </Alert>

@@ -68,7 +68,7 @@ const alertDetailsTextCs = style({
   },
 });
 
-const AlertTextDetails = styled("div", {
+const AlertDetails = styled("div", {
   base: {
     borderStyle: "solid",
     borderWidth: "1px 0 0 0",
@@ -84,8 +84,16 @@ const AlertTextDetails = styled("div", {
   },
 });
 
+const AlertDetailsText = styled("div", {
+  base: {
+    overflow: "scroll",
+    maxHeight: 140,
+  },
+});
+
 type AlertProps = ComponentProps<typeof AlertRoot> & {
   details?: JSX.Element;
+  controls?: JSX.Element;
 };
 export function Alert(props: AlertProps) {
   const [expanded, setExpanded] = createSignal(false);
@@ -103,12 +111,24 @@ export function Alert(props: AlertProps) {
           </AlertIcon>
           <Stack flex space="3" style={{ flex: "1" }}>
             <AlertText>{props.children}</AlertText>
-            <Show when={props.details && expanded()}>
-              <AlertTextDetails>
-                <Text pre size="sm" leading="loose" class={alertDetailsTextCs}>
-                  {props.details}
-                </Text>
-              </AlertTextDetails>
+            <Show when={expanded()}>
+              <AlertDetails>
+                <Stack space="4">
+                  <Show when={props.details}>
+                    <AlertDetailsText>
+                      <Text
+                        pre
+                        size="sm"
+                        leading="loose"
+                        class={alertDetailsTextCs}
+                      >
+                        {props.details}
+                      </Text>
+                    </AlertDetailsText>
+                  </Show>
+                  <Show when={props.controls}>{props.controls}</Show>
+                </Stack>
+              </AlertDetails>
             </Show>
           </Stack>
         </Row>
