@@ -190,7 +190,7 @@ export const extract = zod(
 
     console.log("rate limit", count);
 
-    if (count > 5) {
+    if (count > 10000) {
       for (const workspace of workspaces) {
         provideActor({
           type: "system",
