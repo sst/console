@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { provideActor, useActor, useWorkspace } from "../actor";
 import { AWS } from "../aws";
 import { awsAccount } from "../aws/aws.sql";
-import { and, db, eq, inArray, isNull, sql } from "../drizzle";
+import { and, db, eq, inArray, isNull, not, sql } from "../drizzle";
 import { Log } from "../log";
 import { app, stage } from "../app/app.sql";
 import { issue, issueCount as issueCount, issueSubscriber } from "./issue.sql";
@@ -437,6 +437,18 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
       types: ["Function"],
     });
     if (!functions.length) return;
+
+    await db.delete(issueSubscriber).where(
+      and(
+        eq(issueSubscriber.workspaceID, useWorkspace()),
+        not(
+          inArray(
+            issueSubscriber.functionID,
+            functions.map((x) => x.id),
+          ),
+        ),
+      ),
+    );
 
     const exists = await db
       .select({
