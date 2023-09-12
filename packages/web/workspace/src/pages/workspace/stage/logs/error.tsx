@@ -8,7 +8,6 @@ import { For, Show, createMemo, createSignal } from "solid-js";
 export const ErrorList = styled("div", {
   base: {
     ...utility.stack(0),
-    paddingBottom: theme.space[2],
     borderRadius: theme.borderRadius,
     backgroundColor: theme.color.background.surface,
   },
@@ -66,11 +65,8 @@ const FrameInfo = styled("div", {
 
 const FrameTitle = styled("div", {
   base: {
-    padding: `${theme.space[1]} 0`,
+    padding: `${theme.space[2]} 0`,
     lineHeight: theme.font.lineHeight,
-    ":hover": {
-      fontWeight: `500 !important`,
-    },
   },
 });
 
@@ -152,16 +148,16 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                   setExpand(index());
                 }}
               >
-                <FrameExpand>
-                  <Show when={frame.context}>
+                <Show when={frame.context}>
+                  <FrameExpand>
                     <Show
                       when={expand() === index()}
                       fallback={<IconChevronRight width="12" height="12" />}
                     >
                       <IconChevronDown width="12" height="12" />
                     </Show>
-                  </Show>
-                </FrameExpand>
+                  </FrameExpand>
+                </Show>
                 <FrameTitle>
                   <Show when={frame.raw}>
                     <Text

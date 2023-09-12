@@ -12,7 +12,8 @@ import {
   For,
 } from "solid-js";
 import { IconCheck, IconNoSymbol, IconViewfinderCircle } from "$/ui/icons";
-import { Tag, Row, Stack, Text, Button, ButtonGroup } from "$/ui";
+import { IconArrowPathSpin } from "$/ui/icons/custom";
+import { utility, Tag, Row, Stack, Text, Button, ButtonGroup } from "$/ui";
 import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { IssueCountStore, IssueStore } from "$/data/issue";
 import { useReplicache } from "$/providers/replicache";
@@ -21,7 +22,13 @@ import { StackTrace } from "../logs/error";
 import { useWorkspace } from "../../context";
 import { bus } from "$/providers/bus";
 import { LogStore, clearLogStore } from "$/data/log";
-import { LogEntry, LogEntryMessage, LogEntryTime } from "../logs";
+import {
+  LogEntry,
+  LogEntryTime,
+  LogEntryMessage,
+  LogMoreIndicator,
+  LogMoreIndicatorIcon,
+} from "../logs";
 import { sumBy } from "remeda";
 
 const Content = styled("div", {
@@ -45,7 +52,7 @@ const StackTraceBackground = styled("div", {
   },
 });
 
-const LogsMock = styled("div", {
+const LogsBackground = styled("div", {
   base: {
     backgroundColor: theme.color.background.surface,
     borderRadius: theme.borderRadius,
@@ -53,13 +60,20 @@ const LogsMock = styled("div", {
   },
 });
 
-const LogsMockRow = styled("div", {
+export const LogsLoading = styled("div", {
   base: {
-    borderTop: `1px solid ${theme.color.divider.surface}`,
-    height: 50,
-    ":first-child": {
-      borderTop: "none",
-    },
+    ...utility.row(2),
+    alignItems: "center",
+    padding: `${theme.space[5]} 0`,
+  },
+});
+
+export const LogsLoadingIcon = styled("div", {
+  base: {
+    width: 16,
+    height: 16,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.dimmed.surface,
   },
 });
 
@@ -149,12 +163,29 @@ export function Detail() {
                 <StackTrace stack={issue().stack || []} />
               </StackTraceBackground>
             </Stack>
-            <Show when={invocation()?.logs.length}>
-              <Stack space="2">
-                <Text label on="surface" size="mono_sm" color="dimmed">
-                  Logs
-                </Text>
-                <LogsMock>
+            <Stack space="2">
+              <Text label on="surface" size="mono_sm" color="dimmed">
+                Logs
+              </Text>
+              <LogsBackground>
+                <Show
+                  when={invocation()?.logs.length}
+                  fallback={
+                    <LogsLoading>
+                      <LogsLoadingIcon>
+                        <IconArrowPathSpin />
+                      </LogsLoadingIcon>
+                      <Text
+                        leading="normal"
+                        color="dimmed"
+                        size="sm"
+                        on="surface"
+                      >
+                        Loading logs &hellip;
+                      </Text>
+                    </LogsLoading>
+                  }
+                >
                   <For each={invocation()?.logs || []}>
                     {(entry, i) => (
                       <LogEntry>
@@ -165,9 +196,9 @@ export function Detail() {
                       </LogEntry>
                     )}
                   </For>
-                </LogsMock>
-              </Stack>
-            </Show>
+                </Show>
+              </LogsBackground>
+            </Stack>
           </Stack>
         </Content>
         <Sidebar>

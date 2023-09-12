@@ -248,7 +248,7 @@ const light = (() => {
       active: `hsla(${base.black}, 8%)`,
       border: `hsla(${base.black}, 5%)`,
       hover: {
-        color: `hsla(${base.black}, 3%)`,
+        color: `hsla(${base.black}, 1%)`,
         border: `hsla(${base.black}, 5%)`,
       },
       disabled: {
