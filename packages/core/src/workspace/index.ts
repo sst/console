@@ -17,6 +17,15 @@ export const Events = {
   }),
 };
 
+export class WorkspaceExistsError extends VisibleError {
+  constructor(slug: string) {
+    super(
+      "workspace.slug_exists",
+      `there is already a workspace named "${slug}"`,
+    );
+  }
+}
+
 export const Info = createSelectSchema(workspace, {
   id: (schema) => schema.id.cuid2(),
   slug: (schema) =>
@@ -45,11 +54,7 @@ export const create = zod(
         id,
         slug: input.slug,
       });
-      if (result.rowsAffected)
-        throw new VisibleError(
-          "workspace.slug_exists",
-          `there is already a workspace named "${input.slug}"`,
-        );
+      if (result.rowsAffected) throw new WorkspaceExistsError(input.slug);
       await createTransactionEffect(() =>
         Events.Created.publish({
           workspaceID: id,
