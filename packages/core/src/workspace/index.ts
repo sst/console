@@ -21,7 +21,7 @@ export class WorkspaceExistsError extends VisibleError {
   constructor(slug: string) {
     super(
       "workspace.slug_exists",
-      `there is already a workspace named "${slug}"`,
+      `there is already a workspace named "${slug}"`
     );
   }
 }
@@ -58,10 +58,10 @@ export const create = zod(
       await createTransactionEffect(() =>
         Events.Created.publish({
           workspaceID: id,
-        }),
+        })
       );
       return id;
-    }),
+    })
 );
 
 export const setStripeCustomerID = zod(
@@ -74,8 +74,8 @@ export const setStripeCustomerID = zod(
           stripeCustomerID: input.stripeCustomerID,
         })
         .where(eq(workspace.id, input.id))
-        .execute(),
-    ),
+        .execute()
+    )
 );
 
 export const setStripeSubscription = zod(
@@ -93,8 +93,8 @@ export const setStripeSubscription = zod(
           stripeSubscriptionItemID: input.stripeSubscriptionItemID,
         })
         .where(eq(workspace.id, input.id))
-        .execute(),
-    ),
+        .execute()
+    )
 );
 
 export const list = zod(z.void(), () =>
@@ -103,8 +103,8 @@ export const list = zod(z.void(), () =>
       .select()
       .from(workspace)
       .execute()
-      .then((rows) => rows),
-  ),
+      .then((rows) => rows)
+  )
 );
 
 export const fromID = zod(Info.shape.id, async (id) =>
@@ -115,7 +115,7 @@ export const fromID = zod(Info.shape.id, async (id) =>
       .where(eq(workspace.id, id))
       .execute()
       .then((rows) => rows[0]);
-  }),
+  })
 );
 
 export const fromStripeCustomerID = zod(
@@ -127,8 +127,8 @@ export const fromStripeCustomerID = zod(
         .from(workspace)
         .where(eq(workspace.stripeCustomerID, stripeCustomerID))
         .execute()
-        .then((rows) => rows[0]),
-    ),
+        .then((rows) => rows[0])
+    )
 );
 
 export const deleteStripeSubscription = zod(
@@ -142,6 +142,6 @@ export const deleteStripeSubscription = zod(
           stripeSubscriptionItemID: null,
         })
         .where(eq(workspace.stripeSubscriptionID, stripeSubscriptionID))
-        .execute(),
-    ),
+        .execute()
+    )
 );

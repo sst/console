@@ -86,8 +86,8 @@ macaron$(() =>
     globalStyle(selector, {
       opacity: 1,
       color: theme.color.text.dimmed.base,
-    }),
-  ),
+    })
+  )
 );
 
 globalStyle("*", {
@@ -113,8 +113,8 @@ macaron$(() =>
     globalStyle(selector, {
       // Mimic WebKit text selection color
       backgroundColor: "#B4D5FE",
-    }),
-  ),
+    })
+  )
 );
 
 globalStyle("ul, ol", {
@@ -124,9 +124,7 @@ globalStyle("ul, ol", {
 
 export const App: Component = () => {
   const [theme, setTheme] = createSignal<string>(
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light",
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
   );
 
   const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
@@ -171,7 +169,7 @@ export const App: Component = () => {
                           const workspaces = createSubscription(
                             WorkspaceStore.list,
                             null,
-                            () => auth[existing!].replicache,
+                            () => auth[existing!].replicache
                           );
 
                           const init = createSubscription(
@@ -179,11 +177,11 @@ export const App: Component = () => {
                               return tx.get("/init");
                             },
                             false,
-                            () => auth[existing!].replicache,
+                            () => auth[existing!].replicache
                           );
 
                           createEffect(() =>
-                            console.log("workspaces", workspaces()),
+                            console.log("workspaces", workspaces())
                           );
 
                           return (
@@ -195,7 +193,7 @@ export const App: Component = () => {
                                   href={`/${
                                     (
                                       workspaces()!.find(
-                                        (w) => w.id === storage.value.workspace,
+                                        (w) => w.id === storage.value.workspace
                                       ) || workspaces()![0]
                                     ).slug
                                   }`}
@@ -242,14 +240,14 @@ function GlobalCommands() {
           return Promise.all(
             users.map(async (user) => {
               const workspace = await WorkspaceStore.fromID(user.workspaceID)(
-                tx,
+                tx
               );
               return { account: account, workspace };
-            }),
+            })
           );
         });
         return workspaces;
-      }),
+      })
     ).then((x) => x.flat());
     const splits = location.pathname.split("/");
     return [

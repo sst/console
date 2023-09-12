@@ -1,7 +1,7 @@
 export async function queue<T, R>(
   concurrency: number,
   items: T[],
-  processItem: (item: T) => Promise<R>,
+  processItem: (item: T) => Promise<R>
 ) {
   const workers = [...new Array(concurrency)];
   await Promise.all(
@@ -14,6 +14,6 @@ export async function queue<T, R>(
         }
         await processItem(item);
       }
-    }),
+    })
   );
 }

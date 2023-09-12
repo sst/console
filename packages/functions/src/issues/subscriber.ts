@@ -26,7 +26,7 @@ export const handler = Handler("kinesis_stream", async (event) => {
   for (const record of event.Records) {
     if (timeout) break;
     const decoded = JSON.parse(
-      unzipSync(Buffer.from(record.kinesis.data, "base64")).toString(),
+      unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
     );
     if (decoded.messageType !== "DATA_MESSAGE") {
       incomplete.pop();

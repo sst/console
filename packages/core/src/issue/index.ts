@@ -71,9 +71,9 @@ export const ignore = zod(Info.shape.id.array(), async (input) =>
         resolver: null,
       })
       .where(
-        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
-      ),
-  ),
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input))
+      )
+  )
 );
 
 export const unignore = zod(Info.shape.id.array(), async (input) =>
@@ -85,9 +85,9 @@ export const unignore = zod(Info.shape.id.array(), async (input) =>
         ignorer: null,
       })
       .where(
-        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
-      ),
-  ),
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input))
+      )
+  )
 );
 
 export const resolve = zod(Info.shape.id.array(), async (input) =>
@@ -101,9 +101,9 @@ export const resolve = zod(Info.shape.id.array(), async (input) =>
         ignorer: null,
       })
       .where(
-        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
-      ),
-  ),
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input))
+      )
+  )
 );
 
 export const unresolve = zod(Info.shape.id.array(), async (input) =>
@@ -115,9 +115,9 @@ export const unresolve = zod(Info.shape.id.array(), async (input) =>
         resolver: null,
       })
       .where(
-        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
-      ),
-  ),
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input))
+      )
+  )
 );
 
 export const extract = zod(
@@ -126,7 +126,7 @@ export const extract = zod(
     // do not process self
     if (
       input.logGroup.startsWith(
-        "/aws/lambda/production-console-Issues-issuesConsumer",
+        "/aws/lambda/production-console-Issues-issuesConsumer"
       )
     )
       return;
@@ -151,24 +151,18 @@ export const extract = zod(
       .from(awsAccount)
       .leftJoin(
         app,
-        and(
-          eq(app.workspaceID, awsAccount.workspaceID),
-          eq(app.name, appName!),
-        ),
+        and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
       )
       .innerJoin(
         stage,
         and(
           eq(stage.workspaceID, app.workspaceID),
           eq(stage.appID, app.id),
-          eq(stage.name, stageName!),
-        ),
+          eq(stage.name, stageName!)
+        )
       )
       .where(
-        and(
-          eq(awsAccount.accountID, accountID!),
-          isNull(awsAccount.timeFailed),
-        ),
+        and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
       )
       .execute();
 
@@ -182,8 +176,8 @@ export const extract = zod(
       .where(
         and(
           eq(issueCount.workspaceID, workspaces[0]!.workspaceID),
-          eq(issueCount.stageID, workspaces[0]!.stageID),
-        ),
+          eq(issueCount.stageID, workspaces[0]!.stageID)
+        )
       )
       .execute()
       .then((rows) => rows.at(0)?.total || 0);
@@ -235,7 +229,7 @@ export const extract = zod(
         const err = await Log.extractError(
           sourcemapCache,
           event.timestamp,
-          event.message.split(`\t`).map((x) => x.trim()),
+          event.message.split(`\t`).map((x) => x.trim())
         );
         if (!err) return;
 
@@ -265,15 +259,15 @@ export const extract = zod(
           timestamp: event.timestamp,
           err,
         };
-      }),
+      })
     ).then(
       createPipe(
         flatMap((item) => {
           return item.status === "fulfilled" && item.value ? [item.value] : [];
         }),
         groupBy((item) => item.group),
-        values,
-      ),
+        values
+      )
     );
 
     if (errors.length === 0) return;
@@ -285,7 +279,7 @@ export const extract = zod(
         item.err.error,
         item.err.message,
         item.timestamp,
-        items.length,
+        items.length
       );
     }
 
@@ -312,8 +306,8 @@ export const extract = zod(
               timeSeen: sql`now()`,
               timeResolved: null,
               resolver: null,
-            })),
-          ),
+            }))
+          )
         )
         .onDuplicateKeyUpdate({
           set: {
@@ -342,8 +336,8 @@ export const extract = zod(
               count: items.length,
               workspaceID: row.workspaceID,
               group: items[0].group,
-            })),
-          ),
+            }))
+          )
         )
         .onDuplicateKeyUpdate({
           set: {
@@ -364,7 +358,7 @@ export const extract = zod(
       });
       // await Replicache.poke();
     }
-  },
+  }
 );
 
 function destinationIdentifier(config: StageCredentials) {
@@ -379,7 +373,7 @@ export const connectStage = zod(
       "creating",
       uniqueIdentifier,
       Config.ISSUES_ROLE_ARN,
-      Config.ISSUES_STREAM_ARN,
+      Config.ISSUES_STREAM_ARN
     );
     const cw = new CloudWatchLogsClient({
       region: config.region,
@@ -392,7 +386,7 @@ export const connectStage = zod(
           destinationName: uniqueIdentifier,
           roleArn: Config.ISSUES_ROLE_ARN,
           targetArn: Config.ISSUES_STREAM_ARN,
-        }),
+        })
       );
 
       await cw.send(
@@ -411,12 +405,12 @@ export const connectStage = zod(
               },
             ],
           }),
-        }),
+        })
       );
     } finally {
       cw.destroy();
     }
-  },
+  }
 );
 
 export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
@@ -445,10 +439,10 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
         not(
           inArray(
             issueSubscriber.functionID,
-            functions.map((x) => x.id),
-          ),
-        ),
-      ),
+            functions.map((x) => x.id)
+          )
+        )
+      )
     );
 
     const exists = await db
@@ -459,8 +453,8 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
       .where(
         and(
           eq(issueSubscriber.stageID, config.stageID),
-          eq(issueSubscriber.workspaceID, useWorkspace()),
-        ),
+          eq(issueSubscriber.workspaceID, useWorkspace())
+        )
       )
       .execute()
       .then((rows) => new Set(rows.map((x) => x.functionID)));
@@ -491,7 +485,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
                 //   : []),
               ].join(" "),
               logGroupName: logGroup,
-            }),
+            })
           );
 
           await db
@@ -523,7 +517,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
               .send(
                 new CreateLogGroupCommand({
                   logGroupName: logGroup,
-                }),
+                })
               )
               .catch((e) => {
                 if (e instanceof ResourceAlreadyExistsException) return;
@@ -610,8 +604,8 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
       .where(
         and(
           eq(issueSubscriber.stageID, config.stageID),
-          eq(issueSubscriber.workspaceID, useWorkspace()),
-        ),
+          eq(issueSubscriber.workspaceID, useWorkspace())
+        )
       )
       .execute()
       .then((rows) => new Set(rows.map((x) => x.functionID)));
@@ -629,7 +623,7 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
             new DeleteSubscriptionFilterCommand({
               filterName: uniqueIdentifier,
               logGroupName: logGroup,
-            }),
+            })
           );
 
           await db
@@ -638,8 +632,8 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
               and(
                 eq(issueSubscriber.workspaceID, useWorkspace()),
                 eq(issueSubscriber.stageID, config.stageID),
-                eq(issueSubscriber.functionID, fn.id),
-              ),
+                eq(issueSubscriber.functionID, fn.id)
+              )
             )
             .execute();
 

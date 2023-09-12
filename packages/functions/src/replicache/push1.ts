@@ -46,7 +46,7 @@ export const handler = ApiHandler(async (_evt) => {
               actor: actor,
               cvrVersion: 0,
               clientVersion: 0,
-            },
+            }
         );
 
       // if (!equals(group.actor, actor)) {
@@ -73,7 +73,7 @@ export const handler = ApiHandler(async (_evt) => {
               clientGroupID: body.clientGroupID,
               mutationID: 0,
               clientVersion: 0,
-            },
+            }
         );
 
       const nextClientVersion = group.clientVersion + 1;
@@ -81,14 +81,14 @@ export const handler = ApiHandler(async (_evt) => {
 
       if (mutation.id < nextMutationID) {
         console.log(
-          `Mutation ${mutation.id} has already been processed - skipping`,
+          `Mutation ${mutation.id} has already been processed - skipping`
         );
         return;
       }
 
       if (mutation.id > nextMutationID) {
         throw new Error(
-          `Mutation ${mutation.id} is from the future - aborting`,
+          `Mutation ${mutation.id} is from the future - aborting`
         );
       }
 

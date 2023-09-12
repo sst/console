@@ -22,5 +22,5 @@ export const user = mysqlTable(
     primary: primaryKey(table.workspaceID, table.id),
     email: uniqueIndex("email").on(table.workspaceID, table.email),
     emailGlobal: index("email_global").on(table.email),
-  }),
+  })
 );

@@ -41,5 +41,5 @@ export const replicache_cvr = mysqlTable(
   },
   (table) => ({
     primary: primaryKey(table.clientGroupID, table.id),
-  }),
+  })
 );
