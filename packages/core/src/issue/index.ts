@@ -211,8 +211,10 @@ export const extract = zod(
         );
         if (!err) return;
 
-        if (!err.stack.length) {
-          // console.log("no stack", event.message);
+        if (!err.error) {
+          console.log("error was undefined for some reason");
+          console.log("log event", event);
+          return;
         }
 
         const group = (() => {
