@@ -1,14 +1,18 @@
 import { Server } from "./framework";
-import { App } from "@console/core/app";
+import { App, Stage } from "@console/core/app";
 import { LogPoller } from "@console/core/log/poller";
 import { Log } from "@console/core/log/";
 import { AWS } from "@console/core/aws";
 import { z } from "zod";
 import { Workspace } from "@console/core/workspace";
 import { Lambda } from "@console/core/lambda";
-import { assertActor, provideActor } from "@console/core/actor";
+import { assertActor, provideActor, useWorkspace } from "@console/core/actor";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
+import { and, db, eq } from "@console/core/drizzle";
+import { useTransaction } from "@console/core/util/transaction";
+import { issueSubscriber } from "@console/core/issue/issue.sql";
+import { warning } from "@console/core/warning/warning.sql";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
@@ -20,6 +24,29 @@ export const server = new Server()
   .expose("issue_unignore", Issue.unignore)
   .expose("issue_resolve", Issue.resolve)
   .expose("issue_unresolve", Issue.unresolve)
+  .mutation(
+    "issue_subscribe",
+    z.object({
+      stageID: z.string(),
+    }),
+    async (input) => {
+      await useTransaction(async (tx) => {
+        await tx
+          .delete(warning)
+          .where(
+            and(
+              eq(warning.workspaceID, useWorkspace()),
+              eq(warning.stageID, input.stageID),
+              eq(warning.type, "log_subscription"),
+            ),
+          )
+          .execute();
+      });
+      await Stage.Events.ResourcesUpdated.publish({
+        stageID: input.stageID,
+      });
+    },
+  )
   .mutation(
     "connect",
     z.object({
@@ -33,7 +60,7 @@ export const server = new Server()
       if (!appID) appID = await App.create({ name: input.app });
 
       let awsID = await AWS.Account.fromAccountID(input.aws_account_id).then(
-        (x) => x?.id
+        (x) => x?.id,
       );
 
       if (!awsID)
@@ -47,12 +74,12 @@ export const server = new Server()
         awsAccountID: awsID,
         region: input.region,
       });
-    }
+    },
   )
   .mutation(
     "app_stage_sync",
     z.object({ stageID: z.string() }),
-    async (input) => await App.Stage.Events.Updated.publish(input)
+    async (input) => await App.Stage.Events.Updated.publish(input),
   )
   .mutation("workspace_create", Workspace.create.schema, async (input) => {
     const actor = assertActor("account");

@@ -187,7 +187,16 @@ export function List() {
               level="info"
               controls={
                 <Row>
-                  <Button color="secondary">Retry Enabling Issues</Button>
+                  <Button
+                    onClick={() => {
+                      rep().mutate.issue_subscribe({
+                        stageID: stage.stage.id,
+                      });
+                    }}
+                    color="secondary"
+                  >
+                    Retry Enabling Issues
+                  </Button>
                 </Row>
               }
               details={warnings()

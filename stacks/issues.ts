@@ -94,31 +94,6 @@ export function Issues({ stack }: StackContext) {
     ],
   });
 
-  bus.subscribe(stack, "issue.subscribe_requested", {
-    handler: "packages/functions/src/issues/subscribe-requested.handler",
-    timeout: "15 minutes",
-    permissions: [
-      "sts",
-      "logs:DescribeDestinations",
-      "logs:PutDestination",
-      "logs:PutDestinationPolicy",
-      "logs:PutSubscriptionFilter",
-      new PolicyStatement({
-        actions: ["iam:PassRole"],
-        resources: [kinesisRole.roleArn],
-      }),
-    ],
-    bind: [
-      bus,
-      ...Object.values(secrets.database),
-      kinesisParams.ISSUES_ROLE_ARN,
-      kinesisParams.ISSUES_STREAM_ARN,
-      new Config.Parameter(stack, "ISSUES_DESTINATION_PREFIX", {
-        value: `arn:aws:logs:<region>:${stack.account}:destination:`,
-      }),
-    ],
-  });
-
   bus.subscribe(stack, "issue.rate_limited", {
     handler: "packages/functions/src/issues/rate-limited.handler",
     timeout: "15 minutes",
