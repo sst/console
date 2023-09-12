@@ -14,5 +14,7 @@ export function Storage(ctx: StackContext) {
       },
     },
   });
+  storage.addNotifications(ctx.stack, {
+  })
   return storage;
 }

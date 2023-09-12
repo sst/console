@@ -23,12 +23,18 @@ import {
   createMemo,
   createSignal,
 } from "solid-js";
-import { useIssuesContext } from "../context";
+import {
+  useFunctionsContext,
+  useIssuesContext,
+  useResourcesContext,
+  useStageContext,
+} from "../context";
 import { useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
 import { IssueCountStore } from "$/data/issue";
 import { DateTime } from "luxon";
 import { sumBy } from "remeda";
+import { WarningStore } from "$/data/warning";
 
 const COL_COUNT_WIDTH = 80;
 const COL_TIME_WIDTH = 140;
@@ -129,8 +135,17 @@ export function List() {
       if (view() === "active") return !item.timeResolved && !item.timeIgnored;
       if (view() === "ignored") return item.timeIgnored;
       if (view() === "resolved") return item.timeResolved;
-    })
+    }),
   );
+
+  const stage = useStageContext();
+
+  const warnings = WarningStore.watch.scan(
+    rep,
+    (item) =>
+      item.stageID === stage.stage.id && item.type === "log_subscription",
+  );
+  const resources = useResourcesContext();
 
   const [selected, setSelected] = createSignal<string[]>([]);
   let form!: HTMLFormElement;
@@ -167,38 +182,44 @@ export function List() {
       </HeaderSlot>
       <Content>
         <Stack space="4">
-          <Alert
-            level="info"
-            controls={
-              <Row>
-                <Button color="secondary">Retry Enabling Issues</Button>
-              </Row>
-            }
-            details={`We could not enable issues for these functions:
-  - function1 (not found)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-
-Read more about it over on our docs`}
-          >
-            There was a problem enabling Issues for your account.{" "}
-            <a href="htts://sst.dev/discord">Contact us on Discord.</a>
-          </Alert>
+          <Show when={warnings().length}>
+            <Alert
+              level="info"
+              controls={
+                <Row>
+                  <Button color="secondary">Retry Enabling Issues</Button>
+                </Row>
+              }
+              details={warnings()
+                .map((item) => {
+                  const reason = (function () {
+                    if (item.data.error === "noisy") return "Rate Limited";
+                    if (item.data.error === "unknown")
+                      return "Unknown error: " + item.data.message;
+                    if (item.data.error === "limited")
+                      return "Too many existing log subscriber";
+                    if (item.data.error === "permissions")
+                      return "Missing permissions to add log subscriber";
+                  })();
+                  return `${resources()
+                    .flatMap((x) =>
+                      x.id === item.target && x.type === "Function" ? [x] : [],
+                    )
+                    .at(0)?.metadata.handler} (${reason})`;
+                })
+                .join("\n")}
+            >
+              There was a problem enabling Issues for your account.{" "}
+              <a href="htts://sst.dev/discord">Contact us on Discord.</a>
+            </Alert>
+          </Show>
           <form
             ref={form}
             onSubmit={(e) => e.preventDefault()}
             onChange={(e) => {
               const issues = [
                 ...e.currentTarget.querySelectorAll<HTMLInputElement>(
-                  "input[name='issue']:checked"
+                  "input[name='issue']:checked",
                 ),
               ].map((i) => i.value);
               setSelected(issues);
@@ -210,7 +231,7 @@ Read more about it over on our docs`}
                   name="select-all"
                   onChange={(e) => {
                     for (const input of form.querySelectorAll<HTMLInputElement>(
-                      "input[type='checkbox']"
+                      "input[type='checkbox']",
                     )) {
                       input.checked = e.currentTarget.checked;
                     }
@@ -389,7 +410,7 @@ function IssueRow(props: IssueProps) {
     rep,
     (item) =>
       item.group === props.issue.group &&
-      item.hour > DateTime.now().toSQLDate()!
+      item.hour > DateTime.now().toSQLDate()!,
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
 

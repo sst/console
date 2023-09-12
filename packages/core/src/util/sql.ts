@@ -11,9 +11,7 @@ export const id = {
 
 export const workspaceID = {
   get id() {
-    return cuid("id").notNull();
-  },
-  get workspaceID() {
+    return cuid("id").notNull(); }, get workspaceID() {
     return cuid("workspace_id").notNull();
   },
 };
