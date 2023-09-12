@@ -14,6 +14,7 @@ declare module "sst/context" {
 }
 
 export const handler = Handler("kinesis_stream", async (event) => {
+  return;
   provideActor({
     type: "public",
     properties: {},
