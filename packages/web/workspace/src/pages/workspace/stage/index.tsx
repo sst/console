@@ -114,7 +114,7 @@ export function Inner() {
           <Route path="resources" component={Resources} />
           <Route path="resources/logs/:resourceID/*" component={Logs} />
           <Route path="issues/*" component={Issues} />
-          <Route path="" element={<Navigate href="resources" />} />
+          <Route path="*" element={<Navigate href="resources" />} />
         </Routes>
       </div>
     </>
