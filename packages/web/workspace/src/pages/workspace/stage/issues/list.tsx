@@ -33,7 +33,7 @@ import { useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
 import { IssueCountStore } from "$/data/issue";
 import { DateTime } from "luxon";
-import { sumBy } from "remeda";
+import { filter, pipe, sortBy, sumBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 
 const COL_COUNT_WIDTH = 80;
@@ -131,11 +131,16 @@ export function List() {
   const view = createMemo(() => search.view || "active");
   const rep = useReplicache();
   const filtered = createMemo(() =>
-    issues().filter((item) => {
-      if (view() === "active") return !item.timeResolved && !item.timeIgnored;
-      if (view() === "ignored") return item.timeIgnored;
-      if (view() === "resolved") return item.timeResolved;
-    }),
+    pipe(
+      issues(),
+      filter((item) => {
+        if (view() === "active") return !item.timeResolved && !item.timeIgnored;
+        if (view() === "ignored") return Boolean(item.timeIgnored);
+        if (view() === "resolved") return Boolean(item.timeResolved);
+        return false;
+      }),
+      sortBy((item) => item.timeSeen),
+    ),
   );
 
   const stage = useStageContext();
@@ -435,8 +440,6 @@ function IssueRow(props: IssueProps) {
       item.hour > DateTime.now().toSQLDate()!,
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
-
-  console.log(props.issue.pointer?.logGroup);
 
   return (
     <IssueRoot>
