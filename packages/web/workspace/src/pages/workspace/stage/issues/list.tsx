@@ -146,6 +146,9 @@ export function List() {
       item.stageID === stage.stage.id && item.type === "log_subscription",
   );
   const resources = useResourcesContext();
+  const fns = createMemo(() =>
+    resources().flatMap((item) => (item.type === "Function" ? [item] : [])),
+  );
 
   const [selected, setSelected] = createSignal<string[]>([]);
   let form!: HTMLFormElement;
@@ -345,13 +348,23 @@ export function List() {
                 }
               >
                 <For each={filtered()}>
-                  {(issue) => (
-                    <IssueRow
-                      issue={issue}
-                      unread
-                      handler="/packages/functions/src/events/log-poller-status.handler"
-                    />
-                  )}
+                  {(issue) => {
+                    const name = createMemo(
+                      () => issue.pointer?.logGroup.split("/").at(-1),
+                    );
+                    const fn = createMemo(() =>
+                      fns().find(
+                        (x) => name() && x.metadata.arn.endsWith(name()!),
+                      ),
+                    );
+                    return (
+                      <IssueRow
+                        issue={issue}
+                        unread
+                        handler={fn()?.metadata.handler || ""}
+                      />
+                    );
+                  }}
                 </For>
               </Show>
             </IssuesList>
@@ -422,6 +435,8 @@ function IssueRow(props: IssueProps) {
       item.hour > DateTime.now().toSQLDate()!,
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
+
+  console.log(props.issue.pointer?.logGroup);
 
   return (
     <IssueRoot>

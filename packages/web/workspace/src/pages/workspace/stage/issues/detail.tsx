@@ -1,16 +1,7 @@
 import { theme } from "$/ui/theme";
 import { Link, useParams } from "@solidjs/router";
 import { styled } from "@macaron-css/solid";
-import {
-  Show,
-  Switch,
-  Match,
-  ComponentProps,
-  createResource,
-  createMemo,
-  createEffect,
-  For,
-} from "solid-js";
+import { Show, Switch, Match, createMemo, createEffect, For } from "solid-js";
 import { IconCheck, IconNoSymbol, IconViewfinderCircle } from "$/ui/icons";
 import { IconArrowPathSpin } from "$/ui/icons/custom";
 import { utility, Tag, Row, Stack, Text, Button, ButtonGroup } from "$/ui";
@@ -31,6 +22,7 @@ import {
 } from "../logs";
 import { sumBy } from "remeda";
 import { WarningStore } from "$/data/warning";
+import { useResourcesContext } from "../context";
 
 const Content = styled("div", {
   base: {
@@ -140,6 +132,18 @@ export function Detail() {
     Object.values(LogStore[issue()?.id] || {}).at(0),
   );
 
+  const name = createMemo(() => issue()?.pointer?.logGroup.split("/").at(-1));
+  const resources = useResourcesContext();
+  const fn = createMemo(() =>
+    resources()
+      .flatMap((x) =>
+        name() && x.type === "Function" && x.metadata.arn.endsWith(name()!)
+          ? [x]
+          : [],
+      )
+      .at(0),
+  );
+
   return (
     <Show when={issue()}>
       <Row space="6" style={{ padding: `${theme.space[4]}` }}>
@@ -153,8 +157,8 @@ export function Detail() {
                 <Text code leading="loose" size="mono_base">
                   {issue().message}
                 </Text>
-                <FunctionLink href="/link/to/logs">
-                  /packages/functions/src/events/log-poller-status.handler
+                <FunctionLink href={`../../logs/${fn()?.id}`}>
+                  {fn()?.metadata.handler}
                 </FunctionLink>
               </Stack>
             </Stack>
