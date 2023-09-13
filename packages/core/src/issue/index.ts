@@ -186,6 +186,7 @@ export const extract = zod(
         and(
           eq(issueCount.workspaceID, workspaces[0]!.workspaceID),
           eq(issueCount.stageID, workspaces[0]!.stageID),
+          eq(issueCount.hour, hour),
         ),
       )
       .execute()
@@ -242,7 +243,7 @@ export const extract = zod(
         );
         if (!err) return;
 
-        if (!err.error || !err.message) {
+        if (!err.error || err.message) {
           console.log("error was undefined for some reason");
           console.log("log event", event);
           return;

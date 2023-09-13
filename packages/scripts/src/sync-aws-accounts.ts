@@ -3,7 +3,7 @@ import { AWS } from "@console/core/aws";
 import { provideActor } from "@console/core/actor";
 import { db, eq, inArray, or, sql } from "@console/core/drizzle";
 
-const workspaceFilter: string[] = [];
+const workspaceFilter: string[] = ["joftdif747pvaikdh2esjlzp"];
 
 const accounts = await db
   .select()
@@ -11,7 +11,7 @@ const accounts = await db
   .where(
     workspaceFilter.length
       ? inArray(awsAccount.workspaceID, workspaceFilter)
-      : undefined
+      : undefined,
   )
   .execute();
 
@@ -23,10 +23,11 @@ for (const account of accounts) {
       workspaceID: account.workspaceID,
     },
   });
+  console.log(account.workspaceID, account.accountID);
   promises.push(
     AWS.Account.Events.Created.publish({
       awsAccountID: account.id,
-    })
+    }),
   );
 }
 console.log(await Promise.all(promises));
