@@ -113,8 +113,6 @@ const light = (() => {
     d1: `${color.base.brand}, 54%`,
     l1: `${color.base.brand}, 66%`,
     l2: `${color.base.brand}, 72%`,
-    l3: `${color.base.brand}, 78%`,
-    l4: `${color.base.brand}, 84%`,
   };
 
   const blue = {
@@ -123,6 +121,7 @@ const light = (() => {
     l1: `${color.base.blue}, 57%`,
     l2: `${color.base.blue}, 63%`,
     l3: `${color.base.blue}, 69%`,
+    l4: `${color.base.blue}, 75%`,
   };
 
   const black = {
@@ -136,8 +135,6 @@ const light = (() => {
     d1: `${color.base.red}, 49%`,
     l1: `${color.base.red}, 61%`,
     l2: `${color.base.red}, 67%`,
-    l3: `${color.base.red}, 73%`,
-    l4: `${color.base.red}, 80%`,
   };
 
   const accent = `hsla(${base.brand}, 100%)`;
@@ -340,8 +337,6 @@ const dark = ((): typeof light => {
     d1: `${color.base.brand}, 52%`,
     l1: `${color.base.brand}, 64%`,
     l2: `${color.base.brand}, 70%`,
-    l3: `${color.base.brand}, 76%`,
-    l4: `${color.base.brand}, 82%`,
   };
 
   const blue = {
@@ -350,6 +345,7 @@ const dark = ((): typeof light => {
     l1: `${color.base.blue}, 62%`,
     l2: `${color.base.blue}, 68%`,
     l3: `${color.base.blue}, 74%`,
+    l4: `${color.base.blue}, 80%`,
   };
 
   const black = {
@@ -363,8 +359,6 @@ const dark = ((): typeof light => {
     d1: `${color.base.red}, 54%`,
     l1: `${color.base.red}, 68%`,
     l2: `${color.base.red}, 74%`,
-    l3: `${color.base.red}, 80%`,
-    l4: `${color.base.red}, 86%`,
   };
 
   const accent = `hsla(${base.brand}, 100%)`;
