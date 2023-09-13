@@ -444,15 +444,23 @@ type IssueProps = {
 
 function IssueRow(props: IssueProps) {
   const rep = useReplicache();
+  const min = DateTime.now()
+    .startOf("hour")
+    .minus({ hours: 24 })
+    .toSQL({ includeOffset: false })!;
   const counts = IssueCountStore.watch.scan(
     rep,
-    (item) =>
-      item.group === props.issue.group &&
-      item.hour > DateTime.now().toSQLDate()!,
+    (item) => item.group === props.issue.group && item.hour > min,
   );
 
   const histogram = createMemo(() => {
-    const hours = fromPairs(counts().map((item) => [item.hour, item.count]));
+    const hours = fromPairs(
+      counts().map((item) => [
+        parseTime(item.hour).toSQL({ includeOffset: false })!,
+        item.count,
+      ]),
+    );
+    console.log("hours", hours);
     return Interval.fromDateTimes(
       DateTime.now().toUTC().startOf("hour").minus({ hours: 24 }),
       DateTime.now().toUTC().startOf("hour"),
