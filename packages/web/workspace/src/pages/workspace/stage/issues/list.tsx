@@ -376,7 +376,7 @@ export function List() {
                     return (
                       <IssueRow
                         issue={issue}
-                        unread={search.view === "active"}
+                        unread={view() === "active"}
                         handler={fn()?.metadata.handler || ""}
                       />
                     );

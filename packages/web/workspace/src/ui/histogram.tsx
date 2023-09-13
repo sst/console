@@ -42,10 +42,10 @@ function generateBarHeights(
 const HistogramBar = styled("div", {
   base: {
     background: `linear-gradient(180deg,
-      hsl(${theme.color.base.blue}) 0%,
-      hsl(${theme.color.blue.l2}) 50%,
-      hsl(${theme.color.blue.l4}) 95%,
-      hsl(${theme.color.blue.l4}) 100%
+      hsl(${theme.color.base.red}) 0%,
+      hsl(${theme.color.red.l2}) 50%,
+      hsl(${theme.color.red.l4}) 95%,
+      hsl(${theme.color.red.l4}) 100%
     )`,
   },
 });
