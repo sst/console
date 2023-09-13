@@ -6,6 +6,7 @@ import {
   Alert,
   Text,
   Button,
+  Histogram,
   ButtonGroup,
   SplitOptions,
   SplitOptionsOption,
@@ -36,7 +37,7 @@ import { DateTime } from "luxon";
 import { filter, pipe, sortBy, sumBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 
-const COL_COUNT_WIDTH = 80;
+const COL_COUNT_WIDTH = 260;
 const COL_TIME_WIDTH = 140;
 
 const Content = styled("div", {
@@ -139,8 +140,8 @@ export function List() {
         if (view() === "resolved") return Boolean(item.timeResolved);
         return false;
       }),
-      sortBy((item) => item.timeSeen),
-    ),
+      sortBy((item) => item.timeSeen)
+    )
   );
 
   const stage = useStageContext();
@@ -148,11 +149,11 @@ export function List() {
   const warnings = WarningStore.watch.scan(
     rep,
     (item) =>
-      item.stageID === stage.stage.id && item.type === "log_subscription",
+      item.stageID === stage.stage.id && item.type === "log_subscription"
   );
   const resources = useResourcesContext();
   const fns = createMemo(() =>
-    resources().flatMap((item) => (item.type === "Function" ? [item] : [])),
+    resources().flatMap((item) => (item.type === "Function" ? [item] : []))
   );
 
   const [selected, setSelected] = createSignal<string[]>([]);
@@ -218,11 +219,13 @@ export function List() {
                     if (item.data.error === "permissions")
                       return "Missing permissions to add log subscriber";
                   })();
-                  return `${resources()
-                    .flatMap((x) =>
-                      x.id === item.target && x.type === "Function" ? [x] : [],
-                    )
-                    .at(0)?.metadata.handler} (${reason})`;
+                  return `${
+                    resources()
+                      .flatMap((x) =>
+                        x.id === item.target && x.type === "Function" ? [x] : []
+                      )
+                      .at(0)?.metadata.handler
+                  } (${reason})`;
                 })
                 .join("\n")}
             >
@@ -236,7 +239,7 @@ export function List() {
             onChange={(e) => {
               const issues = [
                 ...e.currentTarget.querySelectorAll<HTMLInputElement>(
-                  "input[name='issue']:checked",
+                  "input[name='issue']:checked"
                 ),
               ].map((i) => i.value);
               setSelected(issues);
@@ -248,7 +251,7 @@ export function List() {
                   name="select-all"
                   onChange={(e) => {
                     for (const input of form.querySelectorAll<HTMLInputElement>(
-                      "input[type='checkbox']",
+                      "input[type='checkbox']"
                     )) {
                       input.checked = e.currentTarget.checked;
                     }
@@ -270,8 +273,11 @@ export function List() {
                 <Show when={selected().length > 0}>
                   <ButtonGroup>
                     <Button
+                      active={search.view === "ignored"}
                       onClick={() => {
-                        rep().mutate.issue_ignore(selected());
+                        search.view === "ignored"
+                          ? rep().mutate.issue_unignore(selected())
+                          : rep().mutate.issue_ignore(selected());
                         form.reset();
                       }}
                       size="sm"
@@ -284,13 +290,16 @@ export function List() {
                       Ignore
                     </Button>
                     <Button
+                      active={search.view === "resolved"}
                       onClick={() => {
-                        rep().mutate.issue_resolve(selected());
+                        search.view === "resolved"
+                          ? rep().mutate.issue_unresolve(selected())
+                          : rep().mutate.issue_resolve(selected());
                         form.reset();
                       }}
                       size="sm"
                       grouped="right"
-                      color="success"
+                      color="secondary"
                     >
                       <ButtonIcon>
                         <IconCheck />
@@ -303,7 +312,7 @@ export function List() {
               <IssuesHeaderCol
                 align="right"
                 style={{ width: `${COL_COUNT_WIDTH}px` }}
-                title="Number of events in the last 24 hours"
+                title="Events in the last 24 hours"
               >
                 <Text
                   code
@@ -313,7 +322,7 @@ export function List() {
                   color="dimmed"
                   weight="medium"
                 >
-                  Last day
+                  Last 24hrs
                 </Text>
               </IssuesHeaderCol>
               <IssuesHeaderCol
@@ -354,18 +363,18 @@ export function List() {
               >
                 <For each={filtered()}>
                   {(issue) => {
-                    const name = createMemo(
-                      () => issue.pointer?.logGroup.split("/").at(-1),
+                    const name = createMemo(() =>
+                      issue.pointer?.logGroup.split("/").at(-1)
                     );
                     const fn = createMemo(() =>
                       fns().find(
-                        (x) => name() && x.metadata.arn.endsWith(name()!),
-                      ),
+                        (x) => name() && x.metadata.arn.endsWith(name()!)
+                      )
                     );
                     return (
                       <IssueRow
                         issue={issue}
-                        unread
+                        unread={search.view === "active"}
                         handler={fn()?.metadata.handler || ""}
                       />
                     );
@@ -384,7 +393,7 @@ const IssueRoot = styled("label", {
   base: {
     ...utility.row(4),
     padding: theme.space[4],
-    overflow: "hidden",
+    //overflow: "hidden",
     borderTop: `1px solid ${theme.color.divider.base}`,
     alignItems: "center",
     ":first-child": {
@@ -437,7 +446,7 @@ function IssueRow(props: IssueProps) {
     rep,
     (item) =>
       item.group === props.issue.group &&
-      item.hour > DateTime.now().toSQLDate()!,
+      item.hour > DateTime.now().toSQLDate()!
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
 
@@ -468,9 +477,38 @@ function IssueRow(props: IssueProps) {
         </Stack>
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_COUNT_WIDTH}px` }}>
-        <Text code size="mono_base" title={total().toString()}>
-          {formatNumber(total() || 1, true)}
-        </Text>
+        <Histogram
+          height={30}
+          units="Errors"
+          width={COL_COUNT_WIDTH}
+          currentTime={Date.now()}
+          data={[
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 0 },
+            { value: 305 },
+            { value: 311 },
+            { value: 226 },
+            { value: 200 },
+            { value: 184 },
+            { value: 28 },
+            { value: 489 },
+            { value: 1204 },
+            { value: 472 },
+            { value: 517 },
+            { value: 25 },
+          ]}
+        />
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_TIME_WIDTH}px` }}>
         <Text

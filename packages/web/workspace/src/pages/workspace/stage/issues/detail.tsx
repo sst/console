@@ -4,7 +4,16 @@ import { styled } from "@macaron-css/solid";
 import { Show, Switch, Match, createMemo, createEffect, For } from "solid-js";
 import { IconCheck, IconNoSymbol, IconViewfinderCircle } from "$/ui/icons";
 import { IconArrowPathSpin } from "$/ui/icons/custom";
-import { utility, Tag, Row, Stack, Text, Button, ButtonGroup } from "$/ui";
+import {
+  utility,
+  Tag,
+  Row,
+  Stack,
+  Text,
+  Button,
+  Histogram,
+  ButtonGroup,
+} from "$/ui";
 import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { IssueCountStore, IssueStore } from "$/data/issue";
 import { useReplicache } from "$/providers/replicache";
@@ -134,9 +143,9 @@ export function Detail() {
       .flatMap((x) =>
         name() && x.type === "Function" && x.metadata.arn.endsWith(name()!)
           ? [x]
-          : [],
+          : []
       )
-      .at(0),
+      .at(0)
   );
 
   return (
@@ -224,7 +233,7 @@ export function Detail() {
               </Button>
               <Button
                 grouped="right"
-                color="success"
+                color="secondary"
                 style={{ flex: "1 1 auto" }}
                 active={Boolean(issue().timeResolved)}
                 onClick={() =>
@@ -239,6 +248,43 @@ export function Detail() {
                 Resolve
               </Button>
             </ButtonGroup>
+            <Stack space="2">
+              <Text label on="surface" size="mono_sm" color="dimmed">
+                Last 24hrs
+              </Text>
+              <Histogram
+                width={300}
+                height={40}
+                units="Errors"
+                currentTime={Date.now()}
+                data={[
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 305 },
+                  { value: 311 },
+                  { value: 226 },
+                  { value: 200 },
+                  { value: 184 },
+                  { value: 28 },
+                  { value: 489 },
+                  { value: 1204 },
+                  { value: 472 },
+                  { value: 517 },
+                  { value: 25 },
+                ]}
+              />
+            </Stack>
             <Stack space="2">
               <Text label on="surface" size="mono_sm" color="dimmed">
                 Status
@@ -281,14 +327,6 @@ export function Detail() {
                 color="secondary"
               >
                 {formatSinceTime(issue().timeCreated, true)}
-              </Text>
-            </Stack>
-            <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                Events in last 24hrs
-              </Text>
-              <Text color="secondary" title={total().toString()}>
-                {formatNumber(total(), true)}
               </Text>
             </Stack>
           </Stack>
