@@ -142,6 +142,7 @@ export const extract = zod(
 
     const hour = DateTime.now()
       .startOf("hour")
+      .toUTC()
       .toSQL({ includeOffset: false })!;
 
     const workspaces = await db

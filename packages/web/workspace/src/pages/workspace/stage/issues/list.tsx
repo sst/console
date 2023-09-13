@@ -469,7 +469,10 @@ function IssueRow(props: IssueProps) {
       .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
       .map((hour) => ({ label: hour, value: hours[hour] || 0 }));
   });
-  createEffect(() => console.log(histogram()));
+  createEffect(() => {
+    console.log("counts", counts());
+    console.log("histogram", histogram());
+  });
 
   return (
     <IssueRoot>
