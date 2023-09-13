@@ -33,8 +33,8 @@ import {
 import { useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
 import { IssueCountStore } from "$/data/issue";
-import { DateTime } from "luxon";
-import { filter, pipe, sortBy, sumBy } from "remeda";
+import { DateTime, Interval } from "luxon";
+import { filter, fromPairs, pipe, sortBy, sumBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 
 const COL_COUNT_WIDTH = 260;
@@ -451,11 +451,16 @@ function IssueRow(props: IssueProps) {
       item.hour > DateTime.now().toSQLDate()!,
   );
 
-  const histogram = createMemo(() =>
-    Array(24 - counts().length)
-      .fill({ value: 0 })
-      .concat(counts().map((item) => ({ value: item.count }))),
-  );
+  const histogram = createMemo(() => {
+    const hours = fromPairs(counts().map((item) => [item.hour, item.count]));
+    return Interval.fromDateTimes(
+      DateTime.now().toUTC().startOf("hour").minus({ hours: 24 }),
+      DateTime.now().toUTC().startOf("hour"),
+    )
+      .splitBy({ hours: 1 })
+      .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
+      .map((hour) => ({ label: hour, value: hours[hour] || 0 }));
+  });
   createEffect(() => console.log(histogram()));
 
   return (
