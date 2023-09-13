@@ -1,6 +1,13 @@
 import { styled } from "@macaron-css/solid";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Link, Route, Routes, useNavigate, useParams } from "@solidjs/router";
+import {
+  Link,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { theme } from "$/ui/theme";
@@ -34,12 +41,12 @@ export function Stage() {
 
   const app = AppStore.watch.find(
     useReplicache(),
-    (app) => app.name === params.appName
+    (app) => app.name === params.appName,
   );
   const stage = createSubscription(() =>
     app()
       ? StageStore.fromName(app()!.id, params.stageName)
-      : async () => undefined
+      : async () => undefined,
   );
 
   bar.register("stage-switcher", async () => {
@@ -79,7 +86,7 @@ export function Inner() {
   const issues = useIssuesContext();
   const issuesCount = createMemo(
     () =>
-      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length
+      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length,
   );
   const header = useHeaderContext();
   return (
@@ -88,7 +95,7 @@ export function Inner() {
       <Show when={ctx.app.name === "console"}>
         <PageHeader>
           <Row space="5" vertical="center">
-            <Link href="" end>
+            <Link href="resources">
               <TabTitle>Resources</TabTitle>
             </Link>
             <Link href="issues">
@@ -104,9 +111,10 @@ export function Inner() {
       </Show>
       <div>
         <Routes>
-          <Route path="" component={Resources} />
+          <Route path="resources" component={Resources} />
+          <Route path="resources/logs/:resourceID/*" component={Logs} />
           <Route path="issues/*" component={Issues} />
-          <Route path="logs/:resourceID/*" component={Logs} />
+          <Route path="" element={<Navigate href="resources" />} />
         </Routes>
       </div>
     </>

@@ -27,13 +27,13 @@ export function createStageContext() {
   const params = useParams();
   const apps = AppStore.watch.scan(
     useReplicache(),
-    (item) => item.name === params.appName
+    (item) => item.name === params.appName,
   );
   const app = createMemo(() => apps().at(0));
   const stage = createSubscription(() =>
     app()
       ? StageStore.fromName(app()!.id, params.stageName)
-      : async () => undefined
+      : async () => undefined,
   );
   const local = useLocalContext();
 
@@ -62,7 +62,7 @@ function createResourcesContext() {
 
   const resources = ResourceStore.watch.scan(
     useReplicache(),
-    (item) => item.stageID === ctx.stage.id
+    (item) => item.stageID === ctx.stage.id,
   );
 
   if (query.dummy) {
@@ -98,7 +98,9 @@ export function ResourcesProvider(props: ParentProps) {
       >;
       if (!fn) return [];
       const run = (control: any) => {
-        nav(`/${params.workspaceSlug}/${appName}/${stageName}/logs/${fn.id}`);
+        nav(
+          `/${params.workspaceSlug}/${appName}/${stageName}/resources/logs/${fn.id}`,
+        );
         control.hide();
       };
       if (!refs.length)
@@ -116,10 +118,9 @@ export function ResourcesProvider(props: ParentProps) {
             return {
               icon: IconApi,
               category: "API Routes",
-              title: `Go to ${
-                resource.metadata.routes.find((r) => r.fn?.node === fn.addr)
-                  ?.route
-              }`,
+              title: `Go to ${resource.metadata.routes.find(
+                (r) => r.fn?.node === fn.addr,
+              )?.route}`,
               run,
             };
           default:
@@ -164,7 +165,7 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
         (r) =>
           r.type === "Function" &&
           ((typeof fn !== "string" && r.addr === fn.node) ||
-            r.metadata.arn === fn)
+            r.metadata.arn === fn),
       ) as Extract<Resource.Info, { type: "Function" }> | undefined;
       if (!match) return;
 
@@ -196,7 +197,7 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           break;
         case "Table":
           resource.metadata.consumers.forEach((consumer) =>
-            push(resource, consumer.fn)
+            push(resource, consumer.fn),
           );
           break;
         case "RDS":
@@ -209,7 +210,7 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           break;
         case "Bucket":
           resource.metadata.notifications.forEach((item) =>
-            push(resource, item)
+            push(resource, item),
           );
           break;
         case "Script":
@@ -222,12 +223,12 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           break;
         case "AppSync":
           resource.metadata.dataSources.forEach((item) =>
-            push(resource, item.fn)
+            push(resource, item.fn),
           );
           break;
         case "EventBus":
           resource.metadata.rules.forEach((item) =>
-            item.targets.forEach((t) => push(resource, t))
+            item.targets.forEach((t) => push(resource, t)),
           );
           break;
         case "AstroSite":
@@ -249,7 +250,7 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           break;
         case "KinesisStream":
           resource.metadata.consumers.forEach((item) =>
-            push(resource, item.fn)
+            push(resource, item.fn),
           );
           break;
         case "SlsNextjsSite":
@@ -276,7 +277,7 @@ export const { use: useIssuesContext, provider: IssuesProvider } =
     const ctx = useStageContext();
     const issues = IssueStore.watch.scan(
       rep,
-      (issue) => issue.stageID === ctx.stage.id
+      (issue) => issue.stageID === ctx.stage.id,
     );
     return issues;
   });

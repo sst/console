@@ -72,6 +72,7 @@ export const LogsLoadingIcon = styled("div", {
 
 const FunctionLink = styled(Link, {
   base: {
+    cursor: "pointer",
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_sm,
     lineHeight: theme.font.lineHeight,
@@ -157,7 +158,7 @@ export function Detail() {
                 <Text code leading="loose" size="mono_base">
                   {issue().message}
                 </Text>
-                <FunctionLink href={`../../logs/${fn()?.id}`}>
+                <FunctionLink href={`../../resources/logs/${fn()?.id}`}>
                   {fn()?.metadata.handler}
                 </FunctionLink>
               </Stack>
