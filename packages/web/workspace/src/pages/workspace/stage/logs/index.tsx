@@ -384,7 +384,7 @@ const LogErrorMessage = styled("span", {
   },
 });
 
-export const LogMoreIndicator = styled("div", {
+const LogMoreIndicator = styled("div", {
   base: {
     ...utility.row(2),
     alignItems: "center",
@@ -393,7 +393,7 @@ export const LogMoreIndicator = styled("div", {
   },
 });
 
-export const LogMoreIndicatorIcon = styled("div", {
+const LogMoreIndicatorIcon = styled("div", {
   base: {
     padding: 2,
     width: 20,

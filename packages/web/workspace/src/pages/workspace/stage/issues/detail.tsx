@@ -13,13 +13,7 @@ import { StackTrace } from "../logs/error";
 import { useWorkspace } from "../../context";
 import { bus } from "$/providers/bus";
 import { LogStore, clearLogStore } from "$/data/log";
-import {
-  LogEntry,
-  LogEntryTime,
-  LogEntryMessage,
-  LogMoreIndicator,
-  LogMoreIndicatorIcon,
-} from "../logs";
+import { LogEntry, LogEntryTime, LogEntryMessage } from "../logs";
 import { sumBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 import { useResourcesContext } from "../context";
@@ -116,7 +110,7 @@ export function Detail() {
           authorization: rep().auth,
           "x-sst-workspace": issue()!.workspaceID,
         },
-      },
+      }
     ).then((x) => x.json());
     clearLogStore(issue()!.id);
     bus.emit("log", result);
@@ -125,12 +119,12 @@ export function Detail() {
   const counts = IssueCountStore.watch.scan(
     rep,
     (item) =>
-      item.group === issue()?.group && item.hour > DateTime.now().toSQLDate()!,
+      item.group === issue()?.group && item.hour > DateTime.now().toSQLDate()!
   );
   const total = createMemo(() => sumBy(counts(), (item) => item.count));
 
   const invocation = createMemo(() =>
-    Object.values(LogStore[issue()?.id] || {}).at(0),
+    Object.values(LogStore[issue()?.id] || {}).at(0)
   );
 
   const name = createMemo(() => issue()?.pointer?.logGroup.split("/").at(-1));
@@ -269,7 +263,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeSeen).toLocaleString(
-                  DateTime.DATETIME_FULL,
+                  DateTime.DATETIME_FULL
                 )}
                 color="secondary"
               >
@@ -282,7 +276,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeCreated).toLocaleString(
-                  DateTime.DATETIME_FULL,
+                  DateTime.DATETIME_FULL
                 )}
                 color="secondary"
               >

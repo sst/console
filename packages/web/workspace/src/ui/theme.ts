@@ -120,6 +120,8 @@ const light = (() => {
     d1: `${color.base.blue}, 45%`,
     l1: `${color.base.blue}, 57%`,
     l2: `${color.base.blue}, 63%`,
+    l3: `${color.base.blue}, 69%`,
+    l4: `${color.base.blue}, 75%`,
   };
 
   const black = {
@@ -342,6 +344,8 @@ const dark = ((): typeof light => {
     d1: `${color.base.blue}, 50%`,
     l1: `${color.base.blue}, 62%`,
     l2: `${color.base.blue}, 68%`,
+    l3: `${color.base.blue}, 74%`,
+    l4: `${color.base.blue}, 80%`,
   };
 
   const black = {
