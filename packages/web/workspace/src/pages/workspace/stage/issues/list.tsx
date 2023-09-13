@@ -140,7 +140,7 @@ export function List() {
         if (view() === "resolved") return Boolean(item.timeResolved);
         return false;
       }),
-      sortBy((item) => item.timeSeen),
+      sortBy([(item) => item.timeSeen, "desc"]),
     ),
   );
 
