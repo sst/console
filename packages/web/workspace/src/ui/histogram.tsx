@@ -23,7 +23,7 @@ interface HistogramProps {
 
 function generateBarHeights(
   maxBarHeight: number,
-  data: HistogramPoint[]
+  data: HistogramPoint[],
 ): HistogramPointWithHeight[] {
   const values = data.map((d) => d.value);
   const maxValue = Math.max(...values);
@@ -118,7 +118,7 @@ export function Histogram(props: HistogramProps) {
   const [showTooltip, setShowTooltip] = createSignal<number>();
 
   const barData = createMemo(() =>
-    generateBarHeights(props.height, props.data)
+    generateBarHeights(props.height, props.data),
   );
   const hourMarkers = createMemo(() => getHourMarkers(props.currentTime));
   const tooltipLeft = createMemo(() => {

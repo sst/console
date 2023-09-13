@@ -140,8 +140,8 @@ export function List() {
         if (view() === "resolved") return Boolean(item.timeResolved);
         return false;
       }),
-      sortBy((item) => item.timeSeen)
-    )
+      sortBy((item) => item.timeSeen),
+    ),
   );
 
   const stage = useStageContext();
@@ -149,20 +149,24 @@ export function List() {
   const warnings = WarningStore.watch.scan(
     rep,
     (item) =>
-      item.stageID === stage.stage.id && item.type === "log_subscription"
+      item.stageID === stage.stage.id && item.type === "log_subscription",
   );
   const resources = useResourcesContext();
   const fns = createMemo(() =>
-    resources().flatMap((item) => (item.type === "Function" ? [item] : []))
+    resources().flatMap((item) => (item.type === "Function" ? [item] : [])),
   );
 
   const [selected, setSelected] = createSignal<string[]>([]);
   let form!: HTMLFormElement;
 
-  createEffect(() => {
-    view();
+  function reset() {
     form.reset();
     setSelected([]);
+  }
+
+  createEffect(() => {
+    view();
+    reset();
   });
 
   return (
@@ -219,13 +223,11 @@ export function List() {
                     if (item.data.error === "permissions")
                       return "Missing permissions to add log subscriber";
                   })();
-                  return `${
-                    resources()
-                      .flatMap((x) =>
-                        x.id === item.target && x.type === "Function" ? [x] : []
-                      )
-                      .at(0)?.metadata.handler
-                  } (${reason})`;
+                  return `${resources()
+                    .flatMap((x) =>
+                      x.id === item.target && x.type === "Function" ? [x] : [],
+                    )
+                    .at(0)?.metadata.handler} (${reason})`;
                 })
                 .join("\n")}
             >
@@ -239,7 +241,7 @@ export function List() {
             onChange={(e) => {
               const issues = [
                 ...e.currentTarget.querySelectorAll<HTMLInputElement>(
-                  "input[name='issue']:checked"
+                  "input[name='issue']:checked",
                 ),
               ].map((i) => i.value);
               setSelected(issues);
@@ -251,7 +253,7 @@ export function List() {
                   name="select-all"
                   onChange={(e) => {
                     for (const input of form.querySelectorAll<HTMLInputElement>(
-                      "input[type='checkbox']"
+                      "input[type='checkbox']",
                     )) {
                       input.checked = e.currentTarget.checked;
                     }
@@ -278,7 +280,7 @@ export function List() {
                         search.view === "ignored"
                           ? rep().mutate.issue_unignore(selected())
                           : rep().mutate.issue_ignore(selected());
-                        form.reset();
+                        reset();
                       }}
                       size="sm"
                       grouped="left"
@@ -295,7 +297,7 @@ export function List() {
                         search.view === "resolved"
                           ? rep().mutate.issue_unresolve(selected())
                           : rep().mutate.issue_resolve(selected());
-                        form.reset();
+                        reset();
                       }}
                       size="sm"
                       grouped="right"
@@ -363,13 +365,13 @@ export function List() {
               >
                 <For each={filtered()}>
                   {(issue) => {
-                    const name = createMemo(() =>
-                      issue.pointer?.logGroup.split("/").at(-1)
+                    const name = createMemo(
+                      () => issue.pointer?.logGroup.split("/").at(-1),
                     );
                     const fn = createMemo(() =>
                       fns().find(
-                        (x) => name() && x.metadata.arn.endsWith(name()!)
-                      )
+                        (x) => name() && x.metadata.arn.endsWith(name()!),
+                      ),
                     );
                     return (
                       <IssueRow
@@ -446,9 +448,15 @@ function IssueRow(props: IssueProps) {
     rep,
     (item) =>
       item.group === props.issue.group &&
-      item.hour > DateTime.now().toSQLDate()!
+      item.hour > DateTime.now().toSQLDate()!,
   );
-  const total = createMemo(() => sumBy(counts(), (item) => item.count));
+
+  const histogram = createMemo(() =>
+    Array(24 - counts().length)
+      .fill({ value: 0 })
+      .concat(counts().map((item) => ({ value: item.count }))),
+  );
+  createEffect(() => console.log(histogram()));
 
   return (
     <IssueRoot>
@@ -482,32 +490,7 @@ function IssueRow(props: IssueProps) {
           units="Errors"
           width={COL_COUNT_WIDTH}
           currentTime={Date.now()}
-          data={[
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 0 },
-            { value: 305 },
-            { value: 311 },
-            { value: 226 },
-            { value: 200 },
-            { value: 184 },
-            { value: 28 },
-            { value: 489 },
-            { value: 1204 },
-            { value: 472 },
-            { value: 517 },
-            { value: 25 },
-          ]}
+          data={histogram()}
         />
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_TIME_WIDTH}px` }}>
