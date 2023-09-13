@@ -510,18 +510,17 @@ export async function extractError(
 }
 
 function formatLogMessage(parts: string[]) {
-  const result = new Array<string>(parts.length);
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i]!;
     if (part[0] === "{" && part.at(-1) === "}") {
       try {
         const parsed = JSON.parse(part);
-        result[i] = JSON.stringify(parsed, null, 2);
+        parts[i] = JSON.stringify(parsed, null, 2);
         continue;
       } catch {}
     }
-    result[i] = part;
+    parts[i] = part;
   }
 
-  return result.join("\t").trim();
+  return parts.join("\t").trim();
 }
