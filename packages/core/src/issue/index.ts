@@ -243,7 +243,7 @@ export const extract = zod(
         );
         if (!err) return;
 
-        if (!err.error || err.message) {
+        if (!err.error || !err.message) {
           console.log("error was undefined for some reason");
           console.log("log event", event);
           return;
