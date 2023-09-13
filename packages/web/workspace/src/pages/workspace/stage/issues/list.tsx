@@ -448,11 +448,11 @@ function IssueRow(props: IssueProps) {
     .startOf("hour")
     .minus({ hours: 24 })
     .toSQL({ includeOffset: false })!;
+
   const counts = IssueCountStore.watch.scan(
     rep,
     (item) => item.group === props.issue.group && item.hour > min,
   );
-
   const histogram = createMemo(() => {
     const hours = fromPairs(
       counts().map((item) => [
@@ -460,7 +460,6 @@ function IssueRow(props: IssueProps) {
         item.count,
       ]),
     );
-    console.log("hours", hours);
     return Interval.fromDateTimes(
       DateTime.now().toUTC().startOf("hour").minus({ hours: 24 }),
       DateTime.now().toUTC().startOf("hour"),
@@ -468,10 +467,6 @@ function IssueRow(props: IssueProps) {
       .splitBy({ hours: 1 })
       .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
       .map((hour) => ({ label: hour, value: hours[hour] || 0 }));
-  });
-  createEffect(() => {
-    console.log("counts", counts());
-    console.log("histogram", histogram());
   });
 
   return (

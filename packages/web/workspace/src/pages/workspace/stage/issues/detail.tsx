@@ -17,13 +17,13 @@ import {
 import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
 import { IssueCountStore, IssueStore } from "$/data/issue";
 import { useReplicache } from "$/providers/replicache";
-import { DateTime } from "luxon";
+import { DateTime, Interval } from "luxon";
 import { StackTrace } from "../logs/error";
 import { useWorkspace } from "../../context";
 import { bus } from "$/providers/bus";
 import { LogStore, clearLogStore } from "$/data/log";
 import { LogEntry, LogEntryTime, LogEntryMessage } from "../logs";
-import { sumBy } from "remeda";
+import { fromPairs, sumBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 import { useResourcesContext } from "../context";
 
@@ -119,21 +119,14 @@ export function Detail() {
           authorization: rep().auth,
           "x-sst-workspace": issue()!.workspaceID,
         },
-      }
+      },
     ).then((x) => x.json());
     clearLogStore(issue()!.id);
     bus.emit("log", result);
   });
 
-  const counts = IssueCountStore.watch.scan(
-    rep,
-    (item) =>
-      item.group === issue()?.group && item.hour > DateTime.now().toSQLDate()!
-  );
-  const total = createMemo(() => sumBy(counts(), (item) => item.count));
-
   const invocation = createMemo(() =>
-    Object.values(LogStore[issue()?.id] || {}).at(0)
+    Object.values(LogStore[issue()?.id] || {}).at(0),
   );
 
   const name = createMemo(() => issue()?.pointer?.logGroup.split("/").at(-1));
@@ -143,10 +136,34 @@ export function Detail() {
       .flatMap((x) =>
         name() && x.type === "Function" && x.metadata.arn.endsWith(name()!)
           ? [x]
-          : []
+          : [],
       )
-      .at(0)
+      .at(0),
   );
+
+  const min = DateTime.now()
+    .startOf("hour")
+    .minus({ hours: 24 })
+    .toSQL({ includeOffset: false })!;
+  const counts = IssueCountStore.watch.scan(
+    rep,
+    (item) => item.group === issue()?.group && item.hour > min,
+  );
+  const histogram = createMemo(() => {
+    const hours = fromPairs(
+      counts().map((item) => [
+        parseTime(item.hour).toSQL({ includeOffset: false })!,
+        item.count,
+      ]),
+    );
+    return Interval.fromDateTimes(
+      DateTime.now().toUTC().startOf("hour").minus({ hours: 24 }),
+      DateTime.now().toUTC().startOf("hour"),
+    )
+      .splitBy({ hours: 1 })
+      .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
+      .map((hour) => ({ label: hour, value: hours[hour] || 0 }));
+  });
 
   return (
     <Show when={issue()}>
@@ -257,32 +274,7 @@ export function Detail() {
                 height={40}
                 units="Errors"
                 currentTime={Date.now()}
-                data={[
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 0 },
-                  { value: 305 },
-                  { value: 311 },
-                  { value: 226 },
-                  { value: 200 },
-                  { value: 184 },
-                  { value: 28 },
-                  { value: 489 },
-                  { value: 1204 },
-                  { value: 472 },
-                  { value: 517 },
-                  { value: 25 },
-                ]}
+                data={histogram()}
               />
             </Stack>
             <Stack space="2">
@@ -309,7 +301,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeSeen).toLocaleString(
-                  DateTime.DATETIME_FULL
+                  DateTime.DATETIME_FULL,
                 )}
                 color="secondary"
               >
@@ -322,7 +314,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeCreated).toLocaleString(
-                  DateTime.DATETIME_FULL
+                  DateTime.DATETIME_FULL,
                 )}
                 color="secondary"
               >
