@@ -466,7 +466,7 @@ export async function extractError(
     if (consumer) {
       const result = stack.flatMap((item): StackFrame[] => {
         const [lineHint, columnHint] = item.match(/(\d+):(\d+)/) ?? [];
-        if (!columnHint || !lineHint) return [{ raw: item }];
+        if (!columnHint || !lineHint) return [];
         const column = parseInt(columnHint);
         const line = parseInt(lineHint);
         const original = (() => {
@@ -501,7 +501,7 @@ export async function extractError(
         ];
       });
       consumer.destroy();
-      return result;
+      if (result.length) return result;
     }
     return stack.map((raw) => ({ raw }));
   })();
