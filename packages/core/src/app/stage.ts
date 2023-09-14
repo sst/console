@@ -191,7 +191,7 @@ export const syncMetadata = zod(
     );
     console.log("found", list.Contents?.length, "stacks");
     if (!list.Contents?.length) {
-      // await remove(input.stageID);
+      await remove(input.stageID);
       return;
     }
     const results = await Promise.all(
