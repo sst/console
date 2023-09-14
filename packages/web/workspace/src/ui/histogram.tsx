@@ -26,7 +26,7 @@ function generateBarHeights(
   data: HistogramPoint[],
 ): HistogramPointWithHeight[] {
   const values = data.map((d) => d.value);
-  const maxValue = Math.max(...values);
+  const maxValue = Math.max(1, ...values);
 
   const newData = data.map(({ value }) => {
     const height = (value / maxValue) * maxBarHeight;
