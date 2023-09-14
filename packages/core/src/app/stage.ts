@@ -57,8 +57,8 @@ export const fromID = zod(Info.shape.id, (stageID) =>
       .from(stage)
       .where(and(eq(stage.workspaceID, useWorkspace()), eq(stage.id, stageID)))
       .execute()
-      .then((x) => x[0])
-  )
+      .then((x) => x[0]),
+  ),
 );
 
 export const fromName = zod(
@@ -79,12 +79,12 @@ export const fromName = zod(
             eq(stage.name, input.name),
             eq(stage.region, input.region),
             eq(stage.appID, input.appID),
-            eq(stage.awsAccountID, input.awsAccountID)
-          )
+            eq(stage.awsAccountID, input.awsAccountID),
+          ),
         )
         .execute()
-        .then((x) => x[0])
-    )
+        .then((x) => x[0]),
+    ),
 );
 
 export const list = zod(z.void(), () =>
@@ -93,8 +93,8 @@ export const list = zod(z.void(), () =>
       .select()
       .from(stage)
       .execute()
-      .then((rows) => rows)
-  )
+      .then((rows) => rows),
+  ),
 );
 
 export const connect = zod(
@@ -135,18 +135,18 @@ export const connect = zod(
             eq(stage.workspaceID, useWorkspace()),
             eq(stage.appID, input.appID),
             eq(stage.name, input.name),
-            eq(stage.region, input.region)
-          )
+            eq(stage.region, input.region),
+          ),
         )
         .execute()
         .then((x) => x[0]!);
       await createTransactionEffect(() =>
         Events.Connected.publish({
           stageID: insertID,
-        })
+        }),
       );
       return insertID;
-    })
+    }),
 );
 
 export const syncMetadata = zod(
@@ -165,7 +165,7 @@ export const syncMetadata = zod(
       .from(stage)
       .innerJoin(app, eq(stage.appID, app.id))
       .where(
-        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace()))
+        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace())),
       )
       .execute()
       .then((x) => x[0]);
@@ -187,9 +187,33 @@ export const syncMetadata = zod(
       new ListObjectsV2Command({
         Prefix: key,
         Bucket: bucket,
-      })
+      }),
     );
     console.log("found", list.Contents?.length, "stacks");
+    if (!list.Contents?.length) {
+      console.log("removing stage");
+      await createTransaction(async (tx) => {
+        await tx
+          .delete(stage)
+          .where(
+            and(
+              eq(stage.id, input.stageID),
+              eq(stage.workspaceID, useWorkspace()),
+            ),
+          )
+          .execute();
+        await tx
+          .delete(resource)
+          .where(
+            and(
+              eq(resource.stageID, input.stageID),
+              eq(resource.workspaceID, useWorkspace()),
+            ),
+          )
+          .execute();
+      });
+      return;
+    }
     const results = await Promise.all(
       list.Contents?.map(async (obj) => {
         const stackID = obj.Key?.split("/").pop()!.split(".")[1];
@@ -197,7 +221,7 @@ export const syncMetadata = zod(
           new GetObjectCommand({
             Key: obj.Key!,
             Bucket: bucket,
-          })
+          }),
         );
         const body = await result
           .Body!.transformToString()
@@ -216,7 +240,7 @@ export const syncMetadata = zod(
               ? await Enrichers[type as keyof typeof Enrichers](
                   res,
                   input.credentials,
-                  row.region
+                  row.region,
                 ).catch(() => ({}))
               : {};
           r.push({
@@ -226,7 +250,7 @@ export const syncMetadata = zod(
           });
         }
         return r;
-      }) || []
+      }) || [],
     ).then((x) => x.flat());
     s3.destroy();
 
@@ -240,8 +264,8 @@ export const syncMetadata = zod(
         .where(
           and(
             eq(resource.stageID, input.stageID),
-            eq(resource.workspaceID, useWorkspace())
-          )
+            eq(resource.workspaceID, useWorkspace()),
+          ),
         )
         .execute()
         .then((x) => new Map(x.map((x) => [x.addr, x.id] as const)));
@@ -264,7 +288,7 @@ export const syncMetadata = zod(
                 metadata: res.data,
                 enrichment: res.enrichment,
               };
-            })
+            }),
           )
           .onDuplicateKeyUpdate({
             set: {
@@ -286,17 +310,17 @@ export const syncMetadata = zod(
             and(
               eq(resource.stageID, input.stageID),
               eq(resource.workspaceID, useWorkspace()),
-              inArray(resource.id, toDelete)
-            )
+              inArray(resource.id, toDelete),
+            ),
           );
       await createTransactionEffect(() => Replicache.poke());
       await createTransactionEffect(() =>
         Events.ResourcesUpdated.publish({
           stageID: input.stageID,
-        })
+        }),
       );
     });
-  }
+  },
 );
 
 export type StageCredentials = Exclude<
@@ -318,7 +342,7 @@ export const assumeRole = zod(Info.shape.id, async (stageID) => {
       .innerJoin(app, eq(stage.appID, app.id))
       .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
       .execute()
-      .then((rows) => rows.at(0))
+      .then((rows) => rows.at(0)),
   );
   if (!result) return;
   const credentials = await AWS.assumeRole(result.accountID);

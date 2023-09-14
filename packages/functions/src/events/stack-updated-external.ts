@@ -32,7 +32,10 @@ type Payload = {
 
 export const handler = async (evt: Payload) => {
   console.log(evt);
-  if (evt["detail-type"] === "Object Created") {
+  if (
+    evt["detail-type"] === "Object Created" ||
+    evt["detail-type"] === "Object Deleted"
+  ) {
     if (!evt.detail.object.key.startsWith("stackMetadata")) return;
     const [, appHint, stageHint] = evt.detail.object.key.split("/");
     if (!stageHint || !appHint) return;
@@ -51,7 +54,10 @@ export const handler = async (evt: Payload) => {
       .from(awsAccount)
       .leftJoin(
         app,
-        and(eq(app.name, appName!), eq(app.workspaceID, awsAccount.workspaceID))
+        and(
+          eq(app.name, appName!),
+          eq(app.workspaceID, awsAccount.workspaceID),
+        ),
       )
       .leftJoin(stage, and(eq(stage.name, stageName!), eq(stage.appID, app.id)))
       .where(and(eq(awsAccount.accountID, account)))
@@ -73,7 +79,7 @@ export const handler = async (evt: Payload) => {
           await createTransactionEffect(() =>
             Stage.Events.Updated.publish({
               stageID: row.stageID!,
-            })
+            }),
           );
           return;
         }

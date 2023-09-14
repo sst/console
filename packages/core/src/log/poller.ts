@@ -40,8 +40,8 @@ export const subscribe = zod(
           and(
             eq(log_poller.stageID, input.stageID),
             eq(log_poller.logGroup, input.logGroup),
-            eq(log_poller.workspaceID, useWorkspace())
-          )
+            eq(log_poller.workspaceID, useWorkspace()),
+          ),
         )
         .execute()
         .then((rows) => rows[0]?.id);
@@ -67,13 +67,13 @@ export const subscribe = zod(
                 workspaceID: useWorkspace(),
                 pollerID: existing,
               }),
-            })
-          )
+            }),
+          ),
         );
         return true;
       }
       return false;
-    })
+    }),
 );
 
 export const fromID = zod(Info.shape.id, (id) =>
@@ -82,10 +82,10 @@ export const fromID = zod(Info.shape.id, (id) =>
       .select()
       .from(log_poller)
       .where(
-        and(eq(log_poller.id, id), eq(log_poller.workspaceID, useWorkspace()))
+        and(eq(log_poller.id, id), eq(log_poller.workspaceID, useWorkspace())),
       )
-      .then((rows) => rows[0])
-  )
+      .then((rows) => rows[0]),
+  ),
 );
 
 export const remove = zod(Info.shape.id, (id) =>
@@ -93,9 +93,9 @@ export const remove = zod(Info.shape.id, (id) =>
     tx
       .delete(log_poller)
       .where(
-        and(eq(log_poller.id, id), eq(log_poller.workspaceID, useWorkspace()))
-      )
-  )
+        and(eq(log_poller.id, id), eq(log_poller.workspaceID, useWorkspace())),
+      ),
+  ),
 );
 
 export const setExecution = zod(
@@ -113,10 +113,10 @@ export const setExecution = zod(
         .where(
           and(
             eq(log_poller.id, input.id),
-            eq(log_poller.workspaceID, useWorkspace())
-          )
-        )
-    )
+            eq(log_poller.workspaceID, useWorkspace()),
+          ),
+        ),
+    ),
 );
 
 export const clear = zod(Info.shape.id, async (id) =>
@@ -124,7 +124,7 @@ export const clear = zod(Info.shape.id, async (id) =>
     tx
       .delete(log_poller)
       .where(
-        and(eq(log_poller.id, id), eq(log_poller.workspaceID, useWorkspace()))
-      )
-  )
+        and(eq(log_poller.id, id), eq(log_poller.workspaceID, useWorkspace())),
+      ),
+  ),
 );
