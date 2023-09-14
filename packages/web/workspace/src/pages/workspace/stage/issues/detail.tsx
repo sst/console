@@ -338,7 +338,7 @@ export function Detail() {
               </Text>
               <FeedbackCopy>
                 <Text size="sm" color="secondary">
-                  Does the error message not look right?
+                  Does something not look right?
                 </Text>{" "}
                 <a href="https://sst.dev/discord" target="_blank">
                   Send us a message in #console on Discord.
