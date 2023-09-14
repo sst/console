@@ -306,7 +306,6 @@ export function Overview() {
         </Match>
         <Match when={true}>
           <>
-            {/*
             <Announcement>
               <Text
                 code
@@ -323,9 +322,9 @@ export function Overview() {
                 —{" "}
               </Text>
               <Text size="sm" on="surface" color="secondary">
-                Use a restricted IAM policy and connect your prod AWS accounts.{" "}
+                View Lambda function errors in real-time.{" "}
                 <a
-                  href="https://docs.sst.dev/advanced/console-updates#restricted-iam-policy"
+                  href="https://docs.sst.dev/advanced/console-updates#issues"
                   target="_blank"
                 >
                   Learn more
@@ -335,7 +334,6 @@ export function Overview() {
                 </a>
               </Text>
             </Announcement>
-            */}
             <Root>
               <Stack space="4">
                 <Row space="5" vertical="center" horizontal="between">
