@@ -461,8 +461,8 @@ function IssueRow(props: IssueProps) {
       ]),
     );
     return Interval.fromDateTimes(
-      DateTime.now().toUTC().startOf("hour").minus({ hours: 24 }),
-      DateTime.now().toUTC().startOf("hour"),
+      DateTime.now().toUTC().startOf("hour").minus({ hours: 23 }),
+      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 }),
     )
       .splitBy({ hours: 1 })
       .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
