@@ -165,6 +165,11 @@ export function Detail() {
       .map((hour) => ({ label: hour, value: hours[hour] || 0 }));
   });
 
+  createEffect(() => {
+    console.log("count", counts());
+    console.log("histogram", histogram());
+  });
+
   return (
     <Show when={issue()}>
       <Row space="6" style={{ padding: `${theme.space[4]}` }}>
