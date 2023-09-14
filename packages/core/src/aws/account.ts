@@ -406,7 +406,6 @@ export const integrate = zod(
           for (const [stageName, stageID] of stages) {
             console.log("could not find", appName, stageName, stageID);
             await App.Stage.remove(stageID);
-            await Replicache.poke();
           }
         }
         if (!list.ContinuationToken) break;

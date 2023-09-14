@@ -353,5 +353,6 @@ export const remove = zod(Info.shape.id, (stageID) =>
         ),
       )
       .execute();
+    await createTransactionEffect(() => Replicache.poke());
   }),
 );
