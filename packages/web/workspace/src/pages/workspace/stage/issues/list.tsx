@@ -515,7 +515,9 @@ function IssueRow(props: IssueProps) {
           size="sm"
           color="dimmed"
           leading="normal"
-          title={parseTime(props.issue.timeSeen).toLocaleString()}
+          title={parseTime(props.issue.timeSeen).toLocaleString(
+            DateTime.DATETIME_FULL
+          )}
         >
           {formatSinceTime(props.issue.timeSeen)}
         </Text>
