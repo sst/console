@@ -92,23 +92,21 @@ export function Inner() {
   return (
     <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
-      <Show when={ctx.app.name === "console"}>
-        <PageHeader>
-          <Row space="5" vertical="center">
-            <Link href="resources">
-              <TabTitle>Resources</TabTitle>
-            </Link>
-            <Link href="issues">
-              <TabTitle
-                count={issuesCount() ? issuesCount().toString() : undefined}
-              >
-                Issues
-              </TabTitle>
-            </Link>
-          </Row>
-          <Show when={header.children}>{header.children}</Show>
-        </PageHeader>
-      </Show>
+      <PageHeader>
+        <Row space="5" vertical="center">
+          <Link href="resources">
+            <TabTitle>Resources</TabTitle>
+          </Link>
+          <Link href="issues">
+            <TabTitle
+              count={issuesCount() ? issuesCount().toString() : undefined}
+            >
+              Issues
+            </TabTitle>
+          </Link>
+        </Row>
+        <Show when={header.children}>{header.children}</Show>
+      </PageHeader>
       <div>
         <Routes>
           <Route path="resources" component={Resources} />
