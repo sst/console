@@ -71,10 +71,10 @@ export const create = zod(
       await createTransactionEffect(() =>
         Events.Created.publish({
           awsAccountID: id,
-        })
+        }),
       );
       return id;
-    })
+    }),
 );
 
 export const fromID = zod(Info.shape.id, (accountID) =>
@@ -85,12 +85,12 @@ export const fromID = zod(Info.shape.id, (accountID) =>
       .where(
         and(
           eq(awsAccount.id, accountID),
-          eq(awsAccount.workspaceID, useWorkspace())
-        )
+          eq(awsAccount.workspaceID, useWorkspace()),
+        ),
       )
       .execute()
-      .then((rows) => rows[0])
-  )
+      .then((rows) => rows[0]),
+  ),
 );
 
 export const fromAccountID = zod(Info.shape.accountID, (accountID) =>
@@ -101,12 +101,12 @@ export const fromAccountID = zod(Info.shape.accountID, (accountID) =>
       .where(
         and(
           eq(awsAccount.accountID, accountID),
-          eq(awsAccount.workspaceID, useWorkspace())
-        )
+          eq(awsAccount.workspaceID, useWorkspace()),
+        ),
       )
       .execute()
-      .then((rows) => rows[0])
-  )
+      .then((rows) => rows[0]),
+  ),
 );
 
 export const bootstrap = zod(
@@ -121,13 +121,13 @@ export const bootstrap = zod(
       .send(
         new DescribeStacksCommand({
           StackName: "SSTBootstrap",
-        })
+        }),
       )
       .catch(() => {});
 
     if (bootstrap) {
       const bucket = bootstrap.Stacks?.at(0)?.Outputs?.find(
-        (x) => x.OutputKey === "BucketName"
+        (x) => x.OutputKey === "BucketName",
       )?.OutputValue;
 
       if (!bucket) {
@@ -135,7 +135,7 @@ export const bootstrap = zod(
           useWorkspace(),
           input.region,
           bootstrap.Stacks?.at(0),
-          "no bucket found"
+          "no bucket found",
         );
         return;
       }
@@ -159,15 +159,17 @@ export const bootstrap = zod(
       if (!paging) break;
     }
     */
-  }
+  },
 );
 
 import { DescribeRegionsCommand, EC2Client } from "@aws-sdk/client-ec2";
-import { App } from "../app";
+import { App, Stage } from "../app";
 import { Replicache } from "../replicache";
 import { Config } from "sst/node/config";
 import { db } from "../drizzle";
 import { Realtime } from "../realtime";
+import { app, stage } from "../app/app.sql";
+import { createPipe, groupBy, mapValues, pipe } from "remeda";
 
 export const regions = zod(
   bootstrap.schema.shape.credentials,
@@ -179,7 +181,7 @@ export const regions = zod(
       .send(new DescribeRegionsCommand({}))
       .then((r) => r.Regions || []);
     return [...new Set(regions.map((r) => r.RegionName!))];
-  }
+  },
 );
 
 export const integrate = zod(
@@ -197,8 +199,8 @@ export const integrate = zod(
       .where(
         and(
           eq(awsAccount.id, input.awsAccountID),
-          eq(awsAccount.workspaceID, useWorkspace())
-        )
+          eq(awsAccount.workspaceID, useWorkspace()),
+        ),
       )
       .execute();
     await Replicache.poke();
@@ -214,7 +216,7 @@ export const integrate = zod(
         new DeleteRolePolicyCommand({
           RoleName: roleName,
           PolicyName: "eventbus",
-        })
+        }),
       )
       .catch((err) => {});
     console.log("deleted role policy");
@@ -222,7 +224,7 @@ export const integrate = zod(
       .send(
         new DeleteRoleCommand({
           RoleName: roleName,
-        })
+        }),
       )
       .catch((err) => {});
     console.log("deleted role");
@@ -242,7 +244,7 @@ export const integrate = zod(
             },
           ],
         }),
-      })
+      }),
     );
     console.log("created role");
 
@@ -260,7 +262,7 @@ export const integrate = zod(
             },
           ],
         }),
-      })
+      }),
     );
     console.log("created role policy");
 
@@ -289,7 +291,7 @@ export const integrate = zod(
             NotificationConfiguration: {
               EventBridgeConfiguration: {},
             },
-          })
+          }),
         )
         .catch(() => {});
       if (!result) {
@@ -310,7 +312,7 @@ export const integrate = zod(
               },
             },
           }),
-        })
+        }),
       );
       await eb.send(
         new PutTargetsCommand({
@@ -322,23 +324,48 @@ export const integrate = zod(
               RoleArn: role.Role!.Arn,
             },
           ],
-        })
+        }),
       );
       console.log(region, "created eventbus rule");
 
       let token: string | undefined;
+      const existing = await useTransaction((tx) =>
+        tx
+          .select({
+            stageName: stage.name,
+            stageID: stage.id,
+            appName: app.name,
+          })
+          .from(stage)
+          .innerJoin(app, eq(stage.appID, app.id))
+          .where(
+            and(
+              eq(stage.awsAccountID, account.id),
+              eq(stage.region, region),
+              eq(stage.workspaceID, useWorkspace()),
+            ),
+          ),
+      ).then(
+        createPipe(
+          groupBy((r) => r.appName),
+          mapValues((rows) =>
+            rows.map((r) => [r.stageName, r.stageID] as const),
+          ),
+          mapValues((rows) => new Map(rows)),
+        ),
+      );
       while (true) {
         const list = await s3.send(
           new ListObjectsV2Command({
             Prefix: "stackMetadata",
             Bucket: b.bucket,
             ContinuationToken: token,
-          })
+          }),
         );
         const distinct = new Set(
           list.Contents?.filter((item) => item.Key).map((item) =>
-            item.Key!.split("/").slice(0, 3).join("/")
-          ) || []
+            item.Key!.split("/").slice(0, 3).join("/"),
+          ) || [],
         );
 
         console.log("found", distinct);
@@ -348,6 +375,7 @@ export const integrate = zod(
           const [, stageName] = stageHint?.split(".");
           const [, appName] = appHint?.split(".");
           if (!stageName || !appName) continue;
+          existing[appName]?.delete(stageName);
           await createTransaction(async () => {
             let app = await App.fromName(appName).then((a) => a?.id);
             if (!app)
@@ -373,6 +401,14 @@ export const integrate = zod(
           });
           console.log(region, "found", stageName, appName);
         }
+
+        for (const [appName, stages] of Object.entries(existing)) {
+          for (const [stageName, stageID] of stages) {
+            console.log("could not find", appName, stageName, stageID);
+            await App.Stage.remove(stageID);
+            await Replicache.poke();
+          }
+        }
         if (!list.ContinuationToken) break;
       }
     }
@@ -385,8 +421,8 @@ export const integrate = zod(
       .where(
         and(
           eq(awsAccount.id, input.awsAccountID),
-          eq(awsAccount.workspaceID, useWorkspace())
-        )
+          eq(awsAccount.workspaceID, useWorkspace()),
+        ),
       );
-  }
+  },
 );

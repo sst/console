@@ -191,27 +191,7 @@ export const syncMetadata = zod(
     );
     console.log("found", list.Contents?.length, "stacks");
     if (!list.Contents?.length) {
-      console.log("removing stage");
-      await createTransaction(async (tx) => {
-        await tx
-          .delete(stage)
-          .where(
-            and(
-              eq(stage.id, input.stageID),
-              eq(stage.workspaceID, useWorkspace()),
-            ),
-          )
-          .execute();
-        await tx
-          .delete(resource)
-          .where(
-            and(
-              eq(resource.stageID, input.stageID),
-              eq(resource.workspaceID, useWorkspace()),
-            ),
-          )
-          .execute();
-      });
+      // await remove(input.stageID);
       return;
     }
     const results = await Promise.all(
@@ -356,3 +336,22 @@ export const assumeRole = zod(Info.shape.id, async (stageID) => {
     awsAccountID: result.accountID,
   };
 });
+
+export const remove = zod(Info.shape.id, (stageID) =>
+  createTransaction(async (tx) => {
+    console.log("removing stage", stageID);
+    await tx
+      .delete(stage)
+      .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
+      .execute();
+    await tx
+      .delete(resource)
+      .where(
+        and(
+          eq(resource.stageID, stageID),
+          eq(resource.workspaceID, useWorkspace()),
+        ),
+      )
+      .execute();
+  }),
+);

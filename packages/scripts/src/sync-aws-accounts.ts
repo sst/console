@@ -3,7 +3,7 @@ import { AWS } from "@console/core/aws";
 import { provideActor } from "@console/core/actor";
 import { db, eq, inArray, or, sql } from "@console/core/drizzle";
 
-const workspaceFilter: string[] = ["joftdif747pvaikdh2esjlzp"];
+const workspaceFilter: string[] = [];
 
 const accounts = await db
   .select()
