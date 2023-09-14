@@ -98,7 +98,7 @@ const Content = styled(DropdownMenu.Content, {
     padding: `${theme.space[1]} 0`,
     border: `1px solid ${theme.color.divider.base}`,
     borderRadius: theme.borderRadius,
-    background: theme.color.background.modal,
+    background: theme.color.background.popup,
     backdropFilter: "blur(10px)",
     WebkitBackdropFilter: "blur(10px)",
     boxShadow: theme.color.shadow.drop.medium,

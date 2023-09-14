@@ -13,17 +13,9 @@ type HistogramPointWithHeight = HistogramPoint & {
   height: number;
 };
 
-interface HistogramProps {
-  width: number;
-  height: number;
-  units: string;
-  currentTime: number;
-  data: HistogramPoint[];
-}
-
 function generateBarHeights(
   maxBarHeight: number,
-  data: HistogramPoint[],
+  data: HistogramPoint[]
 ): HistogramPointWithHeight[] {
   const values = data.map((d) => d.value);
   const maxValue = Math.max(1, ...values);
@@ -34,7 +26,6 @@ function generateBarHeights(
 
     return { value, height: roundedHeight };
   });
-  console.dir(newData);
 
   return newData;
 }
@@ -61,7 +52,7 @@ const HistogramTooltip = styled("div", {
     WebkitBackdropFilter: "blur(10px)",
     borderRadius: theme.borderRadius,
     boxShadow: theme.color.shadow.drop.short,
-    backgroundColor: theme.color.background.modal,
+    backgroundColor: theme.color.background.popup,
     border: `1px solid ${theme.color.divider.base}`,
   },
 });
@@ -112,13 +103,22 @@ function getHourMarkers(currentTime: number) {
   return hourMarkers;
 }
 
+interface HistogramProps {
+  width: number;
+  height: number;
+  units: string;
+  currentTime: number;
+  data: HistogramPoint[];
+  tooltipAlignment?: "top" | "bottom";
+}
+
 export function Histogram(props: HistogramProps) {
   const tooltipWidth = 135;
   const barWidth = (props.width - props.data.length + 1) / props.data.length;
   const [showTooltip, setShowTooltip] = createSignal<number>();
 
   const barData = createMemo(() =>
-    generateBarHeights(props.height, props.data),
+    generateBarHeights(props.height, props.data)
   );
   const hourMarkers = createMemo(() => getHourMarkers(props.currentTime));
   const tooltipLeft = createMemo(() => {
@@ -134,6 +134,8 @@ export function Histogram(props: HistogramProps) {
       ? initialLeft + barWidth - tooltipWidth
       : initialLeft;
   });
+
+  window.addEventListener("blur", () => setShowTooltip(undefined));
 
   return (
     <Row space="px" style={{ position: "relative" }}>
@@ -159,7 +161,10 @@ export function Histogram(props: HistogramProps) {
           style={{
             width: `${tooltipWidth}px`,
             left: `${tooltipLeft()}px`,
-            top: `${props.height + 10}px`,
+            top:
+              props.tooltipAlignment === "top"
+                ? "-67px"
+                : `${props.height + 10}px`,
           }}
         >
           <Text line size="xs" color="dimmed" on="surface">

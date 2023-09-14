@@ -140,8 +140,8 @@ export function List() {
         if (view() === "resolved") return Boolean(item.timeResolved);
         return false;
       }),
-      sortBy([(item) => item.timeSeen, "desc"]),
-    ),
+      sortBy([(item) => item.timeSeen, "desc"])
+    )
   );
 
   const stage = useStageContext();
@@ -149,11 +149,11 @@ export function List() {
   const warnings = WarningStore.watch.scan(
     rep,
     (item) =>
-      item.stageID === stage.stage.id && item.type === "log_subscription",
+      item.stageID === stage.stage.id && item.type === "log_subscription"
   );
   const resources = useResourcesContext();
   const fns = createMemo(() =>
-    resources().flatMap((item) => (item.type === "Function" ? [item] : [])),
+    resources().flatMap((item) => (item.type === "Function" ? [item] : []))
   );
 
   const [selected, setSelected] = createSignal<string[]>([]);
@@ -223,11 +223,13 @@ export function List() {
                     if (item.data.error === "permissions")
                       return "Missing permissions to add log subscriber";
                   })();
-                  return `${resources()
-                    .flatMap((x) =>
-                      x.id === item.target && x.type === "Function" ? [x] : [],
-                    )
-                    .at(0)?.metadata.handler} (${reason})`;
+                  return `${
+                    resources()
+                      .flatMap((x) =>
+                        x.id === item.target && x.type === "Function" ? [x] : []
+                      )
+                      .at(0)?.metadata.handler
+                  } (${reason})`;
                 })
                 .join("\n")}
             >
@@ -241,7 +243,7 @@ export function List() {
             onChange={(e) => {
               const issues = [
                 ...e.currentTarget.querySelectorAll<HTMLInputElement>(
-                  "input[name='issue']:checked",
+                  "input[name='issue']:checked"
                 ),
               ].map((i) => i.value);
               setSelected(issues);
@@ -253,7 +255,7 @@ export function List() {
                   name="select-all"
                   onChange={(e) => {
                     for (const input of form.querySelectorAll<HTMLInputElement>(
-                      "input[type='checkbox']",
+                      "input[type='checkbox']"
                     )) {
                       input.checked = e.currentTarget.checked;
                     }
@@ -364,19 +366,20 @@ export function List() {
                 }
               >
                 <For each={filtered()}>
-                  {(issue) => {
-                    const name = createMemo(
-                      () => issue.pointer?.logGroup.split("/").at(-1),
+                  {(issue, i) => {
+                    const name = createMemo(() =>
+                      issue.pointer?.logGroup.split("/").at(-1)
                     );
                     const fn = createMemo(() =>
                       fns().find(
-                        (x) => name() && x.metadata.arn.endsWith(name()!),
-                      ),
+                        (x) => name() && x.metadata.arn.endsWith(name()!)
+                      )
                     );
                     return (
                       <IssueRow
                         issue={issue}
                         unread={view() === "active"}
+                        last={i() === filtered().length - 1}
                         handler={fn()?.metadata.handler || ""}
                       />
                     );
@@ -437,9 +440,10 @@ const IssueCheckbox = styled("input", {
 });
 
 type IssueProps = {
-  issue: Issue.Info;
+  last: boolean;
   handler: string;
   unread: boolean;
+  issue: Issue.Info;
 };
 
 function IssueRow(props: IssueProps) {
@@ -451,18 +455,18 @@ function IssueRow(props: IssueProps) {
 
   const counts = IssueCountStore.watch.scan(
     rep,
-    (item) => item.group === props.issue.group && item.hour > min,
+    (item) => item.group === props.issue.group && item.hour > min
   );
   const histogram = createMemo(() => {
     const hours = fromPairs(
       counts().map((item) => [
         parseTime(item.hour).toSQL({ includeOffset: false })!,
         item.count,
-      ]),
+      ])
     );
     return Interval.fromDateTimes(
       DateTime.now().toUTC().startOf("hour").minus({ hours: 23 }),
-      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 }),
+      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 })
     )
       .splitBy({ hours: 1 })
       .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
@@ -499,9 +503,10 @@ function IssueRow(props: IssueProps) {
         <Histogram
           height={30}
           units="Errors"
+          data={histogram()}
           width={COL_COUNT_WIDTH}
           currentTime={Date.now()}
-          data={histogram()}
+          tooltipAlignment={props.last ? "top" : "bottom"}
         />
       </IssueCol>
       <IssueCol align="right" style={{ width: `${COL_TIME_WIDTH}px` }}>

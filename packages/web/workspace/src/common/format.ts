@@ -70,8 +70,9 @@ export function formatSinceTime(
   timestamp: string,
   useFullFormat?: boolean
 ): string {
-  const diffInSeconds = Math.ceil(
-    parseTime(timestamp).diffNow().as("seconds") * -1
+  const diffInSeconds = Math.max(
+    0,
+    Math.ceil(parseTime(timestamp).diffNow().as("seconds") * -1)
   );
 
   if (diffInSeconds < 60) {
