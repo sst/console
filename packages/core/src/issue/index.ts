@@ -237,16 +237,20 @@ export const extract = zod(
     });
     const errors = await Promise.allSettled(
       input.logEvents.map(async (event) => {
-        const err = await Log.extractError(
+        const splits = event.message.split(`\t`).map((x) => x.trim());
+        const extracted = Log.extractError(splits);
+        if (!extracted) {
+          console.log("no error found in", splits);
+          return;
+        }
+        const err = await Log.applySourcemap(
           sourcemapCache,
           event.timestamp,
-          event.message.split(`\t`).map((x) => x.trim()),
+          extracted,
         );
-        if (!err) return;
 
         if (!err.error || !err.message) {
-          console.log("error was undefined for some reason");
-          console.log("log event", event);
+          console.log("error was undefined for some reason", event);
           return;
         }
 

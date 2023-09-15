@@ -257,21 +257,22 @@ export function createProcessor(input: {
       const target = message.requestID === "" ? stream.unknown : results;
 
       if (message.level === "ERROR") {
-        const parsed = await extractError(
-          sourcemapCache,
-          input.timestamp,
-          tabs,
-        );
-        if (parsed) {
+        const err = extractError(tabs);
+        if (err) {
+          const mapped = await applySourcemap(
+            sourcemapCache,
+            input.timestamp,
+            err,
+          );
           target.push({
             id: message.id,
             type: "error",
             timestamp: input.timestamp,
             group,
             requestID: message.requestID,
-            error: parsed.error,
-            message: parsed.message,
-            stack: parsed.stack,
+            error: mapped.error,
+            message: mapped.message,
+            stack: mapped.stack,
           });
         }
       }
@@ -418,95 +419,98 @@ type ParsedError = {
   message: string;
   stack: StackFrame[];
 };
-export async function extractError(
+export function extractError(tabs: string[]): ParsedError | undefined {
+  // Generic AWS error handling
+  if (
+    tabs[3]?.includes("Invoke Error") ||
+    tabs[3]?.includes("Uncaught Exception") ||
+    tabs[3]?.includes("Unhandled Promise Rejection")
+  ) {
+    const parsed = JSON.parse(tabs[4]!);
+    if (typeof parsed.stack == "string") {
+      parsed.stack = parsed.stack.split("\n");
+    }
+    return {
+      error: parsed.errorType || parsed.name,
+      message: parsed.errorMessage || parsed.message,
+      stack: ((parsed.stack || []) as string[])
+        .map((l: string) => l.trim())
+        .filter((l: string) => l.startsWith("at "))
+        .map((raw) => ({ raw })),
+    };
+  }
+
+  if (tabs[3]) {
+    const lines = tabs[3].trim().split("\n");
+    if (lines.length < 2) return;
+    const [first] = lines;
+    const [_, error, message] = first!.match(/([A-Z]\w+): (.+)$/) ?? [];
+    if (!error || !message) return;
+    if (error.startsWith("(node:")) return;
+    return {
+      error: error,
+      message: message,
+      stack: lines
+        .map((l) => l.trim())
+        .filter((l) => l.startsWith("at "))
+        .map((raw) => ({
+          raw,
+        })),
+    };
+  }
+}
+
+export async function applySourcemap(
   sourcemapCache: SourcemapCache,
   timestamp: number,
-  tabs: string[],
-): Promise<ParsedError | undefined> {
-  const parsed = (() => {
-    // Generic AWS error handling
-    if (
-      tabs[3]?.includes("Invoke Error") ||
-      tabs[3]?.includes("Uncaught Exception") ||
-      tabs[3]?.includes("Unhandled Promise Rejection")
-    ) {
-      const parsed = JSON.parse(tabs[4]!);
-      if (typeof parsed.stack == "string") {
-        parsed.stack = parsed.stack.split("\n");
+  error: ParsedError,
+): Promise<ParsedError> {
+  const consumer = await sourcemapCache.get(timestamp);
+  if (!consumer) return error;
+
+  const result = error.stack.flatMap((item): StackFrame[] => {
+    const [lineHint, columnHint] = item.raw!.match(/(\d+):(\d+)/) ?? [];
+    if (!columnHint || !lineHint) return [];
+    const column = parseInt(columnHint);
+    const line = parseInt(lineHint);
+    const original = (() => {
+      try {
+        return consumer.originalPositionFor({
+          line,
+          column,
+        });
+      } catch (ex) {
+        console.error(ex);
       }
-      return {
-        error: parsed.errorType || parsed.name,
-        message: parsed.errorMessage || parsed.message,
-        stack: (parsed.stack || [])
-          .map((l: string) => l.trim())
-          .filter((l: string) => l.startsWith("at ")),
-      };
-    }
+    })();
 
-    if (tabs[3]) {
-      const lines = tabs[3].trim().split("\n");
-      if (lines.length < 2) return;
-      const [first] = lines;
-      const [_, error, message] = first!.match(/([A-Z]\w+): (.+)$/) ?? [];
-      if (!error || !message) return;
-      if (error.startsWith("(node:")) return;
-      return {
-        error: error,
-        message: message,
-        stack: lines.map((l) => l.trim()).filter((l) => l.startsWith("at ")),
-      };
-    }
-  })();
+    if (!original?.source) return [item];
 
-  if (!parsed) return;
+    const lines =
+      consumer.sourceContentFor(original.source, true)?.split("\n") || [];
+    const min = Math.max(0, original.line! - 4);
+    const ctx = lines.slice(
+      min,
+      Math.min(original.line! + 3, lines.length - 1),
+    );
 
-  const stack = await (async (): Promise<StackFrame[]> => {
-    const stack: string[] = parsed.stack;
-    const consumer = await sourcemapCache.get(timestamp);
-    if (consumer) {
-      const result = stack.flatMap((item): StackFrame[] => {
-        const [lineHint, columnHint] = item.match(/(\d+):(\d+)/) ?? [];
-        if (!columnHint || !lineHint) return [];
-        const column = parseInt(columnHint);
-        const line = parseInt(lineHint);
-        const original = (() => {
-          try {
-            return consumer.originalPositionFor({
-              line,
-              column,
-            });
-          } catch (ex) {
-            console.error(ex);
-          }
-        })();
+    return [
+      {
+        file: original.source,
+        line: original.line!,
+        column: original.column!,
+        context: ctx,
+        important: !original.source.startsWith("node_modules"),
+      },
+    ];
+  });
+  consumer.destroy();
+  if (!result.length) return error;
 
-        if (!original?.source) return [{ raw: item }];
-
-        const lines =
-          consumer.sourceContentFor(original.source, true)?.split("\n") || [];
-        const min = Math.max(0, original.line! - 4);
-        const ctx = lines.slice(
-          min,
-          Math.min(original.line! + 3, lines.length - 1),
-        );
-
-        return [
-          {
-            file: original.source,
-            line: original.line!,
-            column: original.column!,
-            context: ctx,
-            important: !original.source.startsWith("node_modules"),
-          },
-        ];
-      });
-      consumer.destroy();
-      if (result.length) return result;
-    }
-    return stack.map((raw) => ({ raw }));
-  })();
-  parsed.stack = stack;
-  return parsed;
+  return {
+    ...error,
+    stack: result,
+  };
 }
 
 function formatLogMessage(parts: string[]) {
