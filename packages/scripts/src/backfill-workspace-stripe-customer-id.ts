@@ -4,6 +4,7 @@ import { provideActor } from "@console/core/actor";
 const workspaces = await Workspace.list();
 
 for (const workspace of workspaces) {
+  if (workspace.stripeCustomerID) continue;
   provideActor({
     type: "system",
     properties: {
