@@ -315,7 +315,7 @@ export const extract = zod(
               },
               workspaceID: row.workspaceID,
               error: items[0].err.error,
-              message: items[0].err.message,
+              message: items[0].err.message.substring(0, 32_768),
               count: items.length,
               stageID: row.stageID,
               timeSeen: sql`now()`,

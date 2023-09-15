@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { createId } from "@paralleldrive/cuid2";
 import { Account } from "../src/account";
 
-it("create account", async (ctx) => {
+it("create account", async (_ctx) => {
   const email = createId() + "@example.com";
   const accountID = createId();
   const account = await Account.create({
