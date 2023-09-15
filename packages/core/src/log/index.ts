@@ -484,7 +484,7 @@ export async function applySourcemap(
       }
     })();
 
-    if (!original?.source) return [item];
+    if (!original?.source) return [];
 
     const lines =
       consumer.sourceContentFor(original.source, true)?.split("\n") || [];
