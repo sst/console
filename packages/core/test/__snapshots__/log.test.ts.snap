@@ -1,0 +1,249 @@
+// Vitest Snapshot v1
+
+exports[`node inline 1`] = `
+{
+  "error": "DatabaseError",
+  "message": "target: sst.-.primary: vttablet: rpc error: code = AlreadyExists desc = Duplicate entry 'foo' for key 'workspace.slug' (errno 1062) (sqlstate 23000) (CallerID: lq15hm6s0ctusshuarsx): Sql: \\"insert into workspace(id, time_created, time_updated, time_deleted, slug, stripe_customer_id, stripe_subscription_id, stripe_subscription_item_id) values (:vtg1 /* VARCHAR */, default, default, default, :vtg2 /* VARCHAR */, default, default, default)\\", BindVars: {REDACTED}",
+  "stack": [
+    {
+      "raw": "at _Connection.execute (file:///var/task/packages/functions/src/replicache/push1.mjs:47211:13)",
+    },
+    {
+      "raw": "at runMicrotasks (<anonymous>)",
+    },
+    {
+      "raw": "at processTicksAndRejections (node:internal/process/task_queues:96:5)",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/replicache/push1.mjs:69523:5",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/replicache/push1.mjs:76353:22",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/replicache/push1.mjs:76423:9",
+    },
+    {
+      "raw": "at async db.transaction.isolationLevel (file:///var/task/packages/functions/src/replicache/push1.mjs:55325:25)",
+    },
+    {
+      "raw": "at async _Connection.transaction (file:///var/task/packages/functions/src/replicache/push1.mjs:47190:19)",
+    },
+    {
+      "raw": "at async createTransaction (file:///var/task/packages/functions/src/replicache/push1.mjs:55322:20)",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/replicache/push1.mjs:76380:5 {
+  status: 400,
+  body: {
+    message: \`target: sst.-.primary: vttablet: rpc error: code = AlreadyExists desc = Duplicate entry 'foo' for key 'workspace.slug' (errno 1062) (sqlstate 23000) (CallerID: lq15hm6s0ctusshuarsx): Sql: \\"insert into workspace(id, time_created, time_updated, time_deleted, slug, stripe_customer_id, stripe_subscription_id, stripe_subscription_item_id) values (:vtg1 /* VARCHAR */, default, default, default, :vtg2 /* VARCHAR */, default, default, default)\\", BindVars: {REDACTED}\`,
+    code: 'UNKNOWN'
+  }
+}",
+    },
+  ],
+}
+`;
+
+exports[`node inline multiline 1`] = `
+{
+  "error": "ZodError",
+  "message": "[
+  {
+    \\"code\\": \\"too_small\\",
+    \\"minimum\\": 1,
+    \\"type\\": \\"string\\",
+    \\"inclusive\\": true,
+    \\"exact\\": false,
+    \\"message\\": \\"String must contain at least 1 character(s)\\",
+    \\"path\\": [
+      \\"slug\\"
+    ]
+  },
+  {
+    \\"code\\": \\"too_small\\",
+    \\"minimum\\": 3,
+    \\"type\\": \\"string\\",
+    \\"inclusive\\": true,
+    \\"exact\\": false,
+    \\"message\\": \\"String must contain at least 3 character(s)\\",
+    \\"path\\": [
+      \\"slug\\"
+    ]
+  },
+  {
+    \\"validation\\": \\"regex\\",
+    \\"code\\": \\"invalid_string\\",
+    \\"message\\": \\"Invalid\\",
+    \\"path\\": [
+      \\"slug\\"
+    ]
+  }
+]",
+  "stack": [
+    {
+      "raw": "at Object.get error [as error] (file:///var/task/packages/functions/src/replicache/push1.mjs:37260:23)",
+    },
+    {
+      "raw": "at _ZodObject.parse (file:///var/task/packages/functions/src/replicache/push1.mjs:37363:18)",
+    },
+    {
+      "raw": "at Object.result (file:///var/task/packages/functions/src/replicache/push1.mjs:58013:27)",
+    },
+    {
+      "raw": "at file:///var/task/packages/functions/src/replicache/push1.mjs:76714:46",
+    },
+    {
+      "raw": "at Object.fn (file:///var/task/packages/functions/src/replicache/push1.mjs:58262:16)",
+    },
+    {
+      "raw": "at Server.execute (file:///var/task/packages/functions/src/replicache/push1.mjs:58279:16)",
+    },
+    {
+      "raw": "at file:///var/task/packages/functions/src/replicache/push1.mjs:76784:22",
+    },
+    {
+      "raw": "at runMicrotasks (<anonymous>)",
+    },
+    {
+      "raw": "at processTicksAndRejections (node:internal/process/task_queues:96:5)",
+    },
+    {
+      "raw": "at async db.transaction.isolationLevel (file:///var/task/packages/functions/src/replicache/push1.mjs:55329:25) {
+  issues: [
+    {
+      code: 'too_small',
+      minimum: 1,
+      type: 'string',
+      inclusive: true,
+      exact: false,
+      message: 'String must contain at least 1 character(s)',
+      path: [Array]
+    },
+    {
+      code: 'too_small',
+      minimum: 3,
+      type: 'string',
+      inclusive: true,
+      exact: false,
+      message: 'String must contain at least 3 character(s)',
+      path: [Array]
+    },
+    {
+      validation: 'regex',
+      code: 'invalid_string',
+      message: 'Invalid',
+      path: [Array]
+    }
+  ],
+  addIssue: [Function (anonymous)],
+  addIssues: [Function (anonymous)],
+  errors: [
+    {
+      code: 'too_small',
+      minimum: 1,
+      type: 'string',
+      inclusive: true,
+      exact: false,
+      message: 'String must contain at least 1 character(s)',
+      path: [Array]
+    },
+    {
+      code: 'too_small',
+      minimum: 3,
+      type: 'string',
+      inclusive: true,
+      exact: false,
+      message: 'String must contain at least 3 character(s)',
+      path: [Array]
+    },
+    {
+      validation: 'regex',
+      code: 'invalid_string',
+      message: 'Invalid',
+      path: [Array]
+    }
+  ]
+}",
+    },
+  ],
+}
+`;
+
+exports[`node invoke 1`] = `
+{
+  "error": "NoSuchBucket",
+  "message": "The specified bucket does not exist",
+  "stack": [
+    {
+      "raw": "at de_NoSuchBucketRes (file:///var/task/packages/functions/src/events/app-stage-updated.mjs:51859:21)",
+    },
+    {
+      "raw": "at de_ListObjectsV2CommandError (file:///var/task/packages/functions/src/events/app-stage-updated.mjs:51807:19)",
+    },
+    {
+      "raw": "at runMicrotasks (<anonymous>)",
+    },
+    {
+      "raw": "at processTicksAndRejections (node:internal/process/task_queues:96:5)",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:42732:20",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:41547:18",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:43230:38",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:41269:22",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:56745:19",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:56891:3",
+    },
+  ],
+}
+`;
+
+exports[`node uncaught exception 1`] = `
+{
+  "error": "NoSuchBucket",
+  "message": "The specified bucket does not exist",
+  "stack": [
+    {
+      "raw": "at de_NoSuchBucketRes (file:///var/task/packages/functions/src/events/app-stage-updated.mjs:51859:21)",
+    },
+    {
+      "raw": "at de_ListObjectsV2CommandError (file:///var/task/packages/functions/src/events/app-stage-updated.mjs:51807:19)",
+    },
+    {
+      "raw": "at runMicrotasks (<anonymous>)",
+    },
+    {
+      "raw": "at processTicksAndRejections (node:internal/process/task_queues:96:5)",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:42732:20",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:41547:18",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:43230:38",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:41269:22",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:56745:19",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:56891:3",
+    },
+  ],
+}
+`;

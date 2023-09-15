@@ -440,19 +440,19 @@ export function extractError(tabs: string[]): ParsedError | undefined {
     };
   }
 
+  // NodeJS inline
   if (tabs[3]) {
-    const lines = tabs[3].trim().split("\n");
-    if (lines.length < 2) return;
-    const [first] = lines;
-    const [_, error, message] = first!.match(/([A-Z]\w+): (.+)$/) ?? [];
+    const line = tabs[3];
+    const [description, ...stack] = line.split(/\n\s{4}(?=at)/g);
+    if (!description || stack.length === 0) return;
+    const [_, error, message] = description!.match(/([A-Z]\w+): (.+)$/s) ?? [];
     if (!error || !message) return;
     if (error.startsWith("(node:")) return;
     return {
       error: error,
       message: message,
-      stack: lines
+      stack: stack
         .map((l) => l.trim())
-        .filter((l) => l.startsWith("at "))
         .map((raw) => ({
           raw,
         })),
