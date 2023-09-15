@@ -15,6 +15,7 @@ import { AWS, Credentials } from "../aws";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
+  NoSuchKey,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Enrichers } from "./resource";
@@ -197,12 +198,20 @@ export const syncMetadata = zod(
     const results = await Promise.all(
       list.Contents?.map(async (obj) => {
         const stackID = obj.Key?.split("/").pop()!.split(".")[1];
-        const result = await s3.send(
-          new GetObjectCommand({
-            Key: obj.Key!,
-            Bucket: bucket,
-          }),
-        );
+        const result = await s3
+          .send(
+            new GetObjectCommand({
+              Key: obj.Key!,
+              Bucket: bucket,
+            }),
+          )
+          .catch((err) => {
+            if (err instanceof NoSuchKey) {
+              return;
+            }
+            throw err;
+          });
+        if (!result) return [];
         const body = await result
           .Body!.transformToString()
           .then((x) => JSON.parse(x));
