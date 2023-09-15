@@ -126,6 +126,7 @@ export const bootstrap = zod(
       .catch(() => {});
 
     if (bootstrap) {
+      console.log("found", bootstrap.Stacks?.length, "stacks");
       const bucket = bootstrap.Stacks?.at(0)?.Outputs?.find(
         (x) => x.OutputKey === "BucketName",
       )?.OutputValue;
@@ -139,6 +140,8 @@ export const bootstrap = zod(
         );
         return;
       }
+
+      console.log("found bootstrap bucket", bucket);
 
       return {
         bucket,
