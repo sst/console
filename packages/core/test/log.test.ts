@@ -44,3 +44,14 @@ test("node inline", () => {
     `DatabaseError: target: sst.-.primary: vttablet: rpc error: code = AlreadyExists desc = Duplicate entry 'foo' for key 'workspace.slug' (errno 1062) (sqlstate 23000) (CallerID: lq15hm6s0ctusshuarsx): Sql: \"insert into workspace(id, time_created, time_updated, time_deleted, slug, stripe_customer_id, stripe_subscription_id, stripe_subscription_item_id) values (:vtg1 /* VARCHAR */, default, default, default, :vtg2 /* VARCHAR */, default, default, default)\", BindVars: {REDACTED}\n    at _Connection.execute (file:///var/task/packages/functions/src/replicache/push1.mjs:47211:13)\n    at runMicrotasks (<anonymous>)\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)\n    at async file:///var/task/packages/functions/src/replicache/push1.mjs:69523:5\n    at async file:///var/task/packages/functions/src/replicache/push1.mjs:76353:22\n    at async file:///var/task/packages/functions/src/replicache/push1.mjs:76423:9\n    at async db.transaction.isolationLevel (file:///var/task/packages/functions/src/replicache/push1.mjs:55325:25)\n    at async _Connection.transaction (file:///var/task/packages/functions/src/replicache/push1.mjs:47190:19)\n    at async createTransaction (file:///var/task/packages/functions/src/replicache/push1.mjs:55322:20)\n    at async file:///var/task/packages/functions/src/replicache/push1.mjs:76380:5 {\n  status: 400,\n  body: {\n    message: \`target: sst.-.primary: vttablet: rpc error: code = AlreadyExists desc = Duplicate entry 'foo' for key 'workspace.slug' (errno 1062) (sqlstate 23000) (CallerID: lq15hm6s0ctusshuarsx): Sql: \"insert into workspace(id, time_created, time_updated, time_deleted, slug, stripe_customer_id, stripe_subscription_id, stripe_subscription_item_id) values (:vtg1 /* VARCHAR */, default, default, default, :vtg2 /* VARCHAR */, default, default, default)\", BindVars: {REDACTED}\`,\n    code: 'UNKNOWN'\n  }\n}\n`,
   ]);
 });
+
+test("node ignore warning", () => {
+  const err = Log.extractError([
+    `2023-09-12T00:55:20.974Z`,
+    `662fa6b4-dc47-4d49-a7e2-200ad7ce1537`,
+    `ERROR`,
+    `(node:8) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+(Use \`node --trace-deprecation ...\` to show where the warning was created)`,
+  ]);
+  expect(err).toBeUndefined();
+});

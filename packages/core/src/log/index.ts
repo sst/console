@@ -441,13 +441,13 @@ export function extractError(tabs: string[]): ParsedError | undefined {
   }
 
   // NodeJS inline
-  if (tabs[3]) {
+  if (tabs[0]?.length === 24 && tabs[1]?.length === 36 && tabs[3]) {
     const line = tabs[3];
     const [description, ...stack] = line.split(/\n\s{4}(?=at)/g);
-    if (!description || stack.length === 0) return;
+    if (!description) return;
+    if (description.startsWith("(node:")) return;
     const [_, error, message] = description!.match(/([A-Z]\w+): (.+)$/s) ?? [];
     if (!error || !message) return;
-    if (error.startsWith("(node:")) return;
     return {
       error: error,
       message: message,
