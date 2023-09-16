@@ -373,41 +373,7 @@ exports[`node undefined requestID 1`] = `
 }
 `;
 
-exports[`node with brackets 1`] = `
-{
-  "error": "[BadRequestError]",
-  "message": "Event object failed validation",
-  "stack": [
-    {
-      "raw": "at createError (file:///var/task/packages/functions/user/editProfile.mjs:826205:10)",
-    },
-    {
-      "raw": "at validatorMiddlewareBefore (file:///var/task/packages/functions/user/editProfile.mjs:826293:15)",
-    },
-    {
-      "raw": "at async runMiddlewares (file:///var/task/packages/functions/user/editProfile.mjs:826148:17)",
-    },
-    {
-      "raw": "at async runRequest (file:///var/task/packages/functions/user/editProfile.mjs:826106:5) {
-  statusCode: 400,
-  status: 400,
-  expose: true,
-  [cause]: [
-    {
-      instancePath: '/body/username',
-      schemaPath: '#/properties/body/properties/username/pattern',
-      keyword: 'pattern',
-      params: [Object],
-      message: 'must match pattern \\"^[a-zA-Z][a-zA-Z0-9_-]{2,19}$\\"'
-    }
-  ]
-}",
-    },
-  ],
-}
-`;
-
-exports[`wtf 1`] = `
+exports[`node weird error 1`] = `
 {
   "error": "SupernovaException [Error]",
   "message": "Unknown message",
@@ -439,6 +405,40 @@ exports[`wtf 1`] = `
     {
       "raw": "at async Runtime.handler (file:///var/task/src/apps/docs-server/[path+]/route.mjs:86039:12) {
   type: 'ResourceNotFound'
+}",
+    },
+  ],
+}
+`;
+
+exports[`node with brackets 1`] = `
+{
+  "error": "[BadRequestError]",
+  "message": "Event object failed validation",
+  "stack": [
+    {
+      "raw": "at createError (file:///var/task/packages/functions/user/editProfile.mjs:826205:10)",
+    },
+    {
+      "raw": "at validatorMiddlewareBefore (file:///var/task/packages/functions/user/editProfile.mjs:826293:15)",
+    },
+    {
+      "raw": "at async runMiddlewares (file:///var/task/packages/functions/user/editProfile.mjs:826148:17)",
+    },
+    {
+      "raw": "at async runRequest (file:///var/task/packages/functions/user/editProfile.mjs:826106:5) {
+  statusCode: 400,
+  status: 400,
+  expose: true,
+  [cause]: [
+    {
+      instancePath: '/body/username',
+      schemaPath: '#/properties/body/properties/username/pattern',
+      keyword: 'pattern',
+      params: [Object],
+      message: 'must match pattern \\"^[a-zA-Z][a-zA-Z0-9_-]{2,19}$\\"'
+    }
+  ]
 }",
     },
   ],

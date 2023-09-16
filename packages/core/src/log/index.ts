@@ -323,10 +323,8 @@ import {
   CloudWatchLogsClient,
   GetLogEventsCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
-import { LambdaClient } from "@aws-sdk/client-lambda";
 import { RETRY_STRATEGY } from "../util/aws";
 import { StageCredentials } from "../app/stage";
-import { retrySync } from "../util/retry";
 import { extractJSON } from "../util/json";
 
 export const expand = zod(
@@ -472,7 +470,6 @@ export function extractError(tabs: string[]): ParsedError | undefined {
     const [description, ...stack] = line.split(/\n\s{4}(?=at)/g);
     if (!description) return;
     if (description.startsWith("(node:")) return;
-    console.log(description);
     const [error, message] = (() => {
       // Normal error
       const [_, error, message] =

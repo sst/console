@@ -160,7 +160,7 @@ test("node undefined requestID", () =>
       "    at new Promise (<anonymous>)",
   ]));
 
-test("wtf", () =>
+test("node weird error", () =>
   expectError([
     "2023-09-16T12:28:24.083Z",
     "b94f5937-dab2-4665-88f4-91f5ce79e30d",
