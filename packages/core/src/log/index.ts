@@ -472,8 +472,17 @@ export function extractError(tabs: string[]): ParsedError | undefined {
     const [description, ...stack] = line.split(/\n\s{4}(?=at)/g);
     if (!description) return;
     if (description.startsWith("(node:")) return;
-    const [_, error, message] = description!.match(/([A-Z]\w+): (.+)$/s) ?? [];
-    if (!error || !message) return;
+    console.log(description);
+    const [error, message] = (() => {
+      // Normal error
+      const [_, error, message] =
+        description!.match(/([A-Z\[][\w\]]+): (.+)$/s) ?? [];
+      if (error && message) return [error, message];
+
+      // No clue how to parse this
+      return [description.substring(0, 128), "Unknown message"];
+    })();
+    if (!error) return;
     return {
       error: error,
       message: message,

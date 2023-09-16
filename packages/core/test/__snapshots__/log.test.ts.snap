@@ -373,40 +373,73 @@ exports[`node undefined requestID 1`] = `
 }
 `;
 
-exports[`wtf 1`] = `
+exports[`node with brackets 1`] = `
 {
-  "error": "Error",
-  "message": "Missing AWS Lambda trace data for X-Ray. Ensure Active Tracing is enabled and no subsegments are created outside the function handler.",
+  "error": "[BadRequestError]",
+  "message": "Event object failed validation",
   "stack": [
     {
-      "raw": "at Object.contextMissingLogError [as contextMissing] (file:///var/task/functions/crons/property/queue-property-updates.js:738560:23)",
+      "raw": "at createError (file:///var/task/packages/functions/user/editProfile.mjs:826205:10)",
     },
     {
-      "raw": "at Segment.resolveLambdaTraceData (file:///var/task/functions/crons/property/queue-property-updates.js:739641:47)",
+      "raw": "at validatorMiddlewareBefore (file:///var/task/packages/functions/user/editProfile.mjs:826293:15)",
     },
     {
-      "raw": "at Object.getSegment (file:///var/task/functions/crons/property/queue-property-updates.js:738604:21)",
+      "raw": "at async runMiddlewares (file:///var/task/packages/functions/user/editProfile.mjs:826148:17)",
     },
     {
-      "raw": "at tryGetCurrentSegment (file:///var/task/functions/crons/property/queue-property-updates.js:742664:29)",
+      "raw": "at async runRequest (file:///var/task/packages/functions/user/editProfile.mjs:826106:5) {
+  statusCode: 400,
+  status: 400,
+  expose: true,
+  [cause]: [
+    {
+      instancePath: '/body/username',
+      schemaPath: '#/properties/body/properties/username/pattern',
+      keyword: 'pattern',
+      params: [Object],
+      message: 'must match pattern \\"^[a-zA-Z][a-zA-Z0-9_-]{2,19}$\\"'
+    }
+  ]
+}",
+    },
+  ],
+}
+`;
+
+exports[`wtf 1`] = `
+{
+  "error": "SupernovaException [Error]",
+  "message": "Unknown message",
+  "stack": [
+    {
+      "raw": "at SupernovaException.notFound (file:///var/task/src/apps/docs-server/[path+]/route.mjs:54792:12)",
     },
     {
-      "raw": "at Promise2.then (file:///var/task/functions/crons/property/queue-property-updates.js:742631:49)",
+      "raw": "at file:///var/task/src/apps/docs-server/[path+]/route.mjs:87051:32",
     },
     {
-      "raw": "at file:///var/task/functions/crons/property/queue-property-updates.js:820938:34",
+      "raw": "at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:87075:14",
     },
     {
-      "raw": "at step (file:///var/task/functions/crons/property/queue-property-updates.js:5739:25)",
+      "raw": "at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:87162:27",
     },
     {
-      "raw": "at Object.next (file:///var/task/functions/crons/property/queue-property-updates.js:5686:20)",
+      "raw": "at async withActiveSession (file:///var/task/src/apps/docs-server/[path+]/route.mjs:86158:70)",
     },
     {
-      "raw": "at file:///var/task/functions/crons/property/queue-property-updates.js:5672:73",
+      "raw": "at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:87148:51",
     },
     {
-      "raw": "at new Promise (<anonymous>)",
+      "raw": "at async promiseWithTimeout (file:///var/task/src/apps/docs-server/[path+]/route.mjs:55030:18)",
+    },
+    {
+      "raw": "at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:86991:26",
+    },
+    {
+      "raw": "at async Runtime.handler (file:///var/task/src/apps/docs-server/[path+]/route.mjs:86039:12) {
+  type: 'ResourceNotFound'
+}",
     },
   ],
 }

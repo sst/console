@@ -503,6 +503,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
                 `?"Task timed out after"`,
                 // NodeJS Uncaught and console.error
                 `?"\tERROR\t"`,
+                `?"[ERROR]"`,
                 // ...(fn.enrichment.runtime?.startsWith("nodejs")
                 //   ? [`?"\tERROR\t"`]
                 //   : []),

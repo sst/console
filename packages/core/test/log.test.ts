@@ -159,3 +159,47 @@ test("node undefined requestID", () =>
       "    at file:///var/task/functions/crons/property/queue-property-updates.js:5672:73\n" +
       "    at new Promise (<anonymous>)",
   ]));
+
+test("wtf", () =>
+  expectError([
+    "2023-09-16T12:28:24.083Z",
+    "b94f5937-dab2-4665-88f4-91f5ce79e30d",
+    "ERROR",
+    "SupernovaException [Error]\n" +
+      "    at SupernovaException.notFound (file:///var/task/src/apps/docs-server/[path+]/route.mjs:54792:12)\n" +
+      "    at file:///var/task/src/apps/docs-server/[path+]/route.mjs:87051:32\n" +
+      "    at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:87075:14\n" +
+      "    at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:87162:27\n" +
+      "    at async withActiveSession (file:///var/task/src/apps/docs-server/[path+]/route.mjs:86158:70)\n" +
+      "    at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:87148:51\n" +
+      "    at async promiseWithTimeout (file:///var/task/src/apps/docs-server/[path+]/route.mjs:55030:18)\n" +
+      "    at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:86991:26\n" +
+      "    at async Runtime.handler (file:///var/task/src/apps/docs-server/[path+]/route.mjs:86039:12) {\n" +
+      "  type: 'ResourceNotFound'\n" +
+      "}",
+  ]));
+
+test("node with brackets", () =>
+  expectError([
+    "2023-09-16T09:46:41.059Z",
+    "1bd090f4-02c9-495a-8790-c1815cd5134f",
+    "ERROR",
+    "HttpError [BadRequestError]: Event object failed validation\n" +
+      "    at createError (file:///var/task/packages/functions/user/editProfile.mjs:826205:10)\n" +
+      "    at validatorMiddlewareBefore (file:///var/task/packages/functions/user/editProfile.mjs:826293:15)\n" +
+      "    at async runMiddlewares (file:///var/task/packages/functions/user/editProfile.mjs:826148:17)\n" +
+      "    at async runRequest (file:///var/task/packages/functions/user/editProfile.mjs:826106:5) {\n" +
+      "  statusCode: 400,\n" +
+      "  status: 400,\n" +
+      "  expose: true,\n" +
+      "  [cause]: [\n" +
+      "    {\n" +
+      "      instancePath: '/body/username',\n" +
+      "      schemaPath: '#/properties/body/properties/username/pattern',\n" +
+      "      keyword: 'pattern',\n" +
+      "      params: [Object],\n" +
+      `      message: 'must match pattern "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$"'\n` +
+      "    }\n" +
+      "  ]\n" +
+      "}",
+  ]));
