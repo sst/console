@@ -1,19 +1,21 @@
 export async function queue<T, R>(
   concurrency: number,
   items: T[],
-  processItem: (item: T) => Promise<R>
+  processItem: (item: T) => Promise<R>,
 ) {
   const workers = [...new Array(concurrency)];
   await Promise.all(
-    workers.map(async (index) => {
+    workers.map(async (_, index) => {
+      let count = 0;
       while (true) {
         const item = items.pop();
         if (!item) {
-          console.log(`Worker ${index} finished`);
+          if (count) console.log(`Worker ${index} finished`);
           break;
         }
         await processItem(item);
+        count++;
       }
-    })
+    }),
   );
 }

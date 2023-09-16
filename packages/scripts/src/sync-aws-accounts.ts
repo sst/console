@@ -2,8 +2,9 @@ import { awsAccount } from "@console/core/aws/aws.sql";
 import { AWS } from "@console/core/aws";
 import { provideActor } from "@console/core/actor";
 import { db, eq, inArray, or, sql } from "@console/core/drizzle";
+import { queue } from "@console/core/util/queue";
 
-const workspaceFilter: string[] = [];
+const workspaceFilter: string[] = ["kzbnlviosmzv6ff2fithnde6"];
 
 const accounts = await db
   .select()
@@ -15,19 +16,17 @@ const accounts = await db
   )
   .execute();
 
-const promises = [];
-for (const account of accounts) {
+await queue(100, accounts, async (account) => {
   provideActor({
     type: "system",
     properties: {
       workspaceID: account.workspaceID,
     },
   });
-  console.log(account.workspaceID, account.accountID);
-  promises.push(
-    AWS.Account.Events.Created.publish({
-      awsAccountID: account.id,
-    }),
-  );
-}
-console.log(await Promise.all(promises));
+  const credentials = await AWS.assumeRole(account.accountID);
+  if (!credentials) return;
+  await AWS.Account.integrate({
+    credentials,
+    awsAccountID: account.accountID,
+  });
+});

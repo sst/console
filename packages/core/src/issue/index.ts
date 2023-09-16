@@ -240,7 +240,6 @@ export const extract = zod(
         const splits = event.message.split(`\t`).map((x) => x.trim());
         const extracted = Log.extractError(splits);
         if (!extracted) {
-          console.log("no error found in", splits);
           return;
         }
         const err = await Log.applySourcemap(

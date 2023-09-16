@@ -23,10 +23,11 @@ export const handler = Handler("kinesis_stream", async (event) => {
   setTimeout(() => {
     timeout = true;
   }, 1000 * 60);
-  for (const record of event.Records) {
+  const { Records, ...rest } = event;
+  for (const record of Records) {
     if (timeout) break;
     const decoded = JSON.parse(
-      unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
+      unzipSync(Buffer.from(record.kinesis.data, "base64")).toString(),
     );
     if (decoded.messageType !== "DATA_MESSAGE") {
       incomplete.pop();
