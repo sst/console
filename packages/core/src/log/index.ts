@@ -477,6 +477,17 @@ export function extractError(tabs: string[]): ParsedError | undefined {
         })),
     };
   }
+
+  const timeout = tabs.find((l) => l.startsWith("Task timed out after"));
+  if (timeout) {
+    return {
+      error: "LambdaTimeoutError",
+      message: timeout,
+      stack: [],
+    };
+  }
+
+  // Python inline
 }
 
 export async function applySourcemap(
@@ -484,6 +495,7 @@ export async function applySourcemap(
   timestamp: number,
   error: ParsedError,
 ): Promise<ParsedError> {
+  if (!error.stack.length) return error;
   const consumer = await sourcemapCache.get(timestamp);
   if (!consumer) return error;
 

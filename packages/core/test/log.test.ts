@@ -94,3 +94,50 @@ test("node logtail", () => {
       "}",
   ]);
 });
+
+test("node logtail", () => {
+  expectError([
+    `2023-09-12T00:55:20.974Z`,
+    `662fa6b4-dc47-4d49-a7e2-200ad7ce1537`,
+    `ERROR`,
+    "{\n" +
+      "  status: 500,\n" +
+      `  message: "Cannot read properties of undefined (reading 'enabled')",\n` +
+      "  stack: [\n" +
+      `    "TypeError: Cannot read properties of undefined (reading 'enabled')",\n` +
+      "    'at Object.toJSON (file:///var/task/src/handlers/http.mjs:280853:35)',\n" +
+      "    'at transform (file:///var/task/src/handlers/http.mjs:280495:30)',\n" +
+      "    'at Document2.$toObject (file:///var/task/src/handlers/http.mjs:91609:25)',\n" +
+      "    'at Document2.toJSON (file:///var/task/src/handlers/http.mjs:91810:19)',\n" +
+      "    'at clone (file:///var/task/src/handlers/http.mjs:83888:21)',\n" +
+      "    'at cloneObject (file:///var/task/src/handlers/http.mjs:83960:22)',\n" +
+      "    'at clone (file:///var/task/src/handlers/http.mjs:83901:20)',\n" +
+      "    'at Document2.$toObject (file:///var/task/src/handlers/http.mjs:91580:17)',\n" +
+      "    'at Document2.toJSON (file:///var/task/src/handlers/http.mjs:91810:19)',\n" +
+      "    'at RESPONSE.stringify [as _serializer] (<anonymous>)'\n" +
+      "  ]\n" +
+      "} {\n" +
+      "  context: {\n" +
+      "    runtime: {\n" +
+      "      file: '/var/task/src/handlers/http.mjs',\n" +
+      "      type: 'Object',\n" +
+      "      method: 'error',\n" +
+      "      function: 'error',\n" +
+      "      line: 280278,\n" +
+      "      column: 15\n" +
+      "    },\n" +
+      "    system: { pid: 8, main_file: '' }\n" +
+      "  },\n" +
+      "  service: 'http',\n" +
+      "  id: '2f78a09a'\n" +
+      "}",
+  ]);
+});
+
+test("node timeout", () => {
+  expectError([
+    `2023-09-12T00:55:20.974Z`,
+    `662fa6b4-dc47-4d49-a7e2-200ad7ce1537`,
+    `Task timed out after 120.12 seconds`,
+  ]);
+});

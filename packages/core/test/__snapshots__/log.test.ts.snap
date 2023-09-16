@@ -248,6 +248,53 @@ exports[`node logtail 1`] = `
 }
 `;
 
+exports[`node logtail 2`] = `
+{
+  "error": "TypeError",
+  "message": "Cannot read properties of undefined (reading 'enabled')",
+  "stack": [
+    {
+      "raw": "at Object.toJSON (file:///var/task/src/handlers/http.mjs:280853:35)",
+    },
+    {
+      "raw": "at transform (file:///var/task/src/handlers/http.mjs:280495:30)",
+    },
+    {
+      "raw": "at Document2.$toObject (file:///var/task/src/handlers/http.mjs:91609:25)",
+    },
+    {
+      "raw": "at Document2.toJSON (file:///var/task/src/handlers/http.mjs:91810:19)",
+    },
+    {
+      "raw": "at clone (file:///var/task/src/handlers/http.mjs:83888:21)",
+    },
+    {
+      "raw": "at cloneObject (file:///var/task/src/handlers/http.mjs:83960:22)",
+    },
+    {
+      "raw": "at clone (file:///var/task/src/handlers/http.mjs:83901:20)",
+    },
+    {
+      "raw": "at Document2.$toObject (file:///var/task/src/handlers/http.mjs:91580:17)",
+    },
+    {
+      "raw": "at Document2.toJSON (file:///var/task/src/handlers/http.mjs:91810:19)",
+    },
+    {
+      "raw": "at RESPONSE.stringify [as _serializer] (<anonymous>)",
+    },
+  ],
+}
+`;
+
+exports[`node timeout 1`] = `
+{
+  "error": "LambdaTimeoutError",
+  "message": "Task timed out after 120.12 seconds",
+  "stack": [],
+}
+`;
+
 exports[`node uncaught exception 1`] = `
 {
   "error": "NoSuchBucket",
