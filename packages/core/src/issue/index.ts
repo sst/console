@@ -284,17 +284,26 @@ export const extract = zod(
       ),
     );
 
-    if (errors.length === 0) return;
-
-    for (const items of errors) {
-      const [item] = items;
-      console.log(
-        "found error",
-        item.err.error,
-        item.err.message,
-        item.timestamp,
-        items.length,
-      );
+    if (errors.length === 0) {
+      await db
+        .insert(issueCount)
+        .values(
+          workspaces.map((row) => ({
+            id: createId(),
+            hour,
+            stageID: row.stageID,
+            count: input.logEvents.length,
+            workspaceID: row.workspaceID,
+            group: "failed-to-process",
+          })),
+        )
+        .onDuplicateKeyUpdate({
+          set: {
+            count: sql`count + VALUES(count)`,
+          },
+        })
+        .execute();
+      return;
     }
 
     await createTransaction(async (tx) => {

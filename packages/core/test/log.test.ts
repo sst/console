@@ -141,3 +141,21 @@ test("node timeout", () => {
     `Task timed out after 120.12 seconds`,
   ]);
 });
+
+test("node undefined requestID", () =>
+  expectError([
+    `2023-09-12T00:55:20.974Z`,
+    `undefined`,
+    `ERROR`,
+    "Error: Missing AWS Lambda trace data for X-Ray. Ensure Active Tracing is enabled and no subsegments are created outside the function handler.\n" +
+      "    at Object.contextMissingLogError [as contextMissing] (file:///var/task/functions/crons/property/queue-property-updates.js:738560:23)\n" +
+      "    at Segment.resolveLambdaTraceData (file:///var/task/functions/crons/property/queue-property-updates.js:739641:47)\n" +
+      "    at Object.getSegment (file:///var/task/functions/crons/property/queue-property-updates.js:738604:21)\n" +
+      "    at tryGetCurrentSegment (file:///var/task/functions/crons/property/queue-property-updates.js:742664:29)\n" +
+      "    at Promise2.then (file:///var/task/functions/crons/property/queue-property-updates.js:742631:49)\n" +
+      "    at file:///var/task/functions/crons/property/queue-property-updates.js:820938:34\n" +
+      "    at step (file:///var/task/functions/crons/property/queue-property-updates.js:5739:25)\n" +
+      "    at Object.next (file:///var/task/functions/crons/property/queue-property-updates.js:5686:20)\n" +
+      "    at file:///var/task/functions/crons/property/queue-property-updates.js:5672:73\n" +
+      "    at new Promise (<anonymous>)",
+  ]));

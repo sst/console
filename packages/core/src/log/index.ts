@@ -246,7 +246,10 @@ export function createProcessor(input: {
         };
 
         // NodeJS format
-        if (tabs[0]?.length === 24 && tabs[1]?.length === 36) {
+        if (
+          tabs[0]?.length === 24 &&
+          (tabs[1]?.length === 36 || tabs[1] === "undefined")
+        ) {
           result.level = tabs[2]!.trim();
           result.message = formatLogMessage(tabs.slice(3));
         }
@@ -437,7 +440,11 @@ export function extractError(tabs: string[]): ParsedError | undefined {
   }
 
   // NodeJS inline
-  if (tabs[0]?.length === 24 && tabs[1]?.length === 36 && tabs[3]) {
+  if (
+    tabs[0]?.length === 24 &&
+    (tabs[1]?.length === 36 || tabs[1] === "undefined") &&
+    tabs[3]
+  ) {
     const line = tabs[3];
 
     // Logtail

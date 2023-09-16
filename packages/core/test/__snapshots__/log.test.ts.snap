@@ -333,3 +333,81 @@ exports[`node uncaught exception 1`] = `
   ],
 }
 `;
+
+exports[`node undefined requestID 1`] = `
+{
+  "error": "Error",
+  "message": "Missing AWS Lambda trace data for X-Ray. Ensure Active Tracing is enabled and no subsegments are created outside the function handler.",
+  "stack": [
+    {
+      "raw": "at Object.contextMissingLogError [as contextMissing] (file:///var/task/functions/crons/property/queue-property-updates.js:738560:23)",
+    },
+    {
+      "raw": "at Segment.resolveLambdaTraceData (file:///var/task/functions/crons/property/queue-property-updates.js:739641:47)",
+    },
+    {
+      "raw": "at Object.getSegment (file:///var/task/functions/crons/property/queue-property-updates.js:738604:21)",
+    },
+    {
+      "raw": "at tryGetCurrentSegment (file:///var/task/functions/crons/property/queue-property-updates.js:742664:29)",
+    },
+    {
+      "raw": "at Promise2.then (file:///var/task/functions/crons/property/queue-property-updates.js:742631:49)",
+    },
+    {
+      "raw": "at file:///var/task/functions/crons/property/queue-property-updates.js:820938:34",
+    },
+    {
+      "raw": "at step (file:///var/task/functions/crons/property/queue-property-updates.js:5739:25)",
+    },
+    {
+      "raw": "at Object.next (file:///var/task/functions/crons/property/queue-property-updates.js:5686:20)",
+    },
+    {
+      "raw": "at file:///var/task/functions/crons/property/queue-property-updates.js:5672:73",
+    },
+    {
+      "raw": "at new Promise (<anonymous>)",
+    },
+  ],
+}
+`;
+
+exports[`wtf 1`] = `
+{
+  "error": "Error",
+  "message": "Missing AWS Lambda trace data for X-Ray. Ensure Active Tracing is enabled and no subsegments are created outside the function handler.",
+  "stack": [
+    {
+      "raw": "at Object.contextMissingLogError [as contextMissing] (file:///var/task/functions/crons/property/queue-property-updates.js:738560:23)",
+    },
+    {
+      "raw": "at Segment.resolveLambdaTraceData (file:///var/task/functions/crons/property/queue-property-updates.js:739641:47)",
+    },
+    {
+      "raw": "at Object.getSegment (file:///var/task/functions/crons/property/queue-property-updates.js:738604:21)",
+    },
+    {
+      "raw": "at tryGetCurrentSegment (file:///var/task/functions/crons/property/queue-property-updates.js:742664:29)",
+    },
+    {
+      "raw": "at Promise2.then (file:///var/task/functions/crons/property/queue-property-updates.js:742631:49)",
+    },
+    {
+      "raw": "at file:///var/task/functions/crons/property/queue-property-updates.js:820938:34",
+    },
+    {
+      "raw": "at step (file:///var/task/functions/crons/property/queue-property-updates.js:5739:25)",
+    },
+    {
+      "raw": "at Object.next (file:///var/task/functions/crons/property/queue-property-updates.js:5686:20)",
+    },
+    {
+      "raw": "at file:///var/task/functions/crons/property/queue-property-updates.js:5672:73",
+    },
+    {
+      "raw": "at new Promise (<anonymous>)",
+    },
+  ],
+}
+`;
