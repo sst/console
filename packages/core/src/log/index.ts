@@ -459,7 +459,6 @@ export function extractError(tabs: string[]): ParsedError | undefined {
           };
         }
       }
-      return;
     }
 
     // default
