@@ -443,7 +443,6 @@ export function extractError(tabs: string[]): ParsedError | undefined {
     // Logtail
     if (line[0] === "{") {
       const parts = extractJSON(line);
-      console.log(parts);
       for (const part of parts) {
         if (part.message && part.stack) {
           const [description, ...stack] = part.stack;

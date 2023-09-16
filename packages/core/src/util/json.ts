@@ -1,6 +1,6 @@
 import { parse } from "relaxed-json";
 export function extractJSON(input: string) {
-  const stack = [];
+  const stack = [] as any[];
   const results = [];
   let startIdx = 0;
 
@@ -19,12 +19,9 @@ export function extractJSON(input: string) {
       if (stack.length === 0) {
         try {
           const jsonString = input.substring(startIdx, i + 1);
-          console.log(jsonString);
           const jsonObj = parse(jsonString);
-          results.push(jsonObj);
-        } catch (e) {
-          console.error(e);
-        }
+          results.push(jsonObj as any);
+        } catch (e) {}
       }
     }
   }
