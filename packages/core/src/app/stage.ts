@@ -184,6 +184,7 @@ export const syncMetadata = zod(
       region: row.region,
     });
     const key = `stackMetadata/app.${row.app}/stage.${row.stage}/`;
+    console.log("listing", key, "for", bucket);
     const list = await s3.send(
       new ListObjectsV2Command({
         Prefix: key,
