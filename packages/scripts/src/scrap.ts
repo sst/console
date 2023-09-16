@@ -5,22 +5,21 @@ import { Log } from "@console/core/log";
 provideActor({
   type: "system",
   properties: {
-    workspaceID: "tss3o1t2xk17lnvw3ml469a4",
+    workspaceID: "oiwmwdb26rsyu6dtlhum289q",
   },
 });
 
-const config = await Stage.assumeRole("lck4cw78h8kg09o79k85aoz2");
+const config = await Stage.assumeRole("n42t9fy1z9ht91sh34tyikq0");
+if (!config) throw new Error("No config");
 
 console.time("time");
 const results = await Log.expand({
-  timestamp: 1693065066289,
-  requestID: "c813e342-13f8-43e2-a8bb-7a482b8b23d3",
-  logGroup:
-    "/aws/lambda/production-console-API-apiLambdaGETerror2DE42FB7-fbM3nDlmDAJ9",
-  logStream: "2023/08/26/[$LATEST]6002e14ce0714ceca3347645822d47b0",
-  functionArn:
-    "arn:aws:lambda:us-east-1:226609089145:function:production-console-API-apiLambdaGETerror2DE42FB7-fbM3nDlmDAJ9",
-  ...config!,
+  config,
+  group: "foo",
+  logGroup: "/aws/lambda/prod-api-Http-HttpProxyDA8736AC-doxWjkTNAD2l",
+  logStream: "2023/09/15/[$LATEST]c755589de743473da8b140c4c38ffe78",
+  functionArn: "asd",
+  timestamp: 1694806099320,
 });
 console.timeEnd("time");
 console.log(results);

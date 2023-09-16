@@ -324,6 +324,7 @@ import { LambdaClient } from "@aws-sdk/client-lambda";
 import { RETRY_STRATEGY } from "../util/aws";
 import { StageCredentials } from "../app/stage";
 import { retrySync } from "../util/retry";
+import { extractJSON } from "../util/json";
 
 export const expand = zod(
   z.object({
@@ -336,10 +337,6 @@ export const expand = zod(
   }),
   async (input) => {
     const cw = new CloudWatchLogsClient({
-      ...input.config,
-      retryStrategy: RETRY_STRATEGY,
-    });
-    const lambda = new LambdaClient({
       ...input.config,
       retryStrategy: RETRY_STRATEGY,
     });
@@ -409,7 +406,6 @@ export const expand = zod(
     }
 
     cw.destroy();
-    lambda.destroy();
     return processor.flush();
   },
 );
@@ -443,6 +439,31 @@ export function extractError(tabs: string[]): ParsedError | undefined {
   // NodeJS inline
   if (tabs[0]?.length === 24 && tabs[1]?.length === 36 && tabs[3]) {
     const line = tabs[3];
+
+    // Logtail
+    if (line[0] === "{") {
+      const parts = extractJSON(line);
+      console.log(parts);
+      for (const part of parts) {
+        if (part.message && part.stack) {
+          const [description, ...stack] = part.stack;
+          const [_, error, message] =
+            description!.match(/([A-Z]\w+): (.+)$/s) ?? [];
+          return {
+            error: error,
+            message: message,
+            stack: stack
+              .map((l: string) => l.trim())
+              .map((raw: string) => ({
+                raw,
+              })),
+          };
+        }
+      }
+      return;
+    }
+
+    // default
     const [description, ...stack] = line.split(/\n\s{4}(?=at)/g);
     if (!description) return;
     if (description.startsWith("(node:")) return;
