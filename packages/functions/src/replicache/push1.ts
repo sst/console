@@ -11,6 +11,7 @@ import { ApiHandler, useJsonBody } from "sst/node/api";
 import { server } from "./server";
 import { Replicache } from "@console/core/replicache";
 import { VisibleError } from "@console/core/util/error";
+import { ZodError } from "zod";
 
 export const handler = ApiHandler(async (_evt) => {
   provideActor(await useApiAuth());
@@ -46,7 +47,7 @@ export const handler = ApiHandler(async (_evt) => {
               actor: actor,
               cvrVersion: 0,
               clientVersion: 0,
-            }
+            },
         );
 
       // if (!equals(group.actor, actor)) {
@@ -73,7 +74,7 @@ export const handler = ApiHandler(async (_evt) => {
               clientGroupID: body.clientGroupID,
               mutationID: 0,
               clientVersion: 0,
-            }
+            },
         );
 
       const nextClientVersion = group.clientVersion + 1;
@@ -81,14 +82,14 @@ export const handler = ApiHandler(async (_evt) => {
 
       if (mutation.id < nextMutationID) {
         console.log(
-          `Mutation ${mutation.id} has already been processed - skipping`
+          `Mutation ${mutation.id} has already been processed - skipping`,
         );
         return;
       }
 
       if (mutation.id > nextMutationID) {
         throw new Error(
-          `Mutation ${mutation.id} is from the future - aborting`
+          `Mutation ${mutation.id} is from the future - aborting`,
         );
       }
 
@@ -97,7 +98,8 @@ export const handler = ApiHandler(async (_evt) => {
       try {
         await server.execute(name, args);
       } catch (ex) {
-        if (!(ex instanceof VisibleError)) console.error(ex);
+        if (!(ex instanceof VisibleError) && !(ex instanceof ZodError))
+          console.error(ex);
       }
       console.log("done processing", mutation.id, name);
 
