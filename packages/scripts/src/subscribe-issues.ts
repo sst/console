@@ -15,25 +15,20 @@ const stages = await db
     and(
       workspaceFilter.length
         ? inArray(stage.workspaceID, workspaceFilter)
-        : undefined
-    )
+        : undefined,
+    ),
   )
   .execute();
 console.log("found", stages.length, "stages");
 await db.delete(issueSubscriber).execute();
-await queue(100, stages, async (stage) => {
+await queue(1, stages, async (stage) => {
   provideActor({
     type: "system",
     properties: {
       workspaceID: stage.workspaceID,
     },
   });
-  const config = await Stage.assumeRole(stage.id);
-  if (!config) return;
-  try {
-    await Issue.connectStage(config);
-    await Issue.subscribe(config);
-  } catch (ex) {
-    console.error(ex);
-  }
+  await Stage.Events.ResourcesUpdated.publish({
+    stageID: stage.id,
+  });
 });
