@@ -417,6 +417,16 @@ type ParsedError = {
   stack: StackFrame[];
 };
 export function extractError(tabs: string[]): ParsedError | undefined {
+  // Timeout
+  const timeout = tabs.find((l) => l.startsWith("Task timed out after"));
+  if (timeout) {
+    return {
+      error: "LambdaTimeoutError",
+      message: timeout,
+      stack: [],
+    };
+  }
+
   // Generic AWS error handling
   if (
     tabs[3]?.includes("Invoke Error") ||
@@ -488,15 +498,6 @@ export function extractError(tabs: string[]): ParsedError | undefined {
         .map((raw) => ({
           raw,
         })),
-    };
-  }
-
-  const timeout = tabs.find((l) => l.startsWith("Task timed out after"));
-  if (timeout) {
-    return {
-      error: "LambdaTimeoutError",
-      message: timeout,
-      stack: [],
     };
   }
 
