@@ -19,7 +19,6 @@ type DummyData =
 export function* generateData(
   config: DummyConfig,
 ): Generator<DummyData, void, unknown> {
-  console.log("CONFIG", config);
   yield {
     type: "workspace",
     id: "dummy-workspace",
