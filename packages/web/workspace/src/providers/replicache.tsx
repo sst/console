@@ -23,6 +23,7 @@ import { makeEventListener } from "@solid-primitives/event-listener";
 import { IssueStore } from "$/data/issue";
 import { DateTime } from "luxon";
 import { WarningStore } from "$/data/warning";
+import { useDummy } from "./dummy";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async (tx, input) => {})
@@ -105,11 +106,16 @@ const ReplicacheContext =
   createContext<() => ReturnType<typeof createReplicache>>();
 
 function createReplicache(workspaceID: string, token: string) {
+  const dummy = useDummy();
   const replicache = new Replicache({
     name: workspaceID,
     auth: `Bearer ${token}`,
     licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
-    pullURL: import.meta.env.VITE_API_URL + "/replicache/pull1",
+    pullURL:
+      import.meta.env.VITE_API_URL +
+      (dummy()
+        ? `/replicache/dummy/pull?dummy=${dummy()}`
+        : "/replicache/pull1"),
     pushURL: import.meta.env.VITE_API_URL + "/replicache/push1",
     pullInterval: 60 * 1000,
     mutators,

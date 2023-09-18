@@ -5,10 +5,12 @@ import { useAuth } from "./auth";
 import { WorkspaceStore } from "$/data/workspace";
 import { bus } from "./bus";
 import { createId } from "@paralleldrive/cuid2";
+import { useDummy } from "./dummy";
 
 export function RealtimeProvider() {
   let connection: mqtt.MqttClientConnection;
   const auth = useAuth();
+  const dummy = useDummy();
 
   onMount(async () => {
     const url = import.meta.env.VITE_IOT_HOST;
@@ -29,6 +31,7 @@ export function RealtimeProvider() {
     }
 
     async function createConnection() {
+      if (dummy()) return;
       console.log("creating new connection");
       if (connection) await connection.disconnect();
       const config = iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()
@@ -39,7 +42,7 @@ export function RealtimeProvider() {
           "",
           `${import.meta.env.VITE_STAGE}-console-authorizer`,
           "",
-          tokens
+          tokens,
         )
         .with_keep_alive_seconds(1200)
         .build();
@@ -52,7 +55,7 @@ export function RealtimeProvider() {
           console.log("subscribing to", workspace);
           await connection.subscribe(
             `console/${import.meta.env.VITE_STAGE}/${workspace}/#`,
-            mqtt.QoS.AtLeastOnce
+            mqtt.QoS.AtLeastOnce,
           );
         }
       });
@@ -69,7 +72,7 @@ export function RealtimeProvider() {
           e.cause,
           e.message,
           e.error_code,
-          e.error_name
+          e.error_name,
         );
       });
       connection.on("resume", console.log);

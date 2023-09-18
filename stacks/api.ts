@@ -51,9 +51,9 @@ export function API({ stack, app }: StackContext) {
           Condition.booleanEquals("$.status.done", false),
           new Wait(stack, "pollerWaitStep", {
             time: WaitTime.duration(Duration.seconds(3)),
-          }).next(pollerFetchStep)
+          }).next(pollerFetchStep),
         )
-        .otherwise(new Pass(stack, "done"))
+        .otherwise(new Pass(stack, "done")),
     ),
   });
 
@@ -108,6 +108,12 @@ export function API({ stack, app }: StackContext) {
       "POST /replicache/pull1": {
         function: {
           handler: "packages/functions/src/replicache/pull1.handler",
+          timeout: "29 seconds",
+        },
+      },
+      "POST /replicache/dummy/pull": {
+        function: {
+          handler: "packages/functions/src/replicache/dummy/pull.handler",
           timeout: "29 seconds",
         },
       },

@@ -31,6 +31,7 @@ import { IconLogout, IconAddCircle, IconWorkspace } from "./ui/icons/custom";
 import { LocalProvider } from "./providers/local";
 import { useStorage } from "./providers/account";
 import { Fullscreen, Splash } from "./ui";
+import { DummyProvider } from "./providers/dummy";
 
 const Root = styled("div", {
   base: {
@@ -86,8 +87,8 @@ macaron$(() =>
     globalStyle(selector, {
       opacity: 1,
       color: theme.color.text.dimmed.base,
-    })
-  )
+    }),
+  ),
 );
 
 globalStyle("*", {
@@ -113,8 +114,8 @@ macaron$(() =>
     globalStyle(selector, {
       // Mimic WebKit text selection color
       backgroundColor: "#B4D5FE",
-    })
-  )
+    }),
+  ),
 );
 
 globalStyle("ul, ol", {
@@ -124,7 +125,9 @@ globalStyle("ul, ol", {
 
 export const App: Component = () => {
   const [theme, setTheme] = createSignal<string>(
-    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light",
   );
 
   const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
@@ -145,78 +148,83 @@ export const App: Component = () => {
           <Route
             path="*"
             element={
-              <AuthProvider>
-                <RealtimeProvider />
-                <LocalProvider>
-                  <CommandBar>
-                    <GlobalCommands />
-                    <Routes>
-                      <Route path="debug" component={Debug} />
-                      <Route path="design" component={Design} />
-                      <Route path="connect" component={Connect} />
-                      <Route path="workspace" component={WorkspaceCreate} />
-                      <Route path=":workspaceSlug/*" component={Workspace} />
-                      <Route path="/auth/code" component={Code} />
-                      <Route
-                        path="*"
-                        component={() => {
-                          const auth = useAuth();
-                          let existing = storage.value.account;
-                          if (!existing || !auth[existing]) {
-                            existing = Object.keys(auth)[0];
-                            storage.set("account", existing);
-                          }
-                          const workspaces = createSubscription(
-                            WorkspaceStore.list,
-                            null,
-                            () => auth[existing!].replicache
-                          );
+              <DummyProvider>
+                <AuthProvider>
+                  <RealtimeProvider />
+                  <LocalProvider>
+                    <CommandBar>
+                      <GlobalCommands />
+                      <Routes>
+                        <Route path="debug" component={Debug} />
+                        <Route path="design" component={Design} />
+                        <Route path="connect" component={Connect} />
+                        <Route path="workspace" component={WorkspaceCreate} />
+                        <Route path=":workspaceSlug/*" component={Workspace} />
+                        <Route path="/auth/code" component={Code} />
+                        <Route
+                          path="*"
+                          component={() => {
+                            const auth = useAuth();
+                            let existing = storage.value.account;
+                            if (!existing || !auth[existing]) {
+                              existing = Object.keys(auth)[0];
+                              storage.set("account", existing);
+                            }
+                            const workspaces = createSubscription(
+                              WorkspaceStore.list,
+                              null,
+                              () => auth[existing!].replicache,
+                            );
 
-                          const init = createSubscription(
-                            () => (tx) => {
-                              return tx.get("/init");
-                            },
-                            false,
-                            () => auth[existing!].replicache
-                          );
+                            const init = createSubscription(
+                              () => (tx) => {
+                                return tx.get("/init");
+                              },
+                              false,
+                              () => auth[existing!].replicache,
+                            );
 
-                          createEffect(() =>
-                            console.log("workspaces", workspaces())
-                          );
+                            createEffect(() =>
+                              console.log("workspaces", workspaces()),
+                            );
 
-                          return (
-                            <Switch>
-                              <Match
-                                when={workspaces() && workspaces()!.length > 0}
-                              >
-                                <Navigate
-                                  href={`/${
-                                    (
-                                      workspaces()!.find(
-                                        (w) => w.id === storage.value.workspace
-                                      ) || workspaces()![0]
-                                    ).slug
-                                  }`}
-                                />
-                              </Match>
-                              <Match
-                                when={
-                                  init() &&
-                                  workspaces() &&
-                                  workspaces()!.length === 0
-                                }
-                              >
-                                <Navigate href={`/workspace`} />
-                              </Match>
-                              <Match when={true}>{/* <Splash /> */}</Match>
-                            </Switch>
-                          );
-                        }}
-                      />
-                    </Routes>
-                  </CommandBar>
-                </LocalProvider>
-              </AuthProvider>
+                            return (
+                              <Switch>
+                                <Match
+                                  when={
+                                    workspaces() && workspaces()!.length > 0
+                                  }
+                                >
+                                  <Navigate
+                                    href={`/${
+                                      (
+                                        workspaces()!.find(
+                                          (w) =>
+                                            w.id === storage.value.workspace,
+                                        ) || workspaces()![0]
+                                      ).slug
+                                    }`}
+                                  />
+                                </Match>
+                                <Match
+                                  when={
+                                    init() &&
+                                    workspaces() &&
+                                    workspaces()!.length === 0
+                                  }
+                                >
+                                  <Navigate href={`/workspace`} />
+                                </Match>
+                                <Match when={true}>{/* <Splash /> */}</Match>
+                              </Switch>
+                            );
+                          }}
+                        />
+                      </Routes>
+                    </CommandBar>
+                  </LocalProvider>
+                </AuthProvider>
+              </DummyProvider>
             }
           />
         </Routes>
@@ -240,14 +248,14 @@ function GlobalCommands() {
           return Promise.all(
             users.map(async (user) => {
               const workspace = await WorkspaceStore.fromID(user.workspaceID)(
-                tx
+                tx,
               );
               return { account: account, workspace };
-            })
+            }),
           );
         });
         return workspaces;
-      })
+      }),
     ).then((x) => x.flat());
     const splits = location.pathname.split("/");
     return [

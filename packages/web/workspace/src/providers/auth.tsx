@@ -5,6 +5,7 @@ import { Navigate } from "@solidjs/router";
 import { Replicache } from "replicache";
 import { ParentProps, createContext, useContext } from "solid-js";
 import { useStorage } from "./account";
+import { useDummy } from "./dummy";
 
 export * as AuthStore from "./auth";
 
@@ -55,10 +56,11 @@ export function AuthProvider(props: ParentProps) {
   const fragment = new URLSearchParams(location.hash.substring(1));
   const access_token = fragment.get("access_token");
   const storage = useStorage();
+  const dummy = useDummy();
   if (access_token) {
     const [_headerEncoded, payloadEncoded] = access_token.split(".");
     const payload = JSON.parse(
-      atob(payloadEncoded.replace(/-/g, "+").replace(/_/g, "/"))
+      atob(payloadEncoded.replace(/-/g, "+").replace(/_/g, "/")),
     );
     tokens[payload.properties.accountID] = {
       token: access_token,
@@ -78,7 +80,11 @@ export function AuthProvider(props: ParentProps) {
       name: token.accountID,
       auth: `Bearer ${token.token}`,
       licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
-      pullURL: import.meta.env.VITE_API_URL + "/replicache/pull1",
+      pullURL:
+        import.meta.env.VITE_API_URL +
+        (dummy()
+          ? `/replicache/dummy/pull?dummy=${dummy()}`
+          : "/replicache/pull1"),
       pushURL: import.meta.env.VITE_API_URL + "/replicache/push1",
       mutators,
     });

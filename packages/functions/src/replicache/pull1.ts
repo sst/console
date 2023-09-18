@@ -37,6 +37,23 @@ import {
 } from "@console/core/issue/issue.sql";
 import { compress } from "@console/core/util/compress";
 
+export const TABLES = {
+  workspace,
+  user,
+  awsAccount,
+  app,
+  stage,
+  resource,
+  log_poller,
+  log_search,
+  lambdaPayload,
+  warning,
+  issue,
+  issueSubscriber,
+  issueCount,
+  usage,
+};
+
 export const handler = ApiHandler(async () => {
   provideActor(await useApiAuth());
   NotPublic();
@@ -117,29 +134,12 @@ export const handler = ApiHandler(async () => {
         });
       }
 
-      const tables = {
-        workspace,
-        user,
-        awsAccount,
-        app,
-        stage,
-        resource,
-        log_poller,
-        log_search,
-        lambdaPayload,
-        warning,
-        issue,
-        issueSubscriber,
-        issueCount,
-        usage,
-      };
-
       const results: [string, { id: string; time_updated: string }[]][] = [];
 
       if (actor.type === "user") {
         console.log("syncing user");
 
-        const filters = {
+        const tableFilters = {
           log_search: eq(log_search.userID, actor.properties.userID),
           usage: gte(
             usage.day,
@@ -154,11 +154,11 @@ export const handler = ApiHandler(async () => {
               .toSQL({ includeOffset: false })!,
           ),
         } satisfies {
-          [key in keyof typeof tables]?: SQLWrapper;
+          [key in keyof typeof TABLES]?: SQLWrapper;
         };
 
         const workspaceID = useWorkspace();
-        for (const [name, table] of Object.entries(tables)) {
+        for (const [name, table] of Object.entries(TABLES)) {
           const query = tx
             .select({ id: table.id, time_updated: table.timeUpdated })
             .from(table)
@@ -168,8 +168,8 @@ export const handler = ApiHandler(async () => {
                   "workspaceID" in table ? table.workspaceID : table.id,
                   workspaceID,
                 ),
-                ...(name in filters
-                  ? [filters[name as keyof typeof filters]]
+                ...(name in tableFilters
+                  ? [tableFilters[name as keyof typeof tableFilters]]
                   : []),
               ),
             );
@@ -240,7 +240,7 @@ export const handler = ApiHandler(async () => {
       // new data
       for (const [name, ids] of Object.entries(toPut)) {
         if (!ids.length) continue;
-        const table = tables[name as keyof typeof tables];
+        const table = TABLES[name as keyof typeof TABLES];
         const rows = await tx
           .select()
           .from(table)
@@ -289,16 +289,6 @@ export const handler = ApiHandler(async () => {
         clients.map((c) => [c.id, c.mutationID] as const),
       );
       if (patch.length > 0) {
-        await tx
-          .delete(replicache_cvr)
-          .where(
-            and(
-              eq(replicache_cvr.clientGroupID, req.clientGroupID),
-              lte(replicache_cvr.timeUpdated, sql`now() - interval 7 day`),
-            ),
-          )
-          .execute();
-
         await tx
           .insert(replicache_client_group)
           .values({

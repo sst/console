@@ -5,11 +5,7 @@ import { StageStore } from "$/data/stage";
 import { PRICING_PLAN, UsageStore } from "$/data/usage";
 import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
-import {
-  createGet,
-  createSubscription,
-  useReplicache,
-} from "$/providers/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import {
   theme,
   utility,
@@ -19,8 +15,6 @@ import {
   Stack,
   Button,
   TextButton,
-  LinkButton,
-  IconButton,
 } from "$/ui";
 import { Fullscreen } from "$/ui/layout";
 import { Dropdown } from "$/ui/dropdown";
@@ -32,22 +26,15 @@ import {
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
 import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
-import type { App } from "@console/core/app";
 import type { Stage } from "@console/core/app";
 import type { Account } from "@console/core/aws/account";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import {
-  DUMMY_STAGES,
-  DUMMY_ACCOUNTS,
-  DUMMY_LOCAL_APP,
-} from "./overview-dummy";
 import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
-import { pipe, sortBy } from "remeda";
+import { sortBy } from "remeda";
 import { User } from "@console/core/user";
-import { WorkspaceStore } from "$/data/workspace";
 import { useWorkspace } from "./context";
 
 const Root = styled("div", {
@@ -164,7 +151,7 @@ function sortUsers(users: UserInfo[], selfEmail: string): UserInfo[] {
     users,
     (user) => (user.email === selfEmail ? 0 : 1), // Your own user
     (user) => (!user.timeSeen ? 0 : 1), // Invites
-    (user) => user.email.length // Sort by length
+    (user) => user.email.length, // Sort by length
   );
 }
 
@@ -193,30 +180,16 @@ function splitCols(array: Account.Info[]) {
 export function Overview() {
   const rep = useReplicache();
   const [query] = useSearchParams();
-  const accounts = createSubscription(() =>
-    query.dummy
-      ? async (): Promise<Account.Info[]> => {
-          return DUMMY_ACCOUNTS.hasOwnProperty(query.dummy)
-            ? DUMMY_ACCOUNTS[query.dummy as keyof typeof DUMMY_ACCOUNTS]
-            : DUMMY_ACCOUNTS.DEFAULT;
-        }
-      : AccountStore.list()
-  );
+  const accounts = createSubscription(AccountStore.list);
   const users = createSubscription(UserStore.list, [] as User.Info[]);
   const cols = createMemo(() => splitCols(accounts() || []));
-  const stages = createSubscription(
-    () =>
-      query.dummy
-        ? async (): Promise<Stage.Info[]> => DUMMY_STAGES
-        : StageStore.list(),
-    []
-  );
+  const stages = createSubscription(StageStore.list, []);
   const workspace = useWorkspace();
   const usages = UsageStore.watch.scan(rep);
   const invocations = createMemo(() =>
     usages()
       .map((usage) => usage.invocations)
-      .reduce((a, b) => a + b, 0)
+      .reduce((a, b) => a + b, 0),
   );
   const nav = useNavigate();
   const auth = useAuth();
@@ -224,8 +197,9 @@ export function Overview() {
   const selfEmail = createMemo(() => auth[storage.value.account].token.email);
 
   createEffect(() => {
+    console.log("users", users());
     const all = accounts();
-    if (all && !all.length && !query.force && !query.dummy)
+    if (all && !all.length && !query.force)
       nav("account", {
         replace: true,
       });
@@ -238,7 +212,7 @@ export function Overview() {
       return sortBy(
         stages().filter((stage) => stage.awsAccountID === account.id),
         (c) => apps().find((app) => app.id === c.appID)?.name || "",
-        (c) => c.name
+        (c) => c.name,
       );
     });
     return (
@@ -448,7 +422,7 @@ interface StageCardProps {
 function StageCard(props: StageCardProps) {
   const [query] = useSearchParams();
   const app = AppStore.watch.get(useReplicache(), () => props.stage.appID);
-  const local = query.dummy ? () => DUMMY_LOCAL_APP : useLocalContext();
+  const local = useLocalContext();
   return (
     <StageRoot href={`${app()?.name}/${props.stage.name}`}>
       <Row space="2" vertical="center">
@@ -509,7 +483,7 @@ function UserCard(props: UserCardProps) {
   const auth = useAuth();
   const storage = useStorage();
   const self = createMemo(
-    () => auth[storage.value.account].token.email === user()?.email
+    () => auth[storage.value.account].token.email === user()?.email,
   );
 
   return (
@@ -538,7 +512,7 @@ function UserCard(props: UserCardProps) {
                 onSelect={() => {
                   if (
                     !confirm(
-                      "Are you sure you want to remove them from the workspace?"
+                      "Are you sure you want to remove them from the workspace?",
                     )
                   )
                     return;

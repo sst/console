@@ -28,7 +28,7 @@ export function LocalProvider(props: ParentProps) {
       JSON.stringify({
         type: "log.cleared",
         properties,
-      })
+      }),
     );
   });
 
@@ -51,7 +51,7 @@ export function LocalProvider(props: ParentProps) {
         reconnect = setTimeout(connect, 3000);
       };
       ws.onerror = () => {
-        reconnect = setTimeout(connect, 3000);
+        ws.close();
       };
     }
     connect();
