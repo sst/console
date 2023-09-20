@@ -48,6 +48,7 @@ import { LogSearchStore } from "$/data/log-search";
 import { DialogRange, DialogRangeControl } from "./dialog-range";
 import { ResourceIcon } from "$/common/resource-icon";
 import { ErrorItem, ErrorList } from "./error";
+import { InvocationRow } from "$/common/invocation";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -59,14 +60,14 @@ const LogSwitchIcon = styled("div", {
   },
 });
 
-const LogList = styled("div", {
+export const LogList = styled("div", {
   base: {
     border: `1px solid ${theme.color.divider.base}`,
     borderRadius: theme.borderRadius,
   },
 });
 
-const LogLoadingIndicator = styled("div", {
+export const LogLoadingIndicator = styled("div", {
   base: {
     ...utility.row(0),
     height: 52,
@@ -76,7 +77,7 @@ const LogLoadingIndicator = styled("div", {
   },
 });
 
-const LogLoadingIndicatorIcon = styled("div", {
+export const LogLoadingIndicatorIcon = styled("div", {
   base: {
     padding: 2,
     width: 20,
@@ -103,7 +104,7 @@ const LogLoadingIndicatorIcon = styled("div", {
   },
 });
 
-const LogLoadingIndicatorIconSvg = style({
+export const LogLoadingIndicatorIconSvg = style({
   selectors: {
     [`${LogLoadingIndicatorIcon.selector({ pulse: true })} &`]: {
       animation: "glow-pulse 1.7s linear infinite alternate",
@@ -177,213 +178,6 @@ const LogEmpty = styled("div", {
   },
 });
 
-const LogText = styled("div", {
-  base: {
-    ...utility.textLine(),
-    lineHeight: "normal",
-    fontFamily: theme.font.family.code,
-  },
-});
-
-const LogDate = styled(LogText, {
-  base: {
-    flexShrink: 0,
-    minWidth: 190,
-    paddingLeft: theme.space[2],
-  },
-});
-
-const LogDuration = styled(LogText, {
-  base: {
-    flexShrink: 0,
-    minWidth: 70,
-    textAlign: "right",
-    color: theme.color.text.secondary.base,
-  },
-  variants: {
-    coldStart: {
-      true: {
-        color: `hsla(${theme.color.base.blue}, 100%)`,
-      },
-      false: {},
-    },
-  },
-  defaultVariants: {
-    coldStart: false,
-  },
-});
-
-const LogRequestId = styled(LogText, {
-  base: {
-    paddingLeft: theme.space[2],
-    flexShrink: 0,
-    whiteSpace: "pre",
-    color: theme.color.text.secondary.base,
-    fontSize: theme.font.size.mono_base,
-  },
-});
-
-const LogMessage = styled(LogText, {
-  base: {
-    flexGrow: 1,
-    alignSelf: "center",
-    paddingLeft: theme.space[2],
-    fontSize: theme.font.size.mono_base,
-    selectors: {
-      [`${LogContainer.selector({ level: "error" })} &`]: {
-        color: `hsla(${theme.color.base.red}, 100%)`,
-      },
-    },
-  },
-});
-
-const CaretIcon = styled("div", {
-  base: {
-    width: 20,
-    height: 20,
-    flexShrink: 0,
-    lineHeight: 0,
-    color: theme.color.icon.dimmed,
-    selectors: {
-      [`${LogContainer.selector({ expanded: true })} &`]: {
-        transform: "rotate(90deg)",
-      },
-    },
-  },
-});
-
-const LogDetail = styled("div", {
-  base: {
-    padding: theme.space[3],
-    ...utility.stack(3),
-    selectors: {
-      [`${LogContainer.selector({ expanded: true })} &`]: {
-        borderTop: `1px solid ${theme.color.divider.base}`,
-      },
-    },
-  },
-});
-
-const LogDetailHeader = styled("div", {
-  base: {
-    display: "flex",
-    padding: `0 ${theme.space.px}`,
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-});
-
-const LogEntries = styled("div", {
-  base: {
-    borderRadius: theme.borderRadius,
-    padding: `0 ${theme.space[4]}`,
-    backgroundColor: theme.color.background.surface,
-  },
-  variants: {
-    error: {
-      true: {
-        padding: `0`,
-      },
-      false: {},
-    },
-  },
-  defaultVariants: {
-    error: false,
-  },
-});
-
-export const LogEntry = styled("div", {
-  base: {
-    ...utility.row(3.5),
-    borderTop: `1px solid ${theme.color.divider.surface}`,
-    paddingTop: theme.space[3],
-    paddingBottom: theme.space[3],
-    fontFamily: theme.font.family.code,
-    selectors: {
-      "&:first-child": {
-        borderTop: "none",
-      },
-    },
-  },
-});
-
-const LogError = styled("div", {
-  base: {
-    ...utility.stack(2),
-    paddingTop: theme.space[4],
-    paddingBottom: theme.space[4],
-  },
-});
-
-export const LogEntryTime = styled("div", {
-  base: {
-    flexShrink: 0,
-    minWidth: 89,
-    textAlign: "left",
-    color: theme.color.text.dimmed.base,
-    fontSize: theme.font.size.mono_sm,
-    lineHeight: theme.font.lineHeight,
-    fontFamily: theme.font.family.code,
-  },
-});
-
-const LogReportKey = styled(LogEntryTime, {
-  base: {
-    minWidth: 105,
-  },
-});
-
-export const LogEntryMessage = styled("span", {
-  base: {
-    minWidth: 0,
-    whiteSpace: "pre-wrap",
-    overflowWrap: "anywhere",
-    lineHeight: theme.font.lineHeight,
-    color: theme.color.text.primary.surface,
-    fontFamily: theme.font.family.code,
-    fontSize: theme.font.size.mono_sm,
-  },
-  variants: {
-    error: {
-      true: {
-        color: `hsla(${theme.color.base.red}, 100%)`,
-      },
-      false: {},
-    },
-    dimmed: {
-      true: {
-        color: theme.color.text.dimmed.surface,
-      },
-      false: {},
-    },
-  },
-  defaultVariants: {
-    error: false,
-    dimmed: false,
-  },
-});
-
-const LogEntryMessageErrorTitle = styled("span", {
-  base: {
-    color: `hsla(${theme.color.base.red}, 100%)`,
-    fontSize: theme.font.size.mono_sm,
-    fontWeight: 500,
-    fontFamily: theme.font.family.code,
-    lineHeight: "normal",
-  },
-});
-
-const LogErrorMessage = styled("span", {
-  base: {
-    lineHeight: 2,
-    whiteSpace: "pre-wrap",
-    overflowWrap: "break-word",
-    fontFamily: theme.font.family.code,
-    color: theme.color.text.primary.surface,
-    fontSize: theme.font.size.mono_sm,
-  },
-});
-
 const LogMoreIndicator = styled("div", {
   base: {
     ...utility.row(2),
@@ -418,7 +212,7 @@ export function Logs() {
       ? DUMMY_FUNC
       : (resources().find((x) => x.id === params.resourceID) as
           | Extract<Resource.Info, { type: "Function" }>
-          | undefined)
+          | undefined),
   );
 
   const logGroup = createMemo(() => {
@@ -451,7 +245,7 @@ export function Logs() {
   const rep = useReplicache();
 
   const poller = createSubscription(() =>
-    LogPollerStore.fromLogGroup(logGroup())
+    LogPollerStore.fromLogGroup(logGroup()),
   );
 
   createEffect(() => {
@@ -481,7 +275,7 @@ export function Logs() {
     id: createId(),
   });
   const activeSearch = createSubscription(() =>
-    LogSearchStore.fromID(search.id || "")
+    LogSearchStore.fromID(search.id || ""),
   );
 
   function createSearch(start?: number, end?: number) {
@@ -489,7 +283,7 @@ export function Logs() {
       produce((draft) => {
         draft.start = start ? new Date(start) : undefined;
         draft.end = end ? new Date(end) : undefined;
-      })
+      }),
     );
 
     rep().mutate.log_search({
@@ -530,7 +324,7 @@ export function Logs() {
       },
       {
         replace: true,
-      }
+      },
     );
     if (val === "tail") return;
     clearLogStore(logGroupKey());
@@ -736,255 +530,18 @@ export function Logs() {
             </LogEmpty>
           </Show>
           <For each={invocations()}>
-            {(invocation) => {
-              const [expanded, setExpanded] = createSignal(false);
-              const [tab, setTab] = createSignal<
-                "logs" | "request" | "response" | "error" | "report"
-              >("logs");
-
-              const shortDate = createMemo(() =>
-                new Intl.DateTimeFormat("en-US", shortDateOptions)
-                  .format(invocation.start)
-                  .replace(" at ", ", ")
-              );
-              const longDate = createMemo(() =>
-                new Intl.DateTimeFormat("en-US", longDateOptions).format(
-                  invocation.start
-                )
-              );
-              //              const empty = createMemo(
-              //                () => mode() !== "live" && invocation.logs.length === 0
-              //              );
-              const [replaying, setReplaying] = createSignal(false);
-
-              return (
-                <LogContainer
-                  expanded={expanded()}
-                  level={invocation.errors.length ? "error" : "info"}
-                >
-                  <LogSummary
-                    onClick={() => {
-                      batch(() => {
-                        if (!expanded() && invocation.errors.length)
-                          setTab("error");
-                        setExpanded((r) => !r);
-                      });
-                    }}
-                  >
-                    <Row flex={false} space="2" vertical="center">
-                      <CaretIcon>
-                        <IconCaretRight />
-                      </CaretIcon>
-                      <LogLevel
-                        level={invocation.errors.length ? "error" : "info"}
-                      />
-                    </Row>
-                    <LogDate title={longDate()}>{shortDate()}</LogDate>
-                    <Show when={mode() !== "live"}>
-                      <LogDuration
-                        coldStart={invocation.cold}
-                        title={invocation.cold ? "Cold start" : ""}
-                      >
-                        {invocation.report?.duration
-                          ? formatDuration(invocation.report?.duration)
-                          : "-"}
-                      </LogDuration>
-                    </Show>
-                    <LogRequestId title="Request Id">
-                      {invocation.id.slice(0, 36)}
-                    </LogRequestId>
-                    <LogMessage>
-                      {invocation.errors[0]?.message ||
-                        invocation.logs[0]?.message}
-                    </LogMessage>
-                  </LogSummary>
-                  <Show when={expanded()}>
-                    <LogDetail>
-                      <LogDetailHeader>
-                        <Row space="5" vertical="center">
-                          <TabTitle
-                            size="mono_sm"
-                            onClick={() => setTab("logs")}
-                            state={tab() === "logs" ? "active" : "inactive"}
-                          >
-                            Logs
-                          </TabTitle>
-                          <Show when={invocation.errors.length}>
-                            <TabTitle
-                              size="mono_sm"
-                              onClick={() => setTab("error")}
-                              state={tab() === "error" ? "active" : "inactive"}
-                            >
-                              Error
-                            </TabTitle>
-                          </Show>
-                          <Show when={mode() === "live"}>
-                            <TabTitle
-                              size="mono_sm"
-                              onClick={() => setTab("request")}
-                              state={
-                                !invocation.event
-                                  ? "disabled"
-                                  : tab() === "request"
-                                  ? "active"
-                                  : "inactive"
-                              }
-                            >
-                              Request
-                            </TabTitle>
-                            <TabTitle
-                              size="mono_sm"
-                              onClick={() => setTab("response")}
-                              state={
-                                !invocation.response
-                                  ? "disabled"
-                                  : tab() === "response"
-                                  ? "active"
-                                  : "inactive"
-                              }
-                            >
-                              Response
-                            </TabTitle>
-                          </Show>
-                          <Show when={invocation.report}>
-                            <TabTitle
-                              size="mono_sm"
-                              onClick={() => setTab("report")}
-                              state={tab() === "report" ? "active" : "inactive"}
-                            >
-                              Report
-                            </TabTitle>
-                          </Show>
-                        </Row>
-                        <Show when={invocation.event}>
-                          <Row space="4">
-                            <TextButton
-                              on="surface"
-                              icon={<IconBookmark />}
-                              onClick={() =>
-                                invokeControl.savePayload(
-                                  structuredClone(unwrap(invocation.event))
-                                )
-                              }
-                            >
-                              Save
-                            </TextButton>
-                            <TextButton
-                              on="surface"
-                              completing={replaying()}
-                              icon={<IconArrowPath />}
-                              onClick={() => {
-                                setReplaying(true);
-                                rep().mutate.function_invoke({
-                                  stageID: resource()!.stageID,
-                                  payload: structuredClone(
-                                    unwrap(invocation.event)
-                                  ),
-                                  functionARN: resource()!.metadata.arn,
-                                });
-                                setTimeout(() => setReplaying(false), 2000);
-                              }}
-                            >
-                              Replay
-                            </TextButton>
-                          </Row>
-                        </Show>
-                      </LogDetailHeader>
-                      <LogEntries error={tab() === "error"}>
-                        <Switch>
-                          <Match when={tab() === "error"}>
-                            <ErrorList>
-                              <For each={invocation.errors}>
-                                {(error) => <ErrorItem error={error} />}
-                              </For>
-                            </ErrorList>
-                          </Match>
-                          <Match when={tab() === "logs"}>
-                            <Show when={invocation.logs.length === 0}>
-                              <LogEntry>
-                                <LogEntryMessage dimmed>
-                                  Nothing was logged in this invocation
-                                </LogEntryMessage>
-                              </LogEntry>
-                            </Show>
-                            <For each={invocation.logs}>
-                              {(entry, i) => (
-                                <LogEntry>
-                                  <LogEntryTime>
-                                    {entry.timestamp.toLocaleTimeString()}
-                                  </LogEntryTime>
-                                  <LogEntryMessage>
-                                    {entry.message}
-                                  </LogEntryMessage>
-                                </LogEntry>
-                              )}
-                            </For>
-                          </Match>
-                          <Match when={tab() === "request"}>
-                            <LogEntry>
-                              <LogEntryMessage>
-                                {JSON.stringify(invocation.event, null, 2)}
-                              </LogEntryMessage>
-                            </LogEntry>
-                          </Match>
-                          <Match when={tab() === "response"}>
-                            <LogEntry>
-                              <LogEntryMessage>
-                                {JSON.stringify(invocation.response, null, 2)}
-                              </LogEntryMessage>
-                            </LogEntry>
-                          </Match>
-                          <Match when={tab() === "report"}>
-                            <LogEntry>
-                              <LogReportKey>Duration</LogReportKey>
-                              <LogEntryMessage>
-                                {formatDuration(
-                                  invocation.report?.duration || 0
-                                )}
-                              </LogEntryMessage>
-                            </LogEntry>
-                            <LogEntry>
-                              <LogReportKey>Memory used</LogReportKey>
-                              <LogEntryMessage>
-                                <Show when={invocation.report?.memory}>
-                                  {(size) => {
-                                    const formattedSize = formatBytes(
-                                      size() * 1024 * 1024
-                                    );
-                                    return `${formattedSize.value}${formattedSize.unit}`;
-                                  }}
-                                </Show>
-                              </LogEntryMessage>
-                            </LogEntry>
-                            <LogEntry>
-                              <LogReportKey>Memory size</LogReportKey>
-                              <LogEntryMessage>
-                                <Show when={invocation.report?.size}>
-                                  {(size) => {
-                                    const formattedSize = formatBytes(
-                                      size() * 1024 * 1024
-                                    );
-                                    return `${formattedSize.value}${formattedSize.unit}`;
-                                  }}
-                                </Show>
-                              </LogEntryMessage>
-                            </LogEntry>
-                            <Show when={invocation.report?.xray}>
-                              <LogEntry>
-                                <LogReportKey>X-Ray ID</LogReportKey>
-                                <LogEntryMessage>
-                                  {invocation.report?.xray}
-                                </LogEntryMessage>
-                              </LogEntry>
-                            </Show>
-                          </Match>
-                        </Switch>
-                      </LogEntries>
-                    </LogDetail>
-                  </Show>
-                </LogContainer>
-              );
-            }}
+            {(invocation) => (
+              <InvocationRow
+                onSavePayload={() => {
+                  invokeControl.savePayload(
+                    structuredClone(unwrap(invocation.event)),
+                  );
+                }}
+                invocation={invocation}
+                local={mode() === "live"}
+                function={resource()!}
+              />
+            )}
           </For>
           <Show when={mode() === "search"}>
             <Switch>
@@ -1001,7 +558,7 @@ export function Logs() {
                       Scanning
                       {activeSearch()?.timeStart
                         ? ` from ${formatSinceTime(
-                            activeSearch()?.timeStart || ""
+                            activeSearch()?.timeStart || "",
                           )}`
                         : ""}
                       &hellip;
@@ -1019,7 +576,7 @@ export function Logs() {
                       const i = invocations();
                       console.log(
                         "scanning from",
-                        i[i.length - 1].start.toISOString()
+                        i[i.length - 1].start.toISOString(),
                       );
                       createSearch(i[i.length - 1]!.start.getTime());
                     }}
@@ -1040,7 +597,7 @@ export function Logs() {
             },
             {
               replace: true,
-            }
+            },
           );
           clearLogStore(logGroupKey());
           createSearch(start.getTime(), end.getTime());

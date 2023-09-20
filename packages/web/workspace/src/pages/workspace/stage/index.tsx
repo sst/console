@@ -32,6 +32,9 @@ import {
   useHeaderContext,
 } from "../header";
 import { Row, SplitOptions, SplitOptionsOption, TabTitle } from "$/ui";
+import { useLocale } from "@kobalte/core";
+import { useLocalContext } from "$/providers/local";
+import { Local } from "./local";
 
 export function Stage() {
   const bar = useCommandBar();
@@ -104,6 +107,11 @@ export function Inner() {
               Issues
             </TabTitle>
           </Link>
+          <Show when={ctx.connected}>
+            <Link href="local">
+              <TabTitle>Local</TabTitle>
+            </Link>
+          </Show>
         </Row>
         <Show when={header.children}>{header.children}</Show>
       </PageHeader>
@@ -112,6 +120,7 @@ export function Inner() {
           <Route path="resources" component={Resources} />
           <Route path="resources/logs/:resourceID/*" component={Logs} />
           <Route path="issues/*" component={Issues} />
+          <Route path="local/*" component={Local} />
           <Route path="*" element={<Navigate href="resources" />} />
         </Routes>
       </div>

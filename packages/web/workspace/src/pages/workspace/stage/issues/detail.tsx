@@ -22,7 +22,7 @@ import { StackTrace } from "../logs/error";
 import { useWorkspace } from "../../context";
 import { bus } from "$/providers/bus";
 import { LogStore, clearLogStore } from "$/data/log";
-import { LogEntry, LogEntryTime, LogEntryMessage } from "../logs";
+import { Log, LogTime, LogMessage } from "$/common/invocation";
 import { fromPairs, sumBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 import { useResourcesContext } from "../context";
@@ -125,14 +125,14 @@ export function Detail() {
           authorization: rep().auth,
           "x-sst-workspace": issue()!.workspaceID,
         },
-      }
+      },
     ).then((x) => x.json());
     clearLogStore(issue()!.id);
     bus.emit("log", result);
   });
 
   const invocation = createMemo(() =>
-    Object.values(LogStore[issue()?.id] || {}).at(0)
+    Object.values(LogStore[issue()?.id] || {}).at(0),
   );
 
   const name = createMemo(() => issue()?.pointer?.logGroup.split("/").at(-1));
@@ -142,9 +142,9 @@ export function Detail() {
       .flatMap((x) =>
         name() && x.type === "Function" && x.metadata.arn.endsWith(name()!)
           ? [x]
-          : []
+          : [],
       )
-      .at(0)
+      .at(0),
   );
 
   const min = DateTime.now()
@@ -153,18 +153,18 @@ export function Detail() {
     .toSQL({ includeOffset: false })!;
   const counts = IssueCountStore.watch.scan(
     rep,
-    (item) => item.group === issue()?.group && item.hour > min
+    (item) => item.group === issue()?.group && item.hour > min,
   );
   const histogram = createMemo(() => {
     const hours = fromPairs(
       counts().map((item) => [
         parseTime(item.hour).toSQL({ includeOffset: false })!,
         item.count,
-      ])
+      ]),
     );
     return Interval.fromDateTimes(
       DateTime.now().toUTC().startOf("hour").minus({ hours: 23 }),
-      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 })
+      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 }),
     )
       .splitBy({ hours: 1 })
       .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
@@ -227,12 +227,12 @@ export function Detail() {
                 >
                   <For each={invocation()?.logs || []}>
                     {(entry, i) => (
-                      <LogEntry>
-                        <LogEntryTime>
+                      <Log>
+                        <LogTime>
                           {entry.timestamp.toLocaleTimeString()}
-                        </LogEntryTime>
-                        <LogEntryMessage>{entry.message}</LogEntryMessage>
-                      </LogEntry>
+                        </LogTime>
+                        <LogMessage>{entry.message}</LogMessage>
+                      </Log>
                     )}
                   </For>
                 </Show>
@@ -312,7 +312,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeSeen).toLocaleString(
-                  DateTime.DATETIME_FULL
+                  DateTime.DATETIME_FULL,
                 )}
                 color="secondary"
               >
@@ -325,7 +325,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeCreated).toLocaleString(
-                  DateTime.DATETIME_FULL
+                  DateTime.DATETIME_FULL,
                 )}
                 color="secondary"
               >

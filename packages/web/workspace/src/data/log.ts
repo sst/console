@@ -5,20 +5,22 @@ import { createStore, produce } from "solid-js/store";
 
 export const [LogStore, setLogStore] = createStore<
   Record<string, Invocation[]>
->({});
+>({
+  all: [],
+});
 
 export function clearLogStore(input: string) {
-  invocations.delete(input);
   invocations.delete(input);
   setLogStore(
     produce((state) => {
       state[input] = [];
-    })
+    }),
   );
 }
 
 export interface Invocation {
   id: string;
+  group: string;
   cold: boolean;
   event?: any;
   response?: any;
@@ -80,11 +82,13 @@ bus.on("log", (data) => {
             const invocation: Invocation = {
               id: event.requestID,
               start: new Date(event.timestamp),
+              group: event.group,
               errors: [],
               cold: event.cold,
               logs: pending,
             };
             const index = group.push(invocation);
+            state.all.push(invocation);
             let all = invocations.get(event.group);
             if (!all) invocations.set(event.group, (all = new Map()));
             all.set(event.requestID, index - 1);
@@ -145,10 +149,10 @@ bus.on("log", (data) => {
         invocation.logs = pipe(
           invocation.logs,
           uniqBy((l) => l.id),
-          sortBy((l) => l.timestamp)
+          sortBy((l) => l.timestamp),
         );
       }
-    })
+    }),
   );
   // console.log(track);
 });
@@ -170,7 +174,7 @@ bus.on("function.invoked", (e) => {
       const invocation = group.find((i) => i.id === e.requestID);
       if (!invocation) return;
       invocation.event = e.event;
-    })
+    }),
   );
 });
 
@@ -204,7 +208,7 @@ bus.on("function.success", (e) => {
       const invocation = group.find((i) => i.id === e.requestID);
       if (!invocation) return;
       invocation.response = e.body;
-    })
+    }),
   );
 });
 
@@ -231,6 +235,6 @@ bus.on("function.error", (e) => {
           raw: t,
         })),
       });
-    })
+    }),
   );
 });
