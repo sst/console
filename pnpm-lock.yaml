@@ -21,8 +21,8 @@ importers:
         specifier: 10.2.69
         version: 10.2.69
       sst:
-        specifier: 2.25.1
-        version: 2.25.1
+        specifier: 0.0.0-20230919233603
+        version: 0.0.0-20230919233603
       turbo:
         specifier: ^1.10.13
         version: 1.10.13
@@ -127,8 +127,8 @@ importers:
         specifier: 0.19.13
         version: 0.19.13
       sst:
-        specifier: 2.25.1
-        version: 2.25.1
+        specifier: 0.0.0-20230919233603
+        version: 0.0.0-20230919233603
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -203,8 +203,8 @@ importers:
         specifier: ^18.16.0
         version: 18.17.15
       sst:
-        specifier: 2.25.1
-        version: 2.25.1
+        specifier: 0.0.0-20230919233603
+        version: 0.0.0-20230919233603
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -218,8 +218,8 @@ importers:
         specifier: ^3.3.0
         version: 3.4.3
       sst:
-        specifier: 2.25.1
-        version: 2.25.1
+        specifier: 0.0.0-20230919233603
+        version: 0.0.0-20230919233603
       tsx:
         specifier: ^3.12.7
         version: 3.12.8
@@ -304,8 +304,8 @@ importers:
         specifier: ^1.3.0
         version: 1.4.3(vite@3.2.7)
       sst:
-        specifier: 2.25.1
-        version: 2.25.1
+        specifier: 0.0.0-20230919233603
+        version: 0.0.0-20230919233603
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -7303,8 +7303,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.25.1:
-    resolution: {integrity: sha512-1YV1afra67XYyc/PIuWoMnNkmcZnIRd9ri9OBqEVmDXcbrgSJbC4eHQ9I+GzK2cOsfagObLW/X4uLjVmQm93pA==}
+  /sst@0.0.0-20230919233603:
+    resolution: {integrity: sha512-vg4bZ9rXyolDfn55j3lIec6vPmTS8ZX2Qtv5SU5WuFmeSPrEwwVtZyGVyUf5641So3PO0ODjmGS61cDkCETQ8Q==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

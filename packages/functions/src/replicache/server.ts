@@ -6,7 +6,7 @@ import { AWS } from "@console/core/aws";
 import { z } from "zod";
 import { Workspace } from "@console/core/workspace";
 import { Lambda } from "@console/core/lambda";
-import { assertActor, provideActor, useWorkspace } from "@console/core/actor";
+import { assertActor, withActor, useWorkspace } from "@console/core/actor";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
 import { and, db, eq } from "@console/core/drizzle";
@@ -93,16 +93,19 @@ export const server = new Server()
   .mutation("workspace_create", Workspace.create.schema, async (input) => {
     const actor = assertActor("account");
     const workspace = await Workspace.create(input);
-    provideActor({
-      type: "system",
-      properties: {
-        workspaceID: workspace,
+    await withActor(
+      {
+        type: "system",
+        properties: {
+          workspaceID: workspace,
+        },
       },
-    });
-    await User.create({
-      email: actor.properties.email,
-      first: true,
-    });
+      () =>
+        User.create({
+          email: actor.properties.email,
+          first: true,
+        }),
+    );
   })
   .expose("user_create", User.create)
   .expose("user_remove", User.remove)

@@ -1,4 +1,4 @@
-import { Context } from "sst/context";
+import { Context } from "sst/context/context2.js";
 import { z } from "zod";
 
 export const PublicActor = z.object({
@@ -44,7 +44,7 @@ export type Actor = z.infer<typeof Actor>;
 const ActorContext = Context.create<Actor>("actor");
 
 export const useActor = ActorContext.use;
-export const provideActor = ActorContext.provide;
+export const withActor = ActorContext.with;
 
 export function assertActor<T extends Actor["type"]>(type: T) {
   const actor = useActor();

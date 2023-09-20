@@ -1,4 +1,4 @@
-import { assertActor, provideActor } from "@console/core/actor";
+import { assertActor, withActor } from "@console/core/actor";
 import { Config } from "sst/node/config";
 import { Session } from "sst/node/future/auth";
 import { db } from "@console/core/drizzle";
@@ -13,24 +13,25 @@ export async function handler(evt: any) {
   const workspaces = [] as string[];
   for (const token of tokens) {
     const session = Session.verify(token);
-    provideActor(session as any);
-    const account = assertActor("account");
-    const rows = await db
-      .select({
-        workspaceID: user.workspaceID,
-      })
-      .from(user)
-      .where(eq(user.email, account.properties.email))
-      .execute();
+    await withActor(session as any, async () => {
+      const account = assertActor("account");
+      const rows = await db
+        .select({
+          workspaceID: user.workspaceID,
+        })
+        .from(user)
+        .where(eq(user.email, account.properties.email))
+        .execute();
 
-    await db
-      .update(user)
-      .set({
-        timeSeen: DateTime.now().toSQL({ includeOffset: false }),
-      })
-      .where(eq(user.email, account.properties.email))
-      .execute();
-    workspaces.push(...rows.map((r) => r.workspaceID));
+      await db
+        .update(user)
+        .set({
+          timeSeen: DateTime.now().toSQL({ includeOffset: false }),
+        })
+        .where(eq(user.email, account.properties.email))
+        .execute();
+      workspaces.push(...rows.map((r) => r.workspaceID));
+    });
   }
   console.log("workspaces", workspaces);
   const policy = {

@@ -12,7 +12,6 @@ import {
 import { cuid, timestamps, workspaceID } from "../util/sql";
 import { Actor } from "../actor";
 import { StackFrame } from "../log";
-import { bigserial } from "drizzle-orm/pg-core";
 
 export const issue = mysqlTable(
   "issue",
@@ -49,7 +48,7 @@ export const issue = mysqlTable(
     primary: primaryKey(table.workspaceID, table.id),
     group: unique("group").on(table.workspaceID, table.stageID, table.group),
     updated: index("updated").on(table.workspaceID, table.timeUpdated),
-  })
+  }),
 );
 
 export const issueSubscriber = mysqlTable(
@@ -65,9 +64,9 @@ export const issueSubscriber = mysqlTable(
     unique: unique("unique").on(
       table.workspaceID,
       table.stageID,
-      table.functionID
+      table.functionID,
     ),
-  })
+  }),
 );
 
 export const issueCount = mysqlTable(
@@ -88,7 +87,7 @@ export const issueCount = mysqlTable(
       table.workspaceID,
       table.stageID,
       table.group,
-      table.hour
+      table.hour,
     ),
-  })
+  }),
 );

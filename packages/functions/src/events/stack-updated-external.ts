@@ -1,4 +1,4 @@
-import { provideActor } from "@console/core/actor";
+import { withActor } from "@console/core/actor";
 import { App, Stage } from "@console/core/app";
 import { app, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
@@ -6,7 +6,6 @@ import { db } from "@console/core/drizzle";
 import {
   createTransaction,
   createTransactionEffect,
-  useTransaction,
 } from "@console/core/util/transaction";
 import { and, eq } from "drizzle-orm";
 
@@ -66,38 +65,40 @@ export const handler = async (evt: Payload) => {
     console.log("matches", rows);
 
     for (const row of rows) {
-      await createTransaction(async () => {
-        provideActor({
+      await withActor(
+        {
           type: "system",
           properties: {
             workspaceID: row.workspaceID,
           },
-        });
+        },
+        () =>
+          createTransaction(async () => {
+            if (row.stageID) {
+              console.log("creating effect");
+              await createTransactionEffect(() =>
+                Stage.Events.Updated.publish({
+                  stageID: row.stageID!,
+                }),
+              );
+              return;
+            }
 
-        if (row.stageID) {
-          console.log("creating effect");
-          await createTransactionEffect(() =>
-            Stage.Events.Updated.publish({
-              stageID: row.stageID!,
-            }),
-          );
-          return;
-        }
+            let appID = row.appID;
+            if (!appID) {
+              appID = await App.create({
+                name: appName!,
+              });
+            }
 
-        let appID = row.appID;
-        if (!appID) {
-          appID = await App.create({
-            name: appName!,
-          });
-        }
-
-        await App.Stage.connect({
-          appID,
-          region,
-          name: stageName!,
-          awsAccountID: row.id,
-        });
-      });
+            await App.Stage.connect({
+              appID,
+              region,
+              name: stageName!,
+              awsAccountID: row.id,
+            });
+          }),
+      );
       console.log("done", row);
     }
   }

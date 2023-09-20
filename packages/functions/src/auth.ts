@@ -1,10 +1,10 @@
 import { AuthHandler, CodeAdapter, GithubAdapter } from "sst/node/future/auth";
 import { Config } from "sst/node/config";
 import { Account } from "@console/core/account";
-import { provideActor } from "@console/core/actor";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import Botpoison from "@botpoison/node";
 import { sessions } from "./sessions";
+import { withActor } from "@console/core/actor";
 
 const ses = new SESv2Client({});
 
@@ -19,59 +19,63 @@ export const handler = AuthHandler({
     }),
     email: CodeAdapter({
       async onCodeRequest(code, claims) {
-        provideActor({
-          type: "public",
-          properties: {},
-        });
-        console.log("sending email to", claims);
-        console.log("Code", code);
+        return withActor(
+          {
+            type: "public",
+            properties: {},
+          },
+          async () => {
+            console.log("sending email to", claims);
+            console.log("Code", code);
 
-        if (!process.env.IS_LOCAL) {
-          const botpoison = new Botpoison({
-            secretKey: Config.BOTPOISON_SECRET_KEY,
-          });
-          const { ok } = await botpoison.verify(claims.challenge);
-          if (!ok)
+            if (!process.env.IS_LOCAL) {
+              const botpoison = new Botpoison({
+                secretKey: Config.BOTPOISON_SECRET_KEY,
+              });
+              const { ok } = await botpoison.verify(claims.challenge);
+              if (!ok)
+                return {
+                  statusCode: 302,
+                  headers: {
+                    Location: process.env.AUTH_FRONTEND_URL + "/auth/email",
+                  },
+                };
+              console.log("challenge verified");
+              const email = new SendEmailCommand({
+                Destination: {
+                  ToAddresses: [claims.email],
+                },
+                FromEmailAddress: `SST <mail@${process.env.EMAIL_DOMAIN}>`,
+                Content: {
+                  Simple: {
+                    Body: {
+                      Html: {
+                        Data: `Your pin code is <strong>${code}</strong>`,
+                      },
+                      Text: {
+                        Data: `Your pin code is ${code}`,
+                      },
+                    },
+                    Subject: {
+                      Data: "SST Console Pin Code: " + code,
+                    },
+                  },
+                },
+              });
+              await ses.send(email);
+            }
+
             return {
               statusCode: 302,
               headers: {
-                Location: process.env.AUTH_FRONTEND_URL + "/auth/email",
+                Location:
+                  process.env.AUTH_FRONTEND_URL +
+                  "/auth/code?" +
+                  new URLSearchParams({ email: claims.email }).toString(),
               },
             };
-          console.log("challenge verified");
-          const email = new SendEmailCommand({
-            Destination: {
-              ToAddresses: [claims.email],
-            },
-            FromEmailAddress: `SST <mail@${process.env.EMAIL_DOMAIN}>`,
-            Content: {
-              Simple: {
-                Body: {
-                  Html: {
-                    Data: `Your pin code is <strong>${code}</strong>`,
-                  },
-                  Text: {
-                    Data: `Your pin code is ${code}`,
-                  },
-                },
-                Subject: {
-                  Data: "SST Console Pin Code: " + code,
-                },
-              },
-            },
-          });
-          await ses.send(email);
-        }
-
-        return {
-          statusCode: 302,
-          headers: {
-            Location:
-              process.env.AUTH_FRONTEND_URL +
-              "/auth/code?" +
-              new URLSearchParams({ email: claims.email }).toString(),
           },
-        };
+        );
       },
       async onCodeInvalid() {
         return {
@@ -84,10 +88,8 @@ export const handler = AuthHandler({
       },
     }),
   },
-  async clients() {
-    return {
-      solid: "",
-    };
+  async allowClient(clientID, redirect) {
+    return true;
   },
   onSuccess: async (input, response) => {
     let email: string | undefined;

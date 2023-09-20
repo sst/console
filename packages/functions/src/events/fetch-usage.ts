@@ -4,18 +4,15 @@ import {
   GetMetricDataCommand,
 } from "@aws-sdk/client-cloudwatch";
 import { EventHandler } from "sst/node/event-bus";
-import { provideActor, useWorkspace } from "@console/core/actor";
+import { withActor, useWorkspace } from "@console/core/actor";
 import { Stage } from "@console/core/app/stage";
 import { Resource } from "@console/core/app/resource";
 import { Billing } from "@console/core/billing";
 import { stripe } from "@console/core/stripe";
 import { Workspace } from "@console/core/workspace";
 
-export const handler = EventHandler(
-  Stage.Events.UsageRequested,
-  async (evt) => {
-    provideActor(evt.metadata.actor);
-
+export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
+  withActor(evt.metadata.actor, async () => {
     const { stageID, daysOffset } = evt.properties;
     const startDate = DateTime.now()
       .toUTC()
@@ -32,7 +29,7 @@ export const handler = EventHandler(
     const functions = allFunctions.filter(
       // TODO fix type error
       // @ts-expect-error
-      (fn) => fn.type === "Function" && !fn.enrichment.live
+      (fn) => fn.type === "Function" && !fn.enrichment.live,
     );
     console.log(`> functions ${functions.length}/${allFunctions.length}`);
     if (!functions.length) return;
@@ -91,11 +88,11 @@ export const handler = EventHandler(
             })),
             StartTime: startDate.toJSDate(),
             EndTime: endDate.toJSDate(),
-          })
+          }),
         );
         return (metrics.MetricDataResults || [])?.reduce(
           (acc, result) => acc + (result.Values?.[0] ?? 0),
-          0
+          0,
         );
       };
 
@@ -122,7 +119,7 @@ export const handler = EventHandler(
       });
       const monthlyInvocations = monthlyUsages.reduce(
         (acc, usage) => acc + usage.invocations,
-        0
+        0,
       );
       console.log("> monthly invocations", monthlyInvocations);
 
@@ -142,13 +139,13 @@ export const handler = EventHandler(
           },
           {
             idempotencyKey: `${workspaceID}-${stageID}-${timestamp}`,
-          }
+          },
         );
       } catch (e: any) {
         console.log(e.message);
         if (
           e.message.startsWith(
-            "Cannot create the usage record with this timestamp"
+            "Cannot create the usage record with this timestamp",
           )
         ) {
           return;
@@ -156,5 +153,5 @@ export const handler = EventHandler(
         throw e;
       }
     }
-  }
+  }),
 );

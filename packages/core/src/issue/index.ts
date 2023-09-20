@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { provideActor, useActor, useWorkspace } from "../actor";
+import { withActor, useActor, useWorkspace } from "../actor";
 import { AWS } from "../aws";
 import { awsAccount } from "../aws/aws.sql";
 import { and, db, eq, inArray, isNull, not, sql } from "../drizzle";
@@ -196,96 +196,108 @@ export const extract = zod(
     console.log("rate limit", count);
 
     if (count > 10_000) {
-      for (const workspace of workspaces) {
-        provideActor({
-          type: "system",
-          properties: {
-            workspaceID: workspace.workspaceID,
-          },
-        });
-        await Events.RateLimited.publish({ stageID: workspace.stageID });
-      }
+      await Promise.all(
+        workspaces.map((workspace) =>
+          withActor(
+            {
+              type: "system",
+              properties: {
+                workspaceID: workspace.workspaceID,
+              },
+            },
+            () => Events.RateLimited.publish({ stageID: workspace.stageID }),
+          ),
+        ),
+      );
+
       return;
     }
 
-    provideActor({
-      type: "system",
-      properties: {
-        workspaceID: workspaces[0]!.workspaceID,
+    const errors = await withActor(
+      {
+        type: "system",
+        properties: {
+          workspaceID: workspaces[0]!.workspaceID,
+        },
       },
-    });
+      async () => {
+        const credentials = await AWS.assumeRole(accountID!);
+        if (!credentials) return;
 
-    const credentials = await AWS.assumeRole(accountID!);
-    if (!credentials) return;
+        const functionArn =
+          `arn:aws:lambda:${region}:${accountID}:function:` +
+          input.logGroup.split("/").pop();
 
-    const functionArn =
-      `arn:aws:lambda:${region}:${accountID}:function:` +
-      input.logGroup.split("/").pop();
+        console.log("functionArn", functionArn);
 
-    console.log("functionArn", functionArn);
+        const sourcemapCache = Log.createSourcemapCache({
+          functionArn,
+          config: {
+            credentials: credentials,
+            stageID: workspaces[0]!.stageID,
+            app: appName!,
+            stage: stageName!,
+            awsAccountID: accountID!,
+            region: region!,
+          },
+        });
+        const errors = Promise.allSettled(
+          input.logEvents.map(async (event) => {
+            const splits = event.message.split(`\t`).map((x) => x.trim());
+            const extracted = Log.extractError(splits);
+            if (!extracted) {
+              console.log("no error found", splits);
+              return;
+            }
+            const err = await Log.applySourcemap(
+              sourcemapCache,
+              event.timestamp,
+              extracted,
+            );
 
-    const sourcemapCache = Log.createSourcemapCache({
-      functionArn,
-      config: {
-        credentials: credentials,
-        stageID: workspaces[0]!.stageID,
-        app: appName!,
-        stage: stageName!,
-        awsAccountID: accountID!,
-        region: region!,
-      },
-    });
-    const errors = await Promise.allSettled(
-      input.logEvents.map(async (event) => {
-        const splits = event.message.split(`\t`).map((x) => x.trim());
-        const extracted = Log.extractError(splits);
-        if (!extracted) {
-          console.log("no error found", splits);
-          return;
-        }
-        const err = await Log.applySourcemap(
-          sourcemapCache,
-          event.timestamp,
-          extracted,
+            if (!err.error || !err.message) {
+              console.log("error was undefined for some reason", event);
+              return;
+            }
+
+            const group = (() => {
+              const frames = err.stack
+                .map((x) => {
+                  if (x.file) {
+                    return x.context?.[3] || x.file;
+                  }
+
+                  return x.raw!;
+                })
+                .map((x) => x.trim());
+              const parts = [err.error, frames[0]].filter(Boolean).join("\n");
+
+              return createHash("sha256").update(parts).digest("hex");
+            })();
+
+            return {
+              group,
+              timestamp: event.timestamp,
+              err,
+            };
+          }),
+        ).then(
+          createPipe(
+            flatMap((item) => {
+              return item.status === "fulfilled" && item.value
+                ? [item.value]
+                : [];
+            }),
+            groupBy((item) => item.group),
+            values,
+          ),
         );
-
-        if (!err.error || !err.message) {
-          console.log("error was undefined for some reason", event);
-          return;
-        }
-
-        const group = (() => {
-          const frames = err.stack
-            .map((x) => {
-              if (x.file) {
-                return x.context?.[3] || x.file;
-              }
-
-              return x.raw!;
-            })
-            .map((x) => x.trim());
-          const parts = [err.error, frames[0]].filter(Boolean).join("\n");
-
-          return createHash("sha256").update(parts).digest("hex");
-        })();
-
-        return {
-          group,
-          timestamp: event.timestamp,
-          err,
-        };
-      }),
-    ).then(
-      createPipe(
-        flatMap((item) => {
-          return item.status === "fulfilled" && item.value ? [item.value] : [];
-        }),
-        groupBy((item) => item.group),
-        values,
-      ),
+        sourcemapCache.destroy();
+        return errors;
+      },
     );
 
-    if (errors.length === 0) {
+    if (!errors || errors.length === 0) {
       await db
         .insert(issueCount)
         .values(
@@ -370,18 +382,6 @@ export const extract = zod(
         })
         .execute();
     });
-
-    sourcemapCache.destroy();
-
-    for (const row of workspaces) {
-      provideActor({
-        type: "system",
-        properties: {
-          workspaceID: row.workspaceID,
-        },
-      });
-      // await Replicache.poke();
-    }
   },
 );
 

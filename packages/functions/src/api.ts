@@ -1,39 +1,48 @@
-import { Actor, provideActor, useActor } from "@console/core/actor";
+import { Actor, withActor, useActor } from "@console/core/actor";
 import { useHeader, Response } from "sst/node/api";
 import { User } from "@console/core/user";
 import { sessions } from "./sessions";
 
-export const useApiAuth = async (): Promise<Actor> => {
-  const session = sessions.use();
+export const withApiAuth = <T>(cb: () => Promise<T>) => {
+  return function () {
+    const session = sessions.use();
 
-  const workspaceID = useHeader("x-sst-workspace");
-  if (!workspaceID) return session;
-  console.log("auth workspace", workspaceID);
-  if (session.type !== "account")
-    throw new Response({
-      statusCode: 401,
-      body: "Unauthorized",
-    });
+    const workspaceID = useHeader("x-sst-workspace");
+    console.log("auth workspace", workspaceID);
+    if (!workspaceID) return withActor(session, cb);
+    if (session.type !== "account")
+      throw new Response({
+        statusCode: 401,
+        body: "Unauthorized",
+      });
 
-  provideActor({
-    type: "system",
-    properties: {
-      workspaceID,
-    },
-  });
-  const user = await User.fromEmail(session.properties.email);
-  if (!user || user.timeDeleted)
-    throw new Response({
-      statusCode: 401,
-      body: "Unauthorized",
-    });
-
-  return {
-    type: "user",
-    properties: {
-      workspaceID,
-      userID: user.id,
-    },
+    const result = withActor(
+      {
+        type: "system",
+        properties: {
+          workspaceID,
+        },
+      },
+      async () => {
+        const user = await User.fromEmail(session.properties.email);
+        if (!user || user.timeDeleted)
+          throw new Response({
+            statusCode: 401,
+            body: "Unauthorized",
+          });
+        return withActor(
+          {
+            type: "user",
+            properties: {
+              workspaceID,
+              userID: user.id,
+            },
+          },
+          cb,
+        );
+      },
+    );
+    return result;
   };
 };
 

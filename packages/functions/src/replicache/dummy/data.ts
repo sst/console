@@ -3,24 +3,27 @@ import { Resource } from "@console/core/app/resource";
 import { AWS } from "@console/core/aws";
 import { Issue } from "@console/core/issue";
 import { User } from "@console/core/user";
+import { Warning } from "@console/core/warning";
 import { Workspace } from "@console/core/workspace";
 import { DateTime } from "luxon";
 
 export type DummyConfig = "base" | "example";
+
 type DummyData =
-  | (Workspace.Info & { type: "workspace" })
-  | (Omit<AWS.Account.Info, "workspaceID"> & { type: "awsAccount" })
-  | (Omit<User.Info, "workspaceID"> & { type: "user" })
-  | (Omit<Resource.Info, "workspaceID"> & { type: "resource" })
-  | (Omit<Stage.Info, "workspaceID"> & { type: "stage" })
-  | (Omit<App.Info, "workspaceID"> & { type: "app" })
-  | (Omit<Issue.Info, "workspaceID"> & { type: "issue" });
+  | (Workspace.Info & { _type: "workspace" })
+  | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" })
+  | (Omit<User.Info, "workspaceID"> & { _type: "user" })
+  | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
+  | (Omit<Stage.Info, "workspaceID"> & { _type: "stage" })
+  | (Omit<App.Info, "workspaceID"> & { _type: "app" })
+  | (Omit<Issue.Info, "workspaceID"> & { _type: "issue" })
+  | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" });
 
 export function* generateData(
   config: DummyConfig,
 ): Generator<DummyData, void, unknown> {
   yield {
-    type: "workspace",
+    _type: "workspace",
     id: "dummy-workspace",
     slug: "dummy-workspace",
     timeCreated: DateTime.now().toSQL()!,
@@ -32,7 +35,7 @@ export function* generateData(
   };
 
   yield {
-    type: "user",
+    _type: "user",
     timeCreated: DateTime.now().toSQL()!,
     timeUpdated: DateTime.now().toSQL()!,
     timeSeen: DateTime.now().toSQL()!,
@@ -42,7 +45,7 @@ export function* generateData(
   };
 
   yield {
-    type: "awsAccount",
+    _type: "awsAccount",
     id: "syncing",
     accountID: "123456789012",
     timeUpdated: DateTime.now().toSQL()!,
@@ -52,15 +55,18 @@ export function* generateData(
     timeFailed: null,
   };
 
-  if (config === "example")
-    yield {
-      type: "awsAccount",
-      id: "failed",
-      accountID: "123456789012",
-      timeUpdated: DateTime.now().toSQL()!,
-      timeCreated: DateTime.now().toSQL()!,
-      timeDiscovered: DateTime.now().toSQL()!,
-      timeFailed: DateTime.now().toSQL()!,
-      timeDeleted: null,
-    };
+  if (config === "example") yield* example();
+}
+
+export function* example(): Generator<DummyData, void, unknown> {
+  yield {
+    _type: "awsAccount",
+    id: "failed",
+    accountID: "123456789012",
+    timeUpdated: DateTime.now().toSQL()!,
+    timeCreated: DateTime.now().toSQL()!,
+    timeDiscovered: DateTime.now().toSQL()!,
+    timeFailed: DateTime.now().toSQL()!,
+    timeDeleted: null,
+  };
 }
