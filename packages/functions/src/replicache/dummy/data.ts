@@ -7,6 +7,10 @@ import { Warning } from "@console/core/warning";
 import { Workspace } from "@console/core/workspace";
 import { DateTime } from "luxon";
 
+const DEFAULT_APP_ID = "1";
+const FAILED_ACCOUNT_ID = "123456789015";
+const SYNCING_ACCOUNT_ID = "123456789016";
+
 export type DummyConfig = "empty" | "overview:default";
 
 type DummyData =
@@ -18,6 +22,37 @@ type DummyData =
   | (Omit<App.Info, "workspaceID"> & { _type: "app" })
   | (Omit<Issue.Info, "workspaceID"> & { _type: "issue" })
   | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" });
+
+function* stage(
+  id: string,
+  name: string,
+  appID: string,
+  region: string,
+  awsAccountID: string
+): Generator<DummyData, void, unknown> {
+  yield {
+    _type: "stage",
+    id,
+    name,
+    appID,
+    region,
+    awsAccountID,
+    timeCreated: DateTime.now().toSQL()!,
+    timeDeleted: DateTime.now().toSQL()!,
+    timeUpdated: DateTime.now().toSQL()!,
+  };
+}
+
+function* app(id: string, name: string): Generator<DummyData, void, unknown> {
+  yield {
+    _type: "app",
+    id,
+    name,
+    timeCreated: DateTime.now().toSQL()!,
+    timeDeleted: DateTime.now().toSQL()!,
+    timeUpdated: DateTime.now().toSQL()!,
+  };
+}
 
 export function* generateData(
   config: DummyConfig
@@ -44,24 +79,14 @@ export function* generateData(
     timeDeleted: null,
   };
 
-  yield {
-    _type: "awsAccount",
-    id: "syncing",
-    accountID: "123456789012",
-    timeUpdated: DateTime.now().toSQL()!,
-    timeCreated: DateTime.now().toSQL()!,
-    timeDiscovered: null,
-    timeDeleted: null,
-    timeFailed: null,
-  };
-
-  if (config === "overview:default") yield* example();
+  if (config === "overview:default") yield* overviewDefault();
 }
 
-export function* example(): Generator<DummyData, void, unknown> {
+export function* overviewDefault(): Generator<DummyData, void, unknown> {
+  yield* app(DEFAULT_APP_ID, "my-sst-app");
   yield {
     _type: "awsAccount",
-    id: "syncing",
+    id: "syncing-empty",
     accountID: "123456789012",
     timeUpdated: DateTime.now().toSQL()!,
     timeCreated: DateTime.now().toSQL()!,
@@ -71,7 +96,7 @@ export function* example(): Generator<DummyData, void, unknown> {
   };
   yield {
     _type: "awsAccount",
-    id: "failed",
+    id: "failed-empty",
     accountID: "123456789013",
     timeUpdated: DateTime.now().toSQL()!,
     timeCreated: DateTime.now().toSQL()!,
@@ -79,4 +104,48 @@ export function* example(): Generator<DummyData, void, unknown> {
     timeFailed: DateTime.now().toSQL()!,
     timeDeleted: null,
   };
+  yield {
+    _type: "awsAccount",
+    id: "empty",
+    accountID: "123456789014",
+    timeUpdated: DateTime.now().toSQL()!,
+    timeCreated: DateTime.now().toSQL()!,
+    timeDiscovered: DateTime.now().toSQL()!,
+    timeFailed: null,
+    timeDeleted: null,
+  };
+  yield {
+    _type: "awsAccount",
+    id: "failed",
+    accountID: FAILED_ACCOUNT_ID,
+    timeUpdated: DateTime.now().toSQL()!,
+    timeCreated: DateTime.now().toSQL()!,
+    timeDiscovered: DateTime.now().toSQL()!,
+    timeFailed: DateTime.now().toSQL()!,
+    timeDeleted: null,
+  };
+  yield* stage(
+    "stage-account-failed",
+    "pr-123",
+    DEFAULT_APP_ID,
+    "ap-southeast-1",
+    FAILED_ACCOUNT_ID
+  );
+  yield {
+    _type: "awsAccount",
+    id: "syncing",
+    accountID: SYNCING_ACCOUNT_ID,
+    timeUpdated: DateTime.now().toSQL()!,
+    timeCreated: DateTime.now().toSQL()!,
+    timeDiscovered: null,
+    timeDeleted: null,
+    timeFailed: null,
+  };
+  yield* stage(
+    "stage-account-syncing",
+    "dev",
+    DEFAULT_APP_ID,
+    "us-east-1",
+    SYNCING_ACCOUNT_ID
+  );
 }
