@@ -418,7 +418,7 @@ type ParsedError = {
 };
 export function extractError(tabs: string[]): ParsedError | undefined {
   // Timeout
-  const timeout = tabs.find((l) => l.startsWith("Task timed out after"));
+  const timeout = tabs.find((l) => l.includes("Task timed out after"));
   if (timeout) {
     return {
       error: "LambdaTimeoutError",
