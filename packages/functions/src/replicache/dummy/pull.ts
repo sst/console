@@ -48,7 +48,7 @@ export const handler = ApiHandler(async () => {
         value: true,
       });
 
-      const data = generateData(useQueryParam("dummy") || "base");
+      const data = generateData(useQueryParam("dummy") || "empty");
       for (const item of data) {
         const { _type, ...value } = item;
         if (actor.type === "account" && !["workspace", "user"].includes(_type))
@@ -67,6 +67,6 @@ export const handler = ApiHandler(async () => {
         },
         body: JSON.stringify(response),
       };
-    },
+    }
   );
 });
