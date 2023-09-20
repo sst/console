@@ -96,12 +96,6 @@ const FrameContextNumber = styled("div", {
 });
 
 export function ErrorItem(props: { error: Invocation["errors"][number] }) {
-  const [expand, setExpand] = createSignal(
-    Math.max(
-      props.error.stack.findIndex((frame) => frame.important),
-      0
-    )
-  );
   return (
     <>
       <Title>
@@ -122,16 +116,16 @@ export function ErrorItem(props: { error: Invocation["errors"][number] }) {
 }
 
 export function StackTrace(props: { stack: StackFrame[] }) {
-  const [expand, setExpand] = createSignal(
+  const first = createMemo(() =>
     Math.max(
       props.stack.findIndex((frame) => frame.important),
-      0
-    )
+      0,
+    ),
   );
   return (
     <For each={props.stack}>
       {(frame, index) => {
-        const expanded = createMemo(() => expand() === index());
+        const [expand, setExpand] = createSignal(Boolean(index() === first()));
         return (
           // If raw, remove empty lines
           <Show
@@ -145,13 +139,13 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                 dimmed={!frame.important && Boolean(frame.file)}
                 onClick={() => {
                   if (!frame.context) return;
-                  setExpand(index());
+                  setExpand((x) => !x);
                 }}
               >
                 <Show when={frame.context}>
                   <FrameExpand>
                     <Show
-                      when={expand() === index()}
+                      when={expand()}
                       fallback={<IconChevronRight width="12" height="12" />}
                     >
                       <IconChevronDown width="12" height="12" />
@@ -179,7 +173,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                         size="mono_sm"
                         color="primary"
                         leading="normal"
-                        weight={expand() === index() ? "semibold" : undefined}
+                        weight={expand() ? "semibold" : undefined}
                       >
                         {frame.fn!}
                       </Text>
@@ -193,10 +187,10 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                       leading="normal"
                       weight={
                         frame.fn
-                          ? expand() === index()
+                          ? expand()
                             ? "medium"
                             : undefined
-                          : expand() === index()
+                          : expand()
                           ? "semibold"
                           : undefined
                       }
@@ -226,7 +220,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                   </Show>
                 </FrameTitle>
               </FrameInfo>
-              <Show when={frame.context && expanded()}>
+              <Show when={frame.context && expand()}>
                 <FrameContext>
                   <For each={frame.context}>
                     {(line, index) => (
