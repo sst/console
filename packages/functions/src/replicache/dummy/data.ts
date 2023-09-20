@@ -7,7 +7,7 @@ import { Warning } from "@console/core/warning";
 import { Workspace } from "@console/core/workspace";
 import { DateTime } from "luxon";
 
-export type DummyConfig = "base" | "example";
+export type DummyConfig = "empty" | "overview:default";
 
 type DummyData =
   | (Workspace.Info & { _type: "workspace" })
@@ -20,7 +20,7 @@ type DummyData =
   | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" });
 
 export function* generateData(
-  config: DummyConfig,
+  config: DummyConfig
 ): Generator<DummyData, void, unknown> {
   yield {
     _type: "workspace",
@@ -55,14 +55,24 @@ export function* generateData(
     timeFailed: null,
   };
 
-  if (config === "example") yield* example();
+  if (config === "overview:default") yield* example();
 }
 
 export function* example(): Generator<DummyData, void, unknown> {
   yield {
     _type: "awsAccount",
-    id: "failed",
+    id: "syncing",
     accountID: "123456789012",
+    timeUpdated: DateTime.now().toSQL()!,
+    timeCreated: DateTime.now().toSQL()!,
+    timeDiscovered: null,
+    timeDeleted: null,
+    timeFailed: null,
+  };
+  yield {
+    _type: "awsAccount",
+    id: "failed",
+    accountID: "123456789013",
     timeUpdated: DateTime.now().toSQL()!,
     timeCreated: DateTime.now().toSQL()!,
     timeDiscovered: DateTime.now().toSQL()!,
