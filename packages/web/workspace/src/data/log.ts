@@ -20,7 +20,7 @@ export function clearLogStore(input: string) {
 
 export interface Invocation {
   id: string;
-  group: string;
+  group?: string;
   cold: boolean;
   event?: any;
   response?: any;

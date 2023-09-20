@@ -91,7 +91,7 @@ export function Local() {
               mixed
               local
               invocation={invocation}
-              function={functionsByGroup()[invocation.group]}
+              function={functionsByGroup()[invocation.group!]}
             />
           )}
         </For>
