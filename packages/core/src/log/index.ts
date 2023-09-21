@@ -393,6 +393,7 @@ export function createProcessor(input: {
           }
           return invocation;
         }),
+        filter((invocation) => Boolean(invocation.id)),
         sortBy((invocation) => order * invocation.start),
       );
       results = [];
