@@ -30,12 +30,25 @@ import type { Stage } from "@console/core/app";
 import type { Account } from "@console/core/aws/account";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createSignal,
+  createEffect,
+  createMemo,
+} from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
 import { sortBy } from "remeda";
 import { User } from "@console/core/user";
 import { useWorkspace } from "./context";
+
+const OVERFLOW_APPS_COUNT = 9;
+const OVERFLOW_APPS_DISPLAY = 6;
+const OVERFLOW_USERS_COUNT = 7;
+const OVERFLOW_USERS_DISPLAY = 5;
 
 const Root = styled("div", {
   base: {
@@ -79,7 +92,7 @@ const ManageWorkspaceIcon = styled("div", {
 const Col = styled("div", {
   base: {
     ...utility.stack(4),
-    width: "50%",
+    width: `calc(50% - ${theme.space[4]} / 2)`,
   },
 });
 
@@ -109,14 +122,6 @@ const CardError = styled("div", {
   },
 });
 
-const CardErrorIcon = styled("div", {
-  base: {
-    width: 16,
-    height: 16,
-    color: `hsla(${theme.color.base.red}, 100%)`,
-  },
-});
-
 const CardErrorCopy = styled(Text, {
   base: {
     fontSize: theme.font.size.sm,
@@ -124,7 +129,7 @@ const CardErrorCopy = styled(Text, {
   },
 });
 
-const CardLoading = styled("div", {
+const CardStatus = styled("div", {
   base: {
     ...utility.row(2),
     alignItems: "center",
@@ -138,11 +143,28 @@ const CardLoading = styled("div", {
   },
 });
 
-const CardLoadingIcon = styled("div", {
+const CardStatusIcon = styled("div", {
   base: {
     width: 16,
     height: 16,
-    color: theme.color.icon.dimmed,
+  },
+  variants: {
+    status: {
+      error: {
+        color: `hsla(${theme.color.base.red}, 100%)`,
+      },
+      info: {
+        color: theme.color.icon.dimmed,
+      },
+    },
+  },
+});
+
+const CardOverflowRow = styled("div", {
+  base: {
+    textAlign: "center",
+    padding: `${theme.space[3]} ${theme.space[4]}`,
+    borderTop: `1px solid ${theme.color.divider.base}`,
   },
 });
 
@@ -151,7 +173,7 @@ function sortUsers(users: UserInfo[], selfEmail: string): UserInfo[] {
     users,
     (user) => (user.email === selfEmail ? 0 : 1), // Your own user
     (user) => (!user.timeSeen ? 0 : 1), // Invites
-    (user) => user.email.length, // Sort by length
+    (user) => user.email.length // Sort by length
   );
 }
 
@@ -189,16 +211,30 @@ export function Overview() {
   const invocations = createMemo(() =>
     usages()
       .map((usage) => usage.invocations)
-      .reduce((a, b) => a + b, 0),
+      .reduce((a, b) => a + b, 0)
   );
   const nav = useNavigate();
   const auth = useAuth();
   const storage = useStorage();
   const selfEmail = createMemo(() => auth[storage.value.account].token.email);
 
+  const sortedUsers = createMemo(() =>
+    sortUsers(
+      users().filter((u) => !u.timeDeleted),
+      selfEmail()
+    )
+  );
+  const usersCapped = createMemo(() =>
+    sortedUsers().length > OVERFLOW_USERS_COUNT
+      ? sortedUsers().slice(0, OVERFLOW_USERS_DISPLAY)
+      : sortedUsers()
+  );
+  const [showUsersOverflow, setUsersShowOverflow] = createSignal(false);
+
   createEffect(() => {
     console.log("users", users());
     const all = accounts();
+    console.log("accounts", accounts());
     if (all && !all.length && !query.force)
       nav("account", {
         replace: true,
@@ -207,14 +243,19 @@ export function Overview() {
 
   function renderAccount(account: Account.Info) {
     const apps = AppStore.watch.scan(rep);
-    const local = useLocalContext();
     const children = createMemo(() => {
       return sortBy(
         stages().filter((stage) => stage.awsAccountID === account.id),
         (c) => apps().find((app) => app.id === c.appID)?.name || "",
-        (c) => c.name,
+        (c) => c.name
       );
     });
+    const childrenCapped = createMemo(() =>
+      children().length > OVERFLOW_APPS_COUNT
+        ? children().slice(0, OVERFLOW_APPS_DISPLAY)
+        : children()
+    );
+    const [showOverflow, setShowOverflow] = createSignal(false);
     return (
       <Card>
         <CardHeader>
@@ -229,25 +270,53 @@ export function Overview() {
         </CardHeader>
         <div>
           <Show when={account.timeFailed}>
-            <CardError>
-              <CardErrorIcon>
+            <CardStatus>
+              <CardStatusIcon status="error">
                 <IconExclamationTriangle />
-              </CardErrorIcon>
+              </CardStatusIcon>
               <Link href="account">
                 <CardErrorCopy>Reconnect account</CardErrorCopy>
               </Link>
-            </CardError>
+            </CardStatus>
           </Show>
-          <For each={children()}>{(stage) => <StageCard stage={stage} />}</For>
+          <For each={showOverflow() ? children() : childrenCapped()}>
+            {(stage) => <StageCard stage={stage} />}
+          </For>
           <Show when={!account.timeDiscovered && !account.timeFailed}>
-            <CardLoading>
-              <CardLoadingIcon>
+            <CardStatus>
+              <CardStatusIcon status="info">
                 <IconArrowPathSpin />
-              </CardLoadingIcon>
+              </CardStatusIcon>
               <Text size="sm" color="dimmed">
                 Searching for SST apps&hellip;
               </Text>
-            </CardLoading>
+            </CardStatus>
+          </Show>
+          <Show
+            when={
+              children().length === 0 &&
+              !account.timeFailed &&
+              account.timeDiscovered
+            }
+          >
+            <CardStatus>
+              <CardStatusIcon status="info">
+                <IconExclamationTriangle />
+              </CardStatusIcon>
+              <Text size="sm" color="dimmed">
+                No SST v2 apps found
+              </Text>
+            </CardStatus>
+          </Show>
+          <Show when={children().length > OVERFLOW_APPS_COUNT}>
+            <CardOverflowRow>
+              <TextButton onClick={() => setShowOverflow(!showOverflow())}>
+                <Show when={showOverflow()} fallback="Show all">
+                  Hide
+                </Show>{" "}
+                apps
+              </TextButton>
+            </CardOverflowRow>
           </Show>
         </div>
       </Card>
@@ -358,14 +427,37 @@ export function Overview() {
                             Team:
                           </Text>
                           <Text code size="mono_sm" color="dimmed">
-                            {users().filter((u) => !u.timeDeleted).length}
+                            {sortedUsers().length}
                           </Text>
                         </Row>
                       </CardHeader>
                       <div>
-                        <For each={sortUsers(users(), selfEmail())}>
+                        <For
+                          each={
+                            showUsersOverflow() ? sortedUsers() : usersCapped()
+                          }
+                        >
                           {(user) => <UserCard id={user.id} />}
                         </For>
+                        <Show
+                          when={sortedUsers().length > OVERFLOW_USERS_COUNT}
+                        >
+                          <CardOverflowRow>
+                            <TextButton
+                              onClick={() =>
+                                setUsersShowOverflow(!showUsersOverflow())
+                              }
+                            >
+                              <Show
+                                when={showUsersOverflow()}
+                                fallback="Show all"
+                              >
+                                Hide
+                              </Show>{" "}
+                              users
+                            </TextButton>
+                          </CardOverflowRow>
+                        </Show>
                       </div>
                     </Card>
                     <For each={cols()[1]}>{renderAccount}</For>
@@ -483,49 +575,47 @@ function UserCard(props: UserCardProps) {
   const auth = useAuth();
   const storage = useStorage();
   const self = createMemo(
-    () => auth[storage.value.account].token.email === user()?.email,
+    () => auth[storage.value.account].token.email === user()?.email
   );
 
   return (
-    <Show when={!user()?.timeDeleted}>
-      <UserRoot>
-        <Row space="2" vertical="center">
-          <AvatarInitialsIcon
-            type="user"
-            text={user()?.email || ""}
-            style={{ width: "24px", height: "24px" }}
-          />
-          <Text line size="base" leading="normal">
-            {user()?.email}
-          </Text>
-        </Row>
-        <Row space="2" horizontal="center" style={{ flex: "0 0 auto" }}>
-          <Show when={!user()?.timeSeen}>
-            <Tag level="tip">Invited</Tag>
-          </Show>
-          <Show when={!self()}>
-            <Dropdown
-              size="sm"
-              icon={<IconEllipsisVertical width={18} height={18} />}
-            >
-              <Dropdown.Item
-                onSelect={() => {
-                  if (
-                    !confirm(
-                      "Are you sure you want to remove them from the workspace?",
-                    )
+    <UserRoot>
+      <Row space="2" vertical="center">
+        <AvatarInitialsIcon
+          type="user"
+          text={user()?.email || ""}
+          style={{ width: "24px", height: "24px" }}
+        />
+        <Text line size="base" leading="normal">
+          {user()?.email}
+        </Text>
+      </Row>
+      <Row space="2" horizontal="center" style={{ flex: "0 0 auto" }}>
+        <Show when={!user()?.timeSeen}>
+          <Tag level="tip">Invited</Tag>
+        </Show>
+        <Show when={!self()}>
+          <Dropdown
+            size="sm"
+            icon={<IconEllipsisVertical width={18} height={18} />}
+          >
+            <Dropdown.Item
+              onSelect={() => {
+                if (
+                  !confirm(
+                    "Are you sure you want to remove them from the workspace?"
                   )
-                    return;
+                )
+                  return;
 
-                  rep().mutate.user_remove(props.id);
-                }}
-              >
-                Remove
-              </Dropdown.Item>
-            </Dropdown>
-          </Show>
-        </Row>
-      </UserRoot>
-    </Show>
+                rep().mutate.user_remove(props.id);
+              }}
+            >
+              Remove
+            </Dropdown.Item>
+          </Dropdown>
+        </Show>
+      </Row>
+    </UserRoot>
   );
 }
