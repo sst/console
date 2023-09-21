@@ -23,14 +23,14 @@ type DummyData =
   | (Omit<Issue.Info, "workspaceID"> & { _type: "issue" })
   | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" });
 
-function* stage(
+function stage(
   id: string,
   name: string,
   appID: string,
   region: string,
-  awsAccountID: string
-): Generator<DummyData, void, unknown> {
-  yield {
+  awsAccountID: string,
+): DummyData {
+  return {
     _type: "stage",
     id,
     name,
@@ -43,8 +43,8 @@ function* stage(
   };
 }
 
-function* app(id: string, name: string): Generator<DummyData, void, unknown> {
-  yield {
+function app(id: string, name: string): DummyData {
+  return {
     _type: "app",
     id,
     name,
@@ -55,7 +55,7 @@ function* app(id: string, name: string): Generator<DummyData, void, unknown> {
 }
 
 export function* generateData(
-  config: DummyConfig
+  config: DummyConfig,
 ): Generator<DummyData, void, unknown> {
   yield {
     _type: "workspace",
@@ -83,7 +83,7 @@ export function* generateData(
 }
 
 export function* overviewDefault(): Generator<DummyData, void, unknown> {
-  yield* app(DEFAULT_APP_ID, "my-sst-app");
+  yield app(DEFAULT_APP_ID, "my-sst-app");
   yield {
     _type: "awsAccount",
     id: "syncing-empty",
@@ -124,12 +124,12 @@ export function* overviewDefault(): Generator<DummyData, void, unknown> {
     timeFailed: DateTime.now().toSQL()!,
     timeDeleted: null,
   };
-  yield* stage(
+  yield stage(
     "stage-account-failed",
     "pr-123",
     DEFAULT_APP_ID,
     "ap-southeast-1",
-    FAILED_ACCOUNT_ID
+    "failed",
   );
   yield {
     _type: "awsAccount",
@@ -141,11 +141,11 @@ export function* overviewDefault(): Generator<DummyData, void, unknown> {
     timeDeleted: null,
     timeFailed: null,
   };
-  yield* stage(
+  yield stage(
     "stage-account-syncing",
     "dev",
     DEFAULT_APP_ID,
     "us-east-1",
-    SYNCING_ACCOUNT_ID
+    SYNCING_ACCOUNT_ID,
   );
 }
