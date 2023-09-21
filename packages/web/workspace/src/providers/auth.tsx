@@ -3,9 +3,13 @@ import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
 import { Navigate } from "@solidjs/router";
 import { Replicache } from "replicache";
-import { ParentProps, createContext, useContext } from "solid-js";
+import { ParentProps, createContext, createMemo, useContext } from "solid-js";
 import { useStorage } from "./account";
 import { useDummy } from "./dummy";
+import { createScan, useReplicache } from "./replicache";
+import { UserStore } from "$/data/user";
+import { User } from "@console/core/user";
+import { DateTime } from "luxon";
 
 export * as AuthStore from "./auth";
 
@@ -112,4 +116,27 @@ export function useAuth() {
   const result = useContext(AuthContext);
   if (!result) throw new Error("useAuth must be used within a AuthProvider");
   return result;
+}
+
+export function useCurrentUser() {
+  const rep = useReplicache();
+  const dummy = useDummy();
+  const auth = useAuth();
+  const storage = useStorage();
+  const users = createScan<User.Info>(() => `/user`, rep);
+  return createMemo<User.Info>(() =>
+    dummy()
+      ? {
+          id: "dummy",
+          email: "dummy@example.com",
+          workspaceID: "",
+          timeSeen: null,
+          timeDeleted: null,
+          timeCreated: DateTime.now().toSQL()!,
+          timeUpdated: DateTime.now().toSQL()!,
+        }
+      : users().find(
+          (u) => u.email === auth[storage.value.account].token.email,
+        )!,
+  );
 }

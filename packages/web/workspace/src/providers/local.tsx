@@ -32,6 +32,7 @@ export function LocalProvider(props: ParentProps) {
         {props.children}
       </localContext.Provider>
     );
+
   let reconnect: NodeJS.Timer;
   let ws: WebSocket;
   const [store, setStore] = createSignal<State>({});
