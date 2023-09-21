@@ -127,7 +127,7 @@ export function Detail() {
       },
     ).then((x) => x.json());
     invocations.clear(issue()!.id);
-    bus.emit("log", result);
+    bus.emit("invocation", result);
   });
 
   const invocation = createMemo(() => invocations.forSource(issue()?.id).at(0));

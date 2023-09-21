@@ -498,7 +498,7 @@ export const expand = zod(
     }
 
     cw.destroy();
-    return processor.flush();
+    return processor.flushInvocations();
   },
 );
 
