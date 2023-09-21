@@ -10,6 +10,7 @@ import {
 } from "solid-js";
 import { bus } from "./bus";
 import { createStore, produce } from "solid-js/store";
+import { useDummy } from "./dummy";
 
 interface State {
   app?: string;
@@ -21,7 +22,15 @@ const localContext = createContext<Accessor<State>>(() => ({}));
 export function LocalProvider(props: ParentProps) {
   let reconnect: NodeJS.Timer;
   let ws: WebSocket;
-  const [store, setStore] = createSignal<State>({});
+  const dummy = useDummy();
+  const [store, setStore] = createSignal<State>(
+    dummy()
+      ? {
+          app: "dummy",
+          stage: "dummy",
+        }
+      : {},
+  );
 
   bus.on("log.cleared", (properties) => {
     ws.send(
@@ -39,6 +48,7 @@ export function LocalProvider(props: ParentProps) {
 
   let ssl = true;
   onMount(() => {
+    if (dummy()) return;
     function connect() {
       console.log("trying to connect to local ssl:", ssl);
       ssl = !ssl;
