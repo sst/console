@@ -51,7 +51,7 @@ export function LocalProvider(props: ParentProps) {
         reconnect = setTimeout(connect, 3000);
       };
       ws.onerror = () => {
-        ws.close();
+        reconnect = setTimeout(connect, 3000);
       };
     }
     connect();
