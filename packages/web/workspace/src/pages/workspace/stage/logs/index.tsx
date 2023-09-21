@@ -590,7 +590,7 @@ export function Logs() {
               replace: true,
             },
           );
-          clearLogStore(logGroupKey());
+          invocationsContext.clear(logGroupKey());
           createSearch(start.getTime(), end.getTime());
         }}
         control={(control) => (rangeControl = control)}
