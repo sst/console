@@ -365,9 +365,9 @@ export function Overview() {
                 —{" "}
               </Text>
               <Text size="sm" on="surface" color="secondary">
-                View Lambda function errors in real-time.{" "}
+                View local logs from all your functions in one tab.{" "}
                 <a
-                  href="https://docs.sst.dev/advanced/console-updates#issues"
+                  href="https://docs.sst.dev/advanced/console-updates#local-logs-tab"
                   target="_blank"
                 >
                   Learn more
