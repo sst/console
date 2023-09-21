@@ -20,17 +20,21 @@ interface State {
 const localContext = createContext<Accessor<State>>(() => ({}));
 
 export function LocalProvider(props: ParentProps) {
-  let reconnect: NodeJS.Timer;
-  let ws: WebSocket;
   const dummy = useDummy();
-  const [store, setStore] = createSignal<State>(
-    dummy()
-      ? {
+  if (dummy())
+    return (
+      <localContext.Provider
+        value={() => ({
           app: "dummy",
           stage: "dummy",
-        }
-      : {},
-  );
+        })}
+      >
+        {props.children}
+      </localContext.Provider>
+    );
+  let reconnect: NodeJS.Timer;
+  let ws: WebSocket;
+  const [store, setStore] = createSignal<State>({});
 
   bus.on("log.cleared", (properties) => {
     ws.send(
