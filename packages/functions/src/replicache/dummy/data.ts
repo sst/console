@@ -130,7 +130,7 @@ export function* generateData(
   yield user("invited-dummy@example.com", false, false);
   yield user("deleted-dummy@example.com", true, true);
 
-  if (configMap["overview"] === "all") {
+  if (configMap["overview"] === "full") {
     for (let i = 0; i < 30; i++) {
       yield user(`dummy${i}@example.com`, true, false);
     }
