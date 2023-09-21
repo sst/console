@@ -18,7 +18,7 @@ const ACCOUNT_ID_SYNCING = "syncing";
 export type DummyConfig =
   | "empty"
   | "overview:base"
-  | "overview:base;usage:overage;subscription:active;users:large;stages:large";
+  | "overview:all;usage:overage;subscription:active";
 
 type DummyData =
   | (Workspace.Info & { _type: "workspace" })
@@ -130,20 +130,35 @@ export function* generateData(
   yield user("invited-dummy@example.com", false, false);
   yield user("deleted-dummy@example.com", true, true);
 
-  if (configMap["users"] === "large") {
+  if (configMap["overview"] === "all") {
     for (let i = 0; i < 30; i++) {
       yield user(`dummy${i}@example.com`, true, false);
     }
   }
 
-  if (configMap["overview"] === "base") yield* overviewBase();
+  if (configMap["overview"]) yield* overviewBase();
 
-  if (configMap["stages"] === "large") yield* stagesLarge();
+  if (configMap["overview"] === "full") yield* overviewFull();
 
   if (configMap["usage"] === "overage") yield* usageOverage();
 }
 
 function* overviewBase(): Generator<DummyData, void, unknown> {
+  yield account(ACCOUNT_ID_LONG, "123456789018", false, true);
+  yield app(
+    APP_ID_LONG,
+    "my-sst-app-that-has-a-really-long-name-that-should-be-truncated"
+  );
+  yield stage("stage-long-id-1", APP_ID_LONG, "us-east-1", ACCOUNT_ID_LONG);
+  yield stage(
+    "this-stage-name-is-really-long-and-needs-to-be-truncated",
+    APP_ID_LONG,
+    "ap-southeast-1",
+    ACCOUNT_ID_LONG
+  );
+}
+
+function* overviewFull(): Generator<DummyData, void, unknown> {
   yield app(APP_ID, "my-sst-app");
   yield account("syncing-empty", "123456789012", false, false);
   yield account("failed-empty", "123456789013", true, true);
@@ -158,18 +173,10 @@ function* overviewBase(): Generator<DummyData, void, unknown> {
   yield account(ACCOUNT_ID_SYNCING, "123456789016", false, false);
   yield stage("stage-account-syncing", APP_ID, "us-east-1", ACCOUNT_ID_SYNCING);
   yield account(ACCOUNT_ID, "123456789017", false, true);
-  yield account(ACCOUNT_ID_LONG, "123456789018", false, true);
-  yield app(
-    APP_ID_LONG,
-    "my-sst-app-that-has-a-really-long-name-that-should-be-truncated"
-  );
-  yield stage("stage-long-id-1", APP_ID_LONG, "us-east-1", ACCOUNT_ID_LONG);
-  yield stage(
-    "this-stage-name-is-really-long-and-needs-to-be-truncated",
-    APP_ID,
-    "ap-southeast-1",
-    ACCOUNT_ID_LONG
-  );
+
+  for (let i = 0; i < 30; i++) {
+    yield stage(`stage-${i}`, APP_ID, "us-east-1", ACCOUNT_ID);
+  }
 }
 
 function* usageOverage(): Generator<DummyData, void, unknown> {
@@ -195,8 +202,4 @@ function* usageOverage(): Generator<DummyData, void, unknown> {
   };
 }
 
-function* stagesLarge(): Generator<DummyData, void, unknown> {
-  for (let i = 0; i < 30; i++) {
-    yield stage(`stage-${i}`, APP_ID, "us-east-1", ACCOUNT_ID);
-  }
-}
+function* stagesLarge(): Generator<DummyData, void, unknown> {}
