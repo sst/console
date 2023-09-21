@@ -40,6 +40,7 @@ export function LocalProvider(props: ParentProps) {
   let ssl = true;
   onMount(() => {
     function connect() {
+      console.log("trying to connect to local ssl:", ssl);
       ssl = !ssl;
       clearTimeout(reconnect);
       ws = new WebSocket(`ws${ssl ? "s" : ""}://localhost:13557/socket`);

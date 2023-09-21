@@ -5,23 +5,13 @@ import {
   LogLoadingIndicatorIcon,
   LogLoadingIndicatorIconSvg,
 } from "../logs";
-import { theme, Text, utility, IconButton, Row, TextButton } from "$/ui";
-import { LogStore, clearLogStore } from "$/data/log";
+import { theme, Text, utility, Row, TextButton } from "$/ui";
 import { InvocationRow } from "$/common/invocation";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { useResourcesContext, useStageContext } from "../context";
-import { createPipe, filter, flatMap, flatten, fromPairs, pipe } from "remeda";
-import { bus } from "$/providers/bus";
-import { Dropdown } from "$/ui/dropdown";
-import {
-  IconArrowsUpDown,
-  IconArrowDown,
-  IconBoltSolid,
-  IconArrowPathRoundedSquare,
-} from "$/ui/icons";
-import { stage } from "@console/core/app/app.sql";
-import { search } from "@console/core/log/search";
-import { useLocalContext } from "$/providers/local";
+import { filter, flatMap, pipe } from "remeda";
+import { IconArrowsUpDown, IconBoltSolid } from "$/ui/icons";
+import { useInvocations } from "$/providers/invocation";
 
 const Root = styled("div", {
   base: {
@@ -32,7 +22,7 @@ const Root = styled("div", {
 
 export function Local() {
   const resources = useResourcesContext();
-  const functionsByGroup = createMemo(() =>
+  const functionByLocalID = createMemo(() =>
     Object.fromEntries(
       pipe(
         resources(),
@@ -46,7 +36,10 @@ export function Local() {
     ),
   );
   const ctx = useStageContext();
-  const invocations = createMemo(() => LogStore.all.slice().reverse());
+  const invocationsContext = useInvocations();
+  const invocations = createMemo(() =>
+    invocationsContext.forSource("local").slice().reverse(),
+  );
   return (
     <Root>
       <LogList>
@@ -77,7 +70,7 @@ export function Local() {
             <Show when={invocations().length > 0}>
               <TextButton
                 onClick={() => {
-                  clearLogStore("all");
+                  invocationsContext.clear("local");
                 }}
               >
                 Clear
@@ -91,7 +84,7 @@ export function Local() {
               mixed
               local
               invocation={invocation}
-              function={functionsByGroup()[invocation.group!]}
+              function={functionByLocalID()[invocation.source!]}
             />
           )}
         </For>

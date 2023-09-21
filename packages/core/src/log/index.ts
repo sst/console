@@ -30,6 +30,30 @@ export type StackFrame = {
   important?: boolean;
 };
 
+export interface Invocation {
+  id: string;
+  source: string;
+  cold: boolean;
+  input?: any;
+  output?: any;
+  errors: (ParsedError & { id: string })[];
+  report?: {
+    duration: number;
+    size: number;
+    memory: number;
+    xray: string;
+  };
+  start: number;
+  end?: number;
+  logs: Log[];
+}
+
+interface Log {
+  id: string;
+  timestamp: number;
+  message: string;
+}
+
 export type LogEvent = LogEventBase &
   (
     | {
@@ -239,7 +263,10 @@ export function createProcessor(input: {
           type: "message",
           timestamp: input.timestamp,
           group,
-          requestID: stream.requestID || "",
+          requestID:
+            tabs[1]?.length === 36
+              ? generateInvocationID(tabs[1]!)
+              : stream.requestID || "",
           id: input.id,
           level: "INFO",
           message: formatLogMessage(tabs),
@@ -305,6 +332,69 @@ export function createProcessor(input: {
         ),
         sortBy((evts) => order * (evts[0]?.timestamp || 0)),
       ).flat();
+      results = [];
+      return events;
+    },
+    flushInvocations(order = 1) {
+      const events = pipe(
+        results,
+        groupBy((evt) => evt.requestID),
+        values,
+        map((evts) => {
+          // @ts-expect-error
+          const invocation: Invocation = {
+            source: group,
+            logs: [],
+            errors: [],
+          };
+          const sorted = sortBy(
+            evts,
+            (evt) => {
+              return {
+                start: 0,
+                message: 1,
+                error: 2,
+                end: 3,
+                report: 4,
+              }[evt.type];
+            },
+            (evt) => evt.timestamp,
+          );
+          for (const evt of sorted) {
+            switch (evt.type) {
+              case "start":
+                invocation.start = evt.timestamp;
+                invocation.id = evt.requestID;
+                invocation.cold = evt.cold;
+                break;
+              case "message":
+                invocation.logs.push({
+                  id: evt.id,
+                  message: evt.message,
+                  timestamp: evt.timestamp,
+                });
+                break;
+              case "error":
+                invocation.errors.push({
+                  error: evt.error,
+                  message: evt.message,
+                  id: evt.id,
+                  stack: evt.stack,
+                });
+                break;
+              case "report":
+                invocation.report = {
+                  size: evt.size,
+                  xray: evt.xray,
+                  memory: evt.memory,
+                  duration: evt.duration,
+                };
+            }
+          }
+          return invocation;
+        }),
+        sortBy((invocation) => order * invocation.start),
+      );
       results = [];
       return events;
     },
@@ -411,7 +501,7 @@ export const expand = zod(
   },
 );
 
-type ParsedError = {
+export type ParsedError = {
   error: string;
   message: string;
   stack: StackFrame[];

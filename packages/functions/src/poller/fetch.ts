@@ -169,11 +169,14 @@ export function handler(input: State) {
         });
       }
 
-      const data = processor.flush();
-      const url = await Storage.putEphemeral(JSON.stringify(data), {
-        ContentType: "application/json",
-      });
-      await Realtime.publish("log.url", url);
+      const data = processor.flushInvocations();
+      if (data.length) {
+        console.log("sending", data.length, "invocations");
+        const url = await Storage.putEphemeral(JSON.stringify(data), {
+          ContentType: "application/json",
+        });
+        await Realtime.publish("invocation.url", url);
+      }
 
       return {
         attempts: attempts + 1,

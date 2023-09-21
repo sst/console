@@ -1,11 +1,8 @@
-import { LogStore, clearLogStore } from "$/data/log";
 import { LogPollerStore } from "$/data/log-poller";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Tag, Text, TabTitle } from "$/ui";
+import { Tag, Text } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import {
-  IconBookmark,
-  IconArrowPath,
   IconArrowDown,
   IconBoltSolid,
   IconArrowsUpDown,
@@ -14,7 +11,7 @@ import {
   IconEllipsisVertical,
   IconArrowPathRoundedSquare,
 } from "$/ui/icons";
-import { IconCaretRight, IconArrowPathSpin } from "$/ui/icons/custom";
+import { IconArrowPathSpin } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
 import { TextButton, IconButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
@@ -27,19 +24,16 @@ import {
   Match,
   Show,
   Switch,
-  batch,
   createEffect,
   createMemo,
-  createSignal,
   mergeProps,
-  onMount,
   untrack,
 } from "solid-js";
 import { useResourcesContext, useStageContext } from "../context";
 import { Resource } from "@console/core/app/resource";
-import { DUMMY_FUNC, DUMMY_LOGS } from "./logs-dummy";
+import { DUMMY_FUNC } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
-import { formatBytes, formatDuration, formatSinceTime } from "$/common/format";
+import { formatSinceTime } from "$/common/format";
 import { bus } from "$/providers/bus";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { Invoke, InvokeControl } from "./invoke";
@@ -47,8 +41,8 @@ import { createId } from "@paralleldrive/cuid2";
 import { LogSearchStore } from "$/data/log-search";
 import { DialogRange, DialogRangeControl } from "./dialog-range";
 import { ResourceIcon } from "$/common/resource-icon";
-import { ErrorItem, ErrorList } from "./error";
 import { InvocationRow } from "$/common/invocation";
+import { useInvocations } from "$/providers/invocation";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -200,6 +194,7 @@ const LogMoreIndicatorIcon = styled("div", {
 export function Logs() {
   const stage = useStageContext();
   const nav = useNavigate();
+  const invocationsContext = useInvocations();
   const bar = useCommandBar();
   const params = useParams();
   const [query, setQuery] = useSearchParams<{
@@ -305,7 +300,7 @@ export function Logs() {
   });
 
   const invocations = createMemo(() => {
-    const result = query.dummy ? DUMMY_LOGS : LogStore[logGroupKey()] || [];
+    const result = invocationsContext.forSource(logGroupKey()) || [];
     if (mode() === "tail" || mode() === "live") return result.slice().reverse();
     return result;
   });
@@ -327,7 +322,7 @@ export function Logs() {
       },
     );
     if (val === "tail") return;
-    clearLogStore(logGroupKey());
+    invocationsContext.clear(logGroupKey());
     setSearch("id", createId());
     if (val === "recent") {
       createSearch();
@@ -437,7 +432,7 @@ export function Logs() {
               <Show when={mode() !== "search" && invocations().length > 0}>
                 <TextButton
                   onClick={() => {
-                    clearLogStore(logGroupKey());
+                    invocationsContext.clear(logGroupKey());
                     bus.emit("log.cleared", {
                       functionID: logGroup(),
                     });
@@ -534,7 +529,7 @@ export function Logs() {
               <InvocationRow
                 onSavePayload={() => {
                   invokeControl.savePayload(
-                    structuredClone(unwrap(invocation.event)),
+                    structuredClone(unwrap(invocation.input)),
                   );
                 }}
                 invocation={invocation}
@@ -574,11 +569,7 @@ export function Logs() {
                   <TextButton
                     onClick={() => {
                       const i = invocations();
-                      console.log(
-                        "scanning from",
-                        i[i.length - 1].start.toISOString(),
-                      );
-                      createSearch(i[i.length - 1]!.start.getTime());
+                      createSearch(i[i.length - 1]!.start);
                     }}
                   >
                     Load more logs

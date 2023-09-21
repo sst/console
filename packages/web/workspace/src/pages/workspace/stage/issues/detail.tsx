@@ -2,7 +2,7 @@ import { theme } from "$/ui/theme";
 import { Link, useParams } from "@solidjs/router";
 import { styled } from "@macaron-css/solid";
 import { Show, Switch, Match, createMemo, createEffect, For } from "solid-js";
-import { IconCheck, IconNoSymbol, IconViewfinderCircle } from "$/ui/icons";
+import { IconCheck, IconNoSymbol } from "$/ui/icons";
 import { IconArrowPathSpin } from "$/ui/icons/custom";
 import {
   utility,
@@ -14,18 +14,16 @@ import {
   Histogram,
   ButtonGroup,
 } from "$/ui";
-import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
+import { formatSinceTime, parseTime } from "$/common/format";
 import { IssueCountStore, IssueStore } from "$/data/issue";
 import { useReplicache } from "$/providers/replicache";
 import { DateTime, Interval } from "luxon";
 import { StackTrace } from "../logs/error";
-import { useWorkspace } from "../../context";
 import { bus } from "$/providers/bus";
-import { LogStore, clearLogStore } from "$/data/log";
 import { Log, LogTime, LogMessage } from "$/common/invocation";
-import { fromPairs, sumBy } from "remeda";
-import { WarningStore } from "$/data/warning";
+import { fromPairs } from "remeda";
 import { useResourcesContext } from "../context";
+import { useInvocations } from "$/providers/invocation";
 
 const Content = styled("div", {
   base: {
@@ -102,6 +100,7 @@ const FeedbackCopy = styled("span", {
 export function Detail() {
   const params = useParams();
   const rep = useReplicache();
+  const invocations = useInvocations();
   const issue = IssueStore.watch.get(rep, () => params.issueID);
 
   const status = createMemo(() => {
@@ -127,13 +126,11 @@ export function Detail() {
         },
       },
     ).then((x) => x.json());
-    clearLogStore(issue()!.id);
+    invocations.clear(issue()!.id);
     bus.emit("log", result);
   });
 
-  const invocation = createMemo(() =>
-    Object.values(LogStore[issue()?.id] || {}).at(0),
-  );
+  const invocation = createMemo(() => invocations.forSource(issue()?.id).at(0));
 
   const name = createMemo(() => issue()?.pointer?.logGroup.split("/").at(-1));
   const resources = useResourcesContext();
@@ -229,7 +226,7 @@ export function Detail() {
                     {(entry, i) => (
                       <Log>
                         <LogTime>
-                          {entry.timestamp.toLocaleTimeString()}
+                          {new Date(entry.timestamp).toLocaleTimeString()}
                         </LogTime>
                         <LogMessage>{entry.message}</LogMessage>
                       </Log>

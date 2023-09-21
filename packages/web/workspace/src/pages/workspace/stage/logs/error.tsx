@@ -1,7 +1,6 @@
-import { Invocation } from "$/data/log";
 import { utility, theme, Text, SpanSpacer } from "$/ui";
 import { IconChevronDown, IconChevronRight } from "$/ui/icons";
-import { StackFrame } from "@console/core/log";
+import { Invocation, StackFrame } from "@console/core/log";
 import { styled } from "@macaron-css/solid";
 import { For, Show, createMemo, createSignal } from "solid-js";
 
@@ -107,7 +106,7 @@ export function ErrorItem(props: { error: Invocation["errors"][number] }) {
           color="danger"
           leading="loose"
         >
-          {props.error.type}: {props.error.message}
+          {props.error.error}: {props.error.message}
         </Text>
       </Title>
       <StackTrace stack={props.error.stack} />

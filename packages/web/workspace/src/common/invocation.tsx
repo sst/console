@@ -1,5 +1,5 @@
 import { ErrorList, ErrorItem } from "$/pages/workspace/stage/logs/error";
-import { Row, TabTitle, Tag, TextButton, Text, theme, utility } from "$/ui";
+import { Row, TabTitle, Tag, TextButton, theme, utility } from "$/ui";
 import { IconBookmark, IconArrowPath } from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
 import {
@@ -14,10 +14,11 @@ import {
 } from "solid-js";
 import { unwrap } from "solid-js/store";
 import { formatDuration, formatBytes } from "./format";
-import { Invocation } from "$/data/log";
 import { styled } from "@macaron-css/solid";
 import { useReplicache } from "$/providers/replicache";
 import { Resource } from "@console/core/app/resource";
+import { Invocation } from "@console/core/log";
+import { Link } from "@solidjs/router";
 
 const shortDateOptions: Intl.DateTimeFormatOptions = {
   month: "short",
@@ -253,6 +254,13 @@ const LogReportKey = styled(LogTime, {
   },
 });
 
+const FunctionLink = styled(Link, {
+  base: {
+    cursor: "pointer",
+    fontSize: theme.font.size.sm,
+  },
+});
+
 export function InvocationRow(props: {
   invocation: Invocation;
   onSavePayload?: () => void;
@@ -346,7 +354,7 @@ export function InvocationRow(props: {
                   size="mono_sm"
                   onClick={() => setTab("request")}
                   state={
-                    !props.invocation.event!
+                    !props.invocation.input!
                       ? "disabled"
                       : tab() === "request"
                       ? "active"
@@ -359,7 +367,7 @@ export function InvocationRow(props: {
                   size="mono_sm"
                   onClick={() => setTab("response")}
                   state={
-                    !props.invocation.response
+                    !props.invocation.output
                       ? "disabled"
                       : tab() === "response"
                       ? "active"
@@ -379,8 +387,8 @@ export function InvocationRow(props: {
                 </TabTitle>
               </Show>
             </Row>
-            <Show when={props.invocation.event}>
-              <Row space="4">
+            <Show when={props.invocation.input}>
+              <Row space="4" vertical="center">
                 <Show when={props.onSavePayload}>
                   <TextButton
                     onClick={() => props.onSavePayload?.()}
@@ -390,6 +398,11 @@ export function InvocationRow(props: {
                     Save
                   </TextButton>
                 </Show>
+                <Show when={!props.onSavePayload}>
+                  <FunctionLink href={`../resources/logs/${props.function.id}`}>
+                    View Function
+                  </FunctionLink>
+                </Show>
                 <TextButton
                   on="surface"
                   completing={replaying()}
@@ -398,7 +411,7 @@ export function InvocationRow(props: {
                     setReplaying(true);
                     rep().mutate.function_invoke({
                       stageID: props.function.stageID,
-                      payload: structuredClone(unwrap(props.invocation.event)),
+                      payload: structuredClone(unwrap(props.invocation.input)),
                       functionARN: props.function.metadata.arn,
                     });
                     setTimeout(() => setReplaying(false), 2000);
@@ -429,7 +442,9 @@ export function InvocationRow(props: {
                 <For each={props.invocation.logs}>
                   {(entry) => (
                     <Log>
-                      <LogTime>{entry.timestamp.toLocaleTimeString()}</LogTime>
+                      <LogTime>
+                        {new Date(entry.timestamp).toLocaleTimeString()}
+                      </LogTime>
                       <LogMessage>{entry.message}</LogMessage>
                     </Log>
                   )}
@@ -438,14 +453,14 @@ export function InvocationRow(props: {
               <Match when={tab() === "request"}>
                 <Log>
                   <LogMessage>
-                    {JSON.stringify(props.invocation.event, null, 2)}
+                    {JSON.stringify(props.invocation.input, null, 2)}
                   </LogMessage>
                 </Log>
               </Match>
               <Match when={tab() === "response"}>
                 <Log>
                   <LogMessage>
-                    {JSON.stringify(props.invocation.response, null, 2)}
+                    {JSON.stringify(props.invocation.output, null, 2)}
                   </LogMessage>
                 </Log>
               </Match>

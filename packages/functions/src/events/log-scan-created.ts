@@ -106,15 +106,18 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                 index++;
               }
 
-              const data = processor.flush(-1);
-              const url = await Storage.putEphemeral(JSON.stringify(data), {
-                ContentType: "application/json",
-              });
-              await Realtime.publish("log.url", url);
+              const data = processor.flushInvocations(-1);
+              if (data.length) {
+                const url = await Storage.putEphemeral(JSON.stringify(data), {
+                  ContentType: "application/json",
+                });
+                await Realtime.publish("invocation.url", url);
+              }
 
               if (processor.invocations.size >= 50 || isFixed) {
                 return;
               }
+
               break;
             }
 

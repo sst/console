@@ -32,6 +32,7 @@ import { LocalProvider } from "./providers/local";
 import { useStorage } from "./providers/account";
 import { Fullscreen, Splash } from "./ui";
 import { DummyProvider } from "./providers/dummy";
+import { InvocationProvider } from "./providers/invocation";
 
 const Root = styled("div", {
   base: {
@@ -152,76 +153,81 @@ export const App: Component = () => {
                 <AuthProvider>
                   <RealtimeProvider />
                   <LocalProvider>
-                    <CommandBar>
-                      <GlobalCommands />
-                      <Routes>
-                        <Route path="debug" component={Debug} />
-                        <Route path="design" component={Design} />
-                        <Route path="connect" component={Connect} />
-                        <Route path="workspace" component={WorkspaceCreate} />
-                        <Route path=":workspaceSlug/*" component={Workspace} />
-                        <Route path="/auth/code" component={Code} />
-                        <Route
-                          path="*"
-                          component={() => {
-                            const auth = useAuth();
-                            let existing = storage.value.account;
-                            if (!existing || !auth[existing]) {
-                              existing = Object.keys(auth)[0];
-                              storage.set("account", existing);
-                            }
-                            const workspaces = createSubscription(
-                              WorkspaceStore.list,
-                              null,
-                              () => auth[existing!].replicache,
-                            );
+                    <InvocationProvider>
+                      <CommandBar>
+                        <GlobalCommands />
+                        <Routes>
+                          <Route path="debug" component={Debug} />
+                          <Route path="design" component={Design} />
+                          <Route path="connect" component={Connect} />
+                          <Route path="workspace" component={WorkspaceCreate} />
+                          <Route
+                            path=":workspaceSlug/*"
+                            component={Workspace}
+                          />
+                          <Route path="/auth/code" component={Code} />
+                          <Route
+                            path="*"
+                            component={() => {
+                              const auth = useAuth();
+                              let existing = storage.value.account;
+                              if (!existing || !auth[existing]) {
+                                existing = Object.keys(auth)[0];
+                                storage.set("account", existing);
+                              }
+                              const workspaces = createSubscription(
+                                WorkspaceStore.list,
+                                null,
+                                () => auth[existing!].replicache,
+                              );
 
-                            const init = createSubscription(
-                              () => (tx) => {
-                                return tx.get("/init");
-                              },
-                              false,
-                              () => auth[existing!].replicache,
-                            );
+                              const init = createSubscription(
+                                () => (tx) => {
+                                  return tx.get("/init");
+                                },
+                                false,
+                                () => auth[existing!].replicache,
+                              );
 
-                            createEffect(() =>
-                              console.log("workspaces", workspaces()),
-                            );
+                              createEffect(() =>
+                                console.log("workspaces", workspaces()),
+                              );
 
-                            return (
-                              <Switch>
-                                <Match
-                                  when={
-                                    workspaces() && workspaces()!.length > 0
-                                  }
-                                >
-                                  <Navigate
-                                    href={`/${
-                                      (
-                                        workspaces()!.find(
-                                          (w) =>
-                                            w.id === storage.value.workspace,
-                                        ) || workspaces()![0]
-                                      ).slug
-                                    }`}
-                                  />
-                                </Match>
-                                <Match
-                                  when={
-                                    init() &&
-                                    workspaces() &&
-                                    workspaces()!.length === 0
-                                  }
-                                >
-                                  <Navigate href={`/workspace`} />
-                                </Match>
-                                <Match when={true}>{/* <Splash /> */}</Match>
-                              </Switch>
-                            );
-                          }}
-                        />
-                      </Routes>
-                    </CommandBar>
+                              return (
+                                <Switch>
+                                  <Match
+                                    when={
+                                      workspaces() && workspaces()!.length > 0
+                                    }
+                                  >
+                                    <Navigate
+                                      href={`/${
+                                        (
+                                          workspaces()!.find(
+                                            (w) =>
+                                              w.id === storage.value.workspace,
+                                          ) || workspaces()![0]
+                                        ).slug
+                                      }`}
+                                    />
+                                  </Match>
+                                  <Match
+                                    when={
+                                      init() &&
+                                      workspaces() &&
+                                      workspaces()!.length === 0
+                                    }
+                                  >
+                                    <Navigate href={`/workspace`} />
+                                  </Match>
+                                  <Match when={true}>{/* <Splash /> */}</Match>
+                                </Switch>
+                              );
+                            }}
+                          />
+                        </Routes>
+                      </CommandBar>
+                    </InvocationProvider>
                   </LocalProvider>
                 </AuthProvider>
               </DummyProvider>
