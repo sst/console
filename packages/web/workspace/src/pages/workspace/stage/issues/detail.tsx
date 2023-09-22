@@ -195,9 +195,11 @@ export function Detail() {
               <Text label on="surface" size="mono_sm" color="dimmed">
                 Stack Trace
               </Text>
-              <StackTraceBackground>
-                <StackTrace stack={issue().stack || []} />
-              </StackTraceBackground>
+              <Show when={issue().stack?.length}>
+                <StackTraceBackground>
+                  <StackTrace stack={issue().stack || []} />
+                </StackTraceBackground>
+              </Show>
             </Stack>
             <Stack space="2">
               <Text label on="surface" size="mono_sm" color="dimmed">
