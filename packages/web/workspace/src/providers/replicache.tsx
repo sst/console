@@ -113,8 +113,8 @@ function createReplicache(workspaceID: string, token: string) {
     licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
     pullURL:
       import.meta.env.VITE_API_URL +
-      (dummy.mode
-        ? `/replicache/dummy/pull?dummy=${dummy.mode}`
+      (dummy()
+        ? `/replicache/dummy/pull?dummy=${dummy()}`
         : "/replicache/pull1"),
     pushURL: import.meta.env.VITE_API_URL + "/replicache/push1",
     pullInterval: 60 * 1000,

@@ -5,7 +5,7 @@ import { Navigate, useSearchParams } from "@solidjs/router";
 import { Replicache } from "replicache";
 import { ParentProps, createContext, createMemo, useContext } from "solid-js";
 import { useStorage } from "./account";
-import { useDummy } from "./dummy";
+import { useDummy, useDummyConfig } from "./dummy";
 import { createScan, useReplicache } from "./replicache";
 import { UserStore } from "$/data/user";
 import { User } from "@console/core/user";
@@ -80,7 +80,7 @@ export function AuthProvider(props: ParentProps) {
 
   const stores: AuthContextType = {};
   const splits = location.hostname.split(".");
-  const isDummy = splits[0] === "dummy" && splits[1] === "localhost";
+  const dummy = useDummy();
   for (const token of Object.values(tokens)) {
     const rep = new Replicache({
       name: token.accountID,
@@ -88,8 +88,8 @@ export function AuthProvider(props: ParentProps) {
       licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
       pullURL:
         import.meta.env.VITE_API_URL +
-        (isDummy
-          ? `/replicache/dummy/pull?dummy=${search.dummy || "base"}`
+        (dummy()
+          ? `/replicache/dummy/pull?dummy=${dummy()}`
           : "/replicache/pull1"),
       pushURL: import.meta.env.VITE_API_URL + "/replicache/push1",
       mutators,
@@ -122,7 +122,7 @@ export function useAuth() {
 
 export function useCurrentUser() {
   const rep = useReplicache();
-  const dummy = useDummy();
+  const dummy = useDummyConfig();
   const auth = useAuth();
   const storage = useStorage();
   const users = createScan<User.Info>(() => `/user`, rep);
@@ -130,7 +130,7 @@ export function useCurrentUser() {
     () =>
       users().find(
         (u) =>
-          dummy.config?.user === u.id ||
+          dummy()?.user === u.id ||
           u.email === auth[storage.value.account].token.email,
       )!,
   );

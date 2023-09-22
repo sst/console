@@ -10,7 +10,8 @@ function init() {
     createStore({
       account: "",
       workspace: "",
-    })
+      dummy: "",
+    }),
   );
 
   return {

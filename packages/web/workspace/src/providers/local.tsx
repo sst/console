@@ -10,7 +10,7 @@ import {
 } from "solid-js";
 import { bus } from "./bus";
 import { createStore, produce } from "solid-js/store";
-import { useDummy } from "./dummy";
+import { useDummy, useDummyConfig } from "./dummy";
 
 interface State {
   app?: string;
@@ -20,10 +20,10 @@ interface State {
 const localContext = createContext<Accessor<State>>(() => ({}));
 
 export function LocalProvider(props: ParentProps) {
-  const dummy = useDummy();
-  if (dummy.mode)
+  const dummy = useDummyConfig();
+  if (dummy())
     return (
-      <localContext.Provider value={() => dummy.config.local}>
+      <localContext.Provider value={() => dummy().local}>
         {props.children}
       </localContext.Provider>
     );

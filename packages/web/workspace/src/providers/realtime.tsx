@@ -31,7 +31,7 @@ export function RealtimeProvider() {
     }
 
     async function createConnection() {
-      if (dummy.mode) return;
+      if (dummy()) return;
       console.log("creating new connection");
       if (connection) await connection.disconnect();
       const config = iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()

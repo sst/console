@@ -9,6 +9,7 @@ import {
 import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 import { sessions } from "../../sessions";
 import { generateData } from "./data";
+import { createHash, subtle } from "crypto";
 
 export const handler = ApiHandler(async () => {
   const session = sessions.use();
@@ -34,8 +35,8 @@ export const handler = ApiHandler(async () => {
       console.log("request", req);
 
       const response: PullResponseV1 = {
-        patch,
-        cookie: cookie + 1,
+        patch: [],
+        cookie: cookie,
         lastMutationIDChanges: {},
       };
 
@@ -65,6 +66,13 @@ export const handler = ApiHandler(async () => {
               .join("/"),
           value: value as any,
         });
+      }
+      const hash = createHash("sha256")
+        .update(JSON.stringify(patch))
+        .digest("hex");
+      if (hash !== req.cookie) {
+        response.patch = patch;
+        response.cookie = hash;
       }
 
       return {
