@@ -1,12 +1,4 @@
-import {
-  Row,
-  Stack,
-  AvatarInitialsIcon,
-  Text,
-  Tag,
-  theme,
-  TabTitle,
-} from "$/ui";
+import { Row, Stack, AvatarInitialsIcon, Text, theme } from "$/ui";
 import { IconChevronUpDown, IconMagnifyingGlass } from "$/ui/icons";
 import { utility } from "$/ui/utility";
 import { styled } from "@macaron-css/solid";
@@ -17,15 +9,11 @@ import {
   JSX,
   ParentProps,
   Show,
-  createContext,
   createEffect,
-  createMemo,
   createSignal,
   onCleanup,
-  onMount,
 } from "solid-js";
 import { createInitializedContext } from "$/common/context";
-import { useIssuesContext } from "./stage/context";
 import { dropAllDatabases } from "replicache";
 
 const Root = styled("div", {

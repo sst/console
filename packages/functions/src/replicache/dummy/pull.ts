@@ -30,7 +30,13 @@ export const handler = ApiHandler(async () => {
       NotPublic();
 
       const req: PullRequest = useJsonBody();
-      const cookie = req.cookie as number;
+      const cookie = (req.cookie || {
+        hash: "",
+        order: 0,
+      }) as {
+        hash: string;
+        order: number;
+      };
       const patch: PatchOperation[] = [];
       console.log("request", req);
 
@@ -70,9 +76,13 @@ export const handler = ApiHandler(async () => {
       const hash = createHash("sha256")
         .update(JSON.stringify(patch))
         .digest("hex");
-      if (hash !== req.cookie) {
+
+      if (cookie.hash !== hash) {
         response.patch = patch;
-        response.cookie = hash;
+        response.cookie = {
+          hash,
+          order: (cookie.order || 0) + 1,
+        };
       }
 
       return {

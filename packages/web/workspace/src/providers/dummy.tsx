@@ -6,7 +6,7 @@ import {
 import { useSearchParams } from "@solidjs/router";
 import { createGet, useReplicache } from "./replicache";
 import { useAuth } from "./auth";
-import { createMemo } from "solid-js";
+import { createEffect, createMemo } from "solid-js";
 import { useStorage } from "./account";
 
 export const { use: useDummy, provider: DummyProvider } =
@@ -20,6 +20,7 @@ export const { use: useDummy, provider: DummyProvider } =
     const result = () =>
       isDummy ? (storage.value.dummy as DummyMode) : undefined;
     result.ready = true;
+    if (isDummy) console.log("dummy mode", storage.value.dummy);
     return result;
   });
 
@@ -29,6 +30,10 @@ export const { use: useDummyConfig, provider: DummyConfigProvider } =
     const storage = useStorage();
     const rep = createMemo(() => auth[storage.value.account].replicache);
     const config = createGet<DummyConfig>(() => "/dummyConfig", rep);
+
+    createEffect(() => {
+      if (config()) console.log("dummy config", config());
+    });
 
     return config;
   });

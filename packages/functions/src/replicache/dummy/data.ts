@@ -17,6 +17,11 @@ const ACCOUNT_ID_LONG = "long";
 const ACCOUNT_ID_FAILED = "failed";
 const ACCOUNT_ID_SYNCING = "syncing";
 
+const timestamps = {
+  timeCreated: DateTime.now().startOf("day").toSQL()!,
+  timeUpdated: DateTime.now().startOf("day").toSQL()!,
+};
+
 export type DummyMode =
   | "empty"
   | "overview:base"
@@ -67,12 +72,11 @@ function workspace({ id, activeSubscription }: WorkspaceProps): DummyData {
     _type: "workspace",
     id,
     slug: id,
-    timeCreated: DateTime.now().toSQL()!,
     timeDeleted: null,
-    timeUpdated: DateTime.now().toSQL()!,
     stripeSubscriptionItemID: null,
     stripeCustomerID: null,
     stripeSubscriptionID: activeSubscription ? "sub_123" : null,
+    ...timestamps,
   };
 }
 
@@ -87,10 +91,9 @@ function user({ id, email, active, deleted }: UserProps): DummyData {
     _type: "user",
     email,
     id: id || email,
-    timeCreated: DateTime.now().toSQL()!,
-    timeUpdated: DateTime.now().toSQL()!,
-    timeSeen: active ? DateTime.now().toSQL()! : null,
-    timeDeleted: deleted ? DateTime.now().toSQL()! : null,
+    timeSeen: active ? timestamps.timeUpdated : null,
+    timeDeleted: deleted ? timestamps.timeUpdated : null,
+    ...timestamps,
   };
 }
 
@@ -106,10 +109,9 @@ function account({ id, accountID, failed, syncing }: AccountProps): DummyData {
     id,
     accountID: accountID,
     timeDeleted: null,
-    timeUpdated: DateTime.now().toSQL()!,
-    timeCreated: DateTime.now().toSQL()!,
-    timeFailed: failed ? DateTime.now().toSQL()! : null,
-    timeDiscovered: syncing ? null : DateTime.now().toSQL()!,
+    timeFailed: failed ? timestamps.timeUpdated : null,
+    timeDiscovered: syncing ? null : timestamps.timeUpdated,
+    ...timestamps,
   };
 }
 
@@ -128,8 +130,7 @@ function stage({ id, appID, region, awsAccountID }: StageProps): DummyData {
     awsAccountID,
     timeDeleted: null,
     region: region || "us-east-1",
-    timeCreated: DateTime.now().toSQL()!,
-    timeUpdated: DateTime.now().toSQL()!,
+    ...timestamps,
   };
 }
 
@@ -143,19 +144,19 @@ function app({ id, name }: AppProps): DummyData {
     id,
     name: name || id,
     timeDeleted: null,
-    timeCreated: DateTime.now().toSQL()!,
-    timeUpdated: DateTime.now().toSQL()!,
+    ...timestamps,
   };
 }
 
 export function* generateData(
-  config: DummyMode,
+  mode: DummyMode,
 ): Generator<DummyData, void, unknown> {
-  const configMap = stringToObject(config);
+  const modeMap = stringToObject(mode);
+  console.log("generating for", mode);
 
   yield workspace({
     id: "dummy-workspace",
-    activeSubscription: configMap["subscription"] === "active",
+    activeSubscription: modeMap["subscription"] === "active",
   });
 
   yield {
@@ -175,17 +176,17 @@ export function* generateData(
     deleted: true,
   });
 
-  if (configMap["overview"] === "full") {
+  if (modeMap["overview"] === "full") {
     for (let i = 0; i < 30; i++) {
       yield user({ email: `dummy${i}@example.com`, active: true });
     }
   }
 
-  if (configMap["overview"]) yield* overviewBase();
+  if (modeMap["overview"]) yield* overviewBase();
 
-  if (configMap["overview"] === "full") yield* overviewFull();
+  if (modeMap["overview"] === "full") yield* overviewFull();
 
-  if (configMap["usage"] === "overage") yield* usageOverage();
+  if (modeMap["usage"] === "overage") yield* usageOverage();
 }
 
 function* overviewBase(): Generator<DummyData, void, unknown> {
@@ -261,9 +262,8 @@ function* usageOverage(): Generator<DummyData, void, unknown> {
     day: "2021-01-01",
     stageID: "stage-account-overage",
     invocations: 100,
-    timeCreated: DateTime.now().toSQL()!,
     timeDeleted: null,
-    timeUpdated: DateTime.now().toSQL()!,
+    ...timestamps,
   };
   yield {
     _type: "usage",
@@ -271,8 +271,7 @@ function* usageOverage(): Generator<DummyData, void, unknown> {
     day: "2021-01-02",
     stageID: "stage-account-overage",
     invocations: 1230000,
-    timeCreated: DateTime.now().toSQL()!,
     timeDeleted: null,
-    timeUpdated: DateTime.now().toSQL()!,
+    ...timestamps,
   };
 }
