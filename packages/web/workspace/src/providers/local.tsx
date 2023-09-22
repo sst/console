@@ -38,6 +38,8 @@ export function LocalProvider(props: ParentProps) {
   const [store, setStore] = createSignal<State>({});
 
   bus.on("log.cleared", (properties) => {
+    if (!ws) return;
+    if (ws.OPEN) return;
     ws.send(
       JSON.stringify({
         type: "log.cleared",
@@ -47,7 +49,6 @@ export function LocalProvider(props: ParentProps) {
   });
 
   bus.on("cli.dev", (properties) => {
-    console.log("setting", properties);
     setStore(properties);
   });
 
