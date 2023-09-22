@@ -103,6 +103,7 @@ export function Issues({ stack }: StackContext) {
 
   bus.subscribe(stack, "app.stage.connected", {
     handler: "packages/functions/src/issues/stage-connected.handler",
+    timeout: "1 minute",
     bind: [
       bus,
       use(Storage),
