@@ -434,7 +434,7 @@ export function Logs() {
                   onClick={() => {
                     invocationsContext.clear(logGroupKey());
                     bus.emit("log.cleared", {
-                      functionID: logGroup(),
+                      source: logGroup(),
                     });
                   }}
                 >
