@@ -85,6 +85,7 @@ export function API({ stack, app }: StackContext) {
   const api = new Api(stack, "api", {
     defaults: {
       function: {
+        timeout: "29 seconds",
         bind: [
           auth,
           ...Object.values(secrets.database),
@@ -101,20 +102,17 @@ export function API({ stack, app }: StackContext) {
       "POST /replicache/pull": {
         function: {
           handler: "packages/functions/src/replicache/pull.handler",
-          timeout: "29 seconds",
         },
       },
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
       "POST /replicache/pull1": {
         function: {
           handler: "packages/functions/src/replicache/pull1.handler",
-          timeout: "29 seconds",
         },
       },
       "POST /replicache/dummy/pull": {
         function: {
           handler: "packages/functions/src/replicache/dummy/pull.handler",
-          timeout: "29 seconds",
         },
       },
       "POST /replicache/push1":

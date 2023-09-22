@@ -256,6 +256,8 @@ export const extract = zod(
             );
 
             if (
+              err.error !== "Runtime.HandlerNotFound" &&
+              err.stack.length &&
               err.stack.every((frame) => !frame.context) &&
               (await sourcemapCache.meta()).length
             ) {
