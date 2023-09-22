@@ -309,16 +309,14 @@ export function InvocationRow(props: {
           <Level level={props.invocation.errors.length ? "error" : "info"} />
         </Row>
         <Timestamp title={longDate()}>{shortDate()}</Timestamp>
-        <Show when={!props.local}>
-          <Duration
-            coldStart={props.invocation.cold}
-            title={props.invocation.cold ? "Cold start" : ""}
-          >
-            {props.invocation.report?.duration
-              ? formatDuration(props.invocation.report?.duration)
-              : "-"}
-          </Duration>
-        </Show>
+        <Duration
+          coldStart={props.invocation.cold}
+          title={props.invocation.cold ? "Cold start" : ""}
+        >
+          {props.invocation.report?.duration
+            ? formatDuration(props.invocation.report?.duration)
+            : "-"}
+        </Duration>
         <RequestID title="Request Id">
           {props.invocation.id.slice(0, 36)}
         </RequestID>
@@ -377,7 +375,7 @@ export function InvocationRow(props: {
                   Response
                 </TabTitle>
               </Show>
-              <Show when={props.invocation.report}>
+              <Show when={props.invocation.report && !props.local}>
                 <TabTitle
                   size="mono_sm"
                   onClick={() => setTab("report")}
