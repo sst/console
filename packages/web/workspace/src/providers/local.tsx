@@ -21,14 +21,9 @@ const localContext = createContext<Accessor<State>>(() => ({}));
 
 export function LocalProvider(props: ParentProps) {
   const dummy = useDummy();
-  if (dummy())
+  if (dummy.mode)
     return (
-      <localContext.Provider
-        value={() => ({
-          app: "dummy",
-          stage: "dummy",
-        })}
-      >
+      <localContext.Provider value={() => dummy.config.local}>
         {props.children}
       </localContext.Provider>
     );
@@ -54,7 +49,6 @@ export function LocalProvider(props: ParentProps) {
 
   let ssl = true;
   onMount(() => {
-    if (dummy()) return;
     function connect() {
       console.log("trying to connect to local ssl:", ssl);
       ssl = !ssl;

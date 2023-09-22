@@ -149,8 +149,8 @@ export const App: Component = () => {
           <Route
             path="*"
             element={
-              <DummyProvider>
-                <AuthProvider>
+              <AuthProvider>
+                <DummyProvider>
                   <RealtimeProvider />
                   <LocalProvider>
                     <InvocationProvider>
@@ -229,8 +229,8 @@ export const App: Component = () => {
                       </CommandBar>
                     </InvocationProvider>
                   </LocalProvider>
-                </AuthProvider>
-              </DummyProvider>
+                </DummyProvider>
+              </AuthProvider>
             }
           />
         </Routes>

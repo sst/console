@@ -17,12 +17,23 @@ const ACCOUNT_ID_LONG = "long";
 const ACCOUNT_ID_FAILED = "failed";
 const ACCOUNT_ID_SYNCING = "syncing";
 
-export type DummyConfig =
+export type DummyMode =
   | "empty"
   | "overview:base"
   | "overview:all;usage:overage;subscription:active";
 
+export interface DummyConfig {
+  local: {
+    app: string;
+    stage: string;
+  };
+  user: string;
+}
+
 type DummyData =
+  | (DummyConfig & {
+      _type: "dummyConfig";
+    })
   | (Workspace.Info & { _type: "workspace" })
   | (Omit<Usage, "workspaceID"> & { _type: "usage" })
   | (Omit<App.Info, "workspaceID"> & { _type: "app" })
@@ -138,7 +149,7 @@ function app({ id, name }: AppProps): DummyData {
 }
 
 export function* generateData(
-  config: DummyConfig
+  config: DummyMode,
 ): Generator<DummyData, void, unknown> {
   const configMap = stringToObject(config);
 
@@ -146,6 +157,15 @@ export function* generateData(
     id: "dummy-workspace",
     activeSubscription: configMap["subscription"] === "active",
   });
+
+  yield {
+    _type: "dummyConfig",
+    user: "dummy",
+    local: {
+      app: "dummy",
+      stage: "dummy",
+    },
+  };
 
   yield user({ id: "dummy", email: "me@example.com", active: true });
   yield user({ email: "invited-dummy@example.com" });

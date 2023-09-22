@@ -51,11 +51,18 @@ export const handler = ApiHandler(async () => {
       const data = generateData(useQueryParam("dummy") || "empty");
       for (const item of data) {
         const { _type, ...value } = item;
-        if (actor.type === "account" && !["workspace", "user"].includes(_type))
+        if (
+          actor.type === "account" &&
+          !["workspace", "user", "dummyConfig"].includes(_type)
+        )
           continue;
         patch.push({
           op: "put",
-          key: "/" + [_type, item.id].join("/"),
+          key:
+            "/" +
+            [_type, "id" in item ? item.id : undefined]
+              .filter(Boolean)
+              .join("/"),
           value: value as any,
         });
       }
@@ -67,6 +74,6 @@ export const handler = ApiHandler(async () => {
         },
         body: JSON.stringify(response),
       };
-    }
+    },
   );
 });

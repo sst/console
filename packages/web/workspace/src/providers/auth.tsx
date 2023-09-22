@@ -1,7 +1,7 @@
 import { WorkspaceStore } from "$/data/workspace";
 import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
-import { Navigate } from "@solidjs/router";
+import { Navigate, useSearchParams } from "@solidjs/router";
 import { Replicache } from "replicache";
 import { ParentProps, createContext, createMemo, useContext } from "solid-js";
 import { useStorage } from "./account";
@@ -60,7 +60,7 @@ export function AuthProvider(props: ParentProps) {
   const fragment = new URLSearchParams(location.hash.substring(1));
   const access_token = fragment.get("access_token");
   const storage = useStorage();
-  const dummy = useDummy();
+  const [search] = useSearchParams();
   if (access_token) {
     const [_headerEncoded, payloadEncoded] = access_token.split(".");
     const payload = JSON.parse(
@@ -79,6 +79,8 @@ export function AuthProvider(props: ParentProps) {
   if (Object.values(tokens).length === 0) return <Navigate href="/auth" />;
 
   const stores: AuthContextType = {};
+  const splits = location.hostname.split(".");
+  const isDummy = splits[0] === "dummy" && splits[1] === "localhost";
   for (const token of Object.values(tokens)) {
     const rep = new Replicache({
       name: token.accountID,
@@ -86,8 +88,8 @@ export function AuthProvider(props: ParentProps) {
       licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
       pullURL:
         import.meta.env.VITE_API_URL +
-        (dummy()
-          ? `/replicache/dummy/pull?dummy=${dummy()}`
+        (isDummy
+          ? `/replicache/dummy/pull?dummy=${search.dummy || "base"}`
           : "/replicache/pull1"),
       pushURL: import.meta.env.VITE_API_URL + "/replicache/push1",
       mutators,
@@ -124,19 +126,12 @@ export function useCurrentUser() {
   const auth = useAuth();
   const storage = useStorage();
   const users = createScan<User.Info>(() => `/user`, rep);
-  return createMemo<User.Info | undefined>(() =>
-    dummy()
-      ? {
-          id: "dummy",
-          email: "me@example.com",
-          workspaceID: "",
-          timeSeen: null,
-          timeDeleted: null,
-          timeCreated: DateTime.now().toSQL()!,
-          timeUpdated: DateTime.now().toSQL()!,
-        }
-      : users().find(
-          (u) => u.email === auth[storage.value.account].token.email,
-        )!,
+  return createMemo<User.Info | undefined>(
+    () =>
+      users().find(
+        (u) =>
+          dummy.config?.user === u.id ||
+          u.email === auth[storage.value.account].token.email,
+      )!,
   );
 }
