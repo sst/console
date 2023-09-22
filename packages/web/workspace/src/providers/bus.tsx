@@ -13,7 +13,7 @@ export const bus = createEmitter<{
   "invocation.url": string;
   invocation: Invocation[];
   "log.cleared": {
-    functionID: string;
+    source: string;
   };
   "worker.stdout": Events["worker.stdout"];
   "function.invoked": Events["function.invoked"];

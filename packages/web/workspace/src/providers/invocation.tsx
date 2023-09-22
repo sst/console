@@ -28,6 +28,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             const exists = source.findLast((i) => i.id === invocation.id);
             if (!exists) {
               source.push(invocation);
+              if (invocation.input) state.local.push(invocation);
               continue;
             }
             // merge safely with existing invocation
@@ -142,6 +143,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             state[source] = [];
           }),
         );
+        bus.emit("log.cleared", { source });
       },
       ready: true,
     };

@@ -590,7 +590,7 @@ function UserCard(props: UserCardProps) {
         <Show when={!user()?.timeSeen}>
           <Tag level="tip">Invited</Tag>
         </Show>
-        <Show when={self().id !== user()?.id}>
+        <Show when={self()?.id !== user()?.id}>
           <Dropdown
             size="sm"
             icon={<IconEllipsisVertical width={18} height={18} />}

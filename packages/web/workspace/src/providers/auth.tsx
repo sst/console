@@ -64,7 +64,7 @@ export function AuthProvider(props: ParentProps) {
   if (access_token) {
     const [_headerEncoded, payloadEncoded] = access_token.split(".");
     const payload = JSON.parse(
-      atob(payloadEncoded.replace(/-/g, "+").replace(/_/g, "/"))
+      atob(payloadEncoded.replace(/-/g, "+").replace(/_/g, "/")),
     );
     tokens[payload.properties.accountID] = {
       token: access_token,
@@ -124,7 +124,7 @@ export function useCurrentUser() {
   const auth = useAuth();
   const storage = useStorage();
   const users = createScan<User.Info>(() => `/user`, rep);
-  return createMemo<User.Info>(() =>
+  return createMemo<User.Info | undefined>(() =>
     dummy()
       ? {
           id: "dummy",
@@ -136,7 +136,7 @@ export function useCurrentUser() {
           timeUpdated: DateTime.now().toSQL()!,
         }
       : users().find(
-          (u) => u.email === auth[storage.value.account].token.email
-        )!
+          (u) => u.email === auth[storage.value.account].token.email,
+        )!,
   );
 }
