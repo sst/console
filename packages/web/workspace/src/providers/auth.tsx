@@ -64,7 +64,7 @@ export function AuthProvider(props: ParentProps) {
   if (access_token) {
     const [_headerEncoded, payloadEncoded] = access_token.split(".");
     const payload = JSON.parse(
-      atob(payloadEncoded.replace(/-/g, "+").replace(/_/g, "/")),
+      atob(payloadEncoded.replace(/-/g, "+").replace(/_/g, "/"))
     );
     tokens[payload.properties.accountID] = {
       token: access_token,
@@ -128,7 +128,7 @@ export function useCurrentUser() {
     dummy()
       ? {
           id: "dummy",
-          email: "dummy@example.com",
+          email: "me@example.com",
           workspaceID: "",
           timeSeen: null,
           timeDeleted: null,
@@ -136,7 +136,7 @@ export function useCurrentUser() {
           timeUpdated: DateTime.now().toSQL()!,
         }
       : users().find(
-          (u) => u.email === auth[storage.value.account].token.email,
-        )!,
+          (u) => u.email === auth[storage.value.account].token.email
+        )!
   );
 }

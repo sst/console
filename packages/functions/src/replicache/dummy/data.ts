@@ -66,15 +66,16 @@ function workspace({ id, activeSubscription }: WorkspaceProps): DummyData {
 }
 
 interface UserProps {
+  id?: string;
   email: string;
   active?: boolean;
   deleted?: boolean;
 }
-function user({ email, active, deleted }: UserProps): DummyData {
+function user({ id, email, active, deleted }: UserProps): DummyData {
   return {
     _type: "user",
     email,
-    id: email,
+    id: id || email,
     timeCreated: DateTime.now().toSQL()!,
     timeUpdated: DateTime.now().toSQL()!,
     timeSeen: active ? DateTime.now().toSQL()! : null,
@@ -146,7 +147,7 @@ export function* generateData(
     activeSubscription: configMap["subscription"] === "active",
   });
 
-  yield user({ email: "me@example.com", active: true });
+  yield user({ id: "dummy", email: "me@example.com", active: true });
   yield user({ email: "invited-dummy@example.com" });
   yield user({
     email: "deleted-dummy@example.com",
