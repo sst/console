@@ -134,9 +134,8 @@ export function Alert(props: AlertProps) {
         </Row>
         <Show when={props.details}>
           <Text
-            label
             underline
-            size="mono_xs"
+            size="xs"
             class={alertDetailsTextCs}
             style={{ "margin-top": "4px" }}
             onClick={() => setExpanded(!expanded())}

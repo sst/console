@@ -276,12 +276,12 @@ export function InvocationRow(props: {
   const shortDate = createMemo(() =>
     new Intl.DateTimeFormat("en-US", shortDateOptions)
       .format(props.invocation.start)
-      .replace(" at ", ", "),
+      .replace(" at ", ", ")
   );
   const longDate = createMemo(() =>
     new Intl.DateTimeFormat("en-US", longDateOptions).format(
-      props.invocation.start,
-    ),
+      props.invocation.start
+    )
   );
   //              const empty = createMemo(
   //                () => mode() !== "live" && invocation.logs.length === 0
@@ -400,7 +400,7 @@ export function InvocationRow(props: {
                 </Show>
                 <Show when={!props.onSavePayload}>
                   <FunctionLink href={`../resources/logs/${props.function.id}`}>
-                    View Function
+                    View function
                   </FunctionLink>
                 </Show>
                 <TextButton
