@@ -16,7 +16,7 @@ import {
 } from "solid-js";
 import { Navigate, Route, Router, Routes, useNavigate } from "@solidjs/router";
 import { Auth, Code } from "./pages/auth";
-import { AuthProvider, useAuth, useCurrentUser } from "./providers/auth";
+import { AuthProvider, useAuth } from "./providers/auth";
 import { RealtimeProvider } from "./providers/realtime";
 import { CommandBar, useCommandBar } from "./pages/workspace/command-bar";
 import { Debug } from "./pages/debug";
@@ -244,7 +244,7 @@ function GlobalCommands() {
   const auth = useAuth();
   const nav = useNavigate();
   const storage = useStorage();
-  const self = useCurrentUser();
+  const selfEmail = createMemo(() => auth[storage.value.account].token.email);
 
   bar.register("workspace-switcher", async () => {
     const workspaces = await Promise.all(
@@ -293,7 +293,7 @@ function GlobalCommands() {
     return [
       {
         category: "Account",
-        title: `Logout from ${self().email}`,
+        title: `Logout from ${selfEmail()}`,
         icon: IconLogout,
         run: async () => {
           await dropAllDatabases();
