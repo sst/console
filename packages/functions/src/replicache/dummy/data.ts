@@ -8,10 +8,14 @@ import type { Usage } from "@console/core/billing";
 import { Workspace } from "@console/core/workspace";
 import { Resource } from "@console/core/app/resource";
 
+const USER_ID = "me@example.com";
+
 const APP_ID = "1";
 const APP_ID_LONG = "2";
 const APP_LOCAL = "dummy";
+
 const STAGE_LOCAL = "dummy";
+
 const ACCOUNT_ID = "connected";
 const ACCOUNT_ID_LONG = "long";
 const ACCOUNT_ID_FAILED = "failed";
@@ -148,11 +152,28 @@ function app({ id, name }: AppProps): DummyData {
   };
 }
 
+interface UsageProps {
+  day: string;
+  invocations: number;
+}
+function usage({ day, invocations }: UsageProps): DummyData {
+  return {
+    _type: "usage",
+    day,
+    id: day,
+    invocations,
+    stageID: "stage-account-overage",
+    timeDeleted: null,
+    ...timestamps,
+  };
+}
+
 export function* generateData(
-  mode: DummyMode,
+  mode: DummyMode
 ): Generator<DummyData, void, unknown> {
-  const modeMap = stringToObject(mode);
   console.log("generating for", mode);
+
+  const modeMap = stringToObject(mode);
 
   yield workspace({
     id: "dummy-workspace",
@@ -161,20 +182,22 @@ export function* generateData(
 
   yield {
     _type: "dummyConfig",
-    user: "dummy",
+    user: USER_ID,
     local: {
-      app: "dummy",
-      stage: "dummy",
+      app: APP_LOCAL,
+      stage: STAGE_LOCAL,
     },
   };
 
-  yield user({ id: "dummy", email: "me@example.com", active: true });
+  yield user({ email: USER_ID, active: true });
   yield user({ email: "invited-dummy@example.com" });
   yield user({
     email: "deleted-dummy@example.com",
     active: true,
     deleted: true,
   });
+
+  yield usage({ day: "2021-01-01", invocations: 100 });
 
   if (modeMap["overview"] === "full") {
     for (let i = 0; i < 30; i++) {
@@ -186,7 +209,8 @@ export function* generateData(
 
   if (modeMap["overview"] === "full") yield* overviewFull();
 
-  if (modeMap["usage"] === "overage") yield* usageOverage();
+  if (modeMap["usage"] === "overage")
+    yield usage({ day: "2021-01-01", invocations: 12300000000 });
 }
 
 function* overviewBase(): Generator<DummyData, void, unknown> {
@@ -253,25 +277,4 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
   for (let i = 0; i < 30; i++) {
     yield stage({ id: `stage-${i}`, appID: APP_ID, awsAccountID: ACCOUNT_ID });
   }
-}
-
-function* usageOverage(): Generator<DummyData, void, unknown> {
-  yield {
-    _type: "usage",
-    id: "1",
-    day: "2021-01-01",
-    stageID: "stage-account-overage",
-    invocations: 100,
-    timeDeleted: null,
-    ...timestamps,
-  };
-  yield {
-    _type: "usage",
-    id: "2",
-    day: "2021-01-02",
-    stageID: "stage-account-overage",
-    invocations: 1230000,
-    timeDeleted: null,
-    ...timestamps,
-  };
 }

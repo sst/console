@@ -13,7 +13,6 @@ import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { IconAws } from "$/ui/icons/custom";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "./header";
-import { DUMMY_SETTINGS } from "./overview-dummy";
 import type { Usage } from "@console/core/billing";
 import { usage } from "@console/core/billing/billing.sql";
 import { create } from "@console/core/workspace";
@@ -112,18 +111,14 @@ const UsageStatTier = styled("span", {
 
 export function Settings() {
   const rep = useReplicache();
-  const [query] = useSearchParams();
-  const usages = query.dummy
-    ? () => DUMMY_SETTINGS[query.dummy as keyof typeof DUMMY_SETTINGS].usages
-    : UsageStore.watch.scan(rep);
+  const usages = UsageStore.watch.scan(rep);
   const invocations = createMemo(() =>
     usages()
       .map((usage) => usage.invocations)
       .reduce((a, b) => a + b, 0)
   );
-  const workspace = query.dummy
-    ? () => DUMMY_SETTINGS[query.dummy as keyof typeof DUMMY_SETTINGS].workspace
-    : useWorkspace();
+  console.log("usages", usages().length);
+  const workspace = useWorkspace();
   const cycle = createMemo(() => {
     const data = usages();
     const start = data[0] ? DateTime.fromSQL(data[0].day) : DateTime.now();
