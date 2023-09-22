@@ -257,8 +257,7 @@ export const extract = zod(
 
             if (
               err.stack.every((frame) => !frame.context) &&
-              appName === "console" &&
-              stageName === "production"
+              (await sourcemapCache.meta()).length
             ) {
               console.log(
                 "failed to apply sourcemap",
