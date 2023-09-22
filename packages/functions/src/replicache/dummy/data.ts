@@ -10,6 +10,8 @@ import { Resource } from "@console/core/app/resource";
 
 const APP_ID = "1";
 const APP_ID_LONG = "2";
+const APP_LOCAL = "dummy";
+const STAGE_LOCAL = "dummy";
 const ACCOUNT_ID = "connected";
 const ACCOUNT_ID_LONG = "long";
 const ACCOUNT_ID_FAILED = "failed";
@@ -45,7 +47,11 @@ function stringToObject(input: string): { [key: string]: string } {
   return result;
 }
 
-function workspace(id: string, activeSubscription?: boolean): DummyData {
+interface WorkspaceProps {
+  id: string;
+  activeSubscription?: boolean;
+}
+function workspace({ id, activeSubscription }: WorkspaceProps): DummyData {
   return {
     _type: "workspace",
     id,
@@ -59,7 +65,12 @@ function workspace(id: string, activeSubscription?: boolean): DummyData {
   };
 }
 
-function user(email: string, active?: boolean, deleted?: boolean): DummyData {
+interface UserProps {
+  email: string;
+  active?: boolean;
+  deleted?: boolean;
+}
+function user({ email, active, deleted }: UserProps): DummyData {
   return {
     _type: "user",
     email,
@@ -71,48 +82,54 @@ function user(email: string, active?: boolean, deleted?: boolean): DummyData {
   };
 }
 
-function account(
-  id: string,
-  accountID: string,
-  failed?: boolean,
-  discovered?: boolean
-): DummyData {
+interface AccountProps {
+  id: string;
+  failed?: boolean;
+  accountID: string;
+  syncing?: boolean;
+}
+function account({ id, accountID, failed, syncing }: AccountProps): DummyData {
   return {
     _type: "awsAccount",
     id,
-    accountID,
+    accountID: accountID,
+    timeDeleted: null,
     timeUpdated: DateTime.now().toSQL()!,
     timeCreated: DateTime.now().toSQL()!,
-    timeDiscovered: discovered ? DateTime.now().toSQL()! : null,
     timeFailed: failed ? DateTime.now().toSQL()! : null,
-    timeDeleted: null,
+    timeDiscovered: syncing ? null : DateTime.now().toSQL()!,
   };
 }
 
-function stage(
-  id: string,
-  appID: string,
-  region: string,
-  awsAccountID: string
-): DummyData {
+interface StageProps {
+  id: string;
+  appID: string;
+  region?: string;
+  awsAccountID: string;
+}
+function stage({ id, appID, region, awsAccountID }: StageProps): DummyData {
   return {
     _type: "stage",
     id,
     appID,
-    region,
     name: id,
     awsAccountID,
     timeDeleted: null,
+    region: region || "us-east-1",
     timeCreated: DateTime.now().toSQL()!,
     timeUpdated: DateTime.now().toSQL()!,
   };
 }
 
-function app(id: string, name: string): DummyData {
+interface AppProps {
+  id: string;
+  name?: string;
+}
+function app({ id, name }: AppProps): DummyData {
   return {
     _type: "app",
     id,
-    name,
+    name: name || id,
     timeDeleted: null,
     timeCreated: DateTime.now().toSQL()!,
     timeUpdated: DateTime.now().toSQL()!,
@@ -124,15 +141,22 @@ export function* generateData(
 ): Generator<DummyData, void, unknown> {
   const configMap = stringToObject(config);
 
-  yield workspace("dummy-workspace", configMap["subscription"] === "active");
+  yield workspace({
+    id: "dummy-workspace",
+    activeSubscription: configMap["subscription"] === "active",
+  });
 
-  yield user("me@example.com", true, false);
-  yield user("invited-dummy@example.com", false, false);
-  yield user("deleted-dummy@example.com", true, true);
+  yield user({ email: "me@example.com", active: true });
+  yield user({ email: "invited-dummy@example.com" });
+  yield user({
+    email: "deleted-dummy@example.com",
+    active: true,
+    deleted: true,
+  });
 
   if (configMap["overview"] === "full") {
     for (let i = 0; i < 30; i++) {
-      yield user(`dummy${i}@example.com`, true, false);
+      yield user({ email: `dummy${i}@example.com`, active: true });
     }
   }
 
@@ -144,38 +168,68 @@ export function* generateData(
 }
 
 function* overviewBase(): Generator<DummyData, void, unknown> {
-  yield account(ACCOUNT_ID_LONG, "123456789018", false, true);
-  yield app(
-    APP_ID_LONG,
-    "my-sst-app-that-has-a-really-long-name-that-should-be-truncated"
-  );
-  yield stage("stage-long-id-1", APP_ID_LONG, "us-east-1", ACCOUNT_ID_LONG);
-  yield stage(
-    "this-stage-name-is-really-long-and-needs-to-be-truncated",
-    APP_ID_LONG,
-    "ap-southeast-1",
-    ACCOUNT_ID_LONG
-  );
+  yield account({ id: ACCOUNT_ID_LONG, accountID: "123456789012" });
+  yield app({ id: APP_LOCAL });
+  yield app({
+    id: APP_ID_LONG,
+    name: "my-sst-app-that-has-a-really-long-name-that-should-be-truncated",
+  });
+  yield stage({
+    id: STAGE_LOCAL,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID_LONG,
+  });
+  yield stage({
+    id: "stage-long-id-1",
+    appID: APP_ID_LONG,
+    awsAccountID: ACCOUNT_ID_LONG,
+  });
+  yield stage({
+    id: "this-stage-name-is-really-long-and-needs-to-be-truncated",
+    appID: APP_ID_LONG,
+    region: "ap-southeast-1",
+    awsAccountID: ACCOUNT_ID_LONG,
+  });
 }
 
 function* overviewFull(): Generator<DummyData, void, unknown> {
-  yield app(APP_ID, "my-sst-app");
-  yield account("syncing-empty", "123456789012", false, false);
-  yield account("failed-empty", "123456789013", true, true);
-  yield account("empty", "123456789014", false, true);
-  yield account(ACCOUNT_ID_FAILED, "123456789015", true, true);
-  yield stage(
-    "stage-account-failed",
-    APP_ID,
-    "ap-southeast-1",
-    ACCOUNT_ID_FAILED
-  );
-  yield account(ACCOUNT_ID_SYNCING, "123456789016", false, false);
-  yield stage("stage-account-syncing", APP_ID, "us-east-1", ACCOUNT_ID_SYNCING);
-  yield account(ACCOUNT_ID, "123456789017", false, true);
+  yield app({ id: APP_ID, name: "my-sst-app" });
+  yield account({
+    id: "syncing-empty",
+    accountID: "123456789013",
+    syncing: true,
+  });
+  yield account({
+    id: "failed-empty",
+    accountID: "123456789014",
+    failed: true,
+  });
+  yield account({ id: "empty", accountID: "123456789015" });
+  yield account({
+    id: ACCOUNT_ID_FAILED,
+    accountID: "123456789016",
+    failed: true,
+  });
+  yield stage({
+    id: "stage-account-failed",
+    appID: APP_ID,
+    region: "ap-southeast-1",
+    awsAccountID: ACCOUNT_ID_FAILED,
+  });
+  yield account({
+    id: ACCOUNT_ID_SYNCING,
+    accountID: "123456789017",
+    syncing: false,
+  });
+  yield stage({
+    id: "stage-account-syncing",
+    appID: APP_ID,
+    awsAccountID: ACCOUNT_ID_SYNCING,
+  });
+  yield account({ id: ACCOUNT_ID, accountID: "123456789018" });
 
   for (let i = 0; i < 30; i++) {
-    yield stage(`stage-${i}`, APP_ID, "us-east-1", ACCOUNT_ID);
+    yield stage({ id: `stage-${i}`, appID: APP_ID, awsAccountID: ACCOUNT_ID });
   }
 }
 
@@ -201,5 +255,3 @@ function* usageOverage(): Generator<DummyData, void, unknown> {
     timeUpdated: DateTime.now().toSQL()!,
   };
 }
-
-function* stagesLarge(): Generator<DummyData, void, unknown> {}
