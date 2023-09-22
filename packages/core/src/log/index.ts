@@ -120,6 +120,9 @@ export function createSourcemapCache(input: {
   });
 
   return {
+    meta() {
+      return sourcemapsMeta();
+    },
     async get(number: number) {
       const match = pipe(
         await sourcemapsMeta(),

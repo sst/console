@@ -255,6 +255,20 @@ export const extract = zod(
               extracted,
             );
 
+            if (
+              err.stack.every((frame) => !frame.context) &&
+              appName === "console" &&
+              stageName === "production"
+            ) {
+              console.log(
+                "failed to apply sourcemap",
+                extracted,
+                err,
+                event.timestamp,
+                await sourcemapCache.meta(),
+              );
+            }
+
             if (!err.error || !err.message) {
               console.log("error was undefined for some reason", event);
               return;
