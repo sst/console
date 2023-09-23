@@ -43,6 +43,7 @@ import { DialogRange, DialogRangeControl } from "./dialog-range";
 import { ResourceIcon } from "$/common/resource-icon";
 import { InvocationRow } from "$/common/invocation";
 import { useInvocations } from "$/providers/invocation";
+import { DateTime } from "luxon";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -285,8 +286,12 @@ export function Logs() {
       id: search.id!,
       stageID: stage.stage.id,
       logGroup: logGroup(),
-      timeStart: search.start?.toISOString().split("Z")[0] || null,
-      timeEnd: search.end?.toISOString().split("Z")[0] || null,
+      timeStart: search.start
+        ? DateTime.fromJSDate(search.start!).toSQL({ includeOffset: false })
+        : null,
+      timeEnd: search.end
+        ? DateTime.fromJSDate(search.end!).toSQL({ includeOffset: false })
+        : null,
     });
   }
 
