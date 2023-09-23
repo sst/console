@@ -438,9 +438,6 @@ export function Logs() {
                 <TextButton
                   onClick={() => {
                     invocationsContext.clear(logGroupKey());
-                    bus.emit("log.cleared", {
-                      source: logGroup(),
-                    });
                   }}
                 >
                   Clear
