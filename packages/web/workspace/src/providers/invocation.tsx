@@ -9,7 +9,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
     const [store, setStore] = createStore<{
       [source: string]: Invocation[];
     }>({
-      local: [],
+      all: [],
     });
     bus.on("invocation.url", async (e) => {
       const data: Invocation[] = await fetch(e).then((r) => r.json());
@@ -28,7 +28,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             const exists = source.findLast((i) => i.id === invocation.id);
             if (!exists) {
               source.push(invocation);
-              if (invocation.input) state.local.push(invocation);
+              if (invocation.input) state.all.push(invocation);
               continue;
             }
             // merge safely with existing invocation
@@ -77,7 +77,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             source: data.functionID,
           };
           group.push(invocation);
-          state.local.push(invocation);
+          state.all.push(invocation);
         }),
       );
     });

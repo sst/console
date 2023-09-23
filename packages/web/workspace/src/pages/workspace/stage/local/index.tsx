@@ -38,7 +38,7 @@ export function Local() {
   const ctx = useStageContext();
   const invocationsContext = useInvocations();
   const invocations = createMemo(() =>
-    invocationsContext.forSource("local").slice().reverse(),
+    invocationsContext.forSource("all").slice().reverse(),
   );
   return (
     <Root>
@@ -70,7 +70,7 @@ export function Local() {
             <Show when={invocations().length > 0}>
               <TextButton
                 onClick={() => {
-                  invocationsContext.clear("local");
+                  invocationsContext.clear("all");
                 }}
               >
                 Clear
