@@ -34,7 +34,7 @@ export function LocalProvider(props: ParentProps) {
 
   bus.on("log.cleared", (properties) => {
     if (!ws) return;
-    if (!ws.OPEN) return;
+    if (ws.readyState !== WebSocket.OPEN) return;
     ws.send(
       JSON.stringify({
         type: "log.cleared",
