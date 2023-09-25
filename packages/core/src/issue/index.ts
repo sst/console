@@ -28,7 +28,11 @@ import { StageCredentials } from "../app/stage";
 import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
-import { createTransaction, useTransaction } from "../util/transaction";
+import {
+  createTransaction,
+  createTransactionEffect,
+  useTransaction,
+} from "../util/transaction";
 import { DateTime } from "luxon";
 import { createPipe, flatMap, groupBy, values } from "remeda";
 
@@ -57,6 +61,10 @@ export const Events = {
   }),
   RateLimited: event("issue.rate_limited", {
     stageID: z.string(),
+  }),
+  IssueDetected: event("issue.detected", {
+    stageID: z.string(),
+    group: z.string(),
   }),
   SubscribeRequested: event("issue.subscribe_requested", {
     stageID: z.string(),
@@ -275,7 +283,16 @@ export const extract = zod(
               return;
             }
 
-            const group = (() => {
+            const groupParts = (() => {
+              const important = err.stack.filter((x) => x.important);
+              if (
+                important.length &&
+                appName === "console" &&
+                stageName === "production"
+              ) {
+                return important[0].context?.[3] || important[0].file;
+              }
+
               const frames = err.stack
                 .map((x) => {
                   if (x.file) {
@@ -285,10 +302,9 @@ export const extract = zod(
                   return x.raw!;
                 })
                 .map((x) => x.trim());
-              const parts = [err.error, frames[0]].filter(Boolean).join("\n");
-
-              return createHash("sha256").update(parts).digest("hex");
+              return [err.error, frames[0]].filter(Boolean).join("\n");
             })();
+            const group = createHash("sha256").update(groupParts).digest("hex");
 
             return {
               group,
@@ -396,6 +412,33 @@ export const extract = zod(
           },
         })
         .execute();
+
+      await createTransactionEffect(() =>
+        Promise.all(
+          errors
+            .flatMap((items) =>
+              workspaces.map((workspace) => ({
+                group: items[0].group,
+                workspace,
+              })),
+            )
+            .map((item) =>
+              withActor(
+                {
+                  type: "system",
+                  properties: {
+                    workspaceID: item.workspace.workspaceID,
+                  },
+                },
+                () =>
+                  Events.IssueDetected.publish({
+                    stageID: item.workspace.stageID,
+                    group: item.group,
+                  }),
+              ),
+            ),
+        ),
+      );
     });
   },
 );

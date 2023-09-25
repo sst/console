@@ -1,12 +1,16 @@
 import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import { macaronVitePlugin } from "@macaron-css/vite";
+import inspect from "vite-plugin-inspect";
 import path from "path";
 
 export default defineConfig({
-  plugins: [macaronVitePlugin(), solidPlugin() as any],
+  plugins: [inspect(), macaronVitePlugin(), solidPlugin() as any],
   server: {
     port: 3000,
+  },
+  css: {
+    transformer: "lightningcss",
   },
   optimizeDeps: {
     esbuildOptions: {
