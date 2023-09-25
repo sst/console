@@ -148,6 +148,10 @@ export const extract = zod(
     console.log("filter", filter);
     const [_prefix, region, accountID, appName, stageName] = filter.split("#");
 
+    const isBeta = ["917397401067", "226609089145", "706616489477"].includes(
+      accountID,
+    );
+
     const hour = DateTime.now()
       .startOf("hour")
       .toUTC()
@@ -285,12 +289,12 @@ export const extract = zod(
 
             const groupParts = (() => {
               const [important] = err.stack.filter((x) => x.important);
-              if (
-                important &&
-                appName === "console" &&
-                stageName === "production"
-              ) {
-                return [err.error, important.context?.[3] || important.file];
+              if (important && isBeta) {
+                return [
+                  err.error,
+                  important.context?.[3]?.trim(),
+                  important.file,
+                ];
               }
 
               const frames = err.stack
@@ -304,6 +308,7 @@ export const extract = zod(
                 .map((x) => x.trim());
               return [err.error, frames[0]];
             })();
+            if (isBeta) console.log("group parts", groupParts);
             const group = createHash("sha256")
               .update(groupParts.filter(Boolean).join("\n"))
               .digest("hex");
