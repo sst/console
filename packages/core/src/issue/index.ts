@@ -290,7 +290,10 @@ export const extract = zod(
                 appName === "console" &&
                 stageName === "production"
               ) {
-                return important[0].context?.[3] || important[0].file;
+                return [
+                  err.error,
+                  important[0].context?.[3] || important[0].file,
+                ];
               }
 
               const frames = err.stack
@@ -302,9 +305,11 @@ export const extract = zod(
                   return x.raw!;
                 })
                 .map((x) => x.trim());
-              return [err.error, frames[0]].filter(Boolean).join("\n");
+              return [err.error, frames[0]];
             })();
-            const group = createHash("sha256").update(groupParts).digest("hex");
+            const group = createHash("sha256")
+              .update(groupParts.filter(Boolean).join("\n"))
+              .digest("hex");
 
             return {
               group,
