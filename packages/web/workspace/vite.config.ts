@@ -9,9 +9,6 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  css: {
-    transformer: "lightningcss",
-  },
   optimizeDeps: {
     esbuildOptions: {
       target: "es2020",
