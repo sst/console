@@ -284,16 +284,13 @@ export const extract = zod(
             }
 
             const groupParts = (() => {
-              const important = err.stack.filter((x) => x.important);
+              const [important] = err.stack.filter((x) => x.important);
               if (
-                important.length &&
+                important &&
                 appName === "console" &&
                 stageName === "production"
               ) {
-                return [
-                  err.error,
-                  important[0].context?.[3] || important[0].file,
-                ];
+                return [err.error, important.context?.[3] || important.file];
               }
 
               const frames = err.stack
