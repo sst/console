@@ -149,7 +149,7 @@ export const extract = zod(
     const [_prefix, region, accountID, appName, stageName] = filter.split("#");
 
     const isBeta = ["917397401067", "226609089145", "706616489477"].includes(
-      accountID,
+      accountID || "",
     );
 
     const hour = DateTime.now()
