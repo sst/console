@@ -1,6 +1,7 @@
 import {
   Choice,
   Condition,
+  DefinitionBody,
   Pass,
   StateMachine,
   Wait,
@@ -8,14 +9,7 @@ import {
 } from "aws-cdk-lib/aws-stepfunctions";
 import * as events from "aws-cdk-lib/aws-events";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
-import {
-  StackContext,
-  Api,
-  use,
-  Function,
-  EventBus,
-  Bucket,
-} from "sst/constructs";
+import { StackContext, Api, use, Function, EventBus } from "sst/constructs";
 import { Auth } from "./auth";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
@@ -45,15 +39,17 @@ export function API({ stack, app }: StackContext) {
   });
 
   const poller = new StateMachine(stack, "poller", {
-    definition: pollerFetchStep.next(
-      new Choice(stack, "pollerLoopStep")
-        .when(
-          Condition.booleanEquals("$.status.done", false),
-          new Wait(stack, "pollerWaitStep", {
-            time: WaitTime.duration(Duration.seconds(3)),
-          }).next(pollerFetchStep),
-        )
-        .otherwise(new Pass(stack, "done")),
+    definitionBody: DefinitionBody.fromChainable(
+      pollerFetchStep.next(
+        new Choice(stack, "pollerLoopStep")
+          .when(
+            Condition.booleanEquals("$.status.done", false),
+            new Wait(stack, "pollerWaitStep", {
+              time: WaitTime.duration(Duration.seconds(3)),
+            }).next(pollerFetchStep),
+          )
+          .otherwise(new Pass(stack, "done")),
+      ),
     ),
   });
 
