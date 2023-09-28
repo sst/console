@@ -426,13 +426,13 @@ export function Overview() {
                         />
                         <Button color="secondary">Connect Slack</Button>
                       </form>
-                      <Link href="account">
-                        <Button color="secondary">Add AWS Account</Button>
-                      </Link>
-                      <Link href="user">
-                        <Button color="primary">Invite Team</Button>
-                      </Link>
                     </Show>
+                    <Link href="account">
+                      <Button color="secondary">Add AWS Account</Button>
+                    </Link>
+                    <Link href="user">
+                      <Button color="primary">Invite Team</Button>
+                    </Link>
                   </Row>
                 </Row>
                 <Row space="4">

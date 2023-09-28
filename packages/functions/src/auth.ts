@@ -32,9 +32,9 @@ export const handler = AuthHandler({
         issuer: "https://slack.com",
         token_endpoint: "https://slack.com/api/oauth.v2.access",
       }),
-      scope: "chat:write team:read",
-      clientID: "1630249232881.5932863952839",
-      clientSecret: "d77256873e4155f26d2da347968974b7",
+      scope: "chat:write team:read chat:write.public",
+      clientID: Config.SLACK_CLIENT_ID,
+      clientSecret: Config.SLACK_CLIENT_SECRET,
     }),
     email: CodeAdapter({
       async onCodeRequest(code, claims) {
