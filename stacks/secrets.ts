@@ -13,6 +13,7 @@ export function Secrets(ctx: StackContext) {
       "GITHUB_CLIENT_SECRET",
     ),
     botpoison: new Config.Secret(ctx.stack, "BOTPOISON_SECRET_KEY"),
+    cloudflare: new Config.Secret(ctx.stack, "CLOUDFLARE_TOKEN"),
     slack: [
       new Config.Secret(ctx.stack, "SLACK_CLIENT_ID"),
       new Config.Secret(ctx.stack, "SLACK_CLIENT_SECRET"),

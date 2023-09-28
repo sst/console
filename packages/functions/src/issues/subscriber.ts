@@ -21,7 +21,7 @@ export const handler = Handler("kinesis_stream", (event) =>
     },
     async () => {
       const incomplete: string[] = event.Records.map(
-        (r) => r.eventID,
+        (r) => r.eventID
       ).reverse();
       let timeout = false;
       setTimeout(() => {
@@ -31,7 +31,7 @@ export const handler = Handler("kinesis_stream", (event) =>
       for (const record of Records) {
         if (timeout) break;
         const decoded = JSON.parse(
-          unzipSync(Buffer.from(record.kinesis.data, "base64")).toString(),
+          unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
         );
         if (decoded.messageType !== "DATA_MESSAGE") {
           incomplete.pop();
@@ -52,6 +52,6 @@ export const handler = Handler("kinesis_stream", (event) =>
       };
 
       return response;
-    },
-  ),
+    }
+  )
 );

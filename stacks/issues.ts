@@ -26,7 +26,12 @@ export function Issues({ stack }: StackContext) {
           nodejs: {
             install: ["source-map"],
           },
-          bind: [bus, use(Storage), ...Object.values(secrets.database)],
+          bind: [
+            bus,
+            use(Storage),
+            ...Object.values(secrets.database),
+            secrets.cloudflare,
+          ],
           permissions: ["sts", "iot"],
         },
         cdk: {
