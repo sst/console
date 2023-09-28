@@ -54,7 +54,6 @@ export const send = zod(
 
     const client = new WebClient(result.accessToken);
     await client.chat.postMessage({
-      text: "Error",
       attachments: [
         {
           color: "#ff0000",
