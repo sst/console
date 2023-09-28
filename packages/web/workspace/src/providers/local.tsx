@@ -59,6 +59,7 @@ export function LocalProvider(props: ParentProps) {
         bus.emit(parsed.type, parsed.properties);
       };
       ws.onclose = () => {
+        setStore({});
         reconnect = window.setTimeout(connect, 3000);
       };
       ws.onerror = () => {
