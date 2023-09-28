@@ -1,6 +1,6 @@
 import { useWorkspace, withActor } from "@console/core/actor";
 import { app, stage } from "@console/core/app/app.sql";
-import { and, db, eq, gt, lt, sql } from "@console/core/drizzle";
+import { and, db, eq, gt, isNull, lt, sql } from "@console/core/drizzle";
 import { Issue } from "@console/core/issue";
 import { issue, issueAlert } from "@console/core/issue/issue.sql";
 import { Slack } from "@console/core/slack";
@@ -30,6 +30,7 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
           eq(issue.workspaceID, useWorkspace()),
           eq(issue.stageID, event.properties.stageID),
           eq(issue.group, event.properties.group),
+          isNull(issue.timeIgnored),
         ),
       )
       .then((rows) => rows[0]);
