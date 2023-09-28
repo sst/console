@@ -39,7 +39,7 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
       withContext[0]?.context;
 
     await Slack.send({
-      channel: "team",
+      channel: "sst-alerts",
       teamID: "T01JJ7B6URX",
       blocks: [
         {
