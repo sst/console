@@ -79,6 +79,15 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
             ].join("\n"),
           },
         },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "plain_text",
+              text: [result.appName, result.stageName].join("/"),
+            },
+          ],
+        },
       ],
     });
 
