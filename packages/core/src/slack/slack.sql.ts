@@ -7,7 +7,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID } from "../util/sql";
 
-export const slack_team = mysqlTable(
+export const slackTeam = mysqlTable(
   "slack_team",
   {
     ...workspaceID,

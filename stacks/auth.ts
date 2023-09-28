@@ -4,7 +4,7 @@ import { Secrets } from "./secrets";
 import { DNS } from "./dns";
 
 export function Auth({ stack, app }: StackContext) {
-  const { github, database, botpoison } = use(Secrets);
+  const { slack, github, database, botpoison } = use(Secrets);
   const dns = use(DNS);
   const auth = new SSTAuth(stack, "auth", {
     authenticator: {
@@ -14,6 +14,7 @@ export function Auth({ stack, app }: StackContext) {
         github.GITHUB_CLIENT_SECRET,
         database.PLANETSCALE_PASSWORD,
         database.PLANETSCALE_USERNAME,
+        ...slack,
         botpoison,
       ],
       environment: {

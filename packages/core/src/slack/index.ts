@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zod } from "../util/zod";
 import { Block, KnownBlock, WebClient } from "@slack/web-api";
 import { useTransaction } from "../util/transaction";
-import { slack_team } from "./slack.sql";
+import { slackTeam } from "./slack.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { and, db, eq } from "../drizzle";
@@ -14,7 +14,7 @@ export const connect = zod(z.string().nonempty(), async (token) => {
   const response = await client.team.info();
   await useTransaction(async (tx) =>
     tx
-      .insert(slack_team)
+      .insert(slackTeam)
       .values({
         workspaceID: useWorkspace(),
         accessToken: token,
@@ -41,11 +41,11 @@ export const send = zod(
   async (input) => {
     const result = await db
       .select()
-      .from(slack_team)
+      .from(slackTeam)
       .where(
         and(
-          eq(slack_team.teamID, input.teamID),
-          eq(slack_team.workspaceID, useWorkspace()),
+          eq(slackTeam.teamID, input.teamID),
+          eq(slackTeam.workspaceID, useWorkspace()),
         ),
       )
       .then((rows) => rows.at(0));

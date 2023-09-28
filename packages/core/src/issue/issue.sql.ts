@@ -91,3 +91,17 @@ export const issueCount = mysqlTable(
     ),
   }),
 );
+
+export const issueAlert = mysqlTable(
+  "issue_alert",
+  {
+    ...workspaceID,
+    ...timestamps,
+    stageID: cuid("stage_id").notNull(),
+    group: varchar("group", { length: 255 }).notNull(),
+  },
+  (table) => ({
+    primary: primaryKey(table.workspaceID, table.id),
+    unique: unique("unique").on(table.workspaceID, table.stageID, table.group),
+  }),
+);
