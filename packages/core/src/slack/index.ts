@@ -28,7 +28,7 @@ export const connect = zod(z.string().nonempty(), async (token) => {
           teamName: response.team?.name!,
         },
       })
-      .execute(),
+      .execute()
   );
 });
 
@@ -45,8 +45,8 @@ export const send = zod(
       .where(
         and(
           eq(slackTeam.teamID, input.teamID),
-          eq(slackTeam.workspaceID, useWorkspace()),
-        ),
+          eq(slackTeam.workspaceID, useWorkspace())
+        )
       )
       .then((rows) => rows.at(0));
 
@@ -62,5 +62,5 @@ export const send = zod(
       ],
       channel: input.channel,
     });
-  },
+  }
 );

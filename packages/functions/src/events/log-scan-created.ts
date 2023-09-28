@@ -38,11 +38,11 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
               orderBy: "LastEventTime",
               descending: true,
               limit: 1,
-            }),
+            })
           );
           console.log(response.logStreams);
           initial = new Date(
-            response.logStreams?.[0]?.lastEventTimestamp! + 30 * 60 * 1000,
+            response.logStreams?.[0]?.lastEventTimestamp! + 30 * 60 * 1000
           );
         }
         console.log("start", initial.toLocaleString());
@@ -68,7 +68,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
             "scanning from",
             new Date(start).toLocaleString(),
             "to",
-            new Date(end).toLocaleString(),
+            new Date(end).toLocaleString()
           );
           const result = await client
             .send(
@@ -77,7 +77,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                 queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 10000`,
                 startTime: start / 1000,
                 endTime: end / 1000,
-              }),
+              })
             )
             .catch(() => {});
           if (!result) return;
@@ -87,7 +87,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
             const response = await client.send(
               new GetQueryResultsCommand({
                 queryId: result.queryId,
-              }),
+              })
             );
 
             if (response.status === "Complete") {
@@ -95,7 +95,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
 
               let index = 0;
               for (const result of results.sort((a, b) =>
-                a[0]!.value!.localeCompare(b[0]!.value!),
+                a[0]!.value!.localeCompare(b[0]!.value!)
               )) {
                 await processor.process({
                   id: index.toString(),
@@ -131,7 +131,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
 
     await Log.Search.complete(search.id);
     await Replicache.poke();
-  }),
+  })
 );
 
 function delay(iteration: number) {

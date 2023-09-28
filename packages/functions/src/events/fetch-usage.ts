@@ -29,7 +29,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
     const functions = allFunctions.filter(
       // TODO fix type error
       // @ts-expect-error
-      (fn) => fn.type === "Function" && !fn.enrichment.live,
+      (fn) => fn.type === "Function" && !fn.enrichment.live
     );
     console.log(`> functions ${functions.length}/${allFunctions.length}`);
     if (!functions.length) return;
@@ -88,11 +88,11 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
             })),
             StartTime: startDate.toJSDate(),
             EndTime: endDate.toJSDate(),
-          }),
+          })
         );
         return (metrics.MetricDataResults || [])?.reduce(
           (acc, result) => acc + (result.Values?.[0] ?? 0),
-          0,
+          0
         );
       };
 
@@ -119,7 +119,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       });
       const monthlyInvocations = monthlyUsages.reduce(
         (acc, usage) => acc + usage.invocations,
-        0,
+        0
       );
       console.log("> monthly invocations", monthlyInvocations);
 
@@ -139,13 +139,13 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
           },
           {
             idempotencyKey: `${workspaceID}-${stageID}-${timestamp}`,
-          },
+          }
         );
       } catch (e: any) {
         console.log(e.message);
         if (
           e.message.startsWith(
-            "Cannot create the usage record with this timestamp",
+            "Cannot create the usage record with this timestamp"
           )
         ) {
           return;
@@ -153,5 +153,5 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
         throw e;
       }
     }
-  }),
+  })
 );

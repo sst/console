@@ -206,7 +206,7 @@ function createControl() {
       p.map(async (provider) => {
         const actions = await provider(input(), activeProviders().length === 0);
         return actions;
-      }),
+      })
     ).then((x) => x.flat());
     setActions(actions);
   });
@@ -215,16 +215,16 @@ function createControl() {
     return pipe(
       actions() || [],
       filter((action) =>
-        action.title.toLowerCase().includes(input().toLowerCase()),
+        action.title.toLowerCase().includes(input().toLowerCase())
       ),
-      groupBy((a) => a.category),
+      groupBy((a) => a.category)
     );
   });
 
   createMutationObserver(
     () => root()?.querySelector(`[data-element="results"]`)!,
     { childList: true },
-    () => control.reset(),
+    () => control.reset()
   );
 
   const control = {
@@ -244,7 +244,7 @@ function createControl() {
     },
     active() {
       return control.root.querySelector(
-        "[data-element='action'].active",
+        "[data-element='action'].active"
       ) as HTMLElement;
     },
     setActive(el: Element, disableScroll?: boolean) {

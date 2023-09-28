@@ -66,7 +66,7 @@ export function handler(input: State) {
                 nextToken: nextToken,
                 orderBy: "LastEventTime",
                 descending: true,
-              }),
+              })
             );
 
             for (const logStream of response.logStreams || []) {
@@ -86,7 +86,7 @@ export function handler(input: State) {
       async function* fetchEvents(
         logGroup: string,
         startTime: number,
-        streams: string[],
+        streams: string[]
       ) {
         let nextToken: string | undefined;
         console.log("fetching logs for", streams.length, "streams");
@@ -98,7 +98,7 @@ export function handler(input: State) {
               logStreamNames: streams,
               nextToken,
               startTime,
-            }),
+            })
           );
 
           for (const event of response.events || []) {
@@ -126,14 +126,14 @@ export function handler(input: State) {
                 limit: 1,
                 logGroupIdentifier: input.logGroup,
                 logStreamName: stream.logStreamName,
-              }),
+              })
             )
             .then((r) => r.events?.[0]);
           if (result) {
             console.log(
               "found last event",
               result.timestamp,
-              stream.logStreamName,
+              stream.logStreamName
             );
             start = (result.timestamp || 0) - 60 * 1000;
           }
@@ -159,7 +159,7 @@ export function handler(input: State) {
       for await (const event of fetchEvents(
         input.logGroup,
         start + offset,
-        streams,
+        streams
       )) {
         await processor.process({
           timestamp: event.timestamp!,
@@ -184,6 +184,6 @@ export function handler(input: State) {
         start,
         done: false,
       } satisfies State["status"];
-    },
+    }
   );
 }

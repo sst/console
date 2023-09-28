@@ -11,7 +11,7 @@ function init() {
       account: "",
       workspace: "",
       dummy: "",
-    }),
+    })
   );
 
   return {

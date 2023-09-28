@@ -20,8 +20,8 @@ await queue(100, accounts, (account) =>
         workspaceID: account.workspaceID,
       },
     },
-    () => AWS.Account.Events.Created.publish({ awsAccountID: account.id }),
-  ),
+    () => AWS.Account.Events.Created.publish({ awsAccountID: account.id })
+  )
 );
 
 console.log("done");

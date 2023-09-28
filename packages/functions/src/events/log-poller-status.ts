@@ -19,7 +19,7 @@ export const handler = (evt: any) => {
         console.log(
           "setting execution arn",
           input.pollerID,
-          evt.detail.executionArn,
+          evt.detail.executionArn
         );
         await LogPoller.setExecution({
           id: input.pollerID,
@@ -34,6 +34,6 @@ export const handler = (evt: any) => {
       // console.log("restarted", restarted);
 
       await Replicache.poke();
-    },
+    }
   );
 };

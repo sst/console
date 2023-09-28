@@ -57,14 +57,14 @@ export const Enrichers = {
     const info = await client.send(
       new GetFunctionCommand({
         FunctionName: resource.data.arn,
-      }),
+      })
     );
     client.destroy();
     return {
       size: info.Configuration?.CodeSize,
       runtime: info.Configuration?.Runtime,
       live: Boolean(
-        info.Configuration?.Environment?.Variables?.SST_FUNCTION_ID,
+        info.Configuration?.Environment?.Variables?.SST_FUNCTION_ID
       ),
     };
   },
@@ -80,19 +80,19 @@ export const Enrichers = {
     const result = await client.send(
       new DescribeStacksCommand({
         StackName: resource.id,
-      }),
+      })
     );
     client.destroy();
     const [stack] = result.Stacks || [];
     const parsed = JSON.parse(
       stack?.Outputs?.find((o) => o.OutputKey === "SSTMetadata")?.OutputValue ||
-        "{}",
+        "{}"
     );
     return {
       outputs:
         stack?.Outputs?.filter(
           (o) =>
-            o.OutputKey !== "SSTMetadata" && !o.OutputKey?.startsWith("Export"),
+            o.OutputKey !== "SSTMetadata" && !o.OutputKey?.startsWith("Export")
         ) || [],
       version: parsed.version as string | undefined,
     } as const;
@@ -104,7 +104,7 @@ export const Enrichers = {
       data: Extract<Metadata, { type: key }>["data"];
     },
     credentials: Credentials,
-    region: string,
+    region: string
   ) => Promise<any>;
 };
 
@@ -115,8 +115,8 @@ export const fromID = zod(z.string().nonempty(), (id) =>
       .from(resource)
       .where(and(eq(resource.workspaceID, useWorkspace()), eq(resource.id, id)))
       .execute()
-      .then((x) => x[0]),
-  ),
+      .then((x) => x[0])
+  )
 );
 
 export const enrich = zod(
@@ -137,9 +137,9 @@ export const enrich = zod(
           data: resource.metadata as any,
         },
         input.credentials,
-        input.region,
+        input.region
       );
-    }),
+    })
 );
 
 export const listFromStageID = zod(
@@ -156,10 +156,10 @@ export const listFromStageID = zod(
           and(
             eq(resource.workspaceID, useWorkspace()),
             eq(resource.stageID, input.stageID),
-            inArray(resource.type, input.types),
-          ),
+            inArray(resource.type, input.types)
+          )
         )
         .execute()
-        .then((rows) => rows),
-    ),
+        .then((rows) => rows)
+    )
 );

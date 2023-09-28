@@ -124,7 +124,7 @@ export function Detail() {
           authorization: rep().auth,
           "x-sst-workspace": issue()!.workspaceID,
         },
-      },
+      }
     ).then((x) => x.json());
     invocations.clear(issue()!.id);
     bus.emit("invocation", result);
@@ -139,9 +139,9 @@ export function Detail() {
       .flatMap((x) =>
         name() && x.type === "Function" && x.metadata.arn.endsWith(name()!)
           ? [x]
-          : [],
+          : []
       )
-      .at(0),
+      .at(0)
   );
 
   const min = DateTime.now()
@@ -150,18 +150,18 @@ export function Detail() {
     .toSQL({ includeOffset: false })!;
   const counts = IssueCountStore.watch.scan(
     rep,
-    (item) => item.group === issue()?.group && item.hour > min,
+    (item) => item.group === issue()?.group && item.hour > min
   );
   const histogram = createMemo(() => {
     const hours = fromPairs(
       counts().map((item) => [
         parseTime(item.hour).toSQL({ includeOffset: false })!,
         item.count,
-      ]),
+      ])
     );
     return Interval.fromDateTimes(
       DateTime.now().toUTC().startOf("hour").minus({ hours: 23 }),
-      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 }),
+      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 })
     )
       .splitBy({ hours: 1 })
       .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
@@ -311,7 +311,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeSeen).toLocaleString(
-                  DateTime.DATETIME_FULL,
+                  DateTime.DATETIME_FULL
                 )}
                 color="secondary"
               >
@@ -324,7 +324,7 @@ export function Detail() {
               </Text>
               <Text
                 title={parseTime(issue().timeCreated).toLocaleString(
-                  DateTime.DATETIME_FULL,
+                  DateTime.DATETIME_FULL
                 )}
                 color="secondary"
               >

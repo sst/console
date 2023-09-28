@@ -15,5 +15,5 @@ export const handler = EventHandler(AWS.Account.Events.Created, (evt) =>
       awsAccountID: account.id,
       credentials,
     });
-  }),
+  })
 );

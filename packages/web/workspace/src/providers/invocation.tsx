@@ -53,12 +53,12 @@ export const { use: useInvocations, provider: InvocationProvider } =
                 exists.logs = pipe(
                   invocation.logs,
                   uniqBy((e) => e.id),
-                  sortBy((e) => e.timestamp),
+                  sortBy((e) => e.timestamp)
                 );
               }
             }
           }
-        }),
+        })
       );
     });
 
@@ -78,7 +78,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
           };
           group.push(invocation);
           state.all.push(invocation);
-        }),
+        })
       );
     });
 
@@ -87,7 +87,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
         produce((state) => {
           let group = state[data.functionID];
           const invocation = group?.findLast(
-            (i) => i.source === data.functionID,
+            (i) => i.source === data.functionID
           );
           if (!invocation) return;
           invocation.logs.push({
@@ -95,7 +95,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             message: data.message,
             timestamp: Date.now(),
           });
-        }),
+        })
       );
     });
 
@@ -104,12 +104,12 @@ export const { use: useInvocations, provider: InvocationProvider } =
         produce((state) => {
           let group = state[data.functionID];
           const invocation = group?.findLast(
-            (i) => i.source === data.functionID,
+            (i) => i.source === data.functionID
           );
           if (!invocation) return;
           invocation.end = Date.now();
           invocation.output = data.body;
-        }),
+        })
       );
     });
 
@@ -118,7 +118,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
         produce((state) => {
           let group = state[data.functionID];
           const invocation = group?.findLast(
-            (i) => i.source === data.functionID,
+            (i) => i.source === data.functionID
           );
           if (!invocation) return;
           invocation.errors.push({
@@ -129,7 +129,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
               raw: t,
             })),
           });
-        }),
+        })
       );
     });
 
@@ -141,7 +141,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
         setStore(
           produce((state) => {
             state[source] = [];
-          }),
+          })
         );
         bus.emit("log.cleared", { source });
       },

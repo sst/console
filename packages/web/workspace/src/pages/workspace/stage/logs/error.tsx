@@ -118,8 +118,8 @@ export function StackTrace(props: { stack: StackFrame[] }) {
   const first = createMemo(() =>
     Math.max(
       props.stack.findIndex((frame) => frame.important),
-      0,
-    ),
+      0
+    )
   );
   return (
     <For each={props.stack}>

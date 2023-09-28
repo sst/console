@@ -64,7 +64,7 @@ export function AuthProvider(props: ParentProps) {
   if (access_token) {
     const [_headerEncoded, payloadEncoded] = access_token.split(".");
     const payload = JSON.parse(
-      atob(payloadEncoded.replace(/-/g, "+").replace(/_/g, "/")),
+      atob(payloadEncoded.replace(/-/g, "+").replace(/_/g, "/"))
     );
     tokens[payload.properties.accountID] = {
       token: access_token,
@@ -131,7 +131,7 @@ export function useCurrentUser() {
       users().find(
         (u) =>
           dummy()?.user === u.id ||
-          u.email === auth[storage.value.account].session.email,
-      )!,
+          u.email === auth[storage.value.account].session.email
+      )!
   );
 }

@@ -39,7 +39,7 @@ export function LocalProvider(props: ParentProps) {
       JSON.stringify({
         type: "log.cleared",
         properties,
-      }),
+      })
     );
   });
 

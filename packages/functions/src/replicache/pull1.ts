@@ -81,7 +81,7 @@ export const handler = ApiHandler(
                 actor,
                 cvrVersion: 0,
                 clientVersion: (req.cookie as number) ?? 0,
-              },
+              }
           );
 
         if (!equals(group.actor, actor)) {
@@ -98,8 +98,8 @@ export const handler = ApiHandler(
           .where(
             and(
               eq(replicache_cvr.clientGroupID, req.clientGroupID),
-              eq(replicache_cvr.id, req.cookie as number),
-            ),
+              eq(replicache_cvr.id, req.cookie as number)
+            )
           )
           .execute()
           .then((rows) => rows.at(0));
@@ -133,7 +133,7 @@ export const handler = ApiHandler(
             log_search: eq(log_search.userID, actor.properties.userID),
             usage: gte(
               usage.day,
-              DateTime.now().toUTC().startOf("month").toSQLDate()!,
+              DateTime.now().toUTC().startOf("month").toSQLDate()!
             ),
             issueCount: gte(
               issueCount.hour,
@@ -141,7 +141,7 @@ export const handler = ApiHandler(
                 .toUTC()
                 .startOf("hour")
                 .minus({ day: 1 })
-                .toSQL({ includeOffset: false })!,
+                .toSQL({ includeOffset: false })!
             ),
           } satisfies {
             [key in keyof typeof TABLES]?: SQLWrapper;
@@ -156,12 +156,12 @@ export const handler = ApiHandler(
                 and(
                   eq(
                     "workspaceID" in table ? table.workspaceID : table.id,
-                    workspaceID,
+                    workspaceID
                   ),
                   ...(name in tableFilters
                     ? [tableFilters[name as keyof typeof tableFilters]]
-                    : []),
-                ),
+                    : [])
+                )
               );
             const rows = await query.execute();
             results.push([name, rows]);
@@ -182,8 +182,8 @@ export const handler = ApiHandler(
               .where(
                 and(
                   eq(user.email, actor.properties.email),
-                  isNull(user.timeDeleted),
-                ),
+                  isNull(user.timeDeleted)
+                )
               )
               .execute(),
           ]);
@@ -199,8 +199,8 @@ export const handler = ApiHandler(
             .where(
               and(
                 eq(user.email, actor.properties.email),
-                isNull(user.timeDeleted),
-              ),
+                isNull(user.timeDeleted)
+              )
             )
             .execute();
           results.push(["workspace", workspaces]);
@@ -222,7 +222,7 @@ export const handler = ApiHandler(
 
         console.log(
           "toPut",
-          mapValues(toPut, (value) => value.length),
+          mapValues(toPut, (value) => value.length)
         );
 
         console.log("toDel", cvr.data);
@@ -239,8 +239,8 @@ export const handler = ApiHandler(
                 "workspaceID" in table && actor.type === "user"
                   ? eq(table.workspaceID, useWorkspace())
                   : undefined,
-                inArray(table.id, ids),
-              ),
+                inArray(table.id, ids)
+              )
             )
             .execute();
           for (const row of rows) {
@@ -270,13 +270,13 @@ export const handler = ApiHandler(
           .where(
             and(
               eq(replicache_client.clientGroupID, req.clientGroupID),
-              gt(replicache_client.clientVersion, cvr.clientVersion),
-            ),
+              gt(replicache_client.clientVersion, cvr.clientVersion)
+            )
           )
           .execute();
 
         const lastMutationIDChanges = Object.fromEntries(
-          clients.map((c) => [c.id, c.mutationID] as const),
+          clients.map((c) => [c.id, c.mutationID] as const)
         );
         if (patch.length > 0) {
           console.log("inserting", req.clientGroupID);
@@ -310,8 +310,8 @@ export const handler = ApiHandler(
             .where(
               and(
                 eq(replicache_cvr.clientGroupID, req.clientGroupID),
-                lt(replicache_cvr.id, nextCvr.version - 10),
-              ),
+                lt(replicache_cvr.id, nextCvr.version - 10)
+              )
             );
 
           return {
@@ -326,7 +326,7 @@ export const handler = ApiHandler(
           cookie: req.cookie,
           lastMutationIDChanges,
         };
-      },
+      }
     );
 
     return {
@@ -336,5 +336,5 @@ export const handler = ApiHandler(
       },
       body: JSON.stringify(resp),
     };
-  }),
+  })
 );

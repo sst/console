@@ -229,7 +229,7 @@ export function Header(props: HeaderProps) {
   const icon = createMemo(
     () =>
       props.icon ||
-      ResourceIcon[props.resource.type as keyof typeof ResourceIcon],
+      ResourceIcon[props.resource.type as keyof typeof ResourceIcon]
   );
   return (
     <HeaderRoot>
@@ -267,7 +267,7 @@ const MINIMUM_VERSION = "2.19.2";
 export function Resources() {
   const resources = useResourcesContext();
   const stacks = createMemo(() =>
-    resources().filter((r) => r.type === "Stack"),
+    resources().filter((r) => r.type === "Stack")
   );
   const outdated = createMemo(() =>
     stacks().filter(
@@ -275,14 +275,14 @@ export function Resources() {
         r.type === "Stack" &&
         r.enrichment.version &&
         r.enrichment.version < MINIMUM_VERSION &&
-        !r.enrichment.version?.startsWith("0.0.0"),
-    ),
+        !r.enrichment.version?.startsWith("0.0.0")
+    )
   );
   const minVersion = createMemo(
     () =>
       outdated()
         .map((r) => r.type === "Stack" && r.enrichment.version)
-        .sort()[0],
+        .sort()[0]
   );
 
   return (
@@ -382,7 +382,7 @@ export function Resources() {
                     r.type === "KinesisStream" ||
                     r.type === "SvelteKitSite" ||
                     r.type === "SolidStartSite" ||
-                    r.type === "ApiGatewayV1Api",
+                    r.type === "ApiGatewayV1Api"
                 )
                 .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
             >
@@ -873,7 +873,7 @@ export function OutputsCard() {
   const outputs = createMemo(() =>
     resources()
       .flatMap((r) => (r.type === "Stack" ? r.enrichment.outputs : []))
-      .sort((a, b) => a.OutputKey!.localeCompare(b.OutputKey!)),
+      .sort((a, b) => a.OutputKey!.localeCompare(b.OutputKey!))
   );
 
   return (
@@ -943,7 +943,7 @@ export function OrphanFunctionsCard() {
   const orphans = createMemo(() =>
     [...functions().entries()]
       .filter(([_, values]) => !values.length)
-      .map(([key]) => key),
+      .map(([key]) => key)
   );
 
   return (
@@ -997,11 +997,11 @@ function FunctionChild(props: {
           r.type === "Function" &&
           (r.id === props.id ||
             r.addr === props.id ||
-            r.metadata.arn === props.id),
-      ) as Extract<Resource.Info, { type: "Function" }> | undefined,
+            r.metadata.arn === props.id)
+      ) as Extract<Resource.Info, { type: "Function" }> | undefined
   );
   const runtime = createMemo(
-    () => fn()?.metadata.runtime || fn()?.enrichment.runtime || "",
+    () => fn()?.metadata.runtime || fn()?.enrichment.runtime || ""
   );
   return (
     <Show when={fn()}>

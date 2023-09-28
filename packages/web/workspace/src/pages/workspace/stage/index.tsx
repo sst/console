@@ -44,12 +44,12 @@ export function Stage() {
 
   const app = AppStore.watch.find(
     useReplicache(),
-    (app) => app.name === params.appName,
+    (app) => app.name === params.appName
   );
   const stage = createSubscription(() =>
     app()
       ? StageStore.fromName(app()!.id, params.stageName)
-      : async () => undefined,
+      : async () => undefined
   );
 
   bar.register("stage-switcher", async () => {
@@ -89,7 +89,7 @@ export function Inner() {
   const issues = useIssuesContext();
   const issuesCount = createMemo(
     () =>
-      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length,
+      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length
   );
   const header = useHeaderContext();
   return (

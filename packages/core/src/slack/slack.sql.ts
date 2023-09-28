@@ -19,5 +19,5 @@ export const slackTeam = mysqlTable(
   (table) => ({
     primary: primaryKey(table.workspaceID, table.id),
     team: uniqueIndex("team").on(table.workspaceID, table.teamID),
-  }),
+  })
 );

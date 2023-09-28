@@ -16,8 +16,8 @@ export async function handler() {
           Stage.Events.UsageRequested.publish({
             stageID: stage.id,
             daysOffset: 1,
-          }),
-      ),
-    ),
+          })
+      )
+    )
   );
 }

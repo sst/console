@@ -14,8 +14,8 @@ const stages = await db
     and(
       workspaceFilter.length
         ? inArray(stage.workspaceID, workspaceFilter)
-        : undefined,
-    ),
+        : undefined
+    )
   )
   .execute();
 console.log("found", stages.length, "stages");
@@ -31,6 +31,6 @@ await queue(1, stages, async (stage) =>
     () =>
       Stage.Events.ResourcesUpdated.publish({
         stageID: stage.id,
-      }),
-  ),
+      })
+  )
 );

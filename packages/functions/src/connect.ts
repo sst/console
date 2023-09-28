@@ -20,7 +20,7 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
         },
         async () => {
           const credentials = await AWS.assumeRole(
-            event.ResourceProperties.accountID,
+            event.ResourceProperties.accountID
           );
           if (credentials) {
             await AWS.Account.create({
@@ -32,7 +32,7 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
           } else {
             status = "FAILED";
           }
-        },
+        }
       );
     } catch (ex) {
       console.error(ex);

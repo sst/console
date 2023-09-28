@@ -37,5 +37,5 @@ export const handler = ApiHandler(
     });
 
     return { statusCode: 200, body: JSON.stringify({ url: session.url }) };
-  }),
+  })
 );

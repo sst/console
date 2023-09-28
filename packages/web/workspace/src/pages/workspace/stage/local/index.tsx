@@ -30,15 +30,15 @@ export function Local() {
         flatMap((item) =>
           item.type === "Function"
             ? [[item.metadata.localId, item] as const]
-            : [],
-        ),
-      ),
-    ),
+            : []
+        )
+      )
+    )
   );
   const ctx = useStageContext();
   const invocationsContext = useInvocations();
   const invocations = createMemo(() =>
-    invocationsContext.forSource("all").slice().reverse(),
+    invocationsContext.forSource("all").slice().reverse()
   );
   return (
     <Root>

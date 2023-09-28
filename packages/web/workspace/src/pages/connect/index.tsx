@@ -93,7 +93,7 @@ export function Connect() {
               const workspaces = createSubscription(
                 WorkspaceStore.list,
                 [],
-                () => item.replicache,
+                () => item.replicache
               );
               return (
                 <For each={workspaces()}>

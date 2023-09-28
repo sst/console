@@ -93,7 +93,7 @@ export const handler = AuthHandler({
                   new URLSearchParams({ email: claims.email }).toString(),
               },
             };
-          },
+          }
         );
       },
       async onCodeInvalid() {
@@ -148,7 +148,7 @@ export const handler = AuthHandler({
             if (result.provider === "slack") {
               await Slack.connect(result.tokenset.access_token!);
             }
-          },
+          }
         );
 
         return {

@@ -17,5 +17,5 @@ export const handler = ApiHandler(
         "Content-Type": "application/json",
       },
     };
-  }),
+  })
 );

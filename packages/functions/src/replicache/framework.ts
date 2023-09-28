@@ -18,11 +18,11 @@ export class Server<Mutations> {
   public mutation<
     Name extends string,
     Shape extends ZodSchema,
-    Args = z.infer<Shape>,
+    Args = z.infer<Shape>
   >(
     name: Name,
     shape: Shape,
-    fn: (input: z.infer<Shape>) => Promise<any>,
+    fn: (input: z.infer<Shape>) => Promise<any>
   ): Server<Mutations & { [key in Name]: Mutation<Name, Args> }> {
     this.mutations.set(name as string, {
       fn: async (args) => {
@@ -37,12 +37,12 @@ export class Server<Mutations> {
   public expose<
     Name extends string,
     Shape extends ZodSchema,
-    Args = z.infer<Shape>,
+    Args = z.infer<Shape>
   >(
     name: Name,
     fn: ((input: z.infer<ZodSchema>) => Promise<any>) & {
       schema: Shape;
-    },
+    }
   ): Server<Mutations & { [key in Name]: Mutation<Name, Args> }> {
     this.mutations.set(name as string, {
       fn,
@@ -64,16 +64,13 @@ type ExtractMutations<S extends Server<any>> = S extends Server<infer M>
 
 export class Client<
   S extends Server<any>,
-  Mutations extends Record<string, Mutation> = ExtractMutations<S>,
+  Mutations extends Record<string, Mutation> = ExtractMutations<S>
 > {
   private mutations = new Map<string, (...input: any) => Promise<void>>();
 
   public mutation<Name extends keyof Mutations>(
     name: Name,
-    fn: (
-      tx: WriteTransaction,
-      input: Mutations[Name]["input"],
-    ) => Promise<void>,
+    fn: (tx: WriteTransaction, input: Mutations[Name]["input"]) => Promise<void>
   ) {
     this.mutations.set(name as string, fn);
     return this;
@@ -82,7 +79,7 @@ export class Client<
   public build(): {
     [key in keyof Mutations]: (
       ctx: WriteTransaction,
-      args: Mutations[key]["input"],
+      args: Mutations[key]["input"]
     ) => Promise<void>;
   } {
     return Object.fromEntries(this.mutations.entries()) as any;

@@ -30,8 +30,8 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
           eq(issue.workspaceID, useWorkspace()),
           eq(issue.stageID, event.properties.stageID),
           eq(issue.group, event.properties.group),
-          isNull(issue.timeIgnored),
-        ),
+          isNull(issue.timeIgnored)
+        )
       )
       .then((rows) => rows[0]);
 
@@ -55,8 +55,8 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
           eq(issueAlert.workspaceID, useWorkspace()),
           eq(issueAlert.stageID, event.properties.stageID),
           eq(issueAlert.group, event.properties.group),
-          gt(issueAlert.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
-        ),
+          gt(issueAlert.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`)
+        )
       );
 
     if (limit.length > 0) return;
@@ -105,5 +105,5 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
           timeUpdated: sql`NOW()`,
         },
       });
-  }),
+  })
 );

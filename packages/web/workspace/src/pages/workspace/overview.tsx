@@ -174,7 +174,7 @@ function sortUsers(users: UserInfo[], selfEmail: string): UserInfo[] {
     users,
     (user) => (user.email === selfEmail ? 0 : 1), // Your own user
     (user) => (!user.timeSeen ? 0 : 1), // Invites
-    (user) => user.email.length, // Sort by length
+    (user) => user.email.length // Sort by length
   );
 }
 
@@ -212,7 +212,7 @@ export function Overview() {
   const invocations = createMemo(() =>
     usages()
       .map((usage) => usage.invocations)
-      .reduce((a, b) => a + b, 0),
+      .reduce((a, b) => a + b, 0)
   );
   const nav = useNavigate();
   const auth = useAuth();
@@ -222,13 +222,13 @@ export function Overview() {
   const sortedUsers = createMemo(() =>
     sortUsers(
       users().filter((u) => !u.timeDeleted),
-      selfEmail(),
-    ),
+      selfEmail()
+    )
   );
   const usersCapped = createMemo(() =>
     sortedUsers().length > OVERFLOW_USERS_COUNT
       ? sortedUsers().slice(0, OVERFLOW_USERS_DISPLAY)
-      : sortedUsers(),
+      : sortedUsers()
   );
   const [showUsersOverflow, setUsersShowOverflow] = createSignal(false);
 
@@ -248,13 +248,13 @@ export function Overview() {
       return sortBy(
         stages().filter((stage) => stage.awsAccountID === account.id),
         (c) => apps().find((app) => app.id === c.appID)?.name || "",
-        (c) => c.name,
+        (c) => c.name
       );
     });
     const childrenCapped = createMemo(() =>
       children().length > OVERFLOW_APPS_COUNT
         ? children().slice(0, OVERFLOW_APPS_DISPLAY)
-        : children(),
+        : children()
     );
     const [showOverflow, setShowOverflow] = createSignal(false);
     return (
@@ -618,7 +618,7 @@ function UserCard(props: UserCardProps) {
               onSelect={() => {
                 if (
                   !confirm(
-                    "Are you sure you want to remove them from the workspace?",
+                    "Are you sure you want to remove them from the workspace?"
                   )
                 )
                   return;

@@ -11,5 +11,5 @@ export const handler = EventHandler(Stage.Events.Updated, (evt) =>
       stageID: evt.properties.stageID,
       credentials: config.credentials,
     });
-  }),
+  })
 );

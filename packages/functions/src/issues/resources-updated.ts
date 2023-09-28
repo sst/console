@@ -8,5 +8,5 @@ export const handler = EventHandler(App.Stage.Events.ResourcesUpdated, (evt) =>
     const config = await Stage.assumeRole(evt.properties.stageID);
     if (!config) return;
     await Issue.subscribe(config);
-  }),
+  })
 );

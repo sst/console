@@ -16,7 +16,7 @@ export async function handler() {
       () =>
         AWS.Account.Events.Created.publish({
           awsAccountID: row.id,
-        }),
+        })
     );
   }
 }

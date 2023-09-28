@@ -92,6 +92,6 @@ export const handler = ApiHandler(async () => {
         },
         body: JSON.stringify(response),
       };
-    },
+    }
   );
 });

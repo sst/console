@@ -42,7 +42,7 @@ export function RealtimeProvider() {
           "",
           `${import.meta.env.VITE_STAGE}-console-authorizer`,
           "",
-          tokens,
+          tokens
         )
         .with_keep_alive_seconds(1200)
         .build();
@@ -55,7 +55,7 @@ export function RealtimeProvider() {
           console.log("subscribing to", workspace);
           await connection.subscribe(
             `console/${import.meta.env.VITE_STAGE}/${workspace}/#`,
-            mqtt.QoS.AtLeastOnce,
+            mqtt.QoS.AtLeastOnce
           );
         }
       });
@@ -72,7 +72,7 @@ export function RealtimeProvider() {
           e.cause,
           e.message,
           e.error_code,
-          e.error_name,
+          e.error_name
         );
       });
       connection.on("resume", console.log);

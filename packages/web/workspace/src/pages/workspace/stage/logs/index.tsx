@@ -208,7 +208,7 @@ export function Logs() {
       ? DUMMY_FUNC
       : (resources().find((x) => x.id === params.resourceID) as
           | Extract<Resource.Info, { type: "Function" }>
-          | undefined),
+          | undefined)
   );
 
   const logGroup = createMemo(() => {
@@ -241,7 +241,7 @@ export function Logs() {
   const rep = useReplicache();
 
   const poller = createSubscription(() =>
-    LogPollerStore.fromLogGroup(logGroup()),
+    LogPollerStore.fromLogGroup(logGroup())
   );
 
   createEffect(() => {
@@ -271,7 +271,7 @@ export function Logs() {
     id: createId(),
   });
   const activeSearch = createSubscription(() =>
-    LogSearchStore.fromID(search.id || ""),
+    LogSearchStore.fromID(search.id || "")
   );
 
   function createSearch(start?: number, end?: number) {
@@ -279,7 +279,7 @@ export function Logs() {
       produce((draft) => {
         draft.start = start ? new Date(start) : undefined;
         draft.end = end ? new Date(end) : undefined;
-      }),
+      })
     );
 
     rep().mutate.log_search({
@@ -324,7 +324,7 @@ export function Logs() {
       },
       {
         replace: true,
-      },
+      }
     );
     if (val === "tail") return;
     invocationsContext.clear(logGroupKey());
@@ -531,7 +531,7 @@ export function Logs() {
               <InvocationRow
                 onSavePayload={() => {
                   invokeControl.savePayload(
-                    structuredClone(unwrap(invocation.input)),
+                    structuredClone(unwrap(invocation.input))
                   );
                 }}
                 invocation={invocation}
@@ -555,7 +555,7 @@ export function Logs() {
                       Scanning
                       {activeSearch()?.timeStart
                         ? ` from ${formatSinceTime(
-                            activeSearch()?.timeStart || "",
+                            activeSearch()?.timeStart || ""
                           )}`
                         : ""}
                       &hellip;
@@ -590,7 +590,7 @@ export function Logs() {
             },
             {
               replace: true,
-            },
+            }
           );
           invocationsContext.clear(logGroupKey());
           createSearch(start.getTime(), end.getTime());
