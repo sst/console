@@ -17,8 +17,6 @@ import {
 } from "../util/transaction";
 import { zod } from "../util/zod";
 import { issueCount, issue } from "./issue.sql";
-import { fetch } from "undici";
-import { Config } from "sst/node/config";
 
 export const extract = zod(
   z.custom<(typeof Events.ErrorDetected.shape.properties)["records"][number]>(),
@@ -338,19 +336,3 @@ export const extract = zod(
     });
   }
 );
-
-async function generateEmbedding(input: string[]) {
-  console.log(input);
-  return fetch(
-    "https://api.cloudflare.com/client/v4/accounts/15d29c8639fd3733b1b5486a2acfd968/ai/run/@cf/baai/bge-base-en-v1.5",
-    {
-      headers: {
-        Authorization: `Bearer ${Config.CLOUDFLARE_TOKEN}`,
-      },
-      method: "POST",
-      body: JSON.stringify({
-        text: input.join("\n"),
-      }),
-    }
-  ).then((r) => r.json());
-}
