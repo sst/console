@@ -8,7 +8,7 @@ import { db } from "../drizzle";
 import { and, eq, sql } from "drizzle-orm";
 import { useTransaction } from "../util/transaction";
 import { user } from "./user.sql";
-import { useWorkspace } from "../actor";
+import { assertActor, useWorkspace } from "../actor";
 
 export const Info = createSelectSchema(user, {
   id: (schema) => schema.id.cuid2(),
@@ -43,7 +43,7 @@ export const create = zod(
         })
         .execute();
       return id;
-    })
+    }),
 );
 
 export const remove = zod(Info.shape.id, (input) =>
@@ -56,7 +56,7 @@ export const remove = zod(Info.shape.id, (input) =>
       .where(and(eq(user.id, input), eq(user.workspaceID, useWorkspace())))
       .execute();
     return input;
-  })
+  }),
 );
 
 export const fromID = zod(Info.shape.id, async (id) =>
@@ -67,7 +67,7 @@ export const fromID = zod(Info.shape.id, async (id) =>
       .where(and(eq(user.id, id), eq(user.workspaceID, useWorkspace())))
       .execute()
       .then((rows) => rows[0]);
-  })
+  }),
 );
 
 export const fromEmail = zod(Info.shape.email, async (email) =>
@@ -78,5 +78,16 @@ export const fromEmail = zod(Info.shape.email, async (email) =>
       .where(and(eq(user.email, email), eq(user.workspaceID, useWorkspace())))
       .execute()
       .then((rows) => rows[0]);
-  })
+  }),
 );
+
+export function findUser(workspaceID: string, email: string) {
+  return useTransaction(async (tx) => {
+    return tx
+      .select()
+      .from(user)
+      .where(and(eq(user.email, email), eq(user.workspaceID, workspaceID)))
+      .execute()
+      .then((rows) => rows[0]);
+  });
+}

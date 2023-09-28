@@ -10,7 +10,6 @@ export async function queue<T, R>(
       while (true) {
         const item = items.pop();
         if (!item) {
-          if (count) console.log(`Worker ${index} finished`);
           break;
         }
         await processItem(item);

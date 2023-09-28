@@ -53,7 +53,7 @@ const mutators = new Client<ServerType>()
       name: input.name,
       payload: input.payload,
       key: input.key,
-      timeCreated: new Date().toISOString(),
+      timeCreated: DateTime.now().toUTC().toSQL({ includeOffset: false })!,
     });
   })
   .mutation("function_payload_remove", async (tx, input) => {
@@ -165,7 +165,7 @@ export function ReplicacheProvider(
   props: ParentProps<{ accountID: string; workspaceID: string }>,
 ) {
   const tokens = useAuth();
-  const token = createMemo(() => tokens[props.accountID]?.token.token);
+  const token = createMemo(() => tokens[props.accountID]?.session.token);
 
   const rep = createMemo((prev) => {
     return createReplicache(props.workspaceID, token()!);

@@ -34,7 +34,7 @@ function set(auth: AuthData) {
 type AuthContextType = Record<
   string,
   {
-    token: Token;
+    session: Token;
     replicache: Replicache<typeof mutators>;
   }
 >;
@@ -104,7 +104,7 @@ export function AuthProvider(props: ParentProps) {
     };
 
     stores[token.accountID] = {
-      token,
+      session: token,
       replicache: rep,
     };
   }
@@ -131,7 +131,7 @@ export function useCurrentUser() {
       users().find(
         (u) =>
           dummy()?.user === u.id ||
-          u.email === auth[storage.value.account].token.email,
+          u.email === auth[storage.value.account].session.email,
       )!,
   );
 }

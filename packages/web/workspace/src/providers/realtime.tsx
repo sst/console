@@ -15,7 +15,7 @@ export function RealtimeProvider() {
   onMount(async () => {
     const url = import.meta.env.VITE_IOT_HOST;
     const tokens = Object.values(auth)
-      .map((account) => account.token.token)
+      .map((account) => account.session.token)
       .join(";");
     const workspaces = new Map<string, string[]>();
     for (const [accountID, account] of Object.entries(auth)) {

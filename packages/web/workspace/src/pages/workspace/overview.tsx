@@ -44,6 +44,7 @@ import { useLocalContext } from "$/providers/local";
 import { sortBy } from "remeda";
 import { User } from "@console/core/user";
 import { useWorkspace } from "./context";
+import { useFlags } from "$/providers/flags";
 
 const OVERFLOW_APPS_COUNT = 9;
 const OVERFLOW_APPS_DISPLAY = 6;
@@ -173,7 +174,7 @@ function sortUsers(users: UserInfo[], selfEmail: string): UserInfo[] {
     users,
     (user) => (user.email === selfEmail ? 0 : 1), // Your own user
     (user) => (!user.timeSeen ? 0 : 1), // Invites
-    (user) => user.email.length // Sort by length
+    (user) => user.email.length, // Sort by length
   );
 }
 
@@ -211,23 +212,23 @@ export function Overview() {
   const invocations = createMemo(() =>
     usages()
       .map((usage) => usage.invocations)
-      .reduce((a, b) => a + b, 0)
+      .reduce((a, b) => a + b, 0),
   );
   const nav = useNavigate();
   const auth = useAuth();
   const storage = useStorage();
-  const selfEmail = createMemo(() => auth[storage.value.account].token.email);
+  const selfEmail = createMemo(() => auth[storage.value.account].session.email);
 
   const sortedUsers = createMemo(() =>
     sortUsers(
       users().filter((u) => !u.timeDeleted),
-      selfEmail()
-    )
+      selfEmail(),
+    ),
   );
   const usersCapped = createMemo(() =>
     sortedUsers().length > OVERFLOW_USERS_COUNT
       ? sortedUsers().slice(0, OVERFLOW_USERS_DISPLAY)
-      : sortedUsers()
+      : sortedUsers(),
   );
   const [showUsersOverflow, setUsersShowOverflow] = createSignal(false);
 
@@ -247,13 +248,13 @@ export function Overview() {
       return sortBy(
         stages().filter((stage) => stage.awsAccountID === account.id),
         (c) => apps().find((app) => app.id === c.appID)?.name || "",
-        (c) => c.name
+        (c) => c.name,
       );
     });
     const childrenCapped = createMemo(() =>
       children().length > OVERFLOW_APPS_COUNT
         ? children().slice(0, OVERFLOW_APPS_DISPLAY)
-        : children()
+        : children(),
     );
     const [showOverflow, setShowOverflow] = createSignal(false);
     return (
@@ -406,12 +407,32 @@ export function Overview() {
                     </Link>
                   </PageHeader>
                   <Row space="4" vertical="center">
-                    <Link href="account">
-                      <Button color="secondary">Add AWS Account</Button>
-                    </Link>
-                    <Link href="user">
-                      <Button color="primary">Invite Team</Button>
-                    </Link>
+                    <Show when={useFlags().alerts}>
+                      <form
+                        action={import.meta.env.VITE_AUTH_URL + "/connect"}
+                        method="post"
+                        target="_blank"
+                      >
+                        <input type="hidden" name="provider" value="slack" />
+                        <input
+                          type="hidden"
+                          name="workspaceID"
+                          value={workspace().id}
+                        />
+                        <input
+                          type="hidden"
+                          name="token"
+                          value={auth[storage.value.account].session.token}
+                        />
+                        <Button color="secondary">Connect Slack</Button>
+                      </form>
+                      <Link href="account">
+                        <Button color="secondary">Add AWS Account</Button>
+                      </Link>
+                      <Link href="user">
+                        <Button color="primary">Invite Team</Button>
+                      </Link>
+                    </Show>
                   </Row>
                 </Row>
                 <Row space="4">
@@ -597,7 +618,7 @@ function UserCard(props: UserCardProps) {
               onSelect={() => {
                 if (
                   !confirm(
-                    "Are you sure you want to remove them from the workspace?"
+                    "Are you sure you want to remove them from the workspace?",
                   )
                 )
                   return;

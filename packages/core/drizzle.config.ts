@@ -7,6 +7,7 @@ const connection = {
 };
 export default {
   out: "./migrations/",
+  strict: true,
   schema: "./src/**/*.sql.ts",
   verbose: true,
   driver: "mysql2",

@@ -77,7 +77,7 @@ export const issueCount = mysqlTable(
     hour: timestamp("hour", {
       mode: "string",
     }).notNull(),
-    stageID: cuid("stage_id"),
+    stageID: cuid("stage_id").notNull(),
     group: varchar("group", { length: 255 }).notNull(),
     count: bigint("count", { mode: "number" }).notNull(),
   },

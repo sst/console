@@ -93,14 +93,14 @@ export function Connect() {
               const workspaces = createSubscription(
                 WorkspaceStore.list,
                 [],
-                () => item.replicache
+                () => item.replicache,
               );
               return (
                 <For each={workspaces()}>
                   {(workspace) => (
                     <ConnectWorkspaceRow
                       onClick={() => {
-                        storage.set("account", item.token.accountID);
+                        storage.set("account", item.session.accountID);
                         nav(`/${workspace.slug}/connect` + location.search);
                       }}
                     >

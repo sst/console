@@ -28,7 +28,7 @@ export function LocalProvider(props: ParentProps) {
       </localContext.Provider>
     );
 
-  let reconnect: NodeJS.Timer;
+  let reconnect: number;
   let ws: WebSocket;
   const [store, setStore] = createSignal<State>({});
 
@@ -59,10 +59,10 @@ export function LocalProvider(props: ParentProps) {
         bus.emit(parsed.type, parsed.properties);
       };
       ws.onclose = () => {
-        reconnect = setTimeout(connect, 3000);
+        reconnect = window.setTimeout(connect, 3000);
       };
       ws.onerror = () => {
-        reconnect = setTimeout(connect, 3000);
+        reconnect = window.setTimeout(connect, 3000);
       };
     }
     connect();

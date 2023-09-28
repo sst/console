@@ -101,6 +101,13 @@ export function Issues({ stack }: StackContext) {
     bind: [bus, ...Object.values(secrets.database)],
   });
 
+  bus.subscribe(stack, "issue.detected", {
+    handler: "packages/functions/src/issues/issue-detected.handler",
+    timeout: "15 minutes",
+    permissions: [],
+    bind: [...Object.values(secrets.database)],
+  });
+
   bus.subscribe(stack, "app.stage.connected", {
     handler: "packages/functions/src/issues/stage-connected.handler",
     timeout: "1 minute",

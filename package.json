@@ -18,7 +18,7 @@
     "@tsconfig/node16": "^16.1.0",
     "aws-cdk-lib": "2.95.1",
     "constructs": "10.2.69",
-    "sst": "2.26.5",
+    "sst": "2.26.8",
     "turbo": "^1.10.13",
     "typescript": "^5.2.2"
   },

@@ -1,19 +1,15 @@
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { AWS } from "@console/core/aws";
 import { withActor } from "@console/core/actor";
-import { db, eq, inArray, or, sql } from "@console/core/drizzle";
+import { db, inArray, or } from "@console/core/drizzle";
 import { queue } from "@console/core/util/queue";
-
-const workspaceFilter: string[] = ["jlp4ec9lw4pfabzjwhl021oc"];
+import { promptWorkspaces } from "./common";
+import { workspace } from "@console/core/workspace/workspace.sql";
 
 const accounts = await db
   .select()
   .from(awsAccount)
-  .where(
-    workspaceFilter.length
-      ? inArray(awsAccount.workspaceID, workspaceFilter)
-      : undefined,
-  )
+  .where(inArray(awsAccount.workspaceID, await promptWorkspaces()))
   .execute();
 
 await queue(100, accounts, (account) =>
@@ -27,3 +23,5 @@ await queue(100, accounts, (account) =>
     () => AWS.Account.Events.Created.publish({ awsAccountID: account.id }),
   ),
 );
+
+console.log("done");
