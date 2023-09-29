@@ -77,7 +77,9 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
             text: [
               `*<https://console.sst.dev/${result.slug}/${result.appName}/${result.stageName}/issues/${result.id} | ${result.error}>*`,
               result.message,
-            ].join("\n"),
+            ]
+              .join("\n")
+              .substring(0, 3000),
           },
         },
         {

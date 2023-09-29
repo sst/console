@@ -51,7 +51,8 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
             return resource.metadata.arn;
         }
       })
-      .filter(Boolean) as string[];
+      .flatMap((item) => (item ? [item] : []))
+      .map((item) => item.split(":").pop()) as string[];
     console.log(`> functions ${functions.length}/${allResources.length}`);
     if (!functions.length) return;
     console.log(functions);
