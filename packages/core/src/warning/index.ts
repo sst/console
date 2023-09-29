@@ -7,17 +7,22 @@ import { and, eq } from "drizzle-orm";
 
 export type Info = typeof warning.$inferSelect & Data;
 
-type Data = {
-  type: "log_subscription";
-  data:
-    | {
-        error: "limited" | "permissions" | "noisy";
-      }
-    | {
-        error: "unknown";
-        message: string;
-      };
-};
+type Data =
+  | {
+      type: "log_subscription";
+      data:
+        | {
+            error: "limited" | "permissions" | "noisy";
+          }
+        | {
+            error: "unknown";
+            message: string;
+          };
+    }
+  | {
+      type: "issue_rate_limited";
+      data: {};
+    };
 
 export async function create(
   input: Data & { target: Info["target"]; stageID: Info["stageID"] }

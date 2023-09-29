@@ -1,25 +1,60 @@
-import { provideActor } from "@console/core/actor";
+import { useWorkspace, withActor } from "@console/core/actor";
 import { Stage } from "@console/core/app";
+import { and, db, eq } from "@console/core/drizzle";
+import { issueSubscriber } from "@console/core/issue/issue.sql";
 import { Log } from "@console/core/log";
+import {
+  createTransaction,
+  createTransactionEffect,
+} from "@console/core/util/transaction";
+import { warning } from "@console/core/warning/warning.sql";
+import input from "inquirer/lib/prompts/input";
 
-provideActor({
-  type: "system",
-  properties: {
-    workspaceID: "oiwmwdb26rsyu6dtlhum289q",
-  },
-});
+const stages = await db
+  .select({
+    stageID: warning.stageID,
+    workspaceID: warning.workspaceID,
+  })
+  .from(warning)
+  .groupBy(warning.stageID, warning.workspaceID);
 
-const config = await Stage.assumeRole("n42t9fy1z9ht91sh34tyikq0");
-if (!config) throw new Error("No config");
+for (const row of stages) {
+  console.log(row);
+  await withActor(
+    {
+      type: "system",
+      properties: {
+        workspaceID: row.workspaceID,
+      },
+    },
+    async () => {
+      await createTransaction(async (tx) => {
+        await tx
+          .delete(issueSubscriber)
+          .where(
+            and(
+              eq(issueSubscriber.workspaceID, row.workspaceID),
+              eq(issueSubscriber.stageID, row.stageID)
+            )
+          )
+          .execute();
+        await tx
+          .delete(warning)
+          .where(
+            and(
+              eq(warning.workspaceID, useWorkspace()),
+              eq(warning.stageID, row.stageID),
+              eq(warning.type, "log_subscription")
+            )
+          )
+          .execute();
 
-console.time("time");
-const results = await Log.expand({
-  config,
-  group: "foo",
-  logGroup: "/aws/lambda/prod-api-Http-HttpProxyDA8736AC-doxWjkTNAD2l",
-  logStream: "2023/09/15/[$LATEST]c755589de743473da8b140c4c38ffe78",
-  functionArn: "asd",
-  timestamp: 1694806099320,
-});
-console.timeEnd("time");
-console.log(results);
+        await createTransactionEffect(() => {
+          Stage.Events.ResourcesUpdated.publish({
+            stageID: row.stageID,
+          });
+        });
+      });
+    }
+  );
+}

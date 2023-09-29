@@ -384,6 +384,12 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
     stageID: config.stageID,
     types: ["Function"],
   });
+  await Warning.create({
+    target: "none",
+    type: "issue_rate_limited",
+    stageID: config.stageID,
+    data: {},
+  });
   for (const fn of functions) {
     await Warning.create({
       target: fn.id,
