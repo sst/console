@@ -88,7 +88,7 @@ export const extract = zod(
 
     console.log("rate limit", count);
 
-    if (count > 10_000) {
+    if (count > 0) {
       await Promise.all(
         workspaces.map((workspace) =>
           withActor(

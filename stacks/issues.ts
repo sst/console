@@ -66,7 +66,7 @@ export function Issues({ stack }: StackContext) {
   });
   (kinesisRole.node.defaultChild as CfnRole).addPropertyOverride(
     "AssumeRolePolicyDocument.Statement.0.Principal.Service",
-    allRegions().map((region) => `logs.${region}.amazonaws.com`),
+    allRegions().map((region) => `logs.${region}.amazonaws.com`)
   );
 
   const kinesisParams = Config.Parameter.create(stack, {
@@ -101,8 +101,8 @@ export function Issues({ stack }: StackContext) {
 
   bus.subscribe(stack, "issue.rate_limited", {
     handler: "packages/functions/src/issues/rate-limited.handler",
-    timeout: "15 minutes",
-    permissions: ["sts"],
+    timeout: "1 minute",
+    permissions: ["sts", "logs:DeleteDestination"],
     bind: [bus, ...Object.values(secrets.database)],
   });
 

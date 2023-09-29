@@ -18,6 +18,7 @@ import {
   DeleteSubscriptionFilterCommand,
   ResourceAlreadyExistsException,
   ResourceNotFoundException,
+  DeleteDestinationCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { Resource } from "../app/resource";
 import { z } from "zod";
@@ -27,6 +28,8 @@ import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
 import { useTransaction } from "../util/transaction";
+import { warning } from "../warning/warning.sql";
+import { warn } from "console";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = typeof issue.$inferSelect;
@@ -167,6 +170,31 @@ export const connectStage = zod(
           }),
         })
       );
+    } finally {
+      cw.destroy();
+    }
+  }
+);
+
+export const disconnectStage = zod(
+  z.custom<StageCredentials>(),
+  async (config) => {
+    const uniqueIdentifier = destinationIdentifier(config);
+    console.log("deleting", uniqueIdentifier);
+    const cw = new CloudWatchLogsClient({
+      region: config.region,
+      retryStrategy: RETRY_STRATEGY,
+    });
+
+    try {
+      await cw.send(
+        new DeleteDestinationCommand({
+          destinationName: uniqueIdentifier,
+        })
+      );
+    } catch (ex) {
+      if (ex instanceof ResourceNotFoundException) return;
+      throw ex;
     } finally {
       cw.destroy();
     }
@@ -342,82 +370,29 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
 });
 
 export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
-  const uniqueIdentifier = destinationIdentifier(config);
-  const cw = new CloudWatchLogsClient({
-    region: config.region,
-    credentials: config.credentials,
-    retryStrategy: RETRY_STRATEGY,
-  });
-
-  try {
-    // Get all function resources
-    const functions = await Resource.listFromStageID({
-      stageID: config.stageID,
-      types: ["Function"],
-    });
-    if (!functions.length) return;
-
-    const exists = await db
-      .select({
-        functionID: issueSubscriber.functionID,
-      })
-      .from(issueSubscriber)
-      .where(
-        and(
-          eq(issueSubscriber.stageID, config.stageID),
-          eq(issueSubscriber.workspaceID, useWorkspace())
-        )
+  await disconnectStage(config);
+  await db
+    .delete(issueSubscriber)
+    .where(
+      and(
+        eq(issueSubscriber.workspaceID, useWorkspace()),
+        eq(issueSubscriber.stageID, config.stageID)
       )
-      .execute()
-      .then((rows) => new Set(rows.map((x) => x.functionID)));
-
-    console.log("updating", functions.length, "functions");
-    for (const fn of functions) {
-      if (!exists.has(fn.id)) continue;
-      // @ts-expect-error
-      const logGroup = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
-      console.log("unsubscribing", logGroup);
-
-      while (true) {
-        try {
-          await cw.send(
-            new DeleteSubscriptionFilterCommand({
-              filterName: uniqueIdentifier,
-              logGroupName: logGroup,
-            })
-          );
-
-          await db
-            .delete(issueSubscriber)
-            .where(
-              and(
-                eq(issueSubscriber.workspaceID, useWorkspace()),
-                eq(issueSubscriber.stageID, config.stageID),
-                eq(issueSubscriber.functionID, fn.id)
-              )
-            )
-            .execute();
-
-          await Warning.create({
-            stageID: config.stageID,
-            target: fn.id,
-            type: "log_subscription",
-            data: {
-              error: "noisy",
-            },
-          });
-
-          break;
-        } catch (e: any) {
-          if (e instanceof ResourceNotFoundException) {
-            break;
-          }
-          console.error(e);
-          break;
-        }
-      }
-    }
-  } finally {
-    cw.destroy();
+    )
+    .execute();
+  const functions = await Resource.listFromStageID({
+    stageID: config.stageID,
+    types: ["Function"],
+  });
+  for (const fn of functions) {
+    await Warning.create({
+      target: fn.id,
+      type: "log_subscription",
+      stageID: config.stageID,
+      data: {
+        error: "noisy",
+      },
+    });
   }
+  return;
 });
