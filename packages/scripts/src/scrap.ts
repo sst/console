@@ -16,6 +16,7 @@ const stages = await db
     workspaceID: warning.workspaceID,
   })
   .from(warning)
+  .where(eq(warning.type, "issue_rate_limited"))
   .groupBy(warning.stageID, warning.workspaceID);
 
 for (const row of stages) {

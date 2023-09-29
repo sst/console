@@ -364,6 +364,11 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
         }
       }
     }
+    await Warning.remove({
+      target: "none",
+      type: "issue_rate_limited",
+      stageID: config.stageID,
+    });
   } finally {
     cw.destroy();
   }

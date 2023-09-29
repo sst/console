@@ -160,6 +160,6 @@ export const listFromStageID = zod(
           )
         )
         .execute()
-        .then((rows) => rows)
+        .then((rows) => rows as Info[])
     )
 );

@@ -22,16 +22,40 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
     console.log("STAGE", stageID, startDate.toSQLDate(), endDate.toSQLDate());
 
     // Get all function resources
-    const allFunctions = await Resource.listFromStageID({
+    const allResources = await Resource.listFromStageID({
       stageID,
-      types: ["Function"],
+      types: [
+        "Function",
+        "NextjsSite",
+        "NextjsSite",
+        "RemixSite",
+        "SolidStartSite",
+        "SvelteKitSite",
+      ],
     });
-    const functions = allFunctions.filter(
-      // TODO fix type error
-      // @ts-expect-error
-      (fn) => fn.type === "Function" && !fn.enrichment.live
-    );
-    console.log(`> functions ${functions.length}/${allFunctions.length}`);
+    const functions = allResources
+      .filter(
+        // TODO fix type error
+        (fn) => fn.type !== "Function" || !fn.enrichment.live
+      )
+      .map((resource) => {
+        switch (resource.type) {
+          case "NextjsSite":
+            return resource.metadata.server;
+          case "AstroSite":
+            return resource.metadata.server;
+          case "RemixSite":
+            return resource.metadata.server;
+          case "SolidStartSite":
+            return resource.metadata.server;
+          case "SvelteKitSite":
+            return resource.metadata.server;
+          case "Function":
+            return resource.metadata.arn;
+        }
+      })
+      .filter(Boolean) as string[];
+    console.log(`> functions ${functions.length}/${allResources.length}`);
     if (!functions.length) return;
 
     // Get stage credentials
@@ -76,9 +100,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
                   Dimensions: [
                     {
                       Name: "FunctionName",
-                      // TODO: fix type
-                      // @ts-expect-error
-                      Value: fn?.metadata.arn.split(":").pop(),
+                      Value: fn,
                     },
                   ],
                 },
@@ -125,7 +147,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
 
       try {
         // TODO
-        const timestamp = startDate.toUnixInteger();
+        const timestamp = startDate.toUnixInteger() + 1;
         //const timestamp = Math.floor(Date.now() / 1000);
         //const timestamp = DateTime.now().plus({ month: 1 }).toUnixInteger();
         await stripe.subscriptionItems.createUsageRecord(
