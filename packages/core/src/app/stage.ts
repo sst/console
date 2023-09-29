@@ -185,12 +185,21 @@ export const syncMetadata = zod(
     });
     const key = `stackMetadata/app.${row.app}/stage.${row.stage}/`;
     console.log("listing", key, "for", bucket);
-    const list = await s3.send(
-      new ListObjectsV2Command({
-        Prefix: key,
-        Bucket: bucket,
-      })
-    );
+    const list = await s3
+      .send(
+        new ListObjectsV2Command({
+          Prefix: key,
+          Bucket: bucket,
+        })
+      )
+      .catch((err) => {
+        if (err.name === "AccessDenied") return;
+        throw err;
+      });
+    if (!list) {
+      console.log("could not list from bucket");
+      return;
+    }
     console.log("found", list.Contents?.length, "stacks");
     if (!list.Contents?.length) {
       await remove(input.stageID);
