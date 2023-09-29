@@ -3,6 +3,7 @@ import { withActor } from "@console/core/actor";
 
 export async function handler() {
   const stages = await Stage.list();
+  console.log("stages", stages.length);
   await Promise.all(
     stages.map((stage) =>
       withActor(

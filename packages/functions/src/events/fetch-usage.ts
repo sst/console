@@ -54,6 +54,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       .filter(Boolean) as string[];
     console.log(`> functions ${functions.length}/${allResources.length}`);
     if (!functions.length) return;
+    console.log(functions);
 
     // Get stage credentials
     const config = await Stage.assumeRole(stageID);
@@ -144,7 +145,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
 
       try {
         // TODO
-        const timestamp = startDate.toUnixInteger() + 1;
+        const timestamp = startDate.toUnixInteger();
         //const timestamp = Math.floor(Date.now() / 1000);
         //const timestamp = DateTime.now().plus({ month: 1 }).toUnixInteger();
         await stripe.subscriptionItems.createUsageRecord(
@@ -157,7 +158,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
             action: "set",
           },
           {
-            idempotencyKey: `${workspaceID}-${stageID}-${timestamp}`,
+            idempotencyKey: `${workspaceID}-${stageID}-${timestamp + 4}`,
           }
         );
       } catch (e: any) {
