@@ -27,17 +27,14 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       types: [
         "Function",
         "NextjsSite",
-        "NextjsSite",
+        "AstroSite",
         "RemixSite",
         "SolidStartSite",
         "SvelteKitSite",
       ],
     });
     const functions = allResources
-      .filter(
-        // TODO fix type error
-        (fn) => fn.type !== "Function" || !fn.enrichment.live
-      )
+      .filter((fn) => fn.type !== "Function" || !fn.enrichment.live)
       .map((resource) => {
         switch (resource.type) {
           case "NextjsSite":
