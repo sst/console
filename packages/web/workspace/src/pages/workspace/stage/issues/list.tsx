@@ -215,6 +215,7 @@ export function List() {
               details={warnings()
                 .map((item) => {
                   const reason = (function () {
+                    if (item.type !== "log_subscription") return "Unknown";
                     if (item.data.error === "noisy") return "Rate Limited";
                     if (item.data.error === "unknown")
                       return "Unknown error: " + item.data.message;
