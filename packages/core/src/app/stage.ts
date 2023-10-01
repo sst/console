@@ -136,7 +136,8 @@ export const connect = zod(
             eq(stage.workspaceID, useWorkspace()),
             eq(stage.appID, input.appID),
             eq(stage.name, input.name),
-            eq(stage.region, input.region)
+            eq(stage.region, input.region),
+            eq(stage.awsAccountID, input.awsAccountID)
           )
         )
         .execute()
