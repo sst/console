@@ -350,6 +350,7 @@ export function Overview() {
         </Match>
         <Match when={true}>
           <>
+            {/*
             <Announcement>
               <Text
                 code
@@ -378,6 +379,7 @@ export function Overview() {
                 </a>
               </Text>
             </Announcement>
+            */}
             <Root>
               <Stack space="4">
                 <Row space="5" vertical="center" horizontal="between">
