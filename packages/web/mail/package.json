@@ -1,0 +1,12 @@
+{
+  "name": "@console/mail",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "email dev"
+  },
+  "dependencies": {
+    "@react-email/button": "0.0.10",
+    "@react-email/html": "0.0.4",
+    "react-email": "1.9.4"
+  }
+}
