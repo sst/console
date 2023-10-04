@@ -4,7 +4,18 @@ import { user } from "@console/core/user/user.sql";
 import { createTransaction } from "@console/core/util/transaction";
 import { NotPublic, withApiAuth } from "../api";
 import { ApiHandler, Response, useJsonBody } from "sst/node/api";
-import { eq, and, gt, gte, inArray, isNull, lt, SQLWrapper } from "drizzle-orm";
+import {
+  eq,
+  and,
+  gt,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  SQLWrapper,
+  sql,
+  SQL,
+} from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { usage } from "@console/core/billing/billing.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
@@ -24,6 +35,7 @@ import {
   issueSubscriber,
   issueCount,
 } from "@console/core/issue/issue.sql";
+import { MySqlColumn } from "drizzle-orm/mysql-core";
 
 export const TABLES = {
   workspace,
@@ -40,6 +52,16 @@ export const TABLES = {
   issueSubscriber,
   issueCount,
   usage,
+};
+
+type TableName = keyof typeof TABLES;
+
+const TABLE_KEY = {
+  issue: [issue.stageID, issue.id],
+  resource: [resource.stageID, resource.id],
+  issueCount: [issueCount.group, issueCount.id],
+} as {
+  [key in TableName]?: MySqlColumn[];
 };
 
 export const handler = ApiHandler(
@@ -107,7 +129,8 @@ export const handler = ApiHandler(
           data: {},
           clientVersion: 0,
         };
-        const toPut: Record<string, string[]> = {};
+
+        const toPut: Record<string, { id: string; key: string }[]> = {};
         const nextCvr = {
           data: {} as Record<string, number>,
           version: Math.max(req.cookie as number, group.cvrVersion) + 1,
@@ -124,7 +147,10 @@ export const handler = ApiHandler(
           });
         }
 
-        const results: [string, { id: string; time_updated: string }[]][] = [];
+        const results: [
+          string,
+          { id: string; version: string; key: string }[]
+        ][] = [];
 
         if (actor.type === "user") {
           console.log("syncing user");
@@ -149,8 +175,17 @@ export const handler = ApiHandler(
 
           const workspaceID = useWorkspace();
           for (const [name, table] of Object.entries(TABLES)) {
+            const key = TABLE_KEY[name as TableName] ?? [table.id];
             const query = tx
-              .select({ id: table.id, time_updated: table.timeUpdated })
+              .select({
+                id: table.id,
+                version: table.timeUpdated,
+                key: sql.join([
+                  sql`concat_ws(`,
+                  sql.join([sql`'/'`, sql`''`, sql`${name}`, ...key], sql`, `),
+                  sql.raw(`)`),
+                ]) as SQL<string>,
+              })
               .from(table)
               .where(
                 and(
@@ -175,8 +210,8 @@ export const handler = ApiHandler(
             await tx
               .select({
                 id: user.id,
-                workspaceID: user.workspaceID,
-                time_updated: user.timeUpdated,
+                key: sql<string>`concat('/user/', ${user.id})`,
+                version: user.timeUpdated,
               })
               .from(user)
               .where(
@@ -192,7 +227,8 @@ export const handler = ApiHandler(
           const workspaces = await tx
             .select({
               id: workspace.id,
-              time_updated: workspace.timeUpdated,
+              version: workspace.timeUpdated,
+              key: sql<string>`concat('/workspace/', ${workspace.id})`,
             })
             .from(workspace)
             .leftJoin(user, eq(user.workspaceID, workspace.id))
@@ -207,15 +243,14 @@ export const handler = ApiHandler(
         }
 
         for (const [name, rows] of results) {
-          const arr = [] as string[];
+          const arr = [];
           for (const row of rows) {
-            const key = `/${name}/${row.id}`;
-            const version = new Date(row.time_updated).getTime();
-            if (cvr.data[key] !== version) {
-              arr.push(row.id);
+            const version = new Date(row.version).getTime();
+            if (cvr.data[row.key] !== version) {
+              arr.push(row);
             }
-            delete cvr.data[key];
-            nextCvr.data[key] = version;
+            delete cvr.data[row.key];
+            nextCvr.data[row.key] = version;
           }
           toPut[name] = arr;
         }
@@ -228,7 +263,12 @@ export const handler = ApiHandler(
         console.log("toDel", cvr.data);
 
         // new data
-        for (const [name, ids] of Object.entries(toPut)) {
+        for (const [name, items] of Object.entries(toPut)) {
+          const ids = items.map((item) => item.id);
+          const keys = Object.fromEntries(
+            items.map((item) => [item.id, item.key])
+          );
+
           if (!ids.length) continue;
           const table = TABLES[name as keyof typeof TABLES];
           const rows = await tx
@@ -244,9 +284,10 @@ export const handler = ApiHandler(
             )
             .execute();
           for (const row of rows) {
+            const key = keys[row.id]!;
             patch.push({
               op: "put",
-              key: `/${name}/${row.id}`,
+              key,
               value: row,
             });
           }

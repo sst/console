@@ -1,4 +1,8 @@
-import { createSubscription, useReplicache } from "$/providers/replicache";
+import {
+  createScan,
+  createSubscription,
+  useReplicache,
+} from "$/providers/replicache";
 import {
   Accessor,
   ParentProps,
@@ -17,8 +21,8 @@ import { useCommandBar } from "../command-bar";
 import { IconApi, IconFunction } from "$/ui/icons/custom";
 import { useLocalContext } from "$/providers/local";
 import { ResourceIcon } from "$/common/resource-icon";
-import { IssueStore } from "$/data/issue";
 import { createInitializedContext } from "$/common/context";
+import type { Issue } from "@console/core/issue";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -60,11 +64,11 @@ function createResourcesContext() {
   const ctx = useStageContext();
   const [query] = useSearchParams();
 
-  const resources = ResourceStore.watch.scan(
-    useReplicache(),
-    (item) => item.stageID === ctx.stage.id
+  const rep = useReplicache();
+  const resources = createScan<Resource.Info>(
+    () => `/resource/${ctx.stage.id}`,
+    rep
   );
-
   if (query.dummy) {
     const dummy = () =>
       DUMMY_RESOURCES[query.dummy as keyof typeof DUMMY_RESOURCES] ||
@@ -276,9 +280,6 @@ export const { use: useIssuesContext, provider: IssuesProvider } =
   createInitializedContext("Issues", () => {
     const rep = useReplicache();
     const ctx = useStageContext();
-    const issues = IssueStore.watch.scan(
-      rep,
-      (issue) => issue.stageID === ctx.stage.id
-    );
+    const issues = createScan<Issue.Info>(() => `/issue/${ctx.stage.id}`, rep);
     return issues;
   });

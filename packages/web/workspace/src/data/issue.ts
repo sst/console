@@ -5,8 +5,8 @@ export const IssueStore = define<Issue.Info>({
   scan() {
     return ["issue/"];
   },
-  get(id: string) {
-    return ["issue", id];
+  get(input: { stageID: string; issueID: string }) {
+    return ["issue", input.stageID, input.issueID];
   },
 });
 

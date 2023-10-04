@@ -16,14 +16,15 @@ import {
 } from "$/ui";
 import { formatSinceTime, parseTime } from "$/common/format";
 import { IssueCountStore, IssueStore } from "$/data/issue";
-import { useReplicache } from "$/providers/replicache";
+import { createScan, useReplicache } from "$/providers/replicache";
 import { DateTime, Interval } from "luxon";
 import { StackTrace } from "../logs/error";
 import { bus } from "$/providers/bus";
 import { Log, LogTime, LogMessage } from "$/common/invocation";
 import { fromPairs } from "remeda";
-import { useResourcesContext } from "../context";
+import { useResourcesContext, useStageContext } from "../context";
 import { useInvocations } from "$/providers/invocation";
+import { Issue } from "@console/core/issue";
 
 const Content = styled("div", {
   base: {
@@ -99,9 +100,13 @@ const FeedbackCopy = styled("span", {
 
 export function Detail() {
   const params = useParams();
+  const ctx = useStageContext();
   const rep = useReplicache();
   const invocations = useInvocations();
-  const issue = IssueStore.watch.get(rep, () => params.issueID);
+  const issue = IssueStore.watch.get(rep, () => ({
+    issueID: params.issueID,
+    stageID: ctx.stage.id,
+  }));
 
   const status = createMemo(() => {
     if (issue()?.timeIgnored) return "ignored";
@@ -148,9 +153,10 @@ export function Detail() {
     .startOf("hour")
     .minus({ hours: 24 })
     .toSQL({ includeOffset: false })!;
-  const counts = IssueCountStore.watch.scan(
+  const counts = createScan<Issue.Count>(
+    () => `/issueCount/${issue()?.group || "unknown"}`,
     rep,
-    (item) => item.group === issue()?.group && item.hour > min
+    (items) => items.filter((item) => item.hour > min)
   );
   const histogram = createMemo(() => {
     const hours = fromPairs(

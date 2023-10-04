@@ -5,7 +5,7 @@ export const ResourceStore = define<Resource.Info>({
   scan() {
     return ["resource"];
   },
-  get(id: string) {
-    return ["resource", id];
+  get(input: { stageID: string; resourceID: string }) {
+    return ["resource", input.stageID, input.resourceID];
   },
 });

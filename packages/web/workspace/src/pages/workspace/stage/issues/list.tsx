@@ -30,7 +30,7 @@ import {
   useResourcesContext,
   useStageContext,
 } from "../context";
-import { useReplicache } from "$/providers/replicache";
+import { createScan, useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
 import { IssueCountStore } from "$/data/issue";
 import { DateTime, Interval } from "luxon";
@@ -454,9 +454,10 @@ function IssueRow(props: IssueProps) {
     .minus({ hours: 24 })
     .toSQL({ includeOffset: false })!;
 
-  const counts = IssueCountStore.watch.scan(
+  const counts = createScan<Issue.Count>(
+    () => `/issueCount/${props.issue.group}`,
     rep,
-    (item) => item.group === props.issue.group && item.hour > min
+    (items) => items.filter((item) => item.hour > min)
   );
   const histogram = createMemo(() => {
     const hours = fromPairs(
