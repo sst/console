@@ -11,6 +11,7 @@ import { Events } from "./events";
 import { Storage } from "./storage";
 import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 import { StreamMode } from "aws-cdk-lib/aws-kinesis";
+import { DNS } from "./dns";
 
 export function Issues({ stack }: StackContext) {
   const secrets = use(Secrets);
@@ -109,8 +110,11 @@ export function Issues({ stack }: StackContext) {
   bus.subscribe(stack, "issue.detected", {
     handler: "packages/functions/src/issues/issue-detected.handler",
     timeout: "15 minutes",
-    permissions: [],
+    permissions: ["ses"],
     bind: [...Object.values(secrets.database)],
+    environment: {
+      EMAIL_DOMAIN: use(DNS).domain,
+    },
   });
 
   bus.subscribe(stack, "app.stage.connected", {

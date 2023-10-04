@@ -1,3 +1,4 @@
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { useWorkspace, withActor } from "@console/core/actor";
 import { app, stage } from "@console/core/app/app.sql";
 import { and, db, eq, gt, isNull, lt, sql } from "@console/core/drizzle";
@@ -8,6 +9,8 @@ import { slackTeam } from "@console/core/slack/slack.sql";
 import { createId } from "@console/core/util/sql";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { EventHandler } from "sst/node/event-bus";
+
+const ses = new SESv2Client({});
 
 export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
   withActor(event.metadata.actor, async () => {
@@ -35,7 +38,10 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
       )
       .then((rows) => rows[0]);
 
-    if (!result) return;
+    if (!result) {
+      console.log("nothing to alert");
+      return;
+    }
 
     // temporary
     const row = await db
@@ -93,6 +99,35 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
         },
       ],
     });
+
+    /*
+    const response = await ses.send(
+      new SendEmailCommand({
+        Destination: {
+          ToAddresses: ["dax@sst.dev"],
+        },
+        ReplyToAddresses: [
+          result.id + "+issue+alerts@" + process.env.EMAIL_DOMAIN,
+        ],
+        FromEmailAddress: `SST <${result.id}+issue+alerts@${process.env.EMAIL_DOMAIN}>`,
+        Content: {
+          Simple: {
+            Body: {
+              Html: {
+                Data: result.message,
+              },
+              Text: {
+                Data: result.message,
+              },
+            },
+            Subject: {
+              Data: `Error ${result.error}`,
+            },
+          },
+        },
+      })
+    );
+    */
 
     await db
       .insert(issueAlert)
