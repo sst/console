@@ -255,14 +255,8 @@ export function Detail() {
                 active={Boolean(issue().timeIgnored)}
                 onClick={() =>
                   issue().timeIgnored
-                    ? rep().mutate.issue_unignore({
-                        issues: [issue()!.id],
-                        stageID: issue()!.stageID,
-                      })
-                    : rep().mutate.issue_ignore({
-                        issues: [issue()!.id],
-                        stageID: issue()!.stageID,
-                      })
+                    ? rep().mutate.issue_unignore([issue()!.id])
+                    : rep().mutate.issue_ignore([issue()!.id])
                 }
               >
                 <ButtonIcon>
@@ -277,14 +271,8 @@ export function Detail() {
                 active={Boolean(issue().timeResolved)}
                 onClick={() =>
                   issue().timeResolved
-                    ? rep().mutate.issue_unresolve({
-                        issues: [issue()!.id],
-                        stageID: issue()!.stageID,
-                      })
-                    : rep().mutate.issue_resolve({
-                        issues: [issue()!.id],
-                        stageID: issue()!.stageID,
-                      })
+                    ? rep().mutate.issue_unresolve([issue()!.id])
+                    : rep().mutate.issue_resolve([issue()!.id])
                 }
               >
                 <ButtonIcon>

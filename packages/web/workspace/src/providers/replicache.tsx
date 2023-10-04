@@ -60,61 +60,33 @@ const mutators = new Client<ServerType>()
     await LambdaPayloadStore.remove(tx, input);
   })
   .mutation("issue_resolve", async (tx, input) => {
-    for (const id of input.issues) {
-      await IssueStore.update(
-        tx,
-        {
-          stageID: input.stageID,
-          issueID: id,
-        },
-        (item) => {
-          item.timeResolved = DateTime.now().toSQL({ includeOffset: false });
-          item.timeIgnored = null;
-        }
-      );
+    for (const id of input) {
+      await IssueStore.update(tx, id, (item) => {
+        item.timeResolved = DateTime.now().toSQL({ includeOffset: false });
+        item.timeIgnored = null;
+      });
     }
   })
   .mutation("issue_unresolve", async (tx, input) => {
-    for (const id of input.issues) {
-      await IssueStore.update(
-        tx,
-        {
-          issueID: id,
-          stageID: input.stageID,
-        },
-        (item) => {
-          item.timeResolved = null;
-        }
-      );
+    for (const id of input) {
+      await IssueStore.update(tx, id, (item) => {
+        item.timeResolved = null;
+      });
     }
   })
   .mutation("issue_ignore", async (tx, input) => {
-    for (const id of input.issues) {
-      await IssueStore.update(
-        tx,
-        {
-          issueID: id,
-          stageID: input.stageID,
-        },
-        (item) => {
-          item.timeIgnored = DateTime.now().toSQL({ includeOffset: false });
-          item.timeResolved = null;
-        }
-      );
+    for (const id of input) {
+      await IssueStore.update(tx, id, (item) => {
+        item.timeIgnored = DateTime.now().toSQL({ includeOffset: false });
+        item.timeResolved = null;
+      });
     }
   })
   .mutation("issue_unignore", async (tx, input) => {
-    for (const id of input.issues) {
-      await IssueStore.update(
-        tx,
-        {
-          issueID: id,
-          stageID: input.stageID,
-        },
-        (item) => {
-          item.timeIgnored = null;
-        }
-      );
+    for (const id of input) {
+      await IssueStore.update(tx, id, (item) => {
+        item.timeIgnored = null;
+      });
     }
   })
   .mutation("issue_subscribe", async (tx, input) => {
@@ -147,6 +119,12 @@ function createReplicache(workspaceID: string, token: string) {
     pushURL: import.meta.env.VITE_API_URL + "/replicache/push1",
     pullInterval: 60 * 1000,
     mutators,
+    indexes: {
+      id: {
+        allowEmpty: true,
+        jsonPointer: "/id",
+      },
+    },
   });
 
   replicache.puller = async (req) => {
@@ -320,13 +298,23 @@ export function define<
     },
     async update(
       tx: WriteTransaction,
-      args: Parameters<Get>[0],
+      id: string,
       updator: (input: T) => void
     ) {
-      const value = structuredClone(await result.get(tx, args));
+      const [item] = await tx
+        .scan({
+          indexName: "id",
+          start: {
+            key: [id],
+          },
+        })
+        .entries()
+        .toArray();
+      const [[_, pk], rawValue] = item;
+      const value = structuredClone(rawValue);
       if (!value) throw new Error("Not found");
-      updator(value);
-      await result.set(tx, args, value);
+      updator(value as any);
+      await tx.put(pk, value as any);
     },
   };
   return result;
