@@ -60,33 +60,61 @@ const mutators = new Client<ServerType>()
     await LambdaPayloadStore.remove(tx, input);
   })
   .mutation("issue_resolve", async (tx, input) => {
-    for (const id of input) {
-      await IssueStore.update(tx, id, (item) => {
-        item.timeResolved = DateTime.now().toSQL({ includeOffset: false });
-        item.timeIgnored = null;
-      });
+    for (const id of input.issues) {
+      await IssueStore.update(
+        tx,
+        {
+          stageID: input.stageID,
+          issueID: id,
+        },
+        (item) => {
+          item.timeResolved = DateTime.now().toSQL({ includeOffset: false });
+          item.timeIgnored = null;
+        }
+      );
     }
   })
   .mutation("issue_unresolve", async (tx, input) => {
-    for (const id of input) {
-      await IssueStore.update(tx, id, (item) => {
-        item.timeResolved = null;
-      });
+    for (const id of input.issues) {
+      await IssueStore.update(
+        tx,
+        {
+          issueID: id,
+          stageID: input.stageID,
+        },
+        (item) => {
+          item.timeResolved = null;
+        }
+      );
     }
   })
   .mutation("issue_ignore", async (tx, input) => {
-    for (const id of input) {
-      await IssueStore.update(tx, id, (item) => {
-        item.timeIgnored = DateTime.now().toSQL({ includeOffset: false });
-        item.timeResolved = null;
-      });
+    for (const id of input.issues) {
+      await IssueStore.update(
+        tx,
+        {
+          issueID: id,
+          stageID: input.stageID,
+        },
+        (item) => {
+          item.timeIgnored = DateTime.now().toSQL({ includeOffset: false });
+          item.timeResolved = null;
+        }
+      );
     }
   })
   .mutation("issue_unignore", async (tx, input) => {
-    for (const id of input) {
-      await IssueStore.update(tx, id, (item) => {
-        item.timeIgnored = null;
-      });
+    for (const id of input.issues) {
+      await IssueStore.update(
+        tx,
+        {
+          issueID: id,
+          stageID: input.stageID,
+        },
+        (item) => {
+          item.timeIgnored = null;
+        }
+      );
     }
   })
   .mutation("issue_subscribe", async (tx, input) => {

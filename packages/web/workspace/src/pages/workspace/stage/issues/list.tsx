@@ -11,7 +11,7 @@ import {
   SplitOptions,
   SplitOptionsOption,
 } from "$/ui";
-import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
+import { formatSinceTime, parseTime } from "$/common/format";
 import { Link, useSearchParams } from "@solidjs/router";
 import { theme } from "$/ui/theme";
 import type { Issue } from "@console/core/issue";
@@ -25,16 +25,14 @@ import {
   createSignal,
 } from "solid-js";
 import {
-  useFunctionsContext,
   useIssuesContext,
   useResourcesContext,
   useStageContext,
 } from "../context";
 import { createScan, useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
-import { IssueCountStore } from "$/data/issue";
 import { DateTime, Interval } from "luxon";
-import { filter, fromPairs, pipe, sortBy, sumBy } from "remeda";
+import { filter, fromPairs, pipe, sortBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 
 const COL_COUNT_WIDTH = 260;
@@ -281,8 +279,14 @@ export function List() {
                       active={search.view === "ignored"}
                       onClick={() => {
                         search.view === "ignored"
-                          ? rep().mutate.issue_unignore(selected())
-                          : rep().mutate.issue_ignore(selected());
+                          ? rep().mutate.issue_unignore({
+                              issues: selected(),
+                              stageID: stage.stage.id,
+                            })
+                          : rep().mutate.issue_ignore({
+                              issues: selected(),
+                              stageID: stage.stage.id,
+                            });
                         reset();
                       }}
                       size="sm"
@@ -298,8 +302,14 @@ export function List() {
                       active={search.view === "resolved"}
                       onClick={() => {
                         search.view === "resolved"
-                          ? rep().mutate.issue_unresolve(selected())
-                          : rep().mutate.issue_resolve(selected());
+                          ? rep().mutate.issue_unresolve({
+                              issues: selected(),
+                              stageID: stage.stage.id,
+                            })
+                          : rep().mutate.issue_resolve({
+                              issues: selected(),
+                              stageID: stage.stage.id,
+                            });
                         reset();
                       }}
                       size="sm"

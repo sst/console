@@ -20,10 +20,56 @@ export const server = new Server()
   .expose("function_invoke", Lambda.invoke)
   .expose("function_payload_save", Lambda.savePayload)
   .expose("function_payload_remove", Lambda.removePayload)
-  .expose("issue_ignore", Issue.ignore)
-  .expose("issue_unignore", Issue.unignore)
-  .expose("issue_resolve", Issue.resolve)
-  .expose("issue_unresolve", Issue.unresolve)
+  .mutation(
+    "issue_ignore",
+    z.object({
+      issues: z.array(z.string()),
+      stageID: z.string(),
+    }),
+    async (input) => {
+      await Issue.ignore(input.issues);
+    }
+  )
+  .mutation(
+    "issue_ignore",
+    z.object({
+      issues: z.array(z.string()),
+      stageID: z.string(),
+    }),
+    async (input) => {
+      await Issue.ignore(input.issues);
+    }
+  )
+  .mutation(
+    "issue_unignore",
+    z.object({
+      issues: z.array(z.string()),
+      stageID: z.string(),
+    }),
+    async (input) => {
+      await Issue.unignore(input.issues);
+    }
+  )
+  .mutation(
+    "issue_resolve",
+    z.object({
+      issues: z.array(z.string()),
+      stageID: z.string(),
+    }),
+    async (input) => {
+      await Issue.resolve(input.issues);
+    }
+  )
+  .mutation(
+    "issue_unresolve",
+    z.object({
+      issues: z.array(z.string()),
+      stageID: z.string(),
+    }),
+    async (input) => {
+      await Issue.unresolve(input.issues);
+    }
+  )
   .mutation(
     "issue_subscribe",
     z.object({
