@@ -42,12 +42,17 @@ export async function handler(evt: any) {
     policyDocuments: [
       {
         Version: "2012-10-17",
-        Statement: workspaces.flatMap((workspaceID) => [
+        Statement: [
           {
             Action: "iot:Connect",
             Effect: "Allow",
             Resource: "*",
           },
+        ],
+      },
+      ...workspaces.slice(0, 10).map((workspaceID) => ({
+        Version: "2012-10-17",
+        Statement: [
           {
             Action: "iot:Receive",
             Effect: "Allow",
@@ -58,8 +63,8 @@ export async function handler(evt: any) {
             Effect: "Allow",
             Resource: `arn:aws:iot:us-east-1:${process.env.ACCOUNT}:topicfilter/${Config.APP}/${Config.STAGE}/${workspaceID}/*`,
           },
-        ]),
-      },
+        ],
+      })),
     ],
   };
   return policy;
