@@ -9,7 +9,7 @@ import { Lambda } from "@console/core/lambda";
 import { assertActor, withActor, useWorkspace } from "@console/core/actor";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
-import { and, db, eq } from "@console/core/drizzle";
+import { and, db, eq, or } from "@console/core/drizzle";
 import { useTransaction } from "@console/core/util/transaction";
 import { issueSubscriber } from "@console/core/issue/issue.sql";
 import { warning } from "@console/core/warning/warning.sql";
@@ -46,7 +46,10 @@ export const server = new Server()
             and(
               eq(warning.workspaceID, useWorkspace()),
               eq(warning.stageID, input.stageID),
-              eq(warning.type, "log_subscription")
+              or(
+                eq(warning.type, "log_subscription"),
+                eq(warning.type, "issue_rate_limited")
+              )
             )
           )
           .execute();

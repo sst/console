@@ -145,10 +145,16 @@ export function List() {
 
   const stage = useStageContext();
 
-  const warnings = WarningStore.forType.watch(rep, () => [
-    stage.stage.id,
-    "log_subscription",
-  ]);
+  const warnings = WarningStore.forStage.watch(
+    rep,
+    () => [stage.stage.id],
+    (warnings) =>
+      warnings.filter(
+        (warning) =>
+          warning.type === "log_subscription" ||
+          warning.type === "issue_rate_limited"
+      )
+  );
   const resources = useResourcesContext();
   const fns = createMemo(() =>
     resources().flatMap((item) => (item.type === "Function" ? [item] : []))
@@ -212,24 +218,32 @@ export function List() {
               }
               details={warnings()
                 .map((item) => {
-                  const reason = (function () {
-                    if (item.type !== "log_subscription") return "Unknown";
-                    if (item.data.error === "noisy") return "Rate Limited";
-                    if (item.data.error === "unknown")
-                      return "Unknown error: " + item.data.message;
-                    if (item.data.error === "limited")
-                      return "Too many existing log subscriber";
-                    if (item.data.error === "permissions")
-                      return "Missing permissions to add log subscriber";
-                  })();
-                  return `${
-                    resources()
-                      .flatMap((x) =>
-                        x.id === item.target && x.type === "Function" ? [x] : []
-                      )
-                      .at(0)?.metadata.handler
-                  } (${reason})`;
+                  if (item.type === "log_subscription") {
+                    const reason = (function () {
+                      if (item.data.error === "noisy") return "Rate Limited";
+                      if (item.data.error === "unknown")
+                        return "Unknown error: " + item.data.message;
+                      if (item.data.error === "limited")
+                        return "Too many existing log subscriber";
+                      if (item.data.error === "permissions")
+                        return "Missing permissions to add log subscriber";
+                      return "Unknown";
+                    })();
+                    return `${
+                      resources()
+                        .flatMap((x) =>
+                          x.id === item.target && x.type === "Function"
+                            ? [x]
+                            : []
+                        )
+                        .at(0)?.metadata.handler
+                    } (${reason})`;
+                  }
+                  if (item.type === "issue_rate_limited") {
+                    return `Your functions exceeded the hourly rate limit of 10,000`;
+                  }
                 })
+                .filter(Boolean)
                 .join("\n")}
             >
               There was a problem enabling Issues for your account.{" "}
