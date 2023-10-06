@@ -4,12 +4,12 @@
   "type": "module",
   "scripts": {
     "start": "tsx",
-    "shell": "sst bind $SHELL"
+    "shell": "sst bind bash"
   },
   "dependencies": {
     "@tsconfig/node16": "^1.0.3",
     "luxon": "^3.3.0",
-    "sst": "2.26.8",
+    "sst": "2.28.0",
     "tsx": "^3.12.7"
   },
   "devDependencies": {

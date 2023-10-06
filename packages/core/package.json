@@ -12,7 +12,7 @@
     "@types/node": "^18.16.0",
     "@types/relaxed-json": "^1.0.1",
     "drizzle-kit": "0.19.13",
-    "sst": "2.26.8",
+    "sst": "2.28.0",
     "typescript": "^5.2.2",
     "vitest": "^0.25.3"
   },

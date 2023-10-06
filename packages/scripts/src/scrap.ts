@@ -1,6 +1,6 @@
 import { useWorkspace, withActor } from "@console/core/actor";
 import { Stage } from "@console/core/app";
-import { and, db, eq } from "@console/core/drizzle";
+import { and, db, eq, or } from "@console/core/drizzle";
 import { issueSubscriber } from "@console/core/issue/issue.sql";
 import { Log } from "@console/core/log";
 import {
@@ -45,7 +45,10 @@ for (const row of stages) {
             and(
               eq(warning.workspaceID, useWorkspace()),
               eq(warning.stageID, row.stageID),
-              eq(warning.type, "log_subscription")
+              or(
+                eq(warning.type, "log_subscription"),
+                eq(warning.type, "issue_rate_limited")
+              )
             )
           )
           .execute();
