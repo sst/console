@@ -345,6 +345,11 @@ export const handler = ApiHandler(
               clientGroupID: req.clientGroupID,
               clientVersion: group.clientVersion,
             })
+            .onDuplicateKeyUpdate({
+              set: {
+                data: nextCvr.data,
+              },
+            })
             .execute();
 
           await tx
