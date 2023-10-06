@@ -240,7 +240,7 @@ export function List() {
                     } (${reason})`;
                   }
                   if (item.type === "issue_rate_limited") {
-                    return `Your functions exceeded the hourly rate limit of 10,000`;
+                    return `Your functions exceeded the hourly error limit of 10,000`;
                   }
                 })
                 .filter(Boolean)
