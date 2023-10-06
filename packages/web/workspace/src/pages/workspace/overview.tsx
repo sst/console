@@ -19,6 +19,7 @@ import {
 import { Fullscreen } from "$/ui/layout";
 import { Dropdown } from "$/ui/dropdown";
 import {
+  IconArrowPath,
   IconChevronRight,
   IconEllipsisVertical,
   IconExclamationTriangle,
@@ -257,6 +258,17 @@ export function Overview() {
               {account.accountID}
             </Text>
           </Row>
+          <Show when={account.timeDiscovered}>
+            <TextButton
+              icon={<IconArrowPath />}
+              on="surface"
+              onClick={() => {
+                rep().mutate.aws_account_scan(account.id);
+              }}
+            >
+              Rescan
+            </TextButton>
+          </Show>
         </CardHeader>
         <div>
           <Show when={account.timeFailed}>

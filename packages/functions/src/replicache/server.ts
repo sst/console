@@ -59,6 +59,7 @@ export const server = new Server()
       });
     }
   )
+  .expose("aws_account_scan", AWS.Account.scan)
   .mutation(
     "connect",
     z.object({

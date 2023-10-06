@@ -21,6 +21,7 @@ import { DateTime } from "luxon";
 import { WarningStore } from "$/data/warning";
 import { useDummy } from "./dummy";
 import { createGet, createScan } from "$/data/store";
+import { AWS } from "$/data/aws";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async () => {})
@@ -89,6 +90,11 @@ const mutators = new Client<ServerType>()
     for (const warning of warnings) {
       await tx.del(`/warning/${warning.stageID}/${warning.type}/${warning.id}`);
     }
+  })
+  .mutation("aws_account_scan", async (tx, input) => {
+    await AWS.AccountStore.update(tx, input, (item) => {
+      item.timeDiscovered = null;
+    });
   })
   .build();
 

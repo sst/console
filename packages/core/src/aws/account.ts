@@ -77,6 +77,27 @@ export const create = zod(
     })
 );
 
+export const scan = zod(Info.shape.id, (input) =>
+  useTransaction(async (tx) => {
+    await tx
+      .update(awsAccount)
+      .set({
+        timeDiscovered: null,
+      })
+      .where(
+        and(
+          eq(awsAccount.id, input),
+          eq(awsAccount.workspaceID, useWorkspace())
+        )
+      );
+    await createTransactionEffect(() =>
+      Events.Created.publish({
+        awsAccountID: input,
+      })
+    );
+  })
+);
+
 export const fromID = zod(Info.shape.id, (accountID) =>
   useTransaction((tx) =>
     tx
