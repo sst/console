@@ -9,6 +9,7 @@ import { useDummy, useDummyConfig } from "./dummy";
 import { useReplicache } from "./replicache";
 import { User } from "@console/core/user";
 import { createScan } from "$/data/store";
+import { UserStore } from "$/data/user";
 
 export * as AuthStore from "./auth";
 
@@ -122,7 +123,7 @@ export function useCurrentUser() {
   const dummy = useDummyConfig();
   const auth = useAuth();
   const storage = useStorage();
-  const users = createScan<User.Info>(() => `/user`, rep);
+  const users = UserStore.list.watch(rep, () => []);
   return createMemo<User.Info | undefined>(
     () =>
       users().find(

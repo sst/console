@@ -1,5 +1,4 @@
 import type { Usage } from "@console/core/billing";
-import { define } from "$/providers/replicache";
 import { Store } from "./store";
 
 type PricingTier = {
