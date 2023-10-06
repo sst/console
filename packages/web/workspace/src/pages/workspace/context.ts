@@ -1,7 +1,7 @@
-import { WorkspaceStore } from "$/data/workspace";
+import { Workspace } from "@console/core/workspace";
 import { Accessor, createContext, useContext } from "solid-js";
 
-export const WorkspaceContext = createContext<Accessor<WorkspaceStore.Info>>();
+export const WorkspaceContext = createContext<Accessor<Workspace.Info>>();
 
 export function useWorkspace() {
   const context = useContext(WorkspaceContext);

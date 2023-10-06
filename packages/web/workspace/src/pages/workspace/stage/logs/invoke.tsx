@@ -1,4 +1,4 @@
-import { useReplicache, createSubscription } from "$/providers/replicache";
+import { useReplicache } from "$/providers/replicache";
 import {
   LinkButton,
   theme,
@@ -176,9 +176,10 @@ export function Invoke(props: Props) {
   const key = createMemo(() =>
     [stage.app.name, props.resource.cfnID].join("-")
   );
-  const lambdaPayloads = createSubscription(
-    () => LambdaPayloadStore.forKey(key()),
-    []
+  const lambdaPayloads = LambdaPayloadStore.list.watch(
+    rep,
+    () => [],
+    (items) => items.filter((payload) => payload.key === key())
   );
 
   createEffect(() => {

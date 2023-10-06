@@ -11,7 +11,6 @@ import {
   onCleanup,
   Component,
   createMemo,
-  createEffect,
   createSignal,
 } from "solid-js";
 import { Navigate, Route, Router, Routes, useNavigate } from "@solidjs/router";
@@ -24,7 +23,6 @@ import { Design } from "./pages/design";
 import { Connect } from "./pages/connect";
 import { Workspace } from "./pages/workspace";
 import { WorkspaceCreate } from "./pages/workspace-create";
-import { createSubscription } from "./providers/replicache";
 import { WorkspaceStore } from "./data/workspace";
 import { UserStore } from "./data/user";
 import { IconLogout, IconAddCircle, IconWorkspace } from "./ui/icons/custom";
@@ -33,6 +31,7 @@ import { useStorage } from "./providers/account";
 import { DummyConfigProvider, DummyProvider } from "./providers/dummy";
 import { InvocationProvider } from "./providers/invocation";
 import { FlagsProvider } from "./providers/flags";
+import { createGet } from "./data/store";
 
 const Root = styled("div", {
   base: {
@@ -178,17 +177,13 @@ export const App: Component = () => {
                                     existing = Object.keys(auth)[0];
                                     storage.set("account", existing);
                                   }
-                                  const workspaces = createSubscription(
-                                    WorkspaceStore.list,
-                                    null,
-                                    () => auth[existing!].replicache
+                                  const workspaces = WorkspaceStore.list.watch(
+                                    () => auth[existing!].replicache,
+                                    () => []
                                   );
 
-                                  const init = createSubscription(
-                                    () => (tx) => {
-                                      return tx.get("/init");
-                                    },
-                                    false,
+                                  const init = createGet<boolean>(
+                                    () => "/init",
                                     () => auth[existing!].replicache
                                   );
 
@@ -214,6 +209,7 @@ export const App: Component = () => {
                                       </Match>
                                       <Match
                                         when={
+                                          init.ready &&
                                           init() &&
                                           workspaces() &&
                                           workspaces()!.length === 0
@@ -255,12 +251,10 @@ function GlobalCommands() {
     const workspaces = await Promise.all(
       Object.values(auth).map(async (account) => {
         const workspaces = await account.replicache.query(async (tx) => {
-          const users = await UserStore.list()(tx);
+          const users = await UserStore.list(tx);
           return Promise.all(
             users.map(async (user) => {
-              const workspace = await WorkspaceStore.fromID(user.workspaceID)(
-                tx
-              );
+              const workspace = await WorkspaceStore.get(tx, user.workspaceID);
               return { account: account, workspace };
             })
           );

@@ -1,5 +1,5 @@
 import { UserStore } from "$/data/user";
-import { createSubscription, useReplicache } from "$/providers/replicache";
+import { useReplicache } from "$/providers/replicache";
 import { Row, Stack, Text, theme, utility } from "$/ui";
 import { IconBookmark, IconTrash, IconXMark } from "$/ui/icons";
 import { Modal } from "$/ui/modal";
@@ -194,9 +194,9 @@ export function DialogPayloadManage(props: {
                             }
                           >
                             {(creator) => {
-                              const user = createSubscription(() =>
-                                UserStore.fromID(creator().properties.userID)
-                              );
+                              const user = UserStore.get.watch(rep, () => [
+                                creator().properties.userID,
+                              ]);
                               return <span>{user()?.email || ""}</span>;
                             }}
                           </Show>

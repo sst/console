@@ -1,21 +1,13 @@
 import { Show, createMemo } from "solid-js";
 import { DateTime } from "luxon";
-import { Alert, Button, Row, Stack, Text, theme } from "$/ui";
-import { AvatarInitialsIcon } from "$/ui/avatar-icon";
+import { Button, Row, Stack, Text, theme } from "$/ui";
 import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "./context";
 import { utility } from "$/ui/utility";
-import { FormInput } from "$/ui/form";
 import { formatNumber } from "$/common/format";
-import { createId } from "@paralleldrive/cuid2";
-import { createSubscription, useReplicache } from "$/providers/replicache";
-import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import { IconAws } from "$/ui/icons/custom";
+import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "./header";
-import type { Usage } from "@console/core/billing";
-import { usage } from "@console/core/billing/billing.sql";
-import { create } from "@console/core/workspace";
 
 const PANEL_CONTENT_SPACE = "8";
 const PANEL_HEADER_SPACE = "3";
@@ -111,7 +103,7 @@ const UsageStatTier = styled("span", {
 
 export function Settings() {
   const rep = useReplicache();
-  const usages = UsageStore.watch.scan(rep);
+  const usages = UsageStore.list.watch(rep, () => []);
   const invocations = createMemo(() =>
     usages()
       .map((usage) => usage.invocations)

@@ -1,11 +1,8 @@
-import { define } from "$/providers/replicache";
 import type { App } from "@console/core/app";
+import { Store } from "./store";
 
-export const AppStore = define<App.Info>({
-  scan() {
-    return ["app"];
-  },
-  get(id: string) {
-    return ["app", id];
-  },
-});
+export const AppStore = new Store()
+  .type<App.Info>()
+  .scan("all", () => ["app"])
+  .get((id: string) => ["app", id])
+  .build();

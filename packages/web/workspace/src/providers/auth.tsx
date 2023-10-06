@@ -1,15 +1,14 @@
 import { WorkspaceStore } from "$/data/workspace";
 import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
-import { Navigate, useSearchParams } from "@solidjs/router";
+import { Navigate } from "@solidjs/router";
 import { Replicache } from "replicache";
 import { ParentProps, createContext, createMemo, useContext } from "solid-js";
 import { useStorage } from "./account";
 import { useDummy, useDummyConfig } from "./dummy";
-import { createScan, useReplicache } from "./replicache";
-import { UserStore } from "$/data/user";
+import { useReplicache } from "./replicache";
 import { User } from "@console/core/user";
-import { DateTime } from "luxon";
+import { createScan } from "$/data/store";
 
 export * as AuthStore from "./auth";
 
@@ -42,7 +41,7 @@ const AuthContext = createContext<AuthContextType>();
 
 const mutators = new Client<ServerType>()
   .mutation("workspace_create", async (tx, input) => {
-    await WorkspaceStore.put({
+    await WorkspaceStore.put(tx, [input.id!], {
       id: input.id!,
       slug: input.slug,
       timeUpdated: null as any,
@@ -51,7 +50,7 @@ const mutators = new Client<ServerType>()
       stripeCustomerID: null,
       stripeSubscriptionID: null,
       stripeSubscriptionItemID: null,
-    })(tx);
+    });
   })
   .build();
 
@@ -60,7 +59,6 @@ export function AuthProvider(props: ParentProps) {
   const fragment = new URLSearchParams(location.hash.substring(1));
   const access_token = fragment.get("access_token");
   const storage = useStorage();
-  const [search] = useSearchParams();
   if (access_token) {
     const [_headerEncoded, payloadEncoded] = access_token.split(".");
     const payload = JSON.parse(
@@ -79,7 +77,6 @@ export function AuthProvider(props: ParentProps) {
   if (Object.values(tokens).length === 0) return <Navigate href="/auth" />;
 
   const stores: AuthContextType = {};
-  const splits = location.hostname.split(".");
   const dummy = useDummy();
   for (const token of Object.values(tokens)) {
     const rep = new Replicache({

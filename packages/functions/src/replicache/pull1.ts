@@ -60,6 +60,7 @@ const TABLE_KEY = {
   issue: [issue.stageID, issue.id],
   resource: [resource.stageID, resource.id],
   issueCount: [issueCount.group, issueCount.id],
+  warning: [warning.stageID, warning.type, warning.id],
 } as {
   [key in TableName]?: MySqlColumn[];
 };

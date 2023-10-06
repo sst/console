@@ -1,5 +1,4 @@
 import { useNavigate, useSearchParams } from "@solidjs/router";
-import { createSubscription } from "$/providers/replicache";
 import { useAuth } from "$/providers/auth";
 import { For } from "solid-js";
 import { WorkspaceStore } from "../../data/workspace";
@@ -90,10 +89,9 @@ export function Connect() {
         <ConnectWorkspaceList>
           <For each={Object.values(auth)}>
             {(item) => {
-              const workspaces = createSubscription(
-                WorkspaceStore.list,
-                [],
-                () => item.replicache
+              const workspaces = WorkspaceStore.list.watch(
+                () => item.replicache,
+                () => []
               );
               return (
                 <For each={workspaces()}>

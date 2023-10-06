@@ -1,11 +1,8 @@
 import type { Resource } from "@console/core/app/resource";
-import { define } from "$/providers/replicache";
+import { Store } from "./store";
 
-export const ResourceStore = define<Resource.Info>({
-  scan() {
-    return ["resource"];
-  },
-  get(input: { stageID: string; resourceID: string }) {
-    return ["resource", input.stageID, input.resourceID];
-  },
-});
+export const ResourceStore = new Store()
+  .type<Resource.Info>()
+  .scan("forStage", (stageID: string) => ["resource", stageID])
+  .get((id: string) => ["resource", id])
+  .build();

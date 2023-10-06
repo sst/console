@@ -1,5 +1,5 @@
 import { LogPollerStore } from "$/data/log-poller";
-import { createSubscription, useReplicache } from "$/providers/replicache";
+import { useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import {
@@ -34,7 +34,6 @@ import { Resource } from "@console/core/app/resource";
 import { DUMMY_FUNC } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
 import { formatSinceTime } from "$/common/format";
-import { bus } from "$/providers/bus";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { Invoke, InvokeControl } from "./invoke";
 import { createId } from "@paralleldrive/cuid2";
@@ -240,8 +239,10 @@ export function Logs() {
 
   const rep = useReplicache();
 
-  const poller = createSubscription(() =>
-    LogPollerStore.fromLogGroup(logGroup())
+  const poller = LogPollerStore.list.watch(
+    rep,
+    () => [],
+    (items) => items.find((item) => item.logGroup === logGroup())
   );
 
   createEffect(() => {
@@ -270,9 +271,7 @@ export function Logs() {
   }>({
     id: createId(),
   });
-  const activeSearch = createSubscription(() =>
-    LogSearchStore.fromID(search.id || "")
-  );
+  const activeSearch = LogSearchStore.get.watch(rep, () => [search.id]);
 
   function createSearch(start?: number, end?: number) {
     setSearch(

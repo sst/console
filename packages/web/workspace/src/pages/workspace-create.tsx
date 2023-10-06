@@ -1,7 +1,6 @@
 import { WorkspaceStore } from "$/data/workspace";
 import { useStorage } from "$/providers/account";
 import { useAuth } from "$/providers/auth";
-import { createSubscription } from "$/providers/replicache";
 import {
   Text,
   theme,
@@ -43,11 +42,7 @@ export function WorkspaceCreate() {
   const nav = useNavigate();
   const rep = createMemo(() => auth[storage.value.account].replicache);
   const id = createId();
-  const workspace = createSubscription(
-    () => WorkspaceStore.fromID(id),
-    null,
-    rep
-  );
+  const workspace = WorkspaceStore.get.watch(rep, () => [id]);
   const [slug, setSlug] = createSignal("");
   const pending = createMemo(() => workspace() != null);
   const [error, setError] = createSignal(false);

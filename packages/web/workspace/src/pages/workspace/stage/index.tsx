@@ -1,5 +1,4 @@
-import { styled } from "@macaron-css/solid";
-import { createSubscription, useReplicache } from "$/providers/replicache";
+import { useReplicache } from "$/providers/replicache";
 import {
   Link,
   Navigate,
@@ -10,8 +9,7 @@ import {
 } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
-import { theme } from "$/ui/theme";
-import { ComponentProps, JSX, Show, createMemo } from "solid-js";
+import { Show, createMemo } from "solid-js";
 import { useCommandBar } from "$/pages/workspace/command-bar";
 import {
   IssuesProvider,
@@ -31,9 +29,7 @@ import {
   PageHeader,
   useHeaderContext,
 } from "../header";
-import { Row, SplitOptions, SplitOptionsOption, TabTitle } from "$/ui";
-import { useLocale } from "@kobalte/core";
-import { useLocalContext } from "$/providers/local";
+import { Row, TabTitle } from "$/ui";
 import { Local } from "./local";
 
 export function Stage() {
@@ -42,18 +38,24 @@ export function Stage() {
   const nav = useNavigate();
   const params = useParams();
 
-  const app = AppStore.watch.find(
-    useReplicache(),
-    (app) => app.name === params.appName
+  const app = AppStore.all.watch(
+    rep,
+    () => [],
+    (items) => items.find((app) => app.name === params.appName)
   );
-  const stage = createSubscription(() =>
-    app()
-      ? StageStore.fromName(app()!.id, params.stageName)
-      : async () => undefined
+  const stage = StageStore.list.watch(
+    rep,
+    () => [],
+    (items) =>
+      items.find(
+        (stage) => stage.appID === app()?.id && stage.name === params.stageName
+      )
   );
 
   bar.register("stage-switcher", async () => {
-    const stages = await rep().query(StageStore.forApp(app()?.id || ""));
+    const stages = await rep()
+      .query((tx) => StageStore.list(tx))
+      .then((stages) => stages.filter((stage) => stage.appID === app()?.id));
     return stages
       .filter((item) => item.id !== stage()?.id)
       .map((stage) => ({

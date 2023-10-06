@@ -1,14 +1,6 @@
 import type { Usage } from "@console/core/billing";
 import { define } from "$/providers/replicache";
-
-export const UsageStore = define<Usage>({
-  scan() {
-    return ["usage"];
-  },
-  get(id: string) {
-    return ["usage", id];
-  },
-});
+import { Store } from "./store";
 
 type PricingTier = {
   from: number;
@@ -23,3 +15,9 @@ export const PRICING_PLAN: PricingPlan = [
   { from: 1000000, to: 10000000, rate: 0.00002 },
   { from: 10000000, to: Infinity, rate: 0.000002 },
 ];
+
+export const UsageStore = new Store()
+  .type<Usage>()
+  .scan("list", () => [`usage`])
+  .get((id: string) => [`usage`, id])
+  .build();

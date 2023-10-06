@@ -4,10 +4,11 @@ import {
   DummyMode,
 } from "@console/functions/replicache/dummy/data";
 import { useSearchParams } from "@solidjs/router";
-import { createGet, useReplicache } from "./replicache";
+import { useReplicache } from "./replicache";
 import { useAuth } from "./auth";
 import { createEffect, createMemo } from "solid-js";
 import { useStorage } from "./account";
+import { createGet } from "$/data/store";
 
 export const { use: useDummy, provider: DummyProvider } =
   createInitializedContext("dummy", () => {

@@ -1,11 +1,5 @@
 import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
-import {
-  ReplicacheProvider,
-  createGet,
-  createScan,
-  createSubscription,
-  useReplicache,
-} from "$/providers/replicache";
+import { ReplicacheProvider, useReplicache } from "$/providers/replicache";
 import { useCommandBar } from "./command-bar";
 import { Stage } from "./stage";
 import { Show, createEffect, createMemo } from "solid-js";
@@ -22,7 +16,6 @@ import { IconApp, IconUserAdd, IconConnect } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
 import { Debug } from "../debug";
-import type { Info as WorkspaceInfo } from "@console/core/workspace";
 
 export function Workspace() {
   const params = useParams();
@@ -30,17 +23,17 @@ export function Workspace() {
   const storage = useStorage();
   const nav = useNavigate();
   const rep = createMemo(() => auth[storage.value.account].replicache);
-  const workspaces = createScan<WorkspaceInfo>(
-    () => WorkspaceStore.key(),
+  const workspace = WorkspaceStore.list.watch(
     rep,
-    (workspaces) => workspaces.filter((w) => w.slug === params.workspaceSlug)
+    () => [],
+    (workspaces) =>
+      workspaces.find((item) => item.slug === params.workspaceSlug)
   );
-  const workspace = createMemo(() => workspaces().at(0));
 
   const bar = useCommandBar();
 
   createEffect(() => {
-    if (!workspaces.ready) return;
+    if (!workspace.ready) return;
     if (!workspace()) {
       nav("/");
       return;
@@ -101,14 +94,16 @@ export function Content() {
   const rep = useReplicache();
   const nav = useNavigate();
   const params = useParams();
-  const apps = AppStore.watch.scan(useReplicache());
+  const apps = AppStore.all.watch(useReplicache(), () => []);
   bar.register("app-switcher", async () => {
     return apps().map((app) => ({
       icon: IconApp,
       category: "App",
       title: `Switch to "${app.name}" app`,
       run: async (control) => {
-        const stages = await rep().query(StageStore.forApp(app.id));
+        const stages = await rep()
+          .query((tx) => StageStore.list(tx))
+          .then((stages) => stages.filter((stage) => stage.appID === app.id));
         nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
         control.hide();
       },

@@ -1,6 +1,5 @@
-import { createSubscription, useReplicache } from "$/providers/replicache";
 import { iot, mqtt } from "aws-iot-device-sdk-v2";
-import { createEffect, onCleanup, onMount } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
 import { useAuth } from "./auth";
 import { WorkspaceStore } from "$/data/workspace";
 import { bus } from "./bus";
@@ -19,7 +18,9 @@ export function RealtimeProvider() {
       .join(";");
     const workspaces = new Map<string, string[]>();
     for (const [accountID, account] of Object.entries(auth)) {
-      const list = await account.replicache.query(WorkspaceStore.list());
+      const list = await account.replicache.query((tx) =>
+        WorkspaceStore.list(tx)
+      );
       for (const workspace of list) {
         let arr = workspaces.get(workspace.id);
         if (!arr) {

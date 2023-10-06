@@ -1,11 +1,11 @@
 import { AppStore } from "$/data/app";
-import { UserInfo, UserStore } from "$/data/user";
+import { UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
 import { PRICING_PLAN, UsageStore } from "$/data/usage";
 import { useAuth, useCurrentUser } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
-import { createSubscription, useReplicache } from "$/providers/replicache";
+import { useReplicache } from "$/providers/replicache";
 import {
   theme,
   utility,
@@ -42,9 +42,9 @@ import {
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
 import { sortBy } from "remeda";
-import { User } from "@console/core/user";
 import { useWorkspace } from "./context";
 import { useFlags } from "$/providers/flags";
+import { User } from "@console/core/user";
 
 const OVERFLOW_APPS_COUNT = 9;
 const OVERFLOW_APPS_DISPLAY = 6;
@@ -115,14 +115,6 @@ const CardHeader = styled("div", {
   },
 });
 
-const CardError = styled("div", {
-  base: {
-    ...utility.row(2),
-    alignItems: "center",
-    padding: theme.space[4],
-  },
-});
-
 const CardErrorCopy = styled(Text, {
   base: {
     fontSize: theme.font.size.sm,
@@ -169,7 +161,7 @@ const CardOverflowRow = styled("div", {
   },
 });
 
-function sortUsers(users: UserInfo[], selfEmail: string): UserInfo[] {
+function sortUsers(users: User.Info[], selfEmail: string): User.Info[] {
   return sortBy(
     users,
     (user) => (user.email === selfEmail ? 0 : 1), // Your own user
@@ -203,12 +195,12 @@ function splitCols(array: Account.Info[]) {
 export function Overview() {
   const rep = useReplicache();
   const [query] = useSearchParams();
-  const accounts = createSubscription(AccountStore.list);
-  const users = createSubscription(UserStore.list, [] as User.Info[]);
+  const accounts = AccountStore.list.watch(rep, () => []);
+  const users = UserStore.list.watch(rep, () => []);
   const cols = createMemo(() => splitCols(accounts() || []));
-  const stages = createSubscription(StageStore.list, []);
+  const stages = StageStore.list.watch(rep, () => []);
   const workspace = useWorkspace();
-  const usages = UsageStore.watch.scan(rep);
+  const usages = UsageStore.list.watch(rep, () => []);
   const invocations = createMemo(() =>
     usages()
       .map((usage) => usage.invocations)
@@ -233,17 +225,14 @@ export function Overview() {
   const [showUsersOverflow, setUsersShowOverflow] = createSignal(false);
 
   createEffect(() => {
-    console.log("users", users());
-    const all = accounts();
-    console.log("accounts", accounts());
-    if (all && !all.length && !query.force)
+    if (accounts.ready && !accounts().length && !query.force)
       nav("account", {
         replace: true,
       });
   });
 
   function renderAccount(account: Account.Info) {
-    const apps = AppStore.watch.scan(rep);
+    const apps = AppStore.all.watch(rep, () => []);
     const children = createMemo(() => {
       return sortBy(
         stages().filter((stage) => stage.awsAccountID === account.id),
@@ -531,8 +520,7 @@ interface StageCardProps {
   stage: Stage.Info;
 }
 function StageCard(props: StageCardProps) {
-  const [query] = useSearchParams();
-  const app = AppStore.watch.get(useReplicache(), () => props.stage.appID);
+  const app = AppStore.get.watch(useReplicache(), () => [props.stage.appID]);
   const local = useLocalContext();
   return (
     <StageRoot href={`${app()?.name}/${props.stage.name}`}>
@@ -590,7 +578,7 @@ type UserCardProps = {
 
 function UserCard(props: UserCardProps) {
   const rep = useReplicache();
-  const user = createSubscription(() => UserStore.fromID(props.id));
+  const user = UserStore.get.watch(rep, () => [props.id]);
   const self = useCurrentUser();
 
   return (

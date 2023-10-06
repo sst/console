@@ -1,8 +1,4 @@
-import {
-  createScan,
-  createSubscription,
-  useReplicache,
-} from "$/providers/replicache";
+import { useReplicache } from "$/providers/replicache";
 import {
   Accessor,
   ParentProps,
@@ -16,28 +12,32 @@ import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_RESOURCES } from "./dummy";
-import { ResourceStore } from "$/data/resource";
 import { useCommandBar } from "../command-bar";
 import { IconApi, IconFunction } from "$/ui/icons/custom";
 import { useLocalContext } from "$/providers/local";
 import { ResourceIcon } from "$/common/resource-icon";
 import { createInitializedContext } from "$/common/context";
-import type { Issue } from "@console/core/issue";
+import { IssueStore } from "$/data/issue";
+import { ResourceStore } from "$/data/resource";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
 
 export function createStageContext() {
   const params = useParams();
-  const apps = AppStore.watch.scan(
-    useReplicache(),
-    (item) => item.name === params.appName
+  const rep = useReplicache();
+  const app = AppStore.all.watch(
+    rep,
+    () => [],
+    (items) => items.find((app) => app.name === params.appName)
   );
-  const app = createMemo(() => apps().at(0));
-  const stage = createSubscription(() =>
-    app()
-      ? StageStore.fromName(app()!.id, params.stageName)
-      : async () => undefined
+  const stage = StageStore.list.watch(
+    rep,
+    () => [],
+    (items) =>
+      items.find(
+        (stage) => stage.appID === app()?.id && stage.name === params.stageName
+      )
   );
   const local = useLocalContext();
 
@@ -65,10 +65,7 @@ function createResourcesContext() {
   const [query] = useSearchParams();
 
   const rep = useReplicache();
-  const resources = createScan<Resource.Info>(
-    () => `/resource/${ctx.stage.id}`,
-    rep
-  );
+  const resources = ResourceStore.forStage.watch(rep, () => [ctx.stage.id]);
   if (query.dummy) {
     const dummy = () =>
       DUMMY_RESOURCES[query.dummy as keyof typeof DUMMY_RESOURCES] ||
@@ -280,6 +277,6 @@ export const { use: useIssuesContext, provider: IssuesProvider } =
   createInitializedContext("Issues", () => {
     const rep = useReplicache();
     const ctx = useStageContext();
-    const issues = createScan<Issue.Info>(() => `/issue/${ctx.stage.id}`, rep);
+    const issues = IssueStore.forStage.watch(rep, () => [ctx.stage.id]);
     return issues;
   });

@@ -11,7 +11,7 @@ import {
   SplitOptions,
   SplitOptionsOption,
 } from "$/ui";
-import { formatNumber, formatSinceTime, parseTime } from "$/common/format";
+import { formatSinceTime, parseTime } from "$/common/format";
 import { Link, useSearchParams } from "@solidjs/router";
 import { theme } from "$/ui/theme";
 import type { Issue } from "@console/core/issue";
@@ -25,17 +25,16 @@ import {
   createSignal,
 } from "solid-js";
 import {
-  useFunctionsContext,
   useIssuesContext,
   useResourcesContext,
   useStageContext,
 } from "../context";
-import { createScan, useReplicache } from "$/providers/replicache";
+import { useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
-import { IssueCountStore } from "$/data/issue";
 import { DateTime, Interval } from "luxon";
-import { filter, fromPairs, pipe, sortBy, sumBy } from "remeda";
+import { filter, fromPairs, pipe, sortBy } from "remeda";
 import { WarningStore } from "$/data/warning";
+import { IssueCountStore } from "$/data/issue";
 
 const COL_COUNT_WIDTH = 260;
 const COL_TIME_WIDTH = 140;
@@ -146,11 +145,10 @@ export function List() {
 
   const stage = useStageContext();
 
-  const warnings = WarningStore.watch.scan(
-    rep,
-    (item) =>
-      item.stageID === stage.stage.id && item.type === "log_subscription"
-  );
+  const warnings = WarningStore.forType.watch(rep, () => [
+    stage.stage.id,
+    "log_subscription",
+  ]);
   const resources = useResourcesContext();
   const fns = createMemo(() =>
     resources().flatMap((item) => (item.type === "Function" ? [item] : []))
@@ -454,9 +452,9 @@ function IssueRow(props: IssueProps) {
     .minus({ hours: 24 })
     .toSQL({ includeOffset: false })!;
 
-  const counts = createScan<Issue.Count>(
-    () => `/issueCount/${props.issue.group}`,
+  const counts = IssueCountStore.forIssue.watch(
     rep,
+    () => [props.issue.group],
     (items) => items.filter((item) => item.hour > min)
   );
   const histogram = createMemo(() => {
