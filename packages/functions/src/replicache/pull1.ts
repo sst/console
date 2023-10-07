@@ -86,6 +86,16 @@ export const handler = ApiHandler(
       async (tx): Promise<PullResponseV1 | undefined> => {
         const patch: PatchOperation[] = [];
 
+        await tx
+          .insert(replicache_client_group)
+          .ignore()
+          .values({
+            id: req.clientGroupID,
+            cvrVersion: 0,
+            actor,
+            clientVersion: (req.cookie as number) ?? 0,
+          });
+
         const group = await tx
           .select({
             id: replicache_client_group.id,
@@ -97,15 +107,7 @@ export const handler = ApiHandler(
           .for("update")
           .where(and(eq(replicache_client_group.id, req.clientGroupID)))
           .execute()
-          .then(
-            (rows) =>
-              rows.at(0) ?? {
-                id: req.clientGroupID,
-                actor,
-                cvrVersion: 0,
-                clientVersion: (req.cookie as number) ?? 0,
-              }
-          );
+          .then((rows) => rows.at(0)!);
 
         if (!equals(group.actor, actor)) {
           console.log("compare failed", group.actor, actor);
@@ -323,17 +325,9 @@ export const handler = ApiHandler(
         if (patch.length > 0) {
           console.log("inserting", req.clientGroupID);
           await tx
-            .insert(replicache_client_group)
-            .values({
-              id: req.clientGroupID,
-              clientVersion: group.clientVersion,
+            .update(replicache_client_group)
+            .set({
               cvrVersion: nextCvr.version,
-              actor,
-            })
-            .onDuplicateKeyUpdate({
-              set: {
-                cvrVersion: nextCvr.version,
-              },
             })
             .execute();
 
