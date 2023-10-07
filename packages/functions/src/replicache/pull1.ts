@@ -86,15 +86,12 @@ export const handler = ApiHandler(
       async (tx): Promise<PullResponseV1 | undefined> => {
         const patch: PatchOperation[] = [];
 
-        await tx
-          .insert(replicache_client_group)
-          .ignore()
-          .values({
-            id: req.clientGroupID,
-            cvrVersion: 0,
-            actor,
-            clientVersion: (req.cookie as number) ?? 0,
-          });
+        await tx.insert(replicache_client_group).ignore().values({
+          id: req.clientGroupID,
+          cvrVersion: 0,
+          actor,
+          clientVersion: 0,
+        });
 
         const group = await tx
           .select({
