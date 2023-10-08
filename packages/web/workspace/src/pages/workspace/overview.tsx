@@ -258,17 +258,24 @@ export function Overview() {
               {account.accountID}
             </Text>
           </Row>
-          <Show when={account.timeDiscovered}>
-            <TextButton
-              icon={<IconArrowPath />}
-              on="surface"
-              onClick={() => {
+          <Dropdown
+            size="sm"
+            icon={<IconEllipsisVertical width={18} height={18} />}
+          >
+            <Dropdown.Item
+              disabled={account.timeDiscovered === null}
+              onSelect={() => {
                 rep().mutate.aws_account_scan(account.id);
               }}
             >
-              Rescan
-            </TextButton>
-          </Show>
+              <Show
+                when={account.timeDiscovered}
+                fallback="Rescanning account…"
+              >
+                Rescan AWS account
+              </Show>
+            </Dropdown.Item>
+          </Dropdown>
         </CardHeader>
         <div>
           <Show when={account.timeFailed}>
@@ -281,9 +288,6 @@ export function Overview() {
               </Link>
             </CardStatus>
           </Show>
-          <For each={showOverflow() ? children() : childrenCapped()}>
-            {(stage) => <StageCard stage={stage} />}
-          </For>
           <Show when={!account.timeDiscovered && !account.timeFailed}>
             <CardStatus>
               <CardStatusIcon status="info">
@@ -294,6 +298,9 @@ export function Overview() {
               </Text>
             </CardStatus>
           </Show>
+          <For each={showOverflow() ? children() : childrenCapped()}>
+            {(stage) => <StageCard stage={stage} />}
+          </For>
           <Show
             when={
               children().length === 0 &&
@@ -628,7 +635,7 @@ function UserCard(props: UserCardProps) {
                 rep().mutate.user_remove(props.id);
               }}
             >
-              Remove
+              Remove from workspace
             </Dropdown.Item>
           </Dropdown>
         </Show>

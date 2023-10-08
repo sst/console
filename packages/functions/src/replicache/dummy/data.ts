@@ -20,6 +20,7 @@ const ACCOUNT_ID = "connected";
 const ACCOUNT_ID_LONG = "long";
 const ACCOUNT_ID_FAILED = "failed";
 const ACCOUNT_ID_SYNCING = "syncing";
+const ACCOUNT_ID_SYNCING_FULL = "syncing-full";
 
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
@@ -265,7 +266,12 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
   yield account({
     id: ACCOUNT_ID_SYNCING,
     accountID: "123456789017",
-    syncing: false,
+    syncing: true,
+  });
+  yield account({
+    id: ACCOUNT_ID_SYNCING_FULL,
+    accountID: "123456789019",
+    syncing: true,
   });
   yield stage({
     id: "stage-account-syncing",
@@ -276,5 +282,13 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
 
   for (let i = 0; i < 30; i++) {
     yield stage({ id: `stage-${i}`, appID: APP_ID, awsAccountID: ACCOUNT_ID });
+  }
+
+  for (let i = 0; i < 10; i++) {
+    yield stage({
+      id: `stage-${i}`,
+      appID: APP_ID,
+      awsAccountID: ACCOUNT_ID_SYNCING_FULL,
+    });
   }
 }

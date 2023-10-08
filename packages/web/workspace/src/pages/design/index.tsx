@@ -750,6 +750,9 @@ Read more about it over on our docs`}
             <Dropdown.RadioGroup value="selected">
               <Dropdown.RadioItem value="live">Live</Dropdown.RadioItem>
               <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
+              <Dropdown.RadioItem disabled value="disabled">
+                Disabled
+              </Dropdown.RadioItem>
               <Dropdown.Seperator />
               <Dropdown.RadioItem value="selected">Selected</Dropdown.RadioItem>
               <Dropdown.RadioItem value="long">
