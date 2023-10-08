@@ -36,6 +36,7 @@ import {
   issueCount,
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
+import { db } from "@console/core/drizzle";
 
 export const TABLES = {
   workspace,
@@ -82,16 +83,15 @@ export const handler = ApiHandler(
       });
     }
 
+    await db.insert(replicache_client_group).ignore().values({
+      id: req.clientGroupID,
+      cvrVersion: 0,
+      actor,
+      clientVersion: 0,
+    });
     const resp = await createTransaction(
       async (tx): Promise<PullResponseV1 | undefined> => {
         const patch: PatchOperation[] = [];
-
-        await tx.insert(replicache_client_group).ignore().values({
-          id: req.clientGroupID,
-          cvrVersion: 0,
-          actor,
-          clientVersion: 0,
-        });
 
         const group = await tx
           .select({
