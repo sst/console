@@ -326,6 +326,7 @@ export const handler = ApiHandler(
             .set({
               cvrVersion: nextCvr.version,
             })
+            .where(eq(replicache_client_group.id, req.clientGroupID))
             .execute();
 
           await tx
