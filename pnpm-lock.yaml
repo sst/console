@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -275,15 +275,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: 1.0.2
         version: 1.0.2(@types/react@18.0.25)(react-dom@18.2.0)(react@18.2.0)
-      '@react-email/button':
-        specifier: 0.0.10
-        version: 0.0.10
       '@react-email/components':
         specifier: 0.0.7
         version: 0.0.7
-      '@react-email/html':
-        specifier: 0.0.4
-        version: 0.0.4
       '@react-email/render':
         specifier: 0.0.7
         version: 0.0.7
@@ -2413,6 +2407,7 @@ packages:
 
   /@emotion/memoize@0.7.4:
     resolution: {integrity: sha512-Ja/Vfqe3HpuzRsG1oBtWTHk2PGZ7GR+2Vz5iYGelAw8dx32K0y7PjVuxK6z1nMpZOqAFsRUPCkK1YjJ56qJlgw==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -4401,13 +4396,6 @@ packages:
 
   /@react-email/body@0.0.2:
     resolution: {integrity: sha512-SqZrZdxZlH7viwnrLvrMnVzOKpiofVAtho09bmm2siDzy0VMDGItXRzUPLcpg9vcbVJCHZRCIKoNXqA+PtokzQ==}
-    dependencies:
-      react: 18.2.0
-    dev: false
-
-  /@react-email/button@0.0.10:
-    resolution: {integrity: sha512-S8r7NGTxXoxvw5kCdMzpwXdBHhYAhrYM9sylK6xr+2M9osrjHQOPLBoV3I/po9xdzN3WyRcZqQixH0wPeXy2Gw==}
-    engines: {node: '>=16.0.0'}
     dependencies:
       react: 18.2.0
     dev: false
