@@ -71,10 +71,6 @@ const code = {
   fontFamily: "IBM Plex Mono, mono-space",
 };
 
-const tableCell = {
-  display: "table-cell",
-};
-
 const headingHr = {
   margin: `${unit}px 0`,
 };
@@ -149,20 +145,9 @@ const stacktraceFrameContextImportant = {
   fontWeight: 500,
 };
 
-function insertWbr(
-  input: string,
-  padding: number = 5,
-  interval: number = 60
-): string {
-  let result = "";
-  for (let i = 0; i < input.length; i++) {
-    result += input[i];
-    if ((i + 1) % interval === 0) {
-      result += "\n" + " ".repeat(padding);
-    }
-  }
-  return result;
-}
+const footerLink = {
+  fontSize: "14px",
+};
 
 function countLeadingSpaces(str: string) {
   let count = 0;
@@ -170,7 +155,7 @@ function countLeadingSpaces(str: string) {
     if (char === " ") {
       count++;
     } else if (char === "\t") {
-      count += 4;
+      count += 2;
     } else {
       break;
     }
@@ -250,17 +235,111 @@ function Fonts({ assetsUrl }: { assetsUrl: string }) {
   );
 }
 
+function SplitString({ text, split }: { text: string; split: number }) {
+  const segments: JSX.Element[] = [];
+  for (let i = 0; i < text.length; i += split) {
+    segments.push(<>{text.slice(i, i + split)}</>);
+    if (i + split < text.length) {
+      segments.push(<wbr key={i + "wbr"} />);
+    }
+  }
+  return <>{segments}</>;
+}
+
+function FormattedCode({ text, split = 60, indent = 0 }) {
+  const renderProcessedString = () => {
+    let elements: JSX.Element[] = [];
+    let count = 0;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+
+      if (char === " ") {
+        elements.push(<>&nbsp;</>);
+      } else if (char === "\t") {
+        elements.push(
+          <>
+            <>&nbsp;</>
+            <>&nbsp;</>
+          </>
+        );
+      } else {
+        elements.push(<>{char}</>);
+      }
+
+      count++;
+
+      // Insert <wbr /> with given indent every x characters
+      if (count === split) {
+        elements.push(<wbr key={i} />, ...Array(indent).fill(<>&nbsp;</>));
+        count = 0;
+      }
+    }
+
+    return elements;
+  };
+
+  return <>{renderProcessedString()}</>;
+}
+
 type StacktraceContext = {
   line: string;
   index: number;
 };
 type StacktraceFrame = {
-  file: string;
+  file?: string;
+  raw?: string;
   line?: number;
   column?: number;
   important?: boolean;
   context?: StacktraceContext[];
 };
+
+function renderStacktraceFrameContext(context: StacktraceContext[]) {
+  const minLeadingSpaces = Math.min(
+    ...context.map((row) => countLeadingSpaces(row.line))
+  );
+  const maxIndexLength = Math.max(
+    ...context.map((row) => row.index.toString().length)
+  );
+
+  function padStringToEnd(input: string, desiredLength: number) {
+    const numberOfSpaces = desiredLength - input.length;
+    return input + " ".repeat(numberOfSpaces);
+  }
+
+  return (
+    <>
+      <Row>
+        <Column>
+          <SurfaceHr />
+        </Column>
+      </Row>
+      {context.map((row, index) => (
+        <Row key={index}>
+          <Column>
+            <span
+              style={
+                index === 3
+                  ? stacktraceFrameContextImportant
+                  : stacktraceFrameContext
+              }
+            >
+              <FormattedCode
+                split={68}
+                indent={maxIndexLength + 2}
+                text={`${padStringToEnd(
+                  row.index.toString(),
+                  maxIndexLength
+                )}  ${row.line.substring(minLeadingSpaces)}`}
+              />
+            </span>
+          </Column>
+        </Row>
+      ))}
+    </>
+  );
+}
 
 interface IssueEmailProps {
   url: string;
@@ -269,17 +348,24 @@ interface IssueEmailProps {
   stage: string;
   message: string;
   assetsUrl: string;
+  settingsUrl: string;
   stacktrace?: StacktraceFrame[];
-  stacktraceRaw?: string[];
 }
 const IssueEmail = ({
   app = "console",
   stage = "production",
-  name = "NoSuchBucket",
+  name = "NoSuchBucketIsAReallyLongExceptionNameThatShouldBeTruncated",
   assetsUrl = LOCAL_ASSETS_URL,
-  message = "The specified bucket does not exist",
+  settingsUrl = "https://console.sst.dev/sst/console/production/settings",
+  message = "ThisisareallylongmessagethatshouldbetruncatedBecauseItDoesNotHaveABreakAndWillOverflow.",
   url = "https://console.sst.dev/sst/console/production/issues/pioksmvi6x2sa9zdljvn8ytw",
   stacktrace = [
+    {
+      raw: "_Connection.execute (/Users/jayair/Desktop/Projects/console/node_modules/.pnpm/@planetscale+database@1.11.0/node_modules/@planetscale/database/dist/index.js:92:19)",
+    },
+    {
+      raw: "  at processTicksAndRejections (node:internal/process/task_queues:96:5)",
+    },
     {
       file: "node_modules/.pnpm/@smithy+smithy-client@2.1.3/node_modules/@smithy/smithy-client/dist-es/default-error-handler.js",
       line: 23,
@@ -292,37 +378,37 @@ const IssueEmail = ({
     },
     {
       file: "packages/core/src/issue/index.ts",
-      line: 147,
+      line: 101,
       column: 35,
       important: true,
       context: [
         {
           line: "    const key = `stackMetadata/path/that/is/too/long/and/will/overflow/app.${row.app}/stage.${row.stage}/`;",
-          index: 150,
+          index: 98,
         },
         {
           line: '    console.log("listing", key, "for", bucket);',
-          index: 148,
+          index: 99,
         },
         {
           line: "    const list = await s3",
-          index: 149,
+          index: 100,
         },
         {
           line: "      .send(",
-          index: 150,
+          index: 101,
         },
         {
           line: "        new ListObjectsV2Command({",
-          index: 151,
+          index: 102,
         },
         {
           line: "          Prefix: key,",
-          index: 152,
+          index: 103,
         },
         {
           line: "          Bucket: bucket,",
-          index: 153,
+          index: 104,
         },
       ],
     },
@@ -340,7 +426,7 @@ const IssueEmail = ({
       <Body style={body}>
         <Container style={container}>
           <Section style={frame}>
-            <Section>
+            <Row>
               <Column>
                 <Img
                   height="32"
@@ -353,11 +439,13 @@ const IssueEmail = ({
                   <span style={code}>View Issue</span>
                 </Button>
               </Column>
-            </Section>
+            </Row>
 
-            <Section style={headingHr}>
-              <Hr />
-            </Section>
+            <Row style={headingHr}>
+              <Column>
+                <Hr />
+              </Column>
+            </Row>
 
             <Section>
               <Text style={{ ...compactText, ...issueBreadcrumb }}>
@@ -369,100 +457,109 @@ const IssueEmail = ({
               </Text>
               <Text style={{ ...issueHeading, ...compactText }}>
                 <Link style={code} href={url}>
-                  {name}
+                  <SplitString text={name} split={40} />
                 </Link>
               </Text>
-              <Text style={{ ...compactText, ...code }}>{message}</Text>
+              <Text style={{ ...compactText, ...code }}>
+                <SplitString text={message} split={63} />
+              </Text>
             </Section>
 
             <Section style={{ padding: `${unit * 1.5}px 0 0 0` }}>
-              <Row>
-                <Text style={sectionLabel}>STACK TRACE</Text>
-              </Row>
-              <Section style={stacktraceContainer}>
-                {stacktrace.map((frame, index) => (
+              <Text style={sectionLabel}>STACK TRACE</Text>
+            </Section>
+            <Section style={stacktraceContainer}>
+              {!stacktrace && (
+                <Row>
+                  <Column>
+                    <Text style={{ ...stacktraceFrame, ...compactText }}>
+                      No stacktrace available
+                    </Text>
+                  </Column>
+                </Row>
+              )}
+              {stacktrace &&
+                stacktrace.map((frame, index) => (
                   <>
-                    <Row key={index}>
-                      <span
-                        style={
-                          frame.important
-                            ? stacktraceFrameFileImportant
-                            : stacktraceFrame
-                        }
-                      >
-                        {frame.file}
-                      </span>
-                      &nbsp;&nbsp;
-                      <span
-                        style={
-                          frame.important
-                            ? stacktraceFramePositionImportant
-                            : stacktraceFrame
-                        }
-                      >
-                        {frame.line}
-                      </span>
-                      <span style={stacktraceFrame}>:</span>
-                      <span
-                        style={
-                          frame.important
-                            ? stacktraceFramePositionImportant
-                            : stacktraceFrame
-                        }
-                      >
-                        {frame.column}
-                      </span>
-                    </Row>
+                    {frame.raw ? (
+                      <Row key={index}>
+                        <Column>
+                          <span style={stacktraceFrame}>
+                            <FormattedCode text={frame.raw} split={65} />
+                          </span>
+                        </Column>
+                      </Row>
+                    ) : (
+                      <Row key={index}>
+                        <Column>
+                          <span
+                            style={
+                              frame.important
+                                ? stacktraceFrameFileImportant
+                                : stacktraceFrame
+                            }
+                          >
+                            <SplitString text={frame.file || ""} split={65} />
+                          </span>
+                          &nbsp;&nbsp;
+                          <span
+                            style={
+                              frame.important
+                                ? stacktraceFramePositionImportant
+                                : stacktraceFrame
+                            }
+                          >
+                            {frame.line}
+                          </span>
+                          <span style={stacktraceFrame}>:</span>
+                          <span
+                            style={
+                              frame.important
+                                ? stacktraceFramePositionImportant
+                                : stacktraceFrame
+                            }
+                          >
+                            {frame.column}
+                          </span>
+                        </Column>
+                      </Row>
+                    )}
                     {index < stacktrace.length - 1 && (
                       <Row>
-                        <SurfaceHr />
+                        <Column>
+                          <SurfaceHr />
+                        </Column>
                       </Row>
                     )}
                     {frame.context &&
                       renderStacktraceFrameContext(frame.context)}
                   </>
                 ))}
-              </Section>
             </Section>
+
+            <Row style={headingHr}>
+              <Column>
+                <Hr />
+              </Column>
+            </Row>
+
+            <Row>
+              <Column>
+                <Link href="https://console.sst.dev" style={footerLink}>
+                  View Console
+                </Link>
+              </Column>
+              <Column align="right">
+                <Link href={settingsUrl} style={footerLink}>
+                  Manage Settings
+                </Link>
+              </Column>
+            </Row>
           </Section>
         </Container>
       </Body>
     </Html>
   );
 };
-
-function renderStacktraceFrameContext(context: StacktraceContext[]) {
-  const minLeadingSpaces = Math.min(
-    ...context.map((row) => countLeadingSpaces(row.line))
-  );
-
-  return (
-    <>
-      <Row>
-        <SurfaceHr />
-      </Row>
-      {context.map((row, index) => (
-        <Row>
-          <pre
-            style={
-              index === 3
-                ? stacktraceFrameContextImportant
-                : stacktraceFrameContext
-            }
-          >
-            {row.index}
-            {"  "}
-            {insertWbr(
-              row.line.substring(minLeadingSpaces),
-              row.index.toString().length +
-                2 +
-                countLeadingSpaces(row.line.substring(minLeadingSpaces))
-            )}
-          </pre>
-        </Row>
-      ))}
-    </>
-  );
-}
 
 export default IssueEmail;
