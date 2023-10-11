@@ -766,6 +766,7 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
 }
 
 export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
+  console.log(props.resource.metadata);
   return (
     <>
       <Header
@@ -777,7 +778,22 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
         }
       />
       <Children>
-        <FunctionChild id={props.resource.metadata.server} tag="Server" />
+        <For
+          each={props.resource.metadata.routes || []}
+          fallback={
+            <FunctionChild id={props.resource.metadata.server} tag="Server" />
+          }
+        >
+          {(item) => {
+            return (
+              <FunctionChild
+                title={item.route}
+                tagSize="small"
+                id={props.resource.metadata.server}
+              />
+            );
+          }}
+        </For>
       </Children>
     </>
   );
