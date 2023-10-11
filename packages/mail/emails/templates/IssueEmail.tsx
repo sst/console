@@ -10,14 +10,13 @@ import {
   Button,
   Column,
   Preview,
-  Heading,
   Section,
   Container,
-  Hr as REHr,
-  Text as REText,
-  HrProps as REHrProps,
-  TextProps as RETextProps,
-} from "@react-email/components";
+  Hr as JEHr,
+  Text as JEText,
+  HrProps as JEHrProps,
+  TextProps as JETextProps,
+} from "@jsx-email/all";
 
 const LOCAL_ASSETS_URL = "/static";
 
@@ -77,6 +76,7 @@ const headingHr = {
 
 const buttonPrimary = {
   ...code,
+  padding: "12px 18px",
   color: "#FFF",
   borderRadius: "4px",
   background: BLUE_COLOR,
@@ -168,22 +168,22 @@ function countLeadingSpaces(str: string) {
   return count;
 }
 
-function Text(props: RETextProps) {
-  return <REText {...props} style={{ ...textColor, ...props.style }} />;
+function Text(props: JETextProps) {
+  return <JEText {...props} style={{ ...textColor, ...props.style }} />;
 }
 
-function Hr(props: REHrProps) {
+function Hr(props: JEHrProps) {
   return (
-    <REHr
+    <JEHr
       {...props}
       style={{ borderTop: `1px solid ${DIVIDER_COLOR}`, ...props.style }}
     />
   );
 }
 
-function SurfaceHr(props: REHrProps) {
+function SurfaceHr(props: JEHrProps) {
   return (
-    <REHr
+    <JEHr
       {...props}
       style={{
         borderTop: `1px solid ${SURFACE_DIVIDER_COLOR}`,
@@ -243,9 +243,13 @@ function Fonts({ assetsUrl }: { assetsUrl: string }) {
 function SplitString({ text, split }: { text: string; split: number }) {
   const segments: JSX.Element[] = [];
   for (let i = 0; i < text.length; i += split) {
-    segments.push(<>{text.slice(i, i + split)}</>);
+    segments.push(
+      <React.Fragment key={`${i}text`}>
+        {text.slice(i, i + split)}
+      </React.Fragment>
+    );
     if (i + split < text.length) {
-      segments.push(<wbr key={i + "wbr"} />);
+      segments.push(<wbr key={`${i}wbr`} />);
     }
   }
   return <>{segments}</>;
@@ -260,23 +264,28 @@ function FormattedCode({ text, split = 60, indent = 0 }) {
       const char = text[i];
 
       if (char === " ") {
-        elements.push(<>&nbsp;</>);
+        elements.push(<React.Fragment key={`${i}spc1`}>&nbsp;</React.Fragment>);
       } else if (char === "\t") {
         elements.push(
-          <>
+          <React.Fragment key={`${i}spc2`}>
             <>&nbsp;</>
             <>&nbsp;</>
-          </>
+          </React.Fragment>
         );
       } else {
-        elements.push(<>{char}</>);
+        elements.push(<React.Fragment key={`${i}char`}>{char}</React.Fragment>);
       }
 
       count++;
 
       // Insert <wbr /> with given indent every x characters
       if (count === split) {
-        elements.push(<wbr key={i} />, ...Array(indent).fill(<>&nbsp;</>));
+        elements.push(<wbr key={i} />);
+        for (let j = 0; j < indent; j++) {
+          elements.push(
+            <React.Fragment key={`${j}wbrspc`}>&nbsp;</React.Fragment>
+          );
+        }
         count = 0;
       }
     }
@@ -442,7 +451,7 @@ const IssueEmail = ({
                 />
               </Column>
               <Column align="right">
-                <Button pX={18} pY={12} style={buttonPrimary} href={url}>
+                <Button style={buttonPrimary} href={url}>
                   <span style={code}>View Issue</span>
                 </Button>
               </Column>
@@ -489,9 +498,9 @@ const IssueEmail = ({
               )}
               {stacktrace &&
                 stacktrace.map((frame, index) => (
-                  <>
+                  <React.Fragment key={index}>
                     {frame.raw ? (
-                      <Row key={index}>
+                      <Row>
                         <Column>
                           <span style={stacktraceFrame}>
                             <FormattedCode text={frame.raw} split={65} />
@@ -499,7 +508,7 @@ const IssueEmail = ({
                         </Column>
                       </Row>
                     ) : (
-                      <Row key={index}>
+                      <Row>
                         <Column>
                           <span
                             style={
@@ -542,7 +551,7 @@ const IssueEmail = ({
                     )}
                     {frame.context &&
                       renderStacktraceFrameContext(frame.context)}
-                  </>
+                  </React.Fragment>
                 ))}
             </Section>
 
