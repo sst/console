@@ -355,6 +355,120 @@ function renderStacktraceFrameContext(context: StacktraceContext[]) {
   );
 }
 
+interface SlackBlockKitProps {
+  url: string;
+  app: string;
+  name: string;
+  stage: string;
+  message: string;
+  workspace: string;
+  stacktrace?: StacktraceFrame[];
+}
+function slackBlockKit(props: SlackBlockKitProps) {
+  function stacktrace(stacktrace?: StacktraceFrame[]) {
+    if (!stacktrace) {
+      return "\n  No stacktrace available\n\n";
+    } else {
+      let stackString = "";
+
+      for (let i = 0; i < stacktrace.length; i++) {
+        const frame = stacktrace[i];
+
+        stackString += frame.raw
+          ? `${frame.raw}\n`
+          : `${frame.file}  ${frame.line}:${frame.column}\n`;
+
+        if (i < stacktrace.length - 1) {
+          stackString += "----------\n";
+        }
+
+        if (frame.context) {
+          stackString += "----------\n";
+          const minLeadingSpaces = Math.min(
+            ...frame.context.map((row) => countLeadingSpaces(row.line))
+          );
+          for (let j = 0; j < frame.context.length; j++) {
+            const context = frame.context[j];
+
+            stackString += `${context.index.toString()}  ${context.line.substring(
+              minLeadingSpaces
+            )}\n`;
+          }
+        }
+      }
+
+      return stackString;
+    }
+  }
+
+  const template = {
+    blocks: [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: props.name,
+          emoji: true,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "plain_text",
+          text: props.message,
+        },
+        accessory: {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "View Issue",
+            emoji: false,
+          },
+          url: props.url,
+          action_id: "button-action",
+        },
+      },
+      {
+        type: "section",
+        block_id: "sectionBlockOnlyPlainText",
+        text: {
+          type: "plain_text",
+          text: "Stack Trace",
+          emoji: true,
+        },
+      },
+      {
+        type: "divider",
+      },
+      {
+        type: "rich_text",
+        elements: [
+          {
+            type: "rich_text_preformatted",
+            elements: [
+              {
+                type: "text",
+                text: stacktrace(props.stacktrace),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "plain_text",
+            text: `${props.workspace}: ${props.app} / ${props.stage}`,
+            emoji: false,
+          },
+        ],
+      },
+    ],
+  };
+  return JSON.stringify(template, null, 2);
+}
+
 interface IssueEmailProps {
   url: string;
   app: string;
@@ -430,6 +544,17 @@ const IssueEmail = ({
     },
   ],
 }: IssueEmailProps) => {
+  console.log(
+    slackBlockKit({
+      url,
+      app,
+      name,
+      stage,
+      message,
+      workspace,
+      stacktrace,
+    })
+  );
   return (
     <Html lang="en">
       <Head>
