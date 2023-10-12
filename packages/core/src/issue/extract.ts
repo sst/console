@@ -124,7 +124,7 @@ export const extract = zod(
         console.log("functionArn", functionArn);
 
         const sourcemapCache = Log.createSourcemapCache({
-          functionArn,
+          key: functionArn,
           config: {
             credentials: credentials,
             stageID: workspaces[0]!.stageID,

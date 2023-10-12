@@ -53,6 +53,9 @@ export function handler(input: State) {
           done: true,
         };
       const client = new CloudWatchLogsClient(config);
+      const sourcemapKey =
+        `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
+        input.logGroup.split("/").pop()!;
 
       async function* fetchStreams(logGroup: string) {
         let nextToken: string | undefined;
@@ -149,9 +152,7 @@ export function handler(input: State) {
 
       console.log("fetching since", new Date(start + offset).toLocaleString());
       const processor = Log.createProcessor({
-        arn: `${input.logGroup
-          .replace("log-group:/aws/lambda/", "function:")
-          .replace(":logs:", ":lambda:")}`,
+        sourcemapKey,
         group: input.logGroup + "-tail",
         config,
       });

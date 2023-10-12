@@ -91,7 +91,7 @@ export type Processor = ReturnType<typeof createProcessor>;
 
 export function createSourcemapCache(input: {
   config: StageCredentials;
-  functionArn: string;
+  key: string;
 }) {
   const s3bootstrap = new S3Client({
     ...input.config,
@@ -107,7 +107,7 @@ export function createSourcemapCache(input: {
       .send(
         new ListObjectsV2Command({
           Bucket: bootstrap.bucket,
-          Prefix: `sourcemap/${input.config.app}/${input.config.stage}/${input.functionArn}`,
+          Prefix: `sourcemap/${input.config.app}/${input.config.stage}/${input.key}`,
         })
       )
       .catch(() => {});
@@ -160,7 +160,7 @@ export function createSourcemapCache(input: {
 type SourcemapCache = ReturnType<typeof createSourcemapCache>;
 
 export function createProcessor(input: {
-  arn: string;
+  sourcemapKey: string;
   group: string;
   config: StageCredentials;
 }) {
@@ -176,7 +176,7 @@ export function createProcessor(input: {
   let results = [] as LogEvent[];
 
   const sourcemapCache = createSourcemapCache({
-    functionArn: input.arn,
+    key: input.sourcemapKey,
     config: input.config,
   });
 
@@ -427,7 +427,7 @@ export const expand = zod(
     group: z.string(),
     logGroup: z.string(),
     logStream: z.string(),
-    functionArn: z.string(),
+    sourcemapKey: z.string(),
     config: z.custom<StageCredentials>(),
   }),
   async (input) => {
@@ -441,7 +441,7 @@ export const expand = zod(
     const processor = createProcessor({
       config: input.config,
       group: input.group,
-      arn: input.functionArn,
+      sourcemapKey: input.sourcemapKey,
     });
 
     async function fetchEvents(start: number, end: number) {

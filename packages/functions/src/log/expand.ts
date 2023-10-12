@@ -21,9 +21,7 @@ export const handler = ApiHandler(
       logGroup: pointer.logGroup,
       logStream: pointer.logStream,
       timestamp: pointer.timestamp,
-      functionArn: pointer.logGroup
-        .replace("log-group:/aws/lambda/", "function:")
-        .replace(":logs:", ":lambda:"),
+      sourcemapKey: pointer.logGroup.split("/").pop()!,
       config,
     });
 

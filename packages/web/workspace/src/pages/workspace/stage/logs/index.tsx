@@ -199,24 +199,19 @@ export function Logs() {
   const params = useParams();
   const [query, setQuery] = useSearchParams<{
     dummy?: string;
+    logGroup?: string;
     view: string;
   }>();
   const resources = useResourcesContext();
-  const resource = createMemo(() =>
-    query.dummy
-      ? DUMMY_FUNC
-      : (resources().find((x) => x.id === params.resourceID) as
-          | Extract<Resource.Info, { type: "Function" }>
-          | undefined)
+  const resource = createMemo(
+    () =>
+      resources().find((x) => x.id === params.resourceID) as
+        | Resource.InfoByType<"Function">
+        | undefined
   );
 
   const logGroup = createMemo(() => {
-    if (params.resourceID.includes("arn")) {
-      return params.resourceID
-        .replace("function:", "log-group:/aws/lambda/")
-        .replace("arn:aws:lambda", "arn:aws:logs");
-    }
-
+    if (query.logGroup) return query.logGroup;
     const r = resource();
     if (!r) return "";
     const logGroup = (() => {

@@ -47,9 +47,9 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
         }
         console.log("start", initial.toLocaleString());
         const processor = Log.createProcessor({
-          arn: `${search.logGroup
-            .replace("log-group:/aws/lambda/", "function:")
-            .replace(":logs:", ":lambda:")}`,
+          sourcemapKey:
+            `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
+            search.logGroup.split("/").pop()!,
           group: search.id,
           config,
         });
