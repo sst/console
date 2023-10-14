@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -171,6 +171,9 @@ importers:
       '@botpoison/node':
         specifier: ^0.1.10
         version: 0.1.10
+      '@console/mail':
+        specifier: workspace:*
+        version: link:../mail
       '@octokit/rest':
         specifier: ^19.0.7
         version: 19.0.13
@@ -217,6 +220,9 @@ importers:
 
   packages/mail:
     dependencies:
+      '@console/core':
+        specifier: workspace:*
+        version: link:../core
       '@jsx-email/all':
         specifier: ^2.0.2
         version: 2.0.2(@types/react@18.0.25)(react@18.2.0)

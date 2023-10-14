@@ -9,6 +9,7 @@
     "@jsx-email/all": "^2.0.2",
     "@jsx-email/cli": "^1.0.14",
     "@types/react": "18.0.25",
+    "@console/core": "workspace:*",
     "react": "18.2.0"
   }
 }

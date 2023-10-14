@@ -26,6 +26,7 @@
     "@octokit/rest": "^19.0.7",
     "drizzle-orm": "0.28.5",
     "fast-jwt": "^2.2.1",
+    "@console/mail": "workspace:*",
     "luxon": "^3.3.0",
     "remeda": "^1.17.1",
     "replicache": "^13.0.0",

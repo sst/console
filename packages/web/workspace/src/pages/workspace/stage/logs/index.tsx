@@ -11,7 +11,7 @@ import {
   IconEllipsisVertical,
   IconArrowPathRoundedSquare,
 } from "$/ui/icons";
-import { IconArrowPathSpin } from "$/ui/icons/custom";
+import { IconArrowPathSpin, IconAws } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
 import { TextButton, IconButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
@@ -196,6 +196,7 @@ export function Logs() {
   const nav = useNavigate();
   const invocationsContext = useInvocations();
   const bar = useCommandBar();
+
   const params = useParams();
   const [query, setQuery] = useSearchParams<{
     dummy?: string;
@@ -216,14 +217,37 @@ export function Logs() {
     if (!r) return "";
     const logGroup = (() => {
       if (r.type === "Function") {
-        return r.metadata.arn
-          .replace("function:", "log-group:/aws/lambda/")
-          .replace("arn:aws:lambda", "arn:aws:logs");
+        return `/aws/lambda/${r.metadata.arn.split(":").pop()}`;
       }
       return "";
     })();
 
     return logGroup;
+  });
+
+  bar.register("logs", async () => {
+    return [
+      ...(mode() !== "live"
+        ? [
+            {
+              title: "Open in CloudWatch",
+              category: "logs",
+              run: () => {
+                const url = `https://${
+                  stage.stage.region
+                }.console.aws.amazon.com/cloudwatch/home?region=${
+                  stage.stage.region
+                }#logsV2:log-groups/log-group/${logGroup().replace(
+                  /\//g,
+                  "$252F"
+                )}`;
+                window.open(url, "_blank");
+              },
+              icon: IconAws,
+            },
+          ]
+        : []),
+    ];
   });
 
   const mode = createMemo(() => {

@@ -18,6 +18,8 @@ import {
   TextProps as JETextProps,
 } from "@jsx-email/all";
 
+import type { Issue } from "@console/core/issue";
+
 const LOCAL_ASSETS_URL = "/static";
 
 const unit = 16;
@@ -309,12 +311,12 @@ type StacktraceFrame = {
   context?: StacktraceContext[];
 };
 
-function renderStacktraceFrameContext(context: StacktraceContext[]) {
+function renderStacktraceFrameContext(start: number, context: string[]) {
   const minLeadingSpaces = Math.min(
-    ...context.map((row) => countLeadingSpaces(row.line))
+    ...context.map((row) => countLeadingSpaces(row))
   );
   const maxIndexLength = Math.max(
-    ...context.map((row) => row.index.toString().length)
+    ...context.map((row, index) => (start + index).toString().length)
   );
 
   function padStringToEnd(input: string, desiredLength: number) {
@@ -343,9 +345,9 @@ function renderStacktraceFrameContext(context: StacktraceContext[]) {
                 split={68}
                 indent={maxIndexLength + 2}
                 text={`${padStringToEnd(
-                  row.index.toString(),
+                  (start + index).toString(),
                   maxIndexLength
-                )}  ${row.line.substring(minLeadingSpaces)}`}
+                )}  ${row.substring(minLeadingSpaces)}`}
               />
             </span>
           </Column>
@@ -372,7 +374,7 @@ function slackBlockKit(props: SlackBlockKitProps) {
       let stackString = "";
 
       for (let i = 0; i < stacktrace.length; i++) {
-        const frame = stacktrace[i];
+        const frame = stacktrace[i]!;
 
         stackString += frame.raw
           ? `${frame.raw}\n`
@@ -388,7 +390,7 @@ function slackBlockKit(props: SlackBlockKitProps) {
             ...frame.context.map((row) => countLeadingSpaces(row.line))
           );
           for (let j = 0; j < frame.context.length; j++) {
-            const context = frame.context[j];
+            const context = frame.context[j]!;
 
             stackString += `${context.index.toString()}  ${context.line.substring(
               minLeadingSpaces
@@ -479,90 +481,77 @@ interface IssueEmailProps {
   assetsUrl: string;
   settingsUrl: string;
   stacktrace?: StacktraceFrame[];
+  issue: Issue.Info;
 }
-const IssueEmail = ({
+export const IssueEmail = ({
   app = "console",
   workspace = "seed",
   stage = "production",
-  name = "NoSuchBucketIsAReallyLongExceptionNameThatShouldBeTruncated",
   assetsUrl = LOCAL_ASSETS_URL,
   settingsUrl = "https://console.sst.dev/sst/console/production/settings",
-  message = "ThisisareallylongmessagethatshouldbetruncatedBecauseItDoesNotHaveABreakAndWillOverflow.",
   url = "https://console.sst.dev/sst/console/production/issues/pioksmvi6x2sa9zdljvn8ytw",
-  stacktrace = [
-    {
-      raw: "_Connection.execute (/Users/jayair/Desktop/Projects/console/node_modules/.pnpm/@planetscale+database@1.11.0/node_modules/@planetscale/database/dist/index.js:92:19)",
-    },
-    {
-      raw: "  at processTicksAndRejections (node:internal/process/task_queues:96:5)",
-    },
-    {
-      file: "node_modules/.pnpm/@smithy+smithy-client@2.1.3/node_modules/@smithy/smithy-client/dist-es/default-error-handler.js",
-      line: 23,
-      column: 17,
-    },
-    {
-      file: "node_modules/.pnpm/@smithy+smithy-client@2.1.3/node_modules/@smithy/smithy-client/dist-es/operation.js",
-      line: 49,
-      column: 28,
-    },
-    {
-      file: "packages/core/src/issue/index.ts",
-      line: 101,
-      column: 35,
-      important: true,
-      context: [
-        {
-          line: "    const key = `stackMetadata/path/that/is/too/long/and/will/overflow/app.${row.app}/stage.${row.stage}/`;",
-          index: 98,
-        },
-        {
-          line: '    console.log("listing", key, "for", bucket);',
-          index: 99,
-        },
-        {
-          line: "    const list = await s3",
-          index: 100,
-        },
-        {
-          line: "      .send(",
-          index: 101,
-        },
-        {
-          line: "        new ListObjectsV2Command({",
-          index: 102,
-        },
-        {
-          line: "          Prefix: key,",
-          index: 103,
-        },
-        {
-          line: "          Bucket: bucket,",
-          index: 104,
-        },
-      ],
-    },
-  ],
+  issue = {
+    message:
+      "ThisisareallylongmessagethatshouldbetruncatedBecauseItDoesNotHaveABreakAndWillOverflow.",
+    id: "pioksmvi6x2sa9zdljvn8ytw",
+    count: 10,
+    group: "",
+    pointer: null,
+    timeCreated: "2021-08-05 20:00:00",
+    timeSeen: "2021-08-05 20:00:00",
+    timeResolved: null,
+    ignorer: null,
+    resolver: null,
+    timeDeleted: null,
+    timeIgnored: null,
+    timeUpdated: "2021-08-05 20:00:00",
+    workspaceID: "",
+    error: "NoSuchBucketIsAReallyLongExceptionNameThatShouldBeTruncated",
+    stack: [
+      {
+        raw: "_Connection.execute (/Users/jayair/Desktop/Projects/console/node_modules/.pnpm/@planetscale+database@1.11.0/node_modules/@planetscale/database/dist/index.js:92:19)",
+      },
+      {
+        raw: "  at processTicksAndRejections (node:internal/process/task_queues:96:5)",
+      },
+      {
+        file: "node_modules/.pnpm/@smithy+smithy-client@2.1.3/node_modules/@smithy/smithy-client/dist-es/default-error-handler.js",
+        line: 23,
+        column: 17,
+      },
+      {
+        file: "node_modules/.pnpm/@smithy+smithy-client@2.1.3/node_modules/@smithy/smithy-client/dist-es/operation.js",
+        line: 49,
+        column: 28,
+      },
+      {
+        file: "packages/core/src/issue/index.ts",
+        line: 101,
+        column: 35,
+        important: true,
+        context: [
+          "    const key = `stackMetadata/path/that/is/too/long/and/will/overflow/app.${row.app}/stage.${row.stage}/`;",
+          '    console.log("listing", key, "for", bucket);',
+          "    const list = await s3",
+          "      .send(",
+          "        new ListObjectsV2Command({",
+          "          Prefix: key,",
+          "          Bucket: bucket,",
+        ],
+      },
+    ],
+    errorID: "none",
+    stageID: "",
+  },
 }: IssueEmailProps) => {
-  console.log(
-    slackBlockKit({
-      url,
-      app,
-      name,
-      stage,
-      message,
-      workspace,
-      stacktrace,
-    })
-  );
   return (
     <Html lang="en">
       <Head>
-        <title>{`SST — ${name}: ${message}`}</title>
+        <title>{`SST — ${issue.error}: ${issue.message}`}</title>
       </Head>
       <Fonts assetsUrl={assetsUrl} />
       <Preview>
-        SST — {name}: {message}
+        SST — {issue.error}: {issue.message}
       </Preview>
       <Body style={body}>
         <Container style={container}>
@@ -600,11 +589,11 @@ const IssueEmail = ({
               </Text>
               <Text style={{ ...issueHeading, ...compactText }}>
                 <Link style={code} href={url}>
-                  <SplitString text={name} split={40} />
+                  <SplitString text={issue.error} split={40} />
                 </Link>
               </Text>
               <Text style={{ ...compactText, ...code }}>
-                <SplitString text={message} split={63} />
+                <SplitString text={issue.message} split={63} />
               </Text>
             </Section>
 
@@ -612,7 +601,7 @@ const IssueEmail = ({
               <Text style={sectionLabel}>STACK TRACE</Text>
             </Section>
             <Section style={stacktraceContainer}>
-              {!stacktrace && (
+              {!issue.stack?.length && (
                 <Row>
                   <Column>
                     <Text style={{ ...stacktraceFrame, ...compactText }}>
@@ -621,8 +610,8 @@ const IssueEmail = ({
                   </Column>
                 </Row>
               )}
-              {stacktrace &&
-                stacktrace.map((frame, index) => (
+              {issue.stack &&
+                issue.stack.map((frame, index) => (
                   <React.Fragment key={index}>
                     {frame.raw ? (
                       <Row>
@@ -667,7 +656,7 @@ const IssueEmail = ({
                         </Column>
                       </Row>
                     )}
-                    {index < stacktrace.length - 1 && (
+                    {index < (issue.stack?.length || 0) - 1 && (
                       <Row>
                         <Column>
                           <SurfaceHr />
@@ -675,7 +664,7 @@ const IssueEmail = ({
                       </Row>
                     )}
                     {frame.context &&
-                      renderStacktraceFrameContext(frame.context)}
+                      renderStacktraceFrameContext(frame.line!, frame.context)}
                   </React.Fragment>
                 ))}
             </Section>

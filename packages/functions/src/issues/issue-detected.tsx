@@ -8,6 +8,7 @@ import { Slack } from "@console/core/slack";
 import { slackTeam } from "@console/core/slack/slack.sql";
 import { createId } from "@console/core/util/sql";
 import { workspace } from "@console/core/workspace/workspace.sql";
+import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
 import { EventHandler } from "sst/node/event-bus";
 
 const ses = new SESv2Client({});

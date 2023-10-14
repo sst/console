@@ -8,6 +8,7 @@ import {
   createSignal,
   createEffect,
   ComponentProps,
+  createResource,
 } from "solid-js";
 import { useFunctionsContext, useResourcesContext } from "../context";
 import { styled } from "@macaron-css/solid";
@@ -43,6 +44,7 @@ import {
 import {} from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
+import { hash } from "$/common/hash";
 
 const Content = styled("div", {
   base: {
@@ -785,8 +787,12 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
           }
         >
           {(item) => {
+            const [hashed] = createResource(() => hash(item.route));
             return (
               <FunctionChild
+                logGroup={`/sst/lambda/${props.resource.metadata.server
+                  .split(":")
+                  .pop()}-${hashed()?.substring(0, 8)}`}
                 title={item.route}
                 tagSize="small"
                 id={props.resource.metadata.server}
@@ -1003,6 +1009,7 @@ function FunctionChild(props: {
   id: string | undefined;
   tag?: string;
   title?: string;
+  logGroup?: string;
   tagSize?: ComponentProps<typeof Tag>["size"];
 }) {
   const resources = useResourcesContext();
@@ -1029,7 +1036,9 @@ function FunctionChild(props: {
                 {props.tag!}
               </Tag>
             </Show>
-            <ChildTitleLink href={`./logs/${exists().id}`}>
+            <ChildTitleLink
+              href={`./logs/${exists().id}?logGroup=${props.logGroup || ""}`}
+            >
               <Show
                 when={props.title}
                 fallback={
