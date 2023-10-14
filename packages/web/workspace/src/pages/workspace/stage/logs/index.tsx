@@ -10,6 +10,8 @@ import {
   IconMagnifyingGlass,
   IconEllipsisVertical,
   IconArrowPathRoundedSquare,
+  IconBolt,
+  IconClock,
 } from "$/ui/icons";
 import { IconArrowPathSpin, IconAws } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
@@ -31,7 +33,6 @@ import {
 } from "solid-js";
 import { useResourcesContext, useStageContext } from "../context";
 import { Resource } from "@console/core/app/resource";
-import { DUMMY_FUNC } from "./logs-dummy";
 import { useCommandBar } from "../../command-bar";
 import { formatSinceTime } from "$/common/format";
 import { createStore, produce, unwrap } from "solid-js/store";
@@ -121,47 +122,6 @@ globalKeyframes("glow-pulse", {
   },
 });
 
-const LogContainer = styled("div", {
-  base: {
-    borderTop: `1px solid ${theme.color.divider.base}`,
-  },
-  variants: {
-    expanded: {
-      true: {},
-      false: {},
-    },
-    level: {
-      info: {},
-      error: {},
-    },
-  },
-  defaultVariants: {
-    expanded: false,
-    level: "info",
-  },
-});
-
-const LogSummary = styled("div", {
-  base: {
-    ...utility.row(3),
-    height: 51,
-    fontSize: theme.font.size.mono_sm,
-    alignItems: "center",
-    padding: `0 ${theme.space[3]}`,
-    transition: `opacity ${theme.colorFadeDuration} ease-out`,
-  },
-  variants: {
-    loading: {
-      true: {
-        opacity: 0.4,
-      },
-      false: {
-        opacity: 1,
-      },
-    },
-  },
-});
-
 const LogEmpty = styled("div", {
   base: {
     ...utility.stack(4),
@@ -193,7 +153,6 @@ const LogMoreIndicatorIcon = styled("div", {
 
 export function Logs() {
   const stage = useStageContext();
-  const nav = useNavigate();
   const invocationsContext = useInvocations();
   const bar = useCommandBar();
 
@@ -226,27 +185,50 @@ export function Logs() {
   });
 
   bar.register("logs", async () => {
+    if (mode() === "live") return [];
     return [
-      ...(mode() !== "live"
-        ? [
+      {
+        title: "Tail",
+        category: "logs",
+        run: (bar) => {
+          setQuery(
             {
-              title: "Open in CloudWatch",
-              category: "logs",
-              run: () => {
-                const url = `https://${
-                  stage.stage.region
-                }.console.aws.amazon.com/cloudwatch/home?region=${
-                  stage.stage.region
-                }#logsV2:log-groups/log-group/${logGroup().replace(
-                  /\//g,
-                  "$252F"
-                )}`;
-                window.open(url, "_blank");
-              },
-              icon: IconAws,
+              view: "tail",
             },
-          ]
-        : []),
+            { replace: true }
+          );
+          bar.hide();
+        },
+        icon: IconBolt,
+      },
+      {
+        title: "Recent",
+        category: "logs",
+        run: (bar) => {
+          setQuery(
+            {
+              view: "recent",
+            },
+            { replace: true }
+          );
+          bar.hide();
+        },
+        icon: IconClock,
+      },
+      {
+        title: "Open in CloudWatch",
+        category: "logs",
+        run: () => {
+          const url = `https://${
+            stage.stage.region
+          }.console.aws.amazon.com/cloudwatch/home?region=${
+            stage.stage.region
+          }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`;
+          window.open(url, "_blank");
+          bar.hide();
+        },
+        icon: IconAws,
+      },
     ];
   });
 

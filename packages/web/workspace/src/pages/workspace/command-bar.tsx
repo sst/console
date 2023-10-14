@@ -25,6 +25,7 @@ import { utility } from "$/ui/utility";
 
 interface Action {
   icon: (props: any) => JSX.Element;
+  disabled?: boolean;
   title: string;
   category?: string;
   hotkeys?: string[];
@@ -217,6 +218,7 @@ function createControl() {
       filter((action) =>
         action.title.toLowerCase().includes(input().toLowerCase())
       ),
+      filter((action) => !action.disabled),
       groupBy((a) => a.category)
     );
   });
