@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from "react";
 import {
   Img,
@@ -201,7 +200,7 @@ function Fonts({ assetsUrl }: { assetsUrl: string }) {
     <>
       <Font
         fontFamily="IBM Plex Mono"
-        fallbackFontFamily="mono-space"
+        fallbackFontFamily="monospace"
         webFont={{
           url: `${assetsUrl}/ibm-plex-mono-latin-400.woff2`,
           format: "woff2",
@@ -211,7 +210,7 @@ function Fonts({ assetsUrl }: { assetsUrl: string }) {
       />
       <Font
         fontFamily="IBM Plex Mono"
-        fallbackFontFamily="mono-space"
+        fallbackFontFamily="monospace"
         webFont={{
           url: `${assetsUrl}/ibm-plex-mono-latin-500.woff2`,
           format: "woff2",
@@ -221,7 +220,7 @@ function Fonts({ assetsUrl }: { assetsUrl: string }) {
       />
       <Font
         fontFamily="IBM Plex Mono"
-        fallbackFontFamily="mono-space"
+        fallbackFontFamily="monospace"
         webFont={{
           url: `${assetsUrl}/ibm-plex-mono-latin-700.woff2`,
           format: "woff2",
@@ -231,7 +230,7 @@ function Fonts({ assetsUrl }: { assetsUrl: string }) {
       />
       <Font
         fontFamily="Rubik"
-        fallbackFontFamily="Helvetica, Arial, sans-serif"
+        fallbackFontFamily={["Helvetica", "Arial", "sans-serif"]}
         webFont={{
           url: `${assetsUrl}/rubik-latin.woff2`,
           format: "woff2",
@@ -258,6 +257,7 @@ function SplitString({ text, split }: { text: string; split: number }) {
   return <>{segments}</>;
 }
 
+// @ts-expect-error
 function FormattedCode({ text, split = 60, indent = 0 }) {
   const renderProcessedString = () => {
     let elements: JSX.Element[] = [];
