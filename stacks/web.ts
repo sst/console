@@ -4,6 +4,7 @@ import { Auth } from "./auth";
 import { DNS } from "./dns";
 import { Realtime } from "./realtime";
 import { Connect } from "./connect";
+import { HttpMethods } from "aws-cdk-lib/aws-s3";
 
 export function Web({ stack }: StackContext) {
   const dns = use(DNS);
@@ -19,6 +20,16 @@ export function Web({ stack }: StackContext) {
     customDomain: {
       domainName: dns.domain,
       hostedZone: dns.zone.zoneName,
+    },
+    cdk: {
+      bucket: {
+        cors: [
+          {
+            allowedMethods: [HttpMethods.GET],
+            allowedOrigins: ["*"],
+          },
+        ],
+      },
     },
     environment: {
       VITE_API_URL: api.customDomainUrl || api.url,

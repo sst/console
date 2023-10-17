@@ -96,7 +96,7 @@ export const trigger = zod(
         issueAlertLimit,
         and(
           eq(issueAlertLimit.workspaceID, useWorkspace()),
-          eq(issueAlertLimit.issueID, issue.id)
+          eq(issueAlertLimit.id, issue.id)
         )
       )
       .where(
@@ -162,16 +162,15 @@ export const trigger = zod(
             stage: result.stageName,
             app: result.appName,
             url: "https://console.sst.dev",
-            assetsUrl: "https://console.sst.dev/email/",
+            assetsUrl: "https://console.sst.dev/email",
             workspace: "",
             settingsUrl: "https://console.sst.dev",
           })
         );
-        console.log(html);
         const response = await ses.send(
           new SendEmailCommand({
             Destination: {
-              ToAddresses: ["dax@sst.dev"],
+              ToAddresses: destination.properties.to,
             },
             ReplyToAddresses: [
               result.id + "+issue+alerts@" + process.env.EMAIL_DOMAIN,
@@ -188,7 +187,7 @@ export const trigger = zod(
                   },
                 },
                 Subject: {
-                  Data: `Error ${result.error}`,
+                  Data: `Error: ${result.error}`,
                 },
               },
             },
@@ -201,9 +200,8 @@ export const trigger = zod(
     await db
       .insert(issueAlertLimit)
       .values({
-        id: createId(),
+        id: result.id,
         workspaceID: useWorkspace(),
-        issueID: result.id,
       })
       .onDuplicateKeyUpdate({
         set: {

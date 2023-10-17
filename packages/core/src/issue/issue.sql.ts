@@ -98,7 +98,6 @@ export const issueAlertLimit = mysqlTable(
   {
     ...workspaceID,
     ...timestamps,
-    issueID: cuid("issue_id").notNull(),
   },
   (table) => ({
     primary: primaryKey(table.workspaceID, table.id),
