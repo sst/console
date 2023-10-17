@@ -4,6 +4,8 @@ import { Button, Row, Stack, Text, theme } from "$/ui";
 import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "./context";
 import { utility } from "$/ui/utility";
+import { Switch } from "$/ui/switch";
+import { IconLogosSlack } from "$/ui/icons/custom";
 import { formatNumber } from "$/common/format";
 import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
@@ -119,6 +121,9 @@ export function Settings() {
       end: start.endOf("month").toFormat("LLL d"),
     };
   });
+
+  //const slackWorkspace = "anomaly";
+  const slackWorkspace = undefined;
 
   let portalLink: Promise<Response> | undefined;
   let checkoutLink: Promise<Response> | undefined;
@@ -304,6 +309,41 @@ export function Settings() {
             </Show>
           </Stack>
         </Stack>
+        {/*
+        <Divider />
+        <Stack space={PANEL_CONTENT_SPACE}>
+          <Stack space={PANEL_HEADER_SPACE}>
+            <Text weight="medium">Integrations</Text>
+            <Text size="sm" color="dimmed">
+              Connect your workspace with the services you use
+            </Text>
+          </Stack>
+          <Row space="3.5" horizontal="between" vertical="center">
+            <Row space="3" vertical="center">
+              <IconLogosSlack width="32" height="32" />
+              <Stack space="1.5">
+                <Text weight="medium">Slack</Text>
+                <Show
+                  when={slackWorkspace}
+                  fallback={
+                    <Text size="sm" color="dimmed">
+                      Connect to your Slack workspace
+                    </Text>
+                  }
+                >
+                  <Text size="sm" color="dimmed">
+                    Connected to{" "}
+                    <Text color="dimmed" size="sm" weight="medium">
+                      anomaly
+                    </Text>
+                  </Text>
+                </Show>
+              </Stack>
+            </Row>
+            <Switch />
+          </Row>
+        </Stack>
+        */}
       </SettingsRoot>
     </>
   );

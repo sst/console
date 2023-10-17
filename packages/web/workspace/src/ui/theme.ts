@@ -37,6 +37,17 @@ const formInput = {
   },
 };
 
+const formSwitch = {
+  size: {
+    base: "32px",
+    sm: "24px",
+  },
+  padding: {
+    base: "4px",
+    sm: "3px",
+  },
+};
+
 const constants = {
   colorFadeDuration: "0.15s",
   borderRadius: "4px",
@@ -201,6 +212,17 @@ const light = (() => {
     background: "transparent",
   };
 
+  const formSwitch = {
+    base: {
+      background: `hsla(${base.black}, 9%)`,
+      border: `hsla(${base.black}, 4%)`,
+    },
+    selected: {
+      background: `hsla(${base.blue}, 100%)`,
+      border: `hsla(${base.blue}, 100%)`,
+    },
+  };
+
   const shadow = {
     inset: {
       surface: `0 1px 0 inset hsla(${base.white}, 54%)`,
@@ -318,6 +340,7 @@ const light = (() => {
     input,
     shadow,
     button,
+    switch: formSwitch,
   };
 })();
 
@@ -424,6 +447,17 @@ const dark = ((): typeof light => {
     border: `hsla(${base.white}, 12%)`,
     shadow: `0 1px 2px hsla(${black.d1}, 0.2)`,
     background: `hsla(${base.white}, 4%)`,
+  };
+
+  const formSwitch = {
+    base: {
+      background: `hsla(${base.white}, 19%)`,
+      border: `hsla(${base.white}, 4%)`,
+    },
+    selected: {
+      background: `hsla(${base.blue}, 100%)`,
+      border: `hsla(${base.blue}, 100%)`,
+    },
   };
 
   const shadow = {
@@ -541,6 +575,7 @@ const dark = ((): typeof light => {
     input,
     shadow,
     button,
+    switch: formSwitch,
   };
 })();
 
@@ -550,6 +585,7 @@ export const [lightClass, theme] = createTheme({
   font,
   color: light,
   input: formInput,
+  switch: formSwitch,
 });
 
 export const darkClass = createTheme(theme, {
@@ -559,4 +595,5 @@ export const darkClass = createTheme(theme, {
   font,
   color: dark,
   input: formInput,
+  switch: formSwitch,
 });

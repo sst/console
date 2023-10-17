@@ -1,5 +1,5 @@
 import { DropdownMenu } from "@kobalte/core";
-import { globalStyle, style } from "@macaron-css/core";
+import { globalStyle } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { IconChevronDown } from "./icons";
 import { Text } from "./text";

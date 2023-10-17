@@ -7,6 +7,7 @@ import { Histogram } from "$/ui/histogram";
 import { Text } from "$/ui/text";
 import { Tag } from "$/ui/tag";
 import { Alert } from "$/ui/alert";
+import { Switch } from "$/ui/switch";
 import {
   FormInput,
   FormSelect,
@@ -782,6 +783,20 @@ Read more about it over on our docs`}
           <Dropdown icon={<IconBookmark width={24} height={24} />}>
             <Dropdown.Item>Live</Dropdown.Item>
           </Dropdown>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Switch">
+        <Variant name="Base">
+          <Switch />
+        </Variant>
+        <Variant name="Sm">
+          <Switch size="sm" />
+        </Variant>
+        <Variant name="Base with Label">
+          <Switch label="Turn this on" />
+        </Variant>
+        <Variant name="Sm with Label">
+          <Switch size="sm" label="Turn this on" />
         </Variant>
       </ComponentType>
       <ComponentType name="Forms">
