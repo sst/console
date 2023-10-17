@@ -24,6 +24,7 @@ export const server = new Server()
   .expose("issue_unignore", Issue.unignore)
   .expose("issue_resolve", Issue.resolve)
   .expose("issue_unresolve", Issue.unresolve)
+  .expose("issue_alert_create", Issue.Alert.create)
   .mutation(
     "issue_subscribe",
     z.object({

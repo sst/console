@@ -2,6 +2,7 @@
   "name": "@console/functions",
   "version": "0.0.0",
   "type": "module",
+  "sideEffects": false,
   "scripts": {
     "test": "sst bind vitest",
     "typecheck": "tsc --noEmit --incremental"

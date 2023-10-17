@@ -12,6 +12,7 @@ import {
 import { cuid, timestamps, workspaceID } from "../util/sql";
 import { Actor } from "../actor";
 import { StackFrame } from "../log";
+import { Destination, Source } from "./alert";
 
 export const issue = mysqlTable(
   "issue",
@@ -92,16 +93,27 @@ export const issueCount = mysqlTable(
   })
 );
 
+export const issueAlertLimit = mysqlTable(
+  "issue_alert_limit",
+  {
+    ...workspaceID,
+    ...timestamps,
+    issueID: cuid("issue_id").notNull(),
+  },
+  (table) => ({
+    primary: primaryKey(table.workspaceID, table.id),
+  })
+);
+
 export const issueAlert = mysqlTable(
   "issue_alert",
   {
     ...workspaceID,
     ...timestamps,
-    stageID: cuid("stage_id").notNull(),
-    group: varchar("group", { length: 255 }).notNull(),
+    source: json("source").$type<Source>().notNull(),
+    destination: json("destination").$type<Destination>().notNull(),
   },
   (table) => ({
     primary: primaryKey(table.workspaceID, table.id),
-    unique: unique("unique").on(table.workspaceID, table.stageID, table.group),
   })
 );

@@ -1,29 +1,83 @@
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { createId } from "@paralleldrive/cuid2";
-import { eq, and, isNull, gt, sql } from "drizzle-orm";
+import { eq, and, isNull, gt, sql, getTableColumns, or } from "drizzle-orm";
 import { useWorkspace } from "../actor";
 import { app, stage } from "../app/app.sql";
 import { db } from "../drizzle";
-import { event } from "../event";
 import { Slack } from "../slack";
-import { slackTeam } from "../slack/slack.sql";
 import { workspace } from "../workspace/workspace.sql";
-import { issue, issueAlert } from "./issue.sql";
+import { issue, issueAlert, issueAlertLimit } from "./issue.sql";
 import { createSelectSchema } from "drizzle-zod";
 import { zod } from "../util/zod";
+import { useTransaction } from "../util/transaction";
+import { User } from "../user";
+import { z } from "zod";
+import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
+import { render } from "@jsx-email/render";
 
 export * as Alert from "./alert";
 
-export const Limit = createSelectSchema(issueAlert);
+export const Limit = createSelectSchema(issueAlertLimit);
+
+export const Info = createSelectSchema(issueAlert);
+
+const ses = new SESv2Client({});
+
+export interface Source {
+  app: "*" | string[];
+  stage: "*" | string[];
+}
+
+export type Destination = SlackDestination | EmailDestination;
+
+export interface SlackDestination {
+  type: "slack";
+  properties: {
+    team: string;
+    channel: string;
+  };
+}
+
+export interface EmailDestination {
+  type: "email";
+  properties: {
+    to: string[];
+  };
+}
+
+export const create = zod(
+  Info.pick({ id: true }).partial({ id: true }),
+  (input) =>
+    useTransaction(async (tx) => {
+      const users = await User.list();
+      const id = input.id ?? createId();
+      await tx.insert(issueAlert).values({
+        id,
+        workspaceID: useWorkspace(),
+        source: {
+          stage: "*",
+          app: "*",
+        },
+        destination: {
+          type: "email",
+          properties: {
+            to: users.map((user) => user.email),
+          },
+        },
+      });
+      return id;
+    })
+);
 
 export const trigger = zod(
-  Limit.pick({ stageID: true, group: true }),
+  z.object({
+    stageID: z.string().cuid2(),
+    group: z.string(),
+  }),
   async (input) => {
     const result = await db
       .select({
-        id: issue.id,
-        error: issue.error,
-        message: issue.message,
-        stack: issue.stack,
+        ...getTableColumns(issue),
         slug: workspace.slug,
         appName: app.name,
         stageName: stage.name,
@@ -38,12 +92,11 @@ export const trigger = zod(
         app,
         and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace()))
       )
-      .innerJoin(
-        issueAlert,
+      .leftJoin(
+        issueAlertLimit,
         and(
-          eq(issueAlert.workspaceID, useWorkspace()),
-          eq(issueAlert.stageID, issue.stageID),
-          eq(issueAlert.group, issue.group)
+          eq(issueAlertLimit.workspaceID, useWorkspace()),
+          eq(issueAlertLimit.issueID, issue.id)
         )
       )
       .where(
@@ -51,7 +104,10 @@ export const trigger = zod(
           eq(issue.workspaceID, useWorkspace()),
           eq(issue.stageID, input.stageID),
           eq(issue.group, input.group),
-          gt(issueAlert.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
+          or(
+            isNull(issueAlertLimit.timeUpdated),
+            gt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`)
+          ),
           isNull(issue.timeIgnored)
         )
       )
@@ -59,54 +115,95 @@ export const trigger = zod(
 
     if (!result) return;
 
-    // temporary
-    const row = await db
-      .select({ team: slackTeam.teamID })
-      .from(slackTeam)
-      .where(eq(slackTeam.workspaceID, useWorkspace()))
-      .limit(1)
-      .execute()
-      .then((rows) => rows.at(0));
-    if (!row) return;
+    const alerts = await db
+      .select()
+      .from(issueAlert)
+      .where(eq(issueAlert.workspaceID, useWorkspace()));
 
-    const withContext = result.stack?.filter((frame) => frame.context) || [];
-    const code =
-      withContext.find((frame) => frame.important)?.context ||
-      withContext[0]?.context;
+    for (const alert of alerts) {
+      const { source, destination } = alert;
+      const match =
+        (source.app === "*" || source.app.includes(result.appName)) &&
+        (source.stage === "*" || source.stage.includes(result.stageName));
+      if (!match) continue;
 
-    await Slack.send({
-      channel: "alerts-sst",
-      teamID: row.team,
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: [
-              `*<https://console.sst.dev/${result.slug}/${result.appName}/${result.stageName}/issues/${result.id} | ${result.error}>*`,
-              result.message,
-            ].join("\n"),
-          },
-        },
-        {
-          type: "context",
-          elements: [
+      if (destination.type === "slack") {
+        await Slack.send({
+          channel: "alerts-sst",
+          teamName: destination.properties.team,
+          blocks: [
             {
-              type: "plain_text",
-              text: [result.appName, result.stageName].join("/"),
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: [
+                  `*<https://console.sst.dev/${result.slug}/${result.appName}/${result.stageName}/issues/${result.id} | ${result.error}>*`,
+                  result.message,
+                ].join("\n"),
+              },
+            },
+            {
+              type: "context",
+              elements: [
+                {
+                  type: "plain_text",
+                  text: [result.appName, result.stageName].join("/"),
+                },
+              ],
             },
           ],
-        },
-      ],
-    });
+        });
+      }
+
+      if (destination.type === "email") {
+        const html = render(
+          IssueEmail({
+            issue: result,
+            stage: result.stageName,
+            app: result.appName,
+            url: "https://console.sst.dev",
+            assetsUrl: "https://console.sst.dev/email/",
+            workspace: "",
+            settingsUrl: "https://console.sst.dev",
+          })
+        );
+        console.log(html);
+        const response = await ses.send(
+          new SendEmailCommand({
+            Destination: {
+              ToAddresses: ["dax@sst.dev"],
+            },
+            ReplyToAddresses: [
+              result.id + "+issue+alerts@" + process.env.EMAIL_DOMAIN,
+            ],
+            FromEmailAddress: `SST <${result.id}+issue+alerts@${process.env.EMAIL_DOMAIN}>`,
+            Content: {
+              Simple: {
+                Body: {
+                  Html: {
+                    Data: html,
+                  },
+                  Text: {
+                    Data: result.message,
+                  },
+                },
+                Subject: {
+                  Data: `Error ${result.error}`,
+                },
+              },
+            },
+          })
+        );
+        console.log(response);
+      }
+    }
 
     await db
-      .insert(issueAlert)
+      .insert(issueAlertLimit)
       .values({
         id: createId(),
         workspaceID: useWorkspace(),
-        stageID: input.stageID,
-        group: input.group,
+        issueID: result.id,
       })
       .onDuplicateKeyUpdate({
         set: {

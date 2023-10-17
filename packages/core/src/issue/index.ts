@@ -28,12 +28,11 @@ import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
 import { useTransaction } from "../util/transaction";
-import { warning } from "../warning/warning.sql";
-import { warn } from "console";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = typeof issue.$inferSelect;
 export type Count = typeof issueCount.$inferSelect;
+export { Alert } from "./alert";
 
 export const Events = {
   ErrorDetected: event("issue.error_detected", {

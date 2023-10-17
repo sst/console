@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
+    "jsx": "react",
     "module": "esnext",
     "moduleResolution": "node",
     "noUncheckedIndexedAccess": true

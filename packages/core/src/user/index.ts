@@ -17,6 +17,12 @@ export const Info = createSelectSchema(user, {
 });
 export type Info = z.infer<typeof Info>;
 
+export function list() {
+  return useTransaction((tx) =>
+    tx.select().from(user).where(eq(user.workspaceID, useWorkspace())).execute()
+  );
+}
+
 export const create = zod(
   Info.pick({ email: true, id: true })
     .partial({
