@@ -5,20 +5,17 @@ import { createId } from "@console/core/util/sql";
 
 const slackTeams = await db.select().from(slackTeam);
 
-for (const team of slackTeams) {
-  await db.insert(issueAlert).values({
-    workspaceID: team.workspaceID,
-    id: createId(),
-    source: {
-      stage: "*",
-      app: "*",
+await db.insert(issueAlert).values({
+  workspaceID: "vn5ubp6sxv52de6cso8kb015",
+  id: createId(),
+  source: {
+    stage: "*",
+    app: "*",
+  },
+  destination: {
+    type: "email",
+    properties: {
+      to: ["dax@sst.dev", "frank@sst.dev", "jay@sst.dev"],
     },
-    destination: {
-      type: "slack",
-      properties: {
-        team: team.teamID,
-        channel: "#alerts-sst",
-      },
-    },
-  });
-}
+  },
+});
