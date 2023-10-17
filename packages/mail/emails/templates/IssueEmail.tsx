@@ -1,5 +1,4 @@
-/** @jsx React */
-/** @jsxFrag React.Fragment */
+// @ts-nocheck
 import React from "react";
 import {
   Img,
