@@ -1,6 +1,6 @@
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { createId } from "@paralleldrive/cuid2";
-import { eq, and, isNull, gt, sql, getTableColumns, or } from "drizzle-orm";
+import { eq, and, isNull, gt, sql, getTableColumns, or, lt } from "drizzle-orm";
 import { useWorkspace } from "../actor";
 import { app, stage } from "../app/app.sql";
 import { db } from "../drizzle";
@@ -106,7 +106,7 @@ export const trigger = zod(
           eq(issue.group, input.group),
           or(
             isNull(issueAlertLimit.timeUpdated),
-            gt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`)
+            lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`)
           ),
           isNull(issue.timeIgnored)
         )
