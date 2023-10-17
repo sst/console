@@ -105,8 +105,12 @@ export const trigger = zod(
           eq(issue.stageID, input.stageID),
           eq(issue.group, input.group),
           or(
+            // alert first time
             isNull(issueAlertLimit.timeUpdated),
-            lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`)
+            // do not alert more than once every 30min
+            lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
+            // if issue resolved after last alert, send alert
+            gt(issueAlertLimit.timeUpdated, issue.timeUpdated)
           ),
           isNull(issue.timeIgnored)
         )
