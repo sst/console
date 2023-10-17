@@ -27,6 +27,7 @@ import { IconBookmark } from "$/ui/icons";
 import { LambdaPayloadStore } from "$/data/lambda-payload";
 import { useStageContext } from "../context";
 import { createEffect, createMemo } from "solid-js";
+import { createScan2 } from "$/data/store";
 
 const InvokeRoot = styled("div", {
   base: {
@@ -181,6 +182,12 @@ export function Invoke(props: Props) {
     () => [],
     (items) => items.filter((payload) => payload.key === key())
   );
+
+  const test = createScan2(() => "/lambdaPayload", rep);
+
+  createEffect(() => {
+    console.log([...test()]);
+  });
 
   createEffect(() => {
     props.control({

@@ -8,7 +8,6 @@ import { useStorage } from "./account";
 import { useDummy, useDummyConfig } from "./dummy";
 import { useReplicache } from "./replicache";
 import { User } from "@console/core/user";
-import { createScan } from "$/data/store";
 import { UserStore } from "$/data/user";
 
 export * as AuthStore from "./auth";

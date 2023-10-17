@@ -6,7 +6,7 @@ import {
   onCleanup,
   createMemo,
 } from "solid-js";
-import { createStore, produce, reconcile } from "solid-js/store";
+import { createStore, produce, reconcile, unwrap } from "solid-js/store";
 
 type PathResolver = (...args: any) => string[];
 
@@ -266,6 +266,97 @@ export function createScan<T extends any>(
                   indexToKey.delete(state.length - 1);
 
                   state.pop();
+                }
+              }
+            })
+          );
+
+          setReady(true);
+        });
+      },
+      {
+        prefix: path,
+        initialValuesInFirstDiff: true,
+      }
+    );
+  });
+
+  const result = createMemo(() => (refine ? refine(data) : data));
+  Object.defineProperty(result, "ready", { get: ready });
+
+  onCleanup(() => {
+    if (unsubscribe) unsubscribe();
+  });
+
+  return result as {
+    (): T[];
+    ready: boolean;
+  };
+}
+
+export function createScan2<T extends any>(
+  p: () => string,
+  replicache: () => Replicache,
+  refine?: (values: T[]) => T[]
+) {
+  let unsubscribe: () => void;
+
+  const itemToKey = new Map<any, string>();
+  const [data, setData] = createStore<T[]>([]);
+  const [ready, setReady] = createSignal(false);
+
+  createEffect(() => {
+    if (unsubscribe) unsubscribe();
+    const path = p();
+    batch(() => {
+      setReady(false);
+      setData([]);
+    });
+    const rep = replicache();
+
+    unsubscribe = rep.experimentalWatch(
+      (diffs) => {
+        batch(() => {
+          // Faster set if we haven't seen any diffs yet.
+          if (!ready()) {
+            const values: T[] = [];
+            for (const diff of diffs) {
+              if (diff.op === "add") {
+                values.push(diff.newValue as T);
+                console.log("setting key", diff.newValue, diff.key);
+                itemToKey.set(diff.newValue, diff.key);
+              }
+            }
+            setData(values);
+            setReady(true);
+            return;
+          }
+          setData(
+            produce((state) => {
+              for (const diff of diffs) {
+                if (diff.op === "add") {
+                  state.push(diff.newValue as T);
+                  itemToKey.set(diff.newValue, diff.key);
+                }
+                if (diff.op === "change") {
+                  const index = state.findIndex((item) => {
+                    console.log(item, itemToKey.get(unwrap(item)));
+                    return itemToKey.get(unwrap(item)) === diff.key;
+                  });
+                  console.log(
+                    "found existing item",
+                    itemToKey,
+                    index,
+                    diff.key
+                  );
+                  state[index] = diff.newValue as T;
+                  itemToKey.set(diff.newValue, diff.key);
+                }
+                if (diff.op === "del") {
+                  const index = state.findIndex(
+                    (item) => itemToKey.get(item) === diff.key
+                  );
+                  state.splice(index, 1);
                 }
               }
             })

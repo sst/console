@@ -188,7 +188,7 @@ export function Logs() {
     if (mode() === "live") return [];
     return [
       {
-        title: "Tail",
+        title: "Live",
         category: "logs",
         run: (bar) => {
           setQuery(

@@ -20,7 +20,7 @@ import { IssueStore } from "$/data/issue";
 import { DateTime } from "luxon";
 import { WarningStore } from "$/data/warning";
 import { useDummy } from "./dummy";
-import { createGet, createScan } from "$/data/store";
+import { createGet } from "$/data/store";
 import { AWS } from "$/data/aws";
 
 const mutators = new Client<ServerType>()
