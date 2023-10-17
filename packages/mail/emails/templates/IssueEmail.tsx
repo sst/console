@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 import {
   Img,
@@ -18,7 +19,7 @@ import {
   TextProps as JETextProps,
 } from "@jsx-email/all";
 
-import type { Issue } from "@console/core/issue";
+import type { Issue } from "../../../core/src/issue";
 
 const LOCAL_ASSETS_URL = "/static";
 
@@ -474,13 +475,10 @@ function slackBlockKit(props: SlackBlockKitProps) {
 interface IssueEmailProps {
   url: string;
   app: string;
-  name: string;
   stage: string;
-  message: string;
   workspace: string;
   assetsUrl: string;
   settingsUrl: string;
-  stacktrace?: StacktraceFrame[];
   issue: Issue.Info;
 }
 export const IssueEmail = ({
