@@ -1,3 +1,5 @@
+/** @jsx React */
+/** @jsxFrag React.Fragment */
 import React from "react";
 import {
   Img,
