@@ -89,7 +89,6 @@ export const trigger = zod(
         stage,
         and(eq(stage.id, issue.stageID), eq(stage.workspaceID, useWorkspace()))
       )
-      .innerJoin(workspace, eq(workspace.id, issue.workspaceID))
       .innerJoin(
         app,
         and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace()))

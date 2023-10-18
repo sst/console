@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from "react";
 import {
   Img,
@@ -612,7 +611,7 @@ export const IssueEmail = ({
               {issue.stack &&
                 issue.stack.map((frame, index) => (
                   <React.Fragment key={index}>
-                    {frame.raw ? (
+                    {!frame.important ? (
                       <Row>
                         <Column>
                           <span style={stacktraceFrame}>
