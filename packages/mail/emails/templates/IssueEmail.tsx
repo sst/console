@@ -70,7 +70,7 @@ const textColor = {
 };
 
 const code = {
-  fontFamily: "IBM Plex Mono, mono-space",
+  fontFamily: "IBM Plex Mono, monospace",
 };
 
 const headingHr = {
