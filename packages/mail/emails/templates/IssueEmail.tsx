@@ -263,6 +263,7 @@ function FormattedCode({ text, split = 60, indent = 0 }) {
     let elements: JSX.Element[] = [];
     let count = 0;
 
+    text = text || "";
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
 
@@ -611,7 +612,7 @@ export const IssueEmail = ({
               {issue.stack &&
                 issue.stack.map((frame, index) => (
                   <React.Fragment key={index}>
-                    {!frame.important ? (
+                    {!frame.file ? (
                       <Row>
                         <Column>
                           <span style={stacktraceFrame}>
@@ -662,6 +663,7 @@ export const IssueEmail = ({
                       </Row>
                     )}
                     {frame.context &&
+                      frame.important &&
                       renderStacktraceFrameContext(frame.line!, frame.context)}
                   </React.Fragment>
                 ))}

@@ -118,6 +118,7 @@ export const trigger = zod(
       )
       .then((rows) => rows[0]);
 
+    console.log("not alertable");
     if (!result) return;
 
     const alerts = await db
@@ -202,16 +203,17 @@ export const trigger = zod(
       }
     }
 
-    await db
-      .insert(issueAlertLimit)
-      .values({
-        id: result.id,
-        workspaceID: useWorkspace(),
-      })
-      .onDuplicateKeyUpdate({
-        set: {
-          timeUpdated: sql`NOW()`,
-        },
-      });
+    if (alerts.length)
+      await db
+        .insert(issueAlertLimit)
+        .values({
+          id: result.id,
+          workspaceID: useWorkspace(),
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            timeUpdated: sql`NOW()`,
+          },
+        });
   }
 );
