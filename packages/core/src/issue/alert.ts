@@ -81,6 +81,7 @@ export const trigger = zod(
         slug: workspace.slug,
         appName: app.name,
         stageName: stage.name,
+        workspaceSlug: workspace.slug,
       })
       .from(issue)
       .innerJoin(workspace, eq(workspace.id, issue.workspaceID))
@@ -88,6 +89,7 @@ export const trigger = zod(
         stage,
         and(eq(stage.id, issue.stageID), eq(stage.workspaceID, useWorkspace()))
       )
+      .innerJoin(workspace, eq(workspace.id, issue.workspaceID))
       .innerJoin(
         app,
         and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace()))
@@ -167,7 +169,7 @@ export const trigger = zod(
             app: result.appName,
             url: "https://console.sst.dev",
             assetsUrl: "https://console.sst.dev/email",
-            workspace: "",
+            workspace: result.workspaceSlug,
             settingsUrl: "https://console.sst.dev",
           })
         );
