@@ -144,7 +144,7 @@ export const trigger = zod(
                 type: "mrkdwn",
                 text: [
                   `*<https://console.sst.dev/${result.slug}/${result.appName}/${result.stageName}/issues/${result.id} | ${result.error}>*`,
-                  result.message,
+                  result.message.substring(0, 2000),
                 ].join("\n"),
               },
             },
