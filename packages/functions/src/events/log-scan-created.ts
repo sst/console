@@ -70,6 +70,12 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
             "to",
             new Date(end).toLocaleString()
           );
+          console.log("query", {
+            logGroupIdentifiers: [search.logGroup],
+            queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 10000`,
+            startTime: start / 1000,
+            endTime: end / 1000,
+          });
           const result = await client
             .send(
               new StartQueryCommand({
@@ -92,6 +98,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
 
             if (response.status === "Complete") {
               const results = response.results || [];
+              console.log("log insights results", results.length);
 
               let index = 0;
               for (const result of results.sort((a, b) =>

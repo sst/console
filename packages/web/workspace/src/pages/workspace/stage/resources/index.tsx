@@ -44,7 +44,6 @@ import {
 import {} from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
-import { hash } from "$/common/hash";
 
 const Content = styled("div", {
   base: {
@@ -768,7 +767,6 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
 }
 
 export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
-  console.log(props.resource.metadata);
   return (
     <>
       <Header
@@ -781,18 +779,20 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
       />
       <Children>
         <For
-          each={props.resource.metadata.routes || []}
+          // @ts-expect-error
+          each={props.resource.metadata.routes?.data || []}
           fallback={
             <FunctionChild id={props.resource.metadata.server} tag="Server" />
           }
         >
           {(item) => {
-            const [hashed] = createResource(() => hash(item.route));
             return (
               <FunctionChild
-                logGroup={`/sst/lambda/${props.resource.metadata.server
-                  .split(":")
-                  .pop()}-${hashed()?.substring(0, 8)}`}
+                logGroup={
+                  // @ts-expect-error
+                  props.resource.metadata.routes?.logGroupPrefix +
+                  item.logGroupPath
+                }
                 title={item.route}
                 tagSize="small"
                 id={props.resource.metadata.server}
