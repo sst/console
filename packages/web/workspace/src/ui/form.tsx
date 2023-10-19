@@ -1,3 +1,4 @@
+import { Select as KSelect } from "@kobalte/core";
 import { CSSProperties } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
@@ -318,4 +319,13 @@ type SplitOptionsProps = ComponentProps<typeof SplitOptionsRoot> & {};
 
 export function SplitOptions(props: SplitOptionsProps) {
   return <SplitOptionsRoot {...props}>{props.children}</SplitOptionsRoot>;
+}
+
+function NewSelect() {
+  return (
+    <KSelect.Root
+      options={["Apple"]}
+      placeholder="Select a fruit…"
+    ></KSelect.Root>
+  );
 }

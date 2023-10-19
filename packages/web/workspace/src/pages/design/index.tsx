@@ -8,7 +8,6 @@ import { Text } from "$/ui/text";
 import { Tag } from "$/ui/tag";
 import { Alert } from "$/ui/alert";
 import { Switch } from "$/ui/switch";
-import { NewSelect } from "$/ui/select";
 import {
   FormInput,
   FormSelect,
@@ -166,11 +165,6 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
-      <ComponentType name="Select">
-        <Variant name="Base">
-          <NewSelect />
-        </Variant>
-      </ComponentType>
       <ComponentType name="Histogram">
         <Variant name="Base">
           <Histogram
