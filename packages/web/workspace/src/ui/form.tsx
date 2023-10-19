@@ -321,11 +321,11 @@ export function SplitOptions(props: SplitOptionsProps) {
   return <SplitOptionsRoot {...props}>{props.children}</SplitOptionsRoot>;
 }
 
-function NewSelect() {
-  return (
-    <KSelect.Root
-      options={["Apple"]}
-      placeholder="Select a fruit…"
-    ></KSelect.Root>
-  );
-}
+//function NewSelect() {
+//  return (
+//    <KSelect.Root
+//      options={["Apple"]}
+//      placeholder="Select a fruit…"
+//    ></KSelect.Root>
+//  );
+//}
