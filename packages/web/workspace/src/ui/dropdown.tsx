@@ -32,8 +32,12 @@ const Trigger = styled(DropdownMenu.Trigger, {
   },
   variants: {
     size: {
-      sm: {},
-      base: {},
+      sm: {
+        height: theme.input.size.sm,
+      },
+      base: {
+        height: theme.input.size.base,
+      },
     },
     icon: {
       true: {
@@ -45,26 +49,6 @@ const Trigger = styled(DropdownMenu.Trigger, {
       false: {},
     },
   },
-  compoundVariants: [
-    {
-      variants: {
-        size: "sm",
-        icon: false,
-      },
-      style: {
-        height: theme.input.size.sm,
-      },
-    },
-    {
-      variants: {
-        size: "base",
-        icon: false,
-      },
-      style: {
-        height: theme.input.size.base,
-      },
-    },
-  ],
   defaultVariants: {
     size: "base",
     icon: false,

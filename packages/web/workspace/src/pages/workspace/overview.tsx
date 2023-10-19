@@ -614,7 +614,7 @@ function UserCard(props: UserCardProps) {
           {user()?.email}
         </Text>
       </Row>
-      <Row space="2" horizontal="center" style={{ flex: "0 0 auto" }}>
+      <Row flex={false} space="2" vertical="center">
         <Show when={!user()?.timeSeen}>
           <Tag level="tip">Invited</Tag>
         </Show>

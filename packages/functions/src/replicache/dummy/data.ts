@@ -192,6 +192,7 @@ export function* generateData(
 
   yield user({ email: USER_ID, active: true });
   yield user({ email: "invited-dummy@example.com" });
+  yield user({ email: "invited-dummy-with-long-email-address@example.com" });
   yield user({
     email: "deleted-dummy@example.com",
     active: true,
