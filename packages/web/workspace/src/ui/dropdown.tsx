@@ -161,12 +161,6 @@ const RadioItem = styled(DropdownMenu.RadioItem, {
 const RadioItemLabel = styled("span", {
   base: {
     ...utility.textLine(),
-    selectors: {
-      [`${RadioItem} &`]: {
-        color: theme.color.text.primary.surface,
-        backgroundColor: theme.color.background.hover,
-      },
-    },
   },
 });
 
