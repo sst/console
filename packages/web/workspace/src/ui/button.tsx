@@ -258,9 +258,6 @@ export function ButtonGroup(props: ButtonGroupProps) {
 
 export const LinkButton = styled("span", {
   base: {
-    fontWeight: 500,
-    fontSize: theme.font.size.mono_sm,
-    fontFamily: theme.font.family.code,
     color: theme.color.link.primary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     ":hover": {
@@ -274,6 +271,37 @@ export const LinkButton = styled("span", {
       },
       false: {},
     },
+    code: {
+      true: {
+        fontFamily: theme.font.family.code,
+      },
+      false: {},
+    },
+    weight: {
+      regular: {
+        fontWeight: 400,
+      },
+      medium: {
+        fontWeight: 500,
+      },
+      semibold: {
+        fontWeight: 600,
+      },
+    },
+    size: (() => {
+      const result = {} as Record<`${keyof typeof theme.font.size}`, any>;
+      for (const [key, value] of Object.entries(theme.font.size)) {
+        result[key as keyof typeof theme.font.size] = {
+          fontSize: value,
+        };
+      }
+      return result;
+    })(),
+  },
+  defaultVariants: {
+    code: true,
+    size: "mono_sm",
+    weight: "medium",
   },
 });
 

@@ -5,16 +5,29 @@ import { IconChevronDown } from "./icons";
 import { Text } from "./text";
 import { utility } from "./utility";
 import { theme } from "./theme";
+import {
+  inputStyles,
+  inputFocusStyles,
+  inputDisabledStyles,
+  inputDangerFocusStyles,
+} from "./form";
 import { JSX, Show, ComponentProps, ParentProps } from "solid-js";
 
 const Trigger = styled(DropdownMenu.Trigger, {
   base: {
     ...utility.row(2),
-    border: 0,
+    ...inputStyles,
     alignItems: "center",
     justifyContent: "space-between",
-    borderRadius: theme.borderRadius,
-    transition: `box-shadow ${theme.colorFadeDuration} ease-out`,
+    ":focus": {
+      ...inputFocusStyles,
+    },
+    ":invalid": {
+      color: theme.color.text.dimmed.base,
+    },
+    ":disabled": {
+      ...inputDisabledStyles,
+    },
     maxWidth: 200,
   },
   variants: {
@@ -25,17 +38,11 @@ const Trigger = styled(DropdownMenu.Trigger, {
     icon: {
       true: {
         padding: 0,
+        boxShadow: "none",
         appearance: "none",
         background: "none",
       },
-      false: {
-        padding: `0 ${theme.space[2]} 0 ${theme.space[3]}`,
-        backgroundColor: theme.color.input.background,
-        boxShadow: `
-      0 0 0 1px inset ${theme.color.input.border},
-      ${theme.color.input.shadow}
-    `,
-      },
+      false: {},
     },
   },
   compoundVariants: [
@@ -71,6 +78,7 @@ const DownIcon = styled(DropdownMenu.Icon, {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    opacity: theme.iconOpacity,
     color: theme.color.icon.primary,
     flexShrink: 0,
     selectors: {
@@ -127,22 +135,40 @@ const RadioGroup = styled(DropdownMenu.RadioGroup, {});
 
 const RadioItem = styled(DropdownMenu.RadioItem, {
   base: {
-    ...utility.textLine(),
-    lineHeight: "normal",
+    ...utility.row(2),
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: `${theme.space[2.5]} ${theme.space[3]}`,
-    fontSize: theme.font.size.sm,
-    color: theme.color.text.secondary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
+    color: theme.color.text.secondary.base,
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    userSelect: "none",
+    outline: "none",
     selectors: {
       "&[data-highlighted]": {
         color: theme.color.text.primary.surface,
         backgroundColor: theme.color.background.hover,
       },
-      "&[data-checked]": {
-        color: theme.color.text.primary.surface,
-        backgroundColor: theme.color.background.selected,
+      "&[data-disabled]": {
+        color: theme.color.text.dimmed.surface,
+        pointerEvents: "none",
       },
     },
+  },
+});
+
+const RadioItemLabel = styled("span", {
+  base: {
+    ...utility.textLine(),
+  },
+});
+
+const ItemIndicator = styled(DropdownMenu.ItemIndicator, {
+  base: {
+    opacity: theme.iconOpacity,
+    display: "flex",
+    alignItems: "center",
   },
 });
 
@@ -197,3 +223,5 @@ Dropdown.Item = Item;
 Dropdown.RadioItem = RadioItem;
 Dropdown.Seperator = Seperator;
 Dropdown.RadioGroup = RadioGroup;
+Dropdown.ItemIndicator = ItemIndicator;
+Dropdown.RadioItemLabel = RadioItemLabel;

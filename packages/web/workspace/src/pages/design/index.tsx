@@ -2,12 +2,13 @@ import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
 import { SpanSpacer, Grower, Stack, Row, Hr } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
-import { IconCheck, IconBookmark } from "$/ui/icons";
+import { IconCheck, IconBookmark, IconChevronDown } from "$/ui/icons";
 import { Histogram } from "$/ui/histogram";
 import { Text } from "$/ui/text";
 import { Tag } from "$/ui/tag";
 import { Alert } from "$/ui/alert";
 import { Switch } from "$/ui/switch";
+import { NewSelect } from "$/ui/select";
 import {
   FormInput,
   FormSelect,
@@ -165,6 +166,11 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
+      <ComponentType name="Select">
+        <Variant name="Base">
+          <NewSelect />
+        </Variant>
+      </ComponentType>
       <ComponentType name="Histogram">
         <Variant name="Base">
           <Histogram
@@ -538,6 +544,16 @@ export function Design() {
           </TextContainer>
         </Variant>
       </ComponentType>
+      <ComponentType name="LinkButton">
+        <Variant name="Base">
+          <TextContainer>
+            <Row space="4">
+              <LinkButton>Button</LinkButton>
+              <LinkButton disabled>Button</LinkButton>
+            </Row>
+          </TextContainer>
+        </Variant>
+      </ComponentType>
       <ComponentType name="TabTitle">
         <Variant name="Base">
           <TextContainer>
@@ -748,16 +764,28 @@ Read more about it over on our docs`}
         </Variant>
         <Variant name="RadioGroup">
           <Dropdown label="Dropdown">
-            <Dropdown.RadioGroup value="selected">
-              <Dropdown.RadioItem value="live">Live</Dropdown.RadioItem>
-              <Dropdown.RadioItem value="recent">Recent</Dropdown.RadioItem>
+            <Dropdown.RadioGroup value="long">
+              <Dropdown.RadioItem value="live">
+                <Dropdown.RadioItemLabel>Live</Dropdown.RadioItemLabel>
+              </Dropdown.RadioItem>
+              <Dropdown.RadioItem value="recent">
+                <Dropdown.RadioItemLabel>Recent</Dropdown.RadioItemLabel>
+              </Dropdown.RadioItem>
               <Dropdown.RadioItem disabled value="disabled">
-                Disabled
+                <Dropdown.RadioItemLabel>Disabled</Dropdown.RadioItemLabel>
               </Dropdown.RadioItem>
               <Dropdown.Seperator />
-              <Dropdown.RadioItem value="selected">Selected</Dropdown.RadioItem>
+              <Dropdown.RadioItem value="selected">
+                <Dropdown.RadioItemLabel>Selected</Dropdown.RadioItemLabel>
+              </Dropdown.RadioItem>
               <Dropdown.RadioItem value="long">
-                A really really really long dropdown option that should overflow
+                <Dropdown.RadioItemLabel>
+                  A really really really long dropdown option that should
+                  overflow
+                </Dropdown.RadioItemLabel>
+                <Dropdown.ItemIndicator>
+                  <IconCheck width={14} height={14} />
+                </Dropdown.ItemIndicator>
               </Dropdown.RadioItem>
             </Dropdown.RadioGroup>
           </Dropdown>

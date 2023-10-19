@@ -3,6 +3,9 @@ import { useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import {
+  IconBolt,
+  IconClock,
+  IconCheck,
   IconArrowDown,
   IconBoltSolid,
   IconArrowsUpDown,
@@ -10,8 +13,6 @@ import {
   IconMagnifyingGlass,
   IconEllipsisVertical,
   IconArrowPathRoundedSquare,
-  IconBolt,
-  IconClock,
 } from "$/ui/icons";
 import { IconArrowPathSpin, IconAws } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
@@ -459,29 +460,63 @@ export function Logs() {
                 <Dropdown size="sm" label="View">
                   <Dropdown.RadioGroup value={query.view} onChange={switchView}>
                     <Dropdown.RadioItem closeOnSelect value="tail">
-                      Live
+                      <Dropdown.RadioItemLabel>Live</Dropdown.RadioItemLabel>
+                      <Dropdown.ItemIndicator>
+                        <IconCheck width={14} height={14} />
+                      </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.RadioItem closeOnSelect value="recent">
-                      Recent
+                      <Dropdown.RadioItemLabel>Recent</Dropdown.RadioItemLabel>
+                      <Dropdown.ItemIndicator>
+                        <IconCheck width={14} height={14} />
+                      </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.Seperator />
                     <Dropdown.RadioItem closeOnSelect value="5min">
-                      5min ago
+                      <Dropdown.RadioItemLabel>
+                        5min ago
+                      </Dropdown.RadioItemLabel>
+                      <Dropdown.ItemIndicator>
+                        <IconCheck width={14} height={14} />
+                      </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.RadioItem closeOnSelect value="15min">
-                      15min ago
+                      <Dropdown.RadioItemLabel>
+                        15min ago
+                      </Dropdown.RadioItemLabel>
+                      <Dropdown.ItemIndicator>
+                        <IconCheck width={14} height={14} />
+                      </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.RadioItem closeOnSelect value="1hr">
-                      1hr ago
+                      <Dropdown.RadioItemLabel>1hr ago</Dropdown.RadioItemLabel>
+                      <Dropdown.ItemIndicator>
+                        <IconCheck width={14} height={14} />
+                      </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.RadioItem closeOnSelect value="6hr">
-                      6hrs ago
+                      <Dropdown.RadioItemLabel>
+                        6hrs ago
+                      </Dropdown.RadioItemLabel>
+                      <Dropdown.ItemIndicator>
+                        <IconCheck width={14} height={14} />
+                      </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.RadioItem closeOnSelect value="12hr">
-                      12hrs ago
+                      <Dropdown.RadioItemLabel>
+                        12hrs ago
+                      </Dropdown.RadioItemLabel>
+                      <Dropdown.ItemIndicator>
+                        <IconCheck width={14} height={14} />
+                      </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.RadioItem closeOnSelect value="24hr">
-                      1 day ago
+                      <Dropdown.RadioItemLabel>
+                        1 day ago
+                      </Dropdown.RadioItemLabel>
+                      <Dropdown.ItemIndicator>
+                        <IconCheck width={14} height={14} />
+                      </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.Seperator />
                     <Dropdown.RadioItem closeOnSelect value="custom">

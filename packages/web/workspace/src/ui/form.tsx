@@ -6,7 +6,7 @@ import { ComponentProps, Show } from "solid-js";
 import { Text } from "./text";
 import { Stack } from "./layout";
 
-const inputStyles: CSSProperties = {
+export const inputStyles: CSSProperties = {
   border: "none",
   lineHeight: theme.font.lineHeight,
   appearance: "none",
@@ -22,7 +22,7 @@ const inputStyles: CSSProperties = {
   `,
 };
 
-const inputDisabledStyles: CSSProperties = {
+export const inputDisabledStyles: CSSProperties = {
   opacity: 0.5,
   backgroundColor: theme.color.background.surface,
   color: theme.color.text.dimmed.base,
@@ -30,14 +30,14 @@ const inputDisabledStyles: CSSProperties = {
   boxShadow: `0 0 0 1px inset ${theme.color.input.border}`,
 };
 
-const inputFocusStyles: CSSProperties = {
+export const inputFocusStyles: CSSProperties = {
   boxShadow: `
     0 0 1px 1px inset hsla(${theme.color.blue.d1}, 100%),
     ${theme.color.input.shadow}
   `,
 };
 
-const inputDangerFocusStyles: CSSProperties = {
+export const inputDangerFocusStyles: CSSProperties = {
   color: `hsla(${theme.color.red.d2}, 100%)`,
   boxShadow: `
     0 0 1px 1px inset hsla(${theme.color.red.l2}, 100%),
