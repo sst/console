@@ -15,6 +15,7 @@ import {
 } from "$/ui/icons";
 import { IconLogosSlack, IconLogosSlackBW } from "$/ui/icons/custom";
 import { formatNumber } from "$/common/format";
+import { useFlags } from "$/providers/flags";
 import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "./header";
@@ -195,6 +196,7 @@ export function Settings() {
   );
   console.log("usages", usages().length);
   const workspace = useWorkspace();
+  const flags = useFlags();
   const cycle = createMemo(() => {
     const data = usages();
     const start = data[0] ? DateTime.fromSQL(data[0].day) : DateTime.now();
@@ -275,219 +277,221 @@ export function Settings() {
             View and manage your workspace settings
           </Text>
         </Stack>
-        <Divider />
-        <Stack space={PANEL_CONTENT_SPACE}>
-          <Stack space={PANEL_HEADER_SPACE}>
-            <Text weight="medium">Alerts</Text>
-            <Text size="sm" color="dimmed">
-              Manage the alerts you want your team to receieve
-            </Text>
-          </Stack>
-          <AlertsPanel>
-            <Row
-              class={alertsPanelRow}
-              space="8"
-              vertical="center"
-              horizontal="between"
-            >
-              <Row space="3" vertical="start">
-                <AlertsPanelRowIcon title="Email alert">
-                  <IconEnvelopeSolid width={17} height={17} />
-                </AlertsPanelRowIcon>
-                <Stack space="3">
-                  <Text size="base" color="secondary" leading="normal">
-                    From{" "}
-                    <Text size="base" weight="medium">
-                      all apps
-                    </Text>{" "}
-                    /{" "}
-                    <Text size="base" weight="medium">
-                      stages
-                    </Text>
-                  </Text>
-                  <Row space="1.5" vertical="center">
-                    <AlertsPanelRowArrowIcon>
-                      <IconArrowLongRight width={12} height={12} />
-                    </AlertsPanelRowArrowIcon>
-                    <Text color="secondary" size="sm">
-                      All users in the workspace
-                    </Text>
-                  </Row>
-                </Stack>
-              </Row>
-              <AlertsPanelRowControls />
-            </Row>
-            <Row
-              class={alertsPanelRow}
-              space="8"
-              vertical="center"
-              horizontal="between"
-            >
-              <Row space="3" vertical="start">
-                <AlertsPanelRowIcon title="Email alert">
-                  <IconEnvelopeSolid width={17} height={17} />
-                </AlertsPanelRowIcon>
-                <Stack space="3">
-                  <Text size="base" color="secondary" leading="normal">
-                    From{" "}
-                    <Text size="base" weight="medium">
-                      console
-                    </Text>
-                    <Text size="base" color="dimmed">
-                      {" "}
+        <Show when={flags.alerts}>
+          <Divider />
+          <Stack space={PANEL_CONTENT_SPACE}>
+            <Stack space={PANEL_HEADER_SPACE}>
+              <Text weight="medium">Alerts</Text>
+              <Text size="sm" color="dimmed">
+                Manage the alerts you want your team to receieve
+              </Text>
+            </Stack>
+            <AlertsPanel>
+              <Row
+                class={alertsPanelRow}
+                space="8"
+                vertical="center"
+                horizontal="between"
+              >
+                <Row space="3" vertical="start">
+                  <AlertsPanelRowIcon title="Email alert">
+                    <IconEnvelopeSolid width={17} height={17} />
+                  </AlertsPanelRowIcon>
+                  <Stack space="3">
+                    <Text size="base" color="secondary" leading="normal">
+                      From{" "}
+                      <Text size="base" weight="medium">
+                        all apps
+                      </Text>{" "}
                       /{" "}
-                    </Text>
-                    <Text size="base" weight="medium">
-                      production
-                    </Text>
-                  </Text>
-                  <Row space="1.5" vertical="center">
-                    <AlertsPanelRowArrowIcon>
-                      <IconArrowLongRight width={12} height={12} />
-                    </AlertsPanelRowArrowIcon>
-                    <Text color="dimmed" size="sm" leading="loose">
-                      <Text color="secondary" size="sm">
-                        dax@sst.dev
-                      </Text>
-                      ,{" "}
-                      <Text color="secondary" size="sm">
-                        frank@sst.dev
+                      <Text size="base" weight="medium">
+                        stages
                       </Text>
                     </Text>
+                    <Row space="1.5" vertical="center">
+                      <AlertsPanelRowArrowIcon>
+                        <IconArrowLongRight width={12} height={12} />
+                      </AlertsPanelRowArrowIcon>
+                      <Text color="secondary" size="sm">
+                        All users in the workspace
+                      </Text>
+                    </Row>
+                  </Stack>
+                </Row>
+                <AlertsPanelRowControls />
+              </Row>
+              <Row
+                class={alertsPanelRow}
+                space="8"
+                vertical="center"
+                horizontal="between"
+              >
+                <Row space="3" vertical="start">
+                  <AlertsPanelRowIcon title="Email alert">
+                    <IconEnvelopeSolid width={17} height={17} />
+                  </AlertsPanelRowIcon>
+                  <Stack space="3">
+                    <Text size="base" color="secondary" leading="normal">
+                      From{" "}
+                      <Text size="base" weight="medium">
+                        console
+                      </Text>
+                      <Text size="base" color="dimmed">
+                        {" "}
+                        /{" "}
+                      </Text>
+                      <Text size="base" weight="medium">
+                        production
+                      </Text>
+                    </Text>
+                    <Row space="1.5" vertical="center">
+                      <AlertsPanelRowArrowIcon>
+                        <IconArrowLongRight width={12} height={12} />
+                      </AlertsPanelRowArrowIcon>
+                      <Text color="dimmed" size="sm" leading="loose">
+                        <Text color="secondary" size="sm">
+                          dax@sst.dev
+                        </Text>
+                        ,{" "}
+                        <Text color="secondary" size="sm">
+                          frank@sst.dev
+                        </Text>
+                      </Text>
+                    </Row>
+                  </Stack>
+                </Row>
+                <AlertsPanelRowControls />
+              </Row>
+              <Stack class={alertsPanelRowEditing} space="6">
+                <Stack>
+                  <Row
+                    class={alertsPanelRowEditingField}
+                    space="5"
+                    vertical="center"
+                    horizontal="start"
+                  >
+                    <Text
+                      class={alertsPanelRowEditingFieldLabel}
+                      label
+                      on="surface"
+                      size="mono_sm"
+                    >
+                      Type
+                    </Text>
+                    <Dropdown label="Type">
+                      <Dropdown.Item>Email</Dropdown.Item>
+                      <Dropdown.Item>Slack</Dropdown.Item>
+                    </Dropdown>
+                  </Row>
+                  <Row
+                    class={alertsPanelRowEditingField}
+                    space="5"
+                    vertical="center"
+                    horizontal="start"
+                  >
+                    <Text
+                      class={alertsPanelRowEditingFieldLabel}
+                      label
+                      on="surface"
+                      size="mono_sm"
+                    >
+                      Source
+                    </Text>
+                    <Row flex space="4" vertical="center">
+                      <Dropdown label="App">
+                        <Dropdown.Item>All apps / stages</Dropdown.Item>
+                        <Dropdown.Seperator />
+                        <Dropdown.Item>app1</Dropdown.Item>
+                        <Dropdown.Item>app2</Dropdown.Item>
+                      </Dropdown>
+                      <Dropdown label="Stage">
+                        <Dropdown.Item>stage1</Dropdown.Item>
+                        <Dropdown.Item>stage2</Dropdown.Item>
+                      </Dropdown>
+                    </Row>
+                  </Row>
+                  <Row
+                    class={alertsPanelRowEditingField}
+                    space="5"
+                    vertical="center"
+                    horizontal="start"
+                  >
+                    <Text
+                      class={alertsPanelRowEditingFieldLabel}
+                      label
+                      on="surface"
+                      size="mono_sm"
+                    >
+                      Destination
+                    </Text>
+                    <Dropdown label="To">
+                      <Dropdown.Item>All users</Dropdown.Item>
+                      <Dropdown.Seperator />
+                      <Dropdown.Item>frank@sst.dev</Dropdown.Item>
+                      <Dropdown.Item>dax@sst.dev</Dropdown.Item>
+                      <Dropdown.Item>jay@sst.dev</Dropdown.Item>
+                    </Dropdown>
                   </Row>
                 </Stack>
-              </Row>
-              <AlertsPanelRowControls />
-            </Row>
-            <Stack class={alertsPanelRowEditing} space="6">
-              <Stack>
-                <Row
-                  class={alertsPanelRowEditingField}
-                  space="5"
-                  vertical="center"
-                  horizontal="start"
-                >
-                  <Text
-                    class={alertsPanelRowEditingFieldLabel}
-                    label
-                    on="surface"
-                    size="mono_sm"
-                  >
-                    Type
-                  </Text>
-                  <Dropdown label="Type">
-                    <Dropdown.Item>Email</Dropdown.Item>
-                    <Dropdown.Item>Slack</Dropdown.Item>
-                  </Dropdown>
-                </Row>
-                <Row
-                  class={alertsPanelRowEditingField}
-                  space="5"
-                  vertical="center"
-                  horizontal="start"
-                >
-                  <Text
-                    class={alertsPanelRowEditingFieldLabel}
-                    label
-                    on="surface"
-                    size="mono_sm"
-                  >
-                    Source
-                  </Text>
-                  <Row flex space="4" vertical="center">
-                    <Dropdown label="App">
-                      <Dropdown.Item>All apps / stages</Dropdown.Item>
-                      <Dropdown.Seperator />
-                      <Dropdown.Item>app1</Dropdown.Item>
-                      <Dropdown.Item>app2</Dropdown.Item>
-                    </Dropdown>
-                    <Dropdown label="Stage">
-                      <Dropdown.Item>stage1</Dropdown.Item>
-                      <Dropdown.Item>stage2</Dropdown.Item>
-                    </Dropdown>
-                  </Row>
-                </Row>
-                <Row
-                  class={alertsPanelRowEditingField}
-                  space="5"
-                  vertical="center"
-                  horizontal="start"
-                >
-                  <Text
-                    class={alertsPanelRowEditingFieldLabel}
-                    label
-                    on="surface"
-                    size="mono_sm"
-                  >
-                    Destination
-                  </Text>
-                  <Dropdown label="To">
-                    <Dropdown.Item>All users</Dropdown.Item>
-                    <Dropdown.Seperator />
-                    <Dropdown.Item>frank@sst.dev</Dropdown.Item>
-                    <Dropdown.Item>dax@sst.dev</Dropdown.Item>
-                    <Dropdown.Item>jay@sst.dev</Dropdown.Item>
-                  </Dropdown>
+                <Row space="4" vertical="center" horizontal="end">
+                  <LinkButton>Cancel</LinkButton>
+                  <Button color="success">Update</Button>
                 </Row>
               </Stack>
-              <Row space="4" vertical="center" horizontal="end">
-                <LinkButton>Cancel</LinkButton>
-                <Button color="success">Update</Button>
-              </Row>
-            </Stack>
-            <Row
-              class={alertsPanelRow}
-              space="8"
-              vertical="center"
-              horizontal="between"
-            >
-              <Row space="3" vertical="start">
-                <AlertsPanelRowIcon title="Slack alert">
-                  <IconLogosSlackBW width={18} height={18} />
-                </AlertsPanelRowIcon>
-                <Stack space="3">
-                  <Text size="base" color="secondary" leading="normal">
-                    From{" "}
-                    <Text size="base" weight="medium">
-                      console
-                    </Text>
-                    <Text size="base" color="dimmed">
-                      {" "}
-                      /{" "}
-                    </Text>
-                    <Text size="base" weight="medium">
-                      production
-                    </Text>
-                  </Text>
-                  <Row space="1.5" vertical="center">
-                    <AlertsPanelRowArrowIcon>
-                      <IconArrowLongRight width={12} height={12} />
-                    </AlertsPanelRowArrowIcon>
-                    <Text color="dimmed" size="sm" leading="loose">
-                      <Text color="secondary" size="sm">
-                        #engineering
+              <Row
+                class={alertsPanelRow}
+                space="8"
+                vertical="center"
+                horizontal="between"
+              >
+                <Row space="3" vertical="start">
+                  <AlertsPanelRowIcon title="Slack alert">
+                    <IconLogosSlackBW width={18} height={18} />
+                  </AlertsPanelRowIcon>
+                  <Stack space="3">
+                    <Text size="base" color="secondary" leading="normal">
+                      From{" "}
+                      <Text size="base" weight="medium">
+                        console
+                      </Text>
+                      <Text size="base" color="dimmed">
+                        {" "}
+                        /{" "}
+                      </Text>
+                      <Text size="base" weight="medium">
+                        production
                       </Text>
                     </Text>
-                  </Row>
-                </Stack>
+                    <Row space="1.5" vertical="center">
+                      <AlertsPanelRowArrowIcon>
+                        <IconArrowLongRight width={12} height={12} />
+                      </AlertsPanelRowArrowIcon>
+                      <Text color="dimmed" size="sm" leading="loose">
+                        <Text color="secondary" size="sm">
+                          #engineering
+                        </Text>
+                      </Text>
+                    </Row>
+                  </Stack>
+                </Row>
+                <AlertsPanelRowControls />
               </Row>
-              <AlertsPanelRowControls />
-            </Row>
-            <Row class={alertsPanelRow} space="3" vertical="center">
-              <AlertsPanelRowIcon>
-                <IconEllipsisHorizontal width={18} height={18} />
-              </AlertsPanelRowIcon>
-              <LinkButton code={false} size="sm" weight="regular">
-                Add a new alert
-              </LinkButton>
-            </Row>
-          </AlertsPanel>
-          {/* // Empty state
+              <Row class={alertsPanelRow} space="3" vertical="center">
+                <AlertsPanelRowIcon>
+                  <IconEllipsisHorizontal width={18} height={18} />
+                </AlertsPanelRowIcon>
+                <LinkButton code={false} size="sm" weight="regular">
+                  Add a new alert
+                </LinkButton>
+              </Row>
+            </AlertsPanel>
+            {/* // Empty state
           <Row>
             <Button color="secondary">Create Alert</Button>
           </Row>
             */}
-        </Stack>
+          </Stack>
+        </Show>
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE}>
           <Stack space={PANEL_HEADER_SPACE}>
@@ -604,41 +608,41 @@ export function Settings() {
             </Show>
           </Stack>
         </Stack>
-        {/*
-        <Divider />
-        <Stack space={PANEL_CONTENT_SPACE}>
-          <Stack space={PANEL_HEADER_SPACE}>
-            <Text weight="medium">Integrations</Text>
-            <Text size="sm" color="dimmed">
-              Connect your workspace with the services you use
-            </Text>
-          </Stack>
-          <Row space="3.5" horizontal="between" vertical="center">
-            <Row space="3" vertical="center">
-              <IconLogosSlack width="32" height="32" />
-              <Stack space="1.5">
-                <Text weight="medium">Slack</Text>
-                <Show
-                  when={slackWorkspace}
-                  fallback={
+        <Show when={flags.alerts}>
+          <Divider />
+          <Stack space={PANEL_CONTENT_SPACE}>
+            <Stack space={PANEL_HEADER_SPACE}>
+              <Text weight="medium">Integrations</Text>
+              <Text size="sm" color="dimmed">
+                Connect your workspace with the services you use
+              </Text>
+            </Stack>
+            <Row space="3.5" horizontal="between" vertical="center">
+              <Row space="3" vertical="center">
+                <IconLogosSlack width="32" height="32" />
+                <Stack space="1.5">
+                  <Text weight="medium">Slack</Text>
+                  <Show
+                    when={slackWorkspace}
+                    fallback={
+                      <Text size="sm" color="dimmed">
+                        Connect to your Slack workspace
+                      </Text>
+                    }
+                  >
                     <Text size="sm" color="dimmed">
-                      Connect to your Slack workspace
+                      Connected to{" "}
+                      <Text color="dimmed" size="sm" weight="medium">
+                        anomaly
+                      </Text>
                     </Text>
-                  }
-                >
-                  <Text size="sm" color="dimmed">
-                    Connected to{" "}
-                    <Text color="dimmed" size="sm" weight="medium">
-                      anomaly
-                    </Text>
-                  </Text>
-                </Show>
-              </Stack>
+                  </Show>
+                </Stack>
+              </Row>
+              <Switch />
             </Row>
-            <Switch />
-          </Row>
-        </Stack>
-        */}
+          </Stack>
+        </Show>
       </SettingsRoot>
     </>
   );
