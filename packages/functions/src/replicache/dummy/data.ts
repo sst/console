@@ -12,13 +12,17 @@ const USER_ID = "me@example.com";
 
 const APP_ID = "1";
 const APP_ID_LONG = "2";
-const APP_LOCAL = "dummy";
+const APP_LOCAL = "my-sst-app";
 
-const STAGE_LOCAL = "dummy";
+const STAGE_LOCAL = "jayair";
+const STAGE_EMPTY = "stage-empty";
+const STAGE_NOT_SUPPORTED = "stage-not-supported";
+const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
 
 const ACCOUNT_ID = "connected";
-const ACCOUNT_ID_LONG = "long";
+const ACCOUNT_ID_FULL = "full";
 const ACCOUNT_ID_FAILED = "failed";
+const ACCOUNT_ID_LONG_APPS = "long";
 const ACCOUNT_ID_SYNCING = "syncing";
 const ACCOUNT_ID_SYNCING_FULL = "syncing-full";
 
@@ -29,7 +33,7 @@ const timestamps = {
 
 export type DummyMode =
   | "empty"
-  | "overview:base"
+  | "overview:base;resource:base"
   | "overview:all;usage:overage;subscription:active";
 
 export interface DummyConfig {
@@ -169,26 +173,71 @@ function usage({ day, invocations }: UsageProps): DummyData {
   };
 }
 
-function resource<Type extends Resource.Info["type"]>(
-  type: Type,
-  id: string,
-  metadata: Extract<Resource.Info, { type: Type }>["metadata"],
-  enrichment?: Extract<Resource.Info, { type: Type }>["enrichment"]
-): DummyData {
+function resource<Type extends Resource.Info["type"]>(props: {
+  type: Type;
+  id: string;
+  stage: string;
+  metadata?: Extract<Resource.Info, { type: Type }>["metadata"];
+  enrichment?: Extract<Resource.Info, { type: Type }>["enrichment"];
+}): DummyData {
+  const { id, type, stage, metadata = {}, enrichment = {} } = props;
   return {
-    id,
     _type: "resource",
-    type: type as any,
+    id,
     addr: id,
     cfnID: id,
+    enrichment,
+    stageID: stage,
+    constructID: id,
     stackID: "stack",
-    stageID: "stage-10",
+    timeDeleted: null,
+    type: type as any,
     metadata: metadata as any,
-    enrichment: enrichment || {},
     timeCreated: new Date().toISOString(),
-    timeDeleted: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
-  } as any;
+  };
+}
+
+interface FuncProps {
+  id: string;
+  size?: number;
+  stage: string;
+  live?: boolean;
+  handler: string;
+  runtime?: Extract<Resource.Info, { type: "Function" }>["metadata"]["runtime"];
+}
+function func({
+  id,
+  size,
+  live,
+  stage,
+  handler,
+  runtime,
+}: FuncProps): DummyData {
+  return resource({
+    id,
+    stage,
+    type: "Function",
+    metadata: {
+      handler,
+      localId: id,
+      secrets: [],
+      runtime: runtime || "nodejs18.x",
+      arn: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+    },
+    enrichment: {
+      size: size || 2048,
+      live: live || false,
+      runtime: runtime || "nodejs18.x",
+    },
+  });
+}
+
+function ref(node: string, stack: string) {
+  return {
+    node,
+    stack,
+  };
 }
 
 export function* generateData(
@@ -223,16 +272,6 @@ export function* generateData(
 
   yield usage({ day: "2021-01-01", invocations: 100 });
 
-  yield resource(
-    "Stack",
-    "stack",
-    {},
-    {
-      version: "1.0.0",
-      outputs: [],
-    }
-  );
-
   if (modeMap["overview"] === "full") {
     for (let i = 0; i < 30; i++) {
       yield user({ email: `dummy${i}@example.com`, active: true });
@@ -241,6 +280,12 @@ export function* generateData(
 
   if (modeMap["overview"]) yield* overviewBase();
 
+  if (modeMap["resources"]) {
+    yield* resourcesBase();
+    yield* resourcesNotSupported();
+    yield* resourcesPartlySupported();
+  }
+
   if (modeMap["overview"] === "full") yield* overviewFull();
 
   if (modeMap["usage"] === "overage")
@@ -248,31 +293,33 @@ export function* generateData(
 }
 
 function* overviewBase(): Generator<DummyData, void, unknown> {
-  yield account({ id: ACCOUNT_ID_LONG, accountID: "123456789012" });
+  yield account({ id: ACCOUNT_ID, accountID: "123456789012" });
   yield app({ id: APP_LOCAL });
-  yield app({
-    id: APP_ID_LONG,
-    name: "my-sst-app-that-has-a-really-long-name-that-should-be-truncated",
-  });
   yield stage({
     id: STAGE_LOCAL,
     appID: APP_LOCAL,
-    awsAccountID: ACCOUNT_ID_LONG,
+    awsAccountID: ACCOUNT_ID,
   });
   yield stage({
-    id: "stage-long-id-1",
-    appID: APP_ID_LONG,
-    awsAccountID: ACCOUNT_ID_LONG,
+    id: STAGE_EMPTY,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
   });
   yield stage({
-    id: "this-stage-name-is-really-long-and-needs-to-be-truncated",
-    appID: APP_ID_LONG,
-    region: "ap-southeast-1",
-    awsAccountID: ACCOUNT_ID_LONG,
+    id: STAGE_NOT_SUPPORTED,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield stage({
+    id: STAGE_PARTLY_SUPPORTED,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
   });
 }
 
 function* overviewFull(): Generator<DummyData, void, unknown> {
+  yield* overviewLongApps();
+
   yield app({ id: APP_ID, name: "my-sst-app" });
   yield account({
     id: "syncing-empty",
@@ -311,10 +358,14 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
     appID: APP_ID,
     awsAccountID: ACCOUNT_ID_SYNCING,
   });
-  yield account({ id: ACCOUNT_ID, accountID: "123456789018" });
+  yield account({ id: ACCOUNT_ID_FULL, accountID: "123456789018" });
 
   for (let i = 0; i < 30; i++) {
-    yield stage({ id: `stage-${i}`, appID: APP_ID, awsAccountID: ACCOUNT_ID });
+    yield stage({
+      id: `stage-${i}`,
+      appID: APP_ID,
+      awsAccountID: ACCOUNT_ID_FULL,
+    });
   }
 
   for (let i = 0; i < 10; i++) {
@@ -324,4 +375,570 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
       awsAccountID: ACCOUNT_ID_SYNCING_FULL,
     });
   }
+}
+
+function* overviewLongApps(): Generator<DummyData, void, unknown> {
+  yield account({ id: ACCOUNT_ID_LONG_APPS, accountID: "123456789020" });
+  yield app({
+    id: APP_ID_LONG,
+    name: "my-sst-app-that-has-a-really-long-name-that-should-be-truncated",
+  });
+  yield stage({
+    id: "stage-long-id-1",
+    appID: APP_ID_LONG,
+    awsAccountID: ACCOUNT_ID_LONG_APPS,
+  });
+  yield stage({
+    id: "this-stage-name-is-really-long-and-needs-to-be-truncated",
+    appID: APP_ID_LONG,
+    region: "ap-southeast-1",
+    awsAccountID: ACCOUNT_ID_LONG_APPS,
+  });
+}
+
+function* resourcesBase(): Generator<DummyData, void, unknown> {
+  const STACK = "stack";
+
+  yield func({
+    id: "index",
+    stage: STAGE_LOCAL,
+    handler: "packages/function.handler",
+  });
+  yield func({
+    id: "notes_get",
+    stage: STAGE_LOCAL,
+    handler: "packages/notes.handler",
+    size: 20400800000,
+  });
+  yield func({
+    id: "notes_post",
+    stage: STAGE_LOCAL,
+    handler: "packages/notes.handler",
+    size: 2048000,
+  });
+  yield func({
+    id: "go_func",
+    stage: STAGE_LOCAL,
+    handler: "packages/others/go.handler",
+    size: 204123,
+    runtime: "go1.x",
+  });
+  yield func({
+    id: "java_func",
+    stage: STAGE_LOCAL,
+    handler: "packages/others/java.handler",
+    size: 204123,
+    runtime: "java17",
+  });
+  yield func({
+    id: "node_func",
+    stage: STAGE_LOCAL,
+    handler: "packages/others/node.handler",
+    size: 204123,
+    runtime: "nodejs18.x",
+  });
+  yield func({
+    id: "python_func",
+    stage: STAGE_LOCAL,
+    handler: "packages/others/python.handler",
+    size: 204123,
+    runtime: "python3.10",
+  });
+  yield func({
+    id: "dotnet_func",
+    stage: STAGE_LOCAL,
+    handler: "packages/others/dotnet.handler",
+    size: 204123,
+    runtime: "dotnet6",
+  });
+  yield func({
+    id: "rust_func",
+    stage: STAGE_LOCAL,
+    handler: "packages/others/rust.handler",
+    size: 204123,
+    runtime: "rust",
+  });
+  yield func({
+    stage: STAGE_LOCAL,
+    id: "container_func",
+    handler: "packages/others/container.handler",
+    size: 204123,
+    runtime: "container",
+  });
+  yield func({
+    id: "other_func",
+    stage: STAGE_LOCAL,
+    handler: "packages/others/func.handler",
+    size: 2048000,
+  });
+
+  yield resource({
+    type: "Stack",
+    id: STACK,
+    stage: STAGE_LOCAL,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [
+        {
+          OutputKey: "EmptyOutput",
+          OutputValue: "",
+        },
+        {
+          OutputKey: "ApiEndpoint",
+          OutputValue: "https://api.jayair.dev.sst.dev",
+        },
+        {
+          OutputKey: "LongApiEndpoint",
+          OutputValue:
+            "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+        },
+        {
+          OutputKey:
+            "LongOutputThatShouldOverflowBecauseItsTooLongAndKeepsGoingThatShouldOverflowBecauseItsTooLongAndKeepsGoingThatShouldOverflowBecauseItsTooLongAndKeepsGoing",
+          OutputValue:
+            "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+        },
+      ],
+    },
+  });
+  yield resource({
+    type: "Api",
+    id: "api",
+    stage: STAGE_LOCAL,
+    metadata: {
+      url: "https://example.com",
+      routes: [
+        {
+          route: "GET /todo",
+          type: "function",
+          fn: ref("index", STACK),
+        },
+        {
+          route: "GET /notes",
+          type: "function",
+          fn: ref("notes_get", STACK),
+        },
+        {
+          route: "PUT /notes",
+          type: "function",
+          fn: ref("notes_get", STACK),
+        },
+        {
+          route: "UPDATE /notes",
+          type: "function",
+          fn: ref("notes_get", STACK),
+        },
+        {
+          route: "PATCH /notes",
+          type: "function",
+          fn: ref("notes_get", STACK),
+        },
+        {
+          route: "PATCH .",
+          type: "function",
+          fn: ref("notes_get", STACK),
+        },
+        {
+          route:
+            "POST /with/an/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long/absurdly/long/path/that/should/overflow/because/its/way/too/long",
+          type: "function",
+          fn: ref("notes_post", STACK),
+        },
+      ],
+      graphql: false,
+      httpApiId: "someapi",
+      customDomainUrl: "https://example.com",
+    },
+  });
+  yield resource({
+    type: "Api",
+    id: "long-api",
+    stage: STAGE_LOCAL,
+    metadata: {
+      url: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+      routes: [
+        {
+          route: "GET /",
+          type: "function",
+          fn: ref("index", STACK),
+        },
+      ],
+      graphql: false,
+      httpApiId: "someapi",
+      customDomainUrl: undefined,
+    },
+  });
+  yield resource({
+    type: "ApiGatewayV1Api",
+    id: "apiv1-api",
+    stage: STAGE_LOCAL,
+    metadata: {
+      url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com/jayair/",
+      routes: [
+        {
+          fn: ref("index", STACK),
+          type: "function",
+          route: "ANY /{proxy+}",
+        },
+      ],
+      restApiId: "someapi",
+      customDomainUrl: undefined,
+    },
+  });
+  yield resource({
+    type: "Api",
+    id: "no-routes",
+    stage: STAGE_LOCAL,
+    metadata: {
+      url: "https://api.com",
+      routes: [],
+      graphql: false,
+      httpApiId: "someapi",
+      customDomainUrl: undefined,
+    },
+  });
+  yield resource({
+    type: "Cron",
+    id: "cronjob",
+    stage: STAGE_LOCAL,
+    metadata: {
+      job: ref("index", STACK),
+      ruleName: "jayair-console-Dummy-cronjobRuleFEA4C4A4-1P314X49EP7CP",
+      schedule: "rate(1 day)",
+    },
+  });
+  yield resource({
+    type: "Bucket",
+    id: "uploads",
+    stage: STAGE_LOCAL,
+    metadata: {
+      name: "jayair-console-dummy-uploadsbucket10132eb4-jypzgdnipek",
+      notifications: [ref("index", STACK)],
+      notificationNames: ["myNotification"],
+    },
+  });
+  yield resource({
+    type: "EventBus",
+    id: "event-bus",
+    stage: STAGE_LOCAL,
+    metadata: {
+      eventBusName: "event-bus",
+      rules: [
+        {
+          key: "rule-1",
+          targets: [ref("index", STACK)],
+          targetNames: ["app_stage_connected_1_rule"],
+        },
+      ],
+    },
+  });
+  yield resource({
+    type: "StaticSite",
+    id: "web",
+    stage: STAGE_LOCAL,
+    metadata: {
+      path: "./packages/web/workspace",
+      customDomainUrl: undefined,
+      environment: {},
+      url: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
+    },
+  });
+  yield resource({
+    type: "NextjsSite",
+    id: "nextjs-site-local-no-custom-domain",
+    stage: STAGE_LOCAL,
+    metadata: {
+      routes: undefined,
+      customDomainUrl: undefined,
+      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      path: "./packages/nextjs-site",
+      edge: false,
+      mode: "deployed",
+      secrets: [],
+      url: "",
+      runtime: "nodejs18.x",
+    },
+  });
+  yield resource({
+    type: "NextjsSite",
+    id: "nextjs-site",
+    stage: STAGE_LOCAL,
+    metadata: {
+      customDomainUrl: "https://nextjs-site.com",
+      routes: undefined,
+      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      path: "packages/nextjs-site",
+      edge: false,
+      mode: "deployed",
+      secrets: [],
+      url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+      runtime: "nodejs18.x",
+    },
+  });
+  yield resource({
+    type: "SvelteKitSite",
+    id: "svelte-site",
+    stage: STAGE_LOCAL,
+    metadata: {
+      customDomainUrl: "https://svelte-site.com",
+      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      path: "packages/svelte-site",
+      edge: false,
+      mode: "deployed",
+      secrets: [],
+      url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+      runtime: "nodejs18.x",
+    },
+  });
+  yield resource({
+    type: "RemixSite",
+    id: "remix-site",
+    stage: STAGE_LOCAL,
+    metadata: {
+      customDomainUrl: "https://remix-site.com",
+      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      path: "packages/remix-site",
+      edge: false,
+      mode: "deployed",
+      secrets: [],
+      url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+      runtime: "nodejs18.x",
+    },
+  });
+  yield resource({
+    type: "AstroSite",
+    id: "astro-site",
+    stage: STAGE_LOCAL,
+    metadata: {
+      customDomainUrl: "https://astro-site.com",
+      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      path: "packages/astro-site",
+      edge: false,
+      mode: "deployed",
+      secrets: [],
+      url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+      runtime: "nodejs18.x",
+    },
+  });
+  yield resource({
+    type: "SolidStartSite",
+    id: "solid-site",
+    stage: STAGE_LOCAL,
+    metadata: {
+      customDomainUrl: "https://solid-site.com",
+      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      path: "packages/solid-site",
+      edge: false,
+      mode: "deployed",
+      secrets: [],
+      url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+      runtime: "nodejs18.x",
+    },
+  });
+  yield resource({
+    type: "Cognito",
+    id: "cognito-auth",
+    stage: STAGE_LOCAL,
+    metadata: {
+      identityPoolId: "someid",
+      userPoolId: "someid",
+      triggers: [
+        {
+          fn: ref("index", STACK),
+          name: "consumer1",
+        },
+      ],
+    },
+  });
+  yield resource({
+    type: "Table",
+    id: "notes-table",
+    stage: STAGE_LOCAL,
+    metadata: {
+      consumers: [
+        {
+          fn: ref("index", STACK),
+          name: "consumer1",
+        },
+      ],
+      tableName: "jayair-console-dummy-notes-table",
+    },
+  });
+  yield resource({
+    type: "Queue",
+    id: "my-queue",
+    stage: STAGE_LOCAL,
+    metadata: {
+      name: "jayair-console-my-queue",
+      url: "https://sqs.us-east-1.amazonaws.com/917397401067/jayair-console-my-queue",
+      consumer: ref("index", STACK),
+    },
+  });
+  yield resource({
+    type: "KinesisStream",
+    id: "my-stream",
+    stage: STAGE_LOCAL,
+    metadata: {
+      consumers: [
+        {
+          fn: ref("index", STACK),
+          name: "consumer1",
+        },
+      ],
+      streamName: "jayair-console-my-stream",
+    },
+  }),
+    yield resource({
+      type: "Topic",
+      id: "my-topic",
+      stage: STAGE_LOCAL,
+      metadata: {
+        topicArn: "arn:aws:sns:us-east-1:917397401067:jayair-console-my-topic",
+        subscribers: [ref("index", STACK)],
+        subscriberNames: ["subscriber1"],
+      },
+    });
+  yield resource({
+    type: "Script",
+    id: "my-script",
+    stage: STAGE_LOCAL,
+    metadata: {
+      createfn: ref("index", STACK),
+      deletefn: ref("index", STACK),
+      updatefn: ref("index", STACK),
+    },
+  });
+  yield resource({
+    type: "AppSync",
+    id: "appsync-api",
+    stage: STAGE_LOCAL,
+    metadata: {
+      dataSources: [
+        {
+          fn: ref("index", STACK),
+          name: "notesDs",
+        },
+      ],
+      customDomainUrl: undefined,
+      url: "https://3ec3bjoisfaxhgsubrayz5z3fa.appsync-api.us-east-1.amazonaws.com/graphql",
+      appSyncApiId: "lz26zxwynve2dopyjdd2ekve34",
+      appSyncApiKey: "da2-g63kqnmio5eyhbbv4dz6fk2x4y",
+    },
+  });
+  yield resource({
+    type: "WebSocketApi",
+    id: "ws-api",
+    stage: STAGE_LOCAL,
+    metadata: {
+      url: "wss://h7waex57g8.execute-api.us-east-1.amazonaws.com/jayair",
+      routes: [
+        {
+          route: "$connect",
+          fn: ref("index", STACK),
+        },
+        {
+          route: "$default",
+          fn: ref("index", STACK),
+        },
+        {
+          route: "$disconnect",
+          fn: ref("index", STACK),
+        },
+        {
+          route: "$sendMessage",
+          fn: ref("index", STACK),
+        },
+      ],
+      customDomainUrl: undefined,
+      httpApiId: "someapi",
+    },
+  });
+  yield resource({
+    type: "WebSocketApi",
+    id: "ws-api-custom-domain",
+    stage: STAGE_LOCAL,
+    metadata: {
+      url: "wss://h7waex57g8.execute-api.us-east-1.amazonaws.com/jayair",
+      routes: [
+        {
+          route: "$connect",
+          fn: ref("index", STACK),
+        },
+      ],
+      customDomainUrl: "ws://api.sst.dev",
+      httpApiId: "someapi",
+    },
+  }),
+    yield resource({
+      type: "RDS",
+      id: "my-rds",
+      stage: STAGE_LOCAL,
+      metadata: {
+        engine: "postgresql11.13",
+        secretArn: "arn",
+        clusterArn: "arn",
+        clusterIdentifier: "jayair-console-my-rds",
+        defaultDatabaseName: "acme",
+        types: undefined,
+        migrator: undefined,
+      },
+    });
+}
+
+function* resourcesNotSupported(): Generator<DummyData, void, unknown> {
+  yield resource({
+    type: "Stack",
+    id: "stack",
+    stage: STAGE_NOT_SUPPORTED,
+    enrichment: {
+      version: "1.0.0",
+      outputs: [],
+    },
+  });
+}
+
+function* resourcesPartlySupported(): Generator<DummyData, void, unknown> {
+  const STACK_WORKING = "stackB";
+  const FN_NODE = "index";
+
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_PARTLY_SUPPORTED,
+    enrichment: {
+      version: "1.0.0",
+      outputs: [],
+    },
+  });
+  yield resource({
+    type: "Stack",
+    id: STACK_WORKING,
+    stage: STAGE_PARTLY_SUPPORTED,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield resource({
+    type: "Table",
+    id: "notes-table",
+    stage: STAGE_PARTLY_SUPPORTED,
+    metadata: {
+      consumers: [
+        {
+          fn: {
+            node: FN_NODE,
+            stack: STACK_WORKING,
+          },
+          name: "consumer1",
+        },
+      ],
+      tableName: "jayair-console-dummy-notes-table",
+    },
+  });
+  yield func({
+    id: FN_NODE,
+    stage: STAGE_PARTLY_SUPPORTED,
+    handler: "packages/function.handler",
+  });
 }

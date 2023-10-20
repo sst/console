@@ -111,7 +111,7 @@ const CardHeader = styled("div", {
     height: 46,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `0 ${theme.space[4]}`,
+    padding: `0 ${theme.space[2]} 0 ${theme.space[4]}`,
     borderBottom: `1px solid ${theme.color.divider.base}`,
   },
 });
