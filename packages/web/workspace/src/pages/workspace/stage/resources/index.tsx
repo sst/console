@@ -267,6 +267,7 @@ export function Header(props: HeaderProps) {
 const MINIMUM_VERSION = "2.19.2";
 export function Resources() {
   const resources = useResourcesContext();
+  console.log(resources());
   const stacks = createMemo(() =>
     resources().filter((r) => r.type === "Stack")
   );

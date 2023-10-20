@@ -169,6 +169,28 @@ function usage({ day, invocations }: UsageProps): DummyData {
   };
 }
 
+function resource<Type extends Resource.Info["type"]>(
+  type: Type,
+  id: string,
+  metadata: Extract<Resource.Info, { type: Type }>["metadata"],
+  enrichment?: Extract<Resource.Info, { type: Type }>["enrichment"]
+): DummyData {
+  return {
+    id,
+    _type: "resource",
+    type: type as any,
+    addr: id,
+    cfnID: id,
+    stackID: "stack",
+    stageID: "stage-10",
+    metadata: metadata as any,
+    enrichment: enrichment || {},
+    timeCreated: new Date().toISOString(),
+    timeDeleted: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
+  } as any;
+}
+
 export function* generateData(
   mode: DummyMode
 ): Generator<DummyData, void, unknown> {
@@ -200,6 +222,16 @@ export function* generateData(
   });
 
   yield usage({ day: "2021-01-01", invocations: 100 });
+
+  yield resource(
+    "Stack",
+    "stack",
+    {},
+    {
+      version: "1.0.0",
+      outputs: [],
+    }
+  );
 
   if (modeMap["overview"] === "full") {
     for (let i = 0; i < 30; i++) {
