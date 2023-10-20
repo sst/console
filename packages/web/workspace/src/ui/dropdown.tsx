@@ -48,6 +48,12 @@ const Trigger = styled(DropdownMenu.Trigger, {
       },
       false: {},
     },
+    disabled: {
+      true: {
+        ...inputDisabledStyles,
+      },
+      false: {},
+    },
   },
   defaultVariants: {
     size: "base",
@@ -169,12 +175,19 @@ type Props = ComponentProps<typeof DropdownMenu.Root> & {
   icon?: JSX.Element;
   size?: "sm" | "base";
   label?: string;
+  disabled?: boolean;
+  triggerClass?: string;
 };
 
 export function Dropdown(props: Props) {
   return (
     <DropdownMenu.Root {...props}>
-      <Trigger size={props.size} icon={props.icon !== undefined}>
+      <Trigger
+        size={props.size}
+        disabled={props.disabled}
+        class={props.triggerClass}
+        icon={props.icon !== undefined}
+      >
         <Show
           when={props.icon}
           fallback={

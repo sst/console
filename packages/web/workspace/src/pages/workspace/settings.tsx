@@ -20,7 +20,7 @@ import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "./header";
 
-const PANEL_CONTENT_SPACE = "8";
+const PANEL_CONTENT_SPACE = "10";
 const PANEL_HEADER_SPACE = "3";
 const TIER_LABEL_SPACE = "2";
 
@@ -46,13 +46,13 @@ const SettingsRoot = styled("div", {
     paddingTop: 50,
     paddingBottom: 50,
     margin: "0 auto",
-    width: theme.modalWidth.md,
+    width: theme.modalWidth.lg,
   },
 });
 
 const Divider = styled("div", {
   base: {
-    margin: `${theme.space[10]} 0`,
+    margin: `${theme.space[12]} 0`,
     width: "100%",
     height: 1,
     backgroundColor: theme.color.divider.base,
@@ -97,6 +97,11 @@ const alertsPanelRowEditingField = style({
   },
 });
 
+const alertsPanelRowEditingDropdown = style({
+  width: 220,
+  maxWidth: "100%",
+});
+
 const AlertsPanelRowIcon = styled("div", {
   base: {
     opacity: theme.iconOpacity,
@@ -112,7 +117,7 @@ const AlertsPanelRowArrowIcon = styled("div", {
 });
 
 const alertsPanelRowEditingFieldLabel = style({
-  width: 100,
+  width: 240,
 });
 
 const UsagePanel = styled("div", {
@@ -281,7 +286,9 @@ export function Settings() {
           <Divider />
           <Stack space={PANEL_CONTENT_SPACE}>
             <Stack space={PANEL_HEADER_SPACE}>
-              <Text weight="medium">Alerts</Text>
+              <Text size="lg" weight="medium">
+                Alerts
+              </Text>
               <Text size="sm" color="dimmed">
                 Manage the alerts you want your team to receieve
               </Text>
@@ -365,66 +372,119 @@ export function Settings() {
               <Stack class={alertsPanelRowEditing} space="6">
                 <Stack>
                   <Row
-                    class={alertsPanelRowEditingField}
-                    space="5"
-                    vertical="center"
+                    space="4"
+                    vertical="start"
                     horizontal="start"
+                    class={alertsPanelRowEditingField}
                   >
-                    <Text
-                      class={alertsPanelRowEditingFieldLabel}
-                      label
-                      on="surface"
-                      size="mono_sm"
+                    <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+                      <Text label on="surface" size="mono_sm">
+                        Type
+                      </Text>
+                      <Text
+                        leading="loose"
+                        on="surface"
+                        color="dimmed"
+                        size="sm"
+                      >
+                        The channel to use for sending the alerts.
+                      </Text>
+                    </Stack>
+                    <Dropdown
+                      label=""
+                      triggerClass={alertsPanelRowEditingDropdown}
                     >
-                      Type
-                    </Text>
-                    <Dropdown label="Type">
                       <Dropdown.Item>Email</Dropdown.Item>
                       <Dropdown.Item>Slack</Dropdown.Item>
                     </Dropdown>
                   </Row>
                   <Row
-                    class={alertsPanelRowEditingField}
-                    space="5"
-                    vertical="center"
+                    space="4"
+                    vertical="start"
                     horizontal="start"
+                    class={alertsPanelRowEditingField}
                   >
-                    <Text
-                      class={alertsPanelRowEditingFieldLabel}
-                      label
-                      on="surface"
-                      size="mono_sm"
-                    >
-                      Source
-                    </Text>
+                    <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+                      <Text label on="surface" size="mono_sm">
+                        Source
+                      </Text>
+                      <Text
+                        leading="loose"
+                        on="surface"
+                        color="dimmed"
+                        size="sm"
+                      >
+                        The apps and stages that'll be sending alerts.
+                      </Text>
+                    </Stack>
                     <Row flex space="4" vertical="center">
-                      <Dropdown label="App">
-                        <Dropdown.Item>All apps / stages</Dropdown.Item>
-                        <Dropdown.Seperator />
-                        <Dropdown.Item>app1</Dropdown.Item>
-                        <Dropdown.Item>app2</Dropdown.Item>
-                      </Dropdown>
-                      <Dropdown label="Stage">
-                        <Dropdown.Item>stage1</Dropdown.Item>
-                        <Dropdown.Item>stage2</Dropdown.Item>
-                      </Dropdown>
+                      <Stack space="2">
+                        <Text
+                          label
+                          on="surface"
+                          size="mono_sm"
+                          color="secondary"
+                        >
+                          App
+                        </Text>
+                        {/* single select */}
+                        <Dropdown
+                          label=""
+                          triggerClass={alertsPanelRowEditingDropdown}
+                        >
+                          <Dropdown.Item>All apps</Dropdown.Item>
+                          <Dropdown.Seperator />
+                          <Dropdown.Item>app1</Dropdown.Item>
+                          <Dropdown.Item>app2</Dropdown.Item>
+                          <Dropdown.Item>console</Dropdown.Item>
+                        </Dropdown>
+                      </Stack>
+                      <Stack space="2">
+                        <Text
+                          label
+                          on="surface"
+                          size="mono_sm"
+                          color="secondary"
+                        >
+                          Stage
+                        </Text>
+                        {/* single select */}
+                        <Dropdown
+                          label=""
+                          disabled
+                          triggerClass={alertsPanelRowEditingDropdown}
+                        >
+                          <Dropdown.Item>stage1</Dropdown.Item>
+                          <Dropdown.Item>stage2</Dropdown.Item>
+                          <Dropdown.Item>production</Dropdown.Item>
+                        </Dropdown>
+                      </Stack>
                     </Row>
                   </Row>
                   <Row
-                    class={alertsPanelRowEditingField}
-                    space="5"
-                    vertical="center"
+                    space="4"
+                    vertical="start"
                     horizontal="start"
+                    class={alertsPanelRowEditingField}
                   >
-                    <Text
-                      class={alertsPanelRowEditingFieldLabel}
-                      label
-                      on="surface"
-                      size="mono_sm"
+                    <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+                      <Text label on="surface" size="mono_sm">
+                        Destination
+                      </Text>
+                      <Text
+                        leading="loose"
+                        on="surface"
+                        color="dimmed"
+                        size="sm"
+                      >
+                        Specify who will be getting these alerts.
+                      </Text>
+                    </Stack>
+                    {/* multi select */}
+                    <Dropdown
+                      label=""
+                      triggerClass={alertsPanelRowEditingDropdown}
                     >
-                      Destination
-                    </Text>
-                    <Dropdown label="To">
                       <Dropdown.Item>All users</Dropdown.Item>
                       <Dropdown.Seperator />
                       <Dropdown.Item>frank@sst.dev</Dropdown.Item>
@@ -435,7 +495,10 @@ export function Settings() {
                 </Stack>
                 <Row space="4" vertical="center" horizontal="end">
                   <LinkButton>Cancel</LinkButton>
-                  <Button color="success">Update</Button>
+                  {/* Enable on valid form */}
+                  <Button disabled color="success">
+                    Update
+                  </Button>
                 </Row>
               </Stack>
               <Row
@@ -495,7 +558,9 @@ export function Settings() {
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE}>
           <Stack space={PANEL_HEADER_SPACE}>
-            <Text weight="medium">Usage</Text>
+            <Text size="lg" weight="medium">
+              Usage
+            </Text>
             <Text size="sm" color="dimmed">
               Usage for the current billing period
             </Text>
@@ -510,7 +575,7 @@ export function Settings() {
                   {invocations()}
                 </Text>
               </UsageStat>
-              <UsageStat>
+              <UsageStat stretch>
                 <Text code uppercase size="mono_xs" color="dimmed">
                   Current Cost
                 </Text>
@@ -576,7 +641,9 @@ export function Settings() {
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE} horizontal="start">
           <Stack space={PANEL_HEADER_SPACE}>
-            <Text weight="medium">Billing</Text>
+            <Text size="lg" weight="medium">
+              Billing
+            </Text>
             <Text size="sm" color="dimmed">
               Manage your billing details, and download your invoices
             </Text>
@@ -612,7 +679,9 @@ export function Settings() {
           <Divider />
           <Stack space={PANEL_CONTENT_SPACE}>
             <Stack space={PANEL_HEADER_SPACE}>
-              <Text weight="medium">Integrations</Text>
+              <Text size="lg" weight="medium">
+                Integrations
+              </Text>
               <Text size="sm" color="dimmed">
                 Connect your workspace with the services you use
               </Text>
