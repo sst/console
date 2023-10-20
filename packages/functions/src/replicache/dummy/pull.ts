@@ -10,6 +10,7 @@ import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 import { sessions } from "../../sessions";
 import { generateData } from "./data";
 import { createHash, subtle } from "crypto";
+import { Resource } from "@console/core/app/resource";
 
 export const handler = ApiHandler(async () => {
   const session = sessions.use();
@@ -56,6 +57,25 @@ export const handler = ApiHandler(async () => {
       });
 
       const data = generateData(useQueryParam("dummy") || "empty");
+      const keys = {
+        resource: (item: any) => [item._type, item.stageID, item.id],
+        issue: (issue: any) => [issue._type, issue.stageID, issue.id],
+        issueCount: (issueCount: any) => [
+          issueCount._type,
+          issueCount.group,
+          issueCount.id,
+        ],
+        warning: (warning: any) => [
+          warning._type,
+          warning.stageID,
+          warning.type,
+          warning.id,
+        ],
+        default: (item: any) => [
+          item._type,
+          "id" in item ? item.id : undefined,
+        ],
+      };
       for (const item of data) {
         const { _type, ...value } = item;
         if (
@@ -66,10 +86,8 @@ export const handler = ApiHandler(async () => {
         patch.push({
           op: "put",
           key:
-            "/" +
-            [_type, "id" in item ? item.id : undefined]
-              .filter(Boolean)
-              .join("/"),
+            // @ts-expect-error
+            "/" + (keys[_type] || keys.default)(item).filter(Boolean).join("/"),
           value: value as any,
         });
       }
