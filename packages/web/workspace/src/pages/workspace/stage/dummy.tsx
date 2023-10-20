@@ -202,7 +202,10 @@ const DEFAULT = [
   }),
   resource("NextjsSite", "nextjs-site-local-no-custom-domain", {
     customDomainUrl: undefined,
-    routes: [],
+    routes: {
+      logGroupPrefix: "",
+      data: [],
+    },
     server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
     path: "./packages/nextjs-site",
     edge: false,
@@ -213,7 +216,10 @@ const DEFAULT = [
   }),
   resource("NextjsSite", "nextjs-site", {
     customDomainUrl: "https://nextjs-site.com",
-    routes: [],
+    routes: {
+      logGroupPrefix: "",
+      data: [],
+    },
     server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
     path: "packages/nextjs-site",
     edge: false,
