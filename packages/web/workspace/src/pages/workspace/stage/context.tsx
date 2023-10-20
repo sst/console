@@ -13,7 +13,7 @@ import { AppStore } from "$/data/app";
 import { Resource } from "@console/core/app/resource";
 import { DUMMY_RESOURCES } from "./dummy";
 import { useCommandBar } from "../command-bar";
-import { IconApi, IconFunction } from "$/ui/icons/custom";
+import { IconApi, IconFunction, IconNextjsSite } from "$/ui/icons/custom";
 import { useLocalContext } from "$/providers/local";
 import { ResourceIcon } from "$/common/resource-icon";
 import { createInitializedContext } from "$/common/context";
@@ -113,18 +113,41 @@ export function ResourcesProvider(props: ParentProps) {
             run,
           },
         ];
-      return refs.map((resource) => {
+      return refs.flatMap((resource) => {
         switch (resource.type) {
+          case "NextjsSite":
+            return (
+              resource.metadata.routes?.data?.map((item) => ({
+                icon: IconNextjsSite,
+                category: "NextJS Routes",
+                title: `Go to ${item.route}`,
+                run(control) {
+                  nav(
+                    `/${
+                      params.workspaceSlug
+                    }/${appName}/${stageName}/resources/logs/${
+                      fn.id
+                    }?logGroup=${
+                      resource.metadata.routes!.logGroupPrefix +
+                      item.logGroupPath
+                    }`
+                  );
+                  control.hide();
+                },
+              })) || []
+            );
           case "Api":
-            return {
-              icon: IconApi,
-              category: "API Routes",
-              title: `Go to ${
-                resource.metadata.routes.find((r) => r.fn?.node === fn.addr)
-                  ?.route
-              }`,
-              run,
-            };
+            return [
+              {
+                icon: IconApi,
+                category: "API Routes",
+                title: `Go to ${
+                  resource.metadata.routes.find((r) => r.fn?.node === fn.addr)
+                    ?.route
+                }`,
+                run,
+              },
+            ];
           default:
             return {
               icon: ResourceIcon[resource.type] || IconFunction,

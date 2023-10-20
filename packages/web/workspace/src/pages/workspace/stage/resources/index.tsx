@@ -779,7 +779,6 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
       />
       <Children>
         <For
-          // @ts-expect-error
           each={props.resource.metadata.routes?.data || []}
           fallback={
             <FunctionChild id={props.resource.metadata.server} tag="Server" />
@@ -789,7 +788,6 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
             return (
               <FunctionChild
                 logGroup={
-                  // @ts-expect-error
                   props.resource.metadata.routes?.logGroupPrefix +
                   item.logGroupPath
                 }

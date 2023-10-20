@@ -32,7 +32,11 @@ import {
   mergeProps,
   untrack,
 } from "solid-js";
-import { useResourcesContext, useStageContext } from "../context";
+import {
+  useFunctionsContext,
+  useResourcesContext,
+  useStageContext,
+} from "../context";
 import { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../../command-bar";
 import { formatSinceTime } from "$/common/format";
@@ -160,6 +164,7 @@ export function Logs() {
   const params = useParams();
   const [query, setQuery] = useSearchParams<{
     dummy?: string;
+    title?: string;
     logGroup?: string;
     view: string;
   }>();
@@ -363,6 +368,19 @@ export function Logs() {
     }
   }
 
+  const functions = useFunctionsContext();
+  const title = createMemo(() => {
+    const [ref] = functions().get(resource()?.id || "") || [];
+    console.log("ref", ref);
+    if (ref?.type === "NextjsSite" && ref.metadata.routes?.data) {
+      const match = ref.metadata.routes.data.find((item) =>
+        query.logGroup?.endsWith(item.logGroupPath)
+      );
+      if (match) return match.route;
+    }
+    return resource()?.metadata.handler;
+  });
+
   return (
     <>
       <Stack space="5" style={{ padding: `${theme.space[4]}` }}>
@@ -377,7 +395,7 @@ export function Logs() {
               onClick={() => bar.show("resource")}
             >
               <Text code size="mono_base" color="secondary">
-                {resource()?.metadata.handler}
+                {title()}
               </Text>
               <LogSwitchIcon>
                 <IconChevronUpDown />
