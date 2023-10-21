@@ -232,6 +232,7 @@ function func({
     enrichment: {
       size: size || 2048,
       live: live || false,
+      // @ts-ignore
       runtime: runtime || "nodejs18.x",
     },
   });
