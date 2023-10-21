@@ -133,6 +133,7 @@ export const connectStage = zod(
     const uniqueIdentifier = destinationIdentifier(config);
     console.log(
       "creating",
+      config.region,
       uniqueIdentifier,
       Config.ISSUES_ROLE_ARN,
       Config.ISSUES_STREAM_ARN
