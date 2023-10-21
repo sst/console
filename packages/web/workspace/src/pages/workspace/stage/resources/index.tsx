@@ -91,8 +91,8 @@ const HeaderRoot = styled("div", {
 const HeaderIcon = styled("div", {
   base: {
     flexShrink: 0,
-    width: 14,
-    height: 14,
+    width: 18,
+    height: 18,
     color: theme.color.icon.secondary,
   },
 });
@@ -235,7 +235,7 @@ export function Header(props: HeaderProps) {
   return (
     <HeaderRoot>
       <Row space="2" vertical="center">
-        <Row space="1.5" vertical="center">
+        <Row space="2" vertical="center">
           <Show when={icon}>
             {(icon) => (
               <HeaderIcon title={props.resource.type}>
@@ -244,7 +244,7 @@ export function Header(props: HeaderProps) {
             )}
           </Show>
           <Text on="surface" weight="medium" style={{ "flex-shrink": "0" }}>
-            {props.resource.cfnID}
+            {props.resource.type}
           </Text>
         </Row>
         <Text
@@ -258,7 +258,7 @@ export function Header(props: HeaderProps) {
         </Text>
       </Row>
       <Text code color="secondary" size="mono_base" on="surface">
-        {props.resource.type}
+        {props.resource.cfnID}
       </Text>
     </HeaderRoot>
   );
@@ -318,7 +318,6 @@ export function Resources() {
         </Fullscreen>
       </Match>
       <Match when={true}>
-        {/* TODO: Issues */}
         <Show when={false}>
           <PageHeaderRoot>
             <Row space="5" vertical="center">
@@ -343,7 +342,6 @@ export function Resources() {
             </Routes>
           </PageHeaderRoot>
         </Show>
-        {/* */}
         <Content>
           <Stack space="4">
             <Show when={outdated().length}>
@@ -853,19 +851,6 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
       />
       <Children>
         <FunctionChild id={props.resource.metadata.server} tag="Server" />
-        <Child>
-          <Row space="3" vertical="center">
-            <Tag style="outline">Server</Tag>
-            <ChildTitleLink href={`./logs/${props.resource.metadata.server}`}>
-              {formatPath(props.resource.metadata.path)}
-            </ChildTitleLink>
-          </Row>
-          <Row flex={false} space="3" vertical="center">
-            <ChildIcon>
-              <IconNodeRuntime />
-            </ChildIcon>
-          </Row>
-        </Child>
       </Children>
     </>
   );
@@ -979,9 +964,6 @@ export function OrphanFunctionsCard() {
               Other Functions
             </Text>
           </Row>
-          <Text code color="dimmed" size="mono_base" on="surface">
-            Function
-          </Text>
         </HeaderRoot>
         <Children>
           <For each={orphans()}>

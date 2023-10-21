@@ -1,5 +1,6 @@
 import { Select as KSelect, Separator as KSeperator } from "@kobalte/core";
 import { globalStyle } from "@macaron-css/core";
+import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { IconCheck, IconChevronDown } from "./icons";
 import { Text } from "./text";
@@ -104,11 +105,9 @@ const Content = styled(KSelect.Content, {
   },
 });
 
-const Listbox = styled(KSelect.Listbox, {
-  base: {
-    overflowY: "auto",
-    maxHeight: 360,
-  },
+const listbox = style({
+  overflowY: "auto",
+  maxHeight: 360,
 });
 
 const Item = styled(KSelect.Item, {
@@ -227,7 +226,7 @@ export function Select(props: Props) {
       </Trigger>
       <KSelect.Portal mount={document.getElementById("styled")!}>
         <Content>
-          <Listbox />
+          <KSelect.Listbox class={listbox} />
         </Content>
       </KSelect.Portal>
     </KSelect.Root>

@@ -26,6 +26,7 @@ const ACCOUNT_ID_LONG_APPS = "long";
 const ACCOUNT_ID_SYNCING = "syncing";
 const ACCOUNT_ID_SYNCING_FULL = "syncing-full";
 
+const FUNC_ARN_SSR = "arn:aws:lambda:us-east-1:123456789012:function:my-func";
 const FUNC_ARN_NEXTJS = "arn:aws:lambda:us-east-1:123456789012:function:nextjs";
 
 const timestamps = {
@@ -482,6 +483,12 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     arn: FUNC_ARN_NEXTJS,
     handler: "server.handler",
   });
+  yield func({
+    id: "ssr_func",
+    stage: STAGE_LOCAL,
+    arn: FUNC_ARN_SSR,
+    handler: "server.handler",
+  });
 
   yield resource({
     type: "Stack",
@@ -731,7 +738,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     stage: STAGE_LOCAL,
     metadata: {
       customDomainUrl: "https://remix-site.com",
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      server: FUNC_ARN_SSR,
       path: "packages/remix-site",
       edge: false,
       mode: "deployed",
@@ -746,7 +753,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     stage: STAGE_LOCAL,
     metadata: {
       customDomainUrl: "https://astro-site.com",
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      server: FUNC_ARN_SSR,
       path: "packages/astro-site",
       edge: false,
       mode: "deployed",
@@ -761,7 +768,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     stage: STAGE_LOCAL,
     metadata: {
       customDomainUrl: "https://solid-site.com",
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      server: FUNC_ARN_SSR,
       path: "packages/solid-site",
       edge: false,
       mode: "deployed",
