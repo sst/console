@@ -26,6 +26,8 @@ const ACCOUNT_ID_LONG_APPS = "long";
 const ACCOUNT_ID_SYNCING = "syncing";
 const ACCOUNT_ID_SYNCING_FULL = "syncing-full";
 
+const FUNC_ARN_NEXTJS = "arn:aws:lambda:us-east-1:123456789012:function:nextjs";
+
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
   timeUpdated: DateTime.now().startOf("day").toSQL()!,
@@ -200,6 +202,7 @@ function resource<Type extends Resource.Info["type"]>(props: {
 
 interface FuncProps {
   id: string;
+  arn?: string;
   size?: number;
   stage: string;
   live?: boolean;
@@ -208,6 +211,7 @@ interface FuncProps {
 }
 function func({
   id,
+  arn,
   size,
   live,
   stage,
@@ -223,7 +227,7 @@ function func({
       localId: id,
       secrets: [],
       runtime: runtime || "nodejs18.x",
-      arn: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      arn: arn || "arn:aws:lambda:us-east-1:123456789012:function:my-func",
     },
     enrichment: {
       size: size || 2048,
@@ -471,6 +475,12 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     handler: "packages/others/func.handler",
     size: 2048000,
   });
+  yield func({
+    id: "nextjs_func",
+    stage: STAGE_LOCAL,
+    arn: FUNC_ARN_NEXTJS,
+    handler: "server.handler",
+  });
 
   yield resource({
     type: "Stack",
@@ -648,9 +658,33 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     id: "nextjs-site-local-no-custom-domain",
     stage: STAGE_LOCAL,
     metadata: {
-      routes: undefined,
+      routes: {
+        logGroupPrefix: "",
+        data: [
+          {
+            route: "/ssr",
+            logGroupPath: "",
+          },
+          {
+            route: "/_next/data/BUILD_ID/isr.json",
+            logGroupPath: "",
+          },
+          {
+            route: "/api/auth/[...nextauth]",
+            logGroupPath: "",
+          },
+          {
+            route: "/",
+            logGroupPath: "",
+          },
+          {
+            route: "/_next/data/BUILD_ID/index.json",
+            logGroupPath: "",
+          },
+        ],
+      },
       customDomainUrl: undefined,
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      server: FUNC_ARN_NEXTJS,
       path: "./packages/nextjs-site",
       edge: false,
       mode: "deployed",
@@ -666,7 +700,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     metadata: {
       customDomainUrl: "https://nextjs-site.com",
       routes: undefined,
-      server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      server: FUNC_ARN_NEXTJS,
       path: "packages/nextjs-site",
       edge: false,
       mode: "deployed",
