@@ -96,6 +96,9 @@ export function Email() {
 
   const [challenge, setChallenge] = createSignal<string>();
   const [submitting, setSubmitting] = createSignal<boolean>();
+  const ready = botpoison
+    .challenge()
+    .then((value) => setChallenge(value.solution));
 
   return (
     <Root form="email">
@@ -149,8 +152,7 @@ export function Email() {
           setSubmitting(true);
           e.preventDefault();
           const form = e.currentTarget;
-          const result = await botpoison.challenge();
-          setChallenge(result.solution);
+          await ready;
           form.submit();
         }}
       >
