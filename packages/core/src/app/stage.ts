@@ -15,6 +15,7 @@ import { AWS, Credentials } from "../aws";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
+  NoSuchBucket,
   NoSuchKey,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -195,6 +196,7 @@ export const syncMetadata = zod(
       )
       .catch((err) => {
         if (err.name === "AccessDenied") return;
+        if (err instanceof NoSuchBucket) return;
         throw err;
       });
     if (!list) {
