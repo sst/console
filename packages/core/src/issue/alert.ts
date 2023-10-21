@@ -189,6 +189,7 @@ export const trigger = zod(
             settingsUrl: "https://console.sst.dev",
           })
         );
+        /*
         const response = await ses.send(
           new SendEmailCommand({
             Destination: {
@@ -216,6 +217,7 @@ export const trigger = zod(
           })
         );
         console.log(response);
+        */
       }
     }
 
