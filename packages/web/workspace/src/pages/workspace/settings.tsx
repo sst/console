@@ -679,7 +679,7 @@ function Alerts() {
                               <Select
                                 options={[
                                   {
-                                    label: "All items",
+                                    label: "All apps",
                                     value: "*",
                                     seperator: true,
                                   },
