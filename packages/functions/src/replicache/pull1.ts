@@ -34,6 +34,7 @@ import {
   issue,
   issueSubscriber,
   issueCount,
+  issueAlert,
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
 import { db } from "@console/core/drizzle";
@@ -53,6 +54,7 @@ export const TABLES = {
   issue,
   issueSubscriber,
   issueCount,
+  issueAlert,
   slackTeam,
   usage,
 };

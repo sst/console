@@ -1,11 +1,11 @@
-import { Show, createMemo, createSignal } from "solid-js";
+import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
 import { DateTime } from "luxon";
 import { LinkButton, Button, Row, Stack, Text, theme } from "$/ui";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "./context";
 import { utility } from "$/ui/utility";
-import { Switch } from "$/ui/switch";
+import { Toggle } from "$/ui/switch";
 import { Dropdown } from "$/ui/dropdown";
 import {
   IconEllipsisHorizontal,
@@ -19,10 +19,15 @@ import { useFlags } from "$/providers/flags";
 import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "./header";
-import { SlackTeam } from "$/data/app";
+import { AppStore, IssueAlertStore, SlackTeamStore } from "$/data/app";
 import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
 import { createEventListener } from "@solid-primitives/event-listener";
+import { createId } from "@paralleldrive/cuid2";
+import { Issue } from "@console/core/issue";
+import { createStore, unwrap } from "solid-js/store";
+import { Select } from "$/ui/select";
+import { UserStore } from "$/data/user";
 
 const PANEL_CONTENT_SPACE = "10";
 const PANEL_HEADER_SPACE = "3";
@@ -177,24 +182,6 @@ const UsageStatTier = styled("span", {
   },
 });
 
-function AlertsPanelRowControls() {
-  return (
-    <Row flex={false} space="2">
-      <Button color="secondary" size="sm">
-        Edit
-      </Button>
-      <Dropdown
-        size="sm"
-        icon={<IconEllipsisVertical width={18} height={18} />}
-      >
-        <Dropdown.Item>Duplicate alert</Dropdown.Item>
-        <Dropdown.Seperator />
-        <Dropdown.Item>Remove alert</Dropdown.Item>
-      </Dropdown>
-    </Row>
-  );
-}
-
 export function Settings() {
   const rep = useReplicache();
   const usages = UsageStore.list.watch(rep, () => []);
@@ -284,277 +271,7 @@ export function Settings() {
           </Text>
         </Stack>
         <Show when={flags.alerts}>
-          <Divider />
-          <Stack space={PANEL_CONTENT_SPACE}>
-            <Stack space={PANEL_HEADER_SPACE}>
-              <Text size="lg" weight="medium">
-                Alerts
-              </Text>
-              <Text size="sm" color="dimmed">
-                Manage the alerts you want your team to receieve
-              </Text>
-            </Stack>
-            <AlertsPanel>
-              <Row
-                class={alertsPanelRow}
-                space="8"
-                vertical="center"
-                horizontal="between"
-              >
-                <Row space="3" vertical="start">
-                  <AlertsPanelRowIcon title="Email alert">
-                    <IconEnvelopeSolid width={17} height={17} />
-                  </AlertsPanelRowIcon>
-                  <Stack space="3">
-                    <Text size="base" color="secondary" leading="normal">
-                      From{" "}
-                      <Text size="base" weight="medium">
-                        all apps
-                      </Text>{" "}
-                      /{" "}
-                      <Text size="base" weight="medium">
-                        stages
-                      </Text>
-                    </Text>
-                    <Row space="1.5" vertical="center">
-                      <AlertsPanelRowArrowIcon>
-                        <IconArrowLongRight width={12} height={12} />
-                      </AlertsPanelRowArrowIcon>
-                      <Text color="secondary" size="sm">
-                        All users in the workspace
-                      </Text>
-                    </Row>
-                  </Stack>
-                </Row>
-                <AlertsPanelRowControls />
-              </Row>
-              <Row
-                class={alertsPanelRow}
-                space="8"
-                vertical="center"
-                horizontal="between"
-              >
-                <Row space="3" vertical="start">
-                  <AlertsPanelRowIcon title="Email alert">
-                    <IconEnvelopeSolid width={17} height={17} />
-                  </AlertsPanelRowIcon>
-                  <Stack space="3">
-                    <Text size="base" color="secondary" leading="normal">
-                      From{" "}
-                      <Text size="base" weight="medium">
-                        console
-                      </Text>
-                      <Text size="base" color="dimmed">
-                        {" "}
-                        /{" "}
-                      </Text>
-                      <Text size="base" weight="medium">
-                        production
-                      </Text>
-                    </Text>
-                    <Row space="1.5" vertical="center">
-                      <AlertsPanelRowArrowIcon>
-                        <IconArrowLongRight width={12} height={12} />
-                      </AlertsPanelRowArrowIcon>
-                      <Text color="dimmed" size="sm" leading="loose">
-                        <Text color="secondary" size="sm">
-                          dax@sst.dev
-                        </Text>
-                        ,{" "}
-                        <Text color="secondary" size="sm">
-                          frank@sst.dev
-                        </Text>
-                      </Text>
-                    </Row>
-                  </Stack>
-                </Row>
-                <AlertsPanelRowControls />
-              </Row>
-              <Stack class={alertsPanelRowEditing} space="6">
-                <Stack>
-                  <Row
-                    space="4"
-                    vertical="start"
-                    horizontal="start"
-                    class={alertsPanelRowEditingField}
-                  >
-                    <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
-                      <Text label on="surface" size="mono_sm">
-                        Type
-                      </Text>
-                      <Text
-                        leading="loose"
-                        on="surface"
-                        color="dimmed"
-                        size="sm"
-                      >
-                        The channel to use for sending the alerts.
-                      </Text>
-                    </Stack>
-                    <Dropdown
-                      label=""
-                      triggerClass={alertsPanelRowEditingDropdown}
-                    >
-                      <Dropdown.Item>Email</Dropdown.Item>
-                      <Dropdown.Item>Slack</Dropdown.Item>
-                    </Dropdown>
-                  </Row>
-                  <Row
-                    space="4"
-                    vertical="start"
-                    horizontal="start"
-                    class={alertsPanelRowEditingField}
-                  >
-                    <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
-                      <Text label on="surface" size="mono_sm">
-                        Source
-                      </Text>
-                      <Text
-                        leading="loose"
-                        on="surface"
-                        color="dimmed"
-                        size="sm"
-                      >
-                        The apps and stages that'll be sending alerts.
-                      </Text>
-                    </Stack>
-                    <Row flex space="4" vertical="center">
-                      <Stack space="2">
-                        <Text
-                          label
-                          on="surface"
-                          size="mono_sm"
-                          color="secondary"
-                        >
-                          App
-                        </Text>
-                        {/* single select */}
-                        <Dropdown
-                          label=""
-                          triggerClass={alertsPanelRowEditingDropdown}
-                        >
-                          <Dropdown.Item>All apps</Dropdown.Item>
-                          <Dropdown.Seperator />
-                          <Dropdown.Item>app1</Dropdown.Item>
-                          <Dropdown.Item>app2</Dropdown.Item>
-                          <Dropdown.Item>console</Dropdown.Item>
-                        </Dropdown>
-                      </Stack>
-                      <Stack space="2">
-                        <Text
-                          label
-                          on="surface"
-                          size="mono_sm"
-                          color="secondary"
-                        >
-                          Stage
-                        </Text>
-                        {/* single select */}
-                        <Dropdown
-                          label=""
-                          disabled
-                          triggerClass={alertsPanelRowEditingDropdown}
-                        >
-                          <Dropdown.Item>stage1</Dropdown.Item>
-                          <Dropdown.Item>stage2</Dropdown.Item>
-                          <Dropdown.Item>production</Dropdown.Item>
-                        </Dropdown>
-                      </Stack>
-                    </Row>
-                  </Row>
-                  <Row
-                    space="4"
-                    vertical="start"
-                    horizontal="start"
-                    class={alertsPanelRowEditingField}
-                  >
-                    <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
-                      <Text label on="surface" size="mono_sm">
-                        Destination
-                      </Text>
-                      <Text
-                        leading="loose"
-                        on="surface"
-                        color="dimmed"
-                        size="sm"
-                      >
-                        Specify who will be getting these alerts.
-                      </Text>
-                    </Stack>
-                    {/* multi select */}
-                    <Dropdown
-                      label=""
-                      triggerClass={alertsPanelRowEditingDropdown}
-                    >
-                      <Dropdown.Item>All users</Dropdown.Item>
-                      <Dropdown.Seperator />
-                      <Dropdown.Item>frank@sst.dev</Dropdown.Item>
-                      <Dropdown.Item>dax@sst.dev</Dropdown.Item>
-                      <Dropdown.Item>jay@sst.dev</Dropdown.Item>
-                    </Dropdown>
-                  </Row>
-                </Stack>
-                <Row space="4" vertical="center" horizontal="end">
-                  <LinkButton>Cancel</LinkButton>
-                  {/* Enable on valid form */}
-                  <Button disabled color="success">
-                    Update
-                  </Button>
-                </Row>
-              </Stack>
-              <Row
-                class={alertsPanelRow}
-                space="8"
-                vertical="center"
-                horizontal="between"
-              >
-                <Row space="3" vertical="start">
-                  <AlertsPanelRowIcon title="Slack alert">
-                    <IconLogosSlackBW width={18} height={18} />
-                  </AlertsPanelRowIcon>
-                  <Stack space="3">
-                    <Text size="base" color="secondary" leading="normal">
-                      From{" "}
-                      <Text size="base" weight="medium">
-                        console
-                      </Text>
-                      <Text size="base" color="dimmed">
-                        {" "}
-                        /{" "}
-                      </Text>
-                      <Text size="base" weight="medium">
-                        production
-                      </Text>
-                    </Text>
-                    <Row space="1.5" vertical="center">
-                      <AlertsPanelRowArrowIcon>
-                        <IconArrowLongRight width={12} height={12} />
-                      </AlertsPanelRowArrowIcon>
-                      <Text color="dimmed" size="sm" leading="loose">
-                        <Text color="secondary" size="sm">
-                          #engineering
-                        </Text>
-                      </Text>
-                    </Row>
-                  </Stack>
-                </Row>
-                <AlertsPanelRowControls />
-              </Row>
-              <Row class={alertsPanelRow} space="3" vertical="center">
-                <AlertsPanelRowIcon>
-                  <IconEllipsisHorizontal width={18} height={18} />
-                </AlertsPanelRowIcon>
-                <LinkButton code={false} size="sm" weight="regular">
-                  Add a new alert
-                </LinkButton>
-              </Row>
-            </AlertsPanel>
-            {/* // Empty state
-          <Row>
-            <Button color="secondary">Create Alert</Button>
-          </Row>
-            */}
-          </Stack>
+          <Alerts />
         </Show>
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE}>
@@ -677,19 +394,19 @@ export function Settings() {
           </Stack>
         </Stack>
         <Show when={flags.alerts}>
-          <Alerts />
+          <Integrations />
         </Show>
       </SettingsRoot>
     </>
   );
 }
 
-function Alerts() {
+function Integrations() {
   const rep = useReplicache();
   const workspace = useWorkspace();
   const auth = useAuth();
   const storage = useStorage();
-  const slackTeam = SlackTeam.all.watch(
+  const slackTeam = SlackTeamStore.all.watch(
     rep,
     () => [],
     (all) => all.at(0)
@@ -703,6 +420,9 @@ function Alerts() {
       if (e.data === "success") setOverrideSlack(true);
     }
   );
+
+  const apps = AppStore.all.watch(rep, () => []);
+
   return (
     <>
       <Divider />
@@ -742,7 +462,7 @@ function Alerts() {
             method="post"
             target="newWindow"
           >
-            <Switch
+            <Toggle
               checked={Boolean(slackTeam()) || overrideSlack()}
               onClick={(e) => {
                 if (slackTeam()) {
@@ -762,6 +482,289 @@ function Alerts() {
             />
           </form>
         </Row>
+      </Stack>
+    </>
+  );
+}
+
+function Alerts() {
+  const rep = useReplicache();
+  const apps = AppStore.all.watch(rep, () => []);
+  const users = UserStore.list.watch(rep, () => []);
+  const alerts = IssueAlertStore.all.watch(rep, () => []);
+  const [editing, setEditing] = createStore<Partial<Issue.Alert.Info>>({});
+
+  return (
+    <>
+      <Divider />
+      <Stack space={PANEL_CONTENT_SPACE}>
+        <Stack space={PANEL_HEADER_SPACE}>
+          <Text size="lg" weight="medium">
+            Alerts
+          </Text>
+          <Text size="sm" color="dimmed">
+            Manage the alerts you want your team to receieve
+          </Text>
+        </Stack>
+        <AlertsPanel>
+          <For each={alerts()}>
+            {(alert) => (
+              <>
+                <Row
+                  class={alertsPanelRow}
+                  space="8"
+                  vertical="center"
+                  horizontal="between"
+                >
+                  <Row space="3" vertical="start">
+                    <AlertsPanelRowIcon title="Email alert">
+                      <Switch>
+                        <Match when={alert.destination.type === "email"}>
+                          <IconEnvelopeSolid width={17} height={17} />
+                        </Match>
+                        <Match when={alert.destination.type === "slack"}>
+                          <IconLogosSlackBW width={18} height={18} />
+                        </Match>
+                      </Switch>
+                    </AlertsPanelRowIcon>
+                    <Stack space="3">
+                      <Text size="base" color="secondary" leading="normal">
+                        From{" "}
+                        <Text size="base" weight="medium">
+                          {alert.source.app === "*"
+                            ? "all apps"
+                            : alert.source.app[0]}
+                        </Text>{" "}
+                        /{" "}
+                        <Text size="base" weight="medium">
+                          {alert.source.stage === "*"
+                            ? "all stages"
+                            : alert.source.stage[0]}
+                        </Text>
+                      </Text>
+                      <Row space="1.5" vertical="center">
+                        <AlertsPanelRowArrowIcon>
+                          <IconArrowLongRight width={12} height={12} />
+                        </AlertsPanelRowArrowIcon>
+                        <Text color="secondary" size="sm">
+                          All users in the workspace
+                        </Text>
+                      </Row>
+                    </Stack>
+                  </Row>
+                  <Row flex={false} space="2">
+                    <Button
+                      onClick={() => setEditing(structuredClone(unwrap(alert)))}
+                      color="secondary"
+                      size="sm"
+                    >
+                      Edit
+                    </Button>
+                    <Dropdown
+                      size="sm"
+                      icon={<IconEllipsisVertical width={18} height={18} />}
+                    >
+                      <Dropdown.Item>Duplicate alert</Dropdown.Item>
+                      <Dropdown.Seperator />
+                      <Dropdown.Item
+                        onSelect={() => {
+                          rep().mutate.issue_alert_remove(alert.id);
+                        }}
+                      >
+                        Remove alert
+                      </Dropdown.Item>
+                    </Dropdown>
+                  </Row>
+                </Row>
+                <Show when={editing.id === alert.id}>
+                  <Stack class={alertsPanelRowEditing} space="6">
+                    <Stack>
+                      <Row
+                        space="4"
+                        vertical="start"
+                        horizontal="start"
+                        class={alertsPanelRowEditingField}
+                      >
+                        <Stack
+                          class={alertsPanelRowEditingFieldLabel}
+                          space="1.5"
+                        >
+                          <Text label on="surface" size="mono_sm">
+                            Type
+                          </Text>
+                          <Text
+                            leading="loose"
+                            on="surface"
+                            color="dimmed"
+                            size="sm"
+                          >
+                            The channel to use for sending the alerts.
+                          </Text>
+                        </Stack>
+                        <Select
+                          defaultValue={
+                            editing.destination?.type
+                              ? {
+                                  value: editing.destination.type,
+                                }
+                              : undefined
+                          }
+                          options={[
+                            {
+                              value: "slack",
+                              label: "Slack",
+                            },
+                            {
+                              value: "email",
+                              label: "Email",
+                            },
+                          ]}
+                          triggerClass={alertsPanelRowEditingDropdown}
+                        />
+                      </Row>
+                      <Row
+                        space="4"
+                        vertical="start"
+                        horizontal="start"
+                        class={alertsPanelRowEditingField}
+                      >
+                        <Stack
+                          class={alertsPanelRowEditingFieldLabel}
+                          space="1.5"
+                        >
+                          <Text label on="surface" size="mono_sm">
+                            Source
+                          </Text>
+                          <Text
+                            leading="loose"
+                            on="surface"
+                            color="dimmed"
+                            size="sm"
+                          >
+                            The apps and stages that'll be sending alerts.
+                          </Text>
+                        </Stack>
+                        <Row flex space="4" vertical="center">
+                          <Stack space="2">
+                            <Text
+                              label
+                              on="surface"
+                              size="mono_sm"
+                              color="secondary"
+                            >
+                              App
+                            </Text>
+                            {/* single select */}
+                            <Select
+                              options={[
+                                {
+                                  label: "All items",
+                                  value: "*",
+                                  seperator: true,
+                                },
+                                ...apps().map((app) => ({
+                                  label: app.name,
+                                  value: app.name,
+                                })),
+                              ]}
+                              triggerClass={alertsPanelRowEditingDropdown}
+                            />
+                          </Stack>
+                          <Stack space="2">
+                            <Text
+                              label
+                              on="surface"
+                              size="mono_sm"
+                              color="secondary"
+                            >
+                              Stage
+                            </Text>
+                            {/* single select */}
+                            <Dropdown
+                              label=""
+                              disabled
+                              triggerClass={alertsPanelRowEditingDropdown}
+                            >
+                              <Dropdown.Item>stage1</Dropdown.Item>
+                              <Dropdown.Item>stage2</Dropdown.Item>
+                              <Dropdown.Item>production</Dropdown.Item>
+                            </Dropdown>
+                          </Stack>
+                        </Row>
+                      </Row>
+                      <Row
+                        space="4"
+                        vertical="start"
+                        horizontal="start"
+                        class={alertsPanelRowEditingField}
+                      >
+                        <Stack
+                          class={alertsPanelRowEditingFieldLabel}
+                          space="1.5"
+                        >
+                          <Text label on="surface" size="mono_sm">
+                            Destination
+                          </Text>
+                          <Text
+                            leading="loose"
+                            on="surface"
+                            color="dimmed"
+                            size="sm"
+                          >
+                            Specify who will be getting these alerts.
+                          </Text>
+                        </Stack>
+                        {/* multi select */}
+                        <Select
+                          multiple
+                          options={[
+                            { value: "*", label: "All users", seperator: true },
+                            ...users().map((user) => ({
+                              value: user.email,
+                              label: user.email,
+                            })),
+                          ]}
+                          triggerClass={alertsPanelRowEditingDropdown}
+                        />
+                      </Row>
+                    </Stack>
+                    <Row space="4" vertical="center" horizontal="end">
+                      <LinkButton onClick={() => setEditing({})}>
+                        Cancel
+                      </LinkButton>
+                      {/* Enable on valid form */}
+                      <Button disabled color="success">
+                        Update
+                      </Button>
+                    </Row>
+                  </Stack>
+                </Show>
+              </>
+            )}
+          </For>
+          <Row class={alertsPanelRow} space="3" vertical="center">
+            <AlertsPanelRowIcon>
+              <IconEllipsisHorizontal width={18} height={18} />
+            </AlertsPanelRowIcon>
+            <LinkButton
+              onClick={() => {
+                rep().mutate.issue_alert_create({
+                  id: createId(),
+                });
+              }}
+              code={false}
+              size="sm"
+              weight="regular"
+            >
+              Add a new alert
+            </LinkButton>
+          </Row>
+        </AlertsPanel>
+        {/* // Empty state
+          <Row>
+            <Button color="secondary">Create Alert</Button>
+          </Row>
+            */}
       </Stack>
     </>
   );

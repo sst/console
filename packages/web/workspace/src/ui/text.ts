@@ -21,6 +21,11 @@ export const Text = styled("span", {
         fontFamily: theme.font.family.code,
       },
     },
+    capitalize: {
+      true: {
+        textTransform: "capitalize",
+      },
+    },
     uppercase: {
       true: {
         letterSpacing: 0.5,

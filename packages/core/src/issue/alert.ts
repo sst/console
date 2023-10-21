@@ -19,7 +19,11 @@ export * as Alert from "./alert";
 
 export const Limit = createSelectSchema(issueAlertLimit);
 
-export const Info = createSelectSchema(issueAlert);
+export const Info = createSelectSchema(issueAlert, {
+  source: () => z.custom<Source>(),
+  destination: () => z.custom<Destination>(),
+});
+export type Info = z.infer<typeof Info>;
 
 const ses = new SESv2Client({});
 
@@ -41,7 +45,7 @@ export interface SlackDestination {
 export interface EmailDestination {
   type: "email";
   properties: {
-    to: string[];
+    to: "*" | string[];
   };
 }
 
@@ -49,7 +53,6 @@ export const create = zod(
   Info.pick({ id: true }).partial({ id: true }),
   (input) =>
     useTransaction(async (tx) => {
-      const users = await User.list();
       const id = input.id ?? createId();
       await tx.insert(issueAlert).values({
         id,
@@ -61,12 +64,25 @@ export const create = zod(
         destination: {
           type: "email",
           properties: {
-            to: users.map((user) => user.email),
+            to: "*",
           },
         },
       });
       return id;
     })
+);
+
+export const remove = zod(Info.shape.id, (input) =>
+  useTransaction((tx) =>
+    tx
+      .delete(issueAlert)
+      .where(
+        and(
+          eq(issueAlert.id, input),
+          eq(issueAlert.workspaceID, useWorkspace())
+        )
+      )
+  )
 );
 
 export const trigger = zod(

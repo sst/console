@@ -167,12 +167,13 @@ export const handler = AuthHandler({
             "content-type": "text/html",
           },
           body: `
+          <html>
             <script>
               if (window.opener) {
                 window.opener.postMessage("success", "*")
                 window.close()
               }
-            </script>",
+            </script>
           `,
         };
       },

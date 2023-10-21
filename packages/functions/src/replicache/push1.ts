@@ -98,8 +98,7 @@ export const handler = ApiHandler(
         try {
           await server.execute(name, args);
         } catch (ex) {
-          if (!(ex instanceof VisibleError) && !(ex instanceof ZodError))
-            console.error(ex);
+          if (!(ex instanceof VisibleError)) console.error(ex);
         }
         console.log("done processing", mutation.id, name);
 

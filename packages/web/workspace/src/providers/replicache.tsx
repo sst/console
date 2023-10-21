@@ -22,7 +22,7 @@ import { WarningStore } from "$/data/warning";
 import { useDummy } from "./dummy";
 import { createGet } from "$/data/store";
 import { AWS } from "$/data/aws";
-import { SlackTeam } from "$/data/app";
+import { IssueAlertStore, SlackTeamStore } from "$/data/app";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async () => {})
@@ -97,10 +97,26 @@ const mutators = new Client<ServerType>()
       item.timeDiscovered = null;
     });
   })
+  .mutation("issue_alert_create", async (tx, input) => {
+    await IssueAlertStore.put(tx, [input.id!], {
+      id: input.id,
+      destination: {
+        type: "email",
+        properties: { to: "*" },
+      },
+      source: {
+        app: "*",
+        stage: "*",
+      },
+    });
+  })
+  .mutation("issue_alert_remove", async (tx, input) => {
+    await IssueAlertStore.remove(tx, input);
+  })
   .mutation("slack_disconnect", async (tx, input) => {
-    const all = await SlackTeam.all(tx);
+    const all = await SlackTeamStore.all(tx);
     for (const team of all) {
-      await SlackTeam.remove(tx, team.id);
+      await SlackTeamStore.remove(tx, team.id);
     }
   })
   .build();

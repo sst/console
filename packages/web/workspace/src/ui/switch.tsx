@@ -82,7 +82,7 @@ type Props = ComponentProps<typeof KSwitch.Root> & {
   errorMessage?: string;
 };
 
-export function Switch(props: Props) {
+export function Toggle(props: Props) {
   return (
     <Root {...props}>
       <Show when={props.label}>
