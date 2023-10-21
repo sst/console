@@ -13,6 +13,7 @@ import { and, db, eq, or } from "@console/core/drizzle";
 import { useTransaction } from "@console/core/util/transaction";
 import { issueSubscriber } from "@console/core/issue/issue.sql";
 import { warning } from "@console/core/warning/warning.sql";
+import { Slack } from "@console/core/slack";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
@@ -25,6 +26,7 @@ export const server = new Server()
   .expose("issue_resolve", Issue.resolve)
   .expose("issue_unresolve", Issue.unresolve)
   .expose("issue_alert_create", Issue.Alert.create)
+  .expose("slack_disconnect", Slack.disconnect)
   .mutation(
     "issue_subscribe",
     z.object({

@@ -37,6 +37,7 @@ import {
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
 import { db } from "@console/core/drizzle";
+import { slackTeam } from "@console/core/slack/slack.sql";
 
 export const TABLES = {
   workspace,
@@ -52,6 +53,7 @@ export const TABLES = {
   issue,
   issueSubscriber,
   issueCount,
+  slackTeam,
   usage,
 };
 

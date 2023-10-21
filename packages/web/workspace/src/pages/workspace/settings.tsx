@@ -1,4 +1,4 @@
-import { Show, createMemo } from "solid-js";
+import { Show, createMemo, createSignal } from "solid-js";
 import { DateTime } from "luxon";
 import { LinkButton, Button, Row, Stack, Text, theme } from "$/ui";
 import { style } from "@macaron-css/core";
@@ -19,6 +19,10 @@ import { useFlags } from "$/providers/flags";
 import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "./header";
+import { SlackTeam } from "$/data/app";
+import { useAuth } from "$/providers/auth";
+import { useStorage } from "$/providers/account";
+import { createEventListener } from "@solid-primitives/event-listener";
 
 const PANEL_CONTENT_SPACE = "10";
 const PANEL_HEADER_SPACE = "3";
@@ -210,9 +214,6 @@ export function Settings() {
       end: start.endOf("month").toFormat("LLL d"),
     };
   });
-
-  //const slackWorkspace = "anomaly";
-  const slackWorkspace = undefined;
 
   let portalLink: Promise<Response> | undefined;
   let checkoutLink: Promise<Response> | undefined;
@@ -676,43 +677,92 @@ export function Settings() {
           </Stack>
         </Stack>
         <Show when={flags.alerts}>
-          <Divider />
-          <Stack space={PANEL_CONTENT_SPACE}>
-            <Stack space={PANEL_HEADER_SPACE}>
-              <Text size="lg" weight="medium">
-                Integrations
-              </Text>
-              <Text size="sm" color="dimmed">
-                Connect your workspace with the services you use
-              </Text>
-            </Stack>
-            <Row space="3.5" horizontal="between" vertical="center">
-              <Row space="3" vertical="center">
-                <IconLogosSlack width="32" height="32" />
-                <Stack space="1.5">
-                  <Text weight="medium">Slack</Text>
-                  <Show
-                    when={slackWorkspace}
-                    fallback={
-                      <Text size="sm" color="dimmed">
-                        Connect to your Slack workspace
-                      </Text>
-                    }
-                  >
-                    <Text size="sm" color="dimmed">
-                      Connected to{" "}
-                      <Text color="dimmed" size="sm" weight="medium">
-                        anomaly
-                      </Text>
-                    </Text>
-                  </Show>
-                </Stack>
-              </Row>
-              <Switch />
-            </Row>
-          </Stack>
+          <Alerts />
         </Show>
       </SettingsRoot>
+    </>
+  );
+}
+
+function Alerts() {
+  const rep = useReplicache();
+  const workspace = useWorkspace();
+  const auth = useAuth();
+  const storage = useStorage();
+  const slackTeam = SlackTeam.all.watch(
+    rep,
+    () => [],
+    (all) => all.at(0)
+  );
+
+  const [overrideSlack, setOverrideSlack] = createSignal(false);
+  createEventListener(
+    () => window,
+    "message",
+    (e) => {
+      if (e.data === "success") setOverrideSlack(true);
+    }
+  );
+  return (
+    <>
+      <Divider />
+      <Stack space={PANEL_CONTENT_SPACE}>
+        <Stack space={PANEL_HEADER_SPACE}>
+          <Text size="lg" weight="medium">
+            Integrations
+          </Text>
+          <Text size="sm" color="dimmed">
+            Connect your workspace with the services you use
+          </Text>
+        </Stack>
+        <Row space="3.5" horizontal="between" vertical="center">
+          <Row space="3" vertical="center">
+            <IconLogosSlack width="32" height="32" />
+            <Stack space="1.5">
+              <Text weight="medium">Slack</Text>
+              <Show
+                when={slackTeam()}
+                fallback={
+                  <Text size="sm" color="dimmed">
+                    Connect to your Slack workspace
+                  </Text>
+                }
+              >
+                <Text size="sm" color="dimmed">
+                  Connected to{" "}
+                  <Text color="dimmed" size="sm" weight="medium">
+                    {slackTeam()?.teamName}
+                  </Text>
+                </Text>
+              </Show>
+            </Stack>
+          </Row>
+          <form
+            action={import.meta.env.VITE_AUTH_URL + "/connect"}
+            method="post"
+            target="newWindow"
+          >
+            <Switch
+              checked={Boolean(slackTeam()) || overrideSlack()}
+              onClick={(e) => {
+                if (slackTeam()) {
+                  rep().mutate.slack_disconnect(slackTeam()!.id);
+                  setOverrideSlack(false);
+                  return;
+                }
+                e.currentTarget.closest("form")?.submit();
+              }}
+            />
+            <input type="hidden" name="provider" value="slack" />
+            <input type="hidden" name="workspaceID" value={workspace().id} />
+            <input
+              type="hidden"
+              name="token"
+              value={auth[storage.value.account].session.token}
+            />
+          </form>
+        </Row>
+      </Stack>
     </>
   );
 }

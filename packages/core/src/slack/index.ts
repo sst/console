@@ -6,8 +6,12 @@ import { slackTeam } from "./slack.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { and, db, eq } from "../drizzle";
+import { createSelectSchema } from "drizzle-zod";
 
 export * as Slack from "./index";
+
+export const Info = createSelectSchema(slackTeam);
+export type Info = z.infer<typeof Info>;
 
 export const connect = zod(z.string().nonempty(), async (token) => {
   const client = new WebClient(token);
@@ -31,6 +35,17 @@ export const connect = zod(z.string().nonempty(), async (token) => {
       .execute()
   );
 });
+
+export const disconnect = zod(Info.shape.id, (input) =>
+  useTransaction((tx) => {
+    return tx
+      .delete(slackTeam)
+      .where(
+        and(eq(slackTeam.id, input), eq(slackTeam.workspaceID, useWorkspace()))
+      )
+      .execute();
+  })
+);
 
 export const send = zod(
   z.object({

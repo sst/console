@@ -163,7 +163,17 @@ export const handler = AuthHandler({
 
         return {
           statusCode: 200,
-          body: "ok",
+          headers: {
+            "content-type": "text/html",
+          },
+          body: `
+            <script>
+              if (window.opener) {
+                window.opener.postMessage("success", "*")
+                window.close()
+              }
+            </script>",
+          `,
         };
       },
     },

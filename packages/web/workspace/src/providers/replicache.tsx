@@ -22,6 +22,7 @@ import { WarningStore } from "$/data/warning";
 import { useDummy } from "./dummy";
 import { createGet } from "$/data/store";
 import { AWS } from "$/data/aws";
+import { SlackTeam } from "$/data/app";
 
 const mutators = new Client<ServerType>()
   .mutation("connect", async () => {})
@@ -95,6 +96,12 @@ const mutators = new Client<ServerType>()
     await AWS.AccountStore.update(tx, input, (item) => {
       item.timeDiscovered = null;
     });
+  })
+  .mutation("slack_disconnect", async (tx, input) => {
+    const all = await SlackTeam.all(tx);
+    for (const team of all) {
+      await SlackTeam.remove(tx, team.id);
+    }
   })
   .build();
 
