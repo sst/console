@@ -14,6 +14,7 @@ import { sessions } from "./sessions";
 import { withActor } from "@console/core/actor";
 import { Response, useCookie, useFormValue, useResponse } from "sst/node/api";
 import { User } from "@console/core/user";
+import { z } from "zod";
 
 const ses = new SESv2Client({});
 
@@ -46,6 +47,15 @@ export const handler = AuthHandler({
           async () => {
             console.log("sending email to", claims);
             console.log("code", code);
+            const email = z.string().email().safeParse(claims.email);
+            if (!email.success) {
+              return {
+                statusCode: 302,
+                headers: {
+                  Location: process.env.AUTH_FRONTEND_URL + "/auth/email",
+                },
+              };
+            }
 
             if (!process.env.IS_LOCAL) {
               const botpoison = new Botpoison({
@@ -60,9 +70,9 @@ export const handler = AuthHandler({
                   },
                 };
               console.log("challenge verified");
-              const email = new SendEmailCommand({
+              const cmd = new SendEmailCommand({
                 Destination: {
-                  ToAddresses: [claims.email],
+                  ToAddresses: [email.data],
                 },
                 FromEmailAddress: `SST <mail@${process.env.EMAIL_DOMAIN}>`,
                 Content: {
@@ -81,7 +91,7 @@ export const handler = AuthHandler({
                   },
                 },
               });
-              await ses.send(email);
+              await ses.send(cmd);
             }
 
             return {

@@ -26,3 +26,7 @@ export function Debug() {
   );
 }
 */
+
+export function Debug() {
+  return <span />;
+}
