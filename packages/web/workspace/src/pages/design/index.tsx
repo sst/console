@@ -15,6 +15,7 @@ import {
   SplitOptions,
   SplitOptionsOption,
 } from "$/ui/form";
+import { Select } from "$/ui/select";
 import { Dropdown } from "$/ui/dropdown";
 import {
   Button,
@@ -742,6 +743,59 @@ Read more about it over on our docs`}
             <SplitOptionsOption selected>Ignored</SplitOptionsOption>
             <SplitOptionsOption>Resolved</SplitOptionsOption>
           </SplitOptions>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Select">
+        <Variant name="Default">
+          <Select
+            defaultValue={{ value: "1" }}
+            options={[
+              {
+                label: "Default option",
+                value: "1",
+                seperator: true,
+              },
+              {
+                label: "Option 1",
+                value: "2",
+              },
+              {
+                label:
+                  "Super long option that should be overflow because it is so long",
+                value: "3",
+              },
+              {
+                label: "Option 3",
+                value: "4",
+              },
+              {
+                label: "Option 4",
+                value: "5",
+              },
+            ]}
+          />
+        </Variant>
+        <Variant name="OverflowY">
+          <Select
+            defaultValue={{ value: "1" }}
+            options={[
+              { label: "1", value: "1" },
+              { label: "2", value: "2" },
+              { label: "3", value: "3" },
+              { label: "4", value: "4" },
+              { label: "5", value: "5" },
+              { label: "6", value: "6" },
+              { label: "7", value: "7" },
+              { label: "8", value: "8" },
+              { label: "9", value: "9" },
+              { label: "10", value: "10" },
+              { label: "11", value: "11" },
+              { label: "12", value: "12" },
+              { label: "13", value: "13" },
+              { label: "14", value: "14" },
+              { label: "15", value: "15" },
+            ]}
+          />
         </Variant>
       </ComponentType>
       <ComponentType name="Dropdown">

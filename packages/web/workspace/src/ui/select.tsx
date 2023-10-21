@@ -104,6 +104,13 @@ const Content = styled(KSelect.Content, {
   },
 });
 
+const Listbox = styled(KSelect.Listbox, {
+  base: {
+    overflowY: "auto",
+    maxHeight: 360,
+  },
+});
+
 const Item = styled(KSelect.Item, {
   base: {
     ...utility.row(2),
@@ -220,7 +227,7 @@ export function Select(props: Props) {
       </Trigger>
       <KSelect.Portal mount={document.getElementById("styled")!}>
         <Content>
-          <KSelect.Listbox />
+          <Listbox />
         </Content>
       </KSelect.Portal>
     </KSelect.Root>
