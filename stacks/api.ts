@@ -118,7 +118,14 @@ export function API({ stack, app }: StackContext) {
         "packages/functions/src/billing/create-checkout-session.handler",
       "POST /rest/create_customer_portal_session":
         "packages/functions/src/billing/create-customer-portal-session.handler",
-      "GET /rest/log": "packages/functions/src/log/expand.handler",
+      "GET /rest/log": {
+        function: {
+          handler: "packages/functions/src/log/expand.handler",
+          nodejs: {
+            install: ["source-map"],
+          },
+        },
+      },
       "GET /freshpaint/track": {
         type: "url",
         url: "https://api.perfalytics.com/track",
