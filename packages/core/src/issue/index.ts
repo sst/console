@@ -15,7 +15,6 @@ import {
   PutDestinationCommand,
   PutDestinationPolicyCommand,
   PutSubscriptionFilterCommand,
-  DeleteSubscriptionFilterCommand,
   ResourceAlreadyExistsException,
   ResourceNotFoundException,
   DeleteDestinationCommand,
@@ -214,11 +213,11 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
 
   try {
     // Get all function resources
-    const functions = await Resource.listFromStageID({
+    const resources = await Resource.listFromStageID({
       stageID: config.stageID,
-      types: ["Function"],
+      types: ["Function", "NextjsSite"],
     });
-    if (!functions.length) return;
+    if (!resources.length) return;
 
     await db.delete(issueSubscriber).where(
       and(
@@ -227,7 +226,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
         not(
           inArray(
             issueSubscriber.functionID,
-            functions.map((x) => x.id)
+            resources.filter((x) => x.type === "Function").map((x) => x.id)
           )
         )
       )
@@ -236,6 +235,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
     const exists = await db
       .select({
         functionID: issueSubscriber.functionID,
+        logGroup: issueSubscriber.logGroup,
       })
       .from(issueSubscriber)
       .where(
@@ -244,16 +244,17 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
           eq(issueSubscriber.workspaceID, useWorkspace())
         )
       )
-      .execute()
-      .then((rows) => new Set(rows.map((x) => x.functionID)));
+      .execute();
 
-    console.log("updating", functions.length, "functions");
-    for (const fn of functions) {
-      if (exists.has(fn.id)) continue;
-      // @ts-expect-error
-      const logGroup = `/aws/lambda/${fn.metadata.arn.split(":")[6]}`;
+    console.log("updating", resources.length, "functions");
+    async function subscribe(logGroup: string, functionID: string) {
+      if (
+        exists.find(
+          (item) => item.functionID === functionID && item.logGroup === logGroup
+        )
+      )
+        return;
       console.log("subscribing", logGroup);
-
       while (true) {
         try {
           await cw.send(
@@ -277,19 +278,21 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
             })
           );
 
-          await db
-            .insert(issueSubscriber)
-            .ignore()
-            .values({
-              stageID: config.stageID,
-              workspaceID: useWorkspace(),
-              functionID: fn.id,
-              id: createId(),
-            })
-            .execute();
+          if (functionID)
+            await db
+              .insert(issueSubscriber)
+              .ignore()
+              .values({
+                stageID: config.stageID,
+                workspaceID: useWorkspace(),
+                functionID: functionID,
+                id: createId(),
+                logGroup,
+              })
+              .execute();
 
           await Warning.remove({
-            target: fn.id,
+            target: logGroup,
             type: "log_subscription",
             stageID: config.stageID,
           });
@@ -319,7 +322,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
           if (e instanceof LimitExceededException) {
             await Warning.create({
               stageID: config.stageID,
-              target: fn.id,
+              target: logGroup,
               type: "log_subscription",
               data: {
                 error: "limited",
@@ -332,7 +335,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
           if (e.name === "AccessDeniedException") {
             await Warning.create({
               stageID: config.stageID,
-              target: fn.id,
+              target: logGroup,
               type: "log_subscription",
               data: {
                 error: "permissions",
@@ -353,7 +356,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
           console.error(e);
           await Warning.create({
             stageID: config.stageID,
-            target: fn.id,
+            target: logGroup,
             type: "log_subscription",
             data: {
               error: "unknown",
@@ -361,6 +364,29 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
             },
           });
           break;
+        }
+      }
+    }
+
+    for (const resource of resources) {
+      if (resource.type === "Function") {
+        const logGroup = `/aws/lambda/${resource.metadata.arn.split(":")[6]}`;
+        await subscribe(logGroup, resource.id);
+      }
+
+      if (resource.type === "NextjsSite") {
+        const routes = resource.metadata.routes?.data;
+        if (!routes) continue;
+        const fn = resources.find(
+          (r) =>
+            r.type === "Function" && r.metadata.arn === resource.metadata.server
+        );
+        if (!fn) continue;
+
+        for (const route of routes) {
+          const logGroup =
+            resource.metadata.routes?.logGroupPrefix + route.logGroupPath;
+          await subscribe(logGroup, fn.id);
         }
       }
     }
