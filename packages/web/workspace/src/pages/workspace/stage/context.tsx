@@ -11,7 +11,6 @@ import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { Resource } from "@console/core/app/resource";
-import { DUMMY_RESOURCES } from "./dummy";
 import { useCommandBar } from "../command-bar";
 import { IconApi, IconFunction, IconNextjsSite } from "$/ui/icons/custom";
 import { useLocalContext } from "$/providers/local";
@@ -66,13 +65,6 @@ function createResourcesContext() {
 
   const rep = useReplicache();
   const resources = ResourceStore.forStage.watch(rep, () => [ctx.stage.id]);
-  if (query.dummy) {
-    const dummy = () =>
-      DUMMY_RESOURCES[query.dummy as keyof typeof DUMMY_RESOURCES] ||
-      DUMMY_RESOURCES.DEFAULT;
-    dummy.ready = true;
-    return dummy;
-  }
 
   return resources;
 }
