@@ -49,7 +49,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
         const processor = Log.createProcessor({
           sourcemapKey:
             `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
-            search.logGroup.split("/").pop()!,
+            search.logGroup.split("/").slice(3, 5).join("/"),
           group: search.id,
           config,
         });

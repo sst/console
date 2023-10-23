@@ -55,7 +55,7 @@ export function handler(input: State) {
       const client = new CloudWatchLogsClient(config);
       const sourcemapKey =
         `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
-        input.logGroup.split("/").pop()!;
+        input.logGroup.split("/").slice(3, 5).join("/");
 
       async function* fetchStreams(logGroup: string) {
         let nextToken: string | undefined;

@@ -117,14 +117,14 @@ export const extract = zod(
         const credentials = await AWS.assumeRole(accountID!);
         if (!credentials) return;
 
-        const functionArn =
+        const sourcemapKey =
           `arn:aws:lambda:${region}:${accountID}:function:` +
-          input.logGroup.split("/").pop();
+          input.logGroup.split("/").slice(3, 5).join("/");
 
-        console.log("functionArn", functionArn);
+        console.log({ sourcemapKey });
 
         const sourcemapCache = Log.createSourcemapCache({
-          key: functionArn,
+          key: sourcemapKey,
           config: {
             credentials: credentials,
             stageID: workspaces[0]!.stageID,
@@ -172,7 +172,7 @@ export const extract = zod(
               const [important] = err.stack.filter((x) => x.important);
 
               if (err.error === "LambdaTimeoutError") {
-                return [err.error, functionArn];
+                return [err.error, sourcemapKey];
               }
 
               if (important && isBeta) {
