@@ -56,14 +56,13 @@ const FrameInfo = styled("div", {
   },
   variants: {
     dimmed: {
-      true: {
+      "1": {
         opacity: 0.4,
       },
-      false: {},
+      "2": {
+        opacity: 0.2,
+      },
     },
-  },
-  defaultVariants: {
-    dimmed: false,
   },
 });
 
@@ -126,6 +125,10 @@ export function StackTrace(props: { stack: StackFrame[] }) {
       0
     )
   );
+  const anyContext = createMemo(() =>
+    props.stack.some((frame) => frame.context)
+  );
+
   return (
     <For each={props.stack}>
       {(frame, index) => {
@@ -140,7 +143,13 @@ export function StackTrace(props: { stack: StackFrame[] }) {
           >
             <Frame>
               <FrameInfo
-                dimmed={!frame.important && Boolean(frame.file)}
+                dimmed={
+                  !frame.context && anyContext()
+                    ? "2"
+                    : !frame.important && anyContext()
+                    ? "1"
+                    : undefined
+                }
                 onClick={() => {
                   if (!frame.context) return;
                   setExpand((x) => !x);
@@ -148,7 +157,17 @@ export function StackTrace(props: { stack: StackFrame[] }) {
               >
                 <Show
                   when={frame.context}
-                  fallback={<IconMinusSmall width="12" height="12" />}
+                  fallback={
+                    anyContext() ? (
+                      <IconChevronRight width="12" height="12" />
+                    ) : (
+                      <IconChevronRight
+                        style={{ opacity: 0 }}
+                        width="12"
+                        height="12"
+                      />
+                    )
+                  }
                 >
                   <FrameExpand>
                     <Show
@@ -169,7 +188,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                       color="primary"
                       size="mono_sm"
                     >
-                      {frame.raw?.replace(/at /g, "")}
+                      {frame.raw?.replace(/at /g, "").trim()}
                     </Text>
                   </Show>
                   <Show when={!frame.raw}>
