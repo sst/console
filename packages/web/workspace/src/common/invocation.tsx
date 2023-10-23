@@ -469,17 +469,21 @@ export function InvocationRow(props: {
                     {formatDuration(props.invocation.report?.duration || 0)}
                   </LogMessage>
                 </Log>
-                <Log>
-                  <LogReportKey>Memory used</LogReportKey>
-                  <LogMessage>
-                    <Show when={props.invocation.report?.memory}>
-                      {(size) => {
-                        const formattedSize = formatBytes(size() * 1024 * 1024);
-                        return `${formattedSize.value}${formattedSize.unit}`;
-                      }}
-                    </Show>
-                  </LogMessage>
-                </Log>
+                <Show when={props.invocation.report?.memory}>
+                  <Log>
+                    <LogReportKey>Memory used</LogReportKey>
+                    <LogMessage>
+                      <Show when={props.invocation.report?.memory}>
+                        {(size) => {
+                          const formattedSize = formatBytes(
+                            size() * 1024 * 1024
+                          );
+                          return `${formattedSize.value}${formattedSize.unit}`;
+                        }}
+                      </Show>
+                    </LogMessage>
+                  </Log>
+                </Show>
                 <Log>
                   <LogReportKey>Memory size</LogReportKey>
                   <LogMessage>
