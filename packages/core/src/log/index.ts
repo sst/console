@@ -613,7 +613,7 @@ export async function applySourcemap(
 
   const result = error.stack.flatMap((item): StackFrame[] => {
     if (!item.raw?.includes("/var/task") || item.raw.includes("node_modules"))
-      return [];
+      return [item];
     const [lineHint, columnHint] = item.raw!.match(/(\d+):(\d+)/) ?? [];
     if (!columnHint || !lineHint) return [];
     const column = parseInt(columnHint);
