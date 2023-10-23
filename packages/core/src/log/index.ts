@@ -140,15 +140,19 @@ export function createSourcemapCache(input: {
           Key: match.key,
         })
       );
-      const raw = JSON.parse(
-        zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
-      );
-      raw.sources = raw.sources.map((item: string) =>
-        item.replaceAll("../", "")
-      );
-      sourcemapCache.set(match.key, raw);
-      const consumer = await new SourceMapConsumer(raw);
-      return consumer;
+      try {
+        const raw = JSON.parse(
+          zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
+        );
+        raw.sources = raw.sources.map((item: string) =>
+          item.replaceAll("../", "")
+        );
+        sourcemapCache.set(match.key, raw);
+        const consumer = await new SourceMapConsumer(raw);
+        return consumer;
+      } catch {
+        return;
+      }
     },
     destroy() {
       s3bootstrap.destroy();
