@@ -1,5 +1,10 @@
 import { utility, theme, Text, SpanSpacer } from "$/ui";
-import { IconChevronDown, IconChevronRight } from "$/ui/icons";
+import {
+  IconChevronDown,
+  IconChevronRight,
+  IconMinusSmall,
+  IconPlus,
+} from "$/ui/icons";
 import { Invocation, StackFrame } from "@console/core/log";
 import { styled } from "@macaron-css/solid";
 import { For, Show, createMemo, createSignal } from "solid-js";
@@ -141,7 +146,10 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                   setExpand((x) => !x);
                 }}
               >
-                <Show when={frame.context}>
+                <Show
+                  when={frame.context}
+                  fallback={<IconMinusSmall width="12" height="12" />}
+                >
                   <FrameExpand>
                     <Show
                       when={expand()}
@@ -157,11 +165,11 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                       pre
                       code
                       on="surface"
-                      leading="loose"
+                      leading="normal"
                       color="primary"
                       size="mono_sm"
                     >
-                      {frame.raw}
+                      {frame.raw?.replace(/at /g, "")}
                     </Text>
                   </Show>
                   <Show when={!frame.raw}>
