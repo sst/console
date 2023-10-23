@@ -217,7 +217,8 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
       stageID: config.stageID,
       types: ["Function", "NextjsSite"],
     });
-    if (!resources.length) return;
+    const functions = resources.filter((x) => x.type === "Function");
+    if (!functions.length) return;
 
     await db.delete(issueSubscriber).where(
       and(
@@ -226,7 +227,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
         not(
           inArray(
             issueSubscriber.functionID,
-            resources.filter((x) => x.type === "Function").map((x) => x.id)
+            functions.map((x) => x.id)
           )
         )
       )
