@@ -145,7 +145,7 @@ export function createSourcemapCache(input: {
           zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
         );
         raw.sources = raw.sources.map((item: string) =>
-          item.replaceAll("../", "")
+          item.replaceAll("../", "").replaceAll("webpack://", "")
         );
         sourcemapCache.set(match.key, raw);
         const consumer = await new SourceMapConsumer(raw);
@@ -598,8 +598,6 @@ export function extractError(tabs: string[]): ParsedError | undefined {
         })),
     };
   }
-
-  // Python inline
 }
 
 export async function applySourcemap(
