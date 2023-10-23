@@ -205,6 +205,83 @@ function cleanFilepath(path: string) {
   return path.replace(/^\.?\//, "");
 }
 
+function resourcePriority(resource: Resource.Info) {
+  switch (resource.type) {
+    case "RemixSite":
+    case "AstroSite":
+    case "NextjsSite":
+    case "SvelteKitSite":
+    case "SolidStartSite":
+      return 1;
+    case "Api":
+    case "AppSync":
+    case "ApiGatewayV1Api":
+      return 2;
+    case "WebSocketApi":
+      return 3;
+    case "StaticSite":
+      return 4;
+    case "Bucket":
+      return 5;
+    case "RDS":
+    case "Table":
+      return 6;
+    case "Cron":
+      return 8;
+    case "EventBus":
+      return 8;
+    case "Queue":
+    case "Topic":
+    case "KinesisStream":
+      return 9;
+    case "Cognito":
+      return 10;
+    case "Script":
+      return 11;
+    default:
+      return 100;
+  }
+}
+
+function sortResources(resources: Resource.Info[]): Resource.Info[] {
+  const displayResources = resources.filter(
+    (r) =>
+      r.type === "Api" ||
+      r.type === "RDS" ||
+      r.type === "Cron" ||
+      r.type === "Table" ||
+      r.type === "Queue" ||
+      r.type === "Topic" ||
+      r.type === "Bucket" ||
+      r.type === "Script" ||
+      r.type === "Cognito" ||
+      r.type === "AppSync" ||
+      r.type === "EventBus" ||
+      r.type === "AstroSite" ||
+      r.type === "RemixSite" ||
+      r.type === "StaticSite" ||
+      r.type === "NextjsSite" ||
+      r.type === "WebSocketApi" ||
+      r.type === "KinesisStream" ||
+      r.type === "SvelteKitSite" ||
+      r.type === "SolidStartSite" ||
+      r.type === "ApiGatewayV1Api"
+  );
+
+  return displayResources.sort((a, b) => {
+    const priority = resourcePriority(a) - resourcePriority(b);
+    return priority === 0
+      ? a.type === b.type
+        ? a.cfnID > b.cfnID
+          ? 1
+          : -1
+        : a.type > b.type
+        ? 1
+        : -1
+      : priority;
+  });
+}
+
 type PageHeaderProps = ComponentProps<typeof PageHeaderRoot> & {
   right?: JSX.Element;
 };
@@ -247,18 +324,18 @@ export function Header(props: HeaderProps) {
             {props.resource.type}
           </Text>
         </Row>
-        <Text
-          line
-          on="surface"
-          color="dimmed"
-          leading="normal"
-          style={{ "max-width": "500px" }}
-        >
-          {props.description}
+        <Text code color="secondary" size="mono_base" on="surface">
+          {props.resource.cfnID}
         </Text>
       </Row>
-      <Text code color="secondary" size="mono_base" on="surface">
-        {props.resource.cfnID}
+      <Text
+        line
+        on="surface"
+        color="dimmed"
+        leading="normal"
+        style={{ "max-width": "500px" }}
+      >
+        {props.description}
       </Text>
     </HeaderRoot>
   );
@@ -267,7 +344,6 @@ export function Header(props: HeaderProps) {
 const MINIMUM_VERSION = "2.19.2";
 export function Resources() {
   const resources = useResourcesContext();
-  console.log(resources());
   const stacks = createMemo(() =>
     resources().filter((r) => r.type === "Stack")
   );
@@ -286,6 +362,7 @@ export function Resources() {
         .map((r) => r.type === "Stack" && r.enrichment.version)
         .sort()[0]
   );
+  const sortedResources = createMemo(() => sortResources([...resources()]));
 
   return (
     <Switch>
@@ -359,33 +436,7 @@ export function Resources() {
                 </a>
               </Alert>
             </Show>
-            <For
-              each={resources()
-                .filter(
-                  (r) =>
-                    r.type === "Api" ||
-                    r.type === "RDS" ||
-                    r.type === "Cron" ||
-                    r.type === "Table" ||
-                    r.type === "Queue" ||
-                    r.type === "Topic" ||
-                    r.type === "Bucket" ||
-                    r.type === "Script" ||
-                    r.type === "Cognito" ||
-                    r.type === "AppSync" ||
-                    r.type === "EventBus" ||
-                    r.type === "AstroSite" ||
-                    r.type === "RemixSite" ||
-                    r.type === "StaticSite" ||
-                    r.type === "NextjsSite" ||
-                    r.type === "WebSocketApi" ||
-                    r.type === "KinesisStream" ||
-                    r.type === "SvelteKitSite" ||
-                    r.type === "SolidStartSite" ||
-                    r.type === "ApiGatewayV1Api"
-                )
-                .sort((a, b) => (a.cfnID > b.cfnID ? 1 : -1))}
-            >
+            <For each={sortedResources()}>
               {(resource) => (
                 <Card>
                   <Switch>
@@ -404,9 +455,6 @@ export function Resources() {
                     </Match>
                     <Match when={resource.type === "WebSocketApi" && resource}>
                       {(resource) => <WebSocketApiCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "EventBus" && resource}>
-                      {(resource) => <EventBusCard resource={resource()} />}
                     </Match>
                     <Match when={resource.type === "NextjsSite" && resource}>
                       {(resource) => <NextjsSiteCard resource={resource()} />}
@@ -432,8 +480,14 @@ export function Resources() {
                     <Match when={resource.type === "StaticSite" && resource}>
                       {(resource) => <StaticSiteCard resource={resource()} />}
                     </Match>
+                    <Match when={resource.type === "Table" && resource}>
+                      {(resource) => <TableCard resource={resource()} />}
+                    </Match>
                     <Match when={resource.type === "RDS" && resource}>
                       {(resource) => <RDSCard resource={resource()} />}
+                    </Match>
+                    <Match when={resource.type === "EventBus" && resource}>
+                      {(resource) => <EventBusCard resource={resource()} />}
                     </Match>
                     <Match when={resource.type === "Topic" && resource}>
                       {(resource) => <TopicCard resource={resource()} />}
@@ -454,9 +508,6 @@ export function Resources() {
                     </Match>
                     <Match when={resource.type === "Cron" && resource}>
                       {(resource) => <CronCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "Table" && resource}>
-                      {(resource) => <TableCard resource={resource()} />}
                     </Match>
                     <Match when={resource.type === "Script" && resource}>
                       {(resource) => <ScriptCard resource={resource()} />}
