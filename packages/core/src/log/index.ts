@@ -169,6 +169,7 @@ export function createProcessor(input: {
   config: StageCredentials;
 }) {
   const invocations = new Map<string, number>();
+  let estimated = 0;
   const streams = new Map<
     string,
     {
@@ -253,6 +254,7 @@ export function createProcessor(input: {
         const generated = generateInvocationID(tabs[0].split(" ")[2]!);
         const requestID = tabs[0].split(" ")[2]!.trim();
         invocations.set(requestID, (invocations.get(requestID) || 0) + 1);
+        estimated++;
         return results.push({
           type: "report",
           timestamp: input.timestamp,
@@ -340,6 +342,7 @@ export function createProcessor(input: {
         sortBy((evts) => order * (evts[0]?.timestamp || 0))
       ).flat();
       results = [];
+      estimated = 0;
       return events;
     },
     flushInvocations(order = 1) {
@@ -410,9 +413,11 @@ export function createProcessor(input: {
       sourcemapCache.destroy();
     },
     results,
-    invocations,
     get streams() {
       return streams;
+    },
+    get estimated() {
+      return estimated;
     },
   };
 }

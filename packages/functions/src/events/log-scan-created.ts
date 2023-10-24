@@ -89,6 +89,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
           if (!result) return;
           console.log("created query", result.queryId);
 
+          let flushed = 0;
           while (true) {
             const response = await client.send(
               new GetQueryResultsCommand({
@@ -111,17 +112,21 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                   line: result[1]?.value!,
                 });
                 index++;
+                if (processor.estimated >= 50 && !isFixed) {
+                  break;
+                }
               }
 
+              console.log("flushing invocations");
               const data = processor.flushInvocations(-1);
               if (data.length) {
+                flushed += data.length;
                 const url = await Storage.putEphemeral(JSON.stringify(data), {
                   ContentType: "application/json",
                 });
                 await Realtime.publish("invocation.url", url);
               }
-
-              if (processor.invocations.size >= 50 || isFixed) {
+              if (flushed >= 50 || isFixed) {
                 return;
               }
 
