@@ -4,23 +4,16 @@ import { stage } from "@console/core/app/app.sql";
 import { Stage } from "@console/core/app";
 import { queue } from "@console/core/util/queue";
 import { issueSubscriber } from "@console/core/issue/issue.sql";
-
-const workspaceFilter: string[] = [];
+import { promptWorkspaces } from "./common";
 
 const stages = await db
   .select()
   .from(stage)
-  .where(
-    and(
-      workspaceFilter.length
-        ? inArray(stage.workspaceID, workspaceFilter)
-        : undefined
-    )
-  )
+  .where(inArray(stage.workspaceID, await promptWorkspaces()))
   .execute();
 console.log("found", stages.length, "stages");
 await db.delete(issueSubscriber).execute();
-await queue(1, stages, async (stage) =>
+await queue(20, stages, async (stage) =>
   withActor(
     {
       type: "system",
@@ -34,3 +27,4 @@ await queue(1, stages, async (stage) =>
       })
   )
 );
+console.log("done");
