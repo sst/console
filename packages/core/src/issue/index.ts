@@ -27,6 +27,7 @@ import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
 import { useTransaction } from "../util/transaction";
+import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = typeof issue.$inferSelect;
@@ -140,14 +141,14 @@ export const connectStage = zod(
     const cw = new CloudWatchLogsClient({
       region: config.region,
       retryStrategy: RETRY_STRATEGY,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        sessionToken: process.env.AWS_SESSION_TOKEN!,
-      },
+    });
+    const sts = new STSClient({
+      region: config.region,
+      retryStrategy: RETRY_STRATEGY,
     });
 
     try {
+      console.log("identity", await sts.send(new GetCallerIdentityCommand({})));
       const destination = await cw.send(
         new PutDestinationCommand({
           destinationName: uniqueIdentifier,
