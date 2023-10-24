@@ -572,7 +572,6 @@ export function extractError(tabs: string[]): ParsedError | undefined {
       const parts = extractJSON(line);
 
       for (const part of parts) {
-        console.log(part);
         // powertools
         if (part.recordErrors?.length) {
           const [record] = part.recordErrors;
