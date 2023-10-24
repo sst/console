@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import { and, db, eq } from "@console/core/drizzle";
-import { issue } from "@console/core/issue/issue.sql";
+import { issue, issueCount } from "@console/core/issue/issue.sql";
 import { queue } from "@console/core/util/queue";
 
 const BATCH = 1000;
@@ -19,6 +19,7 @@ while (true) {
       group: issue.group,
       pointer: issue.pointer,
       region: stage.region,
+      stageID: stage.id,
       accountID: awsAccount.accountID,
     })
     .from(issue)
@@ -39,42 +40,77 @@ while (true) {
       stack: item.stack || [],
       error: item.error,
     };
-    const groupParts = (() => {
-      const [important] = err.stack.filter((x) => x.important);
 
-      if (err.error === "LambdaTimeoutError") {
-        return [err.error, sourcemapKey];
-      }
-
-      if (important) {
-        return [err.error, important.context?.[3]?.trim(), important.file];
-      }
-
-      const frames = err.stack
-        .map((x) => {
-          if (x.file) {
-            return x.context?.[3] || x.file;
+    const old = createHash("sha256")
+      .update(
+        (() => {
+          if (err.error === "LambdaTimeoutError") {
+            return [err.error, sourcemapKey];
           }
 
-          return x.raw!;
-        })
-        .map((x) => x.trim());
-      return [err.error, frames[0]];
-    })();
+          const frames = err.stack
+            .map((x) => {
+              if (x.file) {
+                return x.context?.[3] || x.file;
+              }
 
-    const group = createHash("sha256")
-      .update(groupParts.filter(Boolean).join("\n"))
+              return x.raw!;
+            })
+            .map((x) => x.trim());
+          return [err.error, frames[0]];
+        })()
+          .filter(Boolean)
+          .join("\n")
+      )
       .digest("hex");
 
-    console.log({
-      old: item.group,
-      next: group,
-    });
+    const next = createHash("sha256")
+      .update(
+        (() => {
+          const [important] = err.stack.filter((x) => x.important);
 
-    if (item.group !== group) {
+          if (err.error === "LambdaTimeoutError") {
+            return [err.error, sourcemapKey];
+          }
+
+          if (important) {
+            return [err.error, important.context?.[3]?.trim(), important.file];
+          }
+
+          const frames = err.stack
+            .map((x) => {
+              if (x.file) {
+                return x.context?.[3] || x.file;
+              }
+
+              return x.raw!;
+            })
+            .map((x) => x.trim());
+          return [err.error, frames[0]];
+        })()
+          .filter(Boolean)
+          .join("\n")
+      )
+      .digest("hex");
+
+    if (old !== next) {
+      await db
+        .update(issueCount)
+        .set({ group: next })
+        .where(
+          and(
+            eq(issueCount.stageID, item.error),
+            eq(issueCount.workspaceID, item.workspaceID),
+            eq(issueCount.group, old)
+          )
+        );
+      console.log("updated issue count");
+    }
+
+    if (item.group !== next) {
       await db
         .update(issue)
-        .set({ group })
+        .set({ group: next })
         .where(
           and(eq(issue.id, item.id), eq(issue.workspaceID, item.workspaceID))
         )
@@ -91,6 +127,7 @@ while (true) {
                 );
           }
         });
+      console.log("updated issue");
     }
     console.log("completed", ++completed);
   });
