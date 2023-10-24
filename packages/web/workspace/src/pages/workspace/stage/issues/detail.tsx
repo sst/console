@@ -46,6 +46,14 @@ const StackTraceBackground = styled("div", {
   },
 });
 
+export const StackTraceEmpty = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    padding: theme.space[5],
+  },
+});
+
 const LogsBackground = styled("div", {
   base: {
     backgroundColor: theme.color.background.surface,
@@ -198,11 +206,25 @@ export function Detail() {
               <Text label on="surface" size="mono_sm" color="dimmed">
                 Stack Trace
               </Text>
-              <Show when={issue().stack?.length}>
-                <StackTraceBackground>
+              <StackTraceBackground>
+                <Show
+                  when={issue().stack?.length}
+                  fallback={
+                    <StackTraceEmpty>
+                      <Text
+                        leading="normal"
+                        color="dimmed"
+                        size="sm"
+                        on="surface"
+                      >
+                        No stack trace available
+                      </Text>
+                    </StackTraceEmpty>
+                  }
+                >
                   <StackTrace stack={issue().stack || []} />
-                </StackTraceBackground>
-              </Show>
+                </Show>
+              </StackTraceBackground>
             </Stack>
             <Stack space="2">
               <Text label on="surface" size="mono_sm" color="dimmed">

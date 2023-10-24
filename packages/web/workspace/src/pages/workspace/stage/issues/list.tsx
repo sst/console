@@ -383,11 +383,13 @@ export function List() {
                     const name = createMemo(() =>
                       issue.pointer?.logGroup.split("/").at(-1)
                     );
+                    console.log(fns());
                     const fn = createMemo(() =>
                       fns().find(
                         (x) => name() && x.metadata.arn.endsWith(name()!)
                       )
                     );
+                    console.log(fn());
                     return (
                       <IssueRow
                         issue={issue}

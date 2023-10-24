@@ -372,7 +372,7 @@ interface SlackBlockKitProps {
 function slackBlockKit(props: SlackBlockKitProps) {
   function stacktrace(stacktrace?: StacktraceFrame[]) {
     if (!stacktrace) {
-      return "\n  No stacktrace available\n\n";
+      return "\n  No stack trace available\n\n";
     } else {
       let stackString = "";
 
@@ -605,7 +605,7 @@ export const IssueEmail = ({
                 <Row>
                   <Column>
                     <Text style={{ ...stacktraceFrame, ...compactText }}>
-                      No stacktrace available
+                      No stack trace available
                     </Text>
                   </Column>
                 </Row>

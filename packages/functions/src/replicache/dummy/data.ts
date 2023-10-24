@@ -18,6 +18,8 @@ const STAGE_LOCAL = "jayair";
 const STAGE_EMPTY = "stage-empty";
 const STAGE_NOT_SUPPORTED = "stage-not-supported";
 const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
+const STAGE_NO_ISSUES = "stage-no-issues";
+const STAGE_HAS_ISSUES = "stage-has-issues";
 
 const ACCOUNT_ID = "connected";
 const ACCOUNT_ID_FULL = "full";
@@ -29,6 +31,13 @@ const ACCOUNT_ID_SYNCING_FULL = "syncing-full";
 const FUNC_ARN_SSR = "arn:aws:lambda:us-east-1:123456789012:function:my-func";
 const FUNC_ARN_NEXTJS = "arn:aws:lambda:us-east-1:123456789012:function:nextjs";
 
+const ISSUE_ID = "123";
+const ISSUE_FN_NAME = "my-issues-func";
+const ISSUE_ID_LONG = "124";
+const ISSUE_FN_NAME_LONG = "my-issues-func-long";
+const ISSUE_ID_NO_STACK_TRACE = "125";
+const ISSUE_FN_NO_STACK_TRACE = "my-issues-func-no-stack-trace";
+
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
   timeUpdated: DateTime.now().startOf("day").toSQL()!,
@@ -36,7 +45,7 @@ const timestamps = {
 
 export type DummyMode =
   | "empty"
-  | "overview:base;resource:base"
+  | "overview:base;resource:base;issues:base"
   | "overview:all;usage:overage;subscription:active";
 
 export interface DummyConfig {
@@ -58,6 +67,7 @@ type DummyData =
   | (Omit<Stage.Info, "workspaceID"> & { _type: "stage" })
   | (Omit<Issue.Info, "workspaceID"> & { _type: "issue" })
   | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" })
+  | (Omit<Issue.Count, "workspaceID"> & { _type: "issueCount" })
   | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
   | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" });
 
@@ -246,6 +256,76 @@ function ref(node: string, stack: string) {
   };
 }
 
+interface IssueProps {
+  id: string;
+  error: string;
+  stage?: string;
+  fnName: string;
+  message: string;
+}
+function issue({ id, error, stage, fnName, message }: IssueProps): DummyData {
+  return {
+    _type: "issue",
+    id,
+    timeSeen: DateTime.now().startOf("day").toSQL()!,
+    timeCreated: DateTime.now().startOf("day").toSQL()!,
+    timeUpdated: DateTime.now().startOf("day").toSQL()!,
+    timeDeleted: null,
+    timeResolved: null,
+    timeIgnored: null,
+    stageID: stage || STAGE_HAS_ISSUES,
+    error,
+    message,
+    count: 1,
+    stack: [
+      {
+        raw: "at getServerSideProps (/var/task/ .next/server /pages/ssr. js:98:11)",
+      },
+      {
+        raw: "at /var /task/node_modules/ •ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/render.js:569:26",
+      },
+      {
+        raw: "at / var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/lib/trace/tracer.js:117:36",
+      },
+      {
+        raw: "at NoopContextManager.with (/var/task/node_modules/ .ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7057)",
+      },
+      {
+        raw: "at ContextAPI. with (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:516)",
+      },
+    ],
+    errorID: id,
+    group: id,
+    ignorer: null,
+    resolver: null,
+    pointer: {
+      logGroup: `/aws/lambda/${fnName}`,
+      logStream: "2021/01/01/[$LATEST]12345678901234567890123456789012",
+      timestamp: Date.now(),
+    },
+  };
+}
+
+interface IssueCountProps {
+  group: string;
+  hour?: string;
+  count?: number;
+}
+function issueCount({ group, hour, count }: IssueCountProps): DummyData {
+  hour = hour || DateTime.now().startOf("hour").toSQL()!;
+  return {
+    _type: "issueCount",
+    id: `${group}-${hour}`,
+    hour,
+    group,
+    count: count || 1,
+    stageID: STAGE_LOCAL,
+    timeCreated: DateTime.now().startOf("day").toSQL()!,
+    timeUpdated: DateTime.now().startOf("day").toSQL()!,
+    timeDeleted: null,
+  };
+}
+
 export function* generateData(
   mode: DummyMode
 ): Generator<DummyData, void, unknown> {
@@ -292,6 +372,14 @@ export function* generateData(
     yield* resourcesPartlySupported();
   }
 
+  if (modeMap["issues"]) {
+    yield* resourcesNoIssues();
+    yield* resourcesHasIssues();
+    yield* issueBase();
+    yield* issueNoStackTrace();
+    yield* issueLong();
+  }
+
   if (modeMap["overview"] === "full") yield* overviewFull();
 
   if (modeMap["usage"] === "overage")
@@ -308,16 +396,6 @@ function* overviewBase(): Generator<DummyData, void, unknown> {
   });
   yield stage({
     id: STAGE_EMPTY,
-    appID: APP_LOCAL,
-    awsAccountID: ACCOUNT_ID,
-  });
-  yield stage({
-    id: STAGE_NOT_SUPPORTED,
-    appID: APP_LOCAL,
-    awsAccountID: ACCOUNT_ID,
-  });
-  yield stage({
-    id: STAGE_PARTLY_SUPPORTED,
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
   });
@@ -928,6 +1006,11 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
 }
 
 function* resourcesNotSupported(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_NOT_SUPPORTED,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
   yield resource({
     type: "Stack",
     id: "stack",
@@ -942,6 +1025,12 @@ function* resourcesNotSupported(): Generator<DummyData, void, unknown> {
 function* resourcesPartlySupported(): Generator<DummyData, void, unknown> {
   const STACK_WORKING = "stackB";
   const FN_NODE = "index";
+
+  yield stage({
+    id: STAGE_PARTLY_SUPPORTED,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
 
   yield resource({
     type: "Stack",
@@ -982,5 +1071,128 @@ function* resourcesPartlySupported(): Generator<DummyData, void, unknown> {
     id: FN_NODE,
     stage: STAGE_PARTLY_SUPPORTED,
     handler: "packages/function.handler",
+  });
+}
+
+function* resourcesNoIssues(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_NO_ISSUES,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_NO_ISSUES,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield resource({
+    type: "Table",
+    id: "notes-table",
+    stage: STAGE_NO_ISSUES,
+    metadata: {
+      consumers: [],
+      tableName: "jayair-console-dummy-notes-table",
+    },
+  });
+}
+
+function* resourcesHasIssues(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_HAS_ISSUES,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_HAS_ISSUES,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield resource({
+    type: "Table",
+    id: "notes-table",
+    stage: STAGE_HAS_ISSUES,
+    metadata: {
+      consumers: [],
+      tableName: "jayair-console-dummy-notes-table",
+    },
+  });
+}
+
+function* issueBase(): Generator<DummyData, void, unknown> {
+  yield func({
+    id: ISSUE_FN_NAME,
+    stage: STAGE_HAS_ISSUES,
+    handler: "packages/function.handler",
+    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME}`,
+  });
+
+  yield issue({
+    id: ISSUE_ID,
+    error: "Error",
+    message: "Some error message",
+    fnName: ISSUE_FN_NAME,
+  });
+  yield issueCount({
+    group: ISSUE_ID,
+  });
+  yield issueCount({
+    count: 4,
+    group: ISSUE_ID,
+    hour: DateTime.now().minus({ hour: 1 }).startOf("hour").toSQL()!,
+  });
+  yield issueCount({
+    count: 2,
+    group: ISSUE_ID,
+    hour: DateTime.now().minus({ hour: 2 }).startOf("hour").toSQL()!,
+  });
+}
+
+function* issueNoStackTrace(): Generator<DummyData, void, unknown> {
+  yield func({
+    id: ISSUE_FN_NO_STACK_TRACE,
+    stage: STAGE_HAS_ISSUES,
+    handler: "packages/function.handler",
+    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME}`,
+  });
+
+  yield issue({
+    id: ISSUE_ID_NO_STACK_TRACE,
+    error: "Error No Stack Trace",
+    message: "Some error message",
+    fnName: ISSUE_FN_NAME,
+  });
+  yield issueCount({
+    group: ISSUE_ID_NO_STACK_TRACE,
+  });
+}
+
+function* issueLong(): Generator<DummyData, void, unknown> {
+  yield func({
+    id: ISSUE_FN_NAME_LONG,
+    stage: STAGE_HAS_ISSUES,
+    handler:
+      "packages/path/to/function/that/should/overflow/because/its/too/long/function.handler",
+    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME_LONG}`,
+  });
+
+  yield issue({
+    id: ISSUE_ID_LONG,
+    stage: STAGE_HAS_ISSUES,
+    error:
+      "Error long message that is really long and should overflow because its too long and it keeps going and going for a really long time",
+    message:
+      "Some error message that's also way too long and should overflow because its too long and it keeps going and going for a really long time",
+    fnName: ISSUE_FN_NAME_LONG,
+  });
+  yield issueCount({
+    group: ISSUE_ID_LONG,
   });
 }
