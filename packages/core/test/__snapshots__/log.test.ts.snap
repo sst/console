@@ -170,45 +170,6 @@ exports[`node inline multiline 1`] = `
 }
 `;
 
-exports[`node invoke 1`] = `
-{
-  "error": "NoSuchBucket",
-  "message": "The specified bucket does not exist",
-  "stack": [
-    {
-      "raw": "at de_NoSuchBucketRes (file:///var/task/packages/functions/src/events/app-stage-updated.mjs:51859:21)",
-    },
-    {
-      "raw": "at de_ListObjectsV2CommandError (file:///var/task/packages/functions/src/events/app-stage-updated.mjs:51807:19)",
-    },
-    {
-      "raw": "at runMicrotasks (<anonymous>)",
-    },
-    {
-      "raw": "at processTicksAndRejections (node:internal/process/task_queues:96:5)",
-    },
-    {
-      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:42732:20",
-    },
-    {
-      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:41547:18",
-    },
-    {
-      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:43230:38",
-    },
-    {
-      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:41269:22",
-    },
-    {
-      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:56745:19",
-    },
-    {
-      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:56891:3",
-    },
-  ],
-}
-`;
-
 exports[`node logtail 1`] = `
 {
   "error": "TypeError",
@@ -440,6 +401,42 @@ exports[`node with brackets 1`] = `
     }
   ]
 }",
+    },
+  ],
+}
+`;
+
+exports[`powertools 1`] = `
+{
+  "error": "FooError",
+  "message": "test error",
+  "stack": [
+    {
+      "raw": "FooError: test error",
+    },
+    {
+      "raw": "    at j.processRecord (/lib/tracer.ts:54:9)",
+    },
+    {
+      "raw": "    at j.processRecord (/node_modules/@aws-lambda-powertools/batch/lib/BatchProcessor.js:10:39)",
+    },
+    {
+      "raw": "    at record (/node_modules/@aws-lambda-powertools/batch/lib/BasePartialProcessor.js:23:70)",
+    },
+    {
+      "raw": "    at Array.map (<anonymous>)",
+    },
+    {
+      "raw": "    at j.process (/node_modules/@aws-lambda-powertools/batch/lib/BasePartialProcessor.js:23:49)",
+    },
+    {
+      "raw": "    at processPartialResponse (/node_modules/@aws-lambda-powertools/batch/lib/processPartialResponse.js:10:21)",
+    },
+    {
+      "raw": "    at Runtime.handler (/lib/tracer.ts:69:10)",
+    },
+    {
+      "raw": "    at Runtime.handleOnceNonStreaming (file:///var/runtime/index.mjs:1147:29)",
     },
   ],
 }

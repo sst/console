@@ -537,6 +537,15 @@ export function extractError(tabs: string[]): ParsedError | undefined {
     tabs[3]?.includes("Unhandled Promise Rejection")
   ) {
     const parsed = JSON.parse(tabs[4]!);
+    // powertools
+    if (parsed.recordErrors?.length) {
+      const [record] = parsed.recordErrors;
+      return {
+        error: record.errorType,
+        message: record.errorMessage,
+        stack: record.stack.map((raw: string) => ({ raw })),
+      };
+    }
     if (typeof parsed.stack == "string") {
       parsed.stack = parsed.stack.split("\n");
     }
@@ -558,10 +567,23 @@ export function extractError(tabs: string[]): ParsedError | undefined {
   ) {
     const line = tabs[3];
 
-    // Logtail
+    // JSON like
     if (line[0] === "{") {
       const parts = extractJSON(line);
+
       for (const part of parts) {
+        console.log(part);
+        // powertools
+        if (part.recordErrors?.length) {
+          const [record] = part.recordErrors;
+          return {
+            error: record.errorType,
+            message: record.errorMessage,
+            stack: record.stack.map((raw: string) => ({ raw })),
+          };
+        }
+
+        // logtail
         if (part.message && part.stack) {
           const [description, ...stack] = part.stack;
           const [_, error, message] =

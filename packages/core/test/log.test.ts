@@ -17,6 +17,15 @@ test("node invoke", () => {
   ]);
 });
 
+test.only("powertools", () =>
+  expectError([
+    "2023-10-11T12:17:59.036Z",
+    "0638bcc9-5472-4a56-b723-3c63f09893e2",
+    "ERROR",
+    "Invoke Error",
+    `{"errorType":"FullBatchFailureError","errorMessage":"All records failed processing. See individual errors below.","name":"FullBatchFailureError","recordErrors":[{"errorType":"FooError","errorMessage":"test error","name":"FooError","stack":["FooError: test error","    at j.processRecord (/lib/tracer.ts:54:9)","    at j.processRecord (/node_modules/@aws-lambda-powertools/batch/lib/BatchProcessor.js:10:39)","    at record (/node_modules/@aws-lambda-powertools/batch/lib/BasePartialProcessor.js:23:70)","    at Array.map (<anonymous>)","    at j.process (/node_modules/@aws-lambda-powertools/batch/lib/BasePartialProcessor.js:23:49)","    at processPartialResponse (/node_modules/@aws-lambda-powertools/batch/lib/processPartialResponse.js:10:21)","    at Runtime.handler (/lib/tracer.ts:69:10)","    at Runtime.handleOnceNonStreaming (file:///var/runtime/index.mjs:1147:29)"]}],"stack":["FullBatchFailureError: All records failed processing. See individual errors below.","    at j.clean (/node_modules/@aws-lambda-powertools/batch/lib/BasePartialBatchProcessor.js:23:19)","    at j.process (/node_modules/@aws-lambda-powertools/batch/lib/BasePartialProcessor.js:25:14)","    at processPartialResponse (/node_modules/@aws-lambda-powertools/batch/lib/processPartialResponse.js:10:5)"]}`,
+  ]));
+
 test("node uncaught exception", () => {
   expectError([
     `2023-09-15T13:03:59.257Z`,
