@@ -192,7 +192,7 @@ export const disconnectStage = zod(
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
         sessionToken: process.env.AWS_SESSION_TOKEN!,
       },
-      retryStrategy: RETRY_STRATEGY,
+      // retryStrategy: RETRY_STRATEGY,
     });
 
     try {
@@ -201,8 +201,9 @@ export const disconnectStage = zod(
           destinationName: uniqueIdentifier,
         })
       );
-    } catch (ex) {
+    } catch (ex: any) {
       if (ex instanceof ResourceNotFoundException) return;
+      if (ex.name === "ThrottlingException") return;
       throw ex;
     } finally {
       cw.destroy();
