@@ -112,9 +112,9 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                   line: result[1]?.value!,
                 });
                 index++;
-                if (processor.estimated >= 50 && !isFixed) {
-                  break;
-                }
+                // if (processor.estimated >= 50 && !isFixed) {
+                //   break;
+                // }
               }
 
               const data = processor.flushInvocations(-1);
