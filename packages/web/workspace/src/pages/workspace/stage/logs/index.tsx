@@ -293,10 +293,14 @@ export function Logs() {
       stageID: stage.stage.id,
       logGroup: logGroup(),
       timeStart: search.start
-        ? DateTime.fromJSDate(search.start!).toSQL({ includeOffset: false })
+        ? DateTime.fromJSDate(search.start!)
+            .toUTC()
+            .toSQL({ includeOffset: false })
         : null,
       timeEnd: search.end
-        ? DateTime.fromJSDate(search.end!).toSQL({ includeOffset: false })
+        ? DateTime.fromJSDate(search.end!)
+            .toUTC()
+            .toSQL({ includeOffset: false })
         : null,
     });
   }
