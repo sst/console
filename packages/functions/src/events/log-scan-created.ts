@@ -117,8 +117,13 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                 }
               }
 
-              console.log("flushing invocations");
               const data = processor.flushInvocations(-1);
+              console.log(
+                "flushing invocations",
+                data.length,
+                "flushed so far",
+                flushed
+              );
               if (data.length) {
                 flushed += data.length;
                 const url = await Storage.putEphemeral(JSON.stringify(data), {
