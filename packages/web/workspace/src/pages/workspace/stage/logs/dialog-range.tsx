@@ -1,7 +1,8 @@
 import {
+  Input,
   Grower,
   Button,
-  FormInput,
+  FormField,
   LinkButton,
   Row,
   Stack,
@@ -101,27 +102,31 @@ export function DialogRange(props: {
           </Stack>
           <Row space="1">
             <Grower>
-              <FormInput
-                onChange={(e) => {
-                  if (end.value) return;
-                  console.log(e.currentTarget.value);
-                  const start = DateTime.fromISO(e.currentTarget.value);
-                  if (!start) return;
-                  end.value = start
-                    .plus({ hours: 1 })
-                    .toISO()
-                    ?.substring(0, 16)!;
-                }}
-                ref={start}
-                name="start"
-                type="datetime-local"
-              />
+              <FormField>
+                <Input
+                  onChange={(e) => {
+                    if (end.value) return;
+                    console.log(e.currentTarget.value);
+                    const start = DateTime.fromISO(e.currentTarget.value);
+                    if (!start) return;
+                    end.value = start
+                      .plus({ hours: 1 })
+                      .toISO()
+                      ?.substring(0, 16)!;
+                  }}
+                  ref={start}
+                  name="start"
+                  type="datetime-local"
+                />
+              </FormField>
             </Grower>
             <GraphicSpacer>
               <GraphicStem />
             </GraphicSpacer>
             <Grower>
-              <FormInput ref={end} name="end" type="datetime-local" />
+              <FormField>
+                <Input ref={end} name="end" type="datetime-local" />
+              </FormField>
             </Grower>
           </Row>
           <Row space="5" vertical="center" horizontal="end">

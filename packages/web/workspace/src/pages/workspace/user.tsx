@@ -3,7 +3,7 @@ import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "./context";
 import { utility } from "$/ui/utility";
-import { FormInput } from "$/ui/form";
+import { Input, FormField } from "$/ui/form";
 import { createId } from "@paralleldrive/cuid2";
 import { useReplicache } from "$/providers/replicache";
 import { useNavigate } from "@solidjs/router";
@@ -47,13 +47,15 @@ export function User() {
               nav(`/${workspace()?.slug}`);
             }}
           >
-            <FormInput
-              type="email"
-              ref={(r) => setTimeout(() => r?.focus())}
-              autofocus
-              name="email"
-              placeholder="user@example.com"
-            />
+            <FormField>
+              <Input
+                type="email"
+                ref={(r) => setTimeout(() => r?.focus())}
+                autofocus
+                name="email"
+                placeholder="user@example.com"
+              />
+            </FormField>
             <Button type="submit">Send Invite</Button>
           </Form>
         </Stack>

@@ -7,7 +7,16 @@ import {
   createMemo,
   createSignal,
 } from "solid-js";
-import { LinkButton, Button, Row, Stack, Text, FormInput, theme } from "$/ui";
+import {
+  LinkButton,
+  Button,
+  Row,
+  Stack,
+  Text,
+  Input,
+  FormField,
+  theme,
+} from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import {
   IconEllipsisHorizontal,
@@ -364,21 +373,23 @@ export function Alerts() {
               />
             </Match>
             <Match when={data.destination?.type === "slack"}>
-              <FormInput
-                value={data.destination.slack?.channel}
-                onBlur={(e) =>
-                  setData(
-                    "destination",
-                    "slack",
-                    "channel",
-                    e.currentTarget.value.startsWith("#")
-                      ? e.currentTarget.value
-                      : "#" + e.currentTarget.value
-                  )
-                }
-                placeholder="#channel"
-                style={{ width: "220px" }}
-              />
+              <FormField>
+                <Input
+                  value={data.destination.slack?.channel}
+                  onBlur={(e) =>
+                    setData(
+                      "destination",
+                      "slack",
+                      "channel",
+                      e.currentTarget.value.startsWith("#")
+                        ? e.currentTarget.value
+                        : "#" + e.currentTarget.value
+                    )
+                  }
+                  placeholder="#channel"
+                  style={{ width: "220px" }}
+                />
+              </FormField>
             </Match>
           </Switch>
         </Row>

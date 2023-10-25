@@ -3,11 +3,12 @@ import { useStorage } from "$/providers/account";
 import { useAuth } from "$/providers/auth";
 import {
   Text,
+  Input,
   theme,
   Stack,
   Button,
   utility,
-  FormInput,
+  FormField,
   Fullscreen,
   AvatarInitialsIcon,
 } from "$/ui";
@@ -84,19 +85,22 @@ export function WorkspaceCreate() {
             });
           }}
         >
-          <FormInput
-            autofocus
-            pattern="[a-z0-9\-]+"
-            minlength={3}
-            onInput={(e) => {
-              setSlug(e.currentTarget.value);
-              setError(false);
-            }}
-            name="slug"
-            color={error() ? "danger" : "primary"}
-            placeholder="your-company-name"
+          <FormField
             hint="Needs to be lowercase, unique, and URL friendly."
-          />
+            color={error() ? "danger" : "primary"}
+          >
+            <Input
+              autofocus
+              pattern="[a-z0-9\-]+"
+              minlength={3}
+              onInput={(e) => {
+                setSlug(e.currentTarget.value);
+                setError(false);
+              }}
+              name="slug"
+              placeholder="your-company-name"
+            />
+          </FormField>
           <Button type="submit" disabled={Boolean(pending())}>
             <Show when={pending()} fallback="Create Workspace">
               Creating&hellip;

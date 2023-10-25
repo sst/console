@@ -2,8 +2,9 @@ import {
   Row,
   Text,
   Stack,
+  Input,
   Button,
-  FormInput,
+  FormField,
   Fullscreen,
   theme,
   utility,
@@ -156,7 +157,9 @@ export function Email() {
           form.submit();
         }}
       >
-        <FormInput autofocus type="email" name="email" placeholder="Email" />
+        <FormField>
+          <Input autofocus type="email" name="email" placeholder="Email" />
+        </FormField>
         <input type="hidden" name="client_id" value="solid" />
         <input
           type="hidden"

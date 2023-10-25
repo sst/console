@@ -1,5 +1,14 @@
 import { useReplicache } from "$/providers/replicache";
-import { Button, FormInput, LinkButton, Row, Stack, Text, theme } from "$/ui";
+import {
+  Input,
+  Button,
+  FormField,
+  LinkButton,
+  Row,
+  Stack,
+  Text,
+  theme,
+} from "$/ui";
 import { Modal } from "$/ui/modal";
 import { styled } from "@macaron-css/solid";
 import { createId } from "@paralleldrive/cuid2";
@@ -81,15 +90,18 @@ export function DialogPayloadSave(props: {
               Save event to workspace
             </Text>
           </Stack>
-          <FormInput
-            data-element={"save-payload-dialog-name"}
-            autofocus
-            name="name"
+          <FormField
             label="Event name"
-            minLength={1}
             hint="Give the event a short recognizable name"
-            placeholder="EventA"
-          />
+          >
+            <Input
+              data-element={"save-payload-dialog-name"}
+              autofocus
+              name="name"
+              minLength={1}
+              placeholder="EventA"
+            />
+          </FormField>
           <Row space="5" vertical="center" horizontal="end">
             <LinkButton onClick={() => control.hide()}>Cancel</LinkButton>
             <Button color="secondary">Save Event</Button>

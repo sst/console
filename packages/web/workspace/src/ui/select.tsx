@@ -5,7 +5,14 @@ import { IconCheck, IconChevronDown } from "./icons";
 import { Text } from "./text";
 import { utility } from "./utility";
 import { theme } from "./theme";
-import { inputStyles, inputFocusStyles, inputDisabledStyles } from "./form";
+import {
+  Root,
+  inputStyles,
+  inputFocusStyles,
+  inputDisabledStyles,
+  inputDangerTextStyles,
+  inputDangerFocusStyles,
+} from "./form";
 import { JSX, Show, ComponentProps } from "solid-js";
 
 const Trigger = styled(KSelect.Trigger, {
@@ -23,7 +30,12 @@ const Trigger = styled(KSelect.Trigger, {
     ":disabled": {
       ...inputDisabledStyles,
     },
-    maxWidth: 220,
+    width: "100%",
+    selectors: {
+      [`${Root.selector({ color: "danger" })} &`]: {
+        ...inputDangerFocusStyles,
+      },
+    },
   },
   variants: {
     size: {
@@ -34,15 +46,6 @@ const Trigger = styled(KSelect.Trigger, {
         height: theme.input.size.base,
       },
     },
-    icon: {
-      true: {
-        padding: 0,
-        boxShadow: "none",
-        appearance: "none",
-        background: "none",
-      },
-      false: {},
-    },
     disabled: {
       true: {
         ...inputDisabledStyles,
@@ -52,7 +55,12 @@ const Trigger = styled(KSelect.Trigger, {
   },
   defaultVariants: {
     size: "base",
-    icon: false,
+  },
+});
+
+const triggerText = style({
+  [`${Root.selector({ color: "danger" })} &`]: {
+    ...inputDangerTextStyles,
   },
 });
 
@@ -74,20 +82,9 @@ const DownIcon = styled(KSelect.Icon, {
   },
 });
 
-const TriggerIcon = styled("span", {
-  base: {
-    display: "flex",
-    color: theme.color.icon.secondary,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      color: theme.color.icon.primary,
-    },
-  },
-});
-
 const Content = styled(KSelect.Content, {
   base: {
-    marginTop: theme.space[1],
+    marginTop: 0,
     padding: `${theme.space[1]} 0`,
     border: `1px solid ${theme.color.divider.base}`,
     borderRadius: theme.borderRadius,
@@ -170,7 +167,6 @@ type Option<T> = {
   seperator?: boolean;
 };
 type Props<T> = ComponentProps<typeof KSelect.Root<Option<T>>> & {
-  icon?: JSX.Element;
   size?: "sm" | "base";
   label?: string;
   disabled?: boolean;
@@ -201,34 +197,25 @@ export function Select<T>(props: Props<T>) {
         size={props.size}
         disabled={props.disabled}
         class={props.triggerClass}
-        icon={props.icon !== undefined}
       >
-        <Show
-          when={props.icon}
-          fallback={
-            <>
-              <Text
-                line
-                leading="normal"
-                color="secondary"
-                size={props.size === "sm" ? "xs" : "sm"}
-              >
-                <KSelect.Value<Option<T>>>
-                  {(state) =>
-                    state.selectedOptions().length > 1
-                      ? state.selectedOptions().length + " selected"
-                      : state.selectedOption()?.label
-                  }
-                </KSelect.Value>
-              </Text>
-              <DownIcon>
-                <IconChevronDown width={15} height={15} />
-              </DownIcon>
-            </>
-          }
+        <Text
+          line
+          leading="normal"
+          color="secondary"
+          class={triggerText}
+          size={props.size === "sm" ? "xs" : "sm"}
         >
-          <TriggerIcon>{props.icon}</TriggerIcon>
-        </Show>
+          <KSelect.Value<Option<T>>>
+            {(state) =>
+              state.selectedOptions().length > 1
+                ? state.selectedOptions().length + " selected"
+                : state.selectedOption()?.label
+            }
+          </KSelect.Value>
+        </Text>
+        <DownIcon>
+          <IconChevronDown width={15} height={15} />
+        </DownIcon>
       </Trigger>
       <KSelect.Portal mount={document.getElementById("styled")!}>
         <Content>

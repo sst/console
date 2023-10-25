@@ -9,9 +9,9 @@ import { Tag } from "$/ui/tag";
 import { Alert } from "$/ui/alert";
 import { Toggle } from "$/ui/switch";
 import {
-  FormInput,
-  FormSelect,
-  FormTextArea,
+  Input,
+  Textarea,
+  FormField,
   SplitOptions,
   SplitOptionsOption,
 } from "$/ui/form";
@@ -845,7 +845,7 @@ Read more about it over on our docs`}
             </Dropdown.RadioGroup>
           </Dropdown>
         </Variant>
-        <Variant name="Overflow">
+        <Variant name="Overflow Label">
           <Dropdown
             size="base"
             label="A really really really long dropdown option that should overflow"
@@ -917,83 +917,137 @@ function FormTest() {
   return (
     <form>
       <Stack space="7">
-        <FormInput label="Workspace Name" placeholder="Acme Inc." type="text" />
-        <FormInput
+        <FormField label="Workspace Name">
+          <Input placeholder="Acme Inc." type="text" />
+        </FormField>
+        <FormField label="Workspace Name">
+          <Input
+            placeholder="Acme Inc."
+            type="text"
+            disabled
+            value="Acme Inc."
+          />
+        </FormField>
+        <FormField
           label="Workspace Name"
-          placeholder="Acme Inc."
-          type="text"
-          disabled
-          value="Acme Inc."
-        />
-        <FormInput
-          label="Workspace Name"
-          placeholder="Acme Inc."
-          type="text"
-          hint="Needs to be lowercase, unique, and URL friendly."
-        />
-        <FormInput
-          color="danger"
-          label="Workspace Name"
-          placeholder="Acme Inc."
-          type="text"
-          hint="Needs to be lowercase, unique, and URL friendly."
-          value="Invalid Value"
-        />
-        <FormTextArea label="Workspace Description" placeholder="Acme Inc." />
-        <FormTextArea
-          disabled
-          label="Workspace Description"
-          placeholder="Acme Inc."
-        />
-        <FormTextArea
-          label="Workspace Description"
-          placeholder="Acme Inc."
-          hint="Needs to be lowercase, unique, and URL friendly."
-        />
-        <FormTextArea
-          color="danger"
-          label="Workspace Description"
-          placeholder="Acme Inc."
           hint="Needs to be lowercase, unique, and URL friendly."
         >
-          Invalid Description
-        </FormTextArea>
-        <FormSelect required label="Workspace">
-          <option value="" disabled selected hidden>
-            Select your workspace
-          </option>
-          <option>acme</option>
-          <option>acme-2</option>
-          <option>acme-3</option>
-        </FormSelect>
-        <FormSelect required disabled label="Workspace">
-          <option value="" disabled selected hidden>
-            Select your workspace
-          </option>
-          <option>acme</option>
-          <option>acme-2</option>
-          <option>acme-3</option>
-        </FormSelect>
-        <FormSelect
-          required
+          <Input placeholder="Acme Inc." type="text" />
+        </FormField>
+        <FormField
+          color="danger"
+          label="Workspace Name"
+          hint="Needs to be lowercase, unique, and URL friendly."
+        >
+          <Input placeholder="Acme Inc." type="text" value="Invalid Value" />
+        </FormField>
+        <FormField label="Workspace Description">
+          <Textarea placeholder="Acme Inc." />
+        </FormField>
+        <FormField label="Workspace Description">
+          <Textarea disabled placeholder="Acme Inc." />
+        </FormField>
+        <FormField
+          label="Workspace Description"
+          hint="Needs to be lowercase, unique, and URL friendly."
+        >
+          <Textarea placeholder="Acme Inc." />
+        </FormField>
+        <FormField
+          color="danger"
+          label="Workspace Description"
+          hint="Needs to be lowercase, unique, and URL friendly."
+        >
+          <Textarea placeholder="Acme Inc.">Invalid Description</Textarea>
+        </FormField>
+        <FormField label="Workspace">
+          <Select
+            defaultValue={{ value: "1" }}
+            options={[
+              {
+                label: "Select your workspace",
+                value: "1",
+              },
+              {
+                label: "acme",
+                value: "2",
+              },
+              {
+                label: "acme-2",
+                value: "3",
+              },
+              {
+                label: "acme-3",
+                value: "4",
+              },
+            ]}
+          />
+        </FormField>
+        <FormField label="Workspace">
+          <Select
+            disabled
+            defaultValue={{ value: "1" }}
+            options={[
+              {
+                label: "Select your workspace",
+                value: "1",
+              },
+              {
+                label: "acme",
+                value: "2",
+              },
+              {
+                label: "acme-2",
+                value: "3",
+              },
+              {
+                label: "acme-3",
+                value: "4",
+              },
+            ]}
+          />
+        </FormField>
+        <FormField
           label="Workspace"
           hint="You need to create a workspace to get started."
         >
-          <option value="" disabled selected hidden>
-            Select your workspace
-          </option>
-          <option>acme</option>
-          <option>acme-2</option>
-          <option>acme-3</option>
-        </FormSelect>
-        <FormSelect
+          <Select
+            defaultValue={{ value: "1" }}
+            options={[
+              {
+                label: "Select your workspace",
+                value: "1",
+              },
+              {
+                label: "acme",
+                value: "2",
+              },
+              {
+                label: "acme-2",
+                value: "3",
+              },
+              {
+                label: "acme-3",
+                value: "4",
+              },
+            ]}
+          />
+        </FormField>
+        <FormField
           color="danger"
-          required
           label="Workspace"
           hint="You need to create a workspace to get started."
         >
-          <option>No workspace available</option>
-        </FormSelect>
+          <Select
+            defaultValue={{ value: "1" }}
+            options={[
+              {
+                label: "No workspace available",
+                value: "1",
+              },
+            ]}
+          />
+        </FormField>
       </Stack>
     </form>
   );

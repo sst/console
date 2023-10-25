@@ -1,10 +1,8 @@
-import { Select as KSelect } from "@kobalte/core";
 import { CSSProperties } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
 import { utility } from "./utility";
 import { ComponentProps, Show } from "solid-js";
-import { Text } from "./text";
 import { Stack } from "./layout";
 
 export const inputStyles: CSSProperties = {
@@ -38,15 +36,34 @@ export const inputFocusStyles: CSSProperties = {
   `,
 };
 
-export const inputDangerFocusStyles: CSSProperties = {
+export const inputDangerTextStyles: CSSProperties = {
   color: `hsla(${theme.color.red.d2}, 100%)`,
+};
+
+export const inputDangerFocusStyles: CSSProperties = {
+  ...inputDangerTextStyles,
   boxShadow: `
     0 0 1px 1px inset hsla(${theme.color.red.l2}, 100%),
     ${theme.color.input.shadow}
   `,
 };
 
-const Input = styled("input", {
+export const Root = styled("label", {
+  base: {
+    ...utility.stack(2.5),
+  },
+  variants: {
+    color: {
+      primary: {},
+      danger: {},
+    },
+  },
+  defaultVariants: {
+    color: "primary",
+  },
+});
+
+export const Input = styled("input", {
   base: {
     ...inputStyles,
     ":focus": {
@@ -54,6 +71,11 @@ const Input = styled("input", {
     },
     ":disabled": {
       ...inputDisabledStyles,
+    },
+    selectors: {
+      [`${Root.selector({ color: "danger" })} &`]: {
+        ...inputDangerFocusStyles,
+      },
     },
   },
   variants: {
@@ -83,6 +105,11 @@ export const Textarea = styled("textarea", {
     ":disabled": {
       ...inputDisabledStyles,
     },
+    selectors: {
+      [`${Root.selector({ color: "danger" })} &`]: {
+        ...inputDangerFocusStyles,
+      },
+    },
   },
   variants: {
     color: {
@@ -100,6 +127,7 @@ export const Textarea = styled("textarea", {
   },
 });
 
+/*
 const chevronDownString = `
   <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'>
     <path stroke='#767681' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/>
@@ -141,6 +169,7 @@ export const Select = styled("select", {
     color: "primary",
   },
 });
+*/
 
 const Label = styled("p", {
   base: {
@@ -170,67 +199,19 @@ const Hint = styled("p", {
   },
 });
 
-const Root = styled("label", {
-  base: {
-    ...utility.stack(2.5),
-  },
-});
-
-type InputProps = ComponentProps<typeof Input> & {
+type FormFieldProps = ComponentProps<typeof Root> & {
   hint?: string;
   label?: string;
 };
 
-export function FormInput(props: InputProps) {
+export function FormField(props: FormFieldProps) {
   return (
-    <Root>
+    <Root {...props}>
       <Stack space="3">
         <Show when={props.label}>
           <Label color={props.color}>{props.label}</Label>
         </Show>
-        <Input {...props} />
-      </Stack>
-      <Show when={props.hint}>
-        <Hint color={props.color}>{props.hint}</Hint>
-      </Show>
-    </Root>
-  );
-}
-
-type TextareaProps = ComponentProps<typeof Textarea> & {
-  hint?: string;
-  label?: string;
-};
-
-export function FormTextArea(props: TextareaProps) {
-  return (
-    <Root>
-      <Stack space="3">
-        <Show when={props.label}>
-          <Label color={props.color}>{props.label}</Label>
-        </Show>
-        <Textarea {...props} />
-      </Stack>
-      <Show when={props.hint}>
-        <Hint color={props.color}>{props.hint}</Hint>
-      </Show>
-    </Root>
-  );
-}
-
-type SelectProps = ComponentProps<typeof Select> & {
-  hint?: string;
-  label?: string;
-};
-
-export function FormSelect(props: SelectProps) {
-  return (
-    <Root>
-      <Stack space="3">
-        <Show when={props.label}>
-          <Label color={props.color}>{props.label}</Label>
-        </Show>
-        <Select {...props}>{props.children}</Select>
+        {props.children}
       </Stack>
       <Show when={props.hint}>
         <Hint color={props.color}>{props.hint}</Hint>
@@ -320,12 +301,3 @@ type SplitOptionsProps = ComponentProps<typeof SplitOptionsRoot> & {};
 export function SplitOptions(props: SplitOptionsProps) {
   return <SplitOptionsRoot {...props}>{props.children}</SplitOptionsRoot>;
 }
-
-//function NewSelect() {
-//  return (
-//    <KSelect.Root
-//      options={["Apple"]}
-//      placeholder="Select a fruit…"
-//    ></KSelect.Root>
-//  );
-//}
