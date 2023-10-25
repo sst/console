@@ -51,18 +51,13 @@ export const send = zod(
   z.object({
     channel: z.string().nonempty(),
     blocks: z.custom<KnownBlock[]>(),
-    teamName: z.string().nonempty(),
   }),
   async (input) => {
     const result = await db
       .select()
       .from(slackTeam)
-      .where(
-        and(
-          eq(slackTeam.teamID, input.teamName),
-          eq(slackTeam.workspaceID, useWorkspace())
-        )
-      )
+      .where(and(eq(slackTeam.workspaceID, useWorkspace())))
+      .limit(1)
       .then((rows) => rows.at(0));
 
     if (!result) return;
