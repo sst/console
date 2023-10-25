@@ -181,7 +181,6 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                 <FrameTitle>
                   <Show when={frame.raw}>
                     <Text
-                      pre
                       code
                       on="surface"
                       leading="normal"

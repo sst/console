@@ -3,6 +3,7 @@ import { AWS } from "@console/core/aws";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
 import { App, Stage } from "@console/core/app";
+import { StackFrame } from "@console/core/log";
 import { Warning } from "@console/core/warning";
 import type { Usage } from "@console/core/billing";
 import { Workspace } from "@console/core/workspace";
@@ -14,7 +15,8 @@ const APP_ID = "1";
 const APP_ID_LONG = "2";
 const APP_LOCAL = "my-sst-app";
 
-const STAGE_LOCAL = "jayair";
+const STAGE = "stage-base";
+const STAGE_LOCAL = "local";
 const STAGE_EMPTY = "stage-empty";
 const STAGE_NOT_SUPPORTED = "stage-not-supported";
 const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
@@ -32,11 +34,12 @@ const FUNC_ARN_SSR = "arn:aws:lambda:us-east-1:123456789012:function:my-func";
 const FUNC_ARN_NEXTJS = "arn:aws:lambda:us-east-1:123456789012:function:nextjs";
 
 const ISSUE_ID = "123";
-const ISSUE_FN_NAME = "my-issues-func";
+const ISSUE_FN = "my-issues-func";
 const ISSUE_ID_LONG = "124";
-const ISSUE_FN_NAME_LONG = "my-issues-func-long";
+const ISSUE_FN_NAME = "my-issues-func-long";
 const ISSUE_ID_NO_STACK_TRACE = "125";
-const ISSUE_FN_NO_STACK_TRACE = "my-issues-func-no-stack-trace";
+const ISSUE_ID_RAW_STACK_TRACE = "126";
+const ISSUE_ID_FULL_STACK_TRACE = "127";
 
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
@@ -260,10 +263,18 @@ interface IssueProps {
   id: string;
   error: string;
   stage?: string;
-  fnName: string;
+  fnName?: string;
   message: string;
+  stack?: StackFrame[];
 }
-function issue({ id, error, stage, fnName, message }: IssueProps): DummyData {
+function issue({
+  id,
+  error,
+  stage,
+  fnName,
+  message,
+  stack,
+}: IssueProps): DummyData {
   return {
     _type: "issue",
     id,
@@ -277,29 +288,13 @@ function issue({ id, error, stage, fnName, message }: IssueProps): DummyData {
     error,
     message,
     count: 1,
-    stack: [
-      {
-        raw: "at getServerSideProps (/var/task/ .next/server /pages/ssr. js:98:11)",
-      },
-      {
-        raw: "at /var /task/node_modules/ •ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/render.js:569:26",
-      },
-      {
-        raw: "at / var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/lib/trace/tracer.js:117:36",
-      },
-      {
-        raw: "at NoopContextManager.with (/var/task/node_modules/ .ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7057)",
-      },
-      {
-        raw: "at ContextAPI. with (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:516)",
-      },
-    ],
     errorID: id,
     group: id,
     ignorer: null,
     resolver: null,
+    stack: stack || null,
     pointer: {
-      logGroup: `/aws/lambda/${fnName}`,
+      logGroup: `/aws/lambda/${fnName || ISSUE_FN}`,
       logStream: "2021/01/01/[$LATEST]12345678901234567890123456789012",
       timestamp: Date.now(),
     },
@@ -319,7 +314,7 @@ function issueCount({ group, hour, count }: IssueCountProps): DummyData {
     hour,
     group,
     count: count || 1,
-    stageID: STAGE_LOCAL,
+    stageID: STAGE_HAS_ISSUES,
     timeCreated: DateTime.now().startOf("day").toSQL()!,
     timeUpdated: DateTime.now().startOf("day").toSQL()!,
     timeDeleted: null,
@@ -367,15 +362,19 @@ export function* generateData(
   if (modeMap["overview"]) yield* overviewBase();
 
   if (modeMap["resources"]) {
-    yield* resourcesBase();
-    yield* resourcesNotSupported();
-    yield* resourcesPartlySupported();
+    yield* stageBase();
+    yield* stageEmpty();
+    yield* stageNotSupported();
+    yield* stagePartlySupported();
   }
 
   if (modeMap["issues"]) {
     yield* resourcesNoIssues();
     yield* resourcesHasIssues();
+    yield* issueBaseFn();
     yield* issueBase();
+    yield* issueRawStackTrace();
+    yield* issueFullSourceMapStackTrace();
     yield* issueNoStackTrace();
     yield* issueLong();
   }
@@ -391,11 +390,6 @@ function* overviewBase(): Generator<DummyData, void, unknown> {
   yield app({ id: APP_LOCAL });
   yield stage({
     id: STAGE_LOCAL,
-    appID: APP_LOCAL,
-    awsAccountID: ACCOUNT_ID,
-  });
-  yield stage({
-    id: STAGE_EMPTY,
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
   });
@@ -480,70 +474,76 @@ function* overviewLongApps(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* resourcesBase(): Generator<DummyData, void, unknown> {
+function* stageBase(): Generator<DummyData, void, unknown> {
   const STACK = "stack";
+
+  yield stage({
+    id: STAGE,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
 
   yield func({
     id: "index",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/function.handler",
   });
   yield func({
     id: "notes_get",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/notes.handler",
     size: 20400800000,
   });
   yield func({
     id: "notes_post",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/notes.handler",
     size: 2048000,
   });
   yield func({
     id: "go_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/others/go.handler",
     size: 204123,
     runtime: "go1.x",
   });
   yield func({
     id: "java_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/others/java.handler",
     size: 204123,
     runtime: "java17",
   });
   yield func({
     id: "node_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/others/node.handler",
     size: 204123,
     runtime: "nodejs18.x",
   });
   yield func({
     id: "python_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/others/python.handler",
     size: 204123,
     runtime: "python3.10",
   });
   yield func({
     id: "dotnet_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/others/dotnet.handler",
     size: 204123,
     runtime: "dotnet6",
   });
   yield func({
     id: "rust_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/others/rust.handler",
     size: 204123,
     runtime: "rust",
   });
   yield func({
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     id: "container_func",
     handler: "packages/others/container.handler",
     size: 204123,
@@ -551,19 +551,19 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   });
   yield func({
     id: "other_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     handler: "packages/others/func.handler",
     size: 2048000,
   });
   yield func({
     id: "nextjs_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     arn: FUNC_ARN_NEXTJS,
     handler: "server.handler",
   });
   yield func({
     id: "ssr_func",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     arn: FUNC_ARN_SSR,
     handler: "server.handler",
   });
@@ -571,7 +571,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Stack",
     id: STACK,
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     enrichment: {
       version: "2.19.2",
       outputs: [
@@ -600,7 +600,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Api",
     id: "api",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       url: "https://example.com",
       routes: [
@@ -649,7 +649,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Api",
     id: "long-api",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       url: "https://long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going-long-auto-generated-cloudfront-aws-url-that-should-overflow-because-its-too-long-and-keeps-going.com",
       routes: [
@@ -667,7 +667,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "ApiGatewayV1Api",
     id: "apiv1-api",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com/jayair/",
       routes: [
@@ -684,7 +684,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Api",
     id: "no-routes",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       url: "https://api.com",
       routes: [],
@@ -696,7 +696,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Cron",
     id: "cronjob",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       job: ref("index", STACK),
       ruleName: "jayair-console-Dummy-cronjobRuleFEA4C4A4-1P314X49EP7CP",
@@ -706,7 +706,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Bucket",
     id: "uploads",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       name: "jayair-console-dummy-uploadsbucket10132eb4-jypzgdnipek",
       notifications: [ref("index", STACK)],
@@ -716,7 +716,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "EventBus",
     id: "event-bus",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       eventBusName: "event-bus",
       rules: [
@@ -731,7 +731,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "StaticSite",
     id: "web",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       path: "./packages/web/workspace",
       customDomainUrl: undefined,
@@ -742,7 +742,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "NextjsSite",
     id: "nextjs-site-local-no-custom-domain",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       routes: {
         logGroupPrefix: "",
@@ -782,7 +782,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "NextjsSite",
     id: "nextjs-site",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       customDomainUrl: "https://nextjs-site.com",
       routes: undefined,
@@ -798,7 +798,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "SvelteKitSite",
     id: "svelte-site",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       customDomainUrl: "https://svelte-site.com",
       server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
@@ -813,7 +813,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "RemixSite",
     id: "remix-site",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       customDomainUrl: "https://remix-site.com",
       server: FUNC_ARN_SSR,
@@ -828,7 +828,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "AstroSite",
     id: "astro-site",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       customDomainUrl: "https://astro-site.com",
       server: FUNC_ARN_SSR,
@@ -843,7 +843,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "SolidStartSite",
     id: "solid-site",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       customDomainUrl: "https://solid-site.com",
       server: FUNC_ARN_SSR,
@@ -858,7 +858,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Cognito",
     id: "cognito-auth",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       identityPoolId: "someid",
       userPoolId: "someid",
@@ -873,7 +873,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Table",
     id: "notes-table",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       consumers: [
         {
@@ -887,7 +887,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Queue",
     id: "my-queue",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       name: "jayair-console-my-queue",
       url: "https://sqs.us-east-1.amazonaws.com/917397401067/jayair-console-my-queue",
@@ -897,7 +897,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "KinesisStream",
     id: "my-stream",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       consumers: [
         {
@@ -911,7 +911,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     yield resource({
       type: "Topic",
       id: "my-topic",
-      stage: STAGE_LOCAL,
+      stage: STAGE,
       metadata: {
         topicArn: "arn:aws:sns:us-east-1:917397401067:jayair-console-my-topic",
         subscribers: [ref("index", STACK)],
@@ -921,7 +921,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "Script",
     id: "my-script",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       createfn: ref("index", STACK),
       deletefn: ref("index", STACK),
@@ -931,7 +931,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "AppSync",
     id: "appsync-api",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       dataSources: [
         {
@@ -948,7 +948,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "WebSocketApi",
     id: "ws-api",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       url: "wss://h7waex57g8.execute-api.us-east-1.amazonaws.com/jayair",
       routes: [
@@ -976,7 +976,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
   yield resource({
     type: "WebSocketApi",
     id: "ws-api-custom-domain",
-    stage: STAGE_LOCAL,
+    stage: STAGE,
     metadata: {
       url: "wss://h7waex57g8.execute-api.us-east-1.amazonaws.com/jayair",
       routes: [
@@ -992,7 +992,7 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     yield resource({
       type: "RDS",
       id: "my-rds",
-      stage: STAGE_LOCAL,
+      stage: STAGE,
       metadata: {
         engine: "postgresql11.13",
         secretArn: "arn",
@@ -1005,7 +1005,15 @@ function* resourcesBase(): Generator<DummyData, void, unknown> {
     });
 }
 
-function* resourcesNotSupported(): Generator<DummyData, void, unknown> {
+function* stageEmpty(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_EMPTY,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+}
+
+function* stageNotSupported(): Generator<DummyData, void, unknown> {
   yield stage({
     id: STAGE_NOT_SUPPORTED,
     appID: APP_LOCAL,
@@ -1022,7 +1030,7 @@ function* resourcesNotSupported(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* resourcesPartlySupported(): Generator<DummyData, void, unknown> {
+function* stagePartlySupported(): Generator<DummyData, void, unknown> {
   const STACK_WORKING = "stackB";
   const FN_NODE = "index";
 
@@ -1126,19 +1134,20 @@ function* resourcesHasIssues(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueBase(): Generator<DummyData, void, unknown> {
+function* issueBaseFn(): Generator<DummyData, void, unknown> {
   yield func({
-    id: ISSUE_FN_NAME,
+    id: ISSUE_FN,
     stage: STAGE_HAS_ISSUES,
     handler: "packages/function.handler",
-    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME}`,
+    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN}`,
   });
+}
 
+function* issueBase(): Generator<DummyData, void, unknown> {
   yield issue({
     id: ISSUE_ID,
     error: "Error",
     message: "Some error message",
-    fnName: ISSUE_FN_NAME,
   });
   yield issueCount({
     group: ISSUE_ID,
@@ -1156,31 +1165,133 @@ function* issueBase(): Generator<DummyData, void, unknown> {
 }
 
 function* issueNoStackTrace(): Generator<DummyData, void, unknown> {
-  yield func({
-    id: ISSUE_FN_NO_STACK_TRACE,
-    stage: STAGE_HAS_ISSUES,
-    handler: "packages/function.handler",
-    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME}`,
-  });
-
   yield issue({
     id: ISSUE_ID_NO_STACK_TRACE,
     error: "Error No Stack Trace",
     message: "Some error message",
-    fnName: ISSUE_FN_NAME,
   });
   yield issueCount({
     group: ISSUE_ID_NO_STACK_TRACE,
   });
 }
 
+function* issueRawStackTrace(): Generator<DummyData, void, unknown> {
+  yield issue({
+    id: ISSUE_ID_RAW_STACK_TRACE,
+    error: "Error Raw Stack Trace",
+    message: "Some error message",
+    stack: [
+      {
+        raw: "at getServerSideProps (/var/task/.next/server/pages/ssr.js:98:11)",
+      },
+      {
+        raw: "at /var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/render.js:569:26",
+      },
+      {
+        raw: "at /var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/lib/trace/tracer.js:117:36",
+      },
+      {
+        raw: "at NoopContextManager.with (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7057)",
+      },
+      {
+        raw: "at ContextAPI.with (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:516)",
+      },
+      // Don't render this as pre
+      {
+        raw: `at  
+
+        ContextAPI.with
+
+        (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:516)`,
+      },
+    ],
+  });
+  yield issueCount({
+    group: ISSUE_ID_RAW_STACK_TRACE,
+  });
+}
+
+function* issueFullSourceMapStackTrace(): Generator<DummyData, void, unknown> {
+  yield issue({
+    id: ISSUE_ID_FULL_STACK_TRACE,
+    error: "Error Full Source Map Stack Trace",
+    message: "Some error message",
+    stack: [
+      {
+        column: 39,
+        line: 5,
+        file: "node_modules/.pnpm/@smithy+smithy-client@2.1.12/node_modules/@smithy/smithy-client/dist-es/default-error-handler.js",
+        context: [
+          `  export const throwDefaultError = ({ output, parsedBody, exceptionCtor, errorCode }) => {`,
+          `    const $metadata = deserializeMetadata(output);`,
+          `    const statusCode = $metadata.httpStatusCode ? $metadata.httpStatusCode + "" : undefined;`,
+          `    const response = new exceptionCtor({`,
+          `      name: parsedBody?.code || parsedBody?.Code || errorCode || statusCode || "UnknownError",`,
+          `      $fault: "client",`,
+          `      $metadata,`,
+        ],
+      },
+      {
+        column: 52,
+        line: 5323,
+        file: "node_modules/.pnpm/@aws-sdk+client-dynamodb@3.33.0/node_modules/@aws-sdk/client-dynamodb/dist-es/protocols/Aws_json1_0.ts",
+        context: [
+          `      Type: __expectString,`,
+          `    });`,
+          `    Object.assign(contents, doc);`,
+          `    const exception = new ResourceNotFoundException({`,
+          `      $metadata: deserializeMetadata(output),`,
+          `      ...contents,`,
+          `    });`,
+        ],
+      },
+      {
+        raw: "processTicksAndRejections (node:internal/process/task_queues:96:5)",
+      },
+      {
+        column: 17,
+        line: 24,
+        file: "packages/core/src/lambda/index.ts",
+        important: true,
+        context: [
+          `      const config = await Stage.assumeRole(input.stageID, input.extraParam, input.extraLongParamThatShouldOverflowBecauseItsTooLong);`,
+          `      constclient=newDynamoDBClient(config).thatDoesNotHaveAnyLinebreaksAndItShouldFailToBreakBecauseItsTooLongAndThisShouldFailBecauseItKeepsGoingAndGoingFurtherAndFurtherToTest;`,
+          `      const client = new LambdaClient(config);`,
+          `      await client.send(`,
+          `        new InvokeCommand({`,
+          `          FunctionName: input.functionName,`,
+          `          Payload: input.payload,`,
+        ],
+      },
+      {
+        column: 41,
+        line: 99,
+        important: true,
+        file: "packages/functions/src/replicache/with/a/path/that/is/really/long/that/should/overflow/because/its/way/too/long/and/should/overflow/push1.ts",
+        context: [
+          `        const { args, name } = mutation;`,
+          `        const { data } = await invokeLambda({`,
+          `          functionName: name,`,
+          `          payload: JSON.stringify(args),`,
+          `        });`,
+          `        return JSON.parse(data);`,
+          `      }`,
+        ],
+      },
+    ],
+  });
+  yield issueCount({
+    group: ISSUE_ID_FULL_STACK_TRACE,
+  });
+}
+
 function* issueLong(): Generator<DummyData, void, unknown> {
   yield func({
-    id: ISSUE_FN_NAME_LONG,
+    id: ISSUE_FN_NAME,
     stage: STAGE_HAS_ISSUES,
     handler:
-      "packages/path/to/function/that/should/overflow/because/its/too/long/function.handler",
-    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME_LONG}`,
+      "packages/path/to/function/that/should/overflow/because/its/too/long/and/it/keeps/going/because/it/really/is/way/too/long/function.handler",
+    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME}`,
   });
 
   yield issue({
@@ -1190,7 +1301,7 @@ function* issueLong(): Generator<DummyData, void, unknown> {
       "Error long message that is really long and should overflow because its too long and it keeps going and going for a really long time",
     message:
       "Some error message that's also way too long and should overflow because its too long and it keeps going and going for a really long time",
-    fnName: ISSUE_FN_NAME_LONG,
+    fnName: ISSUE_FN_NAME,
   });
   yield issueCount({
     group: ISSUE_ID_LONG,

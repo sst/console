@@ -1,3 +1,4 @@
+.vim
 node_modules
 .sst
 *.DS_Store
