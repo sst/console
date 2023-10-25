@@ -1,18 +1,12 @@
 import { Select as KSelect, Separator as KSeperator } from "@kobalte/core";
-import { globalStyle } from "@macaron-css/core";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { IconCheck, IconChevronDown } from "./icons";
 import { Text } from "./text";
 import { utility } from "./utility";
 import { theme } from "./theme";
-import {
-  inputStyles,
-  inputFocusStyles,
-  inputDisabledStyles,
-  inputDangerFocusStyles,
-} from "./form";
-import { JSX, Show, ComponentProps, ParentProps, splitProps } from "solid-js";
+import { inputStyles, inputFocusStyles, inputDisabledStyles } from "./form";
+import { JSX, Show, ComponentProps } from "solid-js";
 
 const Trigger = styled(KSelect.Trigger, {
   base: {
@@ -158,6 +152,7 @@ const Seperator = styled(KSeperator.Root, {
   },
 });
 
+// @ts-expect-error
 const Listbox = styled(KSelect.Listbox, {
   base: {
     selectors: {
