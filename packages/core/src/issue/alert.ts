@@ -253,7 +253,6 @@ export const trigger = zod(
                             }
 
                             if (frame.context && frame.important) {
-                              stackString += "----------\n";
                               const minLeadingSpaces = Math.min(
                                 ...frame.context.map(countLeadingSpaces)
                               );
@@ -264,6 +263,7 @@ export const trigger = zod(
                                   (frame.line || 0) + j
                                 }  ${context.substring(minLeadingSpaces)}\n`;
                               }
+                              stackString += "----------\n";
                             }
                           }
 
