@@ -244,7 +244,7 @@ export const trigger = zod(
                           for (let i = 0; i < stack.length; i++) {
                             const frame = stack[i]!;
 
-                            stackString += frame.raw
+                            stackString += !frame.file
                               ? `${frame.raw}\n`
                               : `${frame.file}  ${frame.line}:${frame.column}\n`;
 
@@ -252,7 +252,7 @@ export const trigger = zod(
                               stackString += "----------\n";
                             }
 
-                            if (frame.context) {
+                            if (frame.context && frame.important) {
                               stackString += "----------\n";
                               const minLeadingSpaces = Math.min(
                                 ...frame.context.map(countLeadingSpaces)
