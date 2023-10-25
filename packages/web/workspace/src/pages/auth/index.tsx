@@ -217,7 +217,7 @@ export function Code() {
         <Row horizontal="between">
           <For each={Array(6).fill(0)}>
             {() => (
-              <FormInput
+              <Input
                 style={{
                   width: "40px",
                   "text-align": "center",
