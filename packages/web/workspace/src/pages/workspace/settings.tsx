@@ -1,6 +1,14 @@
-import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+} from "solid-js";
 import { DateTime } from "luxon";
-import { LinkButton, Button, Row, Stack, Text, theme } from "$/ui";
+import { LinkButton, Button, Row, Stack, Text, theme, FormInput } from "$/ui";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "./context";
@@ -23,11 +31,13 @@ import { AppStore, IssueAlertStore, SlackTeamStore } from "$/data/app";
 import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
 import { createEventListener } from "@solid-primitives/event-listener";
-import { createId } from "@paralleldrive/cuid2";
 import { Issue } from "@console/core/issue";
-import { createStore, unwrap } from "solid-js/store";
+import { createStore, produce, unwrap } from "solid-js/store";
 import { Select } from "$/ui/select";
 import { UserStore } from "$/data/user";
+import { StageStore } from "$/data/stage";
+import { filter, map, pipe, uniq } from "remeda";
+import { createId } from "@paralleldrive/cuid2";
 
 const PANEL_CONTENT_SPACE = "10";
 const PANEL_HEADER_SPACE = "3";
@@ -490,9 +500,337 @@ function Integrations() {
 function Alerts() {
   const rep = useReplicache();
   const apps = AppStore.all.watch(rep, () => []);
-  const users = UserStore.list.watch(rep, () => []);
+  const users = UserStore.list.watch(
+    rep,
+    () => [],
+    (users) => users.filter((u) => !u.timeDeleted)
+  );
   const alerts = IssueAlertStore.all.watch(rep, () => []);
-  const [editing, setEditing] = createStore<Partial<Issue.Alert.Info>>({});
+  const [editor, setEditor] = createStore<{
+    id?: string;
+    source: {
+      app: string[];
+      stage?: string;
+    };
+    destination: {
+      type?: "email" | "slack";
+      email?: {
+        users: string[];
+      };
+      slack?: {
+        channel?: string;
+      };
+    };
+    active: boolean;
+  }>({
+    active: false,
+    source: {
+      app: [],
+    },
+    destination: {},
+  });
+
+  const selectedApps = AppStore.all.watch(
+    rep,
+    () => [],
+    (apps) =>
+      apps
+        .filter(
+          (app) =>
+            editor.source?.app.includes("*") ||
+            editor.source?.app?.includes(app.name)
+        )
+        .map((app) => app.id)
+  );
+
+  const stages = StageStore.list.watch(rep, () => []);
+  const availableStages = createMemo(() => {
+    return pipe(
+      stages(),
+      filter((s) => selectedApps().includes(s.appID)),
+      map((s) => s.name),
+      uniq()
+    );
+  });
+
+  createEffect(() => console.log(availableStages()));
+
+  function createAlert() {
+    setEditor(
+      produce((val) => {
+        val.id = undefined;
+        val.source = {
+          app: [],
+        };
+        val.destination = {};
+        val.active = true;
+      })
+    );
+  }
+
+  function editAlert(alert: Issue.Alert.Info) {
+    alert = structuredClone(unwrap(alert));
+    setEditor(
+      produce((val) => {
+        val.id = alert.id;
+        val.source = {
+          app: alert.source.app === "*" ? ["*"] : alert.source.app,
+          stage: alert.source.stage === "*" ? "*" : alert.source.stage[0],
+        };
+        val.destination = {
+          type: alert.destination.type,
+          email:
+            alert.destination.type === "email"
+              ? {
+                  users:
+                    alert.destination.properties.users === "*"
+                      ? ["*"]
+                      : alert.destination.properties.users,
+                }
+              : undefined,
+          slack:
+            alert.destination.type === "slack"
+              ? {
+                  channel: alert.destination.properties.channel,
+                }
+              : undefined,
+        };
+        val.active = true;
+      })
+    );
+  }
+
+  const AlertsEditor = () => (
+    <Stack class={alertsPanelRowEditing} space="6">
+      <Stack>
+        <Row
+          space="4"
+          vertical="start"
+          horizontal="start"
+          class={alertsPanelRowEditingField}
+        >
+          <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+            <Text label on="surface" size="mono_sm">
+              Type
+            </Text>
+            <Text leading="loose" on="surface" color="dimmed" size="sm">
+              The channel to use for sending the alerts.
+            </Text>
+          </Stack>
+          <Select<Issue.Alert.Info["destination"]["type"]>
+            onChange={(option) => {
+              setEditor("destination", {
+                type: option.value,
+                email: {
+                  users: [],
+                },
+                slack: {},
+              });
+            }}
+            value={
+              editor.destination?.type
+                ? {
+                    value: editor.destination.type,
+                  }
+                : undefined
+            }
+            options={[
+              {
+                value: "slack",
+                label: "Slack",
+              },
+              {
+                value: "email",
+                label: "Email",
+              },
+            ]}
+            triggerClass={alertsPanelRowEditingDropdown}
+          />
+        </Row>
+        <Row
+          space="4"
+          vertical="start"
+          horizontal="start"
+          class={alertsPanelRowEditingField}
+        >
+          <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+            <Text label on="surface" size="mono_sm">
+              Source
+            </Text>
+            <Text leading="loose" on="surface" color="dimmed" size="sm">
+              The apps and stages that'll be sending alerts.
+            </Text>
+          </Stack>
+          <Row flex space="4" vertical="center">
+            <Stack space="2">
+              <Text label on="surface" size="mono_sm" color="secondary">
+                App
+              </Text>
+              <Select<string>
+                multiple
+                value={editor.source?.app?.map((app) => ({ value: app }))}
+                onChange={(options) => {
+                  if (options.at(-1)?.value !== "*") {
+                    setEditor("source", {
+                      app: options
+                        .filter((o) => o.value !== "*")
+                        .map((o) => o.value),
+                    });
+                    return;
+                  }
+                  setEditor("source", "app", ["*"]);
+                }}
+                options={[
+                  {
+                    label: "All apps",
+                    value: "*",
+                    seperator: true,
+                  },
+                  ...apps().map((app) => ({
+                    label: app.name,
+                    value: app.name,
+                  })),
+                ]}
+                triggerClass={alertsPanelRowEditingDropdown}
+              />
+            </Stack>
+            <Stack space="2">
+              <Text label on="surface" size="mono_sm" color="secondary">
+                Stage
+              </Text>
+              <Select<string>
+                disabled={!editor.source.app.length}
+                value={
+                  editor.source.stage
+                    ? { value: editor.source.stage }
+                    : undefined
+                }
+                onChange={(option) => {
+                  setEditor("source", "stage", option?.value);
+                }}
+                options={[
+                  {
+                    label: "All stages",
+                    value: "*",
+                    seperator: true,
+                  },
+                  ...availableStages().map((stage) => ({
+                    label: stage,
+                    value: stage,
+                  })),
+                ]}
+                triggerClass={alertsPanelRowEditingDropdown}
+              />
+            </Stack>
+          </Row>
+        </Row>
+        <Row
+          space="4"
+          vertical="start"
+          horizontal="start"
+          class={alertsPanelRowEditingField}
+        >
+          <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+            <Text label on="surface" size="mono_sm">
+              Destination
+            </Text>
+            <Text leading="loose" on="surface" color="dimmed" size="sm">
+              Specify who will be getting these alerts.
+            </Text>
+          </Stack>
+          <Switch>
+            <Match when={editor.destination?.type === "email"}>
+              <Select<string>
+                multiple
+                value={editor.destination.email?.users?.map((value) => ({
+                  value,
+                }))}
+                options={[
+                  {
+                    value: "*",
+                    label: "All users",
+                    seperator: true,
+                  },
+                  ...users().map((user) => ({
+                    value: user.id,
+                    label: user.email,
+                  })),
+                ]}
+                onChange={(options) => {
+                  if (options.at(-1)?.value !== "*") {
+                    setEditor(
+                      "destination",
+                      "email",
+                      "users",
+                      options.filter((o) => o.value !== "*").map((o) => o.value)
+                    );
+                    return;
+                  }
+                  setEditor("destination", "email", "users", ["*"]);
+                }}
+                triggerClass={alertsPanelRowEditingDropdown}
+              />
+            </Match>
+            <Match when={editor.destination?.type === "slack"}>
+              <FormInput
+                value={editor.destination.slack?.channel}
+                onBlur={(e) =>
+                  setEditor(
+                    "destination",
+                    "slack",
+                    "channel",
+                    e.currentTarget.value.startsWith("#")
+                      ? e.currentTarget.value
+                      : "#" + e.currentTarget.value
+                  )
+                }
+                placeholder="#channel"
+                style={{ width: "220px" }}
+              />
+            </Match>
+          </Switch>
+        </Row>
+      </Stack>
+      <Row space="4" vertical="center" horizontal="end">
+        <LinkButton onClick={() => setEditor("active", false)}>
+          Cancel
+        </LinkButton>
+        {/* Enable on valid form */}
+        <Button
+          onClick={async () => {
+            const data = structuredClone(unwrap(editor));
+            await rep().mutate.issue_alert_put({
+              id: data.id || createId(),
+              source: {
+                app: data.source.app.includes("*") ? "*" : data.source.app,
+                stage: data.source.stage === "*" ? "*" : [data.source.stage!],
+              },
+              destination:
+                data.destination.type === "slack"
+                  ? {
+                      type: "slack",
+                      properties: {
+                        channel: data.destination.slack?.channel!,
+                      },
+                    }
+                  : {
+                      type: "email",
+                      properties: {
+                        users: data.destination.email?.users.includes("*")
+                          ? "*"
+                          : data.destination.email?.users!,
+                      },
+                    },
+            });
+            setEditor("active", false);
+          }}
+          color="success"
+        >
+          Update
+        </Button>
+      </Row>
+    </Stack>
+  );
 
   return (
     <>
@@ -507,17 +845,10 @@ function Alerts() {
           </Text>
         </Stack>
         <Show
-          when={alerts().length !== 0}
+          when={alerts().length !== 0 || editor.active}
           fallback={
             <Row>
-              <Button
-                color="secondary"
-                onClick={() => {
-                  rep().mutate.issue_alert_create({
-                    id: createId(),
-                  });
-                }}
-              >
+              <Button color="secondary" onClick={() => createAlert()}>
                 Add Alert
               </Button>
             </Row>
@@ -550,13 +881,13 @@ function Alerts() {
                           <Text size="base" weight="medium">
                             {alert.source.app === "*"
                               ? "all apps"
-                              : alert.source.app[0]}
+                              : alert.source.app.join(", ")}
                           </Text>{" "}
-                          /{" "}
+                          matching
                           <Text size="base" weight="medium">
                             {alert.source.stage === "*"
-                              ? "all stages"
-                              : alert.source.stage[0]}
+                              ? " all stages"
+                              : ` "${alert.source.stage.join(", ")}"`}
                           </Text>
                         </Text>
                         <Row space="1.5" vertical="center">
@@ -564,17 +895,47 @@ function Alerts() {
                             <IconArrowLongRight width={12} height={12} />
                           </AlertsPanelRowArrowIcon>
                           <Text color="secondary" size="sm">
-                            All users in the workspace
+                            <Switch>
+                              <Match
+                                when={
+                                  alert.destination.type === "email" &&
+                                  alert.destination
+                                }
+                              >
+                                {(destination) =>
+                                  destination().properties.users === "*"
+                                    ? "All users in the workspace"
+                                    : (
+                                        destination().properties
+                                          .users as string[]
+                                      )
+                                        .map(
+                                          (id) =>
+                                            users().find((u) => u.id === id)
+                                              ?.email
+                                        )
+                                        .join(", ")
+                                }
+                              </Match>
+                              <Match
+                                when={
+                                  alert.destination.type === "slack" &&
+                                  alert.destination
+                                }
+                              >
+                                {(destination) =>
+                                  destination().properties.channel
+                                }
+                              </Match>
+                            </Switch>
                           </Text>
                         </Row>
                       </Stack>
                     </Row>
-                    <Show when={editing.id !== alert.id}>
+                    <Show when={!editor.active || editor.id !== alert.id}>
                       <Row flex={false} space="2">
                         <Button
-                          onClick={() =>
-                            setEditing(structuredClone(unwrap(alert)))
-                          }
+                          onClick={() => editAlert(alert)}
                           color="secondary"
                           size="sm"
                         >
@@ -597,186 +958,21 @@ function Alerts() {
                       </Row>
                     </Show>
                   </Row>
-                  <Show when={editing.id === alert.id}>
-                    <Stack class={alertsPanelRowEditing} space="6">
-                      <Stack>
-                        <Row
-                          space="4"
-                          vertical="start"
-                          horizontal="start"
-                          class={alertsPanelRowEditingField}
-                        >
-                          <Stack
-                            class={alertsPanelRowEditingFieldLabel}
-                            space="1.5"
-                          >
-                            <Text label on="surface" size="mono_sm">
-                              Type
-                            </Text>
-                            <Text
-                              leading="loose"
-                              on="surface"
-                              color="dimmed"
-                              size="sm"
-                            >
-                              The channel to use for sending the alerts.
-                            </Text>
-                          </Stack>
-                          <Select
-                            defaultValue={
-                              editing.destination?.type
-                                ? {
-                                    value: editing.destination.type,
-                                  }
-                                : undefined
-                            }
-                            options={[
-                              {
-                                value: "slack",
-                                label: "Slack",
-                              },
-                              {
-                                value: "email",
-                                label: "Email",
-                              },
-                            ]}
-                            triggerClass={alertsPanelRowEditingDropdown}
-                          />
-                        </Row>
-                        <Row
-                          space="4"
-                          vertical="start"
-                          horizontal="start"
-                          class={alertsPanelRowEditingField}
-                        >
-                          <Stack
-                            class={alertsPanelRowEditingFieldLabel}
-                            space="1.5"
-                          >
-                            <Text label on="surface" size="mono_sm">
-                              Source
-                            </Text>
-                            <Text
-                              leading="loose"
-                              on="surface"
-                              color="dimmed"
-                              size="sm"
-                            >
-                              The apps and stages that'll be sending alerts.
-                            </Text>
-                          </Stack>
-                          <Row flex space="4" vertical="center">
-                            <Stack space="2">
-                              <Text
-                                label
-                                on="surface"
-                                size="mono_sm"
-                                color="secondary"
-                              >
-                                App
-                              </Text>
-                              {/* single select */}
-                              <Select
-                                options={[
-                                  {
-                                    label: "All apps",
-                                    value: "*",
-                                    seperator: true,
-                                  },
-                                  ...apps().map((app) => ({
-                                    label: app.name,
-                                    value: app.name,
-                                  })),
-                                ]}
-                                triggerClass={alertsPanelRowEditingDropdown}
-                              />
-                            </Stack>
-                            <Stack space="2">
-                              <Text
-                                label
-                                on="surface"
-                                size="mono_sm"
-                                color="secondary"
-                              >
-                                Stage
-                              </Text>
-                              {/* single select */}
-                              <Dropdown
-                                label=""
-                                disabled
-                                triggerClass={alertsPanelRowEditingDropdown}
-                              >
-                                <Dropdown.Item>stage1</Dropdown.Item>
-                                <Dropdown.Item>stage2</Dropdown.Item>
-                                <Dropdown.Item>production</Dropdown.Item>
-                              </Dropdown>
-                            </Stack>
-                          </Row>
-                        </Row>
-                        <Row
-                          space="4"
-                          vertical="start"
-                          horizontal="start"
-                          class={alertsPanelRowEditingField}
-                        >
-                          <Stack
-                            class={alertsPanelRowEditingFieldLabel}
-                            space="1.5"
-                          >
-                            <Text label on="surface" size="mono_sm">
-                              Destination
-                            </Text>
-                            <Text
-                              leading="loose"
-                              on="surface"
-                              color="dimmed"
-                              size="sm"
-                            >
-                              Specify who will be getting these alerts.
-                            </Text>
-                          </Stack>
-                          {/* multi select */}
-                          <Select
-                            multiple
-                            options={[
-                              {
-                                value: "*",
-                                label: "All users",
-                                seperator: true,
-                              },
-                              ...users().map((user) => ({
-                                value: user.email,
-                                label: user.email,
-                              })),
-                            ]}
-                            triggerClass={alertsPanelRowEditingDropdown}
-                          />
-                        </Row>
-                      </Stack>
-                      <Row space="4" vertical="center" horizontal="end">
-                        <LinkButton onClick={() => setEditing({})}>
-                          Cancel
-                        </LinkButton>
-                        {/* Enable on valid form */}
-                        <Button disabled color="success">
-                          Update
-                        </Button>
-                      </Row>
-                    </Stack>
+                  <Show when={editor.active && editor.id === alert.id}>
+                    <AlertsEditor />
                   </Show>
                 </>
               )}
             </For>
+            <Show when={editor.active && !editor.id}>
+              <AlertsEditor />
+            </Show>
             <Row class={alertsPanelRow} space="3" vertical="center">
               <AlertsPanelRowIcon>
                 <IconEllipsisHorizontal width={18} height={18} />
               </AlertsPanelRowIcon>
               <LinkButton
-                onClick={() => {
-                  rep().mutate.issue_alert_create({
-                    id: createId(),
-                  });
-                }}
+                onClick={() => createAlert()}
                 code={false}
                 size="sm"
                 weight="regular"

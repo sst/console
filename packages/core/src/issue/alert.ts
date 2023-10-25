@@ -37,7 +37,6 @@ export type Destination = SlackDestination | EmailDestination;
 export interface SlackDestination {
   type: "slack";
   properties: {
-    team: string;
     channel: string;
   };
 }
@@ -45,9 +44,34 @@ export interface SlackDestination {
 export interface EmailDestination {
   type: "email";
   properties: {
-    to: "*" | string[];
+    users: "*" | string[];
   };
 }
+
+export const put = zod(
+  Info.pick({ id: true, source: true, destination: true }).partial({
+    id: true,
+  }),
+  (input) =>
+    useTransaction(async (tx) => {
+      const id = input.id ?? createId();
+      await tx
+        .insert(issueAlert)
+        .values({
+          id,
+          workspaceID: useWorkspace(),
+          source: input.source,
+          destination: input.destination,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            source: input.source,
+            destination: input.destination,
+          },
+        });
+      return id;
+    })
+);
 
 export const create = zod(
   Info.pick({ id: true }).partial({ id: true }),
@@ -64,7 +88,7 @@ export const create = zod(
         destination: {
           type: "email",
           properties: {
-            to: "*",
+            users: "*",
           },
         },
       });

@@ -26,6 +26,7 @@ export const server = new Server()
   .expose("issue_resolve", Issue.resolve)
   .expose("issue_unresolve", Issue.unresolve)
   .expose("issue_alert_create", Issue.Alert.create)
+  .expose("issue_alert_put", Issue.Alert.put)
   .expose("issue_alert_remove", Issue.Alert.remove)
   .expose("slack_disconnect", Slack.disconnect)
   .mutation(

@@ -102,13 +102,17 @@ const mutators = new Client<ServerType>()
       id: input.id,
       destination: {
         type: "email",
-        properties: { to: "*" },
+        properties: { users: "*" },
       },
       source: {
         app: "*",
         stage: "*",
       },
     });
+  })
+  .mutation("issue_alert_put", async (tx, input) => {
+    console.log(input);
+    await IssueAlertStore.put(tx, [input.id!], input);
   })
   .mutation("issue_alert_remove", async (tx, input) => {
     await IssueAlertStore.remove(tx, input);

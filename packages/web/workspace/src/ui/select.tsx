@@ -12,7 +12,7 @@ import {
   inputDisabledStyles,
   inputDangerFocusStyles,
 } from "./form";
-import { JSX, Show, ComponentProps, ParentProps } from "solid-js";
+import { JSX, Show, ComponentProps, ParentProps, splitProps } from "solid-js";
 
 const Trigger = styled(KSelect.Trigger, {
   base: {
@@ -29,7 +29,7 @@ const Trigger = styled(KSelect.Trigger, {
     ":disabled": {
       ...inputDisabledStyles,
     },
-    maxWidth: 200,
+    maxWidth: 220,
   },
   variants: {
     size: {
@@ -101,7 +101,7 @@ const Content = styled(KSelect.Content, {
     backdropFilter: "blur(10px)",
     WebkitBackdropFilter: "blur(10px)",
     boxShadow: theme.color.shadow.drop.medium,
-    width: 200,
+    width: 220,
   },
 });
 
@@ -158,12 +158,23 @@ const Seperator = styled(KSeperator.Root, {
   },
 });
 
-type Option = {
+const Listbox = styled(KSelect.Listbox, {
+  base: {
+    selectors: {
+      "&::-webkit-scrollbar": {
+        width: 0,
+        background: "transparent",
+      },
+    },
+  },
+});
+
+type Option<T> = {
   label?: string;
-  value: string;
+  value: T;
   seperator?: boolean;
 };
-type Props = ComponentProps<typeof KSelect.Root<Option>> & {
+type Props<T> = ComponentProps<typeof KSelect.Root<Option<T>>> & {
   icon?: JSX.Element;
   size?: "sm" | "base";
   label?: string;
@@ -171,9 +182,9 @@ type Props = ComponentProps<typeof KSelect.Root<Option>> & {
   triggerClass?: string;
 };
 
-export function Select(props: Props) {
+export function Select<T>(props: Props<T>) {
   return (
-    <KSelect.Root<Option>
+    <KSelect.Root<Option<T>>
       {...props}
       optionValue="value"
       optionTextValue="label"
@@ -207,7 +218,7 @@ export function Select(props: Props) {
                 color="secondary"
                 size={props.size === "sm" ? "xs" : "sm"}
               >
-                <KSelect.Value<Option>>
+                <KSelect.Value<Option<T>>>
                   {(state) =>
                     state.selectedOptions().length > 1
                       ? state.selectedOptions().length + " selected"
@@ -226,7 +237,7 @@ export function Select(props: Props) {
       </Trigger>
       <KSelect.Portal mount={document.getElementById("styled")!}>
         <Content>
-          <KSelect.Listbox class={listbox} />
+          <Listbox class={listbox} />
         </Content>
       </KSelect.Portal>
     </KSelect.Root>
