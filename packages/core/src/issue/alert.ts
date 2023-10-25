@@ -233,7 +233,8 @@ export const trigger = zod(
               eq(user.workspaceID, useWorkspace()),
               destination.properties.users === "*"
                 ? undefined
-                : inArray(user.id, destination.properties.users)
+                : inArray(user.id, destination.properties.users),
+              isNull(user.timeDeleted)
             )
           );
         await ses.send(
