@@ -176,7 +176,6 @@ export const trigger = zod(
       if (destination.type === "slack") {
         await Slack.send({
           channel: "alerts-sst",
-          teamName: destination.properties.team,
           blocks: [
             {
               type: "section",
