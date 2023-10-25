@@ -568,11 +568,11 @@ function Alerts() {
     );
   }
 
-  function editAlert(alert: Issue.Alert.Info) {
+  function editAlert(alert: Issue.Alert.Info, clone?: boolean) {
     alert = structuredClone(unwrap(alert));
     setEditor(
       produce((val) => {
-        val.id = alert.id;
+        val.id = clone ? undefined : alert.id;
         val.source = {
           app: alert.source.app === "*" ? ["*"] : alert.source.app,
           stage: alert.source.stage === "*" ? "*" : alert.source.stage[0],
@@ -945,7 +945,13 @@ function Alerts() {
                           size="sm"
                           icon={<IconEllipsisVertical width={18} height={18} />}
                         >
-                          <Dropdown.Item>Duplicate alert</Dropdown.Item>
+                          <Dropdown.Item
+                            onSelect={() => {
+                              editAlert(alert, true);
+                            }}
+                          >
+                            Duplicate alert
+                          </Dropdown.Item>
                           <Dropdown.Seperator />
                           <Dropdown.Item
                             onSelect={() => {
