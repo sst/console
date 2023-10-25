@@ -24,6 +24,7 @@ import { z } from "zod";
 import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
 import { render } from "@jsx-email/render";
 import { user } from "../user/user.sql";
+import { countLeadingSpaces } from "../util/string";
 
 export * as Alert from "./alert";
 
@@ -254,10 +255,7 @@ export const trigger = zod(
                             if (frame.context) {
                               stackString += "----------\n";
                               const minLeadingSpaces = Math.min(
-                                ...frame.context.map(
-                                  (row) =>
-                                    row.match(/^[\s\t]*/)?.[0].length || 0
-                                )
+                                ...frame.context.map(countLeadingSpaces)
                               );
                               for (let j = 0; j < frame.context.length; j++) {
                                 const context = frame.context[j]!;
