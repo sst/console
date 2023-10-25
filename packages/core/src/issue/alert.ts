@@ -1,6 +1,16 @@
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { createId } from "@paralleldrive/cuid2";
-import { eq, and, isNull, gt, sql, getTableColumns, or, lt } from "drizzle-orm";
+import {
+  eq,
+  and,
+  isNull,
+  gt,
+  sql,
+  getTableColumns,
+  or,
+  lt,
+  inArray,
+} from "drizzle-orm";
 import { useWorkspace } from "../actor";
 import { app, stage } from "../app/app.sql";
 import { db } from "../drizzle";
@@ -14,6 +24,7 @@ import { User } from "../user";
 import { z } from "zod";
 import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
 import { render } from "@jsx-email/render";
+import { user } from "../user/user.sql";
 
 export * as Alert from "./alert";
 
@@ -212,11 +223,23 @@ export const trigger = zod(
             settingsUrl: "https://console.sst.dev",
           })
         );
-        /*
-        const response = await ses.send(
+        const users = await db
+          .select({
+            email: user.email,
+          })
+          .from(user)
+          .where(
+            and(
+              eq(user.workspaceID, useWorkspace()),
+              destination.properties.users === "*"
+                ? undefined
+                : inArray(user.id, destination.properties.users)
+            )
+          );
+        await ses.send(
           new SendEmailCommand({
             Destination: {
-              ToAddresses: destination.properties.to,
+              ToAddresses: users.map((u) => u.email),
             },
             ReplyToAddresses: [
               result.id + "+issue+alerts@" + process.env.EMAIL_DOMAIN,
@@ -239,8 +262,6 @@ export const trigger = zod(
             },
           })
         );
-        console.log(response);
-        */
       }
     }
 
