@@ -49,6 +49,7 @@ const BACKGROUND_COLOR = "#F0F0F1";
 const SURFACE_COLOR = DIVIDER_COLOR;
 const SURFACE_DIVIDER_COLOR = GREY_COLOR[9];
 
+
 const body = {
   background: BACKGROUND_COLOR,
 };
