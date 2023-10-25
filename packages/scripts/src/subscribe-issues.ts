@@ -13,18 +13,21 @@ const stages = await db
   .execute();
 console.log("found", stages.length, "stages");
 await db.delete(issueSubscriber).execute();
-await queue(20, stages, async (stage) =>
-  withActor(
-    {
-      type: "system",
-      properties: {
-        workspaceID: stage.workspaceID,
+await queue(
+  20,
+  stages.filter((s) => s.name === "thdxr"),
+  async (stage) =>
+    withActor(
+      {
+        type: "system",
+        properties: {
+          workspaceID: stage.workspaceID,
+        },
       },
-    },
-    () =>
-      Stage.Events.ResourcesUpdated.publish({
-        stageID: stage.id,
-      })
-  )
+      () =>
+        Stage.Events.ResourcesUpdated.publish({
+          stageID: stage.id,
+        })
+    )
 );
 console.log("done");

@@ -144,6 +144,7 @@ export const connectStage = zod(
     });
     const sts = new STSClient({
       region: config.region,
+      retryStrategy: RETRY_STRATEGY,
     });
 
     try {
