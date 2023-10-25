@@ -20,7 +20,6 @@ import { issue, issueAlert, issueAlertLimit } from "./issue.sql";
 import { createSelectSchema } from "drizzle-zod";
 import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
-import { User } from "../user";
 import { z } from "zod";
 import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
 import { render } from "@jsx-email/render";
@@ -185,25 +184,106 @@ export const trigger = zod(
       if (!match) continue;
 
       if (destination.type === "slack") {
+        const stack = result.stack || [];
+
         await Slack.send({
-          channel: "alerts-sst",
+          channel: destination.properties.channel,
           blocks: [
+            {
+              type: "header",
+              text: {
+                type: "plain_text",
+                text: result.error,
+                emoji: true,
+              },
+            },
             {
               type: "section",
               text: {
-                type: "mrkdwn",
-                text: [
-                  `*<https://console.sst.dev/${result.slug}/${result.appName}/${result.stageName}/issues/${result.id} | ${result.error}>*`,
-                  result.message.substring(0, 2000),
-                ].join("\n"),
+                type: "plain_text",
+                text: result.message,
               },
+              accessory: {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "View Issue",
+                  emoji: false,
+                },
+                url: `https://console.sst.dev/${result.slug}/${result.appName}/${result.stageName}/issues/${result.id}`,
+                action_id: "button-action",
+              },
+            },
+            {
+              type: "section",
+              block_id: "sectionBlockOnlyPlainText",
+              text: {
+                type: "plain_text",
+                text: "Stack Trace",
+                emoji: true,
+              },
+            },
+            {
+              type: "divider",
+            },
+            {
+              type: "rich_text",
+              elements: [
+                {
+                  type: "rich_text_preformatted",
+                  elements: [
+                    {
+                      type: "text",
+                      text: (() => {
+                        if (!stack.length) {
+                          return "\n  No stacktrace available\n\n";
+                        } else {
+                          let stackString = "";
+
+                          for (let i = 0; i < stack.length; i++) {
+                            const frame = stack[i]!;
+
+                            stackString += frame.raw
+                              ? `${frame.raw}\n`
+                              : `${frame.file}  ${frame.line}:${frame.column}\n`;
+
+                            if (i < stack.length - 1) {
+                              stackString += "----------\n";
+                            }
+
+                            if (frame.context) {
+                              stackString += "----------\n";
+                              const minLeadingSpaces = Math.min(
+                                ...frame.context.map(
+                                  (row) =>
+                                    row.match(/^[\s\t]*/)?.[0].length || 0
+                                )
+                              );
+                              for (let j = 0; j < frame.context.length; j++) {
+                                const context = frame.context[j]!;
+
+                                stackString += `${
+                                  (frame.line || 0) + j
+                                }  ${context.substring(minLeadingSpaces)}\n`;
+                              }
+                            }
+                          }
+
+                          return stackString;
+                        }
+                      })(),
+                    },
+                  ],
+                },
+              ],
             },
             {
               type: "context",
               elements: [
                 {
                   type: "plain_text",
-                  text: [result.appName, result.stageName].join("/"),
+                  text: `${result.workspaceSlug}: ${result.appName} / ${result.stageName}`,
+                  emoji: false,
                 },
               ],
             },
