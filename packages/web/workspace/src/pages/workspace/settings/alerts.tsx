@@ -53,6 +53,8 @@ import {
   setValue,
   setValues,
   getErrors,
+  toTrimmed,
+  toCustom,
 } from "@modular-forms/solid";
 
 const PANEL_CONTENT_SPACE = "10";
@@ -126,10 +128,7 @@ const PutForm = object({
       users: array(string()),
     }),
     slack: object({
-      channel: string([
-        minLength(1, "Channel must be at least 1 character long"),
-        startsWith("#", "Channel must start with a #"),
-      ]),
+      channel: string([minLength(1, "Slack channel is required")]),
     }),
   }),
   source: object({
@@ -433,15 +432,33 @@ export function Alerts() {
                 />
               </Match>
               <Match when={data.destination?.type === "slack"}>
-                <Field name="destination.slack.channel">
+                <Field
+                  name="destination.slack.channel"
+                  transform={toCustom(
+                    (value) => {
+                      if (!value) return "";
+                      value = value.trim().toLowerCase();
+                      if (value?.startsWith("#")) {
+                        return value;
+                      }
+                      return `#${value}`;
+                    },
+                    {
+                      on: "blur",
+                    }
+                  )}
+                >
                   {(field, props) => (
-                  <FormField>
-                    <Input
-                      {...props}
-                      placeholder="#channel"
-                      style={{ width: "220px" }}
+                    <FormField
+                      color={field.error ? "danger" : "primary"}
                       hint={field.error}
-                    />
+                    >
+                      <Input
+                        {...props}
+                        value={field.value}
+                        placeholder="#channel"
+                        style={{ width: "220px" }}
+                      />
                     </FormField>
                   )}
                 </Field>
@@ -490,7 +507,6 @@ export function Alerts() {
           >
             Update
           </Button>
->>>>>>> fc70d16 (sync)
         </Row>
       </Stack>
     </Form>
