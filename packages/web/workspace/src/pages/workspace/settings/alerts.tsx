@@ -350,7 +350,7 @@ export function Alerts() {
                       value: app.name,
                     })),
                   ]}
-                  triggerClass={alertsPanelRowEditingDropdown}
+                  class={alertsPanelRowEditingDropdown}
                 />
               </Stack>
               <Stack space="2">
@@ -376,7 +376,7 @@ export function Alerts() {
                       value: stage,
                     })),
                   ]}
-                  triggerClass={alertsPanelRowEditingDropdown}
+                  class={alertsPanelRowEditingDropdown}
                 />
               </Stack>
             </Row>
@@ -427,7 +427,7 @@ export function Alerts() {
                     }
                     setData("destination", "email", "users", ["*"]);
                   }}
-                  triggerClass={alertsPanelRowEditingDropdown}
+                  class={alertsPanelRowEditingDropdown}
                 />
               </Match>
               <Match when={data.destination?.type === "slack"}>
