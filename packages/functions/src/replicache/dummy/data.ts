@@ -1298,9 +1298,9 @@ function* issueLong(): Generator<DummyData, void, unknown> {
     id: ISSUE_ID_LONG,
     stage: STAGE_HAS_ISSUES,
     error:
-      "Error long message that is really long and should overflow because its too long and it keeps going and going for a really long time",
+      "Errorlongmessagethatisreallylongandshouldoverflowbecauseitstoolonganditkeepsgoingandgoingforareallylongtime",
     message:
-      "Some error message that's also way too long and should overflow because its too long and it keeps going and going for a really long time",
+      "Someerrormessagethat'salsowaytoolongandshouldoverflowbecauseitstoolonganditkeepsgoingandgoingforareallylongtime",
     fnName: ISSUE_FN_NAME,
   });
   yield issueCount({

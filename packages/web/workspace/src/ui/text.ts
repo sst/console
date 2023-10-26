@@ -81,6 +81,12 @@ export const Text = styled("span", {
         fontFamily: theme.font.family.code,
       },
     },
+    break: {
+      true: {
+        wordBreak: "break-all",
+      },
+      false: {},
+    },
     size: (() => {
       const result = {} as Record<`${keyof typeof theme.font.size}`, any>;
       for (const [key, value] of Object.entries(theme.font.size)) {

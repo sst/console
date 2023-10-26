@@ -58,7 +58,7 @@ const LogsBackground = styled("div", {
   base: {
     backgroundColor: theme.color.background.surface,
     borderRadius: theme.borderRadius,
-    padding: `0 ${theme.space[5]}`,
+    padding: `0 ${theme.space[4]}`,
   },
 });
 
@@ -82,6 +82,7 @@ export const LogsLoadingIcon = styled("div", {
 const FunctionLink = styled(Link, {
   base: {
     cursor: "pointer",
+    wordBreak: "break-all",
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_sm,
     lineHeight: theme.font.lineHeight,
@@ -190,11 +191,11 @@ export function Detail() {
         <Content>
           <Stack space="7">
             <Stack space="2">
-              <Text code size="mono_2xl" weight="medium">
+              <Text break code size="mono_2xl" weight="medium">
                 {issue().error}
               </Text>
               <Stack space="0" horizontal="start">
-                <Text code leading="loose" size="mono_base">
+                <Text break code leading="loose" size="mono_base">
                   {issue().message}
                 </Text>
                 <FunctionLink href={`../../resources/logs/${fn()?.id}`}>

@@ -1,10 +1,5 @@
 import { utility, theme, Text, SpanSpacer } from "$/ui";
-import {
-  IconChevronDown,
-  IconChevronRight,
-  IconMinusSmall,
-  IconPlus,
-} from "$/ui/icons";
+import { IconChevronDown, IconChevronRight } from "$/ui/icons";
 import { Invocation, StackFrame } from "@console/core/log";
 import { styled } from "@macaron-css/solid";
 import { For, Show, createMemo, createSignal } from "solid-js";
@@ -13,14 +8,13 @@ export const ErrorList = styled("div", {
   base: {
     ...utility.stack(0),
     borderRadius: theme.borderRadius,
-    backgroundColor: theme.color.background.surface,
   },
 });
 
 const Title = styled("div", {
   base: {
     borderTop: `1px solid ${theme.color.divider.surface}`,
-    padding: `${theme.space[3]} ${theme.space[5]} ${theme.space[2.5]}`,
+    padding: `${theme.space[3]} ${theme.space[4]} ${theme.space[2.5]}`,
     ":first-child": {
       borderTop: "none",
     },
@@ -52,7 +46,7 @@ const FrameInfo = styled("div", {
   base: {
     ...utility.row(2),
     alignItems: "center",
-    padding: `0 ${theme.space[5]}`,
+    padding: `0 ${theme.space[4]}`,
   },
   variants: {
     dimmed: {
@@ -68,7 +62,7 @@ const FrameInfo = styled("div", {
 
 const FrameTitle = styled("div", {
   base: {
-    padding: `${theme.space[2]} 0`,
+    padding: `${theme.space[2]} 0 calc(${theme.space[2]} + 2px)`,
     lineHeight: theme.font.lineHeight,
   },
 });
@@ -85,7 +79,7 @@ const FrameContext = styled("div", {
 
 const FrameContextRow = styled("div", {
   base: {
-    ...utility.row(0),
+    ...utility.row(7),
     alignItems: "flex-start",
     padding: `${theme.space[0.5]} 0`,
   },
@@ -94,9 +88,22 @@ const FrameContextRow = styled("div", {
 const FrameContextNumber = styled("div", {
   base: {
     flex: "0 0 auto",
-    minWidth: 32,
   },
 });
+
+function countLeadingSpaces(str: string) {
+  let count = 0;
+  for (let char of str) {
+    if (char === " ") {
+      count++;
+    } else if (char === "\t") {
+      count += 2;
+    } else {
+      break;
+    }
+  }
+  return count;
+}
 
 export function ErrorItem(props: { error: Invocation["errors"][number] }) {
   return (
@@ -129,6 +136,51 @@ export function StackTrace(props: { stack: StackFrame[] }) {
     props.stack.some((frame) => frame.context)
   );
 
+  function renderStacktraceFrameContext(start: number, context: string[]) {
+    // Find the minimum number of leading spaces across all context lines
+    const minLeadingSpaces = Math.min(
+      ...context.map((row) => countLeadingSpaces(row))
+    );
+    // Max number of characters in the last line number string
+    const maxLineNumberLength = (start + 3).toString().length;
+
+    return (
+      <FrameContext>
+        <For each={context}>
+          {(line, index) => (
+            <FrameContextRow>
+              <FrameContextNumber>
+                <Text
+                  code
+                  on="surface"
+                  disableSelect
+                  size="mono_sm"
+                  leading="loose"
+                  color={index() === 3 ? "primary" : "dimmed"}
+                  weight={index() === 3 ? "semibold" : "regular"}
+                >
+                  {index() + start - 3}
+                </Text>
+              </FrameContextNumber>
+              <Text
+                pre
+                code
+                break
+                on="surface"
+                size="mono_sm"
+                leading="loose"
+                weight={index() === 3 ? "medium" : "regular"}
+                color={index() === 3 ? "primary" : "secondary"}
+              >
+                {line.substring(minLeadingSpaces)}
+              </Text>
+            </FrameContextRow>
+          )}
+        </For>
+      </FrameContext>
+    );
+  }
+
   return (
     <For each={props.stack}>
       {(frame, index) => {
@@ -158,15 +210,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                 <Show
                   when={frame.context}
                   fallback={
-                    anyContext() ? (
-                      <IconChevronRight width="12" height="12" />
-                    ) : (
-                      <IconChevronRight
-                        style={{ opacity: 0 }}
-                        width="12"
-                        height="12"
-                      />
-                    )
+                    anyContext() && <IconChevronRight width="12" height="12" />
                   }
                 >
                   <FrameExpand>
@@ -182,10 +226,11 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                   <Show when={frame.raw}>
                     <Text
                       code
+                      break
                       on="surface"
-                      leading="normal"
                       color="primary"
                       size="mono_sm"
+                      leading="normal"
                     >
                       {frame.raw?.replace(/at /g, "").trim()}
                     </Text>
@@ -206,6 +251,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                     </Show>
                     <Text
                       code
+                      break
                       on="surface"
                       size="mono_sm"
                       color="primary"
@@ -246,38 +292,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                 </FrameTitle>
               </FrameInfo>
               <Show when={frame.context && expand()}>
-                <FrameContext>
-                  <For each={frame.context}>
-                    {(line, index) => (
-                      <FrameContextRow>
-                        <FrameContextNumber>
-                          <Text
-                            code
-                            on="surface"
-                            disableSelect
-                            size="mono_sm"
-                            leading="loose"
-                            color={index() === 3 ? "primary" : "dimmed"}
-                            weight={index() === 3 ? "semibold" : "regular"}
-                          >
-                            {index() + frame.line! - 3}
-                          </Text>
-                        </FrameContextNumber>
-                        <Text
-                          pre
-                          code
-                          on="surface"
-                          size="mono_sm"
-                          leading="loose"
-                          weight={index() === 3 ? "medium" : "regular"}
-                          color={index() === 3 ? "primary" : "secondary"}
-                        >
-                          {line}
-                        </Text>
-                      </FrameContextRow>
-                    )}
-                  </For>
-                </FrameContext>
+                {renderStacktraceFrameContext(frame.line!, frame.context!)}
               </Show>
             </Frame>
           </Show>
