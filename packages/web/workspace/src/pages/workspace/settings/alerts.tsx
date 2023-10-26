@@ -128,8 +128,8 @@ export function Alerts() {
   const rep = useReplicache();
   const users = UserStore.list.watch(
     rep,
-    () => []
-    // (users) => users.filter((u) => !u.timeDeleted)
+    () => [],
+    (users) => users.filter((u) => !u.timeDeleted)
   );
   const alerts = IssueAlertStore.all.watch(rep, () => []);
 
