@@ -166,145 +166,6 @@ const TextContainer = styled("div", {
 export function Design() {
   return (
     <>
-      <ComponentType name="Histogram">
-        <Variant name="Base">
-          <Histogram
-            width={320}
-            height={40}
-            units="Errors"
-            currentTime={Date.now()}
-            data={[
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 305 },
-              { value: 311 },
-              { value: 226 },
-              { value: 200 },
-              { value: 184 },
-              { value: 28 },
-              { value: 489 },
-              { value: 1204 },
-              { value: 472 },
-              { value: 517 },
-              { value: 25 },
-            ]}
-          />
-        </Variant>
-        <Variant name="Tooltip Top">
-          <Histogram
-            width={320}
-            height={40}
-            units="Errors"
-            tooltipAlignment="top"
-            currentTime={Date.now()}
-            data={[
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 305 },
-              { value: 311 },
-              { value: 226 },
-              { value: 200 },
-              { value: 184 },
-              { value: 28 },
-              { value: 489 },
-              { value: 1204 },
-              { value: 472 },
-              { value: 517 },
-              { value: 25 },
-            ]}
-          />
-        </Variant>
-        <Variant name="0">
-          <Histogram
-            width={320}
-            height={40}
-            units="Errors"
-            currentTime={Date.now()}
-            data={[
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-            ]}
-          />
-        </Variant>
-        <Variant name="01">
-          <Histogram
-            width={320}
-            height={40}
-            units="Errors"
-            currentTime={Date.now()}
-            data={[
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 0 },
-              { value: 1 },
-            ]}
-          />
-        </Variant>
-      </ComponentType>
       <ComponentType name="Text">
         <Variant name="Base">
           <TextContainer background="base">
@@ -547,6 +408,13 @@ export function Design() {
               <LinkButton disabled>Button</LinkButton>
             </Row>
           </TextContainer>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Forms">
+        <Variant name="Default">
+          <Grower>
+            <FormTest />
+          </Grower>
         </Variant>
       </ComponentType>
       <ComponentType name="TabTitle">
@@ -875,13 +743,6 @@ Read more about it over on our docs`}
           <Toggle size="sm" label="Turn this on" />
         </Variant>
       </ComponentType>
-      <ComponentType name="Forms">
-        <Variant name="Default">
-          <Grower>
-            <FormTest />
-          </Grower>
-        </Variant>
-      </ComponentType>
       <ComponentType name="Row">
         <Variant name="Default">
           <Row space="1">
@@ -907,6 +768,145 @@ Read more about it over on our docs`}
               <span>us-east-1</span>
             </Row>
           </Row>
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Histogram">
+        <Variant name="Base">
+          <Histogram
+            width={320}
+            height={40}
+            units="Errors"
+            currentTime={Date.now()}
+            data={[
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 305 },
+              { value: 311 },
+              { value: 226 },
+              { value: 200 },
+              { value: 184 },
+              { value: 28 },
+              { value: 489 },
+              { value: 1204 },
+              { value: 472 },
+              { value: 517 },
+              { value: 25 },
+            ]}
+          />
+        </Variant>
+        <Variant name="Tooltip Top">
+          <Histogram
+            width={320}
+            height={40}
+            units="Errors"
+            tooltipAlignment="top"
+            currentTime={Date.now()}
+            data={[
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 305 },
+              { value: 311 },
+              { value: 226 },
+              { value: 200 },
+              { value: 184 },
+              { value: 28 },
+              { value: 489 },
+              { value: 1204 },
+              { value: 472 },
+              { value: 517 },
+              { value: 25 },
+            ]}
+          />
+        </Variant>
+        <Variant name="0">
+          <Histogram
+            width={320}
+            height={40}
+            units="Errors"
+            currentTime={Date.now()}
+            data={[
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+            ]}
+          />
+        </Variant>
+        <Variant name="01">
+          <Histogram
+            width={320}
+            height={40}
+            units="Errors"
+            currentTime={Date.now()}
+            data={[
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 0 },
+              { value: 1 },
+            ]}
+          />
         </Variant>
       </ComponentType>
     </>

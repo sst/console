@@ -188,9 +188,9 @@ const light = (() => {
       inverted: `hsla(${base.white}, 38%)`,
     },
     danger: {
-      base: `hsla(${base.red}, 73%)`,
-      surface: `hsla(${base.red}, 70%)`,
-      inverted: `hsla(${red.l2}, 100%)`,
+      base: `hsla(${base.red}, 90%)`,
+      surface: `hsla(${red.l1}, 100%)`,
+      inverted: `hsla(${red.l1}, 90%)`,
     },
   };
 
@@ -425,9 +425,9 @@ const dark = ((): typeof light => {
       inverted: `hsla(${base.black}, 38%)`,
     },
     danger: {
-      base: `hsla(${red.l2}, 100%)`,
-      surface: `hsla(${red.l2}, 93%)`,
-      inverted: `hsla(${red.d1}, 100%)`,
+      base: `hsla(${red.l1}, 90%)`,
+      surface: `hsla(${red.l1}, 100%)`,
+      inverted: `hsla(${base.red}, 100%)`,
     },
   };
 

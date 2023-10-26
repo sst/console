@@ -37,7 +37,7 @@ export const inputFocusStyles: CSSProperties = {
 };
 
 export const inputDangerTextStyles: CSSProperties = {
-  color: `hsla(${theme.color.red.d2}, 100%)`,
+  color: theme.color.text.danger.base,
 };
 
 export const inputDangerFocusStyles: CSSProperties = {
@@ -126,50 +126,6 @@ export const Textarea = styled("textarea", {
     color: "primary",
   },
 });
-
-/*
-const chevronDownString = `
-  <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'>
-    <path stroke='#767681' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/>
-  </svg>
-`;
-
-export const Select = styled("select", {
-  base: {
-    ...inputStyles,
-    backgroundRepeat: "no-repeat",
-    backgroundSize: "1.25rem 1.25rem",
-    backgroundPosition: "bottom 50% right 0.5rem",
-    backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(
-      chevronDownString
-    )}")`,
-    paddingRight: theme.space[10],
-    ":focus": {
-      ...inputFocusStyles,
-    },
-    ":invalid": {
-      color: theme.color.text.dimmed.base,
-    },
-    ":disabled": {
-      ...inputDisabledStyles,
-    },
-  },
-  variants: {
-    color: {
-      primary: {},
-      danger: {
-        ...inputDangerFocusStyles,
-        ":focus": {
-          ...inputDangerFocusStyles,
-        },
-      },
-    },
-  },
-  defaultVariants: {
-    color: "primary",
-  },
-});
-*/
 
 const Label = styled("p", {
   base: {
@@ -301,3 +257,47 @@ type SplitOptionsProps = ComponentProps<typeof SplitOptionsRoot> & {};
 export function SplitOptions(props: SplitOptionsProps) {
   return <SplitOptionsRoot {...props}>{props.children}</SplitOptionsRoot>;
 }
+
+/*
+const chevronDownString = `
+  <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'>
+    <path stroke='#767681' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/>
+  </svg>
+`;
+
+export const Select = styled("select", {
+  base: {
+    ...inputStyles,
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "1.25rem 1.25rem",
+    backgroundPosition: "bottom 50% right 0.5rem",
+    backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(
+      chevronDownString
+    )}")`,
+    paddingRight: theme.space[10],
+    ":focus": {
+      ...inputFocusStyles,
+    },
+    ":invalid": {
+      color: theme.color.text.dimmed.base,
+    },
+    ":disabled": {
+      ...inputDisabledStyles,
+    },
+  },
+  variants: {
+    color: {
+      primary: {},
+      danger: {
+        ...inputDangerFocusStyles,
+        ":focus": {
+          ...inputDangerFocusStyles,
+        },
+      },
+    },
+  },
+  defaultVariants: {
+    color: "primary",
+  },
+});
+*/
