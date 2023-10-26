@@ -100,7 +100,6 @@ const alertsPanelRowEditingField = style({
 
 const alertsPanelRowEditingDropdown = style({
   width: 220,
-  maxWidth: "100%",
 });
 
 const AlertsPanelRowIcon = styled("div", {
@@ -300,7 +299,7 @@ export function Alerts() {
                         label: "Email",
                       },
                     ]}
-                    triggerClass={alertsPanelRowEditingDropdown}
+                    class={alertsPanelRowEditingDropdown}
                   />
                   <span>{field.error}</span>
                 </>

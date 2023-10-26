@@ -170,7 +170,6 @@ type Props<T> = ComponentProps<typeof KSelect.Root<Option<T>>> & {
   size?: "sm" | "base";
   label?: string;
   disabled?: boolean;
-  triggerClass?: string;
 };
 
 export function Select<T>(props: Props<T>) {
@@ -193,11 +192,7 @@ export function Select<T>(props: Props<T>) {
         </>
       )}
     >
-      <Trigger
-        size={props.size}
-        disabled={props.disabled}
-        class={props.triggerClass}
-      >
+      <Trigger size={props.size} disabled={props.disabled}>
         <Text
           line
           leading="normal"
