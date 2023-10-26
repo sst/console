@@ -36,6 +36,24 @@ import { filter, map, pipe, uniq } from "remeda";
 import { createId } from "@paralleldrive/cuid2";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
+import {
+  array,
+  literal,
+  object,
+  string,
+  startsWith,
+  union,
+  minLength,
+  required,
+} from "valibot";
+import {
+  createForm,
+  valiForm,
+  submit,
+  setValue,
+  setValues,
+  getErrors,
+} from "@modular-forms/solid";
 
 const PANEL_CONTENT_SPACE = "10";
 const PANEL_HEADER_SPACE = "3";
@@ -101,6 +119,24 @@ const alertsPanelRowEditingFieldLabel = style({
   width: 240,
 });
 
+const PutForm = object({
+  destination: object({
+    type: union([literal("email"), literal("slack")], "Must select type"),
+    email: object({
+      users: array(string()),
+    }),
+    slack: object({
+      channel: string([
+        minLength(1, "Channel must be at least 1 character long"),
+        startsWith("#", "Channel must start with a #"),
+      ]),
+    }),
+  }),
+  source: object({
+    app: array(string()),
+  }),
+});
+
 export function Alerts() {
   const rep = useReplicache();
   const apps = AppStore.all.watch(rep, () => []);
@@ -110,6 +146,10 @@ export function Alerts() {
     (users) => users.filter((u) => !u.timeDeleted)
   );
   const alerts = IssueAlertStore.all.watch(rep, () => []);
+  const [putForm, { Form, Field }] = createForm({
+    validate: valiForm(PutForm),
+    validateOn: "submit",
+  });
   const [data, setData] = createStore<{
     id?: string;
     source: {
@@ -156,9 +196,13 @@ export function Alerts() {
     );
   });
 
-  createEffect(() => console.log(availableStages()));
-
   function createAlert() {
+    setValues(putForm, {
+      source: {
+        app: [],
+      },
+      destination: {},
+    });
     setData(
       produce((val) => {
         val.id = undefined;
@@ -204,233 +248,252 @@ export function Alerts() {
   }
 
   const AlertsEditor = () => (
-    <Stack class={alertsPanelRowEditing} space="6">
-      <Stack>
-        <Row
-          space="4"
-          vertical="start"
-          horizontal="start"
-          class={alertsPanelRowEditingField}
-        >
-          <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
-            <Text label on="surface" size="mono_sm">
-              Type
-            </Text>
-            <Text leading="loose" on="surface" color="dimmed" size="sm">
-              The channel to use for sending the alerts.
-            </Text>
-          </Stack>
-          <Select<Issue.Alert.Info["destination"]["type"]>
-            onChange={(option) => {
-              setData("destination", {
-                type: option.value,
-                email: {
-                  users: [],
-                },
-                slack: {},
-              });
-            }}
-            value={
-              data.destination?.type
-                ? {
-                    value: data.destination.type,
-                  }
-                : undefined
-            }
-            options={[
-              {
-                value: "slack",
-                label: "Slack",
-              },
-              {
-                value: "email",
-                label: "Email",
-              },
-            ]}
-            triggerClass={alertsPanelRowEditingDropdown}
-          />
-        </Row>
-        <Row
-          space="4"
-          vertical="start"
-          horizontal="start"
-          class={alertsPanelRowEditingField}
-        >
-          <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
-            <Text label on="surface" size="mono_sm">
-              Source
-            </Text>
-            <Text leading="loose" on="surface" color="dimmed" size="sm">
-              The apps and stages that'll be sending alerts.
-            </Text>
-          </Stack>
-          <Row flex space="4" vertical="center">
-            <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="secondary">
-                App
+    <Form
+      onError={console.log}
+      onSubmit={(e) => {
+        console.log(e);
+      }}
+    >
+      <Stack class={alertsPanelRowEditing} space="6">
+        <Stack>
+          <Row
+            space="4"
+            vertical="start"
+            horizontal="start"
+            class={alertsPanelRowEditingField}
+          >
+            <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+              <Text label on="surface" size="mono_sm">
+                Type
               </Text>
-              <Select<string>
-                multiple
-                value={data.source?.app?.map((app) => ({ value: app }))}
-                onChange={(options) => {
-                  if (options.at(-1)?.value !== "*") {
-                    setData("source", {
-                      app: options
-                        .filter((o) => o.value !== "*")
-                        .map((o) => o.value),
-                    });
-                    return;
-                  }
-                  setData("source", "app", ["*"]);
-                }}
-                options={[
-                  {
-                    label: "All apps",
-                    value: "*",
-                    seperator: true,
-                  },
-                  ...apps().map((app) => ({
-                    label: app.name,
-                    value: app.name,
-                  })),
-                ]}
-                triggerClass={alertsPanelRowEditingDropdown}
-              />
-            </Stack>
-            <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="secondary">
-                Stage
+              <Text leading="loose" on="surface" color="dimmed" size="sm">
+                The channel to use for sending the alerts.
               </Text>
-              <Select<string>
-                disabled={!data.source.app.length}
-                value={
-                  data.source.stage ? { value: data.source.stage } : undefined
-                }
-                onChange={(option) => {
-                  setData("source", "stage", option?.value);
-                }}
-                options={[
-                  {
-                    label: "All stages",
-                    value: "*",
-                    seperator: true,
-                  },
-                  ...availableStages().map((stage) => ({
-                    label: stage,
-                    value: stage,
-                  })),
-                ]}
-                triggerClass={alertsPanelRowEditingDropdown}
-              />
             </Stack>
+            <Field name="destination.type">
+              {(field, props) => (
+                <>
+                  <Select<Issue.Alert.Info["destination"]["type"]>
+                    onChange={(option) => {
+                      setValue(putForm, "destination.type", option?.value);
+                      setData("destination", {
+                        type: option.value,
+                        email: {
+                          users: [],
+                        },
+                        slack: {},
+                      });
+                    }}
+                    value={
+                      field.value
+                        ? {
+                            value: field.value,
+                          }
+                        : undefined
+                    }
+                    options={[
+                      {
+                        value: "slack",
+                        label: "Slack",
+                      },
+                      {
+                        value: "email",
+                        label: "Email",
+                      },
+                    ]}
+                    triggerClass={alertsPanelRowEditingDropdown}
+                  />
+                  <span>{field.error}</span>
+                </>
+              )}
+            </Field>
           </Row>
-        </Row>
-        <Row
-          space="4"
-          vertical="start"
-          horizontal="start"
-          class={alertsPanelRowEditingField}
-        >
-          <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
-            <Text label on="surface" size="mono_sm">
-              Destination
-            </Text>
-            <Text leading="loose" on="surface" color="dimmed" size="sm">
-              Specify who will be getting these alerts.
-            </Text>
-          </Stack>
-          <Switch>
-            <Match when={data.destination?.type === "email"}>
-              <Select<string>
-                multiple
-                value={data.destination.email?.users?.map((value) => ({
-                  value,
-                }))}
-                options={[
-                  {
-                    value: "*",
-                    label: "All users",
-                    seperator: true,
-                  },
-                  ...users().map((user) => ({
-                    value: user.id,
-                    label: user.email,
-                  })),
-                ]}
-                onChange={(options) => {
-                  if (options.at(-1)?.value !== "*") {
-                    setData(
-                      "destination",
-                      "email",
-                      "users",
-                      options.filter((o) => o.value !== "*").map((o) => o.value)
-                    );
-                    return;
-                  }
-                  setData("destination", "email", "users", ["*"]);
-                }}
-                triggerClass={alertsPanelRowEditingDropdown}
-              />
-            </Match>
-            <Match when={data.destination?.type === "slack"}>
-              <FormField>
-                <Input
-                  value={data.destination.slack?.channel}
-                  onBlur={(e) =>
-                    setData(
-                      "destination",
-                      "slack",
-                      "channel",
-                      e.currentTarget.value.startsWith("#")
-                        ? e.currentTarget.value
-                        : "#" + e.currentTarget.value
-                    )
-                  }
-                  placeholder="#channel"
-                  style={{ width: "220px" }}
+          <Row
+            space="4"
+            vertical="start"
+            horizontal="start"
+            class={alertsPanelRowEditingField}
+          >
+            <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+              <Text label on="surface" size="mono_sm">
+                Source
+              </Text>
+              <Text leading="loose" on="surface" color="dimmed" size="sm">
+                The apps and stages that'll be sending alerts.
+              </Text>
+            </Stack>
+            <Row flex space="4" vertical="center">
+              <Stack space="2">
+                <Text label on="surface" size="mono_sm" color="secondary">
+                  App
+                </Text>
+                <Select<string>
+                  multiple
+                  value={data.source?.app?.map((app) => ({ value: app }))}
+                  onChange={(options) => {
+                    if (options.at(-1)?.value !== "*") {
+                      setData("source", {
+                        app: options
+                          .filter((o) => o.value !== "*")
+                          .map((o) => o.value),
+                      });
+                      return;
+                    }
+                    setData("source", "app", ["*"]);
+                  }}
+                  options={[
+                    {
+                      label: "All apps",
+                      value: "*",
+                      seperator: true,
+                    },
+                    ...apps().map((app) => ({
+                      label: app.name,
+                      value: app.name,
+                    })),
+                  ]}
+                  triggerClass={alertsPanelRowEditingDropdown}
                 />
-              </FormField>
-            </Match>
-          </Switch>
+              </Stack>
+              <Stack space="2">
+                <Text label on="surface" size="mono_sm" color="secondary">
+                  Stage
+                </Text>
+                <Select<string>
+                  disabled={!data.source.app.length}
+                  value={
+                    data.source.stage ? { value: data.source.stage } : undefined
+                  }
+                  onChange={(option) => {
+                    setData("source", "stage", option?.value);
+                  }}
+                  options={[
+                    {
+                      label: "All stages",
+                      value: "*",
+                      seperator: true,
+                    },
+                    ...availableStages().map((stage) => ({
+                      label: stage,
+                      value: stage,
+                    })),
+                  ]}
+                  triggerClass={alertsPanelRowEditingDropdown}
+                />
+              </Stack>
+            </Row>
+          </Row>
+          <Row
+            space="4"
+            vertical="start"
+            horizontal="start"
+            class={alertsPanelRowEditingField}
+          >
+            <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+              <Text label on="surface" size="mono_sm">
+                Destination
+              </Text>
+              <Text leading="loose" on="surface" color="dimmed" size="sm">
+                Specify who will be getting these alerts.
+              </Text>
+            </Stack>
+            <Switch>
+              <Match when={data.destination?.type === "email"}>
+                <Select<string>
+                  multiple
+                  value={data.destination.email?.users?.map((value) => ({
+                    value,
+                  }))}
+                  options={[
+                    {
+                      value: "*",
+                      label: "All users",
+                      seperator: true,
+                    },
+                    ...users().map((user) => ({
+                      value: user.id,
+                      label: user.email,
+                    })),
+                  ]}
+                  onChange={(options) => {
+                    if (options.at(-1)?.value !== "*") {
+                      setData(
+                        "destination",
+                        "email",
+                        "users",
+                        options
+                          .filter((o) => o.value !== "*")
+                          .map((o) => o.value)
+                      );
+                      return;
+                    }
+                    setData("destination", "email", "users", ["*"]);
+                  }}
+                  triggerClass={alertsPanelRowEditingDropdown}
+                />
+              </Match>
+              <Match when={data.destination?.type === "slack"}>
+                <Field name="destination.slack.channel">
+                  {(field, props) => (
+                  <FormField>
+                    <Input
+                      {...props}
+                      placeholder="#channel"
+                      style={{ width: "220px" }}
+                      hint={field.error}
+                    />
+                    </FormField>
+                  )}
+                </Field>
+              </Match>
+            </Switch>
+          </Row>
+        </Stack>
+        <Row space="4" vertical="center" horizontal="end">
+          <LinkButton onClick={() => setEditing(false)}>Cancel</LinkButton>
+          <Button
+            type="submit"
+            onClick={async () => {
+              console.log(await getErrors(putForm));
+              submit(putForm);
+              return;
+              const cloned = structuredClone(unwrap(data));
+              await rep().mutate.issue_alert_put({
+                id: cloned.id || createId(),
+                source: {
+                  app: cloned.source.app.includes("*")
+                    ? "*"
+                    : cloned.source.app,
+                  stage:
+                    cloned.source.stage === "*" ? "*" : [cloned.source.stage!],
+                },
+                destination:
+                  cloned.destination.type === "slack"
+                    ? {
+                        type: "slack",
+                        properties: {
+                          channel: cloned.destination.slack?.channel!,
+                        },
+                      }
+                    : {
+                        type: "email",
+                        properties: {
+                          users: cloned.destination.email?.users.includes("*")
+                            ? "*"
+                            : cloned.destination.email?.users!,
+                        },
+                      },
+              });
+              setEditing(false);
+            }}
+            color="success"
+          >
+            Update
+          </Button>
+>>>>>>> fc70d16 (sync)
         </Row>
       </Stack>
-      <Row space="4" vertical="center" horizontal="end">
-        <LinkButton onClick={() => setEditing(false)}>Cancel</LinkButton>
-        <Button
-          onClick={async () => {
-            const cloned = structuredClone(unwrap(data));
-            await rep().mutate.issue_alert_put({
-              id: cloned.id || createId(),
-              source: {
-                app: cloned.source.app.includes("*") ? "*" : cloned.source.app,
-                stage:
-                  cloned.source.stage === "*" ? "*" : [cloned.source.stage!],
-              },
-              destination:
-                cloned.destination.type === "slack"
-                  ? {
-                      type: "slack",
-                      properties: {
-                        channel: cloned.destination.slack?.channel!,
-                      },
-                    }
-                  : {
-                      type: "email",
-                      properties: {
-                        users: cloned.destination.email?.users.includes("*")
-                          ? "*"
-                          : cloned.destination.email?.users!,
-                      },
-                    },
-            });
-            setEditing(false);
-          }}
-          color="success"
-        >
-          Update
-        </Button>
-      </Row>
-    </Stack>
+    </Form>
   );
 
   return (
