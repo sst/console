@@ -616,7 +616,6 @@ Read more about it over on our docs`}
       <ComponentType name="Select">
         <Variant name="Default">
           <Select
-            defaultValue={{ value: "1" }}
             options={[
               {
                 label: "Default option",
@@ -645,7 +644,6 @@ Read more about it over on our docs`}
         </Variant>
         <Variant name="OverflowY">
           <Select
-            defaultValue={{ value: "1" }}
             options={[
               { label: "1", value: "1" },
               { label: "2", value: "2" },
@@ -962,7 +960,6 @@ function FormTest() {
         </FormField>
         <FormField label="Workspace">
           <Select
-            defaultValue={{ value: "1" }}
             options={[
               {
                 label: "Select your workspace",
@@ -986,7 +983,6 @@ function FormTest() {
         <FormField label="Workspace">
           <Select
             disabled
-            defaultValue={{ value: "1" }}
             options={[
               {
                 label: "Select your workspace",
@@ -1012,7 +1008,6 @@ function FormTest() {
           hint="You need to create a workspace to get started."
         >
           <Select
-            defaultValue={{ value: "1" }}
             options={[
               {
                 label: "Select your workspace",
@@ -1039,7 +1034,6 @@ function FormTest() {
           hint="You need to create a workspace to get started."
         >
           <Select
-            defaultValue={{ value: "1" }}
             options={[
               {
                 label: "No workspace available",
