@@ -13,7 +13,7 @@ import {
   inputDangerTextStyles,
   inputDangerFocusStyles,
 } from "./form";
-import { JSX, Show, ComponentProps } from "solid-js";
+import { JSX, Show, splitProps, createEffect, createSignal } from "solid-js";
 
 const Trigger = styled(KSelect.Trigger, {
   base: {
@@ -45,12 +45,6 @@ const Trigger = styled(KSelect.Trigger, {
       base: {
         height: theme.input.size.base,
       },
-    },
-    disabled: {
-      true: {
-        ...inputDisabledStyles,
-      },
-      false: {},
     },
   },
   defaultVariants: {
@@ -161,21 +155,47 @@ const Listbox = styled(KSelect.Listbox, {
   },
 });
 
-type Option<T> = {
+type Option = {
   label?: string;
-  value: T;
+  value: string;
   seperator?: boolean;
 };
-type Props<T> = ComponentProps<typeof KSelect.Root<Option<T>>> & {
+type SelectProps = {
   size?: "sm" | "base";
-  label?: string;
+  triggerClass?: string;
+  name: string;
+  placeholder?: string;
+  options: Option[];
+  error: string;
+  required?: boolean | undefined;
   disabled?: boolean;
+  ref: (element: HTMLSelectElement) => void;
+  onInput: JSX.EventHandler<HTMLSelectElement, InputEvent>;
+  onChange: JSX.EventHandler<HTMLSelectElement, Event>;
+  onBlur: JSX.EventHandler<HTMLSelectElement, FocusEvent>;
 };
 
-export function Select<T>(props: Props<T>) {
+type SingleSelect = {
+  value?: string;
+} & SelectProps;
+
+export function Select(props: SingleSelect) {
+  const [rootProps, selectProps] = splitProps(
+    props,
+    ["name", "placeholder", "options", "required", "disabled"],
+    ["placeholder", "ref", "onInput", "onChange", "onBlur"]
+  );
+  const [getValue, setValue] = createSignal<Option>();
+  createEffect(() => {
+    setValue(props.options.find((option) => props.value === option.value));
+  });
   return (
-    <KSelect.Root<Option<T>>
-      {...props}
+    <KSelect.Root<Option>
+      {...rootProps}
+      multiple={false}
+      value={getValue()}
+      onChange={setValue}
+      validationState={props.error ? "invalid" : "valid"}
       optionValue="value"
       optionTextValue="label"
       itemComponent={(props) => (
@@ -192,6 +212,7 @@ export function Select<T>(props: Props<T>) {
         </>
       )}
     >
+      <KSelect.HiddenSelect {...selectProps} />
       <Trigger size={props.size} disabled={props.disabled}>
         <Text
           line
@@ -200,7 +221,81 @@ export function Select<T>(props: Props<T>) {
           class={triggerText}
           size={props.size === "sm" ? "xs" : "sm"}
         >
-          <KSelect.Value<Option<T>>>
+          <KSelect.Value<Option>>
+            {(state) => state.selectedOption()?.label}
+          </KSelect.Value>
+        </Text>
+        <DownIcon>
+          <IconChevronDown width={15} height={15} />
+        </DownIcon>
+      </Trigger>
+      <KSelect.Portal mount={document.getElementById("styled")!}>
+        <Content>
+          <Listbox class={listbox} />
+        </Content>
+      </KSelect.Portal>
+    </KSelect.Root>
+  );
+}
+
+type MultiselectProps = {
+  value?: string[];
+} & SelectProps;
+export function Multiselect(props: MultiselectProps) {
+  const [rootProps, selectProps] = splitProps(
+    props,
+    ["name", "placeholder", "options", "required", "disabled"],
+    ["placeholder", "ref", "onInput", "onChange", "onBlur"]
+  );
+  const [getValue, setValue] = createSignal<Option[]>();
+  createEffect(() => {
+    console.log("setting value", props.value, typeof props.value);
+    if (!props.value) {
+      setValue([]);
+      return;
+    }
+    const next = props.value
+      ?.map((item) => props.options.find((option) => item === option.value)!)
+      .filter(Boolean);
+    console.log({ next });
+    setValue(next);
+  });
+  return (
+    <KSelect.Root<Option>
+      {...rootProps}
+      multiple={true}
+      value={getValue()}
+      onChange={(val) => {
+        console.log({ val });
+        setValue(val);
+      }}
+      validationState={props.error ? "invalid" : "valid"}
+      optionValue="value"
+      optionTextValue="label"
+      itemComponent={(props) => (
+        <>
+          <Item item={props.item}>
+            <ItemLabel>{props.item.textValue}</ItemLabel>
+            <ItemIndicator>
+              <IconCheck width={14} height={14} />
+            </ItemIndicator>
+          </Item>
+          <Show when={props.item.rawValue.seperator}>
+            <Seperator />
+          </Show>
+        </>
+      )}
+    >
+      <KSelect.HiddenSelect {...selectProps} />
+      <Trigger size={props.size} disabled={props.disabled}>
+        <Text
+          line
+          leading="normal"
+          color="secondary"
+          class={triggerText}
+          size={props.size === "sm" ? "xs" : "sm"}
+        >
+          <KSelect.Value<Option>>
             {(state) =>
               state.selectedOptions().length > 1
                 ? state.selectedOptions().length + " selected"

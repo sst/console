@@ -57,17 +57,6 @@ const AlertText = styled("div", {
   },
 });
 
-const alertDetailsTextCs = style({
-  selectors: {
-    [`${AlertRoot.selector({ level: "info" })} &`]: {
-      color: theme.color.text.secondary.base,
-    },
-    [`${AlertRoot.selector({ level: "danger" })} &`]: {
-      color: `hsla(${theme.color.red.l2}, 100%)`,
-    },
-  },
-});
-
 const AlertDetails = styled("div", {
   base: {
     borderStyle: "solid",
@@ -88,6 +77,17 @@ const AlertDetailsText = styled("div", {
   base: {
     overflowY: "auto",
     maxHeight: 140,
+  },
+});
+
+const alertDetailsTextCs = style({
+  selectors: {
+    [`${AlertRoot.selector({ level: "info" })} &`]: {
+      color: theme.color.text.secondary.base,
+    },
+    [`${AlertRoot.selector({ level: "danger" })} &`]: {
+      color: `hsla(${theme.color.red.l2}, 100%)`,
+    },
   },
 });
 
