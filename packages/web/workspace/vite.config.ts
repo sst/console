@@ -10,7 +10,6 @@ export default defineConfig({
     port: 3000,
   },
   optimizeDeps: {
-    include: ["@modular-forms/solid"],
     esbuildOptions: {
       target: "es2020",
     },

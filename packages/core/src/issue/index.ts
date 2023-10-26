@@ -142,13 +142,8 @@ export const connectStage = zod(
       region: config.region,
       retryStrategy: RETRY_STRATEGY,
     });
-    const sts = new STSClient({
-      region: config.region,
-      retryStrategy: RETRY_STRATEGY,
-    });
 
     try {
-      console.log("identity", await sts.send(new GetCallerIdentityCommand({})));
       const destination = await cw.send(
         new PutDestinationCommand({
           destinationName: uniqueIdentifier,

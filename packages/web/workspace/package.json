@@ -16,7 +16,7 @@
     "typescript": "^5.2.2",
     "vite": "3",
     "vite-plugin-inspect": "^0.7.38",
-    "vite-plugin-solid": "^2.7.0"
+    "vite-plugin-solid": "^2.7.2"
   },
   "dependencies": {
     "@botpoison/browser": "^0.1.30",
@@ -40,7 +40,7 @@
     "modern-normalize": "^1.1.0",
     "remeda": "^1.17.1",
     "replicache": "^13.0.0",
-    "solid-js": "^1.7.3",
+    "solid-js": "^1.8.3",
     "valibot": "^0.19.0"
   }
 }
