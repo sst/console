@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { AWS } from "@console/core/aws";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
+import { Info } from "@console/core/warning";
 import { App, Stage } from "@console/core/app";
 import { StackFrame } from "@console/core/log";
 import { Warning } from "@console/core/warning";
@@ -22,6 +23,8 @@ const STAGE_NOT_SUPPORTED = "stage-not-supported";
 const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
 const STAGE_NO_ISSUES = "stage-no-issues";
 const STAGE_HAS_ISSUES = "stage-has-issues";
+const STAGE_ISSUES_WARN_RATE = "stage-issues-warning-rate-limit";
+const STAGE_ISSUES_WARN_SUB = "stage-issues-warning-subscription";
 
 const ACCOUNT_ID = "connected";
 const ACCOUNT_ID_FULL = "full";
@@ -33,6 +36,9 @@ const ACCOUNT_ID_SYNCING_FULL = "syncing-full";
 const FUNC_ARN_SSR = "arn:aws:lambda:us-east-1:123456789012:function:my-func";
 const FUNC_ARN_NEXTJS = "arn:aws:lambda:us-east-1:123456789012:function:nextjs";
 
+const ISSUE_WARN_FN = "my-warn-func";
+const ISSUE_WARN_FN_LONG = "my-warn-func-long";
+
 const ISSUE_ID = "123";
 const ISSUE_FN = "my-issues-func";
 const ISSUE_ID_LONG = "124";
@@ -40,6 +46,8 @@ const ISSUE_FN_NAME = "my-issues-func-long";
 const ISSUE_ID_NO_STACK_TRACE = "125";
 const ISSUE_ID_RAW_STACK_TRACE = "126";
 const ISSUE_ID_FULL_STACK_TRACE = "127";
+
+let WARNING_COUNT = 0;
 
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
@@ -209,8 +217,7 @@ function resource<Type extends Resource.Info["type"]>(props: {
     timeDeleted: null,
     type: type as any,
     metadata: metadata as any,
-    timeCreated: new Date().toISOString(),
-    timeUpdated: new Date().toISOString(),
+    ...timestamps,
   };
 }
 
@@ -279,8 +286,6 @@ function issue({
     _type: "issue",
     id,
     timeSeen: DateTime.now().startOf("day").toSQL()!,
-    timeCreated: DateTime.now().startOf("day").toSQL()!,
-    timeUpdated: DateTime.now().startOf("day").toSQL()!,
     timeDeleted: null,
     timeResolved: null,
     timeIgnored: null,
@@ -298,6 +303,7 @@ function issue({
       logStream: "2021/01/01/[$LATEST]12345678901234567890123456789012",
       timestamp: Date.now(),
     },
+    ...timestamps,
   };
 }
 
@@ -315,9 +321,27 @@ function issueCount({ group, hour, count }: IssueCountProps): DummyData {
     group,
     count: count || 1,
     stageID: STAGE_HAS_ISSUES,
-    timeCreated: DateTime.now().startOf("day").toSQL()!,
-    timeUpdated: DateTime.now().startOf("day").toSQL()!,
     timeDeleted: null,
+    ...timestamps,
+  };
+}
+
+interface WarningProps {
+  stage: string;
+  target?: string;
+  type: Warning.Info["type"];
+  data?: Warning.Info["data"];
+}
+function warning({ type, stage, target, data }: WarningProps): DummyData {
+  return {
+    _type: "warning",
+    type,
+    stageID: stage,
+    timeDeleted: null,
+    id: `${WARNING_COUNT++}`,
+    data: data || {},
+    target: target || "",
+    ...timestamps,
   };
 }
 
@@ -369,9 +393,10 @@ export function* generateData(
   }
 
   if (modeMap["issues"]) {
-    yield* resourcesNoIssues();
-    yield* resourcesHasIssues();
-    yield* issueBaseFn();
+    yield* stageNoIssues();
+    yield* stageIssuesWarningSubscription();
+    yield* stageIssuesWarningRateLimited();
+    yield* stageHasIssues();
     yield* issueBase();
     yield* issueRawStackTrace();
     yield* issueFullSourceMapStackTrace();
@@ -1082,7 +1107,7 @@ function* stagePartlySupported(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* resourcesNoIssues(): Generator<DummyData, void, unknown> {
+function* stageNoIssues(): Generator<DummyData, void, unknown> {
   yield stage({
     id: STAGE_NO_ISSUES,
     appID: APP_LOCAL,
@@ -1108,7 +1133,86 @@ function* resourcesNoIssues(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* resourcesHasIssues(): Generator<DummyData, void, unknown> {
+function* stageIssuesWarningRateLimited(): Generator<DummyData, void, unknown> {
+  //  yield {
+  //    _type: "warning",
+  //    stageID: STAGE_HAS_ISSUES,
+  //    type: "issue_rate_limited",
+  //    timeDeleted: null,
+  //    id: "123",
+  //    data: {},
+  //    target: "",
+  //    ...timestamps,
+  //  };
+}
+
+function* stageIssuesWarningSubscription(): Generator<
+  DummyData,
+  void,
+  unknown
+> {
+  yield stage({
+    id: STAGE_ISSUES_WARN_SUB,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_ISSUES_WARN_SUB,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield func({
+    id: ISSUE_WARN_FN,
+    stage: STAGE_ISSUES_WARN_SUB,
+    handler: "packages/function.handler",
+  });
+  yield func({
+    id: ISSUE_WARN_FN_LONG,
+    stage: STAGE_ISSUES_WARN_SUB,
+    handler:
+      "packages/path/of/a/really/long/function/name/that/should/overflow/because/it/is/way/too/long/and/it/keeps/going/and/going/function.handler",
+  });
+
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "limited",
+    },
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "permissions",
+    },
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "noisy",
+    },
+    target: ISSUE_WARN_FN_LONG,
+  });
+}
+
+function* stageHasIssues(): Generator<DummyData, void, unknown> {
   yield stage({
     id: STAGE_HAS_ISSUES,
     appID: APP_LOCAL,
@@ -1132,9 +1236,6 @@ function* resourcesHasIssues(): Generator<DummyData, void, unknown> {
       tableName: "jayair-console-dummy-notes-table",
     },
   });
-}
-
-function* issueBaseFn(): Generator<DummyData, void, unknown> {
   yield func({
     id: ISSUE_FN,
     stage: STAGE_HAS_ISSUES,

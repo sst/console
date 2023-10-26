@@ -155,6 +155,7 @@ export function List() {
           warning.type === "issue_rate_limited"
       )
   );
+  console.log("warning", warnings());
   const resources = useResourcesContext();
   const fns = createMemo(() =>
     resources().flatMap((item) => (item.type === "Function" ? [item] : []))
