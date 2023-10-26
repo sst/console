@@ -13,12 +13,20 @@ import {
   inputDangerTextStyles,
   inputDangerFocusStyles,
 } from "./form";
-import { JSX, Show, splitProps, createEffect, createSignal } from "solid-js";
+import {
+  JSX,
+  Show,
+  splitProps,
+  createEffect,
+  createSignal,
+  createComputed,
+} from "solid-js";
 
 const Trigger = styled(KSelect.Trigger, {
   base: {
     ...utility.row(2),
     ...inputStyles,
+    width: "100%",
     alignItems: "center",
     justifyContent: "space-between",
     ":focus": {
@@ -30,7 +38,6 @@ const Trigger = styled(KSelect.Trigger, {
     ":disabled": {
       ...inputDisabledStyles,
     },
-    width: "100%",
     selectors: {
       [`${Root.selector({ color: "danger" })} &`]: {
         ...inputDangerFocusStyles,
@@ -212,8 +219,17 @@ export function Select(props: SingleSelect) {
         </>
       )}
     >
-      <KSelect.HiddenSelect {...selectProps} />
-      <Trigger size={props.size} disabled={props.disabled}>
+      <KSelect.HiddenSelect
+        {...selectProps}
+        onChange={(e) => {
+          props.onChange(e);
+        }}
+      />
+      <Trigger
+        size={props.size}
+        disabled={props.disabled}
+        class={props.triggerClass}
+      >
         <Text
           line
           leading="normal"
@@ -248,8 +264,7 @@ export function Multiselect(props: MultiselectProps) {
     ["placeholder", "ref", "onInput", "onChange", "onBlur"]
   );
   const [getValue, setValue] = createSignal<Option[]>();
-  createEffect(() => {
-    console.log("setting value", props.value, typeof props.value);
+  createComputed(() => {
     if (!props.value) {
       setValue([]);
       return;
@@ -257,7 +272,6 @@ export function Multiselect(props: MultiselectProps) {
     const next = props.value
       ?.map((item) => props.options.find((option) => item === option.value)!)
       .filter(Boolean);
-    console.log({ next });
     setValue(next);
   });
   return (
@@ -265,10 +279,7 @@ export function Multiselect(props: MultiselectProps) {
       {...rootProps}
       multiple={true}
       value={getValue()}
-      onChange={(val) => {
-        console.log({ val });
-        setValue(val);
-      }}
+      onChange={setValue}
       validationState={props.error ? "invalid" : "valid"}
       optionValue="value"
       optionTextValue="label"

@@ -22,7 +22,7 @@
     "@botpoison/browser": "^0.1.30",
     "@fontsource/ibm-plex-mono": "^4.5.13",
     "@fontsource/rubik": "^4.5.14",
-    "@kobalte/core": "^0.9.8",
+    "@kobalte/core": "^0.11.2",
     "@macaron-css/core": "^1.2.0",
     "@macaron-css/solid": "^1.0.1",
     "@modular-forms/solid": "^0.20.0",

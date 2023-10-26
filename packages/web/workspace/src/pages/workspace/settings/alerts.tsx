@@ -1,12 +1,4 @@
-import {
-  For,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-} from "solid-js";
+import { For, Match, Show, Switch, createComputed, createMemo } from "solid-js";
 import {
   LinkButton,
   Button,
@@ -28,33 +20,25 @@ import { IconLogosSlackBW } from "$/ui/icons/custom";
 import { useReplicache } from "$/providers/replicache";
 import { AppStore, IssueAlertStore } from "$/data/app";
 import { Issue } from "@console/core/issue";
-import { createStore, produce, unwrap } from "solid-js/store";
-import { Select } from "$/ui/select";
+import { createStore, unwrap } from "solid-js/store";
+import { Multiselect, Select } from "$/ui/select";
 import { UserStore } from "$/data/user";
 import { StageStore } from "$/data/stage";
 import { filter, map, pipe, uniq } from "remeda";
 import { createId } from "@paralleldrive/cuid2";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
-import {
-  array,
-  literal,
-  object,
-  string,
-  startsWith,
-  union,
-  minLength,
-  required,
-} from "valibot";
+import { array, literal, object, string, union, minLength } from "valibot";
 import {
   createForm,
   valiForm,
-  submit,
   setValue,
   setValues,
   getErrors,
-  toTrimmed,
   toCustom,
+  getValue,
+  getValues,
+  reset,
 } from "@modular-forms/solid";
 
 const PANEL_CONTENT_SPACE = "10";
@@ -128,67 +112,52 @@ const PutForm = object({
   destination: object({
     type: union([literal("email"), literal("slack")], "Must select type"),
     email: object({
-      users: array(string()),
+      users: array(string(), [minLength(1)]),
     }),
     slack: object({
       channel: string([minLength(1, "Slack channel is required")]),
     }),
   }),
   source: object({
-    app: array(string()),
+    app: array(string(), [minLength(1, "Must select at least one app")]),
+    stage: string([minLength(1)]),
   }),
 });
 
 export function Alerts() {
   const rep = useReplicache();
-  const apps = AppStore.all.watch(rep, () => []);
   const users = UserStore.list.watch(
     rep,
-    () => [],
-    (users) => users.filter((u) => !u.timeDeleted)
+    () => []
+    // (users) => users.filter((u) => !u.timeDeleted)
   );
   const alerts = IssueAlertStore.all.watch(rep, () => []);
+
   const [putForm, { Form, Field }] = createForm({
     validate: valiForm(PutForm),
     validateOn: "submit",
   });
-  const [data, setData] = createStore<{
+  const [editing, setEditing] = createStore<{
     id?: string;
-    source: {
-      app: string[];
-      stage?: string;
-    };
-    destination: {
-      type?: "email" | "slack";
-      email?: {
-        users: string[];
-      };
-      slack?: {
-        channel?: string;
-      };
-    };
+    active: boolean;
   }>({
-    source: {
-      app: [],
-    },
-    destination: {},
+    active: false,
   });
-  const [isEditing, setEditing] = createSignal(false);
 
-  const selectedApps = AppStore.all.watch(
-    rep,
-    () => [],
-    (apps) =>
-      apps
-        .filter(
-          (app) =>
-            data.source?.app.includes("*") ||
-            data.source?.app?.includes(app.name)
-        )
-        .map((app) => app.id)
+  const apps = AppStore.all.watch(rep, () => []);
+  const stages = StageStore.list.watch(rep, () => []);
+  const selectedApps = createMemo(() =>
+    apps()
+      .filter((app) => {
+        const formData = getValues(putForm);
+        return (
+          formData.source?.app?.includes("*") ||
+          formData.source?.app?.includes(app.name)
+        );
+      })
+      .map((app) => app.id)
   );
 
-  const stages = StageStore.list.watch(rep, () => []);
   const availableStages = createMemo(() => {
     return pipe(
       stages(),
@@ -198,62 +167,67 @@ export function Alerts() {
     );
   });
 
+  const matchingStages = createMemo(() => {
+    const stageFilter = getValue(putForm, "source.stage");
+    const result = [];
+    for (const app of apps()) {
+      if (!selectedApps().includes(app.id)) continue;
+      for (const stage of stages()) {
+        if (stage.appID !== app.id) continue;
+        if (stageFilter !== "*" && stageFilter !== stage.name) continue;
+        result.push({ app: app.name, stage: stage.name });
+      }
+    }
+    return result;
+  });
+
   function createAlert() {
+    reset(putForm);
     setValues(putForm, {
       source: {
         app: [],
       },
       destination: {},
     });
-    setData(
-      produce((val) => {
-        val.id = undefined;
-        val.source = {
-          app: [],
-        };
-        val.destination = {};
-      })
-    );
-    setEditing(true);
+    setEditing("active", true);
+    setEditing("id", undefined);
   }
 
   function editAlert(alert: Issue.Alert.Info, clone?: boolean) {
+    reset(putForm);
     alert = structuredClone(unwrap(alert));
-    setData(
-      produce((val) => {
-        val.id = clone ? undefined : alert.id;
-        val.source = {
-          app: alert.source.app === "*" ? ["*"] : alert.source.app,
-          stage: alert.source.stage === "*" ? "*" : alert.source.stage[0],
-        };
-        val.destination = {
-          type: alert.destination.type,
-          email:
+
+    // @ts-expect-error
+    setValues(putForm, {
+      source: {
+        app: alert.source.app === "*" ? ["*"] : alert.source.app,
+        stage: alert.source.stage === "*" ? "*" : alert.source.stage[0],
+      },
+      destination: {
+        type: alert.destination.type,
+        email: {
+          users:
             alert.destination.type === "email"
-              ? {
-                  users:
-                    alert.destination.properties.users === "*"
-                      ? ["*"]
-                      : alert.destination.properties.users,
-                }
-              : undefined,
-          slack:
+              ? alert.destination.properties.users
+              : [],
+        },
+        slack: {
+          channel:
             alert.destination.type === "slack"
-              ? {
-                  channel: alert.destination.properties.channel,
-                }
+              ? alert.destination.properties.channel
               : undefined,
-        };
-      })
-    );
-    setEditing(true);
+        },
+      },
+    });
+    setEditing("active", true);
+    setEditing("id", clone ? undefined : alert.id);
   }
 
   const AlertsEditor = () => (
     <Form
       onError={console.log}
       onSubmit={(e) => {
-        console.log(e);
+        console.log("submit", e);
       }}
       class={alertsPanelRowEditing}
     >
@@ -275,25 +249,14 @@ export function Alerts() {
             </Stack>
             <Field name="destination.type">
               {(field, props) => (
-                <>
-                  <Select<Issue.Alert.Info["destination"]["type"]>
-                    onChange={(option) => {
-                      setValue(putForm, "destination.type", option?.value);
-                      setData("destination", {
-                        type: option.value,
-                        email: {
-                          users: [],
-                        },
-                        slack: {},
-                      });
-                    }}
-                    value={
-                      field.value
-                        ? {
-                            value: field.value,
-                          }
-                        : undefined
-                    }
+                <FormField
+                  color={field.error ? "danger" : "primary"}
+                  hint={field.error}
+                >
+                  <Select
+                    {...props}
+                    value={field.value}
+                    error={field.error}
                     options={[
                       {
                         value: "slack",
@@ -304,10 +267,9 @@ export function Alerts() {
                         label: "Email",
                       },
                     ]}
-                    class={alertsPanelRowEditingDropdown}
+                    triggerClass={alertsPanelRowEditingDropdown}
                   />
-                  <span>{field.error}</span>
-                </>
+                </FormField>
               )}
             </Field>
           </Row>
@@ -324,66 +286,83 @@ export function Alerts() {
               <Text leading="loose" on="surface" color="dimmed" size="sm">
                 The apps and stages that'll be sending alerts.
               </Text>
+              <pre>{JSON.stringify(matchingStages(), null, 2)}</pre>
             </Stack>
-            <Row flex space="4" vertical="center">
-              <Stack space="2">
-                <Text label on="surface" size="mono_sm" color="secondary">
-                  App
-                </Text>
-                <Select<string>
-                  multiple
-                  value={data.source?.app?.map((app) => ({ value: app }))}
-                  onChange={(options) => {
-                    if (options.at(-1)?.value !== "*") {
-                      setData("source", {
-                        app: options
-                          .filter((o) => o.value !== "*")
-                          .map((o) => o.value),
-                      });
-                      return;
+            <Row flex space="4" vertical="start">
+              <Field type="string[]" name="source.app">
+                {(field, props) => {
+                  const value = createMemo((prev: string[]) => {
+                    const next = field.value || [];
+                    if (next[0] === "") return [];
+                    if (!prev.includes("*") && next.includes("*")) {
+                      return ["*"];
                     }
-                    setData("source", "app", ["*"]);
-                  }}
-                  options={[
-                    {
-                      label: "All apps",
-                      value: "*",
-                      seperator: true,
-                    },
-                    ...apps().map((app) => ({
-                      label: app.name,
-                      value: app.name,
-                    })),
-                  ]}
-                  class={alertsPanelRowEditingDropdown}
-                />
-              </Stack>
-              <Stack space="2">
-                <Text label on="surface" size="mono_sm" color="secondary">
-                  Stage
-                </Text>
-                <Select<string>
-                  disabled={!data.source.app.length}
-                  value={
-                    data.source.stage ? { value: data.source.stage } : undefined
-                  }
-                  onChange={(option) => {
-                    setData("source", "stage", option?.value);
-                  }}
-                  options={[
-                    {
-                      label: "All stages",
-                      value: "*",
-                      seperator: true,
-                    },
-                    ...availableStages().map((stage) => ({
-                      label: stage,
-                      value: stage,
-                    })),
-                  ]}
-                  class={alertsPanelRowEditingDropdown}
-                />
-              </Stack>
+                    if (prev.includes("*") && next.length > 1) {
+                      return next.filter((v) => v !== "*");
+                    }
+                    return next;
+                  }, []);
+
+                  createComputed(() =>
+                    setValue(putForm, "source.app", value())
+                  );
+
+                  return (
+                    <FormField
+                      style={{ width: "220px" }}
+                      label="App"
+                      color={field.error ? "danger" : "primary"}
+                      hint={field.error}
+                    >
+                      <Multiselect
+                        {...props}
+                        required
+                        error={field.error}
+                        value={field.value}
+                        options={[
+                          {
+                            label: "All apps",
+                            value: "*",
+                            seperator: true,
+                          },
+                          ...apps().map((app) => ({
+                            label: app.name,
+                            value: app.name,
+                          })),
+                        ]}
+                      />
+                    </FormField>
+                  );
+                }}
+              </Field>
+              <Field name="source.stage">
+                {(field, props) => (
+                  <FormField
+                    style={{ width: "220px" }}
+                    label="Stage"
+                    color={field.error ? "danger" : "primary"}
+                    hint={field.error}
+                  >
+                    <Select
+                      {...props}
+                      value={field.value}
+                      error={field.error}
+                      disabled={!getValue(putForm, "source.app")?.length}
+                      options={[
+                        {
+                          label: "All stages",
+                          value: "*",
+                          seperator: true,
+                        },
+                        ...availableStages().map((stage) => ({
+                          label: stage,
+                          value: stage,
+                        })),
+                      ]}
+                    />
+                  </FormField>
+                )}
+              </Field>
             </Row>
           </Row>
           <Row
@@ -401,41 +380,52 @@ export function Alerts() {
               </Text>
             </Stack>
             <Switch>
-              <Match when={data.destination?.type === "email"}>
-                <Select<string>
-                  multiple
-                  value={data.destination.email?.users?.map((value) => ({
-                    value,
-                  }))}
-                  options={[
-                    {
-                      value: "*",
-                      label: "All users",
-                      seperator: true,
-                    },
-                    ...users().map((user) => ({
-                      value: user.id,
-                      label: user.email,
-                    })),
-                  ]}
-                  onChange={(options) => {
-                    if (options.at(-1)?.value !== "*") {
-                      setData(
-                        "destination",
-                        "email",
-                        "users",
-                        options
-                          .filter((o) => o.value !== "*")
-                          .map((o) => o.value)
-                      );
-                      return;
-                    }
-                    setData("destination", "email", "users", ["*"]);
+              <Match when={getValue(putForm, "destination.type") === "email"}>
+                <Field name="destination.email.users" type="string[]">
+                  {(field, props) => {
+                    const value = createMemo((prev: string[]) => {
+                      const next = field.value || [];
+                      if (next[0] === "") return [];
+                      if (!prev.includes("*") && next.includes("*")) {
+                        return ["*"];
+                      }
+                      if (prev.includes("*") && next.length > 1) {
+                        return next.filter((v) => v !== "*");
+                      }
+                      return next;
+                    }, []);
+
+                    createComputed(() =>
+                      setValue(putForm, "destination.email.users", value())
+                    );
+                    return (
+                      <FormField
+                        color={field.error ? "danger" : "primary"}
+                        hint={field.error}
+                        style={{ width: "220px" }}
+                      >
+                        <Multiselect
+                          {...props}
+                          error={field.error}
+                          value={field.value}
+                          options={[
+                            {
+                              value: "*",
+                              label: "All users",
+                              seperator: true,
+                            },
+                            ...users().map((user) => ({
+                              value: user.id,
+                              label: user.email,
+                            })),
+                          ]}
+                        />
+                      </FormField>
+                    );
                   }}
-                  class={alertsPanelRowEditingDropdown}
-                />
+                </Field>
               </Match>
-              <Match when={data.destination?.type === "slack"}>
+              <Match when={getValue(putForm, "destination.type") === "slack"}>
                 <Field
                   name="destination.slack.channel"
                   transform={toCustom(
@@ -467,49 +457,56 @@ export function Alerts() {
                   )}
                 </Field>
               </Match>
+              <Match when={true}>
+                <FormField style={{ width: "220px" }}>
+                  <Input disabled />
+                </FormField>
+              </Match>
             </Switch>
           </Row>
         </Stack>
         <Row space="4" vertical="center" horizontal="end">
-          <LinkButton onClick={() => setEditing(false)}>Cancel</LinkButton>
+          <LinkButton onClick={() => setEditing("active", false)}>
+            Cancel
+          </LinkButton>
           <Button
             type="submit"
             onClick={async () => {
-              //console.log(await getErrors(putForm));
-              //submit(putForm);
-              //return;
-              const cloned = structuredClone(unwrap(data));
+              if (Object.keys(getErrors(putForm)).length) return;
+              const cloned = getValues(putForm);
               await rep().mutate.issue_alert_put({
-                id: cloned.id || createId(),
+                id: editing.id || createId(),
                 source: {
-                  app: cloned.source.app.includes("*")
+                  app: cloned.source!.app!.includes("*")
                     ? "*"
-                    : cloned.source.app,
+                    : cloned.source!.app!,
                   stage:
-                    cloned.source.stage === "*" ? "*" : [cloned.source.stage!],
+                    cloned.source?.stage === "*"
+                      ? "*"
+                      : [cloned.source?.stage!],
                 },
                 destination:
-                  cloned.destination.type === "slack"
+                  cloned.destination!.type === "slack"
                     ? {
                         type: "slack",
                         properties: {
-                          channel: cloned.destination.slack?.channel!,
+                          channel: cloned.destination!.slack?.channel!,
                         },
                       }
                     : {
                         type: "email",
                         properties: {
-                          users: cloned.destination.email?.users.includes("*")
+                          users: cloned.destination!.email!.users!.includes("*")
                             ? "*"
-                            : cloned.destination.email?.users!,
+                            : cloned.destination!.email!.users!,
                         },
                       },
               });
-              setEditing(false);
+              setEditing("active", false);
             }}
-            color={data.id ? "success" : "primary"}
+            color={editing.id ? "success" : "primary"}
           >
-            <Show when={data.id} fallback={"Create"}>
+            <Show when={editing.id} fallback={"Create"}>
               Update
             </Show>
           </Button>
@@ -530,7 +527,7 @@ export function Alerts() {
           </Text>
         </Stack>
         <Show
-          when={alerts().length !== 0 || isEditing()}
+          when={alerts().length !== 0 || editing.active}
           fallback={
             <Row>
               <Button color="secondary" onClick={() => createAlert()}>
@@ -543,7 +540,7 @@ export function Alerts() {
             <For each={alerts()}>
               {(alert) => {
                 const isEditingRow = createMemo(
-                  () => isEditing() && data.id === alert.id
+                  () => editing.active && editing.id === alert.id
                 );
                 return (
                   <>
@@ -670,7 +667,7 @@ export function Alerts() {
                 );
               }}
             </For>
-            <Show when={isEditing() && !data.id}>
+            <Show when={editing.active && !editing.id}>
               <>
                 <Show when={alerts().length !== 0}>
                   <Row class={alertsPanelRow} space="3" vertical="center">
@@ -685,7 +682,9 @@ export function Alerts() {
                 <AlertsEditor />
               </>
             </Show>
-            <Show when={alerts().length !== 0 && (!isEditing() || data.id)}>
+            <Show
+              when={alerts().length !== 0 && (!editing.active || editing.id)}
+            >
               <Row class={alertsPanelRow} space="3" vertical="center">
                 <AlertsPanelRowIcon>
                   <IconEllipsisHorizontal width={18} height={18} />
