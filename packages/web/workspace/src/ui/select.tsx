@@ -170,16 +170,16 @@ type Option = {
 type SelectProps = {
   size?: "sm" | "base";
   triggerClass?: string;
-  name: string;
+  name?: string;
   placeholder?: string;
   options: Option[];
-  error: string;
+  error?: string;
   required?: boolean | undefined;
   disabled?: boolean;
-  ref: (element: HTMLSelectElement) => void;
-  onInput: JSX.EventHandler<HTMLSelectElement, InputEvent>;
-  onChange: JSX.EventHandler<HTMLSelectElement, Event>;
-  onBlur: JSX.EventHandler<HTMLSelectElement, FocusEvent>;
+  ref?: (element: HTMLSelectElement) => void;
+  onInput?: JSX.EventHandler<HTMLSelectElement, InputEvent>;
+  onChange?: JSX.EventHandler<HTMLSelectElement, Event>;
+  onBlur?: JSX.EventHandler<HTMLSelectElement, FocusEvent>;
 };
 
 type SingleSelect = {
@@ -219,12 +219,7 @@ export function Select(props: SingleSelect) {
         </>
       )}
     >
-      <KSelect.HiddenSelect
-        {...selectProps}
-        onChange={(e) => {
-          props.onChange(e);
-        }}
-      />
+      <KSelect.HiddenSelect {...selectProps} />
       <Trigger
         size={props.size}
         disabled={props.disabled}
