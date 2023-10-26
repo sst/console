@@ -225,7 +225,7 @@ export function List() {
                       if (item.data.error === "unknown")
                         return "Unknown error: " + item.data.message;
                       if (item.data.error === "limited")
-                        return "Too many existing log subscriber";
+                        return "Too many existing log subscribers";
                       if (item.data.error === "permissions")
                         return "Missing permissions to add log subscriber";
                       return "Unknown";
@@ -241,7 +241,7 @@ export function List() {
                     } (${reason})`;
                   }
                   if (item.type === "issue_rate_limited") {
-                    return `Your functions exceeded the hourly error limit of 10,000`;
+                    return `Your workspace exceeded the soft limit of issues per hour. Get in touch with us to have the limit lifted.`;
                   }
                 })
                 .filter(Boolean)

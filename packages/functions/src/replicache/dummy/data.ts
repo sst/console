@@ -1134,16 +1134,29 @@ function* stageNoIssues(): Generator<DummyData, void, unknown> {
 }
 
 function* stageIssuesWarningRateLimited(): Generator<DummyData, void, unknown> {
-  //  yield {
-  //    _type: "warning",
-  //    stageID: STAGE_HAS_ISSUES,
-  //    type: "issue_rate_limited",
-  //    timeDeleted: null,
-  //    id: "123",
-  //    data: {},
-  //    target: "",
-  //    ...timestamps,
-  //  };
+  yield stage({
+    id: STAGE_ISSUES_WARN_RATE,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_ISSUES_WARN_RATE,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield func({
+    id: ISSUE_WARN_FN,
+    stage: STAGE_ISSUES_WARN_RATE,
+    handler: "packages/function.handler",
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_RATE,
+    type: "issue_rate_limited",
+  });
 }
 
 function* stageIssuesWarningSubscription(): Generator<
@@ -1174,7 +1187,7 @@ function* stageIssuesWarningSubscription(): Generator<
     id: ISSUE_WARN_FN_LONG,
     stage: STAGE_ISSUES_WARN_SUB,
     handler:
-      "packages/path/of/a/really/long/function/name/that/should/overflow/because/it/is/way/too/long/and/it/keeps/going/and/going/function.handler",
+      "packages/path/of/a/really/long/function/name/that/should/overflow/because/it/is/way/too/long/and/it/keeps/going/and/going/and/lets/make/it/longer/just/for/fun/function.handler",
   });
 
   yield warning({
