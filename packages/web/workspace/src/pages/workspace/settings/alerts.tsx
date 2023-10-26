@@ -19,10 +19,10 @@ import {
 } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import {
-  IconEllipsisHorizontal,
-  IconEllipsisVertical,
-  IconArrowLongRight,
   IconEnvelopeSolid,
+  IconArrowLongRight,
+  IconEllipsisVertical,
+  IconEllipsisHorizontal,
 } from "$/ui/icons";
 import { IconLogosSlackBW } from "$/ui/icons/custom";
 import { useReplicache } from "$/providers/replicache";
@@ -77,8 +77,12 @@ const alertsPanelRow = style({
   },
 });
 
+const alertsPanelRowTitleEditing = style({
+  opacity: 0.6,
+});
+
 const alertsPanelRowEditing = style({
-  padding: theme.space[5],
+  padding: theme.space[6],
   backgroundColor: theme.color.background.surface,
   borderBottom: `1px solid ${theme.color.divider.surface}`,
   selectors: {
@@ -251,8 +255,9 @@ export function Alerts() {
       onSubmit={(e) => {
         console.log(e);
       }}
+      class={alertsPanelRowEditing}
     >
-      <Stack class={alertsPanelRowEditing} space="6">
+      <Stack space="6">
         <Stack>
           <Row
             space="4"
@@ -470,9 +475,9 @@ export function Alerts() {
           <Button
             type="submit"
             onClick={async () => {
-              console.log(await getErrors(putForm));
-              submit(putForm);
-              return;
+              //console.log(await getErrors(putForm));
+              //submit(putForm);
+              //return;
               const cloned = structuredClone(unwrap(data));
               await rep().mutate.issue_alert_put({
                 id: cloned.id || createId(),
@@ -502,9 +507,11 @@ export function Alerts() {
               });
               setEditing(false);
             }}
-            color="success"
+            color={data.id ? "success" : "primary"}
           >
-            Update
+            <Show when={data.id} fallback={"Create"}>
+              Update
+            </Show>
           </Button>
         </Row>
       </Stack>
@@ -534,136 +541,165 @@ export function Alerts() {
         >
           <AlertsPanel>
             <For each={alerts()}>
-              {(alert) => (
-                <>
-                  <Row
-                    class={alertsPanelRow}
-                    space="8"
-                    vertical="center"
-                    horizontal="between"
-                  >
-                    <Row space="3" vertical="start">
-                      <AlertsPanelRowIcon title="Email alert">
-                        <Switch>
-                          <Match when={alert.destination.type === "email"}>
-                            <IconEnvelopeSolid width={17} height={17} />
-                          </Match>
-                          <Match when={alert.destination.type === "slack"}>
-                            <IconLogosSlackBW width={18} height={18} />
-                          </Match>
-                        </Switch>
-                      </AlertsPanelRowIcon>
-                      <Stack space="3">
-                        <Text size="base" color="secondary" leading="normal">
-                          From{" "}
-                          <Text size="base" weight="medium">
-                            {alert.source.app === "*"
-                              ? "all apps"
-                              : alert.source.app.join(", ")}
-                          </Text>{" "}
-                          matching
-                          <Text size="base" weight="medium">
-                            {alert.source.stage === "*"
-                              ? " all stages"
-                              : ` "${alert.source.stage.join(", ")}"`}
+              {(alert) => {
+                const isEditingRow = createMemo(
+                  () => isEditing() && data.id === alert.id
+                );
+                return (
+                  <>
+                    <Row
+                      class={alertsPanelRow}
+                      space="8"
+                      vertical="center"
+                      horizontal="between"
+                    >
+                      <Row
+                        space="3"
+                        vertical="start"
+                        class={
+                          isEditingRow()
+                            ? alertsPanelRowTitleEditing
+                            : undefined
+                        }
+                      >
+                        <AlertsPanelRowIcon title="Email alert">
+                          <Switch>
+                            <Match when={alert.destination.type === "email"}>
+                              <IconEnvelopeSolid width={17} height={17} />
+                            </Match>
+                            <Match when={alert.destination.type === "slack"}>
+                              <IconLogosSlackBW width={18} height={18} />
+                            </Match>
+                          </Switch>
+                        </AlertsPanelRowIcon>
+                        <Stack space="3">
+                          <Text size="base" color="secondary" leading="normal">
+                            From{" "}
+                            <Text size="base" weight="medium">
+                              {alert.source.app === "*"
+                                ? "all apps"
+                                : alert.source.app.join(", ")}
+                            </Text>{" "}
+                            matching
+                            <Text size="base" weight="medium">
+                              {alert.source.stage === "*"
+                                ? " all stages"
+                                : ` "${alert.source.stage.join(", ")}"`}
+                            </Text>
                           </Text>
-                        </Text>
-                        <Row space="1.5" vertical="center">
-                          <AlertsPanelRowArrowIcon>
-                            <IconArrowLongRight width={12} height={12} />
-                          </AlertsPanelRowArrowIcon>
-                          <Text color="secondary" size="sm">
-                            <Switch>
-                              <Match
-                                when={
-                                  alert.destination.type === "email" &&
-                                  alert.destination
-                                }
-                              >
-                                {(destination) =>
-                                  destination().properties.users === "*"
-                                    ? "All users in the workspace"
-                                    : (
-                                        destination().properties
-                                          .users as string[]
-                                      )
-                                        .map(
-                                          (id) =>
-                                            users().find((u) => u.id === id)
-                                              ?.email
+                          <Row space="1.5" vertical="center">
+                            <AlertsPanelRowArrowIcon>
+                              <IconArrowLongRight width={12} height={12} />
+                            </AlertsPanelRowArrowIcon>
+                            <Text color="secondary" size="sm">
+                              <Switch>
+                                <Match
+                                  when={
+                                    alert.destination.type === "email" &&
+                                    alert.destination
+                                  }
+                                >
+                                  {(destination) =>
+                                    destination().properties.users === "*"
+                                      ? "To all users in the workspace"
+                                      : (
+                                          destination().properties
+                                            .users as string[]
                                         )
-                                        .join(", ")
-                                }
-                              </Match>
-                              <Match
-                                when={
-                                  alert.destination.type === "slack" &&
-                                  alert.destination
-                                }
-                              >
-                                {(destination) =>
-                                  destination().properties.channel
-                                }
-                              </Match>
-                            </Switch>
-                          </Text>
-                        </Row>
-                      </Stack>
-                    </Row>
-                    <Show when={!isEditing() || data.id !== alert.id}>
-                      <Row flex={false} space="2">
-                        <Button
-                          onClick={() => editAlert(alert)}
-                          color="secondary"
-                          size="sm"
-                        >
-                          Edit
-                        </Button>
-                        <Dropdown
-                          size="sm"
-                          icon={<IconEllipsisVertical width={18} height={18} />}
-                        >
-                          <Dropdown.Item
-                            onSelect={() => {
-                              editAlert(alert, true);
-                            }}
-                          >
-                            Duplicate alert
-                          </Dropdown.Item>
-                          <Dropdown.Seperator />
-                          <Dropdown.Item
-                            onSelect={() => {
-                              rep().mutate.issue_alert_remove(alert.id);
-                            }}
-                          >
-                            Remove alert
-                          </Dropdown.Item>
-                        </Dropdown>
+                                          .map(
+                                            (id) =>
+                                              users().find((u) => u.id === id)
+                                                ?.email
+                                          )
+                                          .join(", ")
+                                  }
+                                </Match>
+                                <Match
+                                  when={
+                                    alert.destination.type === "slack" &&
+                                    alert.destination
+                                  }
+                                >
+                                  {(destination) =>
+                                    destination().properties.channel
+                                  }
+                                </Match>
+                              </Switch>
+                            </Text>
+                          </Row>
+                        </Stack>
                       </Row>
+                      <Show when={!isEditingRow()}>
+                        <Row flex={false} space="2">
+                          <Button
+                            onClick={() => editAlert(alert)}
+                            color="secondary"
+                            size="sm"
+                          >
+                            Edit
+                          </Button>
+                          <Dropdown
+                            size="sm"
+                            icon={
+                              <IconEllipsisVertical width={18} height={18} />
+                            }
+                          >
+                            <Dropdown.Item
+                              onSelect={() => {
+                                editAlert(alert, true);
+                              }}
+                            >
+                              Duplicate alert
+                            </Dropdown.Item>
+                            <Dropdown.Seperator />
+                            <Dropdown.Item
+                              onSelect={() => {
+                                rep().mutate.issue_alert_remove(alert.id);
+                              }}
+                            >
+                              Remove alert
+                            </Dropdown.Item>
+                          </Dropdown>
+                        </Row>
+                      </Show>
+                    </Row>
+                    <Show when={isEditingRow()}>
+                      <AlertsEditor />
                     </Show>
-                  </Row>
-                  <Show when={isEditing() && data.id === alert.id}>
-                    <AlertsEditor />
-                  </Show>
-                </>
-              )}
+                  </>
+                );
+              }}
             </For>
             <Show when={isEditing() && !data.id}>
-              <AlertsEditor />
+              <>
+                <Show when={alerts().length !== 0}>
+                  <Row class={alertsPanelRow} space="3" vertical="center">
+                    <AlertsPanelRowIcon>
+                      <IconEllipsisHorizontal width={18} height={18} />
+                    </AlertsPanelRowIcon>
+                    <Text size="sm" color="dimmed">
+                      Add a new alert
+                    </Text>
+                  </Row>
+                </Show>
+                <AlertsEditor />
+              </>
             </Show>
-            <Row class={alertsPanelRow} space="3" vertical="center">
-              <AlertsPanelRowIcon>
-                <IconEllipsisHorizontal width={18} height={18} />
-              </AlertsPanelRowIcon>
-              <LinkButton
-                onClick={() => createAlert()}
-                code={false}
-                size="sm"
-                weight="regular"
-              >
-                Add a new alert
-              </LinkButton>
-            </Row>
+            <Show when={alerts().length !== 0 && (!isEditing() || data.id)}>
+              <Row class={alertsPanelRow} space="3" vertical="center">
+                <AlertsPanelRowIcon>
+                  <IconEllipsisHorizontal width={18} height={18} />
+                </AlertsPanelRowIcon>
+                <LinkButton
+                  onClick={() => createAlert()}
+                  code={false}
+                  size="sm"
+                  weight="regular"
+                >
+                  Add a new alert
+                </LinkButton>
+              </Row>
+            </Show>
           </AlertsPanel>
         </Show>
       </Stack>
