@@ -395,7 +395,7 @@ export function Alerts() {
             </Stack>
             <AlertsPanelRowSource>
               <Row space="4" vertical="start">
-                <Field type="string[]" name="source.app">
+                <Field type="string[]" name="source.app" keepActive>
                   {(field, props) => {
                     const value = createMemo((prev: string[]) => {
                       const next = field.value || [];
@@ -440,7 +440,7 @@ export function Alerts() {
                     );
                   }}
                 </Field>
-                <Field name="source.stage">
+                <Field name="source.stage" keepActive>
                   {(field, props) => (
                     <FormField
                       label="Stages"
@@ -499,7 +499,11 @@ export function Alerts() {
             <Row flex space="4" vertical="start">
               <Switch>
                 <Match when={getValue(putForm, "destination.type") === "email"}>
-                  <Field name="destination.email.users" type="string[]">
+                  <Field
+                    name="destination.email.users"
+                    type="string[]"
+                    keepActive
+                  >
                     {(field, props) => {
                       const value = createMemo((prev: string[]) => {
                         const next = field.value || [];
