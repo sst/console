@@ -592,7 +592,7 @@ export function Alerts() {
           <Button
             type="submit"
             onClick={async () => {
-              await validate(putForm);
+              console.log("validate", await validate(putForm));
               const errors = getErrors(putForm);
               console.log("errors", errors);
               const cloned = getValues(putForm);
