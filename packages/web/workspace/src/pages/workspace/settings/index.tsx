@@ -362,7 +362,7 @@ function Integrations() {
             Connect your workspace with the services you use
           </Text>
         </Stack>
-        <Row space="3.5" horizontal="between" vertical="center">
+        <Row space="3.5" horizontal="between" vertical="center" id="slack">
           <Row space="3" vertical="center">
             <IconLogosSlack width="32" height="32" />
             <Stack space="1.5">

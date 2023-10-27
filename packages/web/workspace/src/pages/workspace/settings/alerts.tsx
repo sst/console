@@ -28,7 +28,7 @@ import {
 } from "$/ui/icons";
 import { IconLogosSlackBW } from "$/ui/icons/custom";
 import { useReplicache } from "$/providers/replicache";
-import { AppStore, IssueAlertStore } from "$/data/app";
+import { AppStore, IssueAlertStore, SlackTeamStore } from "$/data/app";
 import { Issue } from "@console/core/issue";
 import { createStore, unwrap } from "solid-js/store";
 import { Multiselect, Select } from "$/ui/select";
@@ -351,6 +351,14 @@ export function Alerts() {
                   <FormField
                     class={alertsPanelRowEditingDropdown}
                     color={field.error ? "danger" : "primary"}
+                    hint={
+                      getValue(putForm, "destination.type") === "slack" &&
+                      !slackTeam() ? (
+                        <span>
+                          Enable slack integration <a href="#slack">below</a>
+                        </span>
+                      ) : undefined
+                    }
                   >
                     <Select
                       {...props}
@@ -393,7 +401,7 @@ export function Alerts() {
             </Stack>
             <AlertsPanelRowSource>
               <Row space="4" vertical="start">
-                <Field type="string[]" name="source.app" keepActive>
+                <Field type="string[]" name="source.app">
                   {(field, props) => {
                     const value = createMemo((prev: string[]) => {
                       const next = field.value || [];
@@ -438,7 +446,7 @@ export function Alerts() {
                     );
                   }}
                 </Field>
-                <Field name="source.stage" keepActive>
+                <Field name="source.stage">
                   {(field, props) => (
                     <FormField
                       label="Stages"
@@ -497,11 +505,7 @@ export function Alerts() {
             <Row flex space="4" vertical="start">
               <Switch>
                 <Match when={getValue(putForm, "destination.type") === "email"}>
-                  <Field
-                    name="destination.email.users"
-                    type="string[]"
-                    keepActive
-                  >
+                  <Field name="destination.email.users" type="string[]">
                     {(field, props) => {
                       const value = createMemo((prev: string[]) => {
                         const next = field.value || [];
@@ -647,6 +651,11 @@ export function Alerts() {
           .filter((w) => w.type === "issue_alert_slack")
           .map((w) => [w.target, w] as const)
       )
+  );
+  const slackTeam = SlackTeamStore.all.watch(
+    rep,
+    () => [],
+    (all) => all.at(0)
   );
 
   return (

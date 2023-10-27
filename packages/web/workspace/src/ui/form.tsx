@@ -4,6 +4,7 @@ import { theme } from "./theme";
 import { utility } from "./utility";
 import { ComponentProps, Show } from "solid-js";
 import { Stack } from "./layout";
+import { JSX } from "solid-js";
 
 export const inputStyles: CSSProperties = {
   border: "none",
@@ -156,7 +157,7 @@ const Hint = styled("p", {
 });
 
 type FormFieldProps = ComponentProps<typeof Root> & {
-  hint?: string;
+  hint?: JSX.Element;
   label?: string;
 };
 
@@ -170,7 +171,7 @@ export function FormField(props: FormFieldProps) {
         {props.children}
       </Stack>
       <Show when={props.hint}>
-        <Hint color={props.color}>{props.hint}</Hint>
+        <Hint color={props.color}>{props.hint!}</Hint>
       </Show>
     </Root>
   );
