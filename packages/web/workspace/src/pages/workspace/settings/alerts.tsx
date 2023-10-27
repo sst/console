@@ -754,8 +754,7 @@ export function Alerts() {
                                       }
                                     >
                                       Could not send alert, make sure you invite
-                                      @SST to #
-                                      {destination().properties.channel}
+                                      @SST to {destination().properties.channel}
                                     </Show>
                                   )}
                                 </Match>
