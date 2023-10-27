@@ -167,16 +167,16 @@ export const trigger = zod(
         and(
           eq(issue.workspaceID, useWorkspace()),
           eq(issue.stageID, input.stageID),
-          eq(issue.group, input.group)
-          // or(
-          //   // alert first time
-          //   isNull(issueAlertLimit.timeUpdated),
-          //   // do not alert more than once every 30min
-          //   lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
-          //   // if issue resolved after last alert, send alert
-          //   gt(issue.timeResolved, issueAlertLimit.timeUpdated)
-          // ),
-          // isNull(issue.timeIgnored)
+          eq(issue.group, input.group),
+          or(
+            // alert first time
+            isNull(issueAlertLimit.timeUpdated),
+            // do not alert more than once every 30min
+            lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
+            // if issue resolved after last alert, send alert
+            gt(issue.timeResolved, issueAlertLimit.timeUpdated)
+          ),
+          isNull(issue.timeIgnored)
         )
       )
       .then((rows) => rows[0]);
