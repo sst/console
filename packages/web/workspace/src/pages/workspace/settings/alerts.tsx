@@ -49,6 +49,7 @@ import {
   getValues,
   reset,
 } from "@modular-forms/solid";
+import { WarningStore } from "$/data/warning";
 
 const PANEL_CONTENT_SPACE = "10";
 const PANEL_HEADER_SPACE = "3";
@@ -624,6 +625,16 @@ export function Alerts() {
       </Stack>
     </Form>
   );
+  const slackWarnings = WarningStore.list.watch(
+    rep,
+    () => [],
+    (warnings) =>
+      Object.fromEntries(
+        warnings
+          .filter((w) => w.type === "issue_alert_slack")
+          .map((w) => [w.target, w] as const)
+      )
+  );
 
   return (
     <>
@@ -652,6 +663,7 @@ export function Alerts() {
                 const isEditingRow = createMemo(
                   () => editing.active && editing.id === alert.id
                 );
+
                 return (
                   <>
                     <Row
@@ -727,9 +739,18 @@ export function Alerts() {
                                     alert.destination
                                   }
                                 >
-                                  {(destination) =>
-                                    destination().properties.channel
-                                  }
+                                  {(destination) => (
+                                    <Show
+                                      when={slackWarnings()[alert.id]}
+                                      fallback={
+                                        destination().properties.channel
+                                      }
+                                    >
+                                      Could not send alert, make sure you invite
+                                      @SST to #
+                                      {destination().properties.channel}
+                                    </Show>
+                                  )}
                                 </Match>
                               </Switch>
                             </Text>

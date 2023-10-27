@@ -27,6 +27,7 @@ import { render } from "@jsx-email/render";
 import { user } from "../user/user.sql";
 import { KnownBlock } from "@slack/web-api";
 import { Warning } from "../warning";
+import { warning } from "../warning/warning.sql";
 
 export * as Alert from "./alert";
 
@@ -82,6 +83,15 @@ export const put = zod(
             destination: input.destination,
           },
         });
+      await tx
+        .delete(warning)
+        .where(
+          and(
+            eq(warning.workspaceID, useWorkspace()),
+            eq(warning.type, "issue_alert_slack"),
+            eq(warning.target, id)
+          )
+        );
       return id;
     })
 );

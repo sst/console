@@ -3,8 +3,9 @@ import { Store } from "./store";
 
 export const WarningStore = new Store()
   .type<Info>()
+  .scan("list", () => ["warning"])
   .scan("forStage", (stageID: string) => ["warning", stageID])
-  .scan("forType", (stageID: string, type: string) => [
+  .scan("forType", (stageID: string, type: Info["type"]) => [
     "warning",
     stageID,
     type,
