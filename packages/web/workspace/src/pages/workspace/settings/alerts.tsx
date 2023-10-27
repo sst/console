@@ -49,6 +49,7 @@ import {
   getValue,
   getValues,
   reset,
+  validate,
 } from "@modular-forms/solid";
 import { WarningStore } from "$/data/warning";
 
@@ -187,7 +188,6 @@ export function Alerts() {
 
   const [putForm, { Form, Field }] = createForm({
     validate: valiForm(PutForm),
-    validateOn: "submit",
   });
   const [editing, setEditing] = createStore<{
     id?: string;
@@ -236,9 +236,7 @@ export function Alerts() {
   function createAlert() {
     reset(putForm);
     setValues(putForm, {
-      source: {
-        app: [],
-      },
+      source: {},
       destination: {},
     });
     setEditing("active", true);
@@ -594,8 +592,12 @@ export function Alerts() {
           <Button
             type="submit"
             onClick={async () => {
-              if (Object.keys(getErrors(putForm)).length) return;
+              await validate(putForm);
+              const errors = getErrors(putForm);
+              console.log("errors", errors);
               const cloned = getValues(putForm);
+              console.log("values", cloned);
+              if (Object.keys(getErrors(putForm)).length) return;
               await rep().mutate.issue_alert_put({
                 id: editing.id || createId(),
                 source: {
