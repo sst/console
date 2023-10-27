@@ -59,9 +59,26 @@ const Trigger = styled(KSelect.Trigger, {
   },
 });
 
-const triggerText = style({
-  [`${Root.selector({ color: "danger" })} &`]: {
-    ...inputDangerTextStyles,
+const TriggerText = styled("span", {
+  base: {
+    ...utility.textLine(),
+    lineHeight: "normal",
+    [`${Root.selector({ color: "danger" })} &`]: {
+      ...inputDangerTextStyles,
+    },
+  },
+  variants: {
+    size: {
+      sm: {
+        fontSize: theme.font.size.xs,
+      },
+      base: {
+        fontSize: theme.font.size.sm,
+      },
+    },
+  },
+  defaultVariants: {
+    size: "base",
   },
 });
 
@@ -225,17 +242,11 @@ export function Select(props: SingleSelect) {
         disabled={props.disabled}
         class={props.triggerClass}
       >
-        <Text
-          line
-          leading="normal"
-          color="secondary"
-          class={triggerText}
-          size={props.size === "sm" ? "xs" : "sm"}
-        >
+        <TriggerText size={props.size}>
           <KSelect.Value<Option>>
             {(state) => state.selectedOption()?.label}
           </KSelect.Value>
-        </Text>
+        </TriggerText>
         <DownIcon>
           <IconChevronDown width={15} height={15} />
         </DownIcon>
@@ -275,9 +286,9 @@ export function Multiselect(props: MultiselectProps) {
       multiple={true}
       value={getValue()}
       onChange={setValue}
-      validationState={props.error ? "invalid" : "valid"}
       optionValue="value"
       optionTextValue="label"
+      validationState={props.error ? "invalid" : "valid"}
       itemComponent={(props) => (
         <>
           <Item item={props.item}>
@@ -294,13 +305,7 @@ export function Multiselect(props: MultiselectProps) {
     >
       <KSelect.HiddenSelect {...selectProps} />
       <Trigger size={props.size} disabled={props.disabled}>
-        <Text
-          line
-          leading="normal"
-          color="secondary"
-          class={triggerText}
-          size={props.size === "sm" ? "xs" : "sm"}
-        >
+        <TriggerText size={props.size}>
           <KSelect.Value<Option>>
             {(state) =>
               state.selectedOptions().length > 1
@@ -308,7 +313,7 @@ export function Multiselect(props: MultiselectProps) {
                 : state.selectedOption()?.label
             }
           </KSelect.Value>
-        </Text>
+        </TriggerText>
         <DownIcon>
           <IconChevronDown width={15} height={15} />
         </DownIcon>

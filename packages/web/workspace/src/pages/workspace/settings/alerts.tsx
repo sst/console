@@ -14,6 +14,7 @@ import {
   Input,
   theme,
   Button,
+  Grower,
   FormField,
   LinkButton,
 } from "$/ui";
@@ -105,15 +106,13 @@ const AlertsPanelRowSource = styled("div", {
 });
 
 const alertsPanelRowEditingDropdown = style({
-  width: 239,
+  flex: 1,
 });
 
 const MatchingStagesPanelRoot = styled("div", {
   base: {
     ...utility.stack(3),
-    alignItems: "flex-start",
-    verticalAlign: "middle",
-    justifyContent: "space-between",
+    alignItems: "stretch",
   },
 });
 
@@ -281,36 +280,39 @@ export function Alerts() {
     return (
       <MatchingStagesPanelRoot>
         <div>
-          <Text size="sm" on="surface" color="dimmed">
+          <Text size="sm" on="surface" color="secondary">
             <Switch>
               <Match when={matchingStages().length === 0}>
                 Does not match any stages
               </Match>
               <Match when={matchingStages().length === 1}>
-                Matches 1 stage
+                Matches 1 stage.{" "}
               </Match>
               <Match when={true}>
-                Matches {matchingStages().length} stages
+                Matches {matchingStages().length} stages.{" "}
               </Match>
             </Switch>
           </Text>
           <Show when={matchingStages().length > 0}>
             <Text
               underline
-              size="xs"
+              size="sm"
               on="surface"
-              color="dimmed"
+              color="secondary"
               onClick={() => setExpanded(!expanded())}
             >
               <Show when={!expanded()} fallback="Hide">
-                Show
+                <Switch>
+                  <Match when={matchingStages().length === 1}>Show</Match>
+                  <Match when={true}>Show all</Match>
+                </Switch>
               </Show>
             </Text>
           </Show>
         </div>
         <Show when={expanded()}>
           <MatchingStagesPanelExpanded>
-            <Text size="sm" color="dimmed" on="surface" leading="loose">
+            <Text size="sm" color="secondary" on="surface" leading="loose">
               {joinWithAnd(
                 matchingStages().map(({ app, stage }) => `${app}/${stage}`)
               )}
@@ -345,31 +347,33 @@ export function Alerts() {
                 The channel to use for sending the alerts.
               </Text>
             </Stack>
-            <Field name="destination.type">
-              {(field, props) => (
-                <FormField
-                  color={field.error ? "danger" : "primary"}
-                  hint={field.error}
-                  class={alertsPanelRowEditingDropdown}
-                >
-                  <Select
-                    {...props}
-                    value={field.value}
-                    error={field.error}
-                    options={[
-                      {
-                        value: "slack",
-                        label: "Slack",
-                      },
-                      {
-                        value: "email",
-                        label: "Email",
-                      },
-                    ]}
-                  />
-                </FormField>
-              )}
-            </Field>
+            <Row flex space="4" vertical="start">
+              <Field name="destination.type">
+                {(field, props) => (
+                  <FormField
+                    class={alertsPanelRowEditingDropdown}
+                    color={field.error ? "danger" : "primary"}
+                  >
+                    <Select
+                      {...props}
+                      value={field.value}
+                      error={field.error}
+                      options={[
+                        {
+                          value: "slack",
+                          label: "Slack",
+                        },
+                        {
+                          value: "email",
+                          label: "Email",
+                        },
+                      ]}
+                    />
+                  </FormField>
+                )}
+              </Field>
+              <Grower />
+            </Row>
           </Row>
           <Row
             space="4"
@@ -412,9 +416,8 @@ export function Alerts() {
                     return (
                       <FormField
                         label="App"
-                        color={field.error ? "danger" : "primary"}
-                        hint={field.error}
                         class={alertsPanelRowEditingDropdown}
+                        color={field.error ? "danger" : "primary"}
                       >
                         <Multiselect
                           {...props}
@@ -440,10 +443,13 @@ export function Alerts() {
                 <Field name="source.stage">
                   {(field, props) => (
                     <FormField
-                      label="Stage"
-                      color={field.error ? "danger" : "primary"}
-                      hint={field.error}
+                      label="Stages"
                       class={alertsPanelRowEditingDropdown}
+                      color={
+                        field.error && getValue(putForm, "source.app")?.length
+                          ? "danger"
+                          : "primary"
+                      }
                     >
                       <Select
                         {...props}
@@ -490,90 +496,91 @@ export function Alerts() {
                 Specify who will be getting these alerts.
               </Text>
             </Stack>
-            <Switch>
-              <Match when={getValue(putForm, "destination.type") === "email"}>
-                <Field name="destination.email.users" type="string[]">
-                  {(field, props) => {
-                    const value = createMemo((prev: string[]) => {
-                      const next = field.value || [];
-                      if (next[0] === "") return [];
-                      if (!prev.includes("*") && next.includes("*")) {
-                        return ["*"];
-                      }
-                      if (prev.includes("*") && next.length > 1) {
-                        return next.filter((v) => v !== "*");
-                      }
-                      return next;
-                    }, []);
+            <Row flex space="4" vertical="start">
+              <Switch>
+                <Match when={getValue(putForm, "destination.type") === "email"}>
+                  <Field name="destination.email.users" type="string[]">
+                    {(field, props) => {
+                      const value = createMemo((prev: string[]) => {
+                        const next = field.value || [];
+                        if (next[0] === "") return [];
+                        if (!prev.includes("*") && next.includes("*")) {
+                          return ["*"];
+                        }
+                        if (prev.includes("*") && next.length > 1) {
+                          return next.filter((v) => v !== "*");
+                        }
+                        return next;
+                      }, []);
 
-                    createComputed(() =>
-                      setValue(putForm, "destination.email.users", value())
-                    );
-                    return (
+                      createComputed(() =>
+                        setValue(putForm, "destination.email.users", value())
+                      );
+                      return (
+                        <FormField
+                          class={alertsPanelRowEditingDropdown}
+                          color={field.error ? "danger" : "primary"}
+                        >
+                          <Multiselect
+                            {...props}
+                            error={field.error}
+                            value={field.value}
+                            options={[
+                              {
+                                value: "*",
+                                label: "All users",
+                                seperator: true,
+                              },
+                              ...users().map((user) => ({
+                                value: user.id,
+                                label: user.email,
+                              })),
+                            ]}
+                          />
+                        </FormField>
+                      );
+                    }}
+                  </Field>
+                </Match>
+                <Match when={getValue(putForm, "destination.type") === "slack"}>
+                  <Field
+                    name="destination.slack.channel"
+                    transform={toCustom(
+                      (value) => {
+                        if (!value) return "";
+                        value = value.trim().toLowerCase();
+                        if (value?.startsWith("#")) {
+                          return value;
+                        }
+                        return `#${value}`;
+                      },
+                      {
+                        on: "blur",
+                      }
+                    )}
+                  >
+                    {(field, props) => (
                       <FormField
-                        color={field.error ? "danger" : "primary"}
-                        hint={field.error}
                         class={alertsPanelRowEditingDropdown}
+                        color={field.error ? "danger" : "primary"}
                       >
-                        <Multiselect
+                        <Input
                           {...props}
-                          error={field.error}
                           value={field.value}
-                          options={[
-                            {
-                              value: "*",
-                              label: "All users",
-                              seperator: true,
-                            },
-                            ...users().map((user) => ({
-                              value: user.id,
-                              label: user.email,
-                            })),
-                          ]}
+                          placeholder="#channel"
                         />
                       </FormField>
-                    );
-                  }}
-                </Field>
-              </Match>
-              <Match when={getValue(putForm, "destination.type") === "slack"}>
-                <Field
-                  name="destination.slack.channel"
-                  transform={toCustom(
-                    (value) => {
-                      if (!value) return "";
-                      value = value.trim().toLowerCase();
-                      if (value?.startsWith("#")) {
-                        return value;
-                      }
-                      return `#${value}`;
-                    },
-                    {
-                      on: "blur",
-                    }
-                  )}
-                >
-                  {(field, props) => (
-                    <FormField
-                      color={field.error ? "danger" : "primary"}
-                      hint={field.error}
-                    >
-                      <Input
-                        {...props}
-                        value={field.value}
-                        placeholder="#channel"
-                        class={alertsPanelRowEditingDropdown}
-                      />
-                    </FormField>
-                  )}
-                </Field>
-              </Match>
-              <Match when={true}>
-                <FormField class={alertsPanelRowEditingDropdown}>
-                  <Input disabled />
-                </FormField>
-              </Match>
-            </Switch>
+                    )}
+                  </Field>
+                </Match>
+                <Match when={true}>
+                  <FormField class={alertsPanelRowEditingDropdown}>
+                    <Input disabled />
+                  </FormField>
+                </Match>
+              </Switch>
+              <Grower />
+            </Row>
           </Row>
         </Stack>
         <Row space="4" vertical="center" horizontal="end">
