@@ -110,7 +110,7 @@ const alertsPanelRowEditingDropdown = style({
 
 const MatchingStagesPanelRoot = styled("div", {
   base: {
-    ...utility.row(4),
+    ...utility.stack(3),
     alignItems: "flex-start",
     verticalAlign: "middle",
     justifyContent: "space-between",
@@ -280,7 +280,7 @@ export function Alerts() {
     const [expanded, setExpanded] = createSignal(false);
     return (
       <MatchingStagesPanelRoot>
-        <Stack flex space="3">
+        <div>
           <Text size="sm" on="surface" color="dimmed">
             <Switch>
               <Match when={matchingStages().length === 0}>
@@ -294,28 +294,28 @@ export function Alerts() {
               </Match>
             </Switch>
           </Text>
-          <Show when={expanded()}>
-            <MatchingStagesPanelExpanded>
-              <Text size="sm" color="dimmed" on="surface" leading="loose">
-                {joinWithAnd(
-                  matchingStages().map(({ app, stage }) => `${app}/${stage}`)
-                )}
-              </Text>
-            </MatchingStagesPanelExpanded>
+          <Show when={matchingStages().length > 0}>
+            <Text
+              underline
+              size="xs"
+              on="surface"
+              color="dimmed"
+              onClick={() => setExpanded(!expanded())}
+            >
+              <Show when={!expanded()} fallback="Hide">
+                Show
+              </Show>
+            </Text>
           </Show>
-        </Stack>
-        <Show when={matchingStages().length > 0}>
-          <Text
-            underline
-            size="xs"
-            on="surface"
-            color="dimmed"
-            onClick={() => setExpanded(!expanded())}
-          >
-            <Show when={!expanded()} fallback="Hide">
-              Show
-            </Show>
-          </Text>
+        </div>
+        <Show when={expanded()}>
+          <MatchingStagesPanelExpanded>
+            <Text size="sm" color="dimmed" on="surface" leading="loose">
+              {joinWithAnd(
+                matchingStages().map(({ app, stage }) => `${app}/${stage}`)
+              )}
+            </Text>
+          </MatchingStagesPanelExpanded>
         </Show>
       </MatchingStagesPanelRoot>
     );
