@@ -346,7 +346,7 @@ function renderStacktraceFrameContext(
                 split={68}
                 indent={maxIndexLength + 2}
                 text={`${padStringToEnd(
-                  (start + index).toString(),
+                  (start + index - 3).toString(),
                   maxIndexLength
                 )}  ${row.substring(minLeadingSpaces)}`}
               />
@@ -436,15 +436,17 @@ export const IssueEmail = ({
   const stack =
     issue.stack?.filter((frame) => frame.important && frame.context) || [];
   const url = `${consoleUrl}/${workspace}/${app}/${stage}/issues/${issue.id}`;
+  const message =
+    issue.message.length > 280
+      ? issue.message.substring(0, 280) + "..."
+      : issue.message;
   return (
     <Html lang="en">
       <Head>
-        <title>{`SST — ${issue.error}: ${issue.message}`}</title>
+        <title>{`SST — ${issue.error}: ${message}`}</title>
       </Head>
       <Fonts assetsUrl={assetsUrl} />
-      <Preview>
-        SST — {issue.error}: {issue.message}
-      </Preview>
+      <Preview>{message}</Preview>
       <Body style={body} id={Math.random().toString()}>
         <Container style={container}>
           <Section style={frame}>
@@ -487,7 +489,7 @@ export const IssueEmail = ({
                 </Link>
               </Text>
               <Text style={{ ...compactText, ...code }}>
-                <SplitString text={issue.message} split={63} />
+                <SplitString text={message} split={63} />
               </Text>
             </Section>
 

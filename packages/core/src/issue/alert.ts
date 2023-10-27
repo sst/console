@@ -202,10 +202,13 @@ export const trigger = zod(
         const context = (function () {
           const match = result.stack?.find((frame) => frame.important);
           if (!match?.context) return;
-          const max = (match.line! + match.context.length).toString().length;
+          const max = (match.line! + match.context.length - 3).toString()
+            .length;
           return [
+            "# " + match.file,
+            "-",
             ...match.context.map((line, index) => {
-              return `${(index + match.line!)
+              return `${(index + match.line! - 3)
                 .toString()
                 .padStart(max, " ")}  ${line}`;
             }),
@@ -219,23 +222,15 @@ export const trigger = zod(
               text: [
                 `*<https://console.sst.dev/${result.slug}/${result.appName}/${result.stageName}/issues/${result.id} | ${result.error}>*`,
                 result.message.substring(0, 2000),
+                "_" + [result.appName, result.stageName].join(" / ") + "_",
               ].join("\n"),
             },
-          },
-          {
-            type: "context",
-            elements: [
-              {
-                type: "plain_text",
-                text: [result.appName, result.stageName].join("/"),
-              },
-            ],
           },
         ];
 
         // insert into position 1
         if (context) {
-          blocks.splice(1, 0, {
+          blocks.push({
             type: "section",
             text: {
               type: "mrkdwn",
@@ -305,7 +300,7 @@ export const trigger = zod(
               ReplyToAddresses: [
                 result.id + "+issue+alerts@" + process.env.EMAIL_DOMAIN,
               ],
-              FromEmailAddress: `SST <${result.id}+issue+alerts@${process.env.EMAIL_DOMAIN}>`,
+              FromEmailAddress: `${result.appName}/${result.stageName} via SST <${result.id}+issue+alerts@${process.env.EMAIL_DOMAIN}>`,
               Content: {
                 Simple: {
                   Body: {
@@ -323,7 +318,9 @@ export const trigger = zod(
               },
             })
           );
-        } catch {}
+        } catch (ex) {
+          console.error(ex);
+        }
       }
     }
 

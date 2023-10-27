@@ -65,12 +65,8 @@ export const send = zod(
 
     const client = new WebClient(result.accessToken);
     await client.chat.postMessage({
-      attachments: [
-        {
-          color: "#ff0000",
-          blocks: input.blocks,
-        },
-      ],
+      blocks: input.blocks,
+      unfurl_links: false,
       text: input.text,
       channel: input.channel,
     });
