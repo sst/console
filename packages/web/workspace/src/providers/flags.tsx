@@ -15,7 +15,7 @@ export const { use: useFlags, provider: FlagsProvider } =
 
     return {
       get alerts() {
-        return true;
+        // return true;
         return local || internal() || Boolean(search.flag_alerts);
       },
       ready: true,
