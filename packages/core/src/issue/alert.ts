@@ -233,6 +233,7 @@ export const trigger = zod(
         await Slack.send({
           channel: destination.properties.channel,
           blocks,
+          text: `${result.error}: ${result.message.substring(0, 512)}`,
         });
       }
 

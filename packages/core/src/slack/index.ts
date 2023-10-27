@@ -50,6 +50,7 @@ export const disconnect = zod(Info.shape.id, (input) =>
 export const send = zod(
   z.object({
     channel: z.string().nonempty(),
+    text: z.string().nonempty(),
     blocks: z.custom<KnownBlock[]>(),
   }),
   async (input) => {
@@ -70,6 +71,7 @@ export const send = zod(
           blocks: input.blocks,
         },
       ],
+      text: input.text,
       channel: input.channel,
     });
   }
