@@ -17,6 +17,7 @@ import {
 } from "../util/transaction";
 import { zod } from "../util/zod";
 import { issueCount, issue } from "./issue.sql";
+import { warning } from "../warning/warning.sql";
 
 export const extract = zod(
   z.custom<(typeof Events.ErrorDetected.shape.properties)["records"][number]>(),
@@ -60,8 +61,21 @@ export const extract = zod(
           eq(stage.name, stageName!)
         )
       )
+      .leftJoin(
+        warning,
+        and(
+          eq(warning.workspaceID, awsAccount.workspaceID),
+          eq(warning.stageID, stage.id),
+          eq(warning.type, "issue_rate_limited"),
+          eq(warning.target, "none")
+        )
+      )
       .where(
-        and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
+        and(
+          eq(awsAccount.accountID, accountID!),
+          isNull(awsAccount.timeFailed),
+          isNull(warning.id)
+        )
       )
       .execute();
 

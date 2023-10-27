@@ -4,6 +4,8 @@ import { useTransaction } from "../util/transaction";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { and, eq } from "drizzle-orm";
+import { zod } from "../util/zod";
+import { useTransition } from "react";
 
 export type Info = typeof warning.$inferSelect & Data;
 
@@ -57,6 +59,22 @@ export async function remove(input: Pick<Info, "type" | "stageID" | "target">) {
           eq(warning.stageID, input.stageID),
           eq(warning.type, input.type),
           eq(warning.target, input.target)
+        )
+      )
+      .execute()
+  );
+}
+
+export async function forType(input: Pick<Info, "type" | "stageID">) {
+  return useTransaction((tx) =>
+    tx
+      .select()
+      .from(warning)
+      .where(
+        and(
+          eq(warning.workspaceID, useWorkspace()),
+          eq(warning.stageID, input.stageID),
+          eq(warning.type, input.type)
         )
       )
       .execute()

@@ -208,6 +208,11 @@ export const disconnectStage = zod(
 );
 
 export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
+  const warnings = await Warning.forType({
+    stageID: config.stageID,
+    type: "issue_rate_limited",
+  });
+  if (warnings.length) return;
   const uniqueIdentifier = destinationIdentifier(config);
   const destination =
     Config.ISSUES_DESTINATION_PREFIX.replace("<region>", config.region) +
