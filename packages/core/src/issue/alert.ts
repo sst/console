@@ -20,7 +20,6 @@ import { issue, issueAlert, issueAlertLimit } from "./issue.sql";
 import { createSelectSchema } from "drizzle-zod";
 import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
-import { User } from "../user";
 import { z } from "zod";
 import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
 import { render } from "@jsx-email/render";
