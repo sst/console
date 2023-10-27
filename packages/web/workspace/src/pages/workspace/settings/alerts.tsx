@@ -1,14 +1,23 @@
-import { For, Match, Show, Switch, createComputed, createMemo } from "solid-js";
 import {
-  LinkButton,
-  Button,
+  For,
+  Match,
+  Show,
+  Switch,
+  createComputed,
+  createSignal,
+  createMemo,
+} from "solid-js";
+import {
   Row,
-  Stack,
   Text,
+  Stack,
   Input,
-  FormField,
   theme,
+  Button,
+  FormField,
+  LinkButton,
 } from "$/ui";
+import { utility } from "$/ui/utility";
 import { Dropdown } from "$/ui/dropdown";
 import {
   IconEnvelopeSolid,
@@ -86,8 +95,32 @@ const alertsPanelRowEditingField = style({
   },
 });
 
+const AlertsPanelRowSource = styled("div", {
+  base: {
+    ...utility.stack(3),
+    flex: "1 1 auto",
+    minWidth: 0,
+  },
+});
+
 const alertsPanelRowEditingDropdown = style({
-  width: 220,
+  width: 239,
+});
+
+const MatchingStagesPanelRoot = styled("div", {
+  base: {
+    ...utility.row(4),
+    alignItems: "flex-start",
+    verticalAlign: "middle",
+    justifyContent: "space-between",
+  },
+});
+
+const MatchingStagesPanelExpanded = styled("div", {
+  base: {
+    paddingTop: theme.space[2],
+    borderTop: `1px solid ${theme.color.divider.surface}`,
+  },
 });
 
 const AlertsPanelRowIcon = styled("div", {
@@ -107,6 +140,25 @@ const AlertsPanelRowArrowIcon = styled("div", {
 const alertsPanelRowEditingFieldLabel = style({
   width: 240,
 });
+
+function joinWithAnd(arr: string[]): string {
+  const length = arr.length;
+
+  if (length === 0) {
+    return "";
+  }
+
+  if (length === 1) {
+    return arr[0];
+  }
+
+  if (length === 2) {
+    return `${arr[0]} and ${arr[1]}`;
+  }
+
+  const allButLast = arr.slice(0, length - 1).join(", ");
+  return `${allButLast}, and ${arr[length - 1]}`;
+}
 
 const PutForm = object({
   destination: object({
@@ -223,6 +275,51 @@ export function Alerts() {
     setEditing("id", clone ? undefined : alert.id);
   }
 
+  const MatchingStagesPanel = () => {
+    const [expanded, setExpanded] = createSignal(false);
+    return (
+      <MatchingStagesPanelRoot>
+        <Stack flex space="3">
+          <Text size="sm" on="surface" color="dimmed">
+            <Switch>
+              <Match when={matchingStages().length === 0}>
+                Does not match any stages
+              </Match>
+              <Match when={matchingStages().length === 1}>
+                Matches 1 stage
+              </Match>
+              <Match when={true}>
+                Matches {matchingStages().length} stages
+              </Match>
+            </Switch>
+          </Text>
+          <Show when={expanded()}>
+            <MatchingStagesPanelExpanded>
+              <Text size="sm" color="dimmed" on="surface" leading="loose">
+                {joinWithAnd(
+                  matchingStages().map(({ app, stage }) => `${app}/${stage}`)
+                )}
+              </Text>
+            </MatchingStagesPanelExpanded>
+          </Show>
+        </Stack>
+        <Show when={matchingStages().length > 0}>
+          <Text
+            underline
+            size="xs"
+            on="surface"
+            color="dimmed"
+            onClick={() => setExpanded(!expanded())}
+          >
+            <Show when={!expanded()} fallback="Hide">
+              Show
+            </Show>
+          </Text>
+        </Show>
+      </MatchingStagesPanelRoot>
+    );
+  };
+
   const AlertsEditor = () => (
     <Form
       onError={console.log}
@@ -252,6 +349,7 @@ export function Alerts() {
                 <FormField
                   color={field.error ? "danger" : "primary"}
                   hint={field.error}
+                  class={alertsPanelRowEditingDropdown}
                 >
                   <Select
                     {...props}
@@ -267,7 +365,6 @@ export function Alerts() {
                         label: "Email",
                       },
                     ]}
-                    triggerClass={alertsPanelRowEditingDropdown}
                   />
                 </FormField>
               )}
@@ -279,91 +376,104 @@ export function Alerts() {
             horizontal="start"
             class={alertsPanelRowEditingField}
           >
-            <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
+            <Stack
+              space="1.5"
+              flex={false}
+              class={alertsPanelRowEditingFieldLabel}
+            >
               <Text label on="surface" size="mono_sm">
                 Source
               </Text>
               <Text leading="loose" on="surface" color="dimmed" size="sm">
-                The apps and stages that'll be sending alerts.
+                The apps and stages that'll be sending the alerts.
               </Text>
-              <pre>{JSON.stringify(matchingStages(), null, 2)}</pre>
             </Stack>
-            <Row flex space="4" vertical="start">
-              <Field type="string[]" name="source.app">
-                {(field, props) => {
-                  const value = createMemo((prev: string[]) => {
-                    const next = field.value || [];
-                    if (next[0] === "") return [];
-                    if (!prev.includes("*") && next.includes("*")) {
-                      return ["*"];
-                    }
-                    if (prev.includes("*") && next.length > 1) {
-                      return next.filter((v) => v !== "*");
-                    }
-                    return next;
-                  }, []);
+            <AlertsPanelRowSource>
+              <Row space="4" vertical="start">
+                <Field type="string[]" name="source.app">
+                  {(field, props) => {
+                    const value = createMemo((prev: string[]) => {
+                      const next = field.value || [];
+                      if (next[0] === "") return [];
+                      if (!prev.includes("*") && next.includes("*")) {
+                        return ["*"];
+                      }
+                      if (prev.includes("*") && next.length > 1) {
+                        return next.filter((v) => v !== "*");
+                      }
+                      return next;
+                    }, []);
 
-                  createComputed(() =>
-                    setValue(putForm, "source.app", value())
-                  );
+                    createComputed(() =>
+                      setValue(putForm, "source.app", value())
+                    );
 
-                  return (
+                    return (
+                      <FormField
+                        label="App"
+                        color={field.error ? "danger" : "primary"}
+                        hint={field.error}
+                        class={alertsPanelRowEditingDropdown}
+                      >
+                        <Multiselect
+                          {...props}
+                          required
+                          error={field.error}
+                          value={field.value}
+                          options={[
+                            {
+                              label: "All apps",
+                              value: "*",
+                              seperator: true,
+                            },
+                            ...apps().map((app) => ({
+                              label: app.name,
+                              value: app.name,
+                            })),
+                          ]}
+                        />
+                      </FormField>
+                    );
+                  }}
+                </Field>
+                <Field name="source.stage">
+                  {(field, props) => (
                     <FormField
-                      style={{ width: "220px" }}
-                      label="App"
+                      label="Stage"
                       color={field.error ? "danger" : "primary"}
                       hint={field.error}
+                      class={alertsPanelRowEditingDropdown}
                     >
-                      <Multiselect
+                      <Select
                         {...props}
-                        required
-                        error={field.error}
                         value={field.value}
+                        error={field.error}
+                        disabled={!getValue(putForm, "source.app")?.length}
                         options={[
                           {
-                            label: "All apps",
+                            label: "All stages",
                             value: "*",
                             seperator: true,
                           },
-                          ...apps().map((app) => ({
-                            label: app.name,
-                            value: app.name,
+                          ...availableStages().map((stage) => ({
+                            label: stage,
+                            value: stage,
                           })),
                         ]}
                       />
                     </FormField>
-                  );
-                }}
-              </Field>
-              <Field name="source.stage">
-                {(field, props) => (
-                  <FormField
-                    style={{ width: "220px" }}
-                    label="Stage"
-                    color={field.error ? "danger" : "primary"}
-                    hint={field.error}
-                  >
-                    <Select
-                      {...props}
-                      value={field.value}
-                      error={field.error}
-                      disabled={!getValue(putForm, "source.app")?.length}
-                      options={[
-                        {
-                          label: "All stages",
-                          value: "*",
-                          seperator: true,
-                        },
-                        ...availableStages().map((stage) => ({
-                          label: stage,
-                          value: stage,
-                        })),
-                      ]}
-                    />
-                  </FormField>
-                )}
-              </Field>
-            </Row>
+                  )}
+                </Field>
+              </Row>
+              <Show
+                when={
+                  getValue(putForm, "source.app")?.length &&
+                  getValue(putForm, "source.stage")?.length
+                }
+              >
+                <MatchingStagesPanel />
+              </Show>
+            </AlertsPanelRowSource>
           </Row>
           <Row
             space="4"
@@ -402,7 +512,7 @@ export function Alerts() {
                       <FormField
                         color={field.error ? "danger" : "primary"}
                         hint={field.error}
-                        style={{ width: "220px" }}
+                        class={alertsPanelRowEditingDropdown}
                       >
                         <Multiselect
                           {...props}
@@ -451,14 +561,14 @@ export function Alerts() {
                         {...props}
                         value={field.value}
                         placeholder="#channel"
-                        style={{ width: "220px" }}
+                        class={alertsPanelRowEditingDropdown}
                       />
                     </FormField>
                   )}
                 </Field>
               </Match>
               <Match when={true}>
-                <FormField style={{ width: "220px" }}>
+                <FormField class={alertsPanelRowEditingDropdown}>
                   <Input disabled />
                 </FormField>
               </Match>
