@@ -49,12 +49,13 @@ const BACKGROUND_COLOR = "#F0F0F1";
 const SURFACE_COLOR = DIVIDER_COLOR;
 const SURFACE_DIVIDER_COLOR = GREY_COLOR[9];
 
-
 const body = {
   background: BACKGROUND_COLOR,
 };
 
-const container = {};
+const container = {
+  minWidth: "600px",
+};
 
 const frame = {
   padding: `${unit * 1.5}px`,
@@ -109,7 +110,7 @@ const issueBreadcrumbSeparator = {
 const issueHeading = {
   ...code,
   fontSize: "22px",
-  fontWeight: 500,
+  fontWeight: 600,
 };
 
 const sectionLabel = {
@@ -224,6 +225,16 @@ function Fonts({ assetsUrl }: { assetsUrl: string }) {
         fontFamily="IBM Plex Mono"
         fallbackFontFamily="monospace"
         webFont={{
+          url: `${assetsUrl}/ibm-plex-mono-latin-600.woff2`,
+          format: "woff2",
+        }}
+        fontWeight="600"
+        fontStyle="normal"
+      />
+      <Font
+        fontFamily="IBM Plex Mono"
+        fallbackFontFamily="monospace"
+        webFont={{
           url: `${assetsUrl}/ibm-plex-mono-latin-700.woff2`,
           format: "woff2",
         }}
@@ -302,25 +313,16 @@ function FormattedCode({ text, split = 60, indent = 0 }) {
   return <>{renderProcessedString()}</>;
 }
 
-type StacktraceContext = {
-  line: string;
-  index: number;
-};
-type StacktraceFrame = {
-  file?: string;
-  raw?: string;
-  line?: number;
-  column?: number;
-  important?: boolean;
-  context?: StacktraceContext[];
-};
-
-function renderStacktraceFrameContext(start: number, context: string[]) {
+function renderStacktraceFrameContext(
+  start: number,
+  context: string[],
+  last?: boolean
+) {
   const minLeadingSpaces = Math.min(
     ...context.map((row) => countLeadingSpaces(row))
   );
   const maxIndexLength = Math.max(
-    ...context.map((row, index) => (start + index).toString().length)
+    ...context.map((_row, index) => (start + index).toString().length)
   );
 
   function padStringToEnd(input: string, desiredLength: number) {
@@ -330,11 +332,6 @@ function renderStacktraceFrameContext(start: number, context: string[]) {
 
   return (
     <>
-      <Row>
-        <Column>
-          <SurfaceHr />
-        </Column>
-      </Row>
       {context.map((row, index) => (
         <Row key={index}>
           <Column>
@@ -357,131 +354,23 @@ function renderStacktraceFrameContext(start: number, context: string[]) {
           </Column>
         </Row>
       ))}
+      {!last && (
+        <Row>
+          <Column>
+            <SurfaceHr />
+          </Column>
+        </Row>
+      )}
     </>
   );
 }
 
-interface SlackBlockKitProps {
-  url: string;
-  app: string;
-  name: string;
-  stage: string;
-  message: string;
-  workspace: string;
-  stacktrace?: StacktraceFrame[];
-}
-function slackBlockKit(props: SlackBlockKitProps) {
-  function stacktrace(stacktrace?: StacktraceFrame[]) {
-    if (!stacktrace) {
-      return "\n  No stack trace available\n\n";
-    } else {
-      let stackString = "";
-
-      for (let i = 0; i < stacktrace.length; i++) {
-        const frame = stacktrace[i]!;
-
-        stackString += frame.raw
-          ? `${frame.raw}\n`
-          : `${frame.file}  ${frame.line}:${frame.column}\n`;
-
-        if (i < stacktrace.length - 1) {
-          stackString += "----------\n";
-        }
-
-        if (frame.context) {
-          stackString += "----------\n";
-          const minLeadingSpaces = Math.min(
-            ...frame.context.map((row) => countLeadingSpaces(row.line))
-          );
-          for (let j = 0; j < frame.context.length; j++) {
-            const context = frame.context[j]!;
-
-            stackString += `${context.index.toString()}  ${context.line.substring(
-              minLeadingSpaces
-            )}\n`;
-          }
-        }
-      }
-
-      return stackString;
-    }
-  }
-
-  const template = {
-    blocks: [
-      {
-        type: "header",
-        text: {
-          type: "plain_text",
-          text: props.name,
-          emoji: true,
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "plain_text",
-          text: props.message,
-        },
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "View Issue",
-            emoji: false,
-          },
-          url: props.url,
-          action_id: "button-action",
-        },
-      },
-      {
-        type: "section",
-        block_id: "sectionBlockOnlyPlainText",
-        text: {
-          type: "plain_text",
-          text: "Stack Trace",
-          emoji: true,
-        },
-      },
-      {
-        type: "divider",
-      },
-      {
-        type: "rich_text",
-        elements: [
-          {
-            type: "rich_text_preformatted",
-            elements: [
-              {
-                type: "text",
-                text: stacktrace(props.stacktrace),
-              },
-            ],
-          },
-        ],
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "plain_text",
-            text: `${props.workspace}: ${props.app} / ${props.stage}`,
-            emoji: false,
-          },
-        ],
-      },
-    ],
-  };
-  return JSON.stringify(template, null, 2);
-}
-
 interface IssueEmailProps {
-  url: string;
   app: string;
   stage: string;
   workspace: string;
   assetsUrl: string;
-  settingsUrl: string;
+  consoleUrl: string;
   issue: Issue.Info;
 }
 export const IssueEmail = ({
@@ -489,8 +378,7 @@ export const IssueEmail = ({
   workspace = "seed",
   stage = "production",
   assetsUrl = LOCAL_ASSETS_URL,
-  settingsUrl = "https://console.sst.dev/sst/console/production/settings",
-  url = "https://console.sst.dev/sst/console/production/issues/pioksmvi6x2sa9zdljvn8ytw",
+  consoleUrl = "https://console.sst.dev",
   issue = {
     message:
       "ThisisareallylongmessagethatshouldbetruncatedBecauseItDoesNotHaveABreakAndWillOverflow.",
@@ -545,6 +433,9 @@ export const IssueEmail = ({
     stageID: "",
   },
 }: IssueEmailProps) => {
+  const stack =
+    issue.stack?.filter((frame) => frame.important && frame.context) || [];
+  const url = `${consoleUrl}/${workspace}/${app}/${stage}/issues/${issue.id}`;
   return (
     <Html lang="en">
       <Head>
@@ -554,16 +445,18 @@ export const IssueEmail = ({
       <Preview>
         SST — {issue.error}: {issue.message}
       </Preview>
-      <Body style={body}>
+      <Body style={body} id={Math.random().toString()}>
         <Container style={container}>
           <Section style={frame}>
             <Row>
               <Column>
-                <Img
-                  height="32"
-                  alt="SST Logo"
-                  src={`${assetsUrl}/sst-logo.png`}
-                />
+                <a href={consoleUrl}>
+                  <Img
+                    height="32"
+                    alt="SST Logo"
+                    src={`${assetsUrl}/sst-logo.png`}
+                  />
+                </a>
               </Column>
               <Column align="right">
                 <Button style={buttonPrimary} href={url}>
@@ -611,8 +504,8 @@ export const IssueEmail = ({
                   </Column>
                 </Row>
               )}
-              {issue.stack &&
-                issue.stack.map((frame, index) => (
+              {stack &&
+                stack.map((frame, index) => (
                   <React.Fragment key={index}>
                     {!frame.file ? (
                       <Row>
@@ -666,7 +559,11 @@ export const IssueEmail = ({
                     )}
                     {frame.context &&
                       frame.important &&
-                      renderStacktraceFrameContext(frame.line!, frame.context)}
+                      renderStacktraceFrameContext(
+                        frame.line!,
+                        frame.context,
+                        index === stack.length - 1
+                      )}
                   </React.Fragment>
                 ))}
             </Section>
@@ -679,12 +576,15 @@ export const IssueEmail = ({
 
             <Row>
               <Column>
-                <Link href="https://console.sst.dev" style={footerLink}>
+                <Link href={consoleUrl} style={footerLink}>
                   Console
                 </Link>
               </Column>
               <Column align="right">
-                <Link href={settingsUrl} style={footerLink}>
+                <Link
+                  href={`${consoleUrl}/${workspace}/settings`}
+                  style={footerLink}
+                >
                   Settings
                 </Link>
               </Column>

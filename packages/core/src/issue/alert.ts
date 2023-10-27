@@ -167,22 +167,24 @@ export const trigger = zod(
         and(
           eq(issue.workspaceID, useWorkspace()),
           eq(issue.stageID, input.stageID),
-          eq(issue.group, input.group),
-          or(
-            // alert first time
-            isNull(issueAlertLimit.timeUpdated),
-            // do not alert more than once every 30min
-            lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
-            // if issue resolved after last alert, send alert
-            gt(issue.timeResolved, issueAlertLimit.timeUpdated)
-          ),
-          isNull(issue.timeIgnored)
+          eq(issue.group, input.group)
+          // or(
+          //   // alert first time
+          //   isNull(issueAlertLimit.timeUpdated),
+          //   // do not alert more than once every 30min
+          //   lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
+          //   // if issue resolved after last alert, send alert
+          //   gt(issue.timeResolved, issueAlertLimit.timeUpdated)
+          // ),
+          // isNull(issue.timeIgnored)
         )
       )
       .then((rows) => rows[0]);
 
-    console.log("not alertable");
-    if (!result) return;
+    if (!result) {
+      console.log("not alertable");
+      return;
+    }
 
     const alerts = await db
       .select()
@@ -242,6 +244,7 @@ export const trigger = zod(
           });
         }
         try {
+          console.log("sending slack");
           await Slack.send({
             channel: destination.properties.channel,
             blocks,
@@ -270,10 +273,9 @@ export const trigger = zod(
             issue: result,
             stage: result.stageName,
             app: result.appName,
-            url: "https://console.sst.dev",
-            assetsUrl: "https://console.sst.dev/email",
+            assetsUrl: `https://console.sst.dev/email`,
+            consoleUrl: "https://console.sst.dev",
             workspace: result.workspaceSlug,
-            settingsUrl: "https://console.sst.dev",
           })
         );
         const users = await db
@@ -290,32 +292,38 @@ export const trigger = zod(
               isNull(user.timeDeleted)
             )
           );
-        await ses.send(
-          new SendEmailCommand({
-            Destination: {
-              ToAddresses: users.map((u) => u.email),
-            },
-            ReplyToAddresses: [
-              result.id + "+issue+alerts@" + process.env.EMAIL_DOMAIN,
-            ],
-            FromEmailAddress: `SST <${result.id}+issue+alerts@${process.env.EMAIL_DOMAIN}>`,
-            Content: {
-              Simple: {
-                Body: {
-                  Html: {
-                    Data: html,
+        console.log(
+          "sending email to",
+          users.map((u) => u.email)
+        );
+        try {
+          await ses.send(
+            new SendEmailCommand({
+              Destination: {
+                ToAddresses: users.map((u) => u.email),
+              },
+              ReplyToAddresses: [
+                result.id + "+issue+alerts@" + process.env.EMAIL_DOMAIN,
+              ],
+              FromEmailAddress: `SST <${result.id}+issue+alerts@${process.env.EMAIL_DOMAIN}>`,
+              Content: {
+                Simple: {
+                  Body: {
+                    Html: {
+                      Data: html,
+                    },
+                    Text: {
+                      Data: result.message,
+                    },
                   },
-                  Text: {
-                    Data: result.message,
+                  Subject: {
+                    Data: `Error: ${result.error}`,
                   },
-                },
-                Subject: {
-                  Data: `Error: ${result.error}`,
                 },
               },
-            },
-          })
-        );
+            })
+          );
+        } catch {}
       }
     }
 

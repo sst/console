@@ -294,6 +294,7 @@ export const extract = zod(
           },
         })
         .execute();
+      console.log("inserted");
 
       await tx
         .insert(issueCount)
