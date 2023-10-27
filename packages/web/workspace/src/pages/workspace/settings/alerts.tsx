@@ -25,6 +25,7 @@ import {
   IconArrowLongRight,
   IconEllipsisVertical,
   IconEllipsisHorizontal,
+  IconExclamationTriangle,
 } from "$/ui/icons";
 import { IconLogosSlackBW } from "$/ui/icons/custom";
 import { useReplicache } from "$/providers/replicache";
@@ -64,7 +65,7 @@ const AlertsPanel = styled("div", {
 });
 
 const alertsPanelRow = style({
-  padding: theme.space[5],
+  padding: `${theme.space[4]} ${theme.space[5]}`,
   borderBottom: `1px solid ${theme.color.divider.base}`,
   selectors: {
     "&:last-child": {
@@ -126,15 +127,47 @@ const MatchingStagesPanelExpanded = styled("div", {
 
 const AlertsPanelRowIcon = styled("div", {
   base: {
+    marginTop: theme.space[1],
     opacity: theme.iconOpacity,
     color: theme.color.text.secondary.base,
   },
 });
 
-const AlertsPanelRowArrowIcon = styled("div", {
+const AlertsPanelToIcon = styled("div", {
   base: {
     opacity: theme.iconOpacity,
+    lineHeight: theme.font.lineHeight,
     color: theme.color.text.secondary.base,
+  },
+  variants: {
+    error: {
+      true: {
+        color: theme.color.text.danger.base,
+      },
+      false: {},
+    },
+  },
+});
+
+const AlertsPanelToLabel = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
+    color: theme.color.text.secondary.base,
+  },
+  variants: {
+    error: {
+      true: {
+        color: theme.color.text.danger.base,
+      },
+      false: {},
+    },
+  },
+});
+
+const AlertsPanelRowFromLabel = styled("div", {
+  base: {
+    lineHeight: theme.font.lineHeight,
   },
 });
 
@@ -713,68 +746,127 @@ export function Alerts() {
                             </Match>
                           </Switch>
                         </AlertsPanelRowIcon>
-                        <Stack space="3">
-                          <Text size="base" color="secondary" leading="normal">
-                            From{" "}
-                            <Text size="base" weight="medium">
-                              {alert.source.app === "*"
-                                ? "all apps"
-                                : alert.source.app.join(", ")}
-                            </Text>{" "}
-                            matching
-                            <Text size="base" weight="medium">
-                              {alert.source.stage === "*"
-                                ? " all stages"
-                                : ` "${alert.source.stage.join(", ")}"`}
+                        <Stack space="2">
+                          <AlertsPanelRowFromLabel>
+                            <Text size="base" color="secondary">
+                              From{" "}
                             </Text>
-                          </Text>
+                            <Show
+                              when={alert.source.app !== "*"}
+                              fallback={
+                                <Text size="base" weight="medium">
+                                  all apps
+                                </Text>
+                              }
+                            >
+                              <>
+                                <Text size="base" weight="medium">
+                                  {alert.source.app !== "*" &&
+                                    alert.source.app.join(", ")}
+                                </Text>
+                                <Text size="base" color="secondary">
+                                  {" "}
+                                  {alert.source.app.length > 1 ? "apps" : "app"}
+                                </Text>
+                              </>
+                            </Show>
+                            <Text size="base" color="secondary">
+                              {" "}
+                              /{" "}
+                            </Text>
+                            <Show
+                              when={alert.source.stage !== "*"}
+                              fallback={
+                                <Text size="base" weight="medium">
+                                  all stages
+                                </Text>
+                              }
+                            >
+                              <>
+                                <Text size="base" weight="medium">
+                                  {alert.source.stage !== "*" &&
+                                    alert.source.stage.join(", ")}
+                                </Text>
+                                <Text size="base" color="secondary">
+                                  {" "}
+                                  {alert.source.app !== "*" &&
+                                  alert.source.app.length === 1
+                                    ? "stage"
+                                    : "stages"}
+                                </Text>
+                              </>
+                            </Show>
+                          </AlertsPanelRowFromLabel>
                           <Row space="1.5" vertical="center">
-                            <AlertsPanelRowArrowIcon>
-                              <IconArrowLongRight width={12} height={12} />
-                            </AlertsPanelRowArrowIcon>
-                            <Text color="secondary" size="sm">
-                              <Switch>
-                                <Match
-                                  when={
-                                    alert.destination.type === "email" &&
-                                    alert.destination
-                                  }
-                                >
-                                  {(destination) =>
-                                    destination().properties.users === "*"
-                                      ? "To all users in the workspace"
-                                      : (
-                                          destination().properties
-                                            .users as string[]
-                                        )
-                                          .map(
-                                            (id) =>
-                                              users().find((u) => u.id === id)
-                                                ?.email
+                            <Switch>
+                              <Match
+                                when={
+                                  alert.destination.type === "email" &&
+                                  alert.destination
+                                }
+                              >
+                                {(destination) => (
+                                  <>
+                                    <AlertsPanelToIcon>
+                                      <IconArrowLongRight
+                                        width={12}
+                                        height={12}
+                                      />
+                                    </AlertsPanelToIcon>
+                                    <AlertsPanelToLabel>
+                                      {destination().properties.users === "*"
+                                        ? "To all users in the workspace"
+                                        : (
+                                            destination().properties
+                                              .users as string[]
                                           )
-                                          .join(", ")
-                                  }
-                                </Match>
-                                <Match
-                                  when={
-                                    alert.destination.type === "slack" &&
-                                    alert.destination
-                                  }
-                                >
-                                  {(destination) => (
-                                    <Show
-                                      when={slackWarnings()[alert.id]}
-                                      fallback={
-                                        destination().properties.channel
-                                      }
-                                    >
-                                      Could not send alert, make sure you invite
-                                      @SST to {destination().properties.channel}
-                                    </Show>
-                                  )}
-                                </Match>
-                              </Switch>
-                            </Text>
+                                            .map(
+                                              (id) =>
+                                                users().find((u) => u.id === id)
+                                                  ?.email
+                                            )
+                                            .join(", ")}
+                                    </AlertsPanelToLabel>
+                                  </>
+                                )}
+                              </Match>
+                              <Match
+                                when={
+                                  alert.destination.type === "slack" &&
+                                  alert.destination
+                                }
+                              >
+                                {(destination) => (
+                                  <Switch>
+                                    <Match when={slackWarnings()[alert.id]}>
+                                      <AlertsPanelToIcon error>
+                                        <IconExclamationTriangle
+                                          width={12}
+                                          height={12}
+                                        />
+                                      </AlertsPanelToIcon>
+                                      <AlertsPanelToLabel error>
+                                        Make sure to invite @SST to the{" "}
+                                        {destination().properties.channel}{" "}
+                                        channel
+                                      </AlertsPanelToLabel>
+                                    </Match>
+                                    <Match when={true}>
+                                      <AlertsPanelToIcon>
+                                        <IconArrowLongRight
+                                          width={12}
+                                          height={12}
+                                        />
+                                      </AlertsPanelToIcon>
+                                      <AlertsPanelToLabel>
+                                        To channel{" "}
+                                        {destination().properties.channel}
+                                      </AlertsPanelToLabel>
+                                    </Match>
+                                  </Switch>
+                                )}
+                              </Match>
+                            </Switch>
                           </Row>
                         </Stack>
                       </Row>
