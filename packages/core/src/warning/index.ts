@@ -24,6 +24,12 @@ type Data =
   | {
       type: "issue_rate_limited";
       data: {};
+    }
+  | {
+      type: "issue_alert_slack";
+      data: {
+        channel: string;
+      };
     };
 
 export async function create(

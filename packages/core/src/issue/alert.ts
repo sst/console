@@ -26,6 +26,7 @@ import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
 import { render } from "@jsx-email/render";
 import { user } from "../user/user.sql";
 import { KnownBlock } from "@slack/web-api";
+import { Warning } from "../warning";
 
 export * as Alert from "./alert";
 
@@ -230,11 +231,27 @@ export const trigger = zod(
             },
           });
         }
-        await Slack.send({
-          channel: destination.properties.channel,
-          blocks,
-          text: `${result.error}: ${result.message.substring(0, 512)}`,
-        });
+        try {
+          await Slack.send({
+            channel: destination.properties.channel,
+            blocks,
+            text: `${result.error}: ${result.message.substring(0, 512)}`,
+          });
+          await Warning.remove({
+            stageID: input.stageID,
+            type: "issue_alert_slack",
+            target: alert.id,
+          });
+        } catch {
+          await Warning.create({
+            stageID: input.stageID,
+            type: "issue_alert_slack",
+            target: alert.id,
+            data: {
+              channel: destination.properties.channel,
+            },
+          });
+        }
       }
 
       if (destination.type === "email") {
