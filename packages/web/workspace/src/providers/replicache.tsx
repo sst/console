@@ -179,7 +179,6 @@ function createReplicache(workspaceID: string, token: string) {
       body: JSON.stringify(req),
       method: "POST",
     });
-    replicache.pull();
     return {
       httpRequestInfo: {
         httpStatusCode: result.status,
