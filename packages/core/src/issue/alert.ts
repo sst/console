@@ -313,7 +313,7 @@ export const trigger = zod(
                     },
                   },
                   Subject: {
-                    Data: `Error: ${result.error}`,
+                    Data: `Error: ${encodeURIComponent(result.error)}`,
                   },
                 },
               },
