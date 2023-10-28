@@ -185,6 +185,8 @@ export const trigger = zod(
       return;
     }
 
+    console.log("alerting", result.id);
+
     const alerts = await db
       .select()
       .from(issueAlert)
