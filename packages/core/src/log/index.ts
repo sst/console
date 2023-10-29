@@ -520,6 +520,15 @@ export type ParsedError = {
   stack: StackFrame[];
 };
 export function extractError(tabs: string[]): ParsedError | undefined {
+  // Lambda runtime error
+  if (tabs.length === 1 && tabs[0]?.includes("LAMBDA_RUNTIME Failed")) {
+    return {
+      error: "LambdaRuntimeError",
+      message: tabs[0]!.split("LAMBDA_RUNTIME")?.[1]?.trim() || "Unknown error",
+      stack: [],
+    };
+  }
+
   // Timeout
   const timeout = tabs.find((l) => l.includes("Task timed out after"));
   if (timeout) {

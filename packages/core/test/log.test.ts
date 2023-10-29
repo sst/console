@@ -212,3 +212,8 @@ test("node with brackets", () =>
       "  ]\n" +
       "}",
   ]));
+
+test.only("payload too big", () =>
+  expectError([
+    `[ERROR] [1698615205834] LAMBDA_RUNTIME Failed to post handler success response. Http response code: 413.`,
+  ]));

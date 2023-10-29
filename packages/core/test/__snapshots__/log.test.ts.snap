@@ -406,6 +406,14 @@ exports[`node with brackets 1`] = `
 }
 `;
 
+exports[`payload too big 1`] = `
+{
+  "error": "LambdaRuntimeError",
+  "message": "Failed to post handler success response. Http response code: 413.",
+  "stack": [],
+}
+`;
+
 exports[`powertools 1`] = `
 {
   "error": "FooError",
