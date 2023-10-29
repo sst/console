@@ -280,7 +280,7 @@ export function Logs() {
   });
   const activeSearch = LogSearchStore.get.watch(rep, () => [search.id]);
 
-  function createSearch(start?: number, end?: number) {
+  async function createSearch(start?: number, end?: number) {
     setSearch(
       produce((draft) => {
         draft.start = start ? new Date(start) : undefined;
@@ -290,6 +290,7 @@ export function Logs() {
 
     rep().mutate.log_search({
       id: search.id!,
+      profileID: await rep().profileID,
       stageID: stage.stage.id,
       logGroup: logGroup(),
       timeStart: search.start

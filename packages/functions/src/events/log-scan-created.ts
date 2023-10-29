@@ -16,6 +16,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const search = await Log.Search.fromID(evt.properties.id);
     if (!search) return;
+    const profileID = search.profileID || undefined;
     const config = await Stage.assumeRole(search.stageID);
     if (!config) return;
 
@@ -63,7 +64,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
             id: search.id,
             timeStart: new Date(start).toISOString().split("Z")[0]!,
           });
-          await Replicache.poke();
+          await Replicache.poke(profileID);
           console.log(
             "scanning from",
             new Date(start).toLocaleString(),
@@ -129,7 +130,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                 const url = await Storage.putEphemeral(JSON.stringify(data), {
                   ContentType: "application/json",
                 });
-                await Realtime.publish("invocation.url", url);
+                await Realtime.publish("invocation.url", url, profileID);
               }
               if (flushed >= 50 || isFixed) {
                 return;
@@ -147,7 +148,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
     }
 
     await Log.Search.complete(search.id);
-    await Replicache.poke();
+    await Replicache.poke(profileID);
   })
 );
 

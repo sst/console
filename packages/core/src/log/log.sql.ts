@@ -33,6 +33,7 @@ export const log_search = mysqlTable(
     ...workspaceID,
     ...timestamps,
     userID: cuid("user_id").notNull(),
+    profileID: varchar("profile_id", { length: 33 }),
     stageID: cuid("stage_id").notNull(),
     logGroup: varchar("log_group", { length: 512 }).notNull(),
     timeStart: timestamp("time_start", {

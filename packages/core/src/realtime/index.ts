@@ -9,7 +9,11 @@ import { useWorkspace } from "../actor";
 
 const data = new IoTDataPlaneClient({});
 
-export async function publish(topic: string, properties: any) {
+export async function publish(
+  topic: string,
+  properties: any,
+  profileID?: string
+) {
   const workspaceID = useWorkspace();
   await data.send(
     new PublishCommand({
@@ -19,7 +23,9 @@ export async function publish(topic: string, properties: any) {
           workspaceID,
         })
       ),
-      topic: `console/${Config.STAGE}/${workspaceID}/${topic}`,
+      topic: `console/${Config.STAGE}/${workspaceID}/${
+        profileID ? profileID : "all"
+      }/${topic}`,
     })
   );
 }

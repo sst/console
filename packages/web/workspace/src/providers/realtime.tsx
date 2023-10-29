@@ -17,10 +17,12 @@ export function RealtimeProvider() {
       .map((account) => account.session.token)
       .join(";");
     const workspaces = new Map<string, string[]>();
+    let profileID = "";
     for (const [accountID, account] of Object.entries(auth)) {
       const list = await account.replicache.query((tx) =>
         WorkspaceStore.list(tx)
       );
+      profileID = await account.replicache.profileID;
       for (const workspace of list) {
         let arr = workspaces.get(workspace.id);
         if (!arr) {
@@ -53,11 +55,20 @@ export function RealtimeProvider() {
       connection.on("connect", async () => {
         console.log("WS connected");
         for (const workspace of workspaces.keys()) {
-          console.log("subscribing to", workspace);
+          console.log("subscribing to", workspace, profileID);
+
           await connection.subscribe(
-            `console/${import.meta.env.VITE_STAGE}/${workspace}/#`,
+            `console/${import.meta.env.VITE_STAGE}/${workspace}/all/#`,
             mqtt.QoS.AtLeastOnce
           );
+
+          if (profileID)
+            await connection.subscribe(
+              `console/${
+                import.meta.env.VITE_STAGE
+              }/${workspace}/${profileID}/#`,
+              mqtt.QoS.AtLeastOnce
+            );
         }
       });
       connection.on("interrupt", (e) => {
@@ -80,7 +91,7 @@ export function RealtimeProvider() {
       connection.on("message", (fullTopic, payload) => {
         const splits = fullTopic.split("/");
         const workspaceID = splits[2];
-        const topic = splits[3];
+        const topic = splits[4];
         const message = new TextDecoder("utf8").decode(new Uint8Array(payload));
         const parsed = JSON.parse(message);
         if (topic === "poke") {
