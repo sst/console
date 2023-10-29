@@ -40,6 +40,8 @@ export const search = zod(
     profileID: true,
     timeStart: true,
     timeEnd: true,
+  }).partial({
+    profileID: true,
   }),
   (input) =>
     useTransaction(async (tx) => {
