@@ -14,7 +14,18 @@ export const handler = EventHandler(Workspace.Events.Created, async (evt) =>
       const workspaceID = evt.properties.workspaceID;
       const workspace = await Workspace.fromID(workspaceID);
 
-      // await Issue.Alert.create({});
+      await Issue.Alert.put({
+        source: {
+          app: "*",
+          stage: "*",
+        },
+        destination: {
+          type: "email",
+          properties: {
+            users: "*",
+          },
+        },
+      });
 
       if (workspace?.stripeCustomerID) {
         console.log("Already has stripe customer ID");

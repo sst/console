@@ -91,8 +91,11 @@ macaron$(() =>
   )
 );
 
-globalStyle("*", {
+globalStyle("body", {
   cursor: "default",
+});
+
+globalStyle("*", {
   boxSizing: "border-box",
 });
 
