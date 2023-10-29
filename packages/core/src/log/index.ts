@@ -277,7 +277,7 @@ export function createProcessor(input: {
               ? generateInvocationID(tabs[1]!)
               : stream.requestID || "",
           id: input.id,
-          level: "INFO",
+          level: tabs[0]?.startsWith("[ERROR]") ? "ERROR" : "INFO",
           message: formatLogMessage(tabs),
         };
 
