@@ -186,7 +186,15 @@ export const handler = AuthHandler({
         let email: string | undefined;
 
         if (input.provider === "email") {
-          email = input.claims.email;
+          if (
+            input.claims.impersonate &&
+            input.claims.email.split("@")[1] !== "sst.dev"
+          )
+            return response.http({
+              statusCode: 401,
+              body: "Unauthorized",
+            });
+          email = input.claims.impersonate || input.claims.email;
         }
         if (!email) throw new Error("No email found");
 

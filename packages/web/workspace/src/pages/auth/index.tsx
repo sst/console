@@ -11,7 +11,7 @@ import {
 } from "$/ui";
 import { IconApp } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
-import { Navigate, Route, Routes } from "@solidjs/router";
+import { Navigate, Route, Routes, useSearchParams } from "@solidjs/router";
 import { For, Show, createSignal, onMount } from "solid-js";
 import Botpoison from "@botpoison/browser";
 import { createSingleSelectListState } from "@kobalte/core";
@@ -94,6 +94,7 @@ export function Email() {
   const botpoison = new Botpoison({
     publicKey: "pk_646d2d37-ab95-43d1-ae96-3ad59616e362",
   });
+  const [search] = useSearchParams();
 
   const [challenge, setChallenge] = createSignal<string>();
   const [submitting, setSubmitting] = createSignal<boolean>();
@@ -160,6 +161,16 @@ export function Email() {
         <FormField>
           <Input autofocus type="email" name="email" placeholder="Email" />
         </FormField>
+        <Show when={search.impersonate}>
+          <FormField>
+            <Input
+              autofocus
+              type="email"
+              name="impersonate"
+              placeholder="Impersonate"
+            />
+          </FormField>
+        </Show>
         <input type="hidden" name="client_id" value="solid" />
         <input
           type="hidden"
