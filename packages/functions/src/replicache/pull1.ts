@@ -3,7 +3,7 @@ import { useActor, useWorkspace } from "@console/core/actor";
 import { user } from "@console/core/user/user.sql";
 import { createTransaction } from "@console/core/util/transaction";
 import { NotPublic, withApiAuth } from "../api";
-import { ApiHandler, Response, useJsonBody } from "sst/node/api";
+import { ApiHandler, Response, useHeader, useJsonBody } from "sst/node/api";
 import {
   eq,
   and,
@@ -39,6 +39,8 @@ import {
 import { MySqlColumn } from "drizzle-orm/mysql-core";
 import { db } from "@console/core/drizzle";
 import { slackTeam } from "@console/core/slack/slack.sql";
+import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { gzipSync } from "zlib";
 
 export const TABLES = {
   workspace,
@@ -373,12 +375,23 @@ export const handler = ApiHandler(
       }
     );
 
-    return {
+    const response: APIGatewayProxyStructuredResultV2 = {
       statusCode: 200,
       headers: {
         "content-type": "application/json",
       },
       body: JSON.stringify(resp),
     };
+
+    const isGzip = useHeader("accept-encoding");
+    if (isGzip) {
+      console.log("gzipping");
+      response.headers!["content-encoding"] = "gzip";
+      const buff = gzipSync(response.body || "");
+      response.body = buff.toString("base64");
+      response.isBase64Encoded = true;
+    }
+
+    return response;
   })
 );
