@@ -620,9 +620,9 @@ export function extractError(tabs: string[]): ParsedError | undefined {
       if (error && message) return [error, message];
 
       // No clue how to parse this
-      return [description.substring(0, 128), "Unknown message"];
+      return [];
     })();
-    if (!error) return;
+    if (!error || !message) return;
     return {
       error: error,
       message: message,
