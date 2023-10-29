@@ -17,7 +17,7 @@ test("node invoke", () => {
   ]);
 });
 
-test.only("powertools", () =>
+test("powertools", () =>
   expectError([
     "2023-10-11T12:17:59.036Z",
     "0638bcc9-5472-4a56-b723-3c63f09893e2",
@@ -213,7 +213,7 @@ test("node with brackets", () =>
       "}",
   ]));
 
-test.only("payload too big", () =>
+test("payload too big", () =>
   expectError([
     `[ERROR] [1698615205834] LAMBDA_RUNTIME Failed to post handler success response. Http response code: 413.`,
   ]));

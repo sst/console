@@ -170,6 +170,45 @@ exports[`node inline multiline 1`] = `
 }
 `;
 
+exports[`node invoke 1`] = `
+{
+  "error": "NoSuchBucket",
+  "message": "The specified bucket does not exist",
+  "stack": [
+    {
+      "raw": "at de_NoSuchBucketRes (file:///var/task/packages/functions/src/events/app-stage-updated.mjs:51859:21)",
+    },
+    {
+      "raw": "at de_ListObjectsV2CommandError (file:///var/task/packages/functions/src/events/app-stage-updated.mjs:51807:19)",
+    },
+    {
+      "raw": "at runMicrotasks (<anonymous>)",
+    },
+    {
+      "raw": "at processTicksAndRejections (node:internal/process/task_queues:96:5)",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:42732:20",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:41547:18",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:43230:38",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:41269:22",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:56745:19",
+    },
+    {
+      "raw": "at async file:///var/task/packages/functions/src/events/app-stage-updated.mjs:56891:3",
+    },
+  ],
+}
+`;
+
 exports[`node logtail 1`] = `
 {
   "error": "TypeError",
