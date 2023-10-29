@@ -417,26 +417,6 @@ export function Overview() {
                     </Link>
                   </PageHeader>
                   <Row space="4" vertical="center">
-                    <Show when={useFlags().alerts}>
-                      <form
-                        action={import.meta.env.VITE_AUTH_URL + "/connect"}
-                        method="post"
-                        target="_blank"
-                      >
-                        <input type="hidden" name="provider" value="slack" />
-                        <input
-                          type="hidden"
-                          name="workspaceID"
-                          value={workspace().id}
-                        />
-                        <input
-                          type="hidden"
-                          name="token"
-                          value={auth[storage.value.account].session.token}
-                        />
-                        <Button color="secondary">Connect Slack</Button>
-                      </form>
-                    </Show>
                     <Link href="account">
                       <Button color="secondary">Add AWS Account</Button>
                     </Link>

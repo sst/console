@@ -8,7 +8,6 @@ export const withApiAuth = <T>(cb: () => Promise<T>) => {
     const session = sessions.use();
 
     const workspaceID = useHeader("x-sst-workspace");
-    console.log("auth workspace", workspaceID);
     if (!workspaceID) return withActor(session, cb);
     if (session.type !== "account")
       throw new Response({
