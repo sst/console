@@ -173,6 +173,7 @@ export const handler = ApiHandler(
                 .minus({ day: 1 })
                 .toSQL({ includeOffset: false })!
             ),
+            issue: isNull(issue.timeDeleted),
           } satisfies {
             [key in keyof typeof TABLES]?: SQLWrapper;
           };
@@ -197,6 +198,7 @@ export const handler = ApiHandler(
                     "workspaceID" in table ? table.workspaceID : table.id,
                     workspaceID
                   ),
+                  isNull(workspaceID),
                   ...(name in tableFilters
                     ? [tableFilters[name as keyof typeof tableFilters]]
                     : [])
