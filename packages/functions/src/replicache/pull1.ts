@@ -198,7 +198,6 @@ export const handler = ApiHandler(
                     "workspaceID" in table ? table.workspaceID : table.id,
                     workspaceID
                   ),
-                  isNull(workspaceID),
                   ...(name in tableFilters
                     ? [tableFilters[name as keyof typeof tableFilters]]
                     : [])
