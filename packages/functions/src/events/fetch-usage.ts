@@ -10,6 +10,7 @@ import { Resource } from "@console/core/app/resource";
 import { Billing } from "@console/core/billing";
 import { stripe } from "@console/core/stripe";
 import { Workspace } from "@console/core/workspace";
+import { Warning } from "@console/core/warning";
 
 export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
   withActor(evt.metadata.actor, async () => {
@@ -88,33 +89,51 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       const client = new CloudWatchClient(config!);
 
       const queryBatch = async (batch: typeof functions) => {
-        const metrics = await client.send(
-          new GetMetricDataCommand({
-            MetricDataQueries: batch.map((fn, i) => ({
-              Id: `m${i}`,
-              MetricStat: {
-                Metric: {
-                  Namespace: "AWS/Lambda",
-                  MetricName: "Invocations",
-                  Dimensions: [
-                    {
-                      Name: "FunctionName",
-                      Value: fn,
-                    },
-                  ],
+        try {
+          const metrics = await client.send(
+            new GetMetricDataCommand({
+              MetricDataQueries: batch.map((fn, i) => ({
+                Id: `m${i}`,
+                MetricStat: {
+                  Metric: {
+                    Namespace: "AWS/Lambda",
+                    MetricName: "Invocations",
+                    Dimensions: [
+                      {
+                        Name: "FunctionName",
+                        Value: fn,
+                      },
+                    ],
+                  },
+                  Period: 86400,
+                  Stat: "Sum",
                 },
-                Period: 86400,
-                Stat: "Sum",
-              },
-            })),
-            StartTime: startDate.toJSDate(),
-            EndTime: endDate.toJSDate(),
-          })
-        );
-        return (metrics.MetricDataResults || [])?.reduce(
-          (acc, result) => acc + (result.Values?.[0] ?? 0),
-          0
-        );
+              })),
+              StartTime: startDate.toJSDate(),
+              EndTime: endDate.toJSDate(),
+            })
+          );
+          await Warning.remove({
+            stageID: evt.properties.stageID,
+            type: "permission_usage",
+            target: evt.properties.stageID,
+          });
+          return (metrics.MetricDataResults || [])?.reduce(
+            (acc, result) => acc + (result.Values?.[0] ?? 0),
+            0
+          );
+        } catch (ex: any) {
+          if (ex instanceof Error && ex.name === "AccessDenied") {
+            await Warning.create({
+              type: "permission_usage",
+              target: evt.properties.stageID,
+              data: {},
+              stageID: evt.properties.stageID,
+            });
+            return 0;
+          }
+          throw ex;
+        }
       };
 
       // Query in batches
