@@ -67,6 +67,23 @@ export const fromCustomerID = zod(z.string(), (input) =>
   )
 );
 
+export const setStanding = zod(
+  Info.pick({
+    subscriptionID: true,
+    standing: true,
+  }),
+  (input) =>
+    useTransaction((tx) =>
+      tx
+        .update(stripe)
+        .set({
+          standing: input.standing,
+        })
+        .where(and(eq(stripe.subscriptionID, input.subscriptionID!)))
+        .execute()
+    )
+);
+
 export const removeSubscription = zod(
   z.string().nonempty(),
   (stripeSubscriptionID) =>

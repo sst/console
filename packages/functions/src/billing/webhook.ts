@@ -42,7 +42,18 @@ export const handler = ApiHandler(async (event) => {
     // @ts-expect-error
     const { id: subscriptionID, customer, status } = body.data.object;
     // Set the subscription status to reflect in the UI
-    console.log({ customer });
+    if (status === "active") {
+      await Billing.Stripe.setStanding({
+        subscriptionID,
+        standing: "good",
+      });
+    }
+    else if (status === "past_due") {
+      await Billing.Stripe.setStanding({
+        subscriptionID,
+        standing: "overdue",
+      });
+    }
   } else if (body.type === "customer.subscription.deleted") {
     // @ts-expect-error
     const { id: subscriptionID } = body.data.object;
