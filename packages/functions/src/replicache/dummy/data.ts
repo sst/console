@@ -106,9 +106,6 @@ function workspace({ id, activeSubscription }: WorkspaceProps): DummyData {
     id,
     slug: id,
     timeDeleted: null,
-    stripeSubscriptionItemID: null,
-    stripeCustomerID: null,
-    stripeSubscriptionID: activeSubscription ? "sub_123" : null,
     ...timestamps,
   };
 }

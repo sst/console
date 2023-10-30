@@ -47,9 +47,6 @@ const mutators = new Client<ServerType>()
       timeUpdated: null as any,
       timeCreated: null as any,
       timeDeleted: null,
-      stripeCustomerID: null,
-      stripeSubscriptionID: null,
-      stripeSubscriptionItemID: null,
     });
   })
   .build();

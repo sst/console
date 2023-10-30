@@ -3,6 +3,7 @@ import { stripe } from "@console/core/stripe";
 import { EventHandler } from "sst/node/event-bus";
 import { Issue } from "@console/core/issue";
 import { withActor } from "@console/core/actor";
+import { Billing } from "@console/core/billing";
 
 export const handler = EventHandler(Workspace.Events.Created, async (evt) =>
   withActor(
@@ -11,9 +12,6 @@ export const handler = EventHandler(Workspace.Events.Created, async (evt) =>
       properties: { workspaceID: evt.properties.workspaceID },
     },
     async () => {
-      const workspaceID = evt.properties.workspaceID;
-      const workspace = await Workspace.fromID(workspaceID);
-
       await Issue.Alert.put({
         source: {
           app: "*",
@@ -27,7 +25,8 @@ export const handler = EventHandler(Workspace.Events.Created, async (evt) =>
         },
       });
 
-      if (workspace?.stripeCustomerID) {
+      const subscription = await Billing.Stripe.get();
+      if (subscription?.customerID) {
         console.log("Already has stripe customer ID");
         return;
       }
@@ -39,10 +38,7 @@ export const handler = EventHandler(Workspace.Events.Created, async (evt) =>
         },
       });
 
-      await Workspace.setStripeCustomerID({
-        id: workspaceID,
-        stripeCustomerID: customer.id,
-      });
+      await Billing.Stripe.setCustomerID(customer.id);
     }
   )
 );

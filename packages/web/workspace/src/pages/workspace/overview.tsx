@@ -397,13 +397,7 @@ export function Overview() {
                     <Link href="settings">
                       <TextButton>
                         <Row space="0.5" horizontal="center">
-                          <Show
-                            fallback="Manage workspace"
-                            when={
-                              invocations() > PRICING_PLAN[0].to &&
-                              !workspace().stripeSubscriptionID
-                            }
-                          >
+                          <Show fallback="Manage workspace" when={false}>
                             <Text color="danger" size="sm">
                               Your usage is above the free tier, add your
                               billing details

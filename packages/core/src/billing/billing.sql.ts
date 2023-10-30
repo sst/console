@@ -1,13 +1,11 @@
 import {
-  index,
-  json,
   mysqlTable,
   primaryKey,
-  timestamp,
   date,
   uniqueIndex,
-  varchar,
+  mysqlEnum,
   bigint,
+  varchar,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid } from "../util/sql";
 
@@ -24,5 +22,23 @@ export const usage = mysqlTable(
   (table) => ({
     primary: primaryKey(table.workspaceID, table.id),
     stage: uniqueIndex("stage").on(table.workspaceID, table.stageID, table.day),
+  })
+);
+
+export const stripe = mysqlTable(
+  "stripe",
+  {
+    ...workspaceID,
+    ...timestamps,
+    customerID: varchar("customer_id", { length: 255 }),
+    subscriptionID: varchar("subscription_id", { length: 255 }),
+    subscriptionItemID: varchar("subscription_item_id", {
+      length: 255,
+    }),
+    standing: mysqlEnum("standing", ["good", "overdue"]),
+  },
+  (table) => ({
+    primary: primaryKey(table.workspaceID, table.id),
+    workspace: uniqueIndex("workspaceID").on(table.workspaceID),
   })
 );

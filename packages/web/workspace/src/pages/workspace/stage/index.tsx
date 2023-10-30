@@ -134,7 +134,7 @@ export function Inner() {
     <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
       <Switch>
-        <Match when={false && !ctx.connected}>
+        <Match when={!ctx.connected}>
           <Fullscreen>
             <Warning>
               <Stack horizontal="center" space="5">
@@ -147,7 +147,7 @@ export function Inner() {
                   </Text>
                   <Text center size="sm" color="secondary">
                     To continue to use the SST Console with non-local stages{" "}
-                    <Link href={`/${workspace().slug}/settings`}>
+                    <Link href={`/${workspace().slug}/settings#billing`}>
                       add billing information
                     </Link>
                   </Text>

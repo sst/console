@@ -131,8 +131,8 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       if (invocations === 0) return;
 
       const workspaceID = useWorkspace();
-      const workspace = await Workspace.fromID(workspaceID);
-      if (!workspace?.stripeSubscriptionItemID) return;
+      const item = await Billing.Stripe.get();
+      if (!item?.subscriptionItemID) return;
 
       const monthlyUsages = await Billing.listByStartAndEndDay({
         startDay: startDate.startOf("month").toSQLDate()!,
@@ -150,7 +150,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
         //const timestamp = Math.floor(Date.now() / 1000);
         //const timestamp = DateTime.now().plus({ month: 1 }).toUnixInteger();
         await stripe.subscriptionItems.createUsageRecord(
-          workspace.stripeSubscriptionItemID,
+          item.subscriptionItemID,
           {
             // TODO
             quantity: monthlyInvocations,

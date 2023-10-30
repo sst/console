@@ -1,17 +1,16 @@
 import { DateTime } from "luxon";
-import { Workspace } from "@console/core/workspace";
-import { stripe } from "@console/core/stripe";
-import { useWorkspace } from "@console/core/actor";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { withApiAuth } from "src/api";
 import { Config } from "sst/node/config";
+import { Billing } from "@console/core/billing";
+import { stripe } from "@console/core/stripe";
 
 export const handler = ApiHandler(
   withApiAuth(async () => {
     const body = useJsonBody();
 
-    const workspace = await Workspace.fromID(useWorkspace());
-    if (!workspace?.stripeCustomerID) {
+    const item = await Billing.Stripe.get();
+    if (!item?.customerID) {
       throw new Error("No stripe customer ID");
     }
 
@@ -22,7 +21,7 @@ export const handler = ApiHandler(
           price: Config.STRIPE_PRICE_ID,
         },
       ],
-      customer: workspace?.stripeCustomerID,
+      customer: item.customerID,
       success_url: body.return_url,
       cancel_url: body.return_url,
       subscription_data: {

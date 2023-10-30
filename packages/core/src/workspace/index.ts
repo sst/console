@@ -10,6 +10,8 @@ import { eq } from "drizzle-orm";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { event } from "../event";
 import { VisibleError } from "../util/error";
+import { stripe } from "../billing/billing.sql";
+import { useWorkspace } from "../actor";
 
 export const Events = {
   Created: event("workspace.created", {
@@ -35,11 +37,11 @@ export const Info = createSelectSchema(workspace, {
       .nonempty()
       .min(3)
       .regex(/^[a-z0-9\-]+$/),
-  stripeCustomerID: (schema) => schema.stripeCustomerID.trim().nonempty(),
-  stripeSubscriptionID: (schema) =>
-    schema.stripeSubscriptionID.trim().nonempty(),
-  stripeSubscriptionItemID: (schema) =>
-    schema.stripeSubscriptionItemID.trim().nonempty(),
+  // stripeCustomerID: (schema) => schema.stripeCustomerID.trim().nonempty(),
+  // stripeSubscriptionID: (schema) =>
+  //   schema.stripeSubscriptionID.trim().nonempty(),
+  // stripeSubscriptionItemID: (schema) =>
+  //   schema.stripeSubscriptionItemID.trim().nonempty(),
 });
 export type Info = z.infer<typeof Info>;
 
@@ -64,39 +66,6 @@ export const create = zod(
     })
 );
 
-export const setStripeCustomerID = zod(
-  Info.pick({ id: true, stripeCustomerID: true }),
-  (input) =>
-    useTransaction((tx) =>
-      tx
-        .update(workspace)
-        .set({
-          stripeCustomerID: input.stripeCustomerID,
-        })
-        .where(eq(workspace.id, input.id))
-        .execute()
-    )
-);
-
-export const setStripeSubscription = zod(
-  Info.pick({
-    id: true,
-    stripeSubscriptionID: true,
-    stripeSubscriptionItemID: true,
-  }),
-  (input) =>
-    useTransaction((tx) =>
-      tx
-        .update(workspace)
-        .set({
-          stripeSubscriptionID: input.stripeSubscriptionID,
-          stripeSubscriptionItemID: input.stripeSubscriptionItemID,
-        })
-        .where(eq(workspace.id, input.id))
-        .execute()
-    )
-);
-
 export const list = zod(z.void(), () =>
   useTransaction((tx) =>
     tx
@@ -116,32 +85,4 @@ export const fromID = zod(Info.shape.id, async (id) =>
       .execute()
       .then((rows) => rows[0]);
   })
-);
-
-export const fromStripeCustomerID = zod(
-  z.string().nonempty(),
-  (stripeCustomerID) =>
-    useTransaction((tx) =>
-      tx
-        .select()
-        .from(workspace)
-        .where(eq(workspace.stripeCustomerID, stripeCustomerID))
-        .execute()
-        .then((rows) => rows[0])
-    )
-);
-
-export const deleteStripeSubscription = zod(
-  z.string().nonempty(),
-  (stripeSubscriptionID) =>
-    useTransaction((tx) =>
-      tx
-        .update(workspace)
-        .set({
-          stripeSubscriptionID: null,
-          stripeSubscriptionItemID: null,
-        })
-        .where(eq(workspace.stripeSubscriptionID, stripeSubscriptionID))
-        .execute()
-    )
 );

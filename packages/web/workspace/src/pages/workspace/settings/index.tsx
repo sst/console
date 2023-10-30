@@ -11,7 +11,7 @@ import { useFlags } from "$/providers/flags";
 import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "../header";
-import { AppStore, SlackTeamStore } from "$/data/app";
+import { AppStore, SlackTeamStore, StripeStore } from "$/data/app";
 import { useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
 import { createEventListener } from "@solid-primitives/event-listener";
@@ -184,6 +184,8 @@ export function Settings() {
     window.location.href = result.url;
   }
 
+  const stripe = StripeStore.get.watch(rep, () => []);
+
   return (
     <>
       <Header />
@@ -284,7 +286,7 @@ export function Settings() {
           </Stack>
         </Stack>
         <Divider />
-        <Stack space={PANEL_CONTENT_SPACE} horizontal="start">
+        <Stack space={PANEL_CONTENT_SPACE} horizontal="start" id="billing">
           <Stack space={PANEL_HEADER_SPACE}>
             <Text size="lg" weight="medium">
               Billing
@@ -294,7 +296,7 @@ export function Settings() {
             </Text>
           </Stack>
           <Stack space="3.5" horizontal="start">
-            <Show when={workspace().stripeSubscriptionID}>
+            <Show when={stripe()?.subscriptionID}>
               <Button
                 color="secondary"
                 onMouseEnter={handleHoverManageSubscription}
@@ -303,7 +305,7 @@ export function Settings() {
                 Manage Billing Details
               </Button>
             </Show>
-            <Show when={!workspace().stripeSubscriptionID}>
+            <Show when={!stripe()?.subscriptionID}>
               <Button
                 color="primary"
                 onMouseEnter={handleHoverSubscribe}

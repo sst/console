@@ -2,6 +2,7 @@ import type { App } from "@console/core/app";
 import { Store } from "./store";
 import { Slack } from "@console/core/slack";
 import { Issue } from "@console/core/issue";
+import { Billing } from "@console/core/billing";
 
 export const AppStore = new Store()
   .type<App.Info>()
@@ -19,4 +20,9 @@ export const IssueAlertStore = new Store()
   .type<Issue.Alert.Info>()
   .scan("all", () => ["issueAlert"])
   .get((id: string) => ["issueAlert", id])
+  .build();
+
+export const StripeStore = new Store()
+  .type<Billing.Stripe.Info>()
+  .get(() => ["stripe"])
   .build();

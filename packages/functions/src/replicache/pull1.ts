@@ -17,7 +17,7 @@ import {
   SQL,
 } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
-import { usage } from "@console/core/billing/billing.sql";
+import { stripe, usage } from "@console/core/billing/billing.sql";
 import { app, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import {
@@ -44,6 +44,7 @@ import { gzipSync } from "zlib";
 
 export const TABLES = {
   workspace,
+  stripe,
   user,
   awsAccount,
   app,
@@ -68,6 +69,7 @@ const TABLE_KEY = {
   resource: [resource.stageID, resource.id],
   issueCount: [issueCount.group, issueCount.id],
   warning: [warning.stageID, warning.type, warning.id],
+  stripe: [],
 } as {
   [key in TableName]?: MySqlColumn[];
 };

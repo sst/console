@@ -2,6 +2,8 @@ import { Workspace } from "@console/core/workspace";
 import { stripe } from "@console/core/stripe";
 import { ApiHandler } from "sst/node/api";
 import { Config } from "sst/node/config";
+import { Billing } from "@console/core/billing";
+import { withActor } from "@console/core/actor";
 
 export const handler = ApiHandler(async (event) => {
   // validate signature
@@ -15,19 +17,27 @@ export const handler = ApiHandler(async (event) => {
   if (body.type === "customer.subscription.created") {
     // @ts-expect-error
     const { id: subscriptionID, customer, items } = body.data.object;
-    const workspace = await Workspace.fromStripeCustomerID(customer);
-    if (!workspace) {
+    const item = await Billing.Stripe.fromCustomerID(customer);
+    if (!item) {
       throw new Error("Workspace not found for customer");
     }
-    if (workspace?.stripeSubscriptionID) {
+    if (item.subscriptionID) {
       throw new Error("Workspace already has a subscription");
     }
 
-    await Workspace.setStripeSubscription({
-      id: workspace.id,
-      stripeSubscriptionID: subscriptionID,
-      stripeSubscriptionItemID: items.data[0].id,
-    });
+    await withActor(
+      {
+        type: "system",
+        properties: {
+          workspaceID: item.workspaceID,
+        },
+      },
+      () =>
+        Billing.Stripe.setSubscription({
+          subscriptionID: subscriptionID,
+          subscriptionItemID: items.data[0].id,
+        })
+    );
   } else if (body.type === "customer.subscription.updated") {
     // @ts-expect-error
     const { id: subscriptionID, customer, status } = body.data.object;
@@ -36,7 +46,7 @@ export const handler = ApiHandler(async (event) => {
   } else if (body.type === "customer.subscription.deleted") {
     // @ts-expect-error
     const { id: subscriptionID } = body.data.object;
-    await Workspace.deleteStripeSubscription(subscriptionID);
+    await Billing.Stripe.removeSubscription(subscriptionID);
   }
 
   // Stripe has already retried charging the customer and failed. Stripe

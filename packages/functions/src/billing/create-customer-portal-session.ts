@@ -1,20 +1,19 @@
-import { Workspace } from "@console/core/workspace";
 import { stripe } from "@console/core/stripe";
-import { useWorkspace } from "@console/core/actor";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { withApiAuth } from "src/api";
+import { Billing } from "@console/core/billing";
 
 export const handler = ApiHandler(
   withApiAuth(async () => {
     const body = useJsonBody();
 
-    const workspace = await Workspace.fromID(useWorkspace());
-    if (!workspace?.stripeCustomerID) {
+    const item = await Billing.Stripe.get();
+    if (!item?.customerID) {
       throw new Error("No stripe customer ID");
     }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: workspace?.stripeCustomerID,
+      customer: item.customerID,
       return_url: body.return_url,
     });
 

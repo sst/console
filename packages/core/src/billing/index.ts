@@ -1,5 +1,5 @@
 import { createSelectSchema } from "drizzle-zod";
-import { usage } from "./billing.sql";
+import { stripe, usage } from "./billing.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
@@ -8,6 +8,7 @@ import { useTransaction } from "../util/transaction";
 import { useWorkspace } from "../actor";
 
 export * as Billing from "./index";
+export { Stripe } from "./stripe";
 
 export const Usage = createSelectSchema(usage, {
   id: (schema) => schema.id.cuid2(),
