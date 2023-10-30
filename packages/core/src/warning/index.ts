@@ -20,6 +20,10 @@ type Data =
           };
     }
   | {
+      type: "permission_usage";
+      data: {};
+    }
+  | {
       type: "issue_rate_limited";
       data: {};
     }
