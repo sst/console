@@ -53,10 +53,12 @@ export const setCustomerID = zod(Info.shape.customerID, (input) =>
         workspaceID: useWorkspace(),
         id: createId(),
         customerID: input,
+        standing: "good",
       })
       .onDuplicateKeyUpdate({
         set: {
           customerID: input,
+          standing: "good",
         },
       })
       .execute()
