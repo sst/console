@@ -5,6 +5,7 @@ import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
 import { eq, and } from "drizzle-orm";
 import { useWorkspace } from "../actor";
+import { createId } from "@paralleldrive/cuid2";
 
 export * as Stripe from "./stripe";
 
@@ -47,11 +48,17 @@ export const setSubscription = zod(
 export const setCustomerID = zod(Info.shape.customerID, (input) =>
   useTransaction((tx) =>
     tx
-      .update(stripe)
-      .set({
+      .insert(stripe)
+      .values({
+        workspaceID: useWorkspace(),
+        id: createId(),
         customerID: input,
       })
-      .where(eq(stripe.workspaceID, useWorkspace()))
+      .onDuplicateKeyUpdate({
+        set: {
+          customerID: input,
+        },
+      })
       .execute()
   )
 );
