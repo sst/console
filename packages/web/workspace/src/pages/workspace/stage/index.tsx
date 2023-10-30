@@ -152,7 +152,7 @@ export function Inner() {
     <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
       <Switch>
-        <Match when={false && !ctx.connected}>
+        <Match when={workspace().timeGated != null && !ctx.connected}>
           <Fullscreen>
             <Warning>
               <Stack horizontal="center" space="5">
