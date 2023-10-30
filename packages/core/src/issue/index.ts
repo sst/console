@@ -2,8 +2,13 @@ export * as Issue from "./index";
 export * from "./extract";
 
 import { useActor, useWorkspace } from "../actor";
-import { and, db, eq, inArray, not, sql } from "../drizzle";
-import { issue, issueCount as issueCount, issueSubscriber } from "./issue.sql";
+import { and, db, eq, inArray, lt, not, sql } from "../drizzle";
+import {
+  issue,
+  issueAlertLimit,
+  issueCount as issueCount,
+  issueSubscriber,
+} from "./issue.sql";
 import { createId } from "@paralleldrive/cuid2";
 import {} from "@smithy/middleware-retry";
 import { zod } from "../util/zod";
@@ -432,3 +437,33 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
   });
   return;
 });
+
+export async function cleanup() {
+  {
+    const result = await db
+      .delete(issue)
+      .where(lt(issue.timeSeen, sql`now() - interval 30 day`));
+    console.log("deleted", result.rowsAffected, "issues");
+  }
+
+  {
+    const result = await db
+      .delete(issueCount)
+      .where(lt(issueCount.hour, sql`now() - interval 24 hour`));
+    console.log("deleted", result.rowsAffected, "issue counts");
+  }
+
+  {
+    const result = await db
+      .delete(issueCount)
+      .where(lt(issueCount.hour, sql`now() - interval 24 hour`));
+    console.log("deleted", result.rowsAffected, "issue counts");
+  }
+
+  {
+    const result = await db
+      .delete(issueAlertLimit)
+      .where(lt(issueAlertLimit.timeUpdated, sql`now() - interval 24 hour`));
+    console.log("deleted", result.rowsAffected, "issue alert limit");
+  }
+}

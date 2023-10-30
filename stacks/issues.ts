@@ -5,7 +5,7 @@ import {
   Role,
   ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
-import { StackContext, KinesisStream, use, Config } from "sst/constructs";
+import { StackContext, KinesisStream, use, Config, Cron } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { Storage } from "./storage";
@@ -137,6 +137,20 @@ export function Issues({ stack }: StackContext) {
         resources: [kinesisRole.roleArn],
       }),
     ],
+  });
+
+  new Cron(stack, "cleanup", {
+    schedule: "cron(0 4 * * ? *)",
+    job: {
+      function: {
+        handler: "packages/functions/src/issues/cleanup.handler",
+        timeout: "15 minutes",
+        bind: [...Object.values(secrets.database)],
+        environment: {
+          DRIZZLE_LOG: "true",
+        },
+      },
+    },
   });
 }
 

@@ -11,4 +11,6 @@ const connection = connect({
   fetch,
 });
 
-export const db = drizzle(connection);
+export const db = drizzle(connection, {
+  logger: process.env.DRIZZLE_LOG === "true",
+});
