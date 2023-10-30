@@ -41,19 +41,38 @@ export const handler = ApiHandler(async (event) => {
   } else if (body.type === "customer.subscription.updated") {
     // @ts-expect-error
     const { id: subscriptionID, customer, status } = body.data.object;
-    // Set the subscription status to reflect in the UI
-    if (status === "active") {
-      await Billing.Stripe.setStanding({
-        subscriptionID,
-        standing: "good",
-      });
+
+    const item = await Billing.Stripe.fromCustomerID(customer);
+    if (!item) {
+      throw new Error("Workspace not found for customer");
     }
-    else if (status === "past_due") {
-      await Billing.Stripe.setStanding({
-        subscriptionID,
-        standing: "overdue",
-      });
+    if (item.subscriptionID) {
+      throw new Error("Workspace already has a subscription");
     }
+
+    await withActor(
+      {
+        type: "system",
+        properties: {
+          workspaceID: item.workspaceID,
+        },
+      },
+      async () => {
+        if (status === "active" && item.standing === "overdue") {
+          await Billing.Stripe.setStanding({
+            subscriptionID,
+            standing: "good",
+          });
+          await Billing.updateGatingStatus();
+        } else if (status === "past_due" && item.standing !== "overdue") {
+          await Billing.Stripe.setStanding({
+            subscriptionID,
+            standing: "overdue",
+          });
+          await Billing.updateGatingStatus();
+        }
+      }
+    );
   } else if (body.type === "customer.subscription.deleted") {
     // @ts-expect-error
     const { id: subscriptionID } = body.data.object;

@@ -1,11 +1,14 @@
 import { createSelectSchema } from "drizzle-zod";
-import { stripe, usage } from "./billing.sql";
+import { usage } from "./billing.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
-import { eq, and, between } from "drizzle-orm";
+import { eq, and, between, sql } from "drizzle-orm";
 import { useTransaction } from "../util/transaction";
 import { useWorkspace } from "../actor";
+import { workspace } from "../workspace/workspace.sql";
+import { Stripe } from "./stripe";
+import { DateTime } from "luxon";
 
 export * as Billing from "./index";
 export { Stripe } from "./stripe";
@@ -39,13 +42,13 @@ export const createUsage = zod(
     )
 );
 
-export const listByStartAndEndDay = zod(
+export const countByStartAndEndDay = zod(
   z.object({
     startDay: Usage.shape.day,
     endDay: Usage.shape.day,
   }),
-  (input) =>
-    useTransaction((tx) =>
+  async (input) => {
+    const rows = await useTransaction((tx) =>
       tx
         .select()
         .from(usage)
@@ -56,6 +59,45 @@ export const listByStartAndEndDay = zod(
           )
         )
         .execute()
-        .then((rows) => rows)
-    )
+    );
+    return rows.reduce((acc, usage) => acc + usage.invocations, 0);
+  }
 );
+
+export const updateGatingStatus = zod(z.void(), async () => {
+  async function isGated() {
+    // check subscription status
+    const customer = await Stripe.get();
+    const subscriptionStatus = customer?.standing;
+    if (subscriptionStatus === "overdue") return true;
+
+    // check warning errors
+    // TODO implement
+    // const warnings = await Warning.getByType({ ... });
+    // if (warnings.length > 0) {
+    //   return true;
+    // }
+
+    // check usage
+    if (!customer?.subscriptionID) {
+      const startDate = DateTime.now().toUTC().startOf("day");
+      const invocations = await countByStartAndEndDay({
+        startDay: startDate.startOf("month").toSQLDate()!,
+        endDay: startDate.endOf("month").toSQLDate()!,
+      });
+      // TODO move 1000000 to some constant
+      if (invocations > 1000000) return true;
+    }
+    return false;
+  }
+
+  const timeGated = (await isGated()) ? sql`NOW()` : null;
+
+  return useTransaction((tx) =>
+    tx
+      .update(workspace)
+      .set({ timeGated })
+      .where(eq(usage.workspaceID, useWorkspace()))
+      .execute()
+  );
+});

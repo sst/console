@@ -5,13 +5,10 @@ import { workspace } from "./workspace.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
-import { db } from "../drizzle";
 import { eq } from "drizzle-orm";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { event } from "../event";
 import { VisibleError } from "../util/error";
-import { stripe } from "../billing/billing.sql";
-import { useWorkspace } from "../actor";
 
 export const Events = {
   Created: event("workspace.created", {

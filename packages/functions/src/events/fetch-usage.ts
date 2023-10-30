@@ -68,6 +68,9 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
     } catch (e: any) {
       if (e.name === "AccessDenied") {
         console.error(e);
+        // TODO implement
+        // await Warning.create({ ... });
+        await Billing.updateGatingStatus();
         return;
       }
       throw e;
@@ -79,6 +82,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       invocations,
     });
     await reportUsageToStripe();
+    await Billing.updateGatingStatus();
 
     /////////////////
     // Functions
@@ -134,14 +138,10 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       const item = await Billing.Stripe.get();
       if (!item?.subscriptionItemID) return;
 
-      const monthlyUsages = await Billing.listByStartAndEndDay({
+      const monthlyInvocations = await Billing.countByStartAndEndDay({
         startDay: startDate.startOf("month").toSQLDate()!,
         endDay: startDate.endOf("month").toSQLDate()!,
       });
-      const monthlyInvocations = monthlyUsages.reduce(
-        (acc, usage) => acc + usage.invocations,
-        0
-      );
       console.log("> monthly invocations", monthlyInvocations);
 
       try {
