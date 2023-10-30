@@ -51,7 +51,7 @@ export const inputDangerFocusStyles: CSSProperties = {
 
 export const Root = styled("label", {
   base: {
-    ...utility.stack(2.5),
+    ...utility.stack(2),
   },
   variants: {
     color: {
@@ -141,6 +141,7 @@ const Label = styled("p", {
 const Hint = styled("p", {
   base: {
     fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
     color: theme.color.text.dimmed.base,
   },
   variants: {

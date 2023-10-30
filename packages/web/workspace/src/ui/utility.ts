@@ -5,8 +5,8 @@ export const utility = {
   textLine() {
     return {
       overflow: "hidden",
-      textOverflow: "ellipsis",
       whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
     } satisfies CSSProperties;
   },
   stack(space: keyof (typeof theme)["space"]) {
@@ -21,5 +21,13 @@ export const utility = {
       display: "flex",
       gap: theme.space[space],
     } satisfies CSSProperties;
+  },
+
+  text: {
+    line: {
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
+    } satisfies CSSProperties,
   },
 };

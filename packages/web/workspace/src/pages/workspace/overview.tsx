@@ -397,12 +397,7 @@ export function Overview() {
                     <Link href="settings">
                       <TextButton>
                         <Row space="0.5" horizontal="center">
-                          <Show fallback="Manage workspace" when={false}>
-                            <Text color="danger" size="sm">
-                              Your usage is above the free tier, add your
-                              billing details
-                            </Text>
-                          </Show>
+                          Manage workspace
                           <ManageWorkspaceIcon>
                             <IconChevronRight width="13" height="13" />
                           </ManageWorkspaceIcon>

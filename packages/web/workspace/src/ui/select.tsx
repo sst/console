@@ -61,7 +61,7 @@ const Trigger = styled(KSelect.Trigger, {
 
 const TriggerText = styled("span", {
   base: {
-    ...utility.textLine(),
+    ...utility.text.line,
     lineHeight: "normal",
     [`${Root.selector({ color: "danger" })} &`]: {
       ...inputDangerTextStyles,
@@ -146,7 +146,7 @@ const Item = styled(KSelect.Item, {
 
 const ItemLabel = styled("span", {
   base: {
-    ...utility.textLine(),
+    ...utility.text.line,
   },
 });
 

@@ -145,7 +145,7 @@ export const Child = styled("div", {
 
 export const ChildTitleLink = styled(Link, {
   base: {
-    ...utility.textLine(),
+    ...utility.text.line,
     lineHeight: "normal",
     fontFamily: theme.font.family.code,
   },
@@ -153,13 +153,13 @@ export const ChildTitleLink = styled(Link, {
 
 export const ChildTitle = styled("span", {
   base: {
-    ...utility.textLine(),
+    ...utility.text.line,
   },
 });
 
 export const ChildDetail = styled("div", {
   base: {
-    ...utility.textLine(),
+    ...utility.text.line,
     display: "flex",
     alignItems: "baseline",
     color: theme.color.text.secondary.surface,
