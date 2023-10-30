@@ -106,6 +106,7 @@ function workspace({ id, activeSubscription }: WorkspaceProps): DummyData {
     id,
     slug: id,
     timeDeleted: null,
+    timeGated: null,
     ...timestamps,
   };
 }

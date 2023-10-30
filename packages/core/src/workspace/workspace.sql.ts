@@ -17,11 +17,6 @@ export const workspace = mysqlTable(
     timeGated: timestamp("time_gated", {
       mode: "string",
     }),
-    stripeCustomerID: varchar("stripe_customer_id", { length: 255 }),
-    stripeSubscriptionID: varchar("stripe_subscription_id", { length: 255 }),
-    stripeSubscriptionItemID: varchar("stripe_subscription_item_id", {
-      length: 255,
-    }),
   },
   (table) => ({
     slug: uniqueIndex("slug").on(table.slug),
