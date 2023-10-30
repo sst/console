@@ -190,7 +190,7 @@ export const LogMessage = styled("span", {
 
 const LogText = styled("div", {
   base: {
-    ...utility.textLine(),
+    ...utility.text.line,
     lineHeight: "normal",
     fontFamily: theme.font.family.code,
   },

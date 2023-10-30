@@ -97,7 +97,7 @@ const Warning = styled("div", {
   base: {
     ...utility.stack(8),
     alignItems: "center",
-    width: 320,
+    width: 400,
   },
 });
 
@@ -106,6 +106,24 @@ const WarningIcon = styled("div", {
     width: 42,
     height: 42,
     color: theme.color.icon.dimmed,
+  },
+});
+
+const WarningTitle = styled("span", {
+  base: {
+    ...utility.text.line,
+    lineHeight: "normal",
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const WarningDescription = styled("span", {
+  base: {
+    textAlign: "center",
+    fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
+    color: theme.color.text.secondary.base,
   },
 });
 
@@ -134,23 +152,25 @@ export function Inner() {
     <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
       <Switch>
-        <Match when={!ctx.connected}>
+        <Match when={false && !ctx.connected}>
           <Fullscreen>
             <Warning>
               <Stack horizontal="center" space="5">
                 <WarningIcon>
                   <IconExclamationTriangle />
                 </WarningIcon>
-                <Stack horizontal="center" space="2">
-                  <Text line size="lg" weight="medium">
-                    Over free tier
-                  </Text>
-                  <Text center size="sm" color="secondary">
-                    To continue to use the SST Console with non-local stages{" "}
+                <Stack horizontal="center" space="1.5">
+                  <WarningTitle>Update billing details</WarningTitle>
+                  <WarningDescription>
+                    Your usage is above the free tier,{" "}
                     <Link href={`/${workspace().slug}/settings#billing`}>
-                      add billing information
+                      update your billing details
                     </Link>
-                  </Text>
+                    .<br />
+                    Note, you can continue using the Console for local stages.
+                    <br />
+                    Just make sure `sst dev` is running locally.
+                  </WarningDescription>
                 </Stack>
               </Stack>
             </Warning>
@@ -164,11 +184,11 @@ export function Inner() {
                   <IconExclamationTriangle />
                 </WarningIcon>
                 <Stack horizontal="center" space="2">
-                  <Text line size="lg" weight="medium">
+                  <WarningTitle>
                     Unsupported SST version
                     {minVersion() ? " v" + minVersion() : ""}
-                  </Text>
-                  <Text center size="sm" color="secondary">
+                  </WarningTitle>
+                  <WarningDescription>
                     To use the SST Console,{" "}
                     <a
                       target="_blank"
@@ -176,7 +196,7 @@ export function Inner() {
                     >
                       upgrade to v{MINIMUM_VERSION}
                     </a>
-                  </Text>
+                  </WarningDescription>
                 </Stack>
               </Stack>
             </Warning>

@@ -1,5 +1,6 @@
 import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
+import { utility } from "./utility";
 import { CSSProperties } from "@macaron-css/core";
 
 export const Text = styled("span", {
@@ -34,13 +35,13 @@ export const Text = styled("span", {
     },
     weight: {
       regular: {
-        fontWeight: 400,
+        fontWeight: theme.font.weight.regular,
       },
       medium: {
-        fontWeight: 500,
+        fontWeight: theme.font.weight.medium,
       },
       semibold: {
-        fontWeight: 600,
+        fontWeight: theme.font.weight.semibold,
       },
     },
     center: {
@@ -50,9 +51,7 @@ export const Text = styled("span", {
     },
     line: {
       true: {
-        overflow: "hidden",
-        whiteSpace: "nowrap",
-        textOverflow: "ellipsis",
+        ...utility.text.line,
       },
     },
     disableSelect: {

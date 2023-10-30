@@ -106,7 +106,7 @@ const Content = styled(DropdownMenu.Content, {
 
 const Item = styled(DropdownMenu.Item, {
   base: {
-    ...utility.textLine(),
+    ...utility.text.line,
     lineHeight: "normal",
     padding: `${theme.space[2.5]} ${theme.space[3]}`,
     fontSize: theme.font.size.sm,
@@ -150,7 +150,7 @@ const RadioItem = styled(DropdownMenu.RadioItem, {
 
 const RadioItemLabel = styled("span", {
   base: {
-    ...utility.textLine(),
+    ...utility.text.line,
   },
 });
 

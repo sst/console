@@ -388,7 +388,8 @@ export function Alerts() {
                       getValue(putForm, "destination.type") === "slack" &&
                       !slackTeam() ? (
                         <span>
-                          Enable slack integration <a href="#slack">below</a>
+                          <a href="#slack">Connect your Slack</a> workspace{" "}
+                          below.
                         </span>
                       ) : undefined
                     }

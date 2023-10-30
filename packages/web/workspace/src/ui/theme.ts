@@ -7,6 +7,11 @@ const font = {
     body: "Rubik, sans-serif",
     code: '"IBM Plex Mono", monospace',
   },
+  weight: {
+    regular: "400",
+    medium: "500",
+    semibold: "600",
+  },
   size: {
     mono_xs: "0.6875rem",
     xs: "0.75rem",
