@@ -10,7 +10,12 @@ import {
   ComponentProps,
   createResource,
 } from "solid-js";
-import { useFunctionsContext, useResourcesContext } from "../context";
+import {
+  MINIMUM_VERSION,
+  useFunctionsContext,
+  useOutdated,
+  useResourcesContext,
+} from "../context";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
@@ -341,27 +346,12 @@ export function Header(props: HeaderProps) {
   );
 }
 
-const MINIMUM_VERSION = "2.19.2";
 export function Resources() {
   const resources = useResourcesContext();
   const stacks = createMemo(() =>
     resources().filter((r) => r.type === "Stack")
   );
-  const outdated = createMemo(() =>
-    stacks().filter(
-      (r) =>
-        r.type === "Stack" &&
-        r.enrichment.version &&
-        r.enrichment.version < MINIMUM_VERSION &&
-        !r.enrichment.version?.startsWith("0.0.0")
-    )
-  );
-  const minVersion = createMemo(
-    () =>
-      outdated()
-        .map((r) => r.type === "Stack" && r.enrichment.version)
-        .sort()[0]
-  );
+  const outdated = useOutdated();
   const sortedResources = createMemo(() => sortResources([...resources()]));
 
   return (
@@ -369,29 +359,6 @@ export function Resources() {
       <Match when={!resources().length}>
         <Fullscreen>
           <Syncing>Waiting for resources&hellip;</Syncing>
-        </Fullscreen>
-      </Match>
-      <Match when={stacks().length === outdated().length}>
-        <Fullscreen>
-          <UnsupportedAppRoot>
-            <Stack horizontal="center" space="5">
-              <UnsupportedAppIcon>
-                <IconExclamationTriangle />
-              </UnsupportedAppIcon>
-              <Stack horizontal="center" space="2">
-                <Text line size="lg" weight="medium">
-                  Unsupported SST version
-                  {minVersion() ? " v" + minVersion() : ""}
-                </Text>
-                <Text center size="sm" color="secondary">
-                  To use the SST Console,{" "}
-                  <a target="_blank" href="https://github.com/sst/sst/releases">
-                    upgrade to v{MINIMUM_VERSION}
-                  </a>
-                </Text>
-              </Stack>
-            </Stack>
-          </UnsupportedAppRoot>
         </Fullscreen>
       </Match>
       <Match when={true}>
@@ -524,23 +491,6 @@ export function Resources() {
     </Switch>
   );
 }
-
-const UnsupportedAppRoot = styled("div", {
-  base: {
-    ...utility.stack(8),
-    alignItems: "center",
-    width: 320,
-  },
-});
-
-const UnsupportedAppIcon = styled("div", {
-  base: {
-    width: 42,
-    height: 42,
-    color: theme.color.icon.dimmed,
-  },
-});
-
 function formatPath(path?: string) {
   return path ? (path === "." ? `"${path}"` : path) : `""`;
 }

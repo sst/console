@@ -61,7 +61,6 @@ export function useStageContext() {
 
 function createResourcesContext() {
   const ctx = useStageContext();
-  const [query] = useSearchParams();
 
   const rep = useReplicache();
   const resources = ResourceStore.forStage.watch(rep, () => [ctx.stage.id]);
@@ -169,6 +168,23 @@ export function useResourcesContext() {
   const context = useContext(ResourcesContext);
   if (!context) throw new Error("No resources context");
   return context;
+}
+
+export const MINIMUM_VERSION = "2.19.2";
+export function useOutdated() {
+  const resources = useResourcesContext();
+  const stacks = createMemo(() =>
+    resources().filter((r) => r.type === "Stack")
+  );
+  return createMemo(() =>
+    stacks().filter(
+      (r) =>
+        r.type === "Stack" &&
+        r.enrichment.version &&
+        r.enrichment.version < MINIMUM_VERSION &&
+        !r.enrichment.version?.startsWith("0.0.0")
+    )
+  );
 }
 
 function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
