@@ -9,6 +9,7 @@ import { useWorkspace } from "../actor";
 import { workspace } from "../workspace/workspace.sql";
 import { Stripe } from "./stripe";
 import { DateTime } from "luxon";
+import { Warning } from "../warning";
 
 export * as Billing from "./index";
 export { Stripe } from "./stripe";
@@ -19,6 +20,8 @@ export const Usage = createSelectSchema(usage, {
   stageID: (schema) => schema.stageID.cuid2(),
 });
 export type Usage = z.infer<typeof Usage>;
+
+const FREE_INVOCATIONS = 1000000;
 
 export const createUsage = zod(
   Usage.pick({ stageID: true, day: true, invocations: true }),
@@ -71,12 +74,11 @@ export const updateGatingStatus = zod(z.void(), async () => {
     const subscriptionStatus = customer?.standing;
     if (subscriptionStatus === "overdue") return true;
 
-    // check warning errors
-    // TODO implement
-    // const warnings = await Warning.getByType({ ... });
-    // if (warnings.length > 0) {
-    //   return true;
-    // }
+    const warnings = await Warning.forType({
+      type: "permission_usage",
+      stageID: "",
+    });
+    if (warnings.length) return true;
 
     // check usage
     if (!customer?.subscriptionID) {
@@ -85,8 +87,7 @@ export const updateGatingStatus = zod(z.void(), async () => {
         startDay: startDate.startOf("month").toSQLDate()!,
         endDay: startDate.endOf("month").toSQLDate()!,
       });
-      // TODO move 1000000 to some constant
-      if (invocations > 1000000) return true;
+      if (invocations > FREE_INVOCATIONS) return true;
     }
     return false;
   }

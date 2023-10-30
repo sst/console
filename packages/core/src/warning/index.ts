@@ -81,7 +81,7 @@ export async function forType(input: Pick<Info, "type" | "stageID">) {
       .where(
         and(
           eq(warning.workspaceID, useWorkspace()),
-          eq(warning.stageID, input.stageID),
+          input.stageID !== "" ? eq(warning.stageID, input.stageID) : undefined,
           eq(warning.type, input.type)
         )
       )
