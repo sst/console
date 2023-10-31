@@ -59,7 +59,15 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
 
     // Get stage credentials
     const config = await Stage.assumeRole(stageID);
-    if (!config) return;
+    if (!config) {
+      await Warning.create({
+        type: "permission_usage",
+        target: evt.properties.stageID,
+        stageID: evt.properties.stageID,
+        data: {},
+      });
+      return;
+    }
 
     // Get usage
     let invocations: number;
