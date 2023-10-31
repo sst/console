@@ -10,10 +10,31 @@ import { Workspace } from "@console/core/workspace";
 import { Resource } from "@console/core/app/resource";
 
 const USER_ID = "me@example.com";
+const USER_ID_ISSUE_ALERT = "alert-me@example.com";
+const USER_ID_ISSUE_1 = "issue-alert_1@example.com";
+const USER_ID_ISSUE_2 = "issue-alert_2@example.com";
+const USER_ID_ISSUE_3 = "issue-alert_3@example.com";
+const USER_ID_ISSUE_4 = "issue-alert_4@example.com";
+const USER_ID_ISSUE_5 = "issue-alert_5@example.com";
+const USER_ID_ISSUE_6 = "issue-alert_6@example.com";
+const USER_ID_ISSUE_7 = "issue-alert_7@example.com";
+const USER_ID_ISSUE_8 = "issue-alert_8@example.com";
+const USER_ID_ISSUE_9 = "issue-alert_9@example.com";
 
 const APP_ID = "1";
 const APP_ID_LONG = "2";
 const APP_LOCAL = "my-sst-app";
+const APP_ISSUE_1 = "sst-app-issue-1";
+const APP_ISSUE_2 = "sst-app-issue-2";
+const APP_ISSUE_3 = "sst-app-issue-3";
+const APP_ISSUE_4 = "sst-app-issue-4";
+const APP_ISSUE_5 = "sst-app-issue-5";
+const APP_ISSUE_6 = "sst-app-issue-6";
+const APP_ISSUE_7 = "sst-app-issue-7";
+const APP_ISSUE_8 = "sst-app-issue-8";
+const APP_ISSUE_9 = "sst-app-issue-9";
+const APP_ISSUE_ALERT_LONG =
+  "mysstappissealertlongshouldoverflowbecaseitistoolongandshouldnotfitintheboxbecauseitstoolonganditkeepsgoingandgoing";
 
 const STAGE = "stage-base";
 const STAGE_LOCAL = "local";
@@ -48,6 +69,8 @@ const ISSUE_ID_FULL_STACK_TRACE = "127";
 
 let WARNING_COUNT = 0;
 
+let ISSUE_ALERT_COUNT = 0;
+
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
   timeUpdated: DateTime.now().startOf("day").toSQL()!,
@@ -55,7 +78,7 @@ const timestamps = {
 
 export type DummyMode =
   | "empty"
-  | "overview:base;resource:base;issues:base"
+  | "overview:base;resource:base;issues:base;alerts:base"
   | "overview:all;usage:overage;subscription:active";
 
 export interface DummyConfig {
@@ -79,6 +102,7 @@ type DummyData =
   | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" })
   | (Omit<Issue.Count, "workspaceID"> & { _type: "issueCount" })
   | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
+  | (Omit<Issue.Alert.Info, "workspaceID"> & { _type: "issueAlert" })
   | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" });
 
 function stringToObject(input: string): { [key: string]: string } {
@@ -343,6 +367,25 @@ function warning({ type, stage, target, data }: WarningProps): DummyData {
   };
 }
 
+interface IssueAlertProps {
+  app: Issue.Alert.Source["app"];
+  stage: Issue.Alert.Source["stage"];
+  destination: Issue.Alert.Destination;
+}
+function issueAlert({ app, stage, destination }: IssueAlertProps): DummyData {
+  return {
+    _type: "issueAlert",
+    id: `${ISSUE_ALERT_COUNT++}`,
+    source: {
+      app,
+      stage,
+    },
+    destination,
+    timeDeleted: null,
+    ...timestamps,
+  };
+}
+
 export function* generateData(
   mode: DummyMode
 ): Generator<DummyData, void, unknown> {
@@ -406,6 +449,18 @@ export function* generateData(
 
   if (modeMap["usage"] === "overage")
     yield usage({ day: "2021-01-01", invocations: 12300000000 });
+
+  if (modeMap["alerts"] === "base") {
+    yield* issueAlertsStar();
+    yield* issueAlertsSingle();
+    yield* issueAlertsSingleTo();
+    yield* issueAlertsDoubleTo();
+    yield* issueAlertsDoubleFrom();
+    yield* issueAlertsMultipleTo();
+    yield* issueAlertsOverflowTo();
+    yield* issueAlertsOverflowFrom();
+    yield* issueAlertsMultipleFrom();
+  }
 }
 
 function* overviewBase(): Generator<DummyData, void, unknown> {
@@ -1417,5 +1472,195 @@ function* issueLong(): Generator<DummyData, void, unknown> {
   });
   yield issueCount({
     group: ISSUE_ID_LONG,
+  });
+}
+
+function* issueAlertsStar(): Generator<DummyData, void, unknown> {
+  yield issueAlert({
+    app: "*",
+    stage: "*",
+    destination: {
+      properties: {
+        users: "*",
+      },
+      type: "email",
+    },
+  });
+  yield issueAlert({
+    app: "*",
+    stage: "*",
+    destination: {
+      properties: {
+        channel: "#my-channel",
+      },
+      type: "slack",
+    },
+  });
+}
+
+function* issueAlertsSingle(): Generator<DummyData, void, unknown> {
+  yield issueAlert({
+    app: [APP_LOCAL],
+    stage: "*",
+    destination: {
+      properties: {
+        users: "*",
+      },
+      type: "email",
+    },
+  });
+  yield issueAlert({
+    app: [APP_LOCAL],
+    stage: [STAGE],
+    destination: {
+      properties: {
+        users: "*",
+      },
+      type: "email",
+    },
+  });
+  yield issueAlert({
+    app: "*",
+    stage: [STAGE],
+    destination: {
+      properties: {
+        users: "*",
+      },
+      type: "email",
+    },
+  });
+}
+
+function* issueAlertsSingleTo(): Generator<DummyData, void, unknown> {
+  yield issueAlert({
+    app: [APP_LOCAL],
+    stage: "*",
+    destination: {
+      properties: {
+        users: [USER_ID],
+      },
+      type: "email",
+    },
+  });
+}
+
+function* issueAlertsDoubleTo(): Generator<DummyData, void, unknown> {
+  yield user({ email: USER_ID_ISSUE_ALERT, active: true });
+
+  yield issueAlert({
+    app: "*",
+    stage: "*",
+    destination: {
+      properties: {
+        users: [USER_ID, USER_ID_ISSUE_ALERT],
+      },
+      type: "email",
+    },
+  });
+}
+
+function* issueAlertsMultipleFrom(): Generator<DummyData, void, unknown> {
+  yield issueAlert({
+    app: [
+      APP_ISSUE_1,
+      APP_ISSUE_2,
+      APP_ISSUE_3,
+      APP_ISSUE_4,
+      APP_ISSUE_5,
+      APP_ISSUE_6,
+      APP_ISSUE_7,
+      APP_ISSUE_8,
+      APP_ISSUE_9,
+    ],
+    stage: "*",
+    destination: {
+      properties: {
+        users: "*",
+      },
+      type: "email",
+    },
+  });
+}
+
+function* issueAlertsMultipleTo(): Generator<DummyData, void, unknown> {
+  yield user({ email: USER_ID_ISSUE_1, active: true });
+  yield user({ email: USER_ID_ISSUE_2, active: true });
+  yield user({ email: USER_ID_ISSUE_3, active: true });
+  yield user({ email: USER_ID_ISSUE_4, active: true });
+  yield user({ email: USER_ID_ISSUE_5, active: true });
+  yield user({ email: USER_ID_ISSUE_6, active: true });
+  yield user({ email: USER_ID_ISSUE_7, active: true });
+  yield user({ email: USER_ID_ISSUE_8, active: true });
+  yield user({ email: USER_ID_ISSUE_9, active: true });
+
+  yield issueAlert({
+    app: "*",
+    stage: "*",
+    destination: {
+      properties: {
+        users: [
+          USER_ID_ISSUE_1,
+          USER_ID_ISSUE_2,
+          USER_ID_ISSUE_3,
+          USER_ID_ISSUE_4,
+          USER_ID_ISSUE_5,
+          USER_ID_ISSUE_6,
+          USER_ID_ISSUE_7,
+          USER_ID_ISSUE_8,
+          USER_ID_ISSUE_9,
+        ],
+      },
+      type: "email",
+    },
+  });
+}
+
+function* issueAlertsDoubleFrom(): Generator<DummyData, void, unknown> {
+  yield issueAlert({
+    app: [APP_ISSUE_1, APP_ISSUE_2],
+    stage: "*",
+    destination: {
+      properties: {
+        users: "*",
+      },
+      type: "email",
+    },
+  });
+  yield issueAlert({
+    app: [APP_ISSUE_1, APP_ISSUE_2],
+    stage: [STAGE],
+    destination: {
+      properties: {
+        users: "*",
+      },
+      type: "email",
+    },
+  });
+}
+
+function* issueAlertsOverflowFrom(): Generator<DummyData, void, unknown> {
+  yield issueAlert({
+    app: [APP_ISSUE_ALERT_LONG],
+    stage: "*",
+    destination: {
+      properties: {
+        users: "*",
+      },
+      type: "email",
+    },
+  });
+}
+
+function* issueAlertsOverflowTo(): Generator<DummyData, void, unknown> {
+  yield issueAlert({
+    app: "*",
+    stage: "*",
+    destination: {
+      properties: {
+        channel:
+          "#areallyreallyreallylongslackchannelnamethatshouldoverflowbecauseitstoolonganditkeepsgoingandgoingforareallylongtime",
+      },
+      type: "slack",
+    },
   });
 }

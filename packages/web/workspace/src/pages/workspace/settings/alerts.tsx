@@ -32,7 +32,7 @@ import { useReplicache } from "$/providers/replicache";
 import { AppStore, IssueAlertStore, SlackTeamStore } from "$/data/app";
 import { Issue } from "@console/core/issue";
 import { createStore, unwrap } from "solid-js/store";
-import { Multiselect, Select } from "$/ui/select";
+import { MultiSelect, Select } from "$/ui/select";
 import { UserStore } from "$/data/user";
 import { StageStore } from "$/data/stage";
 import { filter, map, pipe, uniq } from "remeda";
@@ -41,16 +41,16 @@ import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { array, literal, object, string, union, minLength } from "valibot";
 import {
-  createForm,
-  valiForm,
-  setValue,
-  setValues,
-  getErrors,
-  toCustom,
-  getValue,
-  getValues,
   reset,
   validate,
+  valiForm,
+  setValue,
+  toCustom,
+  getValue,
+  setValues,
+  getErrors,
+  getValues,
+  createForm,
 } from "@modular-forms/solid";
 import { WarningStore } from "$/data/warning";
 
@@ -136,7 +136,7 @@ const AlertsPanelRowIcon = styled("div", {
 const AlertsPanelToIcon = styled("div", {
   base: {
     opacity: theme.iconOpacity,
-    lineHeight: theme.font.lineHeight,
+    lineHeight: `calc(${theme.font.lineHeight} * ${theme.font.size.sm})`,
     color: theme.color.text.secondary.base,
   },
   variants: {
@@ -151,6 +151,7 @@ const AlertsPanelToIcon = styled("div", {
 
 const AlertsPanelToLabel = styled("span", {
   base: {
+    wordBreak: "break-all",
     fontSize: theme.font.size.sm,
     lineHeight: theme.font.lineHeight,
     color: theme.color.text.secondary.base,
@@ -168,6 +169,15 @@ const AlertsPanelToLabel = styled("span", {
 const AlertsPanelRowFromLabel = styled("div", {
   base: {
     lineHeight: theme.font.lineHeight,
+    color: theme.color.text.secondary.base,
+  },
+});
+
+const AlertsPanelFromKeyword = styled("span", {
+  base: {
+    wordBreak: "break-all",
+    fontWeight: theme.font.weight.medium,
+    color: theme.color.text.primary.base,
   },
 });
 
@@ -459,7 +469,7 @@ export function Alerts() {
                         class={alertsPanelRowEditingDropdown}
                         color={field.error ? "danger" : "primary"}
                       >
-                        <Multiselect
+                        <MultiSelect
                           {...props}
                           required
                           error={field.error}
@@ -561,7 +571,7 @@ export function Alerts() {
                           class={alertsPanelRowEditingDropdown}
                           color={field.error ? "danger" : "primary"}
                         >
-                          <Multiselect
+                          <MultiSelect
                             {...props}
                             error={field.error}
                             value={field.value}
@@ -749,56 +759,45 @@ export function Alerts() {
                         </AlertsPanelRowIcon>
                         <Stack space="2">
                           <AlertsPanelRowFromLabel>
-                            <Text size="base" color="secondary">
-                              From{" "}
-                            </Text>
+                            From{" "}
                             <Show
                               when={alert.source.app !== "*"}
                               fallback={
-                                <Text size="base" weight="medium">
+                                <AlertsPanelFromKeyword>
                                   all apps
-                                </Text>
+                                </AlertsPanelFromKeyword>
                               }
                             >
                               <>
-                                <Text size="base" weight="medium">
+                                <AlertsPanelFromKeyword>
                                   {alert.source.app !== "*" &&
                                     alert.source.app.join(", ")}
-                                </Text>
-                                <Text size="base" color="secondary">
-                                  {" "}
-                                  {alert.source.app.length > 1 ? "apps" : "app"}
-                                </Text>
+                                </AlertsPanelFromKeyword>{" "}
+                                {alert.source.app.length > 1 ? "apps" : "app"}
                               </>
-                            </Show>
-                            <Text size="base" color="secondary">
-                              {" "}
-                              /{" "}
-                            </Text>
+                            </Show>{" "}
+                            /{" "}
                             <Show
                               when={alert.source.stage !== "*"}
                               fallback={
-                                <Text size="base" weight="medium">
+                                <AlertsPanelFromKeyword>
                                   all stages
-                                </Text>
+                                </AlertsPanelFromKeyword>
                               }
                             >
                               <>
-                                <Text size="base" weight="medium">
+                                <AlertsPanelFromKeyword>
                                   {alert.source.stage !== "*" &&
                                     alert.source.stage.join(", ")}
-                                </Text>
-                                <Text size="base" color="secondary">
-                                  {" "}
-                                  {alert.source.app !== "*" &&
-                                  alert.source.app.length === 1
-                                    ? "stage"
-                                    : "stages"}
-                                </Text>
+                                </AlertsPanelFromKeyword>{" "}
+                                {alert.source.app !== "*" &&
+                                alert.source.app.length === 1
+                                  ? "stage"
+                                  : "stages"}
                               </>
                             </Show>
                           </AlertsPanelRowFromLabel>
-                          <Row space="1.5" vertical="center">
+                          <Row space="1.5" vertical="start">
                             <Switch>
                               <Match
                                 when={
