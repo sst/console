@@ -32,11 +32,13 @@ export const handler = ApiHandler(async (event) => {
           workspaceID: item.workspaceID,
         },
       },
-      () =>
-        Billing.Stripe.setSubscription({
+      async () => {
+        await Billing.Stripe.setSubscription({
           subscriptionID: subscriptionID,
           subscriptionItemID: items.data[0].id,
-        })
+        });
+        await Billing.updateGatingStatus();
+      }
     );
   } else if (body.type === "customer.subscription.updated") {
     // @ts-expect-error
@@ -77,6 +79,7 @@ export const handler = ApiHandler(async (event) => {
     // @ts-expect-error
     const { id: subscriptionID } = body.data.object;
     await Billing.Stripe.removeSubscription(subscriptionID);
+    await Billing.updateGatingStatus();
   }
 
   // Stripe has already retried charging the customer and failed. Stripe
