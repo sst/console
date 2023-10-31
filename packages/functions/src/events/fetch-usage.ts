@@ -154,16 +154,11 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       console.log("> monthly invocations", monthlyInvocations);
 
       try {
-        // TODO
-        const timestamp = startDate.toUnixInteger();
-        //const timestamp = Math.floor(Date.now() / 1000);
-        //const timestamp = DateTime.now().plus({ month: 1 }).toUnixInteger();
+        const timestamp = endDate.toUnixInteger();
         await stripe.subscriptionItems.createUsageRecord(
           item.subscriptionItemID,
           {
-            // TODO
             quantity: monthlyInvocations,
-            //quantity: 3000000,
             timestamp,
             action: "set",
           },
