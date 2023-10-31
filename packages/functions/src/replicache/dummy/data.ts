@@ -323,7 +323,7 @@ function issue({
     pointer: {
       logGroup: `/aws/lambda/${fnName || ISSUE_FN}`,
       logStream: "2021/01/01/[$LATEST]12345678901234567890123456789012",
-      timestamp: Date.now(),
+      timestamp: DateTime.now().startOf("day").toUnixInteger(),
     },
     ...timestamps,
   };
