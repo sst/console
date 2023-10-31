@@ -11,6 +11,7 @@ import { Realtime } from "@console/core/realtime";
 import { Replicache } from "@console/core/replicache";
 import { EventHandler } from "sst/node/event-bus";
 import { Storage } from "@console/core/storage";
+import { DateTime } from "luxon";
 
 export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
   withActor(evt.metadata.actor, async () => {
@@ -42,9 +43,11 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
             })
           );
           console.log(response.logStreams);
-          initial = new Date(
+          initial = DateTime.fromMillis(
             response.logStreams?.[0]?.lastEventTimestamp! + 30 * 60 * 1000
-          );
+          )
+            .startOf("hour")
+            .toJSDate();
         }
         console.log("start", initial.toLocaleString());
         const processor = Log.createProcessor({
