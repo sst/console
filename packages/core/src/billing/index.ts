@@ -74,6 +74,13 @@ export const updateGatingStatus = zod(z.void(), async () => {
     const subscriptionStatus = customer?.standing;
     if (subscriptionStatus === "overdue") return true;
 
+    if (
+      ["vn5ubp6sxv52de6cso8kb015", "tviez52nfa0b6aerfw9wh597"].includes(
+        customer?.workspaceID || ""
+      )
+    )
+      return false;
+
     const warnings = await Warning.forType({
       type: "permission_usage",
       stageID: "",
@@ -98,7 +105,7 @@ export const updateGatingStatus = zod(z.void(), async () => {
     tx
       .update(workspace)
       .set({ timeGated })
-      .where(eq(usage.workspaceID, useWorkspace()))
+      .where(eq(workspace.id, useWorkspace()))
       .execute()
   );
 });
