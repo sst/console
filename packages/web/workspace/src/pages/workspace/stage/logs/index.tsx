@@ -39,7 +39,7 @@ import {
 } from "../context";
 import { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../../command-bar";
-import { formatSinceTime } from "$/common/format";
+import { formatSinceTime, parseTime } from "$/common/format";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { Invoke, InvokeControl } from "./invoke";
 import { createId } from "@paralleldrive/cuid2";
@@ -612,9 +612,13 @@ export function Logs() {
                     >
                       Scanning
                       {activeSearch()?.timeStart
-                        ? ` from ${formatSinceTime(
-                            activeSearch()?.timeStart || ""
-                          )}`
+                        ? ` last ${parseTime(activeSearch()?.timeStart!)
+                            .toRelative({
+                              style: "long",
+                              unit: ["months", "weeks", "days", "hours"],
+                              round: true,
+                            })
+                            ?.replace(" ago", "")}`
                         : ""}
                       &hellip;
                     </Show>
