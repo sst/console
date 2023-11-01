@@ -493,6 +493,7 @@ export const expand = zod(
       .then((rows) => rows.at(0));
     if (!row?.pointer) return;
     const { pointer } = row;
+    console.log("expanding", pointer);
     const [invocation] = await Log.expand({
       group: "group",
       logGroup: pointer.logGroup,
