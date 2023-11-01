@@ -164,7 +164,7 @@ export function createSourcemapCache(input: {
 type SourcemapCache = ReturnType<typeof createSourcemapCache>;
 
 export function createProcessor(input: {
-  sourcemapKey: string;
+  sourcemapKey?: string;
   group: string;
   config: StageCredentials;
 }) {
@@ -180,10 +180,10 @@ export function createProcessor(input: {
   >();
   let results = [] as LogEvent[];
 
-  const sourcemapCache = createSourcemapCache({
+  const sourcemapCache = input.sourcemapKey ? createSourcemapCache({
     key: input.sourcemapKey,
     config: input.config,
-  });
+  }) : undefined;
 
   function generateInvocationID(id: string) {
     const trimmed = id.trim();
@@ -297,7 +297,7 @@ export function createProcessor(input: {
 
       if (message.level === "ERROR") {
         const err = extractError(tabs);
-        if (err) {
+        if (err && sourcemapCache) {
           const mapped = await applySourcemap(
             sourcemapCache,
             input.timestamp,
@@ -436,7 +436,6 @@ export const expand = zod(
     group: z.string(),
     logGroup: z.string(),
     logStream: z.string(),
-    sourcemapKey: z.string(),
     config: z.custom<StageCredentials>(),
   }),
   async (input) => {
@@ -450,7 +449,7 @@ export const expand = zod(
     const processor = createProcessor({
       config: input.config,
       group: input.group,
-      sourcemapKey: input.sourcemapKey,
+      sourcemapKey: 
     });
 
     async function fetchEvents(start: number, end: number) {

@@ -115,9 +115,6 @@ export function Issues({ stack }: StackContext) {
     environment: {
       EMAIL_DOMAIN: use(DNS).domain,
     },
-    nodejs: {
-      install: ["source-map"],
-    },
   });
 
   bus.subscribe(stack, "app.stage.connected", {
