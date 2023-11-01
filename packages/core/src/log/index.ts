@@ -458,16 +458,19 @@ export const expand = zod(
       const result = [];
       const backwards = end === input.timestamp;
       while (true) {
-        const response = await cw.send(
-          new GetLogEventsCommand({
-            logGroupName: input.logGroup,
-            logStreamName: input.logStream,
-            startTime: start,
-            endTime: end,
-            startFromHead: !backwards,
-            nextToken,
-          })
-        );
+        const response = await cw
+          .send(
+            new GetLogEventsCommand({
+              logGroupName: input.logGroup,
+              logStreamName: input.logStream,
+              startTime: start,
+              endTime: end,
+              startFromHead: !backwards,
+              nextToken,
+            })
+          )
+          .catch(() => {});
+        if (!response) break;
         const events = pipe(
           response.events || [],
           sortBy((evt) => (backwards ? -1 : 1) * evt.timestamp!)
