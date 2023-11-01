@@ -60,7 +60,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
         while (true) {
           await Log.Search.setStart({
             id: search.id,
-            timeStart: new Date(start).toISOString().split("Z")[0]!,
+            timeStart: start.toSQL({ includeOffset: false }),
           });
           await Replicache.poke(profileID);
           console.log(
