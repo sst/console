@@ -140,7 +140,9 @@ export function Detail() {
     bus.emit("invocation", result);
   });
 
-  const invocation = createMemo(() => invocations.forSource(issue()?.id).at(0));
+  const invocation = createMemo(
+    () => issue()?.invocation || invocations.forSource(issue()?.id).at(0)
+  );
 
   const name = createMemo(() => issue()?.pointer?.logGroup.split("/").at(-1));
   const resources = useResourcesContext();
@@ -183,6 +185,7 @@ export function Detail() {
   createEffect(() => {
     console.log("count", counts());
     console.log("histogram", histogram());
+    console.log({ issue: issue(), invocation: invocation() });
   });
 
   return (

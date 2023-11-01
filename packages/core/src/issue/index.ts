@@ -27,12 +27,12 @@ import {
 import { Resource } from "../app/resource";
 import { z } from "zod";
 import { RETRY_STRATEGY } from "../util/aws";
-import { StageCredentials } from "../app/stage";
+import { Stage, StageCredentials } from "../app/stage";
 import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
 import { useTransaction } from "../util/transaction";
-import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
+import { Log } from "../log";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = typeof issue.$inferSelect;
@@ -467,3 +467,49 @@ export async function cleanup() {
     console.log("deleted", result.rowsAffected, "issue alert limit");
   }
 }
+
+export const expand = zod(
+  Info.pick({
+    stageID: true,
+    group: true,
+  }),
+  async (input) => {
+    const config = await Stage.assumeRole(input.stageID);
+    if (!config) return;
+    const row = await db
+      .select({
+        id: issue.id,
+        pointer: issue.pointer,
+      })
+      .from(issue)
+      .where(
+        and(
+          eq(issue.workspaceID, useWorkspace()),
+          eq(issue.stageID, input.stageID),
+          eq(issue.group, input.group)
+        )
+      )
+      .limit(1)
+      .then((rows) => rows.at(0));
+    if (!row?.pointer) return;
+    const { pointer } = row;
+    const [invocation] = await Log.expand({
+      group: "group",
+      logGroup: pointer.logGroup,
+      logStream: pointer.logStream,
+      timestamp: pointer.timestamp,
+      sourcemapKey:
+        `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
+        pointer.logGroup.split("/").slice(3, 5).join("/"),
+      config,
+    });
+    if (!invocation) return;
+
+    await db
+      .update(issue)
+      .set({
+        invocation,
+      })
+      .where(and(eq(issue.workspaceID, useWorkspace()), eq(issue.id, row.id)));
+  }
+);

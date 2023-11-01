@@ -36,15 +36,17 @@ export const timestamps = {
 };
 
 import { customType } from "drizzle-orm/pg-core";
+import { gunzipSync, gzipSync } from "zlib";
 
-/*
-const blob = <TData>(name: string) =>
-  customType<{ data: TData; driverData: Buffer }>({
+export const blob = <TData>(name: string) =>
+  customType<{ data: TData; driverData: string }>({
     dataType() {
-      return "jsonb";
+      return "longtext";
     },
-    toDriver(value: TData): string {
-      return JSON.stringify(value);
+    fromDriver(value) {
+      return JSON.parse(gunzipSync(Buffer.from(value, "binary")).toString());
+    },
+    toDriver(value: TData) {
+      return gzipSync(Buffer.from(JSON.stringify(value))).toString("binary");
     },
   })(name);
-  */

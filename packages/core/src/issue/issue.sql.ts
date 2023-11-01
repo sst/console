@@ -9,9 +9,9 @@ import {
   unique,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { cuid, timestamps, workspaceID } from "../util/sql";
+import { blob, cuid, timestamps, workspaceID } from "../util/sql";
 import { Actor } from "../actor";
-import { StackFrame } from "../log";
+import { Invocation, StackFrame } from "../log";
 import { Destination, Source } from "./alert";
 
 export const issue = mysqlTable(
@@ -44,6 +44,7 @@ export const issue = mysqlTable(
       mode: "string",
     }),
     ignorer: json("ignorer").$type<Actor>(),
+    invocation: blob<Invocation>("invocation"),
   },
   (table) => ({
     primary: primaryKey(table.workspaceID, table.id),

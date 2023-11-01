@@ -110,7 +110,7 @@ export function Issues({ stack }: StackContext) {
   bus.subscribe(stack, "issue.detected", {
     handler: "packages/functions/src/issues/issue-detected.handler",
     timeout: "15 minutes",
-    permissions: ["ses"],
+    permissions: ["ses", "sts"],
     bind: [...Object.values(secrets.database)],
     environment: {
       EMAIL_DOMAIN: use(DNS).domain,
