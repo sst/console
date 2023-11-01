@@ -209,6 +209,12 @@ export function Code() {
       }).toString();
   }
 
+  function inputs() {
+    return [
+      ...document.querySelectorAll<HTMLInputElement>("[data-element=code]"),
+    ];
+  }
+
   return (
     <Root form="code">
       <Stack horizontal="center" space="5">
@@ -240,11 +246,11 @@ export function Code() {
                 disabled={disabled()}
                 type="text"
                 onPaste={(e) => {
-                  const code = e.clipboardData?.getData("text/plain");
+                  const code = e.clipboardData?.getData("text/plain")?.trim();
                   if (!code) return;
-                  const inputs = document.querySelectorAll("input");
-                  if (code.length !== inputs.length) return;
-                  inputs.forEach((item, index) => {
+                  const i = inputs();
+                  if (code.length !== i.length) return;
+                  i.forEach((item, index) => {
                     item.value = code[index];
                   });
                   e.preventDefault();
@@ -266,20 +272,18 @@ export function Code() {
                   }
                 }}
                 onInput={(e) => {
+                  const all = inputs();
+                  const index = all.indexOf(e.currentTarget);
                   if (!e.currentTarget.value) {
-                    const previous =
-                      e.currentTarget.parentNode?.parentNode?.previousSibling
-                        ?.firstChild?.firstChild;
-                    if (previous instanceof HTMLInputElement) {
+                    const previous = all[index - 1];
+                    if (previous) {
                       previous.focus();
                     }
                     return;
                   }
 
-                  const next =
-                    e.currentTarget.parentNode?.parentNode?.nextSibling
-                      ?.firstChild?.firstChild;
-                  if (next instanceof HTMLInputElement) {
+                  const next = all[index + 1];
+                  if (next) {
                     next.focus();
                     next.select();
                     return;
