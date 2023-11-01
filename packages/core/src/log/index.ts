@@ -180,10 +180,12 @@ export function createProcessor(input: {
   >();
   let results = [] as LogEvent[];
 
-  const sourcemapCache = input.sourcemapKey ? createSourcemapCache({
-    key: input.sourcemapKey,
-    config: input.config,
-  }) : undefined;
+  const sourcemapCache = input.sourcemapKey
+    ? createSourcemapCache({
+        key: input.sourcemapKey,
+        config: input.config,
+      })
+    : undefined;
 
   function generateInvocationID(id: string) {
     const trimmed = id.trim();
@@ -410,7 +412,7 @@ export function createProcessor(input: {
       return events;
     },
     destroy() {
-      sourcemapCache.destroy();
+      sourcemapCache?.destroy();
     },
     results,
     get streams() {
@@ -449,7 +451,6 @@ export const expand = zod(
     const processor = createProcessor({
       config: input.config,
       group: input.group,
-      sourcemapKey: 
     });
 
     async function fetchEvents(start: number, end: number) {
