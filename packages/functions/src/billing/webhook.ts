@@ -48,8 +48,8 @@ export const handler = ApiHandler(async (event) => {
     if (!item) {
       throw new Error("Workspace not found for customer");
     }
-    if (item.subscriptionID) {
-      throw new Error("Workspace already has a subscription");
+    if (!item.subscriptionID) {
+      throw new Error("Workspace does not have a subscription");
     }
 
     await withActor(
