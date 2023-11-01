@@ -242,7 +242,9 @@ export function Code() {
                 onPaste={(e) => {
                   const code = e.clipboardData?.getData("text/plain");
                   if (!code) return;
-                  document.querySelectorAll("input").forEach((item, index) => {
+                  const inputs = document.querySelectorAll("input");
+                  if (code.length !== inputs.length) return;
+                  inputs.forEach((item, index) => {
                     item.value = code[index];
                   });
                   e.preventDefault();
