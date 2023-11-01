@@ -26,15 +26,24 @@ export const handler = ApiHandler(
       cancel_url: body.return_url,
       subscription_data: {
         proration_behavior: "none",
-        billing_cycle_anchor: DateTime.now()
-          .toUTC()
-          .plus({ month: 1 })
-          .startOf("month")
-          .plus({ hour: 12 })
-          .toUnixInteger(),
+        billing_cycle_anchor: getAnchorDate().toUnixInteger(),
       },
     });
 
     return { statusCode: 200, body: JSON.stringify({ url: session.url }) };
   })
 );
+
+function getAnchorDate() {
+  const now = DateTime.now();
+
+  // check if falls in current month's anchor date
+  // ie. Current time: Nov 1, 5am UTC
+  //     Anchor date: Nov 1, 12pm UTC
+  const anchor = now.toUTC().startOf("month").plus({ hour: 12 });
+  if (anchor.toUnixInteger() > now.toUnixInteger()) return anchor;
+
+  // ie. Current time: Nov 2, 5am UTC
+  //     Anchor date: Dec 1, 12pm UTC
+  return now.toUTC().plus({ month: 1 }).startOf("month").plus({ hour: 12 });
+}
