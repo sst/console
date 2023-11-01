@@ -573,7 +573,7 @@ export function Logs() {
         onSelect={(end) => {
           setQuery(
             {
-              view: "customer",
+              view: "custom",
             },
             {
               replace: true,
