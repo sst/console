@@ -121,13 +121,14 @@ export function Detail() {
 
   createEffect(async () => {
     if (!issue()) return;
-    const result = await fetch(
+    if (issue()?.invocation) return;
+    await fetch(
       import.meta.env.VITE_API_URL +
         "/rest/log?" +
         new URLSearchParams({
           pointer: JSON.stringify(issue()!.pointer),
           stageID: issue()!.stageID,
-          groupID: issue()!.id,
+          groupID: issue()!.group,
         }),
       {
         headers: {
@@ -136,8 +137,6 @@ export function Detail() {
         },
       }
     ).then((x) => x.json());
-    invocations.clear(issue()!.id);
-    bus.emit("invocation", result);
   });
 
   const invocation = createMemo(
