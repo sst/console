@@ -327,7 +327,7 @@ function renderStacktraceFrameContext(
 
   function padStringToEnd(input: string, desiredLength: number) {
     const numberOfSpaces = desiredLength - input.length;
-    return input + " ".repeat(numberOfSpaces);
+    return input + " ".repeat(Math.max(0, numberOfSpaces));
   }
 
   return (
