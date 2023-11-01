@@ -35,7 +35,7 @@ export const timestamps = {
   }),
 };
 
-import { customType } from "drizzle-orm/pg-core";
+import { customType } from "drizzle-orm/mysql-core";
 import { gunzipSync, gzipSync } from "zlib";
 
 export const blob = <TData>(name: string) =>
