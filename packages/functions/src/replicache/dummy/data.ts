@@ -2,7 +2,6 @@ import { DateTime } from "luxon";
 import { AWS } from "@console/core/aws";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
-import { Info } from "@console/core/warning";
 import { App, Stage } from "@console/core/app";
 import { StackFrame } from "@console/core/log";
 import { Warning } from "@console/core/warning";
@@ -284,6 +283,7 @@ function issue({
     _type: "issue",
     id,
     timeSeen: DateTime.now().startOf("day").toSQL()!,
+    invocation: null,
     timeDeleted: null,
     timeResolved: null,
     timeIgnored: null,
