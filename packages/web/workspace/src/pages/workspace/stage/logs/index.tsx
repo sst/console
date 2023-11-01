@@ -420,7 +420,7 @@ export function Logs() {
                       fallback="Viewing recent logs"
                     >
                       <span>
-                        Viewing logs until {search.end?.toLocaleString()}
+                        Viewing logs older than {search.end?.toLocaleString()}
                       </span>
                     </Show>
                   </Match>
