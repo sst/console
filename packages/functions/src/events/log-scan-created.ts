@@ -28,28 +28,27 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
       await (async () => {
         let iteration = 0;
 
-        let initial = search.timeStart
-          ? new Date(search.timeStart + "Z")
-          : undefined;
-        const isFixed = search.timeEnd != null;
+        let end = search.timeEnd
+          ? DateTime.fromSQL(search.timeEnd, { zone: "utc" })
+          : DateTime.now();
+        let start = search.timeEnd
+          ? end.minus({ hours: 1 })
+          : await (async () => {
+              const response = await client.send(
+                new DescribeLogStreamsCommand({
+                  logGroupIdentifier: search.logGroup,
+                  orderBy: "LastEventTime",
+                  descending: true,
+                  limit: 1,
+                })
+              );
+              return DateTime.fromMillis(
+                response.logStreams?.[0]?.lastEventTimestamp! - 30 * 60 * 1000
+              ).startOf("hour");
+            })();
 
-        if (!initial) {
-          const response = await client.send(
-            new DescribeLogStreamsCommand({
-              logGroupIdentifier: search.logGroup,
-              orderBy: "LastEventTime",
-              descending: true,
-              limit: 1,
-            })
-          );
-          console.log(response.logStreams);
-          initial = DateTime.fromMillis(
-            response.logStreams?.[0]?.lastEventTimestamp! + 30 * 60 * 1000
-          )
-            .startOf("hour")
-            .toJSDate();
-        }
-        console.log("start", initial.toLocaleString());
+        console.log("start", start.toLocaleString(DateTime.DATETIME_SHORT));
+
         const processor = Log.createProcessor({
           sourcemapKey:
             `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
@@ -57,12 +56,8 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
           group: search.id,
           config,
         });
+
         while (true) {
-          iteration++;
-          const start = initial.getTime() - (isFixed ? 0 : delay(iteration));
-          const end = isFixed
-            ? new Date(search.timeEnd + "Z").getTime()
-            : initial.getTime() - delay(iteration - 1);
           await Log.Search.setStart({
             id: search.id,
             timeStart: new Date(start).toISOString().split("Z")[0]!,
@@ -70,23 +65,17 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
           await Replicache.poke(profileID);
           console.log(
             "scanning from",
-            new Date(start).toLocaleString(),
+            start.toLocaleString(DateTime.DATETIME_SHORT),
             "to",
-            new Date(end).toLocaleString()
+            end.toLocaleString(DateTime.DATETIME_SHORT)
           );
-          console.log("query", {
-            logGroupIdentifiers: [search.logGroup],
-            queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 10000`,
-            startTime: start / 1000,
-            endTime: end / 1000,
-          });
           const result = await client
             .send(
               new StartQueryCommand({
                 logGroupIdentifiers: [search.logGroup],
                 queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 10000`,
-                startTime: start / 1000,
-                endTime: end / 1000,
+                startTime: start.toMillis() / 1000,
+                endTime: end.toMillis() / 1000,
               })
             )
             .catch(() => {});
@@ -116,9 +105,6 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                   line: result[1]?.value!,
                 });
                 index++;
-                // if (processor.estimated >= 50 && !isFixed) {
-                //   break;
-                // }
               }
 
               const data = processor.flushInvocations(-1);
@@ -135,15 +121,19 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                 });
                 await Realtime.publish("invocation.url", url, profileID);
               }
-              if (flushed >= 50 || isFixed) {
+              if (flushed >= 50) {
                 return;
               }
 
               break;
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 200));
           }
+
+          iteration++;
+          end = start;
+          start = start.minus({ millisecond: delay(iteration) });
         }
       })();
     } catch (ex) {

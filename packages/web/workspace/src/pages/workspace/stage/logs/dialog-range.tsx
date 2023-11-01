@@ -64,16 +64,15 @@ const GraphicStem = styled("div", {
 export type DialogRangeControl = ReturnType<typeof init>["control"];
 
 export function DialogRange(props: {
-  onSelect: (start: Date, end: Date) => void;
+  onSelect: (end: Date) => void;
   control: (control: DialogRangeControl) => void;
 }) {
   const { state, control } = init();
-  let start!: HTMLInputElement;
   let end!: HTMLInputElement;
 
   createEffect(() => {
     if (state.show) {
-      setTimeout(() => start.focus(), 0);
+      setTimeout(() => end.focus(), 0);
     }
   });
 
@@ -87,42 +86,19 @@ export function DialogRange(props: {
         onSubmit={(e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
-          const start = new Date(fd.get("start")?.toString()!);
           const end = new Date(fd.get("end")?.toString()!);
-          if (!start || !end) return;
-          props.onSelect(start, end);
+          if (!end) return;
+          props.onSelect(end);
           control.hide();
         }}
       >
         <Stack space="5">
           <Stack space="2">
             <Text size="lg" weight="medium">
-              View logs between
+              Jump to
             </Text>
           </Stack>
           <Row space="1">
-            <Grower>
-              <FormField>
-                <Input
-                  onChange={(e) => {
-                    if (end.value) return;
-                    console.log(e.currentTarget.value);
-                    const start = DateTime.fromISO(e.currentTarget.value);
-                    if (!start) return;
-                    end.value = start
-                      .plus({ hours: 1 })
-                      .toISO()
-                      ?.substring(0, 16)!;
-                  }}
-                  ref={start}
-                  name="start"
-                  type="datetime-local"
-                />
-              </FormField>
-            </Grower>
-            <GraphicSpacer>
-              <GraphicStem />
-            </GraphicSpacer>
             <Grower>
               <FormField>
                 <Input ref={end} name="end" type="datetime-local" />

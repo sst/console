@@ -280,10 +280,9 @@ export function Logs() {
   });
   const activeSearch = LogSearchStore.get.watch(rep, () => [search.id]);
 
-  async function createSearch(start?: number, end?: number) {
+  async function createSearch(end?: number) {
     setSearch(
       produce((draft) => {
-        draft.start = start ? new Date(start) : undefined;
         draft.end = end ? new Date(end) : undefined;
       })
     );
@@ -293,11 +292,7 @@ export function Logs() {
       profileID: await rep().profileID,
       stageID: stage.stage.id,
       logGroup: logGroup(),
-      timeStart: search.start
-        ? DateTime.fromJSDate(search.start!)
-            .toUTC()
-            .toSQL({ includeOffset: false })
-        : null,
+      timeStart: null,
       timeEnd: search.end
         ? DateTime.fromJSDate(search.end!)
             .toUTC()
@@ -344,33 +339,6 @@ export function Logs() {
       createSearch();
       return;
     }
-    if (val === "5min") {
-      createSearch(Date.now() - 1000 * 60 * 5, Date.now());
-      return;
-    }
-    if (val === "15min") {
-      createSearch(Date.now() - 1000 * 60 * 15, Date.now());
-      return;
-    }
-    if (val === "1hr") {
-      createSearch(Date.now() - 1000 * 60 * 60, Date.now());
-      return;
-    }
-    if (val === "6hr") {
-      const start = Date.now() - 1000 * 60 * 60 * 6;
-      createSearch(start, start + 1000 * 60 * 60);
-      return;
-    }
-    if (val === "12hr") {
-      const start = Date.now() - 1000 * 60 * 60 * 12;
-      createSearch(start, start + 1000 * 60 * 60);
-      return;
-    }
-    if (val === "24hr") {
-      const start = Date.now() - 1000 * 60 * 60 * 24;
-      createSearch(start, start + 1000 * 60 * 60);
-      return;
-    }
   }
 
   const functions = useFunctionsContext();
@@ -384,6 +352,10 @@ export function Logs() {
       if (match) return match.route;
     }
     return resource()?.metadata.handler;
+  });
+
+  createEffect(() => {
+    console.log(activeSearch()?.timeStart);
   });
 
   return (
@@ -444,12 +416,11 @@ export function Logs() {
                   </Match>
                   <Match when={mode() === "search"}>
                     <Show
-                      when={search.start && search.end}
+                      when={query.view !== "recent" && search.end}
                       fallback="Viewing recent logs"
                     >
                       <span>
-                        Viewing logs between {search.start?.toLocaleString()} —{" "}
-                        {search.end?.toLocaleString()}
+                        Viewing logs until {search.end?.toLocaleString()}
                       </span>
                     </Show>
                   </Match>
@@ -494,56 +465,8 @@ export function Logs() {
                         <IconCheck width={14} height={14} />
                       </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
-                    <Dropdown.Seperator />
-                    <Dropdown.RadioItem closeOnSelect value="5min">
-                      <Dropdown.RadioItemLabel>
-                        5min ago
-                      </Dropdown.RadioItemLabel>
-                      <Dropdown.ItemIndicator>
-                        <IconCheck width={14} height={14} />
-                      </Dropdown.ItemIndicator>
-                    </Dropdown.RadioItem>
-                    <Dropdown.RadioItem closeOnSelect value="15min">
-                      <Dropdown.RadioItemLabel>
-                        15min ago
-                      </Dropdown.RadioItemLabel>
-                      <Dropdown.ItemIndicator>
-                        <IconCheck width={14} height={14} />
-                      </Dropdown.ItemIndicator>
-                    </Dropdown.RadioItem>
-                    <Dropdown.RadioItem closeOnSelect value="1hr">
-                      <Dropdown.RadioItemLabel>1hr ago</Dropdown.RadioItemLabel>
-                      <Dropdown.ItemIndicator>
-                        <IconCheck width={14} height={14} />
-                      </Dropdown.ItemIndicator>
-                    </Dropdown.RadioItem>
-                    <Dropdown.RadioItem closeOnSelect value="6hr">
-                      <Dropdown.RadioItemLabel>
-                        6hrs ago
-                      </Dropdown.RadioItemLabel>
-                      <Dropdown.ItemIndicator>
-                        <IconCheck width={14} height={14} />
-                      </Dropdown.ItemIndicator>
-                    </Dropdown.RadioItem>
-                    <Dropdown.RadioItem closeOnSelect value="12hr">
-                      <Dropdown.RadioItemLabel>
-                        12hrs ago
-                      </Dropdown.RadioItemLabel>
-                      <Dropdown.ItemIndicator>
-                        <IconCheck width={14} height={14} />
-                      </Dropdown.ItemIndicator>
-                    </Dropdown.RadioItem>
-                    <Dropdown.RadioItem closeOnSelect value="24hr">
-                      <Dropdown.RadioItemLabel>
-                        1 day ago
-                      </Dropdown.RadioItemLabel>
-                      <Dropdown.ItemIndicator>
-                        <IconCheck width={14} height={14} />
-                      </Dropdown.ItemIndicator>
-                    </Dropdown.RadioItem>
-                    <Dropdown.Seperator />
                     <Dropdown.RadioItem closeOnSelect value="custom">
-                      Specify a time&hellip;
+                      Jump to&hellip;
                     </Dropdown.RadioItem>
                   </Dropdown.RadioGroup>
                 </Dropdown>
@@ -607,25 +530,27 @@ export function Logs() {
                   </LogMoreIndicatorIcon>
                   <Text leading="normal" color="dimmed" size="sm">
                     <Show
-                      when={query.view === "recent"}
+                      when={mode() === "search"}
                       fallback={<>Loading&hellip;</>}
                     >
                       Scanning
-                      {activeSearch()?.timeStart
-                        ? ` last ${parseTime(activeSearch()?.timeStart!)
-                            .toRelative({
-                              style: "long",
-                              unit: ["months", "weeks", "days", "hours"],
-                              round: true,
-                            })
-                            ?.replace(" ago", "")}`
-                        : ""}
+                      <Show when={activeSearch()?.timeStart}>
+                        {" "}
+                        last{" "}
+                        {parseTime(activeSearch()?.timeStart!)
+                          .toRelative({
+                            style: "long",
+                            unit: ["months", "weeks", "days", "hours"],
+                            round: true,
+                          })
+                          ?.replace(" ago", "")}
+                      </Show>
                       &hellip;
                     </Show>
                   </Text>
                 </LogMoreIndicator>
               </Match>
-              <Match when={query.view === "recent" && invocations().length}>
+              <Match when={mode() === "search" && invocations().length}>
                 <LogMoreIndicator>
                   <LogMoreIndicatorIcon>
                     <IconEllipsisVertical />
@@ -645,7 +570,7 @@ export function Logs() {
         </LogList>
       </Stack>
       <DialogRange
-        onSelect={(start, end) => {
+        onSelect={(end) => {
           setQuery(
             {
               view: "customer",
@@ -655,7 +580,7 @@ export function Logs() {
             }
           );
           invocationsContext.clear(logGroupKey());
-          createSearch(start.getTime(), end.getTime());
+          createSearch(end.getTime());
         }}
         control={(control) => (rangeControl = control)}
       />
