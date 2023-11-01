@@ -39,7 +39,7 @@ import {
 } from "../context";
 import { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../../command-bar";
-import { formatSinceTime, parseTime } from "$/common/format";
+import { DATETIME_LONG, formatSinceTime, parseTime } from "$/common/format";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { Invoke, InvokeControl } from "./invoke";
 import { createId } from "@paralleldrive/cuid2";
@@ -273,8 +273,8 @@ export function Logs() {
 
   const [search, setSearch] = createStore<{
     id: string;
-    start?: Date;
-    end?: Date;
+    start?: DateTime;
+    end?: DateTime;
   }>({
     id: createId(),
   });
@@ -283,7 +283,7 @@ export function Logs() {
   async function createSearch(end?: number) {
     setSearch(
       produce((draft) => {
-        draft.end = end ? new Date(end) : undefined;
+        draft.end = end ? DateTime.fromMillis(end) : undefined;
       })
     );
 
@@ -292,12 +292,12 @@ export function Logs() {
       profileID: await rep().profileID,
       stageID: stage.stage.id,
       logGroup: logGroup(),
-      timeStart: null,
-      timeEnd: search.end
-        ? DateTime.fromJSDate(search.end!)
-            .toUTC()
-            .toSQL({ includeOffset: false })
-        : null,
+      timeStart:
+        search.end
+          ?.minus({ hour: 1 })
+          .toUTC()
+          .toSQL({ includeOffset: false })! || null,
+      timeEnd: search.end?.toUTC().toSQL({ includeOffset: false })! || null,
     });
   }
 
@@ -344,7 +344,6 @@ export function Logs() {
   const functions = useFunctionsContext();
   const title = createMemo(() => {
     const [ref] = functions().get(resource()?.id || "") || [];
-    console.log("ref", ref);
     if (ref?.type === "NextjsSite" && ref.metadata.routes?.data) {
       const match = ref.metadata.routes.data.find((item) =>
         query.logGroup?.endsWith(item.logGroupPath)
@@ -352,10 +351,6 @@ export function Logs() {
       if (match) return match.route;
     }
     return resource()?.metadata.handler;
-  });
-
-  createEffect(() => {
-    console.log(activeSearch()?.timeStart);
   });
 
   return (
@@ -415,12 +410,10 @@ export function Logs() {
                     Tailing logs from local `sst dev`&hellip;
                   </Match>
                   <Match when={mode() === "search"}>
-                    <Show
-                      when={query.view !== "recent" && search.end}
-                      fallback="Viewing recent logs"
-                    >
+                    <Show when={search.end} fallback="Viewing recent logs">
                       <span>
-                        Viewing logs older than {search.end?.toLocaleString()}
+                        Viewing logs older than{" "}
+                        {search.end?.toLocaleString(DATETIME_LONG)}
                       </span>
                     </Show>
                   </Match>
@@ -536,14 +529,10 @@ export function Logs() {
                       Scanning
                       <Show when={activeSearch()?.timeStart}>
                         {" "}
-                        last{" "}
+                        till{" "}
                         {parseTime(activeSearch()?.timeStart!)
-                          .toRelative({
-                            style: "long",
-                            unit: ["months", "weeks", "days", "hours"],
-                            round: true,
-                          })
-                          ?.replace(" ago", "")}
+                          .toLocal()
+                          .toLocaleString(DATETIME_LONG)}
                       </Show>
                       &hellip;
                     </Show>
@@ -571,14 +560,6 @@ export function Logs() {
       </Stack>
       <DialogRange
         onSelect={(end) => {
-          setQuery(
-            {
-              view: "custom",
-            },
-            {
-              replace: true,
-            }
-          );
           invocationsContext.clear(logGroupKey());
           createSearch(end.getTime());
         }}

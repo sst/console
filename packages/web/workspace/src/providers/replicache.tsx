@@ -29,6 +29,7 @@ const mutators = new Client<ServerType>()
   .mutation("app_stage_sync", async () => {})
   .mutation("log_poller_subscribe", async () => {})
   .mutation("log_search", async (tx, input) => {
+    console.log(input);
     await LogSearchStore.put(tx, [input.id], input);
   })
   .mutation("user_create", async (tx, input) => {

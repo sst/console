@@ -1,5 +1,15 @@
 import { DateTime } from "luxon";
 
+export const DATETIME_LONG = {
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  hour12: true,
+  minute: "numeric",
+  second: "numeric",
+  timeZoneName: "short",
+} as const;
+
 export function parseTime(input: string) {
   return DateTime.fromSQL(input, { zone: "utc" });
 }
