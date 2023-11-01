@@ -529,7 +529,7 @@ export function Logs() {
                       Scanning
                       <Show when={activeSearch()?.timeStart}>
                         {" "}
-                        till{" "}
+                        to{" "}
                         {parseTime(activeSearch()?.timeStart!)
                           .toLocal()
                           .toLocaleString(DATETIME_LONG)}
