@@ -128,6 +128,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             stack: data.trace.map((t) => ({
               raw: t,
             })),
+            failed: true,
           });
         })
       );
