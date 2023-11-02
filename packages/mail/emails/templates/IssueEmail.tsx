@@ -584,8 +584,8 @@ export const IssueEmail = ({
               </Column>
               <Column align="right">
                 <Link
-                  href={`${consoleUrl}/${workspace}/settings`}
                   style={footerLink}
+                  href={`${consoleUrl}/${workspace}/settings#alerts`}
                 >
                   Settings
                 </Link>

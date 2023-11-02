@@ -704,7 +704,7 @@ export function Alerts() {
 
   return (
     <>
-      <Stack space={PANEL_CONTENT_SPACE}>
+      <Stack id="alerts" space={PANEL_CONTENT_SPACE}>
         <Stack space={PANEL_HEADER_SPACE}>
           <Text size="lg" weight="medium">
             Alerts
