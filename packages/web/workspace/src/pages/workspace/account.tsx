@@ -91,10 +91,17 @@ export function Account() {
               </Text>
             </Stack>
             <AddAccountHint>
-              <li>Deploys a CloudFormation stack to your account</li>
-              <li>Contains an IAM Role and a Lambda function</li>
-              <li>Scans all your AWS regions for SST apps</li>
-              <li>Subscribes to them and listen for changes</li>
+              <li>Load all the SST apps in your AWS account</li>
+              <li>Subscribe to changes and keep them in sync</li>
+              <li>
+                <a
+                  target="_blank"
+                  href="https://docs.sst.dev/console#how-it-works"
+                >
+                  Learn more
+                </a>{" "}
+                about how the console works
+              </li>
             </AddAccountHint>
             <AddAccountStepsFooter>
               <a
