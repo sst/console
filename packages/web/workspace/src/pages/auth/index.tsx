@@ -61,6 +61,7 @@ const NewConsoleTips = styled("ul", {
     width: "100%",
     padding: `${theme.space[4]} ${theme.space[2]} ${theme.space[4]} 30px`,
     listStyle: "circle",
+    lineHeight: "normal",
     backgroundColor: theme.color.background.surface,
     borderRadius: theme.borderRadius,
     fontSize: theme.font.size.sm,
@@ -118,31 +119,13 @@ export function Email() {
             </Text>
           </Stack>
           <NewConsoleTips>
+            <li>View logs and manage all your apps</li>
+            <li>Get alerts for any issues in your apps</li>
             <li>
-              <Text size="sm" on="surface" color="secondary" leading="normal">
-                <a href="https://docs.sst.dev/console" target="_blank">
-                  Learn more
-                </a>{" "}
-                about the new console.
-              </Text>
-            </li>
-            <li>
-              <Text size="sm" on="surface" color="secondary" leading="normal">
-                Need help?{" "}
-                <a href="https://sst.dev/discord" target="_blank">
-                  Join #console
-                </a>{" "}
-                on Discord.
-              </Text>
-            </li>
-            <li>
-              <Text size="sm" on="surface" color="secondary" leading="normal">
-                Looking for the old console?{" "}
-                <a target="_blank" href="https://old.console.sst.dev">
-                  Click here
-                </a>
-                .
-              </Text>
+              <a href="https://docs.sst.dev/console" target="_blank">
+                Learn more
+              </a>{" "}
+              about how the console works
             </li>
           </NewConsoleTips>
         </Stack>

@@ -29,5 +29,11 @@ export const utility = {
       whiteSpace: "nowrap",
       textOverflow: "ellipsis",
     } satisfies CSSProperties,
+    label: {
+      fontWeight: 500,
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
+      fontFamily: theme.font.family.code,
+    } satisfies CSSProperties,
   },
 };

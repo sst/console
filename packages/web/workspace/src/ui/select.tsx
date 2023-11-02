@@ -260,10 +260,10 @@ export function Select(props: SingleSelect) {
   );
 }
 
-type MultiselectProps = {
+type MultiSelectProps = {
   value?: string[];
 } & SelectProps;
-export function Multiselect(props: MultiselectProps) {
+export function MultiSelect(props: MultiSelectProps) {
   const [rootProps, selectProps] = splitProps(
     props,
     ["name", "placeholder", "options", "required", "disabled"],

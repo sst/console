@@ -15,7 +15,7 @@ import {
   SplitOptions,
   SplitOptionsOption,
 } from "$/ui/form";
-import { Select } from "$/ui/select";
+import { Select, MultiSelect } from "$/ui/select";
 import { Dropdown } from "$/ui/dropdown";
 import {
   Button,
@@ -660,6 +660,36 @@ Read more about it over on our docs`}
               { label: "13", value: "13" },
               { label: "14", value: "14" },
               { label: "15", value: "15" },
+            ]}
+          />
+        </Variant>
+      </ComponentType>
+      <ComponentType name="MultiSelect">
+        <Variant name="Default">
+          <MultiSelect
+            options={[
+              {
+                label: "Default option",
+                value: "1",
+                seperator: true,
+              },
+              {
+                label: "Option 1",
+                value: "2",
+              },
+              {
+                label:
+                  "Super long option that should be overflow because it is so long",
+                value: "3",
+              },
+              {
+                label: "Option 3",
+                value: "4",
+              },
+              {
+                label: "Option 4",
+                value: "5",
+              },
             ]}
           />
         </Variant>

@@ -25,6 +25,19 @@ import { fromPairs } from "remeda";
 import { useResourcesContext, useStageContext } from "../context";
 import { useInvocations } from "$/providers/invocation";
 
+const DATETIME_NO_TIME = {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+} as const;
+
+const Container = styled("div", {
+  base: {
+    ...utility.row(6),
+    padding: theme.space[4],
+  },
+});
+
 const Content = styled("div", {
   base: {
     flex: "1 1 auto",
@@ -35,6 +48,14 @@ const Sidebar = styled("div", {
   base: {
     flex: "0 0 auto",
     width: 300,
+  },
+});
+
+const PanelTitle = styled("span", {
+  base: {
+    ...utility.text.label,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -51,6 +72,14 @@ export const StackTraceEmpty = styled("div", {
     ...utility.row(2),
     alignItems: "center",
     padding: theme.space[5],
+  },
+});
+
+export const PanelEmptyCopy = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.surface,
   },
 });
 
@@ -189,7 +218,7 @@ export function Detail() {
 
   return (
     <Show when={issue()}>
-      <Row space="6" style={{ padding: `${theme.space[4]}` }}>
+      <Container>
         <Content>
           <Stack space="7">
             <Stack space="2">
@@ -206,22 +235,13 @@ export function Detail() {
               </Stack>
             </Stack>
             <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                Stack Trace
-              </Text>
+              <PanelTitle>Stack Trace</PanelTitle>
               <StackTraceBackground>
                 <Show
                   when={issue().stack?.length}
                   fallback={
                     <StackTraceEmpty>
-                      <Text
-                        leading="normal"
-                        color="dimmed"
-                        size="sm"
-                        on="surface"
-                      >
-                        No stack trace available
-                      </Text>
+                      <PanelEmptyCopy>No stack trace available</PanelEmptyCopy>
                     </StackTraceEmpty>
                   }
                 >
@@ -230,9 +250,21 @@ export function Detail() {
               </StackTraceBackground>
             </Stack>
             <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                Logs
-              </Text>
+              <Show
+                when={invocation()?.logs.length}
+                fallback={<PanelTitle>Logs</PanelTitle>}
+              >
+                <PanelTitle
+                  title={DateTime.fromMillis(invocation()?.logs[0].timestamp!)
+                    .toUTC()
+                    .toLocaleString(DateTime.DATETIME_FULL)}
+                >
+                  Logs —{" "}
+                  {DateTime.fromMillis(
+                    invocation()?.logs[0].timestamp!
+                  ).toLocaleString(DATETIME_NO_TIME)}
+                </PanelTitle>
+              </Show>
               <LogsBackground>
                 <Show
                   when={invocation()?.logs.length}
@@ -241,21 +273,20 @@ export function Detail() {
                       <LogsLoadingIcon>
                         <IconArrowPathSpin />
                       </LogsLoadingIcon>
-                      <Text
-                        leading="normal"
-                        color="dimmed"
-                        size="sm"
-                        on="surface"
-                      >
-                        Loading logs &hellip;
-                      </Text>
+                      <PanelEmptyCopy>Loading logs &hellip;</PanelEmptyCopy>
                     </LogsLoading>
                   }
                 >
                   <For each={invocation()?.logs || []}>
-                    {(entry, i) => (
+                    {(entry) => (
                       <Log>
-                        <LogTime>
+                        <LogTime
+                          title={DateTime.fromMillis(entry.timestamp)
+                            .toUTC()
+                            .toLocaleString(
+                              DateTime.DATETIME_FULL_WITH_SECONDS
+                            )}
+                        >
                           {new Date(entry.timestamp).toLocaleTimeString()}
                         </LogTime>
                         <LogMessage>{entry.message}</LogMessage>
@@ -304,9 +335,7 @@ export function Detail() {
               </Button>
             </ButtonGroup>
             <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                Last 24hrs
-              </Text>
+              <PanelTitle>Last 24hrs</PanelTitle>
               <Histogram
                 width={300}
                 height={40}
@@ -316,9 +345,7 @@ export function Detail() {
               />
             </Stack>
             <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                Status
-              </Text>
+              <PanelTitle>Status</PanelTitle>
               <Row>
                 <Switch>
                   <Match when={status() === "active"}>
@@ -334,9 +361,7 @@ export function Detail() {
               </Row>
             </Stack>
             <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                Last Seen
-              </Text>
+              <PanelTitle>Last Seen</PanelTitle>
               <Text
                 title={parseTime(issue().timeSeen).toLocaleString(
                   DateTime.DATETIME_FULL
@@ -347,9 +372,7 @@ export function Detail() {
               </Text>
             </Stack>
             <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                First Seen
-              </Text>
+              <PanelTitle>First Seen</PanelTitle>
               <Text
                 title={parseTime(issue().timeCreated).toLocaleString(
                   DateTime.DATETIME_FULL
@@ -360,9 +383,7 @@ export function Detail() {
               </Text>
             </Stack>
             <Stack space="2">
-              <Text label on="surface" size="mono_sm" color="dimmed">
-                Feedback
-              </Text>
+              <PanelTitle>Feedback</PanelTitle>
               <FeedbackCopy>
                 <Text size="sm" color="secondary">
                   Does something not look right?
@@ -374,7 +395,7 @@ export function Detail() {
             </Stack>
           </Stack>
         </Sidebar>
-      </Row>
+      </Container>
     </Show>
   );
 }

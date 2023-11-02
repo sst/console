@@ -19,6 +19,7 @@ import { useReplicache } from "$/providers/replicache";
 import { Resource } from "@console/core/app/resource";
 import { Invocation } from "@console/core/log";
 import { Link } from "@solidjs/router";
+import { DateTime } from "luxon";
 
 const shortDateOptions: Intl.DateTimeFormatOptions = {
   month: "short",
@@ -442,7 +443,11 @@ export function InvocationRow(props: {
                 <For each={props.invocation.logs}>
                   {(entry) => (
                     <Log>
-                      <LogTime>
+                      <LogTime
+                        title={DateTime.fromMillis(entry.timestamp)
+                          .toUTC()
+                          .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}
+                      >
                         {new Date(entry.timestamp).toLocaleTimeString()}
                       </LogTime>
                       <LogMessage>{entry.message}</LogMessage>

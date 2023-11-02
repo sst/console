@@ -102,6 +102,24 @@ const HeaderIcon = styled("div", {
   },
 });
 
+const HeaderDescription = styled("span", {
+  base: {
+    ...utility.text.line,
+    maxWidth: 500,
+    lineHeight: "normal",
+    color: theme.color.text.dimmed.surface,
+  },
+});
+
+const HeaderDescriptionLink = styled("a", {
+  base: {
+    color: theme.color.text.dimmed.surface,
+    ":hover": {
+      color: theme.color.text.dimmed.surface,
+    },
+  },
+});
+
 const Children = styled("div", {
   base: {
     ...utility.stack(0),
@@ -210,6 +228,10 @@ function cleanFilepath(path: string) {
   return path.replace(/^\.?\//, "");
 }
 
+function getUrl(url?: string, customDomainUrl?: string) {
+  return customDomainUrl ? customDomainUrl : url ? url : undefined;
+}
+
 function resourcePriority(resource: Resource.Info) {
   switch (resource.type) {
     case "RemixSite":
@@ -305,6 +327,7 @@ export function PageHeader(props: PageHeaderProps) {
 interface HeaderProps {
   resource: Resource.Info;
   icon?: (props: any) => JSX.Element;
+  link?: string;
   description?: string;
 }
 
@@ -333,15 +356,17 @@ export function Header(props: HeaderProps) {
           {props.resource.cfnID}
         </Text>
       </Row>
-      <Text
-        line
-        on="surface"
-        color="dimmed"
-        leading="normal"
-        style={{ "max-width": "500px" }}
-      >
-        {props.description}
-      </Text>
+      <HeaderDescription>
+        <Show when={props.link} fallback={props.description}>
+          <HeaderDescriptionLink
+            target="_blank"
+            href={props.link}
+            rel="noopener noreferrer"
+          >
+            {props.description}
+          </HeaderDescriptionLink>
+        </Show>
+      </HeaderDescription>
     </HeaderRoot>
   );
 }
@@ -504,6 +529,10 @@ export function ApiCard(props: CardProps<"Api">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
@@ -566,6 +595,10 @@ export function ApiGatewayV1ApiCard(props: CardProps<"ApiGatewayV1Api">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
@@ -660,6 +693,10 @@ export function AppSyncCard(props: CardProps<"AppSync">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl || props.resource.metadata.url
         }
@@ -756,6 +793,10 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
@@ -771,6 +812,10 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
@@ -808,6 +853,10 @@ export function SvelteKitSiteCard(props: CardProps<"SvelteKitSite">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
@@ -826,6 +875,10 @@ export function RemixSiteCard(props: CardProps<"RemixSite">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
@@ -844,6 +897,10 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
@@ -862,6 +919,10 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
     <>
       <Header
         resource={props.resource}
+        link={getUrl(
+          props.resource.metadata.url,
+          props.resource.metadata.customDomainUrl
+        )}
         description={
           props.resource.metadata.customDomainUrl ||
           props.resource.metadata.url ||
