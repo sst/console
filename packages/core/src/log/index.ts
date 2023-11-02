@@ -79,6 +79,7 @@ export type LogEvent = LogEventBase &
         error: string;
         message: string;
         stack: StackFrame[];
+        failed: boolean;
       }
   );
 
@@ -283,8 +284,16 @@ export function createProcessor(input: {
           message: formatLogMessage(tabs),
         };
 
+        // Timeout
+        // ie. 2023-11-02T21:25:22.391Z 1bd06cd6-9e74-4154-b921-0951216f2ec6 Task timed out after 4.01 seconds
+        if (tabs[0]?.substring(62)?.startsWith("Task timed out after")) {
+          result.requestID = generateInvocationID(tabs[0].split(" ")[1]!);
+          result.level = "ERROR";
+          result.message = tabs[0].substring(62)!;
+        }
+
         // NodeJS format
-        if (
+        else if (
           tabs[0]?.length === 24 &&
           (tabs[1]?.length === 36 || tabs[1] === "undefined")
         ) {
@@ -314,6 +323,7 @@ export function createProcessor(input: {
             error: mapped.error,
             message: mapped.message,
             stack: mapped.stack,
+            failed: mapped.failed,
           });
         }
       }
@@ -392,6 +402,7 @@ export function createProcessor(input: {
                   message: evt.message,
                   id: evt.id,
                   stack: evt.stack,
+                  failed: evt.failed,
                 });
                 break;
               case "report":
@@ -521,6 +532,7 @@ export type ParsedError = {
   error: string;
   message: string;
   stack: StackFrame[];
+  failed: boolean;
 };
 export function extractError(tabs: string[]): ParsedError | undefined {
   // Lambda runtime error
@@ -529,16 +541,17 @@ export function extractError(tabs: string[]): ParsedError | undefined {
       error: "LambdaRuntimeError",
       message: tabs[0]!.split("LAMBDA_RUNTIME")?.[1]?.trim() || "Unknown error",
       stack: [],
+      failed: true,
     };
   }
 
   // Timeout
-  const timeout = tabs.find((l) => l.includes("Task timed out after"));
-  if (timeout) {
+  if (tabs.length === 1 && tabs[0]?.includes("Task timed out after")) {
     return {
       error: "LambdaTimeoutError",
-      message: timeout,
+      message: tabs[0]?.substring(62) || "Timeout error",
       stack: [],
+      failed: true,
     };
   }
 
@@ -556,6 +569,7 @@ export function extractError(tabs: string[]): ParsedError | undefined {
         error: record.errorType,
         message: record.errorMessage,
         stack: record.stack.map((raw: string) => ({ raw })),
+        failed: true,
       };
     }
     if (typeof parsed.stack == "string") {
@@ -568,6 +582,7 @@ export function extractError(tabs: string[]): ParsedError | undefined {
         .map((l: string) => l.trim())
         .filter((l: string) => l.startsWith("at "))
         .map((raw) => ({ raw })),
+      failed: true,
     };
   }
 
@@ -591,6 +606,7 @@ export function extractError(tabs: string[]): ParsedError | undefined {
             error: record.errorType,
             message: record.errorMessage,
             stack: record.stack.map((raw: string) => ({ raw })),
+            failed: false,
           };
         }
 
@@ -607,6 +623,7 @@ export function extractError(tabs: string[]): ParsedError | undefined {
               .map((raw: string) => ({
                 raw,
               })),
+            failed: false,
           };
         }
       }
@@ -637,6 +654,7 @@ export function extractError(tabs: string[]): ParsedError | undefined {
         .map((raw) => ({
           raw,
         })),
+      failed: false,
     };
   }
 }

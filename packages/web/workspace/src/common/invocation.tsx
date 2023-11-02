@@ -46,7 +46,7 @@ const Root = styled("div", {
     },
     level: {
       info: {},
-      error: {},
+      danger: {},
     },
   },
   defaultVariants: {
@@ -241,7 +241,7 @@ const LogPreview = styled(LogText, {
     paddingLeft: theme.space[2],
     fontSize: theme.font.size.mono_base,
     selectors: {
-      [`${Root.selector({ level: "error" })} &`]: {
+      [`${Root.selector({ level: "danger" })} &`]: {
         color: `hsla(${theme.color.base.red}, 100%)`,
       },
     },
@@ -288,12 +288,14 @@ export function InvocationRow(props: {
   //              );
   const [replaying, setReplaying] = createSignal(false);
   const rep = useReplicache();
+  const level = props.invocation.errors.length
+    ? props.invocation.errors.some((error) => error.failed)
+      ? "fail"
+      : "error"
+    : "info";
 
   return (
-    <Root
-      expanded={expanded()}
-      level={props.invocation.errors.length ? "error" : "info"}
-    >
+    <Root expanded={expanded()} level={level === "info" ? "info" : "danger"}>
       <Summary
         onClick={() => {
           batch(() => {
@@ -306,7 +308,7 @@ export function InvocationRow(props: {
           <CaretIcon>
             <IconCaretRight />
           </CaretIcon>
-          <Level level={props.invocation.errors.length ? "error" : "info"} />
+          <Level level={level} />
         </Row>
         <Timestamp title={longDate()}>{shortDate()}</Timestamp>
         <Duration
@@ -515,8 +517,10 @@ function Level(props: { level?: string }) {
   return (
     <Tag
       size="small"
-      style="solid"
-      level={props.level === "error" ? "danger" : "info"}
+      style={props.level === "error" ? "outline" : "solid"}
+      level={
+        props.level === "fail" || props.level === "error" ? "danger" : "info"
+      }
     >
       {props.level}
     </Tag>
