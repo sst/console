@@ -24,9 +24,6 @@ export const handler = ApiHandler(
         logGroup: pointer.logGroup,
         logStream: pointer.logStream,
         timestamp: pointer.timestamp,
-        sourcemapKey:
-          `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
-          pointer.logGroup.split("/").slice(3, 5).join("/"),
         config,
       });
       return {
