@@ -3,11 +3,128 @@ import { AWS } from "@console/core/aws";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
 import { App, Stage } from "@console/core/app";
-import { StackFrame } from "@console/core/log";
 import { Warning } from "@console/core/warning";
-import type { Usage } from "@console/core/billing";
 import { Workspace } from "@console/core/workspace";
 import { Resource } from "@console/core/app/resource";
+import { Usage, Billing } from "@console/core/billing";
+import { StackFrame, Invocation } from "@console/core/log";
+
+export type DummyMode =
+  // Waiting to connect
+  | "empty"
+  // Default
+  | "overview:base"
+  // Overview
+  | "overview:full"
+  // Issues
+  | "overview:base;issues:base"
+  // Alerts
+  | "overview:base;alerts:base"
+  // Resources
+  | "overview:base;resources:base"
+  // With billing details
+  | "overview:base;usage:overage;subscription:active"
+  // Ask for billing details
+  | "overview:base;usage:overage;resources:base;workspace:gated"
+  // Failed to charge card
+  | "overview:base;usage:overage;resources:base;workspace:gated;subscription:overdue";
+
+export function* generateData(
+  mode: DummyMode
+): Generator<DummyData, void, unknown> {
+  console.log("generating for", mode);
+
+  const modeMap = stringToObject(mode);
+
+  yield workspace({
+    id: "dummy-workspace",
+    gated: modeMap["workspace"] === "gated",
+  });
+
+  yield {
+    _type: "dummyConfig",
+    user: USER_ID,
+    local: {
+      app: APP_LOCAL,
+      stage: STAGE_LOCAL,
+    },
+  };
+
+  yield user({ email: USER_ID, active: true });
+
+  if (modeMap["overview"]) {
+    yield* workspaceBase();
+    yield* stageLocal();
+
+    yield usage({ day: "2021-01-01", invocations: 100 });
+  }
+
+  if (modeMap["overview"] === "full") {
+    for (let i = 0; i < 30; i++) {
+      yield user({ email: `dummy${i}@example.com`, active: true });
+    }
+
+    yield* overviewFull();
+  }
+
+  if (modeMap["subscription"]) {
+    yield stripe({
+      standing: modeMap["subscription"] === "overdue" ? "overdue" : undefined,
+    });
+  }
+
+  if (modeMap["usage"] === "overage")
+    yield usage({ day: "2021-01-01", invocations: 12300000000 });
+
+  if (modeMap["resources"]) {
+    yield* stageBase();
+    yield* stageEmpty();
+    yield* stageNotSupported();
+    yield* stagePartlySupported();
+  }
+
+  if (modeMap["issues"]) {
+    yield* stageNoIssues();
+    yield* stageIssuesWarningSubscription();
+    yield* stageIssuesWarningRateLimited();
+    yield* stageHasIssues();
+
+    yield* issueBase();
+    yield* issueRawStackTrace();
+    yield* issueFullSourceMapStackTrace();
+    yield* issueNoStackTrace();
+    yield* issueLong();
+  }
+
+  if (modeMap["alerts"] === "base") {
+    yield* issueAlertsStar();
+    yield* issueAlertsSingle();
+    yield* issueAlertsSingleTo();
+    yield* issueAlertsDoubleTo();
+    yield* issueAlertsDoubleFrom();
+    yield* issueAlertsMultipleTo();
+    yield* issueAlertsOverflowTo();
+    yield* issueAlertsOverflowFrom();
+    yield* issueAlertsMultipleFrom();
+  }
+}
+
+type DummyData =
+  | (DummyConfig & {
+      _type: "dummyConfig";
+    })
+  | (Workspace.Info & { _type: "workspace" })
+  | (Omit<Usage, "workspaceID"> & { _type: "usage" })
+  | (Omit<App.Info, "workspaceID"> & { _type: "app" })
+  | (Omit<User.Info, "workspaceID"> & { _type: "user" })
+  | (Omit<Stage.Info, "workspaceID"> & { _type: "stage" })
+  | (Omit<Issue.Info, "workspaceID"> & { _type: "issue" })
+  | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" })
+  | (Omit<Issue.Count, "workspaceID"> & { _type: "issueCount" })
+  | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
+  | (Omit<Billing.Stripe.Info, "workspaceID"> & { _type: "stripe" })
+  | (Omit<Issue.Alert.Info, "workspaceID"> & { _type: "issueAlert" })
+  | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" });
 
 const USER_ID = "me@example.com";
 const USER_ID_ISSUE_ALERT = "alert-me@example.com";
@@ -35,6 +152,10 @@ const APP_ISSUE_8 = "sst-app-issue-8";
 const APP_ISSUE_9 = "sst-app-issue-9";
 const APP_ISSUE_ALERT_LONG =
   "mysstappissealertlongshouldoverflowbecaseitistoolongandshouldnotfitintheboxbecauseitstoolonganditkeepsgoingandgoing";
+
+const STACK = "stack-base";
+const STACK_LOCAL = "stack-local";
+const STACK_WORKING = "stack-working";
 
 const STAGE = "stage-base";
 const STAGE_LOCAL = "local";
@@ -71,15 +192,12 @@ let WARNING_COUNT = 0;
 
 let ISSUE_ALERT_COUNT = 0;
 
+let INVOCATION_COUNT = 0;
+
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
   timeUpdated: DateTime.now().startOf("day").toSQL()!,
 };
-
-export type DummyMode =
-  | "empty"
-  | "overview:base;resource:base;issues:base;alerts:base"
-  | "overview:all;usage:overage;subscription:active";
 
 export interface DummyConfig {
   local: {
@@ -88,22 +206,6 @@ export interface DummyConfig {
   };
   user: string;
 }
-
-type DummyData =
-  | (DummyConfig & {
-      _type: "dummyConfig";
-    })
-  | (Workspace.Info & { _type: "workspace" })
-  | (Omit<Usage, "workspaceID"> & { _type: "usage" })
-  | (Omit<App.Info, "workspaceID"> & { _type: "app" })
-  | (Omit<User.Info, "workspaceID"> & { _type: "user" })
-  | (Omit<Stage.Info, "workspaceID"> & { _type: "stage" })
-  | (Omit<Issue.Info, "workspaceID"> & { _type: "issue" })
-  | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" })
-  | (Omit<Issue.Count, "workspaceID"> & { _type: "issueCount" })
-  | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
-  | (Omit<Issue.Alert.Info, "workspaceID"> & { _type: "issueAlert" })
-  | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" });
 
 function stringToObject(input: string): { [key: string]: string } {
   const result: { [key: string]: string } = {};
@@ -119,351 +221,7 @@ function stringToObject(input: string): { [key: string]: string } {
   return result;
 }
 
-interface WorkspaceProps {
-  id: string;
-  activeSubscription?: boolean;
-}
-function workspace({ id, activeSubscription }: WorkspaceProps): DummyData {
-  return {
-    _type: "workspace",
-    id,
-    slug: id,
-    timeDeleted: null,
-    timeGated: null,
-    ...timestamps,
-  };
-}
-
-interface UserProps {
-  id?: string;
-  email: string;
-  active?: boolean;
-  deleted?: boolean;
-}
-function user({ id, email, active, deleted }: UserProps): DummyData {
-  return {
-    _type: "user",
-    email,
-    id: id || email,
-    timeSeen: active ? timestamps.timeUpdated : null,
-    timeDeleted: deleted ? timestamps.timeUpdated : null,
-    ...timestamps,
-  };
-}
-
-interface AccountProps {
-  id: string;
-  failed?: boolean;
-  accountID: string;
-  syncing?: boolean;
-}
-function account({ id, accountID, failed, syncing }: AccountProps): DummyData {
-  return {
-    _type: "awsAccount",
-    id,
-    accountID: accountID,
-    timeDeleted: null,
-    timeFailed: failed ? timestamps.timeUpdated : null,
-    timeDiscovered: syncing ? null : timestamps.timeUpdated,
-    ...timestamps,
-  };
-}
-
-interface StageProps {
-  id: string;
-  appID: string;
-  region?: string;
-  awsAccountID: string;
-}
-function stage({ id, appID, region, awsAccountID }: StageProps): DummyData {
-  return {
-    _type: "stage",
-    id,
-    appID,
-    name: id,
-    awsAccountID,
-    timeDeleted: null,
-    region: region || "us-east-1",
-    ...timestamps,
-  };
-}
-
-interface AppProps {
-  id: string;
-  name?: string;
-}
-function app({ id, name }: AppProps): DummyData {
-  return {
-    _type: "app",
-    id,
-    name: name || id,
-    timeDeleted: null,
-    ...timestamps,
-  };
-}
-
-interface UsageProps {
-  day: string;
-  invocations: number;
-}
-function usage({ day, invocations }: UsageProps): DummyData {
-  return {
-    _type: "usage",
-    day,
-    id: day,
-    invocations,
-    stageID: "stage-account-overage",
-    timeDeleted: null,
-    ...timestamps,
-  };
-}
-
-function resource<Type extends Resource.Info["type"]>(props: {
-  type: Type;
-  id: string;
-  stage: string;
-  metadata?: Extract<Resource.Info, { type: Type }>["metadata"];
-  enrichment?: Extract<Resource.Info, { type: Type }>["enrichment"];
-}): DummyData {
-  const { id, type, stage, metadata = {}, enrichment = {} } = props;
-  return {
-    _type: "resource",
-    id,
-    addr: id,
-    cfnID: id,
-    enrichment,
-    stageID: stage,
-    constructID: id,
-    stackID: "stack",
-    timeDeleted: null,
-    type: type as any,
-    metadata: metadata as any,
-    ...timestamps,
-  };
-}
-
-interface FuncProps {
-  id: string;
-  arn?: string;
-  size?: number;
-  stage: string;
-  live?: boolean;
-  handler: string;
-  runtime?: Extract<Resource.Info, { type: "Function" }>["metadata"]["runtime"];
-}
-function func({
-  id,
-  arn,
-  size,
-  live,
-  stage,
-  handler,
-  runtime,
-}: FuncProps): DummyData {
-  return resource({
-    id,
-    stage,
-    type: "Function",
-    metadata: {
-      handler,
-      localId: id,
-      secrets: [],
-      runtime: runtime || "nodejs18.x",
-      arn: arn || "arn:aws:lambda:us-east-1:123456789012:function:my-func",
-    },
-    enrichment: {
-      size: size || 2048,
-      live: live || false,
-      // @ts-ignore
-      runtime: runtime || "nodejs18.x",
-    },
-  });
-}
-
-function ref(node: string, stack: string) {
-  return {
-    node,
-    stack,
-  };
-}
-
-interface IssueProps {
-  id: string;
-  error: string;
-  stage?: string;
-  fnName?: string;
-  message: string;
-  stack?: StackFrame[];
-}
-function issue({
-  id,
-  error,
-  stage,
-  fnName,
-  message,
-  stack,
-}: IssueProps): DummyData {
-  return {
-    _type: "issue",
-    id,
-    timeSeen: DateTime.now().startOf("day").toSQL()!,
-    invocation: null,
-    timeDeleted: null,
-    timeResolved: null,
-    timeIgnored: null,
-    stageID: stage || STAGE_HAS_ISSUES,
-    error,
-    message,
-    count: 1,
-    errorID: id,
-    group: id,
-    ignorer: null,
-    resolver: null,
-    stack: stack || null,
-    pointer: {
-      logGroup: `/aws/lambda/${fnName || ISSUE_FN}`,
-      logStream: "2021/01/01/[$LATEST]12345678901234567890123456789012",
-      timestamp: DateTime.now().startOf("day").toUnixInteger(),
-    },
-    ...timestamps,
-  };
-}
-
-interface IssueCountProps {
-  group: string;
-  hour?: string;
-  count?: number;
-}
-function issueCount({ group, hour, count }: IssueCountProps): DummyData {
-  hour = hour || DateTime.now().startOf("hour").toSQL()!;
-  return {
-    _type: "issueCount",
-    id: `${group}-${hour}`,
-    hour,
-    group,
-    count: count || 1,
-    stageID: STAGE_HAS_ISSUES,
-    timeDeleted: null,
-    ...timestamps,
-  };
-}
-
-interface WarningProps {
-  stage: string;
-  target?: string;
-  type: Warning.Info["type"];
-  data?: Warning.Info["data"];
-}
-function warning({ type, stage, target, data }: WarningProps): DummyData {
-  return {
-    _type: "warning",
-    type,
-    stageID: stage,
-    timeDeleted: null,
-    id: `${WARNING_COUNT++}`,
-    data: data || {},
-    target: target || "",
-    ...timestamps,
-  };
-}
-
-interface IssueAlertProps {
-  app: Issue.Alert.Source["app"];
-  stage: Issue.Alert.Source["stage"];
-  destination: Issue.Alert.Destination;
-}
-function issueAlert({ app, stage, destination }: IssueAlertProps): DummyData {
-  return {
-    _type: "issueAlert",
-    id: `${ISSUE_ALERT_COUNT++}`,
-    source: {
-      app,
-      stage,
-    },
-    destination,
-    timeDeleted: null,
-    ...timestamps,
-  };
-}
-
-export function* generateData(
-  mode: DummyMode
-): Generator<DummyData, void, unknown> {
-  console.log("generating for", mode);
-
-  const modeMap = stringToObject(mode);
-
-  yield workspace({
-    id: "dummy-workspace",
-    activeSubscription: modeMap["subscription"] === "active",
-  });
-
-  yield {
-    _type: "dummyConfig",
-    user: USER_ID,
-    local: {
-      app: APP_LOCAL,
-      stage: STAGE_LOCAL,
-    },
-  };
-
-  yield user({ email: USER_ID, active: true });
-  yield user({ email: "invited-dummy@example.com" });
-  yield user({ email: "invited-dummy-with-long-email-address@example.com" });
-  yield user({
-    email: "deleted-dummy@example.com",
-    active: true,
-    deleted: true,
-  });
-
-  yield usage({ day: "2021-01-01", invocations: 100 });
-
-  if (modeMap["overview"] === "full") {
-    for (let i = 0; i < 30; i++) {
-      yield user({ email: `dummy${i}@example.com`, active: true });
-    }
-  }
-
-  if (modeMap["overview"]) yield* overviewBase();
-
-  if (modeMap["resources"]) {
-    yield* stageBase();
-    yield* stageEmpty();
-    yield* stageNotSupported();
-    yield* stagePartlySupported();
-  }
-
-  if (modeMap["issues"]) {
-    yield* stageNoIssues();
-    yield* stageIssuesWarningSubscription();
-    yield* stageIssuesWarningRateLimited();
-    yield* stageHasIssues();
-    yield* issueBase();
-    yield* issueRawStackTrace();
-    yield* issueFullSourceMapStackTrace();
-    yield* issueNoStackTrace();
-    yield* issueLong();
-  }
-
-  if (modeMap["overview"] === "full") yield* overviewFull();
-
-  if (modeMap["usage"] === "overage")
-    yield usage({ day: "2021-01-01", invocations: 12300000000 });
-
-  if (modeMap["alerts"] === "base") {
-    yield* issueAlertsStar();
-    yield* issueAlertsSingle();
-    yield* issueAlertsSingleTo();
-    yield* issueAlertsDoubleTo();
-    yield* issueAlertsDoubleFrom();
-    yield* issueAlertsMultipleTo();
-    yield* issueAlertsOverflowTo();
-    yield* issueAlertsOverflowFrom();
-    yield* issueAlertsMultipleFrom();
-  }
-}
-
-function* overviewBase(): Generator<DummyData, void, unknown> {
+function* workspaceBase(): Generator<DummyData, void, unknown> {
   yield account({ id: ACCOUNT_ID, accountID: "123456789012" });
   yield app({ id: APP_LOCAL });
   yield stage({
@@ -474,6 +232,14 @@ function* overviewBase(): Generator<DummyData, void, unknown> {
 }
 
 function* overviewFull(): Generator<DummyData, void, unknown> {
+  yield user({ email: "invited-dummy@example.com" });
+  yield user({ email: "invited-dummy-with-long-email-address@example.com" });
+  yield user({
+    email: "deleted-dummy@example.com",
+    active: true,
+    deleted: true,
+  });
+
   yield* overviewLongApps();
 
   yield app({ id: APP_ID, name: "my-sst-app" });
@@ -552,9 +318,28 @@ function* overviewLongApps(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* stageBase(): Generator<DummyData, void, unknown> {
-  const STACK = "stack";
+function* stageLocal(): Generator<DummyData, void, unknown> {
+  yield resource({
+    type: "Stack",
+    id: STACK_LOCAL,
+    stage: STAGE_LOCAL,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield resource({
+    type: "Table",
+    id: "notes-table-local",
+    stage: STAGE_LOCAL,
+    metadata: {
+      consumers: [],
+      tableName: "jayair-console-dummy-notes-table",
+    },
+  });
+}
 
+function* stageBase(): Generator<DummyData, void, unknown> {
   yield stage({
     id: STAGE,
     appID: APP_LOCAL,
@@ -1109,7 +894,6 @@ function* stageNotSupported(): Generator<DummyData, void, unknown> {
 }
 
 function* stagePartlySupported(): Generator<DummyData, void, unknown> {
-  const STACK_WORKING = "stackB";
   const FN_NODE = "index";
 
   yield stage({
@@ -1315,6 +1099,56 @@ function* issueBase(): Generator<DummyData, void, unknown> {
     id: ISSUE_ID,
     error: "Error",
     message: "Some error message",
+    stack: [
+      {
+        column: 17,
+        line: 24,
+        file: "packages/core/src/lambda/index.ts",
+        important: true,
+        context: [
+          `      const config = await Stage.assumeRole(input.stageID, input.extraParam, input.extraLongParamThatShouldOverflowBecauseItsTooLong);`,
+          `      constclient=newDynamoDBClient(config).thatDoesNotHaveAnyLinebreaksAndItShouldFailToBreakBecauseItsTooLongAndThisShouldFailBecauseItKeepsGoingAndGoingFurtherAndFurtherToTest;`,
+          `      const client = new LambdaClient(config);`,
+          `      await client.send(`,
+          `        new InvokeCommand({`,
+          `          FunctionName: input.functionName,`,
+          `          Payload: input.payload,`,
+        ],
+      },
+    ],
+    invocation: invocation({
+      startTime: DateTime.now().startOf("day"),
+      messages: [
+        `areallyreallylonglinethatshouldoverflowandwordwrapbutitdoesntbecauseitshouldntbeabletofitallthewaythroughthewidthofthepage`,
+        `scanning logs {
+  id: 'abcde12vgws358nwyjbb0n7m',
+  workspaceID: 'ab1mmlwfjisrf38lxyjitj3a',
+  timeCreated: '2023-11-02 13:36:22',
+  timeUpdated: '2023-11-02 17:42:00',
+  timeDeleted: null,
+  userID: 'zxc94z5o4m2yenuii7y77jcl',
+  profileID: 'qw5266007421c4ca08c3a9805d26d3081',
+  stageID: 'ertyw9srjl3x3llq9f4iurmn',
+  logGroup: '/aws/lambda/production-notes-app-busTargetbusdevOrderUpd-O5r7A2kRuBqp',
+  timeStart: '2023-11-02 17:00:00',
+  timeEnd: null
+}`,
+        `start 11/2/2023, 11:00 AM`,
+        `sending poke`,
+        `scanning from 11/2/2023, 11:00 AM to 11/2/2023, 5:57 PM`,
+        `poke sent`,
+        `created query 50a15af7-8263-4c2f-be80-6be2585973ab`,
+        `bootstrap [
+  {
+    OutputKey: 'BucketName',
+    OutputValue: 'sstbootstrap-euwest123op64b9-1ej2jgqb9j7yv'
+  },
+  { OutputKey: 'Version', OutputValue: '7.2' }
+]`,
+        `flushing invocations 1 flushed so far 0`,
+        `2023-11-02T18:02:42.819Z ed9967cb-9637-432b-9b54-e80b006b1af6 Task timed out after 300.02 seconds`,
+      ],
+    }),
   });
   yield issueCount({
     group: ISSUE_ID,
@@ -1663,4 +1497,315 @@ function* issueAlertsOverflowTo(): Generator<DummyData, void, unknown> {
       type: "slack",
     },
   });
+}
+
+interface WorkspaceProps {
+  id: string;
+  gated: boolean;
+}
+function workspace({ id, gated }: WorkspaceProps): DummyData {
+  return {
+    _type: "workspace",
+    id,
+    slug: id,
+    timeDeleted: null,
+    timeGated: gated ? DateTime.now().startOf("day").toSQL()! : null,
+    ...timestamps,
+  };
+}
+
+interface UserProps {
+  id?: string;
+  email: string;
+  active?: boolean;
+  deleted?: boolean;
+}
+function user({ id, email, active, deleted }: UserProps): DummyData {
+  return {
+    _type: "user",
+    email,
+    id: id || email,
+    timeSeen: active ? timestamps.timeUpdated : null,
+    timeDeleted: deleted ? timestamps.timeUpdated : null,
+    ...timestamps,
+  };
+}
+
+interface AccountProps {
+  id: string;
+  failed?: boolean;
+  accountID: string;
+  syncing?: boolean;
+}
+function account({ id, accountID, failed, syncing }: AccountProps): DummyData {
+  return {
+    _type: "awsAccount",
+    id,
+    accountID: accountID,
+    timeDeleted: null,
+    timeFailed: failed ? timestamps.timeUpdated : null,
+    timeDiscovered: syncing ? null : timestamps.timeUpdated,
+    ...timestamps,
+  };
+}
+
+interface StageProps {
+  id: string;
+  appID: string;
+  region?: string;
+  awsAccountID: string;
+}
+function stage({ id, appID, region, awsAccountID }: StageProps): DummyData {
+  return {
+    _type: "stage",
+    id,
+    appID,
+    name: id,
+    awsAccountID,
+    timeDeleted: null,
+    region: region || "us-east-1",
+    ...timestamps,
+  };
+}
+
+interface AppProps {
+  id: string;
+  name?: string;
+}
+function app({ id, name }: AppProps): DummyData {
+  return {
+    _type: "app",
+    id,
+    name: name || id,
+    timeDeleted: null,
+    ...timestamps,
+  };
+}
+
+interface UsageProps {
+  day: string;
+  invocations: number;
+}
+function usage({ day, invocations }: UsageProps): DummyData {
+  return {
+    _type: "usage",
+    day,
+    id: day,
+    invocations,
+    stageID: "stage-account-overage",
+    timeDeleted: null,
+    ...timestamps,
+  };
+}
+
+interface StripeProps {
+  standing?: Billing.Stripe.Info["standing"];
+}
+function stripe({ standing }: StripeProps): DummyData {
+  return {
+    _type: "stripe",
+    id: "123",
+    customerID: "cus_123",
+    subscriptionID: "sub_123",
+    standing: standing || "good",
+    subscriptionItemID: "sub_item_123",
+    timeDeleted: null,
+    ...timestamps,
+  };
+}
+
+function resource<Type extends Resource.Info["type"]>(props: {
+  type: Type;
+  id: string;
+  stage: string;
+  metadata?: Extract<Resource.Info, { type: Type }>["metadata"];
+  enrichment?: Extract<Resource.Info, { type: Type }>["enrichment"];
+}): DummyData {
+  const { id, type, stage, metadata = {}, enrichment = {} } = props;
+  return {
+    _type: "resource",
+    id,
+    addr: id,
+    cfnID: id,
+    enrichment,
+    stageID: stage,
+    constructID: id,
+    stackID: "stack",
+    timeDeleted: null,
+    type: type as any,
+    metadata: metadata as any,
+    ...timestamps,
+  };
+}
+
+interface FuncProps {
+  id: string;
+  arn?: string;
+  size?: number;
+  stage: string;
+  live?: boolean;
+  handler: string;
+  runtime?: Extract<Resource.Info, { type: "Function" }>["metadata"]["runtime"];
+}
+function func({
+  id,
+  arn,
+  size,
+  live,
+  stage,
+  handler,
+  runtime,
+}: FuncProps): DummyData {
+  return resource({
+    id,
+    stage,
+    type: "Function",
+    metadata: {
+      handler,
+      localId: id,
+      secrets: [],
+      runtime: runtime || "nodejs18.x",
+      arn: arn || "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+    },
+    enrichment: {
+      size: size || 2048,
+      live: live || false,
+      // @ts-ignore
+      runtime: runtime || "nodejs18.x",
+    },
+  });
+}
+
+function ref(node: string, stack: string) {
+  return {
+    node,
+    stack,
+  };
+}
+
+interface IssueProps {
+  id: string;
+  error: string;
+  stage?: string;
+  fnName?: string;
+  message: string;
+  stack?: StackFrame[];
+  invocation?: Invocation;
+}
+function issue({
+  id,
+  error,
+  stage,
+  fnName,
+  message,
+  invocation,
+  stack,
+}: IssueProps): DummyData {
+  return {
+    _type: "issue",
+    id,
+    timeSeen: DateTime.now().startOf("day").toSQL()!,
+    timeDeleted: null,
+    timeResolved: null,
+    timeIgnored: null,
+    invocation: invocation || null,
+    stageID: stage || STAGE_HAS_ISSUES,
+    error,
+    message,
+    count: 1,
+    errorID: id,
+    group: id,
+    ignorer: null,
+    resolver: null,
+    stack: stack || null,
+    pointer: {
+      logGroup: `/aws/lambda/${fnName || ISSUE_FN}`,
+      logStream: "2021/01/01/[$LATEST]12345678901234567890123456789012",
+      timestamp: DateTime.now().startOf("day").toUnixInteger(),
+    },
+    ...timestamps,
+  };
+}
+
+interface InvocationProps {
+  cold?: boolean;
+  startTime: DateTime;
+  messages?: string[];
+}
+function invocation({
+  cold,
+  startTime,
+  messages,
+}: InvocationProps): Invocation {
+  return {
+    id: `${INVOCATION_COUNT++}`,
+    cold: cold || false,
+    source: "123",
+    errors: [],
+    start: 1,
+    logs: messages
+      ? messages.map((message, i) => ({
+          message,
+          id: `log-${INVOCATION_COUNT}-${i}`,
+          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+        }))
+      : [],
+  };
+}
+
+interface IssueCountProps {
+  group: string;
+  hour?: string;
+  count?: number;
+}
+function issueCount({ group, hour, count }: IssueCountProps): DummyData {
+  hour = hour || DateTime.now().startOf("hour").toSQL()!;
+  return {
+    _type: "issueCount",
+    id: `${group}-${hour}`,
+    hour,
+    group,
+    count: count || 1,
+    stageID: STAGE_HAS_ISSUES,
+    timeDeleted: null,
+    ...timestamps,
+  };
+}
+
+interface WarningProps {
+  stage: string;
+  target?: string;
+  type: Warning.Info["type"];
+  data?: Warning.Info["data"];
+}
+function warning({ type, stage, target, data }: WarningProps): DummyData {
+  return {
+    _type: "warning",
+    type,
+    stageID: stage,
+    timeDeleted: null,
+    id: `${WARNING_COUNT++}`,
+    data: data || {},
+    target: target || "",
+    ...timestamps,
+  };
+}
+
+interface IssueAlertProps {
+  app: Issue.Alert.Source["app"];
+  stage: Issue.Alert.Source["stage"];
+  destination: Issue.Alert.Destination;
+}
+function issueAlert({ app, stage, destination }: IssueAlertProps): DummyData {
+  return {
+    _type: "issueAlert",
+    id: `${ISSUE_ALERT_COUNT++}`,
+    source: {
+      app,
+      stage,
+    },
+    destination,
+    timeDeleted: null,
+    ...timestamps,
+  };
 }

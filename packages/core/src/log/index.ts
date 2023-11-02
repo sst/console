@@ -48,7 +48,7 @@ export interface Invocation {
   logs: Log[];
 }
 
-interface Log {
+export interface Log {
   id: string;
   timestamp: number;
   message: string;

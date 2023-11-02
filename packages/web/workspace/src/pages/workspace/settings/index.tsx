@@ -296,7 +296,9 @@ export function Settings() {
             </Text>
           </Stack>
           <Stack space="3.5" horizontal="start">
-            <Show when={stripe()?.subscriptionID}>
+            <Show
+              when={stripe()?.subscriptionID && stripe().standing === "good"}
+            >
               <Button
                 color="secondary"
                 onMouseEnter={handleHoverManageSubscription}
@@ -305,7 +307,11 @@ export function Settings() {
                 Manage Billing Details
               </Button>
             </Show>
-            <Show when={!stripe()?.subscriptionID}>
+            <Show
+              when={
+                !stripe()?.subscriptionID || stripe()?.standing === "overdue"
+              }
+            >
               <Button
                 color="primary"
                 onMouseEnter={handleHoverSubscribe}
@@ -315,8 +321,9 @@ export function Settings() {
               </Button>
               <Show when={invocations() > PRICING_PLAN[0].to}>
                 <Text color="danger" size="sm">
-                  Your current usage is above the free tier. Please add your
-                  billing details.
+                  {stripe()?.standing === "overdue"
+                    ? "We were unable to charge your card. Please update your billing details."
+                    : "Your current usage is above the free tier. Please add your billing details."}
                 </Text>
               </Show>
             </Show>
