@@ -35,7 +35,7 @@ function calculateCost(units: number, pricingPlan: PricingPlan) {
     }
   }
 
-  return parseFloat(cost.toFixed(2));
+  return cost === 0 ? "0" : cost.toFixed(2);
 }
 
 const SettingsRoot = styled("div", {

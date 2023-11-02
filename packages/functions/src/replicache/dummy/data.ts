@@ -74,7 +74,7 @@ export function* generateData(
   }
 
   if (modeMap["usage"] === "overage")
-    yield usage({ day: "2021-01-01", invocations: 12300000000 });
+    yield usage({ day: "2021-01-01", invocations: 12300099000 });
 
   if (modeMap["resources"]) {
     yield* stageBase();
