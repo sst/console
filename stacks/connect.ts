@@ -21,7 +21,7 @@ export function Connect({ stack }: StackContext) {
       Source.jsonData("template.json", {
         AWSTemplateFormatVersion: "2010-09-09",
         Description:
-          "Connect your AWS account to access the SST Console. Must be deployed in us-east-1",
+          "Connect your AWS account to access the SST Console. Must be deployed to us-east-1",
         Parameters: {
           workspaceID: {
             Type: "String",
@@ -85,6 +85,19 @@ export function Connect({ stack }: StackContext) {
               workspaceID: {
                 Ref: "workspaceID",
               },
+            },
+          },
+          Rules: {
+            testRegion: {
+              Assertions: [
+                {
+                  Assert: {
+                    "Fn::Equals": [{ Ref: "AWS::Region" }, "us-east-1"],
+                  },
+                  AssertDescription:
+                    "This stack needs to be deployed to us-east-1",
+                },
+              ],
             },
           },
         },
