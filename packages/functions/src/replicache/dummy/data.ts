@@ -634,7 +634,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
       },
       customDomainUrl: undefined,
       server: FUNC_ARN_NEXTJS,
-      path: "./packages/nextjs-site",
+      path: "./packages/nextjs-site/that/is/a/very/long/path/that/should/overflow/because/its/way/too/long",
       edge: false,
       mode: "deployed",
       secrets: [],
