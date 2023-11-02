@@ -87,18 +87,18 @@ export function Connect({ stack }: StackContext) {
               },
             },
           },
-          Rules: {
-            testRegion: {
-              Assertions: [
-                {
-                  Assert: {
-                    "Fn::Equals": [{ Ref: "AWS::Region" }, "us-east-1"],
-                  },
-                  AssertDescription:
-                    "This stack needs to be deployed to us-east-1",
+        },
+        Rules: {
+          testRegion: {
+            Assertions: [
+              {
+                Assert: {
+                  "Fn::Equals": [{ Ref: "AWS::Region" }, "us-east-1"],
                 },
-              ],
-            },
+                AssertDescription:
+                  "This stack needs to be deployed to us-east-1",
+              },
+            ],
           },
         },
       }),
