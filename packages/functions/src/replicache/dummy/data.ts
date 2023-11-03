@@ -994,6 +994,15 @@ function* stageIssuesWarningRateLimited(): Generator<DummyData, void, unknown> {
     stage: STAGE_ISSUES_WARN_RATE,
     type: "issue_rate_limited",
   });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_RATE,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
+  });
 }
 
 function* stageIssuesWarningSubscription(): Generator<
@@ -1059,6 +1068,51 @@ function* stageIssuesWarningSubscription(): Generator<
       error: "noisy",
     },
     target: ISSUE_WARN_FN_LONG,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_SUB,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
   });
 }
 

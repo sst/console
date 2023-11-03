@@ -1,9 +1,13 @@
 import { styled } from "@macaron-css/solid";
 import { Row, Stack } from "$/ui/layout";
-import { IconArrowRight, IconCheck, IconNoSymbol } from "$/ui/icons";
+import {
+  IconCheck,
+  IconNoSymbol,
+  IconArrowRight,
+  IconExclamationTriangle,
+} from "$/ui/icons";
 import {
   utility,
-  Alert,
   Text,
   Button,
   Histogram,
@@ -43,6 +47,72 @@ const COL_TIME_WIDTH = 140;
 const Content = styled("div", {
   base: {
     padding: theme.space[4],
+  },
+});
+
+const Warning = styled("div", {
+  base: {
+    ...utility.stack(3),
+    padding: theme.space[3],
+    borderRadius: theme.borderRadius,
+    backgroundColor: theme.color.background.surface,
+  },
+});
+
+const WarningIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 16,
+    height: 16,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.danger.surface,
+  },
+});
+
+const WarningText = styled("div", {
+  base: {
+    fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
+    color: theme.color.text.danger.surface,
+  },
+});
+
+const WarningTextMore = styled("span", {
+  base: {
+    textDecoration: "underline",
+  },
+});
+
+const WarningDetails = styled("div", {
+  base: {
+    ...utility.stack(4),
+    borderStyle: "solid",
+    borderWidth: "1px 0 0 0",
+    paddingTop: theme.space[3],
+    borderColor: theme.color.divider.surface,
+  },
+});
+
+const WarningDetailsScroll = styled("div", {
+  base: {
+    overflowY: "auto",
+    maxHeight: 140,
+    fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
+  },
+});
+
+const WarningDetailsTitle = styled("div", {
+  base: {
+    color: theme.color.text.primary.surface,
+  },
+});
+
+const WarningDetailsDesc = styled("div", {
+  base: {
+    ...utility.text.pre,
+    marginLeft: theme.space[4],
+    color: theme.color.text.secondary.surface,
   },
 });
 
@@ -222,23 +292,25 @@ export function List() {
 
   const stage = useStageContext();
 
-  const warnings = WarningStore.forStage.watch(
+  const subWarnings = WarningStore.forStage.watch(
     rep,
     () => [stage.stage.id],
     (warnings) =>
-      warnings.filter(
-        (warning) =>
-          warning.type === "log_subscription" ||
-          warning.type === "issue_rate_limited"
-      )
+      warnings.filter((warning) => warning.type === "log_subscription")
   );
-  console.log("warning", warnings());
+  const rateWarnings = WarningStore.forStage.watch(
+    rep,
+    () => [stage.stage.id],
+    (warnings) =>
+      warnings.filter((warning) => warning.type === "issue_rate_limited")
+  );
   const resources = useResourcesContext();
   const fns = createMemo(() =>
     resources().flatMap((item) => (item.type === "Function" ? [item] : []))
   );
 
   const [selected, setSelected] = createSignal<string[]>([]);
+  const [warningExpanded, setWarningExpanded] = createSignal(false);
   let form!: HTMLFormElement;
 
   function reset() {
@@ -250,6 +322,109 @@ export function List() {
     view();
     reset();
   });
+
+  function renderWarning() {
+    return (
+      <Warning>
+        <Row space="4" vertical="center" horizontal="between">
+          <Row flex space="2.5" vertical="center">
+            <WarningIcon>
+              <IconExclamationTriangle />
+            </WarningIcon>
+            <WarningText>
+              <Show
+                when={rateWarnings().length > 0}
+                fallback={
+                  <>
+                    There was a problem enabling Issues. Check out the details
+                    and try again, or contact us if you need help.{" "}
+                  </>
+                }
+              >
+                You hit a soft limit for Issues. You can re-enable it or contact
+                us to have the limit lifted.{" "}
+              </Show>
+              <WarningTextMore
+                onClick={() => setWarningExpanded(!warningExpanded())}
+              >
+                <Show when={!warningExpanded()} fallback="Hide details">
+                  Show details
+                </Show>
+              </WarningTextMore>
+              .
+            </WarningText>
+          </Row>
+          <Button
+            size="sm"
+            color="secondary"
+            onClick={() => {
+              rep().mutate.issue_subscribe({
+                stageID: stage.stage.id,
+              });
+            }}
+          >
+            {rateWarnings().length > 0 ? "Enable Issues" : "Retry"}
+          </Button>
+        </Row>
+        <Show when={warningExpanded()}>
+          <WarningDetails>
+            <WarningDetailsScroll>
+              <Show
+                when={rateWarnings().length === 0}
+                fallback={
+                  <WarningDetailsTitle>
+                    We temporarily paused Issues for your workspace because it
+                    hit a soft limit for the number of Issues per hour. Feel
+                    free to re-enable it. Or,{" "}
+                    <a href="mailto:help@sst.dev">get in touch with us</a> if
+                    you'd like the limit lifted.
+                  </WarningDetailsTitle>
+                }
+              >
+                <Stack space="1">
+                  <WarningDetailsTitle>
+                    There was a problem enabling Issues for the following
+                    functions. <a href="mailto:help@sst.dev">Contact us</a> if
+                    you need help.
+                  </WarningDetailsTitle>
+                  <WarningDetailsDesc>
+                    -{" "}
+                    {subWarnings()
+                      .map((item) => {
+                        if (item.type === "log_subscription") {
+                          const reason = (function () {
+                            if (item.data.error === "noisy")
+                              return "Rate Limited";
+                            if (item.data.error === "unknown")
+                              return "Unknown error: " + item.data.message;
+                            if (item.data.error === "limited")
+                              return "Too many existing log subscribers";
+                            if (item.data.error === "permissions")
+                              return "Missing permissions to add log subscriber";
+                            return "Unknown";
+                          })();
+                          return `${
+                            resources()
+                              .flatMap((x) =>
+                                x.id === item.target && x.type === "Function"
+                                  ? [x]
+                                  : []
+                              )
+                              .at(0)?.metadata.handler
+                          } (${reason})`;
+                        }
+                      })
+                      .filter(Boolean)
+                      .join("\n- ")}
+                  </WarningDetailsDesc>
+                </Stack>
+              </Show>
+            </WarningDetailsScroll>
+          </WarningDetails>
+        </Show>
+      </Warning>
+    );
+  }
 
   return (
     <>
@@ -277,56 +452,8 @@ export function List() {
       </HeaderSlot>
       <Content>
         <Stack space="4">
-          <Show when={warnings().length}>
-            <Alert
-              level="info"
-              controls={
-                <Row>
-                  <Button
-                    onClick={() => {
-                      rep().mutate.issue_subscribe({
-                        stageID: stage.stage.id,
-                      });
-                    }}
-                    color="secondary"
-                  >
-                    Retry Enabling Issues
-                  </Button>
-                </Row>
-              }
-              details={warnings()
-                .map((item) => {
-                  if (item.type === "log_subscription") {
-                    const reason = (function () {
-                      if (item.data.error === "noisy") return "Rate Limited";
-                      if (item.data.error === "unknown")
-                        return "Unknown error: " + item.data.message;
-                      if (item.data.error === "limited")
-                        return "Too many existing log subscribers";
-                      if (item.data.error === "permissions")
-                        return "Missing permissions to add log subscriber";
-                      return "Unknown";
-                    })();
-                    return `${
-                      resources()
-                        .flatMap((x) =>
-                          x.id === item.target && x.type === "Function"
-                            ? [x]
-                            : []
-                        )
-                        .at(0)?.metadata.handler
-                    } (${reason})`;
-                  }
-                  if (item.type === "issue_rate_limited") {
-                    return `Your workspace exceeded the soft limit of issues per hour. Get in touch with us to have the limit lifted.`;
-                  }
-                })
-                .filter(Boolean)
-                .join("\n")}
-            >
-              There was a problem enabling Issues for your account.{" "}
-              <a href="htts://sst.dev/discord">Contact us on Discord.</a>
-            </Alert>
+          <Show when={subWarnings().length > 0 || rateWarnings().length > 0}>
+            {renderWarning()}
           </Show>
           <form
             ref={form}

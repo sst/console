@@ -35,5 +35,9 @@ export const utility = {
       textTransform: "uppercase",
       fontFamily: theme.font.family.code,
     } satisfies CSSProperties,
+    pre: {
+      whiteSpace: "pre-wrap",
+      overflowWrap: "anywhere",
+    } satisfies CSSProperties,
   },
 };

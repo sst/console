@@ -551,16 +551,16 @@ Read more about it over on our docs`}
         </Variant>
         <Variant name="Icon">
           <Tag style="outline" level="info">
-            <IconCheck width="12" height="12" />
+            <IconCheck width="11" height="11" />
           </Tag>
           <Tag style="outline" level="tip">
-            <IconCheck width="12" height="12" />
+            <IconCheck width="11" height="11" />
           </Tag>
           <Tag style="outline" level="caution">
-            <IconCheck width="12" height="12" />
+            <IconCheck width="11" height="11" />
           </Tag>
           <Tag style="outline" level="danger">
-            <IconCheck width="12" height="12" />
+            <IconCheck width="11" height="11" />
           </Tag>
         </Variant>
       </ComponentType>
