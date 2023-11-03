@@ -453,7 +453,7 @@ export function Logs() {
                       </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.RadioItem closeOnSelect value="recent">
-                      <Dropdown.RadioItemLabel>Recent</Dropdown.RadioItemLabel>
+                      <Dropdown.RadioItemLabel>All</Dropdown.RadioItemLabel>
                       <Dropdown.ItemIndicator>
                         <IconCheck width={14} height={14} />
                       </Dropdown.ItemIndicator>
