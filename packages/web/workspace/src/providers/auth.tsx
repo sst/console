@@ -41,6 +41,7 @@ const AuthContext = createContext<AuthContextType>();
 
 const mutators = new Client<ServerType>()
   .mutation("workspace_create", async (tx, input) => {
+    console.log("putting");
     await WorkspaceStore.put(tx, [input.id!], {
       id: input.id!,
       slug: input.slug,

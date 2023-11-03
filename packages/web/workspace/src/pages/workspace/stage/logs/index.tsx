@@ -13,6 +13,7 @@ import {
   IconMagnifyingGlass,
   IconEllipsisVertical,
   IconArrowPathRoundedSquare,
+  IconArrowRight,
 } from "$/ui/icons";
 import { IconArrowPathSpin, IconAws } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
@@ -156,6 +157,10 @@ const LogMoreIndicatorIcon = styled("div", {
   },
 });
 
+const [pollerCache, setPollerCache] = createStore<{ [key: string]: string }>(
+  {}
+);
+
 export function Logs() {
   const stage = useStageContext();
   const invocationsContext = useInvocations();
@@ -194,7 +199,7 @@ export function Logs() {
     if (mode() === "live") return [];
     return [
       {
-        title: "Live",
+        title: "Live logs",
         category: "logs",
         run: (bar) => {
           setQuery(
@@ -208,7 +213,7 @@ export function Logs() {
         icon: IconBolt,
       },
       {
-        title: "Recent",
+        title: "Past logs",
         category: "logs",
         run: (bar) => {
           setQuery(
@@ -221,9 +226,26 @@ export function Logs() {
         },
         icon: IconClock,
       },
+      // TODO: jay icon here
+      {
+        title: "Jump to",
+        category: "logs",
+        run: (bar) => {
+          setQuery(
+            {
+              view: "custom",
+            },
+            { replace: true }
+          );
+          switchView("custom");
+          bar.hide();
+        },
+        icon: IconArrowRight,
+      },
       {
         title: "Open in CloudWatch",
         category: "logs",
+        disabled: true,
         run: () => {
           const url = `https://${
             stage.stage.region
@@ -260,6 +282,13 @@ export function Logs() {
       logGroup: logGroup(),
       stageID: resources()?.at(0)?.stageID!,
     });
+  });
+
+  createEffect(() => {
+    const p = poller();
+    if (!p) return;
+    if (pollerCache[p.id]) return;
+    setPollerCache(p.id, DateTime.now().toLocaleString(DATETIME_LONG));
   });
 
   createEffect(() => {
@@ -410,14 +439,22 @@ export function Logs() {
                     Tailing logs from local `sst dev`&hellip;
                   </Match>
                   <Match when={mode() === "search"}>
-                    <Show when={search.end} fallback="Viewing recent logs">
+                    <Show when={search.end} fallback="Viewing past logs">
                       <span>
                         Viewing logs older than{" "}
                         {search.end?.toLocaleString(DATETIME_LONG)}
                       </span>
                     </Show>
                   </Match>
-                  <Match when={true}>Tailing logs&hellip;</Match>
+                  <Match when={true}>
+                    <Show
+                      when={pollerCache[poller()?.id!]}
+                      fallback="Starting tailer"
+                    >
+                      Tailing logs since {pollerCache[poller()?.id!]}
+                    </Show>
+                    &hellip;
+                  </Match>
                 </Switch>
               </Text>
             </Row>
@@ -426,6 +463,10 @@ export function Logs() {
                 <TextButton
                   onClick={() => {
                     invocationsContext.clear(logGroupKey());
+                    setPollerCache(
+                      poller()?.id!,
+                      DateTime.now().toLocaleString(DATETIME_LONG)
+                    );
                   }}
                 >
                   Clear
@@ -453,7 +494,7 @@ export function Logs() {
                       </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
                     <Dropdown.RadioItem closeOnSelect value="recent">
-                      <Dropdown.RadioItemLabel>All</Dropdown.RadioItemLabel>
+                      <Dropdown.RadioItemLabel>Past</Dropdown.RadioItemLabel>
                       <Dropdown.ItemIndicator>
                         <IconCheck width={14} height={14} />
                       </Dropdown.ItemIndicator>

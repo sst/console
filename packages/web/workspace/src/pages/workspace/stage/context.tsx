@@ -100,7 +100,7 @@ export function ResourcesProvider(props: ParentProps) {
           {
             icon: IconFunction,
             category: `Function`,
-            title: `Go to ${fn.metadata.handler}`,
+            title: `${fn.metadata.handler}`,
             run,
           },
         ];
@@ -111,7 +111,7 @@ export function ResourcesProvider(props: ParentProps) {
               resource.metadata.routes?.data?.map((item) => ({
                 icon: IconNextjsSite,
                 category: "NextJS Routes",
-                title: `Go to ${item.route}`,
+                title: `${item.route}`,
                 run(control) {
                   nav(
                     `/${
@@ -132,7 +132,7 @@ export function ResourcesProvider(props: ParentProps) {
               {
                 icon: IconApi,
                 category: "API Routes",
-                title: `Go to ${
+                title: `${
                   resource.metadata.routes.find((r) => r.fn?.node === fn.addr)
                     ?.route
                 }`,
@@ -143,7 +143,7 @@ export function ResourcesProvider(props: ParentProps) {
             return {
               icon: ResourceIcon[resource.type] || IconFunction,
               category: `${resource.type}`,
-              title: `Go to ${fn.metadata.handler}`,
+              title: `${fn.metadata.handler}`,
               run,
             };
         }

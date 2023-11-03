@@ -13,9 +13,16 @@ import {
   AvatarInitialsIcon,
 } from "$/ui";
 import { styled } from "@macaron-css/solid";
+import {
+  FormError,
+  createForm,
+  setError,
+  valiForm,
+} from "@modular-forms/solid";
 import { createId } from "@paralleldrive/cuid2";
 import { useNavigate } from "@solidjs/router";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
+import { minLength, object, string, regex } from "valibot";
 
 const CreateWorkspaceHint = styled("ul", {
   base: {
@@ -30,7 +37,7 @@ const CreateWorkspaceHint = styled("ul", {
   },
 });
 
-const Form = styled("form", {
+const FieldList = styled("div", {
   base: {
     width: 320,
     ...utility.stack(5),
@@ -38,6 +45,16 @@ const Form = styled("form", {
 });
 
 export function WorkspaceCreate() {
+  const [form, { Form, Field }] = createForm({
+    validate: valiForm(
+      object({
+        slug: string([
+          minLength(3, "Must be at least 3 characters long."),
+          regex(/^[a-z0-9\-]+$/, "Must be lowercase, URL friendly."),
+        ]),
+      })
+    ),
+  });
   const auth = useAuth();
   const storage = useStorage();
   const nav = useNavigate();
@@ -46,12 +63,14 @@ export function WorkspaceCreate() {
   const workspace = WorkspaceStore.get.watch(rep, () => [id]);
   const [slug, setSlug] = createSignal("");
   const pending = createMemo(() => workspace() != null);
-  const [error, setError] = createSignal(false);
 
   createEffect((prev) => {
-    if (prev && !pending()) setError(true);
+    console.log(workspace());
+    if (prev && !pending())
+      setError(form, "slug", "Workspace name is not unique");
     return pending();
   });
+
   createEffect(() => {
     if (workspace()?.timeCreated) nav("/" + workspace()?.slug + "/account");
   });
@@ -75,37 +94,34 @@ export function WorkspaceCreate() {
           </CreateWorkspaceHint>
         </Stack>
         <Form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const fd = new FormData(e.currentTarget);
-            const slug = fd.get("slug") as string;
+          onSubmit={(data) => {
             rep().mutate.workspace_create({
               id,
-              slug,
+              slug: data.slug,
             });
           }}
         >
-          <FormField
-            hint="Needs to be lowercase, unique, and URL friendly."
-            color={error() ? "danger" : "primary"}
-          >
-            <Input
-              autofocus
-              pattern="[a-z0-9\-]+"
-              minlength={3}
-              onInput={(e) => {
-                setSlug(e.currentTarget.value);
-                setError(false);
-              }}
-              name="slug"
-              placeholder="your-company-name"
-            />
-          </FormField>
-          <Button type="submit" disabled={Boolean(pending())}>
-            <Show when={pending()} fallback="Create Workspace">
-              Creating&hellip;
-            </Show>
-          </Button>
+          <FieldList>
+            <Field name="slug">
+              {(field, props) => (
+                <FormField
+                  hint={
+                    field.error
+                      ? field.error
+                      : "Needs to be lowercase, unique, and URL friendly."
+                  }
+                  color={field.error ? "danger" : "primary"}
+                >
+                  <Input {...props} autofocus placeholder="your-company-name" />
+                </FormField>
+              )}
+            </Field>
+            <Button type="submit" disabled={Boolean(pending())}>
+              <Show when={pending()} fallback="Create Workspace">
+                Creating&hellip;
+              </Show>
+            </Button>
+          </FieldList>
         </Form>
       </Stack>
     </Fullscreen>

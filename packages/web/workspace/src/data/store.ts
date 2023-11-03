@@ -159,6 +159,7 @@ export function createGet<T extends any>(
   createEffect(() => {
     if (unsubscribe) unsubscribe();
     const path = p();
+    console.log("watching", path);
     batch(() => {
       setData("value", undefined);
       setReady(false);

@@ -121,26 +121,6 @@ export function handler(input: State) {
 
       for await (const stream of fetchStreams(input.logGroup)) {
         streams.push(stream.logStreamName || "");
-        if (!start && stream.lastEventTimestamp) {
-          const result = await client
-            .send(
-              new GetLogEventsCommand({
-                startFromHead: false,
-                limit: 1,
-                logGroupIdentifier: input.logGroup,
-                logStreamName: stream.logStreamName,
-              })
-            )
-            .then((r) => r.events?.[0]);
-          if (result) {
-            console.log(
-              "found last event",
-              result.timestamp,
-              stream.logStreamName
-            );
-            start = (result.timestamp || 0) - 60 * 1000;
-          }
-        }
         if (streams.length === 100) break;
       }
       if (!streams.length)
@@ -148,7 +128,7 @@ export function handler(input: State) {
           ...input.status,
           done: false,
         };
-      if (!start) start = Date.now() - 30 * 1000;
+      if (!start) start = Date.now() - 2 * 60 * 1000;
 
       console.log("fetching since", new Date(start + offset).toLocaleString());
       const processor = Log.createProcessor({

@@ -24,6 +24,10 @@ export function RealtimeProvider() {
       );
       profileID = await account.replicache.profileID;
       for (const workspace of list) {
+        if (!workspace.timeCreated) {
+          console.log("fake", workspace);
+          continue;
+        }
         let arr = workspaces.get(workspace.id);
         if (!arr) {
           workspaces.set(workspace.id, [accountID]);
