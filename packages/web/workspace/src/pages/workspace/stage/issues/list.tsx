@@ -1,6 +1,6 @@
 import { styled } from "@macaron-css/solid";
 import { Row, Stack } from "$/ui/layout";
-import { IconCheck, IconNoSymbol } from "$/ui/icons";
+import { IconArrowRight, IconCheck, IconNoSymbol } from "$/ui/icons";
 import {
   utility,
   Alert,
@@ -35,6 +35,7 @@ import { DateTime, Interval } from "luxon";
 import { filter, fromPairs, pipe, sortBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 import { IssueCountStore } from "$/data/issue";
+import { useCommandBar } from "../../command-bar";
 
 const COL_COUNT_WIDTH = 260;
 const COL_TIME_WIDTH = 140;
@@ -124,6 +125,82 @@ const EmptyIssuesSign = styled("div", {
 });
 
 export function List() {
+  const bar = useCommandBar();
+  // TODO: jay
+  bar.register("issues-list", async () => {
+    return ["active", "ignored", "resolved"].map((view) => ({
+      icon: IconArrowRight,
+      title: `Go to ${view} issues`,
+      run: (control) => {
+        setSearch({
+          view: view,
+        });
+        control.hide();
+      },
+      disabled: search.view === view,
+      category: "Issues",
+    }));
+  });
+  bar.register("issues-bulk", async () => {
+    return [
+      {
+        icon: IconArrowRight,
+        title: "Resolve " + selected().length + " issues",
+        run: (control) => {
+          rep().mutate.issue_resolve(selected());
+          reset();
+          control.hide();
+        },
+        disabled: selected().length === 0 || search.view === "resolved",
+        category: "Issues",
+      },
+      {
+        icon: IconArrowRight,
+        title: "Unresolve " + selected().length + " issues",
+        run: (control) => {
+          rep().mutate.issue_unresolve(selected());
+          reset();
+          control.hide();
+        },
+        disabled: selected().length === 0 || search.view !== "resolved",
+        category: "Issues",
+      },
+      {
+        icon: IconArrowRight,
+        title: "Ignore " + selected().length + " issues",
+        run: (control) => {
+          rep().mutate.issue_ignore(selected());
+          reset();
+          control.hide();
+        },
+        disabled: selected().length === 0 || search.view === "ignored",
+        category: "Issues",
+      },
+      {
+        icon: IconArrowRight,
+        title: "Unignore " + selected().length + " issues",
+        run: (control) => {
+          rep().mutate.issue_unignore(selected());
+          reset();
+          control.hide();
+        },
+        disabled: selected().length === 0 || search.view !== "ignored",
+        category: "Issues",
+      },
+      {
+        icon: IconArrowRight,
+        title: "Select all issues",
+        run: (control) => {
+          document
+            .querySelector<HTMLInputElement>("input[name='select-all']")
+            ?.click();
+          control.hide();
+        },
+        category: "Issues",
+      },
+    ];
+  });
+
   const issues = useIssuesContext();
   const [search, setSearch] = useSearchParams<{
     view: "active" | "ignored" | "resolved";

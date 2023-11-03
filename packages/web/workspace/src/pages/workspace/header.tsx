@@ -182,7 +182,7 @@ export function Header(props: { app?: string; stage?: string }) {
         <StageSwitcher
           onClick={() =>
             props.stage
-              ? bar.show("stage-switcher", "app-switcher")
+              ? bar.show("stage-switcher")
               : bar.show("workspace-switcher")
           }
         >

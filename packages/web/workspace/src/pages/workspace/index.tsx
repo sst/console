@@ -1,11 +1,17 @@
-import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
+import {
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "@solidjs/router";
 import { ReplicacheProvider, useReplicache } from "$/providers/replicache";
 import { useCommandBar } from "./command-bar";
 import { Stage } from "./stage";
 import { Show, createEffect, createMemo } from "solid-js";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
-import { IconWrenchScrewdriver } from "$/ui/icons";
+import { IconArrowRight, IconWrenchScrewdriver } from "$/ui/icons";
 import { User } from "./user";
 import { Account } from "./account";
 import { Settings } from "./settings";
@@ -45,6 +51,16 @@ export function Workspace() {
 
   bar.register("workspace", async () => {
     return [
+      // TODO: jay
+      {
+        icon: IconArrowRight,
+        title: "Overview",
+        category: "Workspace",
+        run: (control) => {
+          control.hide();
+          nav(`/${workspace()?.slug}`);
+        },
+      },
       {
         icon: IconUserAdd,
         title: "Invite user to workspace",
@@ -94,20 +110,24 @@ export function Content() {
   const rep = useReplicache();
   const nav = useNavigate();
   const params = useParams();
+  const loc = useLocation();
   const apps = AppStore.all.watch(useReplicache(), () => []);
-  bar.register("app-switcher", async () => {
-    return apps().map((app) => ({
-      icon: IconApp,
-      category: "App",
-      title: `Switch to "${app.name}" app`,
-      run: async (control) => {
-        const stages = await rep()
-          .query((tx) => StageStore.list(tx))
-          .then((stages) => stages.filter((stage) => stage.appID === app.id));
-        nav(`/${params.workspaceSlug}/${app.name}/${stages[0].name}`);
-        control.hide();
-      },
-    }));
+  const stages = StageStore.list.watch(useReplicache(), () => []);
+
+  bar.register("stage-switcher", async (input, global) => {
+    if (!input && global) return [];
+    return stages().map((stage) => {
+      const app = apps().find((item) => item.id === stage.appID)!;
+      return {
+        icon: IconApp,
+        category: "Stage",
+        title: `Go to "${app.name} / ${stage.name}"`,
+        run: async (control) => {
+          nav(`/${params.workspaceSlug}/${app.name}/${stage.name}`);
+          control.hide();
+        },
+      };
+    });
   });
   return (
     <Routes>

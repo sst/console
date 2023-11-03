@@ -25,7 +25,7 @@ import {
 import { Logs } from "./logs";
 import { Issues } from "./issues";
 import { Resources } from "./resources";
-import { IconStage } from "$/ui/icons/custom";
+import { IconApp, IconStage } from "$/ui/icons/custom";
 import {
   Header,
   HeaderProvider,
@@ -34,13 +34,16 @@ import {
 } from "../header";
 import { Fullscreen, Row, Stack, TabTitle, theme, utility, Text } from "$/ui";
 import { Local } from "./local";
-import { IconExclamationTriangle } from "$/ui/icons";
+import {
+  IconArrowRight,
+  IconChevronDown,
+  IconExclamationTriangle,
+} from "$/ui/icons";
 import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "../context";
 import { useLocalContext } from "$/providers/local";
 
 export function Stage() {
-  const bar = useCommandBar();
   const rep = useReplicache();
   const nav = useNavigate();
   const params = useParams();
@@ -58,23 +61,6 @@ export function Stage() {
         (stage) => stage.appID === app()?.id && stage.name === params.stageName
       )
   );
-
-  bar.register("stage-switcher", async () => {
-    const stages = await rep()
-      .query((tx) => StageStore.list(tx))
-      .then((stages) => stages.filter((stage) => stage.appID === app()?.id));
-    return stages
-      .filter((item) => item.id !== stage()?.id)
-      .map((stage) => ({
-        icon: IconStage,
-        category: "Stage",
-        title: `Switch to "${stage.name}"`,
-        run: (control) => {
-          nav(`/${params.workspaceSlug}/${app()!.name}/${stage.name}`);
-          control.hide();
-        },
-      }));
-  });
 
   const stageContext = createStageContext();
 
@@ -128,6 +114,7 @@ const WarningDescription = styled("span", {
 });
 
 export function Inner() {
+  const bar = useCommandBar();
   const ctx = useStageContext();
   const issues = useIssuesContext();
   const issuesCount = createMemo(
@@ -147,6 +134,47 @@ export function Inner() {
         .sort()[0]
   );
   const workspace = useWorkspace();
+
+  const nav = useNavigate();
+  // TODO: jay
+  bar.register("stage", async () => {
+    return [
+      {
+        icon: IconArrowRight,
+        title: "Issues",
+        run: (control) => {
+          nav("./issues");
+          control.hide();
+        },
+        category: ctx.stage.name,
+      },
+      {
+        icon: IconArrowRight,
+        title: "Resources",
+        run: (control) => {
+          nav("./resources");
+          control.hide();
+        },
+        category: ctx.stage.name,
+      },
+      {
+        icon: IconArrowRight,
+        title: "Logs for...",
+        run: (control) => {
+          control.show("resource");
+        },
+        category: ctx.stage.name,
+      },
+      {
+        icon: IconArrowRight,
+        title: "Switch stage...",
+        run: (control) => {
+          control.show("stage-switcher");
+        },
+        category: ctx.stage.name,
+      },
+    ];
+  });
 
   return (
     <>

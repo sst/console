@@ -215,8 +215,12 @@ function createControl() {
   const groups = createMemo(() => {
     return pipe(
       actions() || [],
-      filter((action) =>
-        action.title.toLowerCase().includes(input().toLowerCase())
+      filter(
+        (action) =>
+          action.title.toLowerCase().includes(input().toLowerCase()) ||
+          Boolean(
+            action.category?.toLowerCase().includes(input().toLowerCase())
+          )
       ),
       filter((action) => !action.disabled),
       groupBy((a) => a.category)
@@ -254,10 +258,19 @@ function createControl() {
       const current = control.active();
       if (current) current.classList.remove("active");
       el.classList.add("active");
-      if (!disableScroll)
+      if (!disableScroll) {
+        const index = control.actions().indexOf(el);
+        if (index === 0) {
+          el.scrollIntoView({
+            block: "end",
+          });
+          return;
+        }
+
         el.scrollIntoView({
           block: "nearest",
         });
+      }
     },
     move(direction: -1 | 1) {
       const current = control.active();
