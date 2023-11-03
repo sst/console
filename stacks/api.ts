@@ -95,22 +95,12 @@ export function API({ stack, app }: StackContext) {
       },
     },
     routes: {
-      "POST /replicache/pull": {
-        function: {
-          handler: "packages/functions/src/replicache/pull.handler",
-        },
-      },
+      "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
-      "POST /replicache/pull1": {
-        function: {
-          handler: "packages/functions/src/replicache/pull1.handler",
-        },
-      },
-      "POST /replicache/dummy/pull": {
-        function: {
-          handler: "packages/functions/src/replicache/dummy/pull.handler",
-        },
-      },
+      "POST /replicache/pull1":
+        "packages/functions/src/replicache/pull1.handler",
+      "POST /replicache/dummy/pull":
+        "packages/functions/src/replicache/dummy/pull.handler",
       "POST /replicache/push1":
         "packages/functions/src/replicache/push1.handler",
       "POST /webhook/stripe": "packages/functions/src/billing/webhook.handler",
@@ -126,6 +116,7 @@ export function API({ stack, app }: StackContext) {
           },
         },
       },
+      "GET /rest/local": "packages/functions/src/rest/local.handler",
       "GET /freshpaint/track": {
         type: "url",
         url: "https://api.perfalytics.com/track",

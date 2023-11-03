@@ -32,6 +32,7 @@ import { DummyConfigProvider, DummyProvider } from "./providers/dummy";
 import { InvocationProvider } from "./providers/invocation";
 import { FlagsProvider } from "./providers/flags";
 import { createGet } from "./data/store";
+import { Local } from "./pages/local";
 
 const Root = styled("div", {
   base: {
@@ -158,6 +159,7 @@ export const App: Component = () => {
                           <CommandBar>
                             <GlobalCommands />
                             <Routes>
+                              <Route path="local" component={Local} />
                               <Route path="debug" component={Debug} />
                               <Route path="design" component={Design} />
                               <Route path="connect" component={Connect} />
