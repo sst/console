@@ -31,5 +31,7 @@ export function Local() {
       nav(`/${result[0]}/${app}/${stage}/local`);
     }
   });
+
+  // TODO: jay do spinner
   return <span />;
 }

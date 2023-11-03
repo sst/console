@@ -159,7 +159,7 @@ export const App: Component = () => {
                           <CommandBar>
                             <GlobalCommands />
                             <Routes>
-                              <Route path="local" component={Local} />
+                              <Route path="local/*" component={Local} />
                               <Route path="debug" component={Debug} />
                               <Route path="design" component={Design} />
                               <Route path="connect" component={Connect} />
