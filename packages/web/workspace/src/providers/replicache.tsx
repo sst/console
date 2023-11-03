@@ -25,7 +25,6 @@ import { AWS } from "$/data/aws";
 import { IssueAlertStore, SlackTeamStore } from "$/data/app";
 
 const mutators = new Client<ServerType>()
-  .mutation("connect", async () => {})
   .mutation("app_stage_sync", async () => {})
   .mutation("log_poller_subscribe", async () => {})
   .mutation("log_search", async (tx, input) => {
