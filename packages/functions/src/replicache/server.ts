@@ -66,35 +66,6 @@ export const server = new Server()
   )
   .expose("aws_account_scan", AWS.Account.scan)
   .mutation(
-    "connect",
-    z.object({
-      app: z.string(),
-      aws_account_id: z.string(),
-      stage: z.string(),
-      region: z.string(),
-    }),
-    async (input) => {
-      let appID = await App.fromName(input.app).then((x) => x?.id);
-      if (!appID) appID = await App.create({ name: input.app });
-
-      let awsID = await AWS.Account.fromAccountID(input.aws_account_id).then(
-        (x) => x?.id
-      );
-
-      if (!awsID)
-        awsID = await AWS.Account.create({
-          accountID: input.aws_account_id,
-        });
-
-      await App.Stage.connect({
-        appID,
-        name: input.stage,
-        awsAccountID: awsID,
-        region: input.region,
-      });
-    }
-  )
-  .mutation(
     "app_stage_sync",
     z.object({ stageID: z.string() }),
     async (input) => await App.Stage.Events.Updated.publish(input)
