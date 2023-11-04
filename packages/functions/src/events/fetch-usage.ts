@@ -60,6 +60,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
         type: "permission_usage",
         target: evt.properties.stageID,
       });
+      return;
     }
     console.log(functions);
 
