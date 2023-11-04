@@ -104,6 +104,7 @@ export function createSourcemapCache(input: {
   const sourcemapsMeta = lazy(async () => {
     const bootstrap = await getBootstrap();
     if (!bootstrap) return [];
+    console.log("getting sourcemap meta", input.key);
     const result = await s3bootstrap
       .send(
         new ListObjectsV2Command({
@@ -117,6 +118,7 @@ export function createSourcemapCache(input: {
       key: item.Key!,
       created: item.LastModified!.getTime(),
     }));
+    console.log({ maps });
     return maps;
   });
 
@@ -135,6 +137,7 @@ export function createSourcemapCache(input: {
         return await new SourceMapConsumer(sourcemapCache.get(match.key)!);
       }
       const bootstrap = await getBootstrap();
+      console.log("getting sourcemaps for", match.key);
       const content = await s3bootstrap.send(
         new GetObjectCommand({
           Bucket: bootstrap!.bucket,
