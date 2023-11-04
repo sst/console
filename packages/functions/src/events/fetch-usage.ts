@@ -54,12 +54,19 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
       .flatMap((item) => (item ? [item] : []))
       .map((item) => item.split(":").pop()) as string[];
     console.log(`> functions ${functions.length}/${allResources.length}`);
-    if (!functions.length) return;
+    if (!functions.length) {
+      await Warning.remove({
+        stageID: evt.properties.stageID,
+        type: "permission_usage",
+        target: evt.properties.stageID,
+      });
+    }
     console.log(functions);
 
     // Get stage credentials
     const config = await Stage.assumeRole(stageID);
     if (!config) {
+      console.log("cannot assume role");
       await Warning.create({
         type: "permission_usage",
         target: evt.properties.stageID,
