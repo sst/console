@@ -16,6 +16,7 @@ import { Events } from "./events";
 import { DNS } from "./dns";
 import { Duration } from "aws-cdk-lib/core";
 import { Storage } from "./storage";
+import { SsrSite } from "sst/constructs/SsrSite";
 
 export function API({ stack, app }: StackContext) {
   const auth = use(Auth);
@@ -129,11 +130,23 @@ export function API({ stack, app }: StackContext) {
         type: "url",
         url: "https://perfalytics.com/{proxy}",
       },
+      "GET /": "packages/functions/src/index.handler",
     },
     customDomain: {
       domainName: "api." + dns.domain,
       hostedZone: dns.zone.zoneName,
     },
+  });
+
+  const hono = new Function(stack, "hono", {
+    url: true,
+    handler: "packages/functions/src/hono/index.handler",
+    nodejs: {
+      splitting: true,
+    },
+  });
+  stack.addOutputs({
+    hono: hono.url,
   });
 
   api.addRoutes(stack, {
