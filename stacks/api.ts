@@ -141,6 +141,7 @@ export function API({ stack, app }: StackContext) {
   const hono = new Function(stack, "hono", {
     url: true,
     handler: "packages/functions/src/hono/index.handler",
+    runtime: "nodejs18.x",
     nodejs: {
       splitting: true,
     },

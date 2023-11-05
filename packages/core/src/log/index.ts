@@ -144,6 +144,7 @@ export function createSourcemapCache(input: {
           Key: match.key,
         })
       );
+      console.log("got sourcemap");
       try {
         const raw = JSON.parse(
           zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
