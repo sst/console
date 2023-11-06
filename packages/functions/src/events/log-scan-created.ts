@@ -15,6 +15,9 @@ import { DateTime } from "luxon";
 
 export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
   withActor(evt.metadata.actor, async () => {
+    if (evt.attempts > 0) {
+      return;
+    }
     const search = await Log.Search.fromID(evt.properties.id);
     if (!search) return;
     const profileID = search.profileID || undefined;
@@ -51,8 +54,10 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
 
         const processor = Log.createProcessor({
           sourcemapKey:
-            `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
-            search.logGroup.split("/").slice(3, 5).join("/"),
+            search.workspaceID === "rjt3u9hhb2b0r8b2pxsbqqof"
+              ? undefined
+              : `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
+                search.logGroup.split("/").slice(3, 5).join("/"),
           group: search.id,
           config,
         });
@@ -124,10 +129,9 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                   line: result[1]?.value!,
                 });
                 if (Date.now() - now > 10_000 && processor.ready) {
+                  console.log("taking too long, flushing");
                   await flush();
-                  if (flushed >= 50) {
-                    return;
-                  }
+                  if (flushed >= 50) return;
                   now = Date.now();
                 }
                 index++;

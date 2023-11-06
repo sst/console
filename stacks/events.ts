@@ -67,15 +67,21 @@ export function Events({ stack }: StackContext) {
     },
   });
 
-  bus.subscribe("log.search.created", {
-    handler: "packages/functions/src/events/log-scan-created.handler",
-    nodejs: {
-      install: ["source-map"],
+  bus.subscribe(
+    "log.search.created",
+    {
+      handler: "packages/functions/src/events/log-scan-created.handler",
+      nodejs: {
+        install: ["source-map"],
+      },
+      bind: [...Object.values(secrets.database), storage, bus],
+      timeout: "5 minute",
+      permissions: ["sts", "iot"],
     },
-    bind: [...Object.values(secrets.database), storage, bus],
-    timeout: "5 minute",
-    permissions: ["sts", "iot"],
-  });
+    {
+      retries: 0,
+    }
+  );
 
   return bus;
 }
