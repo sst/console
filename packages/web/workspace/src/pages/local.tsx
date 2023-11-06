@@ -1,5 +1,6 @@
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
+import { Splash } from "$/ui/splash";
 import { useLocalContext } from "$/providers/local";
 import { useNavigate } from "@solidjs/router";
 import { Replicache } from "replicache";
@@ -28,10 +29,9 @@ export function Local() {
         }
       ).then((res) => res.json());
       if (!result.length) continue;
-      nav(`/${result[0]}/${app}/${stage}/local`);
+      nav(`/${result[0]}/${app}/${stage}`);
     }
   });
 
-  // TODO: jay do spinner
-  return <span />;
+  return <Splash pulse />;
 }
