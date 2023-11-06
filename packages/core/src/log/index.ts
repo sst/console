@@ -169,31 +169,25 @@ export function createProcessor(input: {
   group: string;
   config: StageCredentials;
 }) {
-  const invocations = new Map<string, number>();
-  let estimated = 0;
+  const pending = new Map<string, Invocation>();
+  let finalized = new Array<Invocation>();
   const streams = new Map<
     string,
     {
       cold: boolean;
-      unknown: LogEvent[];
+      unknown: {
+        logs: Invocation["logs"];
+        errors: Invocation["errors"];
+      };
       requestID?: string;
     }
   >();
-  let results = [] as LogEvent[];
-
   const sourcemapCache = input.sourcemapKey
     ? createSourcemapCache({
         key: input.sourcemapKey,
         config: input.config,
       })
     : undefined;
-
-  function generateInvocationID(id: string) {
-    const trimmed = id.trim();
-    const count = invocations.get(trimmed);
-    if (!count) return trimmed;
-    return trimmed + "[" + count + "]";
-  }
 
   const { group } = input;
 
@@ -208,7 +202,10 @@ export function createProcessor(input: {
       if (!stream) {
         stream = {
           cold: false,
-          unknown: [],
+          unknown: {
+            logs: [],
+            errors: [],
+          },
           requestID: "",
         };
         streams.set(input.streamName, stream);
@@ -223,51 +220,55 @@ export function createProcessor(input: {
       if (tabs[0]?.startsWith("START")) {
         const splits = tabs[0].split(" ");
         const isCold = stream.cold;
+        const id = splits[2]!;
+        const invocation: Invocation = {
+          id: splits[2]!,
+          logs: stream.unknown.logs,
+          errors: stream.unknown.errors,
+          cold: isCold,
+          start: input.timestamp,
+          source: group,
+        };
+        pending.set(id, invocation);
         stream.cold = false;
-        const id = generateInvocationID(splits[2]!);
-        const flush = stream.unknown.map((evt) => {
-          evt.requestID = id;
-          return evt;
-        });
-        stream.unknown = [];
+        stream.unknown = {
+          logs: [],
+          errors: [],
+        };
         stream.requestID = id;
-        return results.push(
-          {
-            type: "start",
-            timestamp: input.timestamp,
-            group,
-            requestID: generateInvocationID(splits[2]!),
-            cold: isCold,
-          },
-          ...flush
-        );
+        return;
       }
 
       if (tabs[0]?.startsWith("END")) {
         const splits = tabs[0].split(" ");
-        return results.push({
-          type: "end",
-          timestamp: input.timestamp,
-          group,
-          requestID: generateInvocationID(splits[2]!),
-        });
+        const invocation = pending.get(splits[2]!);
+        if (invocation) {
+          invocation.end = input.timestamp;
+          if (invocation.report) {
+            pending.delete(invocation.id);
+            finalized.push(invocation);
+          }
+        }
+        return;
       }
 
       if (tabs[0]?.startsWith("REPORT")) {
-        const generated = generateInvocationID(tabs[0].split(" ")[2]!);
         const requestID = tabs[0].split(" ")[2]!.trim();
-        invocations.set(requestID, (invocations.get(requestID) || 0) + 1);
-        estimated++;
-        return results.push({
-          type: "report",
-          timestamp: input.timestamp,
-          group,
-          requestID: generated,
-          duration: parseInt(tabs[2]?.split(" ")[2] || "0"),
-          size: parseInt(tabs[3]?.split(" ")[2] || "0"),
-          memory: parseInt(tabs[4]?.split(" ")[3] || "0"),
-          xray: tabs.find((line) => line.includes("XRAY"))?.split(" ")[2] || "",
-        });
+        const invocation = pending.get(requestID);
+        if (invocation) {
+          invocation.report = {
+            duration: parseInt(tabs[2]?.split(" ")[2] || "0"),
+            size: parseInt(tabs[3]?.split(" ")[2] || "0"),
+            memory: parseInt(tabs[4]?.split(" ")[3] || "0"),
+            xray:
+              tabs.find((line) => line.includes("XRAY"))?.split(" ")[2] || "",
+          };
+          if (invocation.end) {
+            pending.delete(invocation.id);
+            finalized.push(invocation);
+          }
+        }
+        return;
       }
 
       const message = (() => {
@@ -275,10 +276,7 @@ export function createProcessor(input: {
           type: "message",
           timestamp: input.timestamp,
           group,
-          requestID:
-            tabs[1]?.length === 36
-              ? generateInvocationID(tabs[1]!)
-              : stream.requestID || "",
+          requestID: tabs[1]?.length === 36 ? tabs[1]! : stream.requestID || "",
           id: input.id,
           level: tabs[0]?.startsWith("[ERROR]") ? "ERROR" : "INFO",
           message: formatLogMessage(tabs),
@@ -287,7 +285,7 @@ export function createProcessor(input: {
         // Timeout
         // ie. 2023-11-02T21:25:22.391Z 1bd06cd6-9e74-4154-b921-0951216f2ec6 Task timed out after 4.01 seconds
         if (tabs[0]?.substring(62)?.startsWith("Task timed out after")) {
-          result.requestID = generateInvocationID(tabs[0].split(" ")[1]!);
+          result.requestID = tabs[0].split(" ")[1]!;
           result.level = "ERROR";
           result.message = tabs[0].substring(62)!;
         }
@@ -304,7 +302,7 @@ export function createProcessor(input: {
         return result;
       })();
 
-      const target = message.requestID === "" ? stream.unknown : results;
+      let target = pending.get(message.requestID) ?? stream.unknown;
 
       if (message.level === "ERROR") {
         const err = extractError(tabs);
@@ -314,123 +312,34 @@ export function createProcessor(input: {
             input.timestamp,
             err
           );
-          target.push({
+          target.errors.push({
             id: message.id,
-            type: "error",
-            timestamp: input.timestamp,
-            group,
-            requestID: message.requestID,
-            error: mapped.error,
             message: mapped.message,
+            error: mapped.error,
             stack: mapped.stack,
             failed: mapped.failed,
           });
         }
       }
-
-      target.push(message);
+      target.logs.push(message);
       return;
     },
     flush(order = 1) {
-      const events = pipe(
-        results,
-        groupBy((evt) => evt.requestID),
-        values,
-        map((evts) =>
-          sortBy(
-            evts,
-            (evt) => {
-              return {
-                start: 0,
-                message: 1,
-                error: 2,
-                end: 3,
-                report: 4,
-              }[evt.type];
-            },
-            (evt) => evt.timestamp
-          )
-        ),
-        sortBy((evts) => order * (evts[0]?.timestamp || 0))
-      ).flat();
-      results = [];
-      estimated = 0;
-      return events;
-    },
-    flushInvocations(order = 1) {
-      const events = pipe(
-        results,
-        groupBy((evt) => evt.requestID),
-        values,
-        map((evts) => {
-          // @ts-expect-error
-          const invocation: Invocation = {
-            source: group,
-            logs: [],
-            errors: [],
-          };
-          const sorted = sortBy(
-            evts,
-            (evt) => {
-              return {
-                start: 0,
-                message: 1,
-                error: 2,
-                end: 3,
-                report: 4,
-              }[evt.type];
-            },
-            (evt) => evt.timestamp
-          );
-          for (const evt of sorted) {
-            switch (evt.type) {
-              case "start":
-                invocation.start = evt.timestamp;
-                invocation.id = evt.requestID;
-                invocation.cold = evt.cold;
-                break;
-              case "message":
-                invocation.logs.push({
-                  id: evt.id,
-                  message: evt.message,
-                  timestamp: evt.timestamp,
-                });
-                break;
-              case "error":
-                invocation.errors.push({
-                  error: evt.error,
-                  message: evt.message,
-                  id: evt.id,
-                  stack: evt.stack,
-                  failed: evt.failed,
-                });
-                break;
-              case "report":
-                invocation.report = {
-                  size: evt.size,
-                  xray: evt.xray,
-                  memory: evt.memory,
-                  duration: evt.duration,
-                };
-            }
-          }
-          return invocation;
-        }),
-        filter((invocation) => Boolean(invocation.id)),
-        sortBy((invocation) => order * invocation.start)
+      const sorted = sortBy(
+        [...finalized, ...pending.values()],
+        (invocation) => order * invocation.start
       );
-      results = [];
-      return events;
+      finalized = [];
+      return sorted;
     },
     destroy() {
       sourcemapCache?.destroy();
     },
-    results,
     get streams() {
       return streams;
     },
-    get estimated() {
-      return estimated;
+    get ready() {
+      return finalized.length;
     },
   };
 }
@@ -524,7 +433,7 @@ export const expand = zod(
     }
 
     cw.destroy();
-    return processor.flushInvocations();
+    return processor.flush();
   }
 );
 

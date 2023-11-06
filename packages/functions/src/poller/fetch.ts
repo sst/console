@@ -150,7 +150,7 @@ export function handler(input: State) {
         });
       }
 
-      const data = processor.flushInvocations();
+      const data = processor.flush();
       if (data.length) {
         console.log("sending", data.length, "invocations");
         const url = await Storage.putEphemeral(JSON.stringify(data), {

@@ -57,6 +57,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
           config,
         });
 
+        let flushed = 0;
         while (true) {
           await Log.Search.setStart({
             id: search.id,
@@ -82,7 +83,6 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
           if (!result) return;
           console.log("created query", result.queryId);
 
-          let flushed = 0;
           while (true) {
             const response = await client.send(
               new GetQueryResultsCommand({
@@ -95,6 +95,28 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
               console.log("log insights results", results.length);
 
               let index = 0;
+
+              async function flush() {
+                const data = processor.flush(-1);
+                console.log(
+                  "flushing invocations",
+                  data.length,
+                  "flushed so far",
+                  flushed
+                );
+                if (data.length) {
+                  flushed += data.length;
+                  const url = await Storage.putEphemeral(JSON.stringify(data), {
+                    ContentType: "application/json",
+                  });
+                  await Realtime.publish("invocation.url", url, profileID);
+                }
+                if (flushed >= 50) {
+                  return;
+                }
+              }
+
+              let now = Date.now();
               for (const result of results.sort((a, b) =>
                 a[0]!.value!.localeCompare(b[0]!.value!)
               )) {
@@ -104,26 +126,13 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                   streamName: result[2]?.value!,
                   line: result[1]?.value!,
                 });
+                if (Date.now() - now > 10_000 && processor.ready) {
+                  await flush();
+                  now = Date.now();
+                }
                 index++;
               }
-
-              const data = processor.flushInvocations(-1);
-              console.log(
-                "flushing invocations",
-                data.length,
-                "flushed so far",
-                flushed
-              );
-              if (data.length) {
-                flushed += data.length;
-                const url = await Storage.putEphemeral(JSON.stringify(data), {
-                  ContentType: "application/json",
-                });
-                await Realtime.publish("invocation.url", url, profileID);
-              }
-              if (flushed >= 50) {
-                return;
-              }
+              await flush();
 
               break;
             }
