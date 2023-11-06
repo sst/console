@@ -309,7 +309,7 @@ export function createProcessor(input: {
       if (message.level === "ERROR") {
         const err = extractError(tabs);
         if (err && sourcemapCache) {
-          console.log("applying sourcemap");
+          console.log("applying sourcemap", err);
           const mapped = await applySourcemap(
             sourcemapCache,
             input.timestamp,

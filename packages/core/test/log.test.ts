@@ -145,9 +145,7 @@ test("node logtail", () => {
 
 test("node timeout", () => {
   expectError([
-    `2023-09-12T00:55:20.974Z`,
-    `662fa6b4-dc47-4d49-a7e2-200ad7ce1537`,
-    `Task timed out after 120.12 seconds`,
+    `2023-09-12T00:55:20.974Z 662fa6b4-dc47-4d49-a7e2-200ad7ce1537 Task timed out after 120.12 seconds`,
   ]);
 });
 

@@ -3,6 +3,7 @@
 exports[`node inline 1`] = `
 {
   "error": "DatabaseError",
+  "failed": false,
   "message": "target: sst.-.primary: vttablet: rpc error: code = AlreadyExists desc = Duplicate entry 'foo' for key 'workspace.slug' (errno 1062) (sqlstate 23000) (CallerID: lq15hm6s0ctusshuarsx): Sql: \\"insert into workspace(id, time_created, time_updated, time_deleted, slug, stripe_customer_id, stripe_subscription_id, stripe_subscription_item_id) values (:vtg1 /* VARCHAR */, default, default, default, :vtg2 /* VARCHAR */, default, default, default)\\", BindVars: {REDACTED}",
   "stack": [
     {
@@ -48,6 +49,7 @@ exports[`node inline 1`] = `
 exports[`node inline multiline 1`] = `
 {
   "error": "ZodError",
+  "failed": false,
   "message": "[
   {
     \\"code\\": \\"too_small\\",
@@ -173,6 +175,7 @@ exports[`node inline multiline 1`] = `
 exports[`node invoke 1`] = `
 {
   "error": "NoSuchBucket",
+  "failed": true,
   "message": "The specified bucket does not exist",
   "stack": [
     {
@@ -212,6 +215,7 @@ exports[`node invoke 1`] = `
 exports[`node logtail 1`] = `
 {
   "error": "TypeError",
+  "failed": false,
   "message": "Cannot read properties of undefined (reading 'enabled')",
   "stack": [
     {
@@ -251,6 +255,7 @@ exports[`node logtail 1`] = `
 exports[`node logtail 2`] = `
 {
   "error": "TypeError",
+  "failed": false,
   "message": "Cannot read properties of undefined (reading 'enabled')",
   "stack": [
     {
@@ -290,6 +295,7 @@ exports[`node logtail 2`] = `
 exports[`node timeout 1`] = `
 {
   "error": "LambdaTimeoutError",
+  "failed": true,
   "message": "Task timed out after 120.12 seconds",
   "stack": [],
 }
@@ -298,6 +304,7 @@ exports[`node timeout 1`] = `
 exports[`node uncaught exception 1`] = `
 {
   "error": "NoSuchBucket",
+  "failed": true,
   "message": "The specified bucket does not exist",
   "stack": [
     {
@@ -337,6 +344,7 @@ exports[`node uncaught exception 1`] = `
 exports[`node undefined requestID 1`] = `
 {
   "error": "Error",
+  "failed": false,
   "message": "Missing AWS Lambda trace data for X-Ray. Ensure Active Tracing is enabled and no subsegments are created outside the function handler.",
   "stack": [
     {
@@ -376,6 +384,7 @@ exports[`node undefined requestID 1`] = `
 exports[`node weird error 1`] = `
 {
   "error": "SupernovaException [Error]",
+  "failed": false,
   "message": "Unknown message",
   "stack": [
     {
@@ -414,6 +423,7 @@ exports[`node weird error 1`] = `
 exports[`node with brackets 1`] = `
 {
   "error": "[BadRequestError]",
+  "failed": false,
   "message": "Event object failed validation",
   "stack": [
     {
@@ -448,6 +458,7 @@ exports[`node with brackets 1`] = `
 exports[`payload too big 1`] = `
 {
   "error": "LambdaRuntimeError",
+  "failed": true,
   "message": "Failed to post handler success response. Http response code: 413.",
   "stack": [],
 }
@@ -456,6 +467,7 @@ exports[`payload too big 1`] = `
 exports[`powertools 1`] = `
 {
   "error": "FooError",
+  "failed": true,
   "message": "test error",
   "stack": [
     {
