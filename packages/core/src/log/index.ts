@@ -647,7 +647,7 @@ export function extractError(tabs: string[]): ParsedError | undefined {
 
       return [];
     })();
-    if (!error || !message) return;
+    if (!error || !message || !stack.length) return;
     return {
       error: error,
       message: message,
