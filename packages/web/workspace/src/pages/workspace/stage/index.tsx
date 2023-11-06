@@ -25,7 +25,7 @@ import {
 import { Logs } from "./logs";
 import { Issues } from "./issues";
 import { Resources } from "./resources";
-import { IconApp, IconStage } from "$/ui/icons/custom";
+import { IconApp, IconStage, IconSubRight } from "$/ui/icons/custom";
 import {
   Header,
   HeaderProvider,
@@ -34,11 +34,7 @@ import {
 } from "../header";
 import { Fullscreen, Row, Stack, TabTitle, theme, utility, Text } from "$/ui";
 import { Local } from "./local";
-import {
-  IconArrowRight,
-  IconChevronDown,
-  IconExclamationTriangle,
-} from "$/ui/icons";
+import { IconExclamationTriangle } from "$/ui/icons";
 import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "../context";
 import { useLocalContext } from "$/providers/local";
@@ -136,11 +132,10 @@ export function Inner() {
   const workspace = useWorkspace();
 
   const nav = useNavigate();
-  // TODO: jay
   bar.register("stage", async () => {
     return [
       {
-        icon: IconArrowRight,
+        icon: IconSubRight,
         title: "Issues",
         run: (control) => {
           nav("./issues");
@@ -149,7 +144,7 @@ export function Inner() {
         category: ctx.stage.name,
       },
       {
-        icon: IconArrowRight,
+        icon: IconSubRight,
         title: "Resources",
         run: (control) => {
           nav("./resources");
@@ -158,15 +153,15 @@ export function Inner() {
         category: ctx.stage.name,
       },
       {
-        icon: IconArrowRight,
-        title: "Logs for...",
+        icon: IconSubRight,
+        title: "View logs...",
         run: (control) => {
           control.show("resource");
         },
         category: ctx.stage.name,
       },
       {
-        icon: IconArrowRight,
+        icon: IconSubRight,
         title: "Switch stage...",
         run: (control) => {
           control.show("stage-switcher");

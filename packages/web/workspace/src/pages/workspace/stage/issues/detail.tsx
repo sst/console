@@ -2,8 +2,12 @@ import { theme } from "$/ui/theme";
 import { Link, useParams } from "@solidjs/router";
 import { styled } from "@macaron-css/solid";
 import { Show, Switch, Match, createMemo, createEffect, For } from "solid-js";
-import { IconArrowRight, IconCheck, IconNoSymbol } from "$/ui/icons";
-import { IconArrowPathSpin } from "$/ui/icons/custom";
+import { IconCheck, IconNoSymbol } from "$/ui/icons";
+import {
+  IconCaretRight,
+  IconSubRight,
+  IconArrowPathSpin,
+} from "$/ui/icons/custom";
 import {
   utility,
   Tag,
@@ -218,48 +222,47 @@ export function Detail() {
   });
 
   const bar = useCommandBar();
-  // TODO: jay
   bar.register("issues-detail", async () => {
     return [
       {
-        icon: IconArrowRight,
+        icon: IconCaretRight,
         title: "Resolve",
         run: (control) => {
           rep().mutate.issue_resolve([issue()!.id]);
           control.hide();
         },
         disabled: Boolean(issue().timeResolved),
-        category: "Issues",
+        category: "Issue",
       },
       {
-        icon: IconArrowRight,
+        icon: IconCaretRight,
         title: "Unresolve",
         run: (control) => {
           rep().mutate.issue_unresolve([issue()!.id]);
           control.hide();
         },
         disabled: !issue().timeResolved,
-        category: "Issues",
+        category: "Issue",
       },
       {
-        icon: IconArrowRight,
+        icon: IconCaretRight,
         title: "Ignore",
         run: (control) => {
           rep().mutate.issue_ignore([issue()!.id]);
           control.hide();
         },
         disabled: Boolean(issue().timeIgnored),
-        category: "Issues",
+        category: "Issue",
       },
       {
-        icon: IconArrowRight,
+        icon: IconCaretRight,
         title: "Unignore",
         run: (control) => {
           rep().mutate.issue_unignore([issue()!.id]);
           control.hide();
         },
         disabled: !issue().timeIgnored,
-        category: "Issues",
+        category: "Issue",
       },
     ];
   });

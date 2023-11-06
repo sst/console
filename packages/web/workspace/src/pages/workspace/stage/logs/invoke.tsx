@@ -9,7 +9,11 @@ import {
   TextButton,
   Button,
 } from "$/ui";
-import { IconCaretRightOutline } from "$/ui/icons/custom";
+import {
+  IconSubRight,
+  IconCaretRight,
+  IconCaretRightOutline,
+} from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
@@ -231,7 +235,7 @@ export function Invoke(props: Props) {
   bar.register("lambda-payloads", async (filter, global) => {
     if (global && !filter) return [];
     return lambdaPayloads().map((x) => ({
-      icon: IconBookmark,
+      icon: IconCaretRight,
       category: "Event Payloads",
       title: x.name,
       async run(control) {
@@ -242,9 +246,10 @@ export function Invoke(props: Props) {
   });
 
   bar.register("invoke", async (filter, global) => {
+    if (!invoke.expand) return [];
     return [
       {
-        icon: IconBookmark,
+        icon: IconSubRight,
         category: "Invoke",
         title: "Load saved payloads...",
         async run(control) {
@@ -254,7 +259,7 @@ export function Invoke(props: Props) {
       {
         icon: IconBookmark,
         category: "Invoke",
-        title: "Manage saved payloads...",
+        title: "Manage saved payloads",
         async run(control) {
           control.hide();
           manageControl.show();

@@ -2,7 +2,8 @@ import { globalStyle, globalKeyframes, CSSProperties } from "@macaron-css/core";
 import { SpanSpacer, Grower, Stack, Row, Hr } from "$/ui/layout";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
-import { IconCheck, IconBookmark, IconChevronDown } from "$/ui/icons";
+import { IconBookmark, IconCheck } from "$/ui/icons";
+import * as CI from "$/ui/icons/custom";
 import { Histogram } from "$/ui/histogram";
 import { Text } from "$/ui/text";
 import { Tag } from "$/ui/tag";
@@ -81,6 +82,7 @@ const VariantContent = styled("div", {
   base: {
     flex: "1 1 auto",
     display: "flex",
+    flexWrap: "wrap",
     gap: theme.space[2],
     border: `1px solid ${theme.color.divider.base}`,
     padding: theme.space[4],
@@ -123,6 +125,7 @@ function Variant(props: VariantProps) {
     </VariantRoot>
   );
 }
+
 const OverflowSpan = styled("span", {
   base: {
     overflow: "hidden",
@@ -160,6 +163,16 @@ const TextContainer = styled("div", {
   },
   defaultVariants: {
     background: "base",
+  },
+});
+
+const IconContainer = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 24,
+    height: 24,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.primary.base,
   },
 });
 
@@ -473,46 +486,9 @@ export function Design() {
             </Alert>
           </Grower>
         </Variant>
-        <Variant name="Details">
-          <Grower>
-            <Alert details="Read more about it on our docs." level="danger">
-              This is a danger alert. You need to take it very seriously.
-            </Alert>
-          </Grower>
-        </Variant>
         <Variant name="Multi Line">
           <Grower>
             <Alert level="info">
-              This is an info alert. You don't need to take it very seriously.
-              But it is a long info alert that will overflow. And we want to
-              test how long it can really get. So here is some more text.
-            </Alert>
-          </Grower>
-        </Variant>
-        <Variant name="Multi Line Details">
-          <Grower>
-            <Alert
-              level="info"
-              controls={
-                <Row>
-                  <Button color="secondary">Retry</Button>
-                </Row>
-              }
-              details={`We could not enable issues for these functions:
-  - function1 (not found)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-  - function2 (subscriber limit)
-  - function3 (no iam permissions)
-
-Read more about it over on our docs`}
-            >
               This is an info alert. You don't need to take it very seriously.
               But it is a long info alert that will overflow. And we want to
               test how long it can really get. So here is some more text.
@@ -935,6 +911,142 @@ Read more about it over on our docs`}
               { value: 1 },
             ]}
           />
+        </Variant>
+      </ComponentType>
+      <ComponentType name="Icons">
+        <Variant name="Base">
+          <IconContainer title="IconAdd">
+            <CI.IconAdd />
+          </IconContainer>
+          <IconContainer title="IconApi">
+            <CI.IconApi />
+          </IconContainer>
+          <IconContainer title="IconApp">
+            <CI.IconApp />
+          </IconContainer>
+          <IconContainer title="IconAws">
+            <CI.IconAws />
+          </IconContainer>
+          <IconContainer title="IconJob">
+            <CI.IconJob />
+          </IconContainer>
+          <IconContainer title="IconRDS">
+            <CI.IconRDS />
+          </IconContainer>
+          <IconContainer title="IconAuth">
+            <CI.IconAuth />
+          </IconContainer>
+          <IconContainer title="IconCron">
+            <CI.IconCron />
+          </IconContainer>
+          <IconContainer title="IconUser">
+            <CI.IconUser />
+          </IconContainer>
+          <IconContainer title="IconQueue">
+            <CI.IconQueue />
+          </IconContainer>
+          <IconContainer title="IconStack">
+            <CI.IconStack />
+          </IconContainer>
+          <IconContainer title="IconStage">
+            <CI.IconStage />
+          </IconContainer>
+          <IconContainer title="IconTable">
+            <CI.IconTable />
+          </IconContainer>
+          <IconContainer title="IconTopic">
+            <CI.IconTopic />
+          </IconContainer>
+          <IconContainer title="IconBucket">
+            <CI.IconBucket />
+          </IconContainer>
+          <IconContainer title="IconConfig">
+            <CI.IconConfig />
+          </IconContainer>
+          <IconContainer title="IconGitHub">
+            <CI.IconGitHub />
+          </IconContainer>
+          <IconContainer title="IconLogout">
+            <CI.IconLogout />
+          </IconContainer>
+          <IconContainer title="IconScript">
+            <CI.IconScript />
+          </IconContainer>
+          <IconContainer title="IconAppSync">
+            <CI.IconAppSync />
+          </IconContainer>
+          <IconContainer title="IconCognito">
+            <CI.IconCognito />
+          </IconContainer>
+          <IconContainer title="IconConnect">
+            <CI.IconConnect />
+          </IconContainer>
+          <IconContainer title="IconUserAdd">
+            <CI.IconUserAdd />
+          </IconContainer>
+          <IconContainer title="IconEventBus">
+            <CI.IconEventBus />
+          </IconContainer>
+          <IconContainer title="IconFunction">
+            <CI.IconFunction />
+          </IconContainer>
+          <IconContainer title="IconSubRight">
+            <CI.IconSubRight />
+          </IconContainer>
+          <IconContainer title="IconAddCircle">
+            <CI.IconAddCircle />
+          </IconContainer>
+          <IconContainer title="IconAstroSite">
+            <CI.IconAstroSite />
+          </IconContainer>
+          <IconContainer title="IconConstruct">
+            <CI.IconConstruct />
+          </IconContainer>
+          <IconContainer title="IconGoRuntime">
+            <CI.IconGoRuntime />
+          </IconContainer>
+          <IconContainer title="IconRemixSite">
+            <CI.IconRemixSite />
+          </IconContainer>
+          <IconContainer title="IconWorkspace">
+            <CI.IconWorkspace />
+          </IconContainer>
+          <IconContainer title="IconCaretRight">
+            <CI.IconCaretRight />
+          </IconContainer>
+          <IconContainer title="IconLogosSlack">
+            <CI.IconLogosSlack />
+          </IconContainer>
+          <IconContainer title="IconWebSocketApi">
+            <CI.IconWebSocketApi />
+          </IconContainer>
+          <IconContainer title="IconArrowPathSpin">
+            <CI.IconArrowPathSpin />
+          </IconContainer>
+          <IconContainer title="IconDotNetRuntime">
+            <CI.IconDotNetRuntime />
+          </IconContainer>
+          <IconContainer title="IconKinesisStream">
+            <CI.IconKinesisStream />
+          </IconContainer>
+          <IconContainer title="IconPythonRuntime">
+            <CI.IconPythonRuntime />
+          </IconContainer>
+          <IconContainer title="IconSvelteKitSite">
+            <CI.IconSvelteKitSite />
+          </IconContainer>
+          <IconContainer title="IconSolidStartSite">
+            <CI.IconSolidStartSite />
+          </IconContainer>
+          <IconContainer title="IconApiGatewayV1Api">
+            <CI.IconApiGatewayV1Api />
+          </IconContainer>
+          <IconContainer title="IconContainerRuntime">
+            <CI.IconContainerRuntime />
+          </IconContainer>
+          <IconContainer title="IconCaretRightOutline">
+            <CI.IconCaretRightOutline />
+          </IconContainer>
         </Variant>
       </ComponentType>
     </>

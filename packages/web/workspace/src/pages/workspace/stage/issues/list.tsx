@@ -1,11 +1,7 @@
 import { styled } from "@macaron-css/solid";
 import { Row, Stack } from "$/ui/layout";
-import {
-  IconCheck,
-  IconNoSymbol,
-  IconArrowRight,
-  IconExclamationTriangle,
-} from "$/ui/icons";
+import { IconCheck, IconNoSymbol, IconExclamationTriangle } from "$/ui/icons";
+import { IconCaretRight, IconSubRight } from "$/ui/icons/custom";
 import {
   utility,
   Text,
@@ -194,13 +190,20 @@ const EmptyIssuesSign = styled("div", {
   },
 });
 
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function pluralize(s: string, count: number) {
+  return count === 1 ? s : s + "s";
+}
+
 export function List() {
   const bar = useCommandBar();
-  // TODO: jay
   bar.register("issues-list", async () => {
     return ["active", "ignored", "resolved"].map((view) => ({
-      icon: IconArrowRight,
-      title: `Go to ${view} issues`,
+      icon: IconSubRight,
+      title: `${capitalize(view)} issues`,
       run: (control) => {
         setSearch({
           view: view,
@@ -214,8 +217,11 @@ export function List() {
   bar.register("issues-bulk", async () => {
     return [
       {
-        icon: IconArrowRight,
-        title: "Resolve " + selected().length + " issues",
+        icon: IconCaretRight,
+        title: `Resolve ${selected().length} ${pluralize(
+          "issue",
+          selected().length
+        )}`,
         run: (control) => {
           rep().mutate.issue_resolve(selected());
           reset();
@@ -225,8 +231,11 @@ export function List() {
         category: "Issues",
       },
       {
-        icon: IconArrowRight,
-        title: "Unresolve " + selected().length + " issues",
+        icon: IconCaretRight,
+        title: `Unresolve ${selected().length} ${pluralize(
+          "issue",
+          selected().length
+        )}`,
         run: (control) => {
           rep().mutate.issue_unresolve(selected());
           reset();
@@ -236,8 +245,11 @@ export function List() {
         category: "Issues",
       },
       {
-        icon: IconArrowRight,
-        title: "Ignore " + selected().length + " issues",
+        icon: IconCaretRight,
+        title: `Ignore ${selected().length} ${pluralize(
+          "issue",
+          selected().length
+        )}`,
         run: (control) => {
           rep().mutate.issue_ignore(selected());
           reset();
@@ -247,8 +259,11 @@ export function List() {
         category: "Issues",
       },
       {
-        icon: IconArrowRight,
-        title: "Unignore " + selected().length + " issues",
+        icon: IconCaretRight,
+        title: `Unignore ${selected().length} ${pluralize(
+          "issue",
+          selected().length
+        )}`,
         run: (control) => {
           rep().mutate.issue_unignore(selected());
           reset();
@@ -258,7 +273,7 @@ export function List() {
         category: "Issues",
       },
       {
-        icon: IconArrowRight,
+        icon: IconCaretRight,
         title: "Select all issues",
         run: (control) => {
           document

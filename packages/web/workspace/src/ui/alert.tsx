@@ -1,9 +1,8 @@
-import { JSX, createSignal } from "solid-js";
 import { theme } from "$/ui/theme";
 import { utility, Row, Text, Stack } from "$/ui";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
-import { ComponentProps, Show } from "solid-js";
+import { ComponentProps } from "solid-js";
 import { IconXCircle, IconExclamationTriangle } from "$/ui/icons";
 
 const AlertRoot = styled("div", {
@@ -91,13 +90,8 @@ const alertDetailsTextCs = style({
   },
 });
 
-type AlertProps = ComponentProps<typeof AlertRoot> & {
-  details?: JSX.Element;
-  controls?: JSX.Element;
-};
+type AlertProps = ComponentProps<typeof AlertRoot> & {};
 export function Alert(props: AlertProps) {
-  const [expanded, setExpanded] = createSignal(false);
-
   return (
     <AlertRoot {...props}>
       <Row space="4" vertical="start" horizontal="between">
@@ -111,40 +105,8 @@ export function Alert(props: AlertProps) {
           </AlertIcon>
           <Stack flex space="3" style={{ flex: "1" }}>
             <AlertText>{props.children}</AlertText>
-            <Show when={expanded()}>
-              <AlertDetails>
-                <Stack space="4">
-                  <Show when={props.details}>
-                    <AlertDetailsText>
-                      <Text
-                        pre
-                        size="sm"
-                        leading="loose"
-                        class={alertDetailsTextCs}
-                      >
-                        {props.details}
-                      </Text>
-                    </AlertDetailsText>
-                  </Show>
-                  <Show when={props.controls}>{props.controls}</Show>
-                </Stack>
-              </AlertDetails>
-            </Show>
           </Stack>
         </Row>
-        <Show when={props.details}>
-          <Text
-            underline
-            size="xs"
-            class={alertDetailsTextCs}
-            style={{ "margin-top": "4px" }}
-            onClick={() => setExpanded(!expanded())}
-          >
-            <Show when={!expanded()} fallback="Hide">
-              Details
-            </Show>
-          </Text>
-        </Show>
       </Row>
     </AlertRoot>
   );

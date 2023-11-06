@@ -6,6 +6,7 @@ import {
   IconBolt,
   IconClock,
   IconCheck,
+  IconCalendar,
   IconArrowDown,
   IconBoltSolid,
   IconArrowsUpDown,
@@ -13,9 +14,8 @@ import {
   IconMagnifyingGlass,
   IconEllipsisVertical,
   IconArrowPathRoundedSquare,
-  IconArrowRight,
 } from "$/ui/icons";
-import { IconArrowPathSpin, IconAws } from "$/ui/icons/custom";
+import { IconAws, IconSubRight, IconArrowPathSpin } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
 import { TextButton, IconButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
@@ -226,9 +226,8 @@ export function Logs() {
         },
         icon: IconClock,
       },
-      // TODO: jay icon here
       {
-        title: "Jump to",
+        title: "Jump to...",
         category: "logs",
         run: (bar) => {
           setQuery(
@@ -240,7 +239,7 @@ export function Logs() {
           switchView("custom");
           bar.hide();
         },
-        icon: IconArrowRight,
+        icon: IconCalendar,
       },
       {
         title: "Open in CloudWatch",

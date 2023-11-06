@@ -11,14 +11,19 @@ import { Stage } from "./stage";
 import { Show, createEffect, createMemo } from "solid-js";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
-import { IconArrowRight, IconWrenchScrewdriver } from "$/ui/icons";
+import { IconWrenchScrewdriver } from "$/ui/icons";
 import { User } from "./user";
 import { Account } from "./account";
 import { Settings } from "./settings";
 import { Overview } from "./overview";
 import { WorkspaceContext } from "./context";
 import { AppStore } from "$/data/app";
-import { IconApp, IconUserAdd, IconConnect } from "$/ui/icons/custom";
+import {
+  IconApp,
+  IconUserAdd,
+  IconConnect,
+  IconSubRight,
+} from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
 import { Debug } from "../debug";
@@ -51,9 +56,8 @@ export function Workspace() {
 
   bar.register("workspace", async () => {
     return [
-      // TODO: jay
       {
-        icon: IconArrowRight,
+        icon: IconSubRight,
         title: "Overview",
         category: "Workspace",
         run: (control) => {
