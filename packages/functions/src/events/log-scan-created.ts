@@ -111,9 +111,6 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                   });
                   await Realtime.publish("invocation.url", url, profileID);
                 }
-                if (flushed >= 50) {
-                  return;
-                }
               }
 
               let now = Date.now();
@@ -128,11 +125,17 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                 });
                 if (Date.now() - now > 10_000 && processor.ready) {
                   await flush();
+                  if (flushed >= 50) {
+                    return;
+                  }
                   now = Date.now();
                 }
                 index++;
               }
               await flush();
+              if (flushed >= 50) {
+                return;
+              }
 
               break;
             }
