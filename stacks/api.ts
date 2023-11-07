@@ -117,6 +117,16 @@ export function API({ stack, app }: StackContext) {
           },
         },
       },
+      "POST /rest/log/tail": {
+        function: {
+          handler: "packages/functions/src/rest/log/tail.handler",
+          bind: [storage],
+          permissions: ["iot"],
+          nodejs: {
+            install: ["source-map"],
+          },
+        },
+      },
       "GET /rest/local": "packages/functions/src/rest/local.handler",
       "GET /freshpaint/track": {
         type: "url",

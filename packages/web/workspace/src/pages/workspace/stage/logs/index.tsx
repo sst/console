@@ -15,14 +15,14 @@ import {
   IconEllipsisVertical,
   IconArrowPathRoundedSquare,
 } from "$/ui/icons";
-import { IconAws, IconSubRight, IconArrowPathSpin } from "$/ui/icons/custom";
+import { IconAws, IconArrowPathSpin } from "$/ui/icons/custom";
 import { Row, Stack } from "$/ui/layout";
 import { TextButton, IconButton } from "$/ui/button";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
-import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
+import { useParams, useSearchParams } from "@solidjs/router";
 import {
   For,
   Match,
@@ -30,8 +30,7 @@ import {
   Switch,
   createEffect,
   createMemo,
-  mergeProps,
-  untrack,
+  onMount,
 } from "solid-js";
 import {
   useFunctionsContext,
@@ -40,17 +39,17 @@ import {
 } from "../context";
 import { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../../command-bar";
-import { DATETIME_LONG, formatSinceTime, parseTime } from "$/common/format";
-import { createStore, produce, unwrap } from "solid-js/store";
+import { DATETIME_LONG, parseTime } from "$/common/format";
+import { createStore, unwrap } from "solid-js/store";
 import { Invoke, InvokeControl } from "./invoke";
 import { createId } from "@paralleldrive/cuid2";
 import { LogSearchStore } from "$/data/log-search";
 import { DialogRange, DialogRangeControl } from "./dialog-range";
-import { ResourceIcon } from "$/common/resource-icon";
 import { InvocationRow } from "$/common/invocation";
 import { useInvocations } from "$/providers/invocation";
 import { DateTime } from "luxon";
-import { Invocation } from "@console/core/log";
+import { useWorkspace } from "../../context";
+import { clearLogStore } from "$/data/log";
 
 const LogSwitchButton = styled("button", {
   base: {
@@ -173,7 +172,7 @@ const LogMoreIndicatorIcon = styled("div", {
   },
 });
 
-const [pollerCache, setPollerCache] = createStore<{ [key: string]: string }>(
+const [pollerCache, setPollerCache] = createStore<{ [key: string]: number }>(
   {}
 );
 
@@ -181,11 +180,18 @@ export function Logs() {
   const stage = useStageContext();
   const invocationsContext = useInvocations();
   const bar = useCommandBar();
+  const [id, setID] = createStore<{
+    search: string;
+    poller: string;
+  }>({
+    search: createId(),
+    poller: createId(),
+  });
 
   const params = useParams();
   const [query, setQuery] = useSearchParams<{
     dummy?: string;
-    title?: string;
+    end?: string;
     logGroup?: string;
     view: string;
   }>();
@@ -207,7 +213,6 @@ export function Logs() {
       }
       return "";
     })();
-
     return logGroup;
   });
 
@@ -252,7 +257,6 @@ export function Logs() {
             },
             { replace: true }
           );
-          switchView("custom");
           bar.hide();
         },
         icon: IconCalendar,
@@ -281,6 +285,52 @@ export function Logs() {
     return "search";
   });
 
+  onMount(() => {
+    if (!query.view)
+      setQuery(
+        {
+          view: "recent",
+        },
+        { replace: true }
+      );
+  });
+
+  const workspace = useWorkspace();
+  createEffect(() => {
+    if (mode() === "live") return;
+
+    if (query.view === "recent") {
+      setID("search", createId());
+      createSearch();
+    }
+
+    if (query.view === "custom" && query.end) {
+      setID("search", createId());
+      createSearch(new Date(query.end).getTime());
+    }
+
+    if (query.view === "tail") {
+      const exists = pollerCache[logGroup()];
+      if (exists) return;
+      async function run() {
+        await fetch(import.meta.env.VITE_API_URL + "/rest/log/tail", {
+          method: "POST",
+          body: JSON.stringify({
+            stageID: stage.stage.id,
+            logGroup: logGroup(),
+          }),
+          headers: {
+            "x-sst-workspace": workspace().id,
+            Authorization: rep().auth,
+          },
+        });
+        setTimeout(run, 3000);
+      }
+      setPollerCache(logGroup(), Date.now());
+      run();
+    }
+  });
+
   const rep = useReplicache();
 
   const poller = LogPollerStore.list.watch(
@@ -299,71 +349,24 @@ export function Logs() {
     });
   });
 
-  createEffect(() => {
-    const p = poller();
-    if (!p) return;
-    if (pollerCache[p.id]) return;
-    setPollerCache(p.id, DateTime.now().toLocaleString(DATETIME_LONG));
-  });
-
-  createEffect(() => {
-    const r = resource();
-    if (!r) return;
-    if (mode() === "live") return;
-    untrack(() => {
-      switchView(query.view || "recent");
-    });
-  });
-
-  const [search, setSearch] = createStore<{
-    id: string;
-    start?: DateTime;
-    end?: DateTime;
-    done?: boolean;
-  }>({
-    id: createId(),
-  });
-  const activeSearch = LogSearchStore.get.watch(rep, () => [search.id]);
-
-  createEffect((prev?: string) => {
-    const search = activeSearch();
-    const next = untrack(() => invocations().at(-1)?.id);
-    if (!search) {
-      if (prev && next && prev === next) setSearch("done", true);
-      return next;
-    }
-
-    if (search) {
-      return next;
-    }
-
-    return prev;
-  });
+  const activeSearch = LogSearchStore.get.watch(rep, () => [id.search]);
 
   async function createSearch(end?: number) {
-    setSearch(
-      produce((draft) => {
-        draft.end = end ? DateTime.fromMillis(end) : undefined;
-      })
-    );
-
     rep().mutate.log_search({
-      id: search.id!,
+      id: id.search,
       profileID: await rep().profileID,
       stageID: stage.stage.id,
       logGroup: logGroup(),
-      timeStart:
-        search.end
-          ?.minus({ hour: 1 })
-          .toUTC()
-          .toSQL({ includeOffset: false })! || null,
-      timeEnd: search.end?.toUTC().toSQL({ includeOffset: false })! || null,
+      timeStart: null,
+      timeEnd: end
+        ? DateTime.fromMillis(end).toUTC().toSQL({ includeOffset: false })!
+        : null,
     });
   }
 
   const logGroupKey = createMemo(() => {
     const base = logGroup();
-    const searchID = search.id!;
+    const searchID = id.search;
     const addr = resource()?.addr!;
     if (mode() === "live") return addr;
     if (mode() === "search") return searchID;
@@ -379,29 +382,8 @@ export function Logs() {
   let invokeControl!: InvokeControl;
   let rangeControl!: DialogRangeControl;
 
-  function switchView(val: string) {
-    if (val === "custom") {
-      setTimeout(() => rangeControl.show(), 0);
-      return;
-    }
-    setQuery(
-      {
-        view: val,
-      },
-      {
-        replace: true,
-      }
-    );
-    if (val === "tail") return;
-    invocationsContext.clear(logGroupKey());
-    setSearch("id", createId());
-    if (val === "recent") {
-      createSearch();
-      return;
-    }
-  }
-
   const functions = useFunctionsContext();
+
   const title = createMemo(() => {
     const [ref] = functions().get(resource()?.id || "") || [];
     if (ref?.type === "NextjsSite" && ref.metadata.routes?.data) {
@@ -464,19 +446,27 @@ export function Logs() {
                     Tailing logs from local `sst dev`&hellip;
                   </Match>
                   <Match when={mode() === "search"}>
-                    <Show when={search.end} fallback="Viewing past logs">
+                    <Show when={query.end} fallback="Viewing past logs">
                       <span>
                         Viewing logs older than{" "}
-                        {search.end?.toLocaleString(DATETIME_LONG)}
+                        {DateTime.fromISO(query.end!).toLocaleString(
+                          DATETIME_LONG
+                        )}
                       </span>
                     </Show>
                   </Match>
                   <Match when={true}>
                     <Show
-                      when={pollerCache[poller()?.id!]}
+                      when={pollerCache[logGroup()]}
                       fallback="Starting tailer"
                     >
-                      Tailing logs since {pollerCache[poller()?.id!]}
+                      Tailing logs since{" "}
+                      {DateTime.fromMillis(
+                        Math.min(
+                          invocations().at(-1)?.start || Number.MAX_VALUE,
+                          pollerCache[logGroup()]
+                        )
+                      ).toLocaleString(DATETIME_LONG)}
                     </Show>
                     &hellip;
                   </Match>
@@ -488,19 +478,21 @@ export function Logs() {
                 <TextButton
                   onClick={() => {
                     invocationsContext.clear(logGroupKey());
-                    setPollerCache(
-                      poller()?.id!,
-                      DateTime.now().toLocaleString(DATETIME_LONG)
-                    );
+                    setPollerCache(poller()?.id!, Date.now());
                   }}
                 >
                   Clear
                 </TextButton>
               </Show>
-              <Show when={mode() === "search" && !activeSearch()}>
+              <Show when={mode() === "search" && activeSearch()?.outcome}>
                 <IconButton
                   title="Reload logs"
-                  onClick={() => switchView(query.view)}
+                  onClick={() => {
+                    invocationsContext.clear(logGroupKey());
+                    createSearch(
+                      query.end ? new Date(query.end).getTime() : undefined
+                    );
+                  }}
                 >
                   <IconArrowPathRoundedSquare
                     display="block"
@@ -511,7 +503,21 @@ export function Logs() {
               </Show>
               <Show when={mode() !== "live"}>
                 <Dropdown size="sm" label="View">
-                  <Dropdown.RadioGroup value={query.view} onChange={switchView}>
+                  <Dropdown.RadioGroup
+                    value={query.view}
+                    onChange={(val) => {
+                      if (val === "custom") return;
+                      setQuery(
+                        {
+                          view: val,
+                          end: undefined,
+                        },
+                        {
+                          replace: true,
+                        }
+                      );
+                    }}
+                  >
                     <Dropdown.RadioItem closeOnSelect value="tail">
                       <Dropdown.RadioItemLabel>Live</Dropdown.RadioItemLabel>
                       <Dropdown.ItemIndicator>
@@ -524,7 +530,14 @@ export function Logs() {
                         <IconCheck width={14} height={14} />
                       </Dropdown.ItemIndicator>
                     </Dropdown.RadioItem>
-                    <Dropdown.RadioItem closeOnSelect value="custom">
+                    <Dropdown.RadioItem
+                      onSelect={() => {
+                        setTimeout(() => rangeControl.show(), 0);
+                        return;
+                      }}
+                      closeOnSelect
+                      value="custom"
+                    >
                       Jump to&hellip;
                     </Dropdown.RadioItem>
                   </Dropdown.RadioGroup>
@@ -541,9 +554,7 @@ export function Logs() {
             }
           >
             <Invoke
-              onInvoke={() => {
-                if (mode() === "search") switchView("tail");
-              }}
+              onInvoke={() => {}}
               control={(c) => (invokeControl = c)}
               resource={resource()!}
             />
@@ -633,155 +644,13 @@ export function Logs() {
       </Stack>
       <DialogRange
         onSelect={(end) => {
-          invocationsContext.clear(logGroupKey());
-          setSearch("id", createId());
-          createSearch(end.getTime());
+          setQuery({
+            view: "custom",
+            end: end.toISOString(),
+          });
         }}
         control={(control) => (rangeControl = control)}
       />
     </>
   );
 }
-
-function Context(props: {
-  tag?: string;
-  type?: Resource.Info["type"];
-  extra?: string;
-}) {
-  const icon = createMemo(() => props.type && ResourceIcon[props.type]);
-  return (
-    <Row vertical="center" space="3">
-      <Show when={props.tag}>
-        <Tag style="outline">{props.tag}</Tag>
-      </Show>
-      <Row vertical="center" space="2">
-        <Show when={icon()}>
-          {icon()!({
-            width: 13,
-            height: 13,
-          })}
-          <Text size="sm" color="secondary" on="base">
-            {props.type}
-          </Text>
-        </Show>
-      </Row>
-      <Show when={props.extra}>
-        <Text size="sm" color="secondary" on="base">
-          {props.extra!}
-        </Text>
-      </Show>
-    </Row>
-  );
-}
-
-function LogLevel(props: { level?: string }) {
-  props = mergeProps({ level: "info" }, props);
-  return (
-    <Tag
-      size="small"
-      style="solid"
-      level={props.level === "error" ? "danger" : "info"}
-    >
-      {props.level}
-    </Tag>
-  );
-}
-
-const shortDateOptions: Intl.DateTimeFormatOptions = {
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  hour12: true,
-  minute: "numeric",
-  second: "numeric",
-  timeZoneName: "short",
-};
-const longDateOptions: Intl.DateTimeFormatOptions = {
-  ...shortDateOptions,
-  timeZone: "UTC",
-  year: "numeric",
-};
-
-/*
-function context() {
-  const functions = useFunctionsContext();
-  const context = createMemo(() => {
-    const parent = functions().get(resource()?.id || "")?.[0];
-    if (!parent) return;
-
-    switch (parent.type) {
-      case "EventBus":
-        return <Context type="EventBus" tag="Subscription" />;
-      case "Api": {
-        const route = parent.metadata.routes.find(
-          (r) => r.fn?.node === resource()?.addr
-        );
-        if (route) {
-          const [method, path] = route.route.split(" ");
-          return <Context type="Api" tag={method} extra={path} />;
-        }
-        break;
-      }
-      case "ApiGatewayV1Api": {
-        const route = parent.metadata.routes.find(
-          (r) => r.fn?.node === resource()?.addr
-        );
-        if (route) {
-          const [method, path] = route.route.split(" ");
-          return <Context type="Api" tag={method} extra={path} />;
-        }
-        break;
-      }
-      case "WebSocketApi": {
-        const route = parent.metadata.routes.find(
-          (r) => r.fn?.node === resource()?.addr
-        );
-        if (route) {
-          const [method, path] = route.route.split(" ");
-          return <Context type="Api" tag={method} extra={path} />;
-        }
-        break;
-      }
-      case "Topic": {
-        return <Context type="Topic" tag="Subscriber" />;
-      }
-      case "Bucket": {
-        return <Context type="Bucket" tag="Notification" />;
-      }
-      case "KinesisStream": {
-        return <Context type="KinesisStream" tag="Consumer" />;
-      }
-      case "AppSync": {
-        return <Context type="AppSync" tag="Source" />;
-      }
-      case "Table": {
-        return <Context type="Table" tag="Consumer" />;
-      }
-      case "Cognito": {
-        return <Context type="Cognito" tag="Trigger" />;
-      }
-      case "Cron": {
-        return <Context type="Cron" tag="Job" />;
-      }
-      case "Queue": {
-        return <Context type="Queue" tag="Consumer" />;
-      }
-      case "NextjsSite": {
-        return <Context type="NextjsSite" tag="Server" />;
-      }
-      case "SvelteKitSite": {
-        return <Context type="SvelteKitSite" tag="Server" />;
-      }
-      case "RemixSite": {
-        return <Context type="RemixSite" tag="Server" />;
-      }
-      case "AstroSite": {
-        return <Context type="AstroSite" tag="Server" />;
-      }
-      case "SolidStartSite": {
-        return <Context type="SolidStartSite" tag="Server" />;
-      }
-    }
-  });
-}
-*/
