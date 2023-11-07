@@ -124,7 +124,8 @@ type DummyData =
   | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
   | (Omit<Billing.Stripe.Info, "workspaceID"> & { _type: "stripe" })
   | (Omit<Issue.Alert.Info, "workspaceID"> & { _type: "issueAlert" })
-  | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" });
+  | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" })
+  | (Omit<Invocation, "workspaceID"> & { _type: "invocation" });
 
 const USER_ID = "me@example.com";
 const USER_ID_ISSUE_ALERT = "alert-me@example.com";

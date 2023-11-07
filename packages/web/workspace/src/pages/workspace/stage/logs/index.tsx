@@ -1,4 +1,3 @@
-import { LogPollerStore } from "$/data/log-poller";
 import { useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
@@ -38,7 +37,7 @@ import {
   useResourcesContext,
   useStageContext,
 } from "../context";
-import { Resource } from "@console/core/app/resource";
+import type { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../../command-bar";
 import { DATETIME_LONG, parseTime } from "$/common/format";
 import { createStore, unwrap } from "solid-js/store";
@@ -50,7 +49,9 @@ import { InvocationRow } from "$/common/invocation";
 import { useInvocations } from "$/providers/invocation";
 import { DateTime } from "luxon";
 import { useWorkspace } from "../../context";
-import { clearLogStore } from "$/data/log";
+import { useDummy } from "$/providers/dummy";
+import { createScan2 } from "$/data/store";
+import type { Invocation } from "@console/core/log";
 
 const LogSwitchButton = styled("button", {
   base: {
@@ -223,10 +224,12 @@ export function Logs() {
       {
         title: "Live logs",
         category: "logs",
+        disabled: query.view === "tail",
         run: (bar) => {
           setQuery(
             {
               view: "tail",
+              end: undefined,
             },
             { replace: true }
           );
@@ -237,10 +240,12 @@ export function Logs() {
       {
         title: "Past logs",
         category: "logs",
+        disabled: query.view === "recent",
         run: (bar) => {
           setQuery(
             {
               view: "recent",
+              end: undefined,
             },
             { replace: true }
           );
@@ -252,12 +257,7 @@ export function Logs() {
         title: "Jump to...",
         category: "logs",
         run: (bar) => {
-          setQuery(
-            {
-              view: "custom",
-            },
-            { replace: true }
-          );
+          rangeControl.show();
           bar.hide();
         },
         icon: IconCalendar,
@@ -359,7 +359,13 @@ export function Logs() {
     return base + "-tail";
   });
 
+  const dummy = useDummy();
+  const dummyInvocations = createScan2<Invocation>(() => "/invocation", rep);
+
   const invocations = createMemo(() => {
+    if (import.meta.env.DEV) {
+      if (dummy()) return dummyInvocations();
+    }
     const result = invocationsContext.forSource(logGroupKey()) || [];
     if (mode() === "tail" || mode() === "live") return result.slice().reverse();
     return result;
