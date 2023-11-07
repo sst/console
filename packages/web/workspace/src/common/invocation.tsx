@@ -299,10 +299,7 @@ export function InvocationRow(props: {
     <Root expanded={expanded()} level={level === "info" ? "info" : "danger"}>
       <Summary
         onClick={() => {
-          batch(() => {
-            if (!expanded() && props.invocation.errors.length) setTab("error");
-            setExpanded((r) => !r);
-          });
+          setExpanded((r) => !r);
         }}
       >
         <Row flex={false} space="2" vertical="center">
