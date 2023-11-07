@@ -30,7 +30,7 @@ const Root = styled("div", {
     backgroundColor: theme.color.background.navbar,
     borderBottom: `1px solid ${theme.color.divider.base}`,
     padding: `0 ${theme.space[4]}`,
-    height: 68,
+    height: theme.headerHeight.root,
   },
 });
 
@@ -106,11 +106,11 @@ const JumpToButtonCopy = styled("span", {
 
 export const PageHeader = styled("div", {
   base: {
-    height: 56,
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
     padding: `0 ${theme.space[4]}`,
+    justifyContent: "space-between",
+    height: theme.headerHeight.stage,
     borderBottom: `1px solid ${theme.color.divider.base}`,
   },
 });

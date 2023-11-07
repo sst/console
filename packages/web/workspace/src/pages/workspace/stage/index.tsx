@@ -9,7 +9,7 @@ import {
 } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
-import { Match, Show, Switch, createMemo } from "solid-js";
+import { JSX, Match, Show, Switch, createMemo } from "solid-js";
 import { useCommandBar } from "$/pages/workspace/command-bar";
 import {
   IssuesProvider,
@@ -28,8 +28,8 @@ import { Resources } from "./resources";
 import { IconApp, IconStage, IconSubRight } from "$/ui/icons/custom";
 import {
   Header,
-  HeaderProvider,
   PageHeader,
+  HeaderProvider,
   useHeaderContext,
 } from "../header";
 import { Fullscreen, Row, Stack, TabTitle, theme, utility, Text } from "$/ui";
@@ -75,9 +75,10 @@ export function Stage() {
   );
 }
 
-const Warning = styled("div", {
+const WarningRoot = styled("div", {
   base: {
     ...utility.stack(8),
+    marginTop: "-7vh",
     alignItems: "center",
     width: 400,
   },
@@ -108,6 +109,26 @@ const WarningDescription = styled("span", {
     color: theme.color.text.secondary.base,
   },
 });
+
+interface WarningProps {
+  title: JSX.Element;
+  description: JSX.Element;
+}
+export function Warning(props: WarningProps) {
+  return (
+    <WarningRoot>
+      <Stack horizontal="center" space="5">
+        <WarningIcon>
+          <IconExclamationTriangle />
+        </WarningIcon>
+        <Stack horizontal="center" space="2">
+          <WarningTitle>{props.title}</WarningTitle>
+          <WarningDescription>{props.description}</WarningDescription>
+        </Stack>
+      </Stack>
+    </WarningRoot>
+  );
+}
 
 export function Inner() {
   const bar = useCommandBar();
@@ -175,54 +196,24 @@ export function Inner() {
     <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
       <Switch>
-        <Match when={workspace().timeGated != null && !ctx.connected}>
-          <Fullscreen>
-            <Warning>
-              <Stack horizontal="center" space="5">
-                <WarningIcon>
-                  <IconExclamationTriangle />
-                </WarningIcon>
-                <Stack horizontal="center" space="1.5">
-                  <WarningTitle>Update billing details</WarningTitle>
-                  <WarningDescription>
-                    Your usage is above the free tier,{" "}
-                    <Link href={`/${workspace().slug}/settings#billing`}>
-                      update your billing details
-                    </Link>
-                    .<br />
-                    Note, you can continue using the Console for local stages.
-                    <br />
-                    Just make sure `sst dev` is running locally.
-                  </WarningDescription>
-                </Stack>
-              </Stack>
-            </Warning>
-          </Fullscreen>
-        </Match>
         <Match when={stacks().length === outdated().length}>
-          <Fullscreen>
-            <Warning>
-              <Stack horizontal="center" space="5">
-                <WarningIcon>
-                  <IconExclamationTriangle />
-                </WarningIcon>
-                <Stack horizontal="center" space="2">
-                  <WarningTitle>
-                    Unsupported SST version
-                    {minVersion() ? " v" + minVersion() : ""}
-                  </WarningTitle>
-                  <WarningDescription>
-                    To use the SST Console,{" "}
-                    <a
-                      target="_blank"
-                      href="https://github.com/sst/sst/releases"
-                    >
-                      upgrade to v{MINIMUM_VERSION}
-                    </a>
-                  </WarningDescription>
-                </Stack>
-              </Stack>
-            </Warning>
+          <Fullscreen inset="root">
+            <Warning
+              title={
+                <>
+                  Unsupported SST version
+                  {minVersion() ? " v" + minVersion() : ""}
+                </>
+              }
+              description={
+                <>
+                  To use the SST Console,{" "}
+                  <a target="_blank" href="https://github.com/sst/sst/releases">
+                    upgrade to v{MINIMUM_VERSION}
+                  </a>
+                </>
+              }
+            />
           </Fullscreen>
         </Match>
         <Match when={true}>

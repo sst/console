@@ -16,13 +16,14 @@ import {
   IconArrowPathRoundedSquare,
 } from "$/ui/icons";
 import { IconAws, IconArrowPathSpin } from "$/ui/icons/custom";
-import { Row, Stack } from "$/ui/layout";
+import { Row, Stack, Fullscreen } from "$/ui/layout";
 import { TextButton, IconButton } from "$/ui/button";
+import { Warning } from "../";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { globalKeyframes, style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
-import { useParams, useSearchParams } from "@solidjs/router";
+import { Link, useParams, useSearchParams } from "@solidjs/router";
 import {
   For,
   Match,
@@ -397,261 +398,289 @@ export function Logs() {
   });
 
   return (
-    <>
-      <Stack space="5" style={{ padding: `${theme.space[4]}` }}>
-        <Row space="2" horizontal="between" vertical="center">
-          <Stack space="2" vertical="center">
-            <Text size="lg" weight="medium">
-              Logs
-            </Text>
-            <LogSwitchButton onClick={() => bar.show("resource")}>
-              <span>{title()}</span>
-              <LogSwitchIcon>
-                <IconChevronUpDown />
-              </LogSwitchIcon>
-            </LogSwitchButton>
-          </Stack>
-          <Show when={mode() === "live"}>
-            <Tag level="tip" style="outline">
-              Local
-            </Tag>
-          </Show>
-        </Row>
-        <LogList>
-          <LogLoadingIndicator>
-            <Row space="2" vertical="center">
-              <LogLoadingIndicatorIcon
-                pulse={mode() !== "search"}
-                glow={
-                  (mode() === "live" && stage.connected) || mode() === "tail"
-                }
-              >
-                <Switch>
-                  <Match when={mode() === "live" && !stage.connected}>
-                    <IconArrowsUpDown />
-                  </Match>
-                  <Match when={mode() === "search"}>
-                    <IconArrowDown />
-                  </Match>
-                  <Match when={true}>
-                    <IconBoltSolid class={LogLoadingIndicatorIconSvg} />
-                  </Match>
-                </Switch>
-              </LogLoadingIndicatorIcon>
-              <Text leading="normal" color="dimmed" size="sm">
-                <Switch>
-                  <Match when={mode() === "live" && !stage.connected}>
-                    Trying to connect to local `sst dev`&hellip;
-                  </Match>
-                  <Match when={mode() === "live"}>
-                    Tailing logs from local `sst dev`&hellip;
-                  </Match>
-                  <Match when={mode() === "search"}>
-                    <Show when={query.end} fallback="Viewing past logs">
-                      <span>
-                        Viewing logs older than{" "}
-                        {DateTime.fromISO(query.end!).toLocaleString(
-                          DATETIME_LONG
-                        )}
-                      </span>
-                    </Show>
-                  </Match>
-                  <Match when={true}>
-                    <Show
-                      when={pollerCache[logGroup()]}
-                      fallback="Starting tailer"
-                    >
-                      Tailing logs since{" "}
-                      {DateTime.fromMillis(
-                        Math.min(
-                          invocations().at(-1)?.start || Number.MAX_VALUE,
-                          pollerCache[logGroup()]
-                        )
-                      ).toLocaleString(DATETIME_LONG)}
-                    </Show>
-                    &hellip;
-                  </Match>
-                </Switch>
-              </Text>
+    <Switch>
+      <Match when={workspace().timeGated != null && !stage.connected}>
+        <Fullscreen inset="stage">
+          <Warning
+            title="Update billing details"
+            description={
+              <>
+                Your usage is above the free tier,{" "}
+                <Link href={`/${workspace().slug}/settings#billing`}>
+                  update your billing details
+                </Link>
+                .<br />
+                Note, you can continue using the Console for local stages.
+                <br />
+                Just make sure `sst dev` is running locally.
+              </>
+            }
+          />
+        </Fullscreen>
+      </Match>
+      <Match when={true}>
+        <>
+          <Stack space="5" style={{ padding: `${theme.space[4]}` }}>
+            <Row space="2" horizontal="between" vertical="center">
+              <Stack space="2" vertical="center">
+                <Text size="lg" weight="medium">
+                  Logs
+                </Text>
+                <LogSwitchButton onClick={() => bar.show("resource")}>
+                  <span>{title()}</span>
+                  <LogSwitchIcon>
+                    <IconChevronUpDown />
+                  </LogSwitchIcon>
+                </LogSwitchButton>
+              </Stack>
+              <Show when={mode() === "live"}>
+                <Tag level="tip" style="outline">
+                  Local
+                </Tag>
+              </Show>
             </Row>
-            <Row space="3.5" vertical="center">
-              <Show when={mode() !== "search" && invocations().length > 0}>
-                <TextButton
-                  onClick={() => {
-                    invocationsContext.clear(logGroupKey());
-                    setPollerCache(poller()?.id!, Date.now());
-                  }}
-                >
-                  Clear
-                </TextButton>
-              </Show>
-              <Show when={mode() === "search" && activeSearch()?.outcome}>
-                <IconButton
-                  title="Reload logs"
-                  onClick={() => {
-                    invocationsContext.clear(logGroupKey());
-                    createSearch(
-                      query.end ? new Date(query.end).getTime() : undefined
-                    );
-                  }}
-                >
-                  <IconArrowPathRoundedSquare
-                    display="block"
-                    width={20}
-                    height={20}
-                  />
-                </IconButton>
-              </Show>
-              <Show when={mode() !== "live"}>
-                <Dropdown size="sm" label="View">
-                  <Dropdown.RadioGroup
-                    value={query.view}
-                    onChange={(val) => {
-                      if (val === "custom") return;
-                      setQuery(
-                        {
-                          view: val,
-                          end: undefined,
-                        },
-                        {
-                          replace: true,
-                        }
-                      );
-                    }}
+            <LogList>
+              <LogLoadingIndicator>
+                <Row space="2" vertical="center">
+                  <LogLoadingIndicatorIcon
+                    pulse={mode() !== "search"}
+                    glow={
+                      (mode() === "live" && stage.connected) ||
+                      mode() === "tail"
+                    }
                   >
-                    <Dropdown.RadioItem closeOnSelect value="tail">
-                      <Dropdown.RadioItemLabel>Live</Dropdown.RadioItemLabel>
-                      <Dropdown.ItemIndicator>
-                        <IconCheck width={14} height={14} />
-                      </Dropdown.ItemIndicator>
-                    </Dropdown.RadioItem>
-                    <Dropdown.RadioItem closeOnSelect value="recent">
-                      <Dropdown.RadioItemLabel>Past</Dropdown.RadioItemLabel>
-                      <Dropdown.ItemIndicator>
-                        <IconCheck width={14} height={14} />
-                      </Dropdown.ItemIndicator>
-                    </Dropdown.RadioItem>
-                    <Dropdown.RadioItem
-                      onSelect={() => {
-                        setTimeout(() => rangeControl.show(), 0);
-                        return;
-                      }}
-                      closeOnSelect
-                      value="custom"
-                    >
-                      Jump to&hellip;
-                    </Dropdown.RadioItem>
-                  </Dropdown.RadioGroup>
-                </Dropdown>
-              </Show>
-            </Row>
-          </LogLoadingIndicator>
-          <Show
-            when={
-              (mode() === "tail" ||
-                mode() === "live" ||
-                query.view === "recent") &&
-              resource()
-            }
-          >
-            <Invoke
-              onInvoke={() => {}}
-              control={(c) => (invokeControl = c)}
-              resource={resource()!}
-            />
-          </Show>
-          <Show
-            when={
-              activeSearch()?.outcome &&
-              mode() === "search" &&
-              invocations().length === 0
-            }
-          >
-            <LogEmpty>
-              <IconMagnifyingGlass
-                width={28}
-                height={28}
-                color={theme.color.icon.dimmed}
-              />
-              <Text center color="dimmed">
-                Could not find any logs
-              </Text>
-            </LogEmpty>
-          </Show>
-          <For each={invocations()}>
-            {(invocation) => (
-              <InvocationRow
-                onSavePayload={() => {
-                  invokeControl.savePayload(
-                    structuredClone(unwrap(invocation.input))
-                  );
-                }}
-                invocation={invocation}
-                local={mode() === "live"}
-                function={resource()!}
-              />
-            )}
-          </For>
-          <Show when={mode() === "search"}>
-            <Switch>
-              <Match when={activeSearch() && !activeSearch().outcome}>
-                <LogMoreIndicator>
-                  <LogMoreIndicatorIcon>
-                    <IconArrowPathSpin />
-                  </LogMoreIndicatorIcon>
+                    <Switch>
+                      <Match when={mode() === "live" && !stage.connected}>
+                        <IconArrowsUpDown />
+                      </Match>
+                      <Match when={mode() === "search"}>
+                        <IconArrowDown />
+                      </Match>
+                      <Match when={true}>
+                        <IconBoltSolid class={LogLoadingIndicatorIconSvg} />
+                      </Match>
+                    </Switch>
+                  </LogLoadingIndicatorIcon>
                   <Text leading="normal" color="dimmed" size="sm">
-                    <Show
-                      when={mode() === "search"}
-                      fallback={<>Loading&hellip;</>}
-                    >
-                      Scanning
-                      <Show when={activeSearch()?.timeStart}>
-                        {" "}
-                        to{" "}
-                        {parseTime(activeSearch()?.timeStart!)
-                          .toLocal()
-                          .toLocaleString(DATETIME_LONG)}
-                      </Show>
-                      &hellip;
-                    </Show>
+                    <Switch>
+                      <Match when={mode() === "live" && !stage.connected}>
+                        Trying to connect to local `sst dev`&hellip;
+                      </Match>
+                      <Match when={mode() === "live"}>
+                        Tailing logs from local `sst dev`&hellip;
+                      </Match>
+                      <Match when={mode() === "search"}>
+                        <Show when={query.end} fallback="Viewing past logs">
+                          <span>
+                            Viewing logs older than{" "}
+                            {DateTime.fromISO(query.end!).toLocaleString(
+                              DATETIME_LONG
+                            )}
+                          </span>
+                        </Show>
+                      </Match>
+                      <Match when={true}>
+                        <Show
+                          when={pollerCache[logGroup()]}
+                          fallback="Starting tailer"
+                        >
+                          Tailing logs since{" "}
+                          {DateTime.fromMillis(
+                            Math.min(
+                              invocations().at(-1)?.start || Number.MAX_VALUE,
+                              pollerCache[logGroup()]
+                            )
+                          ).toLocaleString(DATETIME_LONG)}
+                        </Show>
+                        &hellip;
+                      </Match>
+                    </Switch>
                   </Text>
-                </LogMoreIndicator>
-              </Match>
-              <Match when={mode() === "search" && invocations().length}>
-                <LogMoreIndicator>
-                  <LogMoreIndicatorIcon>
-                    <IconEllipsisVertical />
-                  </LogMoreIndicatorIcon>
-                  <Switch>
-                    <Match when={activeSearch()?.outcome === "completed"}>
-                      <TextButton>No more logs</TextButton>
-                    </Match>
-                    <Match when={activeSearch()?.outcome === "partial"}>
-                      <TextButton
-                        onClick={() => {
-                          const i = invocations();
-                          createSearch(i[i.length - 1]!.start);
+                </Row>
+                <Row space="3.5" vertical="center">
+                  <Show when={mode() !== "search" && invocations().length > 0}>
+                    <TextButton
+                      onClick={() => {
+                        invocationsContext.clear(logGroupKey());
+                        setPollerCache(poller()?.id!, Date.now());
+                      }}
+                    >
+                      Clear
+                    </TextButton>
+                  </Show>
+                  <Show when={mode() === "search" && activeSearch()?.outcome}>
+                    <IconButton
+                      title="Reload logs"
+                      onClick={() => {
+                        invocationsContext.clear(logGroupKey());
+                        createSearch(
+                          query.end ? new Date(query.end).getTime() : undefined
+                        );
+                      }}
+                    >
+                      <IconArrowPathRoundedSquare
+                        display="block"
+                        width={20}
+                        height={20}
+                      />
+                    </IconButton>
+                  </Show>
+                  <Show when={mode() !== "live"}>
+                    <Dropdown size="sm" label="View">
+                      <Dropdown.RadioGroup
+                        value={query.view}
+                        onChange={(val) => {
+                          if (val === "custom") return;
+                          setQuery(
+                            {
+                              view: val,
+                              end: undefined,
+                            },
+                            {
+                              replace: true,
+                            }
+                          );
                         }}
                       >
-                        Load more logs
-                      </TextButton>
-                    </Match>
-                  </Switch>
-                </LogMoreIndicator>
-              </Match>
-            </Switch>
-          </Show>
-        </LogList>
-      </Stack>
-      <DialogRange
-        onSelect={(end) => {
-          setQuery({
-            view: "custom",
-            end: end.toISOString(),
-          });
-        }}
-        control={(control) => (rangeControl = control)}
-      />
-    </>
+                        <Dropdown.RadioItem closeOnSelect value="tail">
+                          <Dropdown.RadioItemLabel>
+                            Live
+                          </Dropdown.RadioItemLabel>
+                          <Dropdown.ItemIndicator>
+                            <IconCheck width={14} height={14} />
+                          </Dropdown.ItemIndicator>
+                        </Dropdown.RadioItem>
+                        <Dropdown.RadioItem closeOnSelect value="recent">
+                          <Dropdown.RadioItemLabel>
+                            Past
+                          </Dropdown.RadioItemLabel>
+                          <Dropdown.ItemIndicator>
+                            <IconCheck width={14} height={14} />
+                          </Dropdown.ItemIndicator>
+                        </Dropdown.RadioItem>
+                        <Dropdown.RadioItem
+                          onSelect={() => {
+                            setTimeout(() => rangeControl.show(), 0);
+                            return;
+                          }}
+                          closeOnSelect
+                          value="custom"
+                        >
+                          Jump to&hellip;
+                        </Dropdown.RadioItem>
+                      </Dropdown.RadioGroup>
+                    </Dropdown>
+                  </Show>
+                </Row>
+              </LogLoadingIndicator>
+              <Show
+                when={
+                  (mode() === "tail" ||
+                    mode() === "live" ||
+                    query.view === "recent") &&
+                  resource()
+                }
+              >
+                <Invoke
+                  onInvoke={() => {}}
+                  control={(c) => (invokeControl = c)}
+                  resource={resource()!}
+                />
+              </Show>
+              <Show
+                when={
+                  activeSearch()?.outcome &&
+                  mode() === "search" &&
+                  invocations().length === 0
+                }
+              >
+                <LogEmpty>
+                  <IconMagnifyingGlass
+                    width={28}
+                    height={28}
+                    color={theme.color.icon.dimmed}
+                  />
+                  <Text center color="dimmed">
+                    Could not find any logs
+                  </Text>
+                </LogEmpty>
+              </Show>
+              <For each={invocations()}>
+                {(invocation) => (
+                  <InvocationRow
+                    onSavePayload={() => {
+                      invokeControl.savePayload(
+                        structuredClone(unwrap(invocation.input))
+                      );
+                    }}
+                    invocation={invocation}
+                    local={mode() === "live"}
+                    function={resource()!}
+                  />
+                )}
+              </For>
+              <Show when={mode() === "search"}>
+                <Switch>
+                  <Match when={activeSearch() && !activeSearch().outcome}>
+                    <LogMoreIndicator>
+                      <LogMoreIndicatorIcon>
+                        <IconArrowPathSpin />
+                      </LogMoreIndicatorIcon>
+                      <Text leading="normal" color="dimmed" size="sm">
+                        <Show
+                          when={mode() === "search"}
+                          fallback={<>Loading&hellip;</>}
+                        >
+                          Scanning
+                          <Show when={activeSearch()?.timeStart}>
+                            {" "}
+                            to{" "}
+                            {parseTime(activeSearch()?.timeStart!)
+                              .toLocal()
+                              .toLocaleString(DATETIME_LONG)}
+                          </Show>
+                          &hellip;
+                        </Show>
+                      </Text>
+                    </LogMoreIndicator>
+                  </Match>
+                  <Match when={mode() === "search" && invocations().length}>
+                    <LogMoreIndicator>
+                      <LogMoreIndicatorIcon>
+                        <IconEllipsisVertical />
+                      </LogMoreIndicatorIcon>
+                      <Switch>
+                        <Match when={activeSearch()?.outcome === "completed"}>
+                          <TextButton>No more logs</TextButton>
+                        </Match>
+                        <Match when={activeSearch()?.outcome === "partial"}>
+                          <TextButton
+                            onClick={() => {
+                              const i = invocations();
+                              createSearch(i[i.length - 1]!.start);
+                            }}
+                          >
+                            Load more logs
+                          </TextButton>
+                        </Match>
+                      </Switch>
+                    </LogMoreIndicator>
+                  </Match>
+                </Switch>
+              </Show>
+            </LogList>
+          </Stack>
+          <DialogRange
+            onSelect={(end) => {
+              setQuery({
+                view: "custom",
+                end: end.toISOString(),
+              });
+            }}
+            control={(control) => (rangeControl = control)}
+          />
+        </>
+      </Match>
+    </Switch>
   );
 }

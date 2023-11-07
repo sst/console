@@ -63,6 +63,10 @@ const constants = {
     md: "640px",
     lg: "800px",
   },
+  headerHeight: {
+    root: "68px",
+    stage: "56px",
+  },
 };
 
 const space = {

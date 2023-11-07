@@ -119,6 +119,17 @@ export const Fullscreen = styled("div", {
     alignItems: "center",
     justifyContent: "center",
   },
+  variants: {
+    inset: {
+      none: {},
+      root: {
+        top: theme.headerHeight.root,
+      },
+      stage: {
+        top: `calc(${theme.headerHeight.root} + ${theme.headerHeight.stage})`,
+      },
+    },
+  },
 });
 
 export const Hr = styled("hr", {
