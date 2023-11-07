@@ -335,22 +335,6 @@ export function Logs() {
 
   const rep = useReplicache();
 
-  const poller = LogPollerStore.list.watch(
-    rep,
-    () => [],
-    (items) => items.find((item) => item.logGroup === logGroup())
-  );
-
-  createEffect(() => {
-    if (!logGroup()) return;
-    if (poller()) return;
-    if (mode() !== "tail") return;
-    rep().mutate.log_poller_subscribe({
-      logGroup: logGroup(),
-      stageID: resources()?.at(0)?.stageID!,
-    });
-  });
-
   const activeSearch = LogSearchStore.get.watch(rep, () => [id.search]);
 
   async function createSearch(end?: number) {
@@ -502,7 +486,7 @@ export function Logs() {
                     <TextButton
                       onClick={() => {
                         invocationsContext.clear(logGroupKey());
-                        setPollerCache(poller()?.id!, Date.now());
+                        setPollerCache(logGroup(), Date.now());
                       }}
                     >
                       Clear
