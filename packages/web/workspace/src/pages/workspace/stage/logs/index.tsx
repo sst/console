@@ -50,6 +50,7 @@ import { ResourceIcon } from "$/common/resource-icon";
 import { InvocationRow } from "$/common/invocation";
 import { useInvocations } from "$/providers/invocation";
 import { DateTime } from "luxon";
+import { Invocation } from "@console/core/log";
 
 const LogSwitchIcon = styled("div", {
   base: {
@@ -313,10 +314,26 @@ export function Logs() {
     id: string;
     start?: DateTime;
     end?: DateTime;
+    done?: boolean;
   }>({
     id: createId(),
   });
   const activeSearch = LogSearchStore.get.watch(rep, () => [search.id]);
+
+  createEffect((prev?: string) => {
+    const search = activeSearch();
+    const next = untrack(() => invocations().at(-1)?.id);
+    if (!search) {
+      if (prev && next && prev === next) setSearch("done", true);
+      return next;
+    }
+
+    if (search) {
+      return next;
+    }
+
+    return prev;
+  });
 
   async function createSearch(end?: number) {
     setSearch(
@@ -534,7 +551,7 @@ export function Logs() {
           </Show>
           <Show
             when={
-              !activeSearch() &&
+              activeSearch()?.outcome &&
               mode() === "search" &&
               invocations().length === 0
             }
@@ -566,7 +583,7 @@ export function Logs() {
           </For>
           <Show when={mode() === "search"}>
             <Switch>
-              <Match when={activeSearch()}>
+              <Match when={activeSearch() && !activeSearch().outcome}>
                 <LogMoreIndicator>
                   <LogMoreIndicatorIcon>
                     <IconArrowPathSpin />
@@ -594,14 +611,21 @@ export function Logs() {
                   <LogMoreIndicatorIcon>
                     <IconEllipsisVertical />
                   </LogMoreIndicatorIcon>
-                  <TextButton
-                    onClick={() => {
-                      const i = invocations();
-                      createSearch(i[i.length - 1]!.start);
-                    }}
-                  >
-                    Load more logs
-                  </TextButton>
+                  <Switch>
+                    <Match when={activeSearch()?.outcome === "completed"}>
+                      <TextButton>No more logs</TextButton>
+                    </Match>
+                    <Match when={activeSearch()?.outcome === "partial"}>
+                      <TextButton
+                        onClick={() => {
+                          const i = invocations();
+                          createSearch(i[i.length - 1]!.start);
+                        }}
+                      >
+                        Load more logs
+                      </TextButton>
+                    </Match>
+                  </Switch>
                 </LogMoreIndicator>
               </Match>
             </Switch>
@@ -611,6 +635,7 @@ export function Logs() {
       <DialogRange
         onSelect={(end) => {
           invocationsContext.clear(logGroupKey());
+          setSearch("id", createId());
           createSearch(end.getTime());
         }}
         control={(control) => (rangeControl = control)}

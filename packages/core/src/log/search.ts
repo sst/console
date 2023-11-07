@@ -5,7 +5,8 @@ import { zod } from "../util/zod";
 import { log_search } from "./log.sql";
 import { assertActor, useWorkspace } from "../actor";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+import { sqliteView } from "drizzle-orm/sqlite-core";
 
 export * as Search from "./search";
 export const Info = createSelectSchema(log_search, {
@@ -57,6 +58,13 @@ export const search = zod(
           timeStart: input.timeStart,
           timeEnd: input.timeEnd,
         })
+        .onDuplicateKeyUpdate({
+          set: {
+            outcome: null,
+            timeStart: input.timeStart,
+            timeEnd: input.timeEnd,
+          },
+        })
         .execute();
       await createTransactionEffect(() =>
         Events.Created.publish({
@@ -89,16 +97,24 @@ export const setStart = zod(
     )
 );
 
-export const complete = zod(Info.shape.id, (input) =>
-  useTransaction((tx) =>
-    tx
-      .delete(log_search)
-      .where(
-        and(
-          eq(log_search.id, input),
-          eq(log_search.workspaceID, useWorkspace())
+export const complete = zod(
+  Info.pick({
+    id: true,
+    outcome: true,
+  }),
+  (input) =>
+    useTransaction((tx) =>
+      tx
+        .update(log_search)
+        .set({
+          outcome: input.outcome,
+        })
+        .where(
+          and(
+            eq(log_search.id, input.id),
+            eq(log_search.workspaceID, useWorkspace())
+          )
         )
-      )
-      .execute()
-  )
+        .execute()
+    )
 );

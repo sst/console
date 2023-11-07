@@ -27,136 +27,135 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
     const client = new CloudWatchLogsClient(config);
     console.log("scanning logs", search);
 
-    try {
-      await (async () => {
-        let iteration = 0;
+    const result = await (async () => {
+      let iteration = 0;
 
-        let end = search.timeEnd
-          ? DateTime.fromSQL(search.timeEnd, { zone: "utc" })
-          : DateTime.now();
-        let start = search.timeEnd
-          ? end.minus({ hours: 1 })
-          : await (async () => {
-              const response = await client.send(
-                new DescribeLogStreamsCommand({
-                  logGroupIdentifier: search.logGroup,
-                  orderBy: "LastEventTime",
-                  descending: true,
-                  limit: 1,
-                })
-              );
-              return DateTime.fromMillis(
-                response.logStreams?.[0]?.lastEventTimestamp! - 30 * 60 * 1000
-              ).startOf("hour");
-            })();
-
-        console.log("start", start.toLocaleString(DateTime.DATETIME_SHORT));
-
-        const processor = Log.createProcessor({
-          sourcemapKey:
-            search.workspaceID === "rjt3u9hhb2b0r8b2pxsbqqof"
-              ? undefined
-              : `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
-                search.logGroup.split("/").slice(3, 5).join("/"),
-          group: search.id,
-          config,
-        });
-
-        let flushed = 0;
-        while (true) {
-          await Log.Search.setStart({
-            id: search.id,
-            timeStart: start.toSQL({ includeOffset: false }),
-          });
-          await Replicache.poke(profileID);
-          console.log(
-            "scanning from",
-            start.toLocaleString(DateTime.DATETIME_SHORT),
-            "to",
-            end.toLocaleString(DateTime.DATETIME_SHORT)
-          );
-          const result = await client
-            .send(
-              new StartQueryCommand({
-                logGroupIdentifiers: [search.logGroup],
-                queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 10000`,
-                startTime: start.toMillis() / 1000,
-                endTime: end.toMillis() / 1000,
-              })
-            )
-            .catch(() => {});
-          if (!result) return;
-          console.log("created query", result.queryId);
-
-          while (true) {
+      let end = search.timeEnd
+        ? DateTime.fromSQL(search.timeEnd, { zone: "utc" })
+        : DateTime.now();
+      let start = search.timeEnd
+        ? end.minus({ hours: 1 })
+        : await (async () => {
             const response = await client.send(
-              new GetQueryResultsCommand({
-                queryId: result.queryId,
+              new DescribeLogStreamsCommand({
+                logGroupIdentifier: search.logGroup,
+                orderBy: "LastEventTime",
+                descending: true,
+                limit: 1,
               })
             );
+            return DateTime.fromMillis(
+              response.logStreams?.[0]?.lastEventTimestamp! - 30 * 60 * 1000
+            ).startOf("hour");
+          })();
 
-            if (response.status === "Complete") {
-              const results = response.results || [];
-              console.log("log insights results", results.length);
+      console.log("start", start.toLocaleString(DateTime.DATETIME_SHORT));
 
-              let index = 0;
+      const processor = Log.createProcessor({
+        sourcemapKey:
+          search.workspaceID === "rjt3u9hhb2b0r8b2pxsbqqof"
+            ? undefined
+            : `arn:aws:lambda:${config.region}:${config.awsAccountID}:function:` +
+              search.logGroup.split("/").slice(3, 5).join("/"),
+        group: search.id,
+        config,
+      });
 
-              async function flush() {
-                const data = processor.flush(-1);
-                console.log(
-                  "flushing invocations",
-                  data.length,
-                  "flushed so far",
-                  flushed
-                );
-                if (data.length) {
-                  flushed += data.length;
-                  const url = await Storage.putEphemeral(JSON.stringify(data), {
-                    ContentType: "application/json",
-                  });
-                  await Realtime.publish("invocation.url", url, profileID);
-                }
-              }
+      let flushed = 0;
+      while (true) {
+        await Log.Search.setStart({
+          id: search.id,
+          timeStart: start.toSQL({ includeOffset: false }),
+        });
+        await Replicache.poke(profileID);
+        console.log(
+          "scanning from",
+          start.toLocaleString(DateTime.DATETIME_SHORT),
+          "to",
+          end.toLocaleString(DateTime.DATETIME_SHORT)
+        );
+        const result = await client
+          .send(
+            new StartQueryCommand({
+              logGroupIdentifiers: [search.logGroup],
+              queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 10000`,
+              startTime: start.toMillis() / 1000,
+              endTime: end.toMillis() / 1000,
+            })
+          )
+          .catch((ex) => {});
+        if (!result) return true;
+        console.log("created query", result.queryId);
 
-              let now = Date.now();
-              for (const result of results.sort((a, b) =>
-                a[0]!.value!.localeCompare(b[0]!.value!)
-              )) {
-                await processor.process({
-                  id: index.toString(),
-                  timestamp: new Date(result[0]?.value! + " Z").getTime(),
-                  streamName: result[2]?.value!,
-                  line: result[1]?.value!,
+        while (true) {
+          const response = await client.send(
+            new GetQueryResultsCommand({
+              queryId: result.queryId,
+            })
+          );
+
+          if (response.status === "Complete") {
+            const results = response.results || [];
+            console.log("log insights results", results.length);
+
+            let index = 0;
+
+            async function flush() {
+              const data = processor.flush(-1);
+              console.log(
+                "flushing invocations",
+                data.length,
+                "flushed so far",
+                flushed
+              );
+              if (data.length) {
+                flushed += data.length;
+                const url = await Storage.putEphemeral(JSON.stringify(data), {
+                  ContentType: "application/json",
                 });
-                if (Date.now() - now > 10_000 && processor.ready) {
-                  console.log("taking too long, flushing");
-                  await flush();
-                  if (flushed >= 50) return;
-                  now = Date.now();
-                }
-                index++;
+                await Realtime.publish("invocation.url", url, profileID);
               }
-              await flush();
-              if (flushed >= 50) {
-                return;
-              }
-
-              break;
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            let now = Date.now();
+            for (const result of results.sort((a, b) =>
+              a[0]!.value!.localeCompare(b[0]!.value!)
+            )) {
+              await processor.process({
+                id: index.toString(),
+                timestamp: new Date(result[0]?.value! + " Z").getTime(),
+                streamName: result[2]?.value!,
+                line: result[1]?.value!,
+              });
+              if (Date.now() - now > 10_000 && processor.ready) {
+                console.log("taking too long, flushing");
+                await flush();
+                if (flushed >= 50) return false;
+                now = Date.now();
+              }
+              index++;
+            }
+            await flush();
+            if (flushed >= 50) {
+              return false;
+            }
+
+            break;
           }
 
-          iteration++;
-          end = start;
-          start = start.minus({ millisecond: delay(iteration) });
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
-      })();
-    } catch (ex) {
-      console.log("error", ex);
-    }
 
-    await Log.Search.complete(search.id);
+        iteration++;
+        end = start;
+        start = start.minus({ millisecond: delay(iteration) });
+      }
+    })();
+
+    await Log.Search.complete({
+      id: search.id,
+      outcome: result ? "completed" : "partial",
+    });
     await Replicache.poke(profileID);
   })
 );

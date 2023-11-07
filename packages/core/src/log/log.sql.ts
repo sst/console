@@ -3,6 +3,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  mysqlEnum,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -42,6 +43,7 @@ export const log_search = mysqlTable(
     timeEnd: timestamp("time_end", {
       mode: "string",
     }),
+    outcome: mysqlEnum("outcome", ["completed", "partial"]),
   },
   (table) => ({
     primary: primaryKey(table.id, table.workspaceID),
