@@ -318,6 +318,7 @@ export function Logs() {
           body: JSON.stringify({
             stageID: stage.stage.id,
             logGroup: logGroup(),
+            profileID: await rep().profileID,
           }),
           headers: {
             "x-sst-workspace": workspace().id,

@@ -13,6 +13,7 @@ import { Realtime } from "@console/core/realtime";
 
 const Body = z.object({
   stageID: z.string(),
+  profileID: z.string(),
   logGroup: z.string(),
 });
 
@@ -123,7 +124,7 @@ export const handler = ApiHandler(
       const url = await Storage.putEphemeral(JSON.stringify(data), {
         ContentType: "application/json",
       });
-      await Realtime.publish("invocation.url", url);
+      await Realtime.publish("invocation.url", url, body.profileID);
     }
 
     return {
