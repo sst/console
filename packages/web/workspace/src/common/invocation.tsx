@@ -2,6 +2,7 @@ import { ErrorList, ErrorItem } from "$/pages/workspace/stage/logs/error";
 import { Row, TabTitle, Tag, TextButton, theme, utility } from "$/ui";
 import { IconBookmark, IconArrowPath } from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
+import { inputFocusStyles } from "$/ui/form";
 import {
   For,
   Match,
@@ -38,7 +39,12 @@ const longDateOptions: Intl.DateTimeFormatOptions = {
 
 const Root = styled("div", {
   base: {
-    borderTop: `1px solid ${theme.color.divider.base}`,
+    borderStyle: "solid",
+    borderWidth: "0 1px 1px 1px",
+    borderColor: theme.color.divider.base,
+    ":last-child": {
+      borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+    },
   },
   variants: {
     expanded: {
@@ -48,6 +54,12 @@ const Root = styled("div", {
     level: {
       info: {},
       danger: {},
+    },
+    focus: {
+      true: {
+        ...inputFocusStyles,
+      },
+      false: {},
     },
   },
   defaultVariants: {
@@ -268,6 +280,7 @@ export function InvocationRow(props: {
   function: Resource.InfoByType<"Function">;
   local: boolean;
   mixed?: boolean;
+  focus?: boolean;
 }) {
   const [expanded, setExpanded] = createSignal(false);
   const [tab, setTab] = createSignal<
@@ -296,7 +309,11 @@ export function InvocationRow(props: {
     : "info";
 
   return (
-    <Root expanded={expanded()} level={level === "info" ? "info" : "danger"}>
+    <Root
+      focus={props.focus}
+      expanded={expanded()}
+      level={level === "info" ? "info" : "danger"}
+    >
       <Summary
         onClick={() => {
           setExpanded((r) => !r);

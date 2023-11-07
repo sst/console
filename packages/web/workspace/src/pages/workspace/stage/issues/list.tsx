@@ -1,6 +1,7 @@
 import { styled } from "@macaron-css/solid";
 import { Row, Stack } from "$/ui/layout";
 import { IconCheck, IconNoSymbol, IconExclamationTriangle } from "$/ui/icons";
+import { inputFocusStyles } from "$/ui/form";
 import { IconCaretRight, IconSubRight } from "$/ui/icons/custom";
 import {
   utility,
@@ -172,21 +173,16 @@ const ButtonIcon = styled("span", {
   },
 });
 
-const IssuesList = styled("div", {
-  base: {
-    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
-    borderStyle: "solid",
-    borderWidth: "0 1px 1px 1px",
-    borderColor: theme.color.divider.base,
-  },
-});
-
 const EmptyIssuesSign = styled("div", {
   base: {
     ...utility.stack(0),
     alignItems: "center",
     justifyContent: "center",
     padding: `${theme.space[32]} ${theme.space[4]}`,
+    borderStyle: "solid",
+    borderWidth: "0 1px 1px 1px",
+    borderColor: theme.color.divider.base,
+    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
   },
 });
 
@@ -579,7 +575,7 @@ export function List() {
                 </Text>
               </IssuesHeaderCol>
             </IssuesHeader>
-            <IssuesList>
+            <div>
               <Show
                 when={filtered().length !== 0}
                 fallback={
@@ -621,7 +617,7 @@ export function List() {
                   }}
                 </For>
               </Show>
-            </IssuesList>
+            </div>
           </form>
         </Stack>
       </Content>
@@ -633,11 +629,20 @@ const IssueRoot = styled("label", {
   base: {
     ...utility.row(4),
     padding: theme.space[4],
-    //overflow: "hidden",
-    borderTop: `1px solid ${theme.color.divider.base}`,
     alignItems: "center",
-    ":first-child": {
-      borderTop: 0,
+    borderStyle: "solid",
+    borderWidth: "0 1px 1px 1px",
+    borderColor: theme.color.divider.base,
+    ":last-child": {
+      borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+    },
+  },
+  variants: {
+    focus: {
+      true: {
+        ...inputFocusStyles,
+      },
+      false: {},
     },
   },
 });
@@ -679,6 +684,7 @@ type IssueProps = {
   handler: string;
   unread: boolean;
   issue: Issue.Info;
+  focus?: boolean;
 };
 
 function IssueRow(props: IssueProps) {
@@ -710,7 +716,7 @@ function IssueRow(props: IssueProps) {
   });
 
   return (
-    <IssueRoot>
+    <IssueRoot focus={props.focus}>
       <IssueCol>
         <IssueCheckbox name="issue" value={props.issue.id} type="checkbox" />
       </IssueCol>

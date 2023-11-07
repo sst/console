@@ -63,8 +63,8 @@ const LogSwitchIcon = styled("div", {
 
 export const LogList = styled("div", {
   base: {
-    border: `1px solid ${theme.color.divider.base}`,
-    borderRadius: theme.borderRadius,
+    //border: `1px solid ${theme.color.divider.base}`,
+    //borderRadius: theme.borderRadius,
   },
 });
 
@@ -75,6 +75,10 @@ export const LogLoadingIndicator = styled("div", {
     alignItems: "center",
     justifyContent: "space-between",
     padding: `0 ${theme.space[3]}`,
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderColor: theme.color.divider.base,
+    borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
   },
 });
 
@@ -134,7 +138,10 @@ const LogEmpty = styled("div", {
     height: 240,
     alignItems: "center",
     justifyContent: "center",
-    borderTop: `1px solid ${theme.color.divider.base}`,
+    borderStyle: "solid",
+    borderWidth: "0 1px 1px 1px",
+    borderColor: theme.color.divider.base,
+    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
   },
 });
 
@@ -143,7 +150,10 @@ const LogMoreIndicator = styled("div", {
     ...utility.row(2),
     alignItems: "center",
     padding: `${theme.space[3]} ${theme.space[3]}`,
-    borderTop: `1px solid ${theme.color.divider.base}`,
+    borderStyle: "solid",
+    borderWidth: "0 1px 1px 1px",
+    borderColor: theme.color.divider.base,
+    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
   },
 });
 

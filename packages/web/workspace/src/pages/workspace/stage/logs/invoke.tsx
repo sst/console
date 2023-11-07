@@ -36,10 +36,12 @@ import { createScan2 } from "$/data/store";
 const InvokeRoot = styled("div", {
   base: {
     ...utility.row(0),
-    borderTop: `1px solid ${theme.color.divider.base}`,
     justifyContent: "space-between",
     paddingLeft: theme.space[3],
     alignItems: "center",
+    borderStyle: "solid",
+    borderWidth: "0 1px 1px 1px",
+    borderColor: theme.color.divider.base,
     ":focus-within": {},
   },
   variants: {
