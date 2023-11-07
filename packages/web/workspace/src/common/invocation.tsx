@@ -89,7 +89,7 @@ const Summary = styled("div", {
   },
 });
 
-const CaretIcon = styled("div", {
+const CaretIcon = styled("button", {
   base: {
     width: 20,
     height: 20,

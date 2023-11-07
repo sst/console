@@ -1,6 +1,7 @@
 import { Row, Stack, AvatarInitialsIcon, Text, theme } from "$/ui";
 import { IconChevronUpDown, IconMagnifyingGlass } from "$/ui/icons";
 import { utility } from "$/ui/utility";
+import { TextButton } from "$/ui/button";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
 import { useWorkspace } from "./context";
@@ -39,31 +40,7 @@ const WorkspaceLogoLink = styled(Link, {
   },
 });
 
-const User = styled("a", {
-  base: {
-    color: theme.color.text.secondary.base,
-    flexShrink: 0,
-    display: "flex",
-    alignItems: "center",
-    gap: theme.space[4],
-    opacity: "0.8",
-    transition: `opacity ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      opacity: "1",
-      textDecoration: "none",
-    },
-  },
-});
-
-const UserImage = styled("img", {
-  base: {
-    borderRadius: "50%",
-    backgroundColor: theme.color.background.surface,
-    width: 28,
-  },
-});
-
-const StageSwitcher = styled("div", {
+const StageSwitcher = styled("button", {
   base: {
     flexShrink: 0,
     display: "flex",
@@ -76,6 +53,14 @@ const StageSwitcher = styled("div", {
   },
 });
 
+const StageSwitcherCopyMain = styled("span", {
+  base: {
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.medium,
+    color: theme.color.text.secondary.base,
+  },
+});
+
 const SwitcherIcon = styled(IconChevronUpDown, {
   base: {
     color: theme.color.text.dimmed.base,
@@ -84,7 +69,7 @@ const SwitcherIcon = styled(IconChevronUpDown, {
   },
 });
 
-const JumpToButton = styled("div", {
+const JumpToButton = styled("button", {
   base: {
     ...utility.row(9),
     height: 36,
@@ -111,6 +96,14 @@ const JumpToButtonKeys = styled("div", {
   },
 });
 
+const JumpToButtonCopy = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontSize: theme.font.size.xs,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
 export const PageHeader = styled("div", {
   base: {
     height: 56,
@@ -122,15 +115,11 @@ export const PageHeader = styled("div", {
   },
 });
 
-const LogoutButton = styled("span", {
+const LogoutButton = styled(TextButton, {
   base: {
-    fontWeight: 500,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    fontFamily: theme.font.family.code,
+    ...utility.text.label,
     fontSize: theme.font.size.mono_sm,
     color: theme.color.text.dimmed.base,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
     ":hover": {
       color: theme.color.text.secondary.base,
     },
@@ -189,15 +178,11 @@ export function Header(props: { app?: string; stage?: string }) {
           <Show
             when={props.stage}
             fallback={
-              <Text size="lg" weight="medium" color="secondary">
-                {workspace().slug}
-              </Text>
+              <StageSwitcherCopyMain>{workspace().slug}</StageSwitcherCopyMain>
             }
           >
             <Stack space="1.5">
-              <Text size="lg" weight="medium" color="secondary">
-                {props.app}
-              </Text>
+              <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
               <Text color="dimmed">{props.stage}</Text>
             </Stack>
           </Show>
@@ -212,9 +197,7 @@ export function Header(props: { app?: string; stage?: string }) {
               height="13"
               color={theme.color.icon.dimmed}
             />
-            <Text leading="normal" size="xs" color="dimmed">
-              Jump to
-            </Text>
+            <JumpToButtonCopy>Jump to</JumpToButtonCopy>
           </Row>
           <Row space="1" vertical="center">
             <JumpToButtonKeys>

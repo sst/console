@@ -104,6 +104,17 @@ globalStyle("input", {
   cursor: "text",
 });
 
+globalStyle("button", {
+  padding: 0,
+  border: "none",
+  font: "inherit",
+  color: "inherit",
+  cursor: "pointer",
+  outline: "inherit",
+  background: "none",
+  textAlign: "inherit",
+});
+
 macaron$(() =>
   [
     "input::-webkit-datetime-edit-day-field:focus",

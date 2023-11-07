@@ -199,7 +199,7 @@ const SplitOptionsRoot = styled("div", {
   },
 });
 
-const SplitOptionsOptionRoot = styled("div", {
+const SplitOptionsOptionRoot = styled("button", {
   base: {
     display: "flex",
     alignItems: "center",
@@ -214,6 +214,7 @@ const SplitOptionsOptionRoot = styled("div", {
       true: {
         backgroundColor: theme.color.background.surface,
         color: theme.color.text.primary.surface,
+        cursor: "default",
       },
       false: {},
     },

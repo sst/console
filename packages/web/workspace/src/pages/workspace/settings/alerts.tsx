@@ -64,13 +64,31 @@ const AlertsPanel = styled("div", {
   },
 });
 
-const alertsPanelRow = style({
-  padding: `${theme.space[4]} ${theme.space[5]}`,
-  borderBottom: `1px solid ${theme.color.divider.base}`,
-  selectors: {
-    "&:last-child": {
-      borderBottom: "none",
+const AlertsPanelRow = styled("div", {
+  base: {
+    alignItems: "center",
+    padding: `${theme.space[4]} ${theme.space[5]}`,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
+    selectors: {
+      "&:last-child": {
+        borderBottom: "none",
+      },
     },
+  },
+  variants: {
+    new: {
+      true: {
+        ...utility.row(3),
+        justifyContent: "flex-start",
+      },
+      false: {
+        ...utility.row(8),
+        justifyContent: "space-between",
+      },
+    },
+  },
+  defaultVariants: {
+    new: false,
   },
 });
 
@@ -89,12 +107,33 @@ const alertsPanelRowEditing = style({
   },
 });
 
-const alertsPanelRowEditingField = style({
-  padding: `${theme.space[5]} 0`,
-  borderBottom: `1px solid ${theme.color.divider.surface}`,
-  selectors: {
-    "&:first-child": {
-      paddingTop: 0,
+const AlertsPanelEditingLabel = styled("span", {
+  base: {
+    ...utility.text.label,
+    color: theme.color.text.primary.surface,
+    fontSize: theme.font.size.mono_sm,
+  },
+});
+
+const AlertsPanelEditingDesc = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.surface,
+    fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
+  },
+});
+
+const AlertsPanelRowEditingField = styled("div", {
+  base: {
+    ...utility.row(4),
+    alignItems: "flex-start",
+    justifyContent: "center",
+    padding: `${theme.space[5]} 0`,
+    borderBottom: `1px solid ${theme.color.divider.surface}`,
+    selectors: {
+      "&:first-child": {
+        paddingTop: 0,
+      },
     },
   },
 });
@@ -118,10 +157,33 @@ const MatchingStagesPanelRoot = styled("div", {
   },
 });
 
+const MatchingStagesPanelStatus = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary.surface,
+  },
+});
+
+const MatchingStagesMoreButton = styled("button", {
+  base: {
+    textDecoration: "underline",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary.surface,
+  },
+});
+
 const MatchingStagesPanelExpanded = styled("div", {
   base: {
     paddingTop: theme.space[2],
     borderTop: `1px solid ${theme.color.divider.surface}`,
+  },
+});
+
+const MatchingStagesCopy = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
+    color: theme.color.text.secondary.surface,
   },
 });
 
@@ -130,6 +192,17 @@ const AlertsPanelRowIcon = styled("div", {
     marginTop: theme.space[1],
     opacity: theme.iconOpacity,
     color: theme.color.text.secondary.base,
+  },
+  variants: {
+    dimmed: {
+      true: {
+        color: theme.color.text.dimmed.base,
+      },
+      false: {},
+    },
+  },
+  defaultVariants: {
+    dimmed: false,
   },
 });
 
@@ -181,8 +254,12 @@ const AlertsPanelFromKeyword = styled("span", {
   },
 });
 
-const alertsPanelRowEditingFieldLabel = style({
-  width: 240,
+const AlertsPanelRowEditingFieldLabel = styled("div", {
+  base: {
+    ...utility.stack(1.5),
+    flex: "0 0 auto",
+    width: 240,
+  },
 });
 
 function joinWithAnd(arr: string[]): string {
@@ -321,10 +398,10 @@ export function Alerts() {
     return (
       <MatchingStagesPanelRoot>
         <div>
-          <Text size="sm" on="surface" color="secondary">
+          <MatchingStagesPanelStatus>
             <Switch>
               <Match when={matchingStages().length === 0}>
-                Does not match any stages
+                Does not match any stages.
               </Match>
               <Match when={matchingStages().length === 1}>
                 Matches 1 stage.{" "}
@@ -333,31 +410,25 @@ export function Alerts() {
                 Matches {matchingStages().length} stages.{" "}
               </Match>
             </Switch>
-          </Text>
+          </MatchingStagesPanelStatus>
           <Show when={matchingStages().length > 0}>
-            <Text
-              underline
-              size="sm"
-              on="surface"
-              color="secondary"
-              onClick={() => setExpanded(!expanded())}
-            >
+            <MatchingStagesMoreButton onClick={() => setExpanded(!expanded())}>
               <Show when={!expanded()} fallback="Hide">
                 <Switch>
                   <Match when={matchingStages().length === 1}>Show</Match>
                   <Match when={true}>Show all</Match>
                 </Switch>
               </Show>
-            </Text>
+            </MatchingStagesMoreButton>
           </Show>
         </div>
         <Show when={expanded()}>
           <MatchingStagesPanelExpanded>
-            <Text size="sm" color="secondary" on="surface" leading="loose">
+            <MatchingStagesCopy>
               {joinWithAnd(
                 matchingStages().map(({ app, stage }) => `${app}/${stage}`)
               )}
-            </Text>
+            </MatchingStagesCopy>
           </MatchingStagesPanelExpanded>
         </Show>
       </MatchingStagesPanelRoot>
@@ -374,20 +445,13 @@ export function Alerts() {
     >
       <Stack space="6">
         <Stack>
-          <Row
-            space="4"
-            vertical="start"
-            horizontal="start"
-            class={alertsPanelRowEditingField}
-          >
-            <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
-              <Text label on="surface" size="mono_sm">
-                Type
-              </Text>
-              <Text leading="loose" on="surface" color="dimmed" size="sm">
+          <AlertsPanelRowEditingField>
+            <AlertsPanelRowEditingFieldLabel>
+              <AlertsPanelEditingLabel>Type</AlertsPanelEditingLabel>
+              <AlertsPanelEditingDesc>
                 The channel to use for sending the alerts.
-              </Text>
-            </Stack>
+              </AlertsPanelEditingDesc>
+            </AlertsPanelRowEditingFieldLabel>
             <Row flex space="4" vertical="start">
               <Field name="destination.type">
                 {(field, props) => (
@@ -424,25 +488,14 @@ export function Alerts() {
               </Field>
               <Grower />
             </Row>
-          </Row>
-          <Row
-            space="4"
-            vertical="start"
-            horizontal="start"
-            class={alertsPanelRowEditingField}
-          >
-            <Stack
-              space="1.5"
-              flex={false}
-              class={alertsPanelRowEditingFieldLabel}
-            >
-              <Text label on="surface" size="mono_sm">
-                Source
-              </Text>
-              <Text leading="loose" on="surface" color="dimmed" size="sm">
+          </AlertsPanelRowEditingField>
+          <AlertsPanelRowEditingField>
+            <AlertsPanelRowEditingFieldLabel>
+              <AlertsPanelEditingLabel>Source</AlertsPanelEditingLabel>
+              <AlertsPanelEditingDesc>
                 The apps and stages that'll be sending the alerts.
-              </Text>
-            </Stack>
+              </AlertsPanelEditingDesc>
+            </AlertsPanelRowEditingFieldLabel>
             <AlertsPanelRowSource>
               <Row space="4" vertical="start">
                 <Field type="string[]" name="source.app">
@@ -531,21 +584,14 @@ export function Alerts() {
                 <MatchingStagesPanel />
               </Show>
             </AlertsPanelRowSource>
-          </Row>
-          <Row
-            space="4"
-            vertical="start"
-            horizontal="start"
-            class={alertsPanelRowEditingField}
-          >
-            <Stack class={alertsPanelRowEditingFieldLabel} space="1.5">
-              <Text label on="surface" size="mono_sm">
-                Destination
-              </Text>
-              <Text leading="loose" on="surface" color="dimmed" size="sm">
+          </AlertsPanelRowEditingField>
+          <AlertsPanelRowEditingField>
+            <AlertsPanelRowEditingFieldLabel>
+              <AlertsPanelEditingLabel>Destination</AlertsPanelEditingLabel>
+              <AlertsPanelEditingDesc>
                 Specify who will be getting these alerts.
-              </Text>
-            </Stack>
+              </AlertsPanelEditingDesc>
+            </AlertsPanelRowEditingFieldLabel>
             <Row flex space="4" vertical="start">
               <Switch>
                 <Match when={getValue(putForm, "destination.type") === "email"}>
@@ -631,7 +677,7 @@ export function Alerts() {
               </Switch>
               <Grower />
             </Row>
-          </Row>
+          </AlertsPanelRowEditingField>
         </Stack>
         <Row space="4" vertical="center" horizontal="end">
           <LinkButton onClick={() => setEditing("active", false)}>
@@ -732,12 +778,7 @@ export function Alerts() {
 
                 return (
                   <>
-                    <Row
-                      class={alertsPanelRow}
-                      space="8"
-                      vertical="center"
-                      horizontal="between"
-                    >
+                    <AlertsPanelRow>
                       <Row
                         space="3"
                         vertical="start"
@@ -903,7 +944,7 @@ export function Alerts() {
                           </Dropdown>
                         </Row>
                       </Show>
-                    </Row>
+                    </AlertsPanelRow>
                     <Show when={isEditingRow()}>
                       <AlertsEditor />
                     </Show>
@@ -914,14 +955,14 @@ export function Alerts() {
             <Show when={editing.active && !editing.id}>
               <>
                 <Show when={alerts().length !== 0}>
-                  <Row class={alertsPanelRow} space="3" vertical="center">
-                    <AlertsPanelRowIcon>
+                  <AlertsPanelRow new>
+                    <AlertsPanelRowIcon dimmed>
                       <IconEllipsisHorizontal width={18} height={18} />
                     </AlertsPanelRowIcon>
                     <Text size="sm" color="dimmed">
                       Add a new alert
                     </Text>
-                  </Row>
+                  </AlertsPanelRow>
                 </Show>
                 <AlertsEditor />
               </>
@@ -929,19 +970,19 @@ export function Alerts() {
             <Show
               when={alerts().length !== 0 && (!editing.active || editing.id)}
             >
-              <Row class={alertsPanelRow} space="3" vertical="center">
+              <AlertsPanelRow new>
                 <AlertsPanelRowIcon>
                   <IconEllipsisHorizontal width={18} height={18} />
                 </AlertsPanelRowIcon>
                 <LinkButton
-                  onClick={() => createAlert()}
-                  code={false}
                   size="sm"
+                  code={false}
                   weight="regular"
+                  onClick={() => createAlert()}
                 >
                   Add a new alert
                 </LinkButton>
-              </Row>
+              </AlertsPanelRow>
             </Show>
           </AlertsPanel>
         </Show>

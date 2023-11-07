@@ -54,13 +54,13 @@ const githubActive: CSSProperties = {
 
 export const Button = styled("button", {
   base: {
-    appearance: "none",
     borderRadius: 4,
     border: "1px solid",
     padding: `0 1rem`,
     fontWeight: 500,
     lineHeight: "normal",
     fontFamily: theme.font.family.code,
+    textAlign: "center",
     transitionDelay: "0s, 0s",
     transitionDuration: "0.2s, 0.2s",
     transitionProperty: "background-color, border",
@@ -256,8 +256,9 @@ export function ButtonGroup(props: ButtonGroupProps) {
   );
 }
 
-export const LinkButton = styled("span", {
+export const LinkButton = styled("a", {
   base: {
+    cursor: "pointer",
     color: theme.color.link.primary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     ":hover": {
@@ -268,6 +269,7 @@ export const LinkButton = styled("span", {
     disabled: {
       true: {
         opacity: 0.65,
+        pointerEvents: "none",
       },
       false: {},
     },
@@ -312,7 +314,7 @@ const textButtonSurfaceHover: CSSProperties = {
   color: theme.color.text.primary.surface,
 };
 
-const TextButtonRoot = styled("span", {
+const TextButtonRoot = styled("button", {
   base: {
     lineHeight: "normal",
     fontSize: theme.font.size.sm,
@@ -420,10 +422,6 @@ export function TextButton(props: TextButtonProps) {
 
 const IconButtonRoot = styled("button", {
   base: {
-    padding: 0,
-    border: "none",
-    appearance: "none",
-    background: "none",
     display: "inline-block",
     color: theme.color.icon.secondary,
     transition: `color ${theme.colorFadeDuration} ease-out`,
@@ -447,7 +445,7 @@ export function IconButton(props: ComponentProps<typeof IconButtonRoot>) {
   return <IconButtonRoot {...props}>{props.children}</IconButtonRoot>;
 }
 
-export const TabTitleRoot = styled("div", {
+export const TabTitleRoot = styled("button", {
   base: {},
   variants: {
     state: {
@@ -461,7 +459,7 @@ export const TabTitleRoot = styled("div", {
   defaultVariants: {},
 });
 
-export const TabTitleText = styled("div", {
+export const TabTitleText = styled("span", {
   base: {
     fontWeight: 500,
     letterSpacing: 0.5,

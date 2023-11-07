@@ -12,6 +12,7 @@ const Root = styled(KSwitch.Root, {
 });
 
 const control = style({
+  cursor: "pointer",
   display: "inline-flex",
   alignItems: "center",
   border: `1px solid ${theme.color.switch.base.border}`,

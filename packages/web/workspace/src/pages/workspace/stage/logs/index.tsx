@@ -52,21 +52,26 @@ import { useInvocations } from "$/providers/invocation";
 import { DateTime } from "luxon";
 import { Invocation } from "@console/core/log";
 
+const LogSwitchButton = styled("button", {
+  base: {
+    ...utility.row(1),
+    alignItems: "center",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.secondary.base,
+  },
+});
+
 const LogSwitchIcon = styled("div", {
   base: {
-    top: -1,
     width: 18,
     height: 18,
-    position: "relative",
-    color: theme.color.icon.secondary,
+    opacity: theme.iconOpacity,
   },
 });
 
 export const LogList = styled("div", {
-  base: {
-    //border: `1px solid ${theme.color.divider.base}`,
-    //borderRadius: theme.borderRadius,
-  },
+  base: {},
 });
 
 export const LogLoadingIndicator = styled("div", {
@@ -416,18 +421,12 @@ export function Logs() {
             <Text size="lg" weight="medium">
               Logs
             </Text>
-            <Row
-              space="1"
-              horizontal="center"
-              onClick={() => bar.show("resource")}
-            >
-              <Text code size="mono_base" color="secondary">
-                {title()}
-              </Text>
+            <LogSwitchButton onClick={() => bar.show("resource")}>
+              <span>{title()}</span>
               <LogSwitchIcon>
                 <IconChevronUpDown />
               </LogSwitchIcon>
-            </Row>
+            </LogSwitchButton>
           </Stack>
           <Show when={mode() === "live"}>
             <Tag level="tip" style="outline">

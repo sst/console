@@ -74,7 +74,7 @@ const WarningText = styled("div", {
   },
 });
 
-const WarningTextMore = styled("span", {
+const WarningMoreButton = styled("button", {
   base: {
     textDecoration: "underline",
   },
@@ -355,13 +355,13 @@ export function List() {
                 You hit a soft limit for Issues. You can re-enable it or contact
                 us to have the limit lifted.{" "}
               </Show>
-              <WarningTextMore
+              <WarningMoreButton
                 onClick={() => setWarningExpanded(!warningExpanded())}
               >
                 <Show when={!warningExpanded()} fallback="Hide details">
                   Show details
                 </Show>
-              </WarningTextMore>
+              </WarningMoreButton>
               .
             </WarningText>
           </Row>

@@ -187,10 +187,10 @@ export const ChildDetail = styled("div", {
     lineHeight: "normal",
   },
 });
+
 export const ChildDetailUnit = styled("span", {
   base: {
-    fontWeight: 500,
-    paddingLeft: 3,
+    padding: 3,
     fontSize: theme.font.size.xs,
   },
 });
@@ -201,12 +201,15 @@ export const ChildIcon = styled("div", {
     height: 16,
     width: 16,
     color: theme.color.icon.dimmed,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
   },
 });
 
-export const ChildIconButton = styled(ChildIcon, {
+export const ChildIconButton = styled("button", {
   base: {
+    flexShrink: 0,
+    height: 16,
+    width: 16,
+    color: theme.color.icon.dimmed,
     ":hover": {
       color: theme.color.icon.secondary,
     },
@@ -214,12 +217,33 @@ export const ChildIconButton = styled(ChildIcon, {
   variants: {
     copying: {
       true: {
+        cursor: "default",
         color: theme.color.accent,
         ":hover": {
           color: theme.color.accent,
         },
       },
     },
+  },
+});
+
+const OutputsValue = styled("span", {
+  base: {
+    ...utility.text.line,
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.dimmed.base,
+    lineHeight: "normal",
+  },
+});
+
+const OutputsKey = styled("span", {
+  base: {
+    ...utility.text.line,
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    lineHeight: "normal",
+    minWidth: "33%",
   },
 });
 
@@ -963,25 +987,9 @@ export function OutputsCard() {
                   }
                 >
                   <Child outputs>
-                    <Text
-                      line
-                      code
-                      size="mono_base"
-                      leading="normal"
-                      style={{ "min-width": "33%" }}
-                    >
-                      {output.OutputKey}
-                    </Text>
+                    <OutputsKey>{output.OutputKey}</OutputsKey>
                     <Row space="3" vertical="center">
-                      <Text
-                        code
-                        line
-                        size="mono_base"
-                        color="dimmed"
-                        leading="normal"
-                      >
-                        {output.OutputValue}
-                      </Text>
+                      <OutputsValue>{output.OutputValue}</OutputsValue>
                       <ChildIconButton
                         copying={copying()}
                         onClick={() => {
@@ -1100,15 +1108,7 @@ function FunctionChild(props: {
                 return (
                   <ChildDetail>
                     {formattedSize.value}
-                    <Text
-                      color="secondary"
-                      on="surface"
-                      size="xs"
-                      weight="medium"
-                      style={{ padding: "3px" }}
-                    >
-                      {formattedSize.unit}
-                    </Text>
+                    <ChildDetailUnit>{formattedSize.unit}</ChildDetailUnit>
                   </ChildDetail>
                 );
               }}

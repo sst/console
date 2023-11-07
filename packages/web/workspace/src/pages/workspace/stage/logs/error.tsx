@@ -32,7 +32,7 @@ const Frame = styled("div", {
   },
 });
 
-const FrameExpand = styled("div", {
+const FrameExpand = styled("button", {
   base: {
     flexShrink: 0,
     opacity: theme.iconOpacity,
