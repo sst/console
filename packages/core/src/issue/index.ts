@@ -33,6 +33,7 @@ import { Config } from "sst/node/config";
 import { Warning } from "../warning";
 import { useTransaction } from "../util/transaction";
 import { Log } from "../log";
+import { Alert } from "./alert";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = typeof issue.$inferSelect;
@@ -202,9 +203,10 @@ export const disconnectStage = zod(
           destinationName: uniqueIdentifier,
         })
       );
+      return true;
     } catch (ex: any) {
-      if (ex instanceof ResourceNotFoundException) return;
-      if (ex.name === "ThrottlingException") return;
+      if (ex instanceof ResourceNotFoundException) return false;
+      if (ex.name === "ThrottlingException") return false;
       throw ex;
     } finally {
       cw.destroy();
@@ -419,7 +421,9 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
 });
 
 export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
-  await disconnectStage(config);
+  const disconnected = await disconnectStage(config);
+  if (!disconnected) return;
+
   await db
     .delete(issueSubscriber)
     .where(
@@ -434,6 +438,11 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
     type: "issue_rate_limited",
     stageID: config.stageID,
     data: {},
+  });
+  await Alert.triggerRateLimit({
+    app: config.app,
+    stage: config.stage,
+    stageID: config.stageID,
   });
   return;
 });

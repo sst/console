@@ -22,11 +22,14 @@ import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
 import { z } from "zod";
 import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
+import { IssueRateLimitEmail } from "@console/mail/emails/templates/IssueRateLimitEmail";
 import { render } from "@jsx-email/render";
 import { user } from "../user/user.sql";
 import { KnownBlock } from "@slack/web-api";
 import { Warning } from "../warning";
 import { warning } from "../warning/warning.sql";
+import { App, Stage } from "../app";
+import { Workspace } from "../workspace";
 
 export * as Alert from "./alert";
 
@@ -60,6 +63,17 @@ export interface EmailDestination {
     users: "*" | string[];
   };
 }
+
+export const list = zod(z.void(), (input) =>
+  useTransaction((tx) =>
+    tx
+      .select()
+      .from(issueAlert)
+      .where(eq(issueAlert.workspaceID, useWorkspace()))
+      .execute()
+      .then((rows) => rows as Info[])
+  )
+);
 
 export const put = zod(
   Info.pick({ id: true, source: true, destination: true }).partial({
@@ -131,7 +145,7 @@ export const remove = zod(Info.shape.id, (input) =>
   )
 );
 
-export const trigger = zod(
+export const triggerIssue = zod(
   z.object({
     stageID: z.string().cuid2(),
     group: z.string(),
@@ -194,10 +208,7 @@ export const trigger = zod(
 
     for (const alert of alerts) {
       const { source, destination } = alert;
-      const match =
-        (source.app === "*" || source.app.includes(result.appName)) &&
-        (source.stage === "*" || source.stage.includes(result.stageName));
-      if (!match) continue;
+      if (!matchAlert(result.appName, result.stageName, source)) continue;
 
       if (destination.type === "slack") {
         const context = (function () {
@@ -339,3 +350,134 @@ export const trigger = zod(
         });
   }
 );
+
+export const triggerRateLimit = zod(
+  z.object({
+    app: z.string(),
+    stage: z.string(),
+    stageID: z.string().cuid2(),
+  }),
+  async (input) => {
+    const alerts = await list();
+
+    for (const alert of alerts) {
+      const { source, destination } = alert;
+      if (!matchAlert(input.app, input.stage, source)) continue;
+
+      const workspaceID = useWorkspace();
+      const workspace = await Workspace.fromID(workspaceID);
+      const message =
+        "You hit a soft limit for Issues. You can re-enable it or contact us to have the limit lifted.";
+
+      if (destination.type === "slack") {
+        const link = `https://console.sst.dev/${workspace!.slug}/${input.app}/${
+          input.stage
+        }/issues`;
+        const blocks: KnownBlock[] = [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: [
+                message,
+                `*<${link} | Enable Issues>*`,
+                "_" + [input.app, input.stage].join(" / ") + "_",
+              ].join("\n"),
+            },
+          },
+        ];
+
+        try {
+          console.log("sending slack");
+          await Slack.send({
+            channel: destination.properties.channel,
+            blocks,
+            text: message,
+          });
+          await Warning.remove({
+            stageID: input.stageID,
+            type: "issue_alert_slack",
+            target: alert.id,
+          });
+        } catch {
+          await Warning.create({
+            stageID: input.stageID,
+            type: "issue_alert_slack",
+            target: alert.id,
+            data: {
+              channel: destination.properties.channel,
+            },
+          });
+        }
+      }
+
+      if (destination.type === "email") {
+        const subject = "Issues temporarily disabled";
+        const html = render(
+          IssueRateLimitEmail({
+            stage: input.stage,
+            app: input.app,
+            subject,
+            message,
+            assetsUrl: `https://console.sst.dev/email`,
+            consoleUrl: "https://console.sst.dev",
+            workspace: workspace!.slug,
+          })
+        );
+        const users = await db
+          .select({
+            email: user.email,
+          })
+          .from(user)
+          .where(
+            and(
+              eq(user.workspaceID, useWorkspace()),
+              destination.properties.users === "*"
+                ? undefined
+                : inArray(user.id, destination.properties.users),
+              isNull(user.timeDeleted)
+            )
+          );
+        console.log(
+          "sending email to",
+          users.map((u) => u.email)
+        );
+        try {
+          await ses.send(
+            new SendEmailCommand({
+              Destination: {
+                ToAddresses: users.map((u) => u.email),
+              },
+              ReplyToAddresses: ["issue+alerts@" + process.env.EMAIL_DOMAIN],
+              FromEmailAddress: `${input.app}/${input.stage} via SST <issue+alerts@${process.env.EMAIL_DOMAIN}>`,
+              Content: {
+                Simple: {
+                  Body: {
+                    Html: {
+                      Data: html,
+                    },
+                    Text: {
+                      Data: message,
+                    },
+                  },
+                  Subject: {
+                    Data: subject,
+                  },
+                },
+              },
+            })
+          );
+        } catch (ex) {
+          console.error(ex);
+        }
+      }
+    }
+  }
+);
+
+function matchAlert(appName: string, stageName: string, source: Source) {
+  return (
+    (source.app === "*" || source.app.includes(appName)) &&
+    (source.stage === "*" || source.stage.includes(stageName))
+  );
+}
