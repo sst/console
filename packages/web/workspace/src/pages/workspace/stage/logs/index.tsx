@@ -30,6 +30,7 @@ import {
   Switch,
   createEffect,
   createMemo,
+  createSignal,
   onMount,
 } from "solid-js";
 import {
@@ -53,6 +54,7 @@ import { useDummy } from "$/providers/dummy";
 import { createScan, createScan2 } from "$/data/store";
 import type { Invocation } from "@console/core/log";
 import { sortBy } from "remeda";
+import { createEventListener } from "@solid-primitives/event-listener";
 
 const LogSwitchButton = styled("button", {
   base: {
@@ -406,6 +408,62 @@ export function Logs() {
     return resource()?.metadata.handler;
   });
 
+  function moveIndex(offset: -1 | 1) {
+    const all = document.querySelectorAll<HTMLElement>(
+      `[data-element="invocation"]`
+    );
+    if (all.length === 0) return;
+    console.log(all);
+    const f = document.querySelector<HTMLElement>(`[data-focus]`);
+    if (!f) {
+      if (offset === 1) all.item(0)?.setAttribute("data-focus", "true");
+      if (offset === -1) all.item(-1)?.setAttribute("data-focus", "true");
+      return;
+    }
+
+    const next =
+      offset === -1 ? f?.previousElementSibling : f?.nextElementSibling;
+    if (!next) return;
+    f.removeAttribute("data-focus");
+    next.setAttribute("data-focus", "true");
+    if (!next.previousElementSibling) {
+      next.scrollIntoView({
+        block: "end",
+      });
+      return;
+    }
+    next.scrollIntoView({
+      block: "nearest",
+    });
+  }
+  createEventListener(window, "keypress", (e) => {
+    console.log(document.activeElement?.tagName);
+    if (document.activeElement?.tagName === "TEXTAREA") return;
+    if (e.key === "j") moveIndex(1);
+    if (e.key === "k") moveIndex(-1);
+    if (e.key === "Enter") {
+      document.querySelector<HTMLElement>("[data-focus] > *")?.click();
+    }
+  });
+
+  createEventListener(window, "keydown", (e) => {
+    if (e.key === " ") {
+      e.preventDefault();
+      const el = document.querySelector<HTMLElement>("[data-focus]");
+      if (el?.dataset.expanded) return;
+      el?.firstChild.click();
+    }
+  });
+
+  createEventListener(window, "keyup", (e) => {
+    if (e.key === " ") {
+      e.preventDefault();
+      document
+        .querySelector<HTMLElement>(`[data-focus][data-expanded="true"] > *`)
+        ?.click();
+    }
+  });
+
   return (
     <Switch>
       <Match when={workspace().timeGated != null && !stage.connected}>
@@ -615,7 +673,7 @@ export function Logs() {
                 </LogEmpty>
               </Show>
               <For each={invocations()}>
-                {(invocation) => (
+                {(invocation, i) => (
                   <InvocationRow
                     onSavePayload={() => {
                       invokeControl.savePayload(
