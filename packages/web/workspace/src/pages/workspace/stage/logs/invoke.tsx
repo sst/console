@@ -30,8 +30,9 @@ import { useCommandBar } from "../../command-bar";
 import { IconBookmark } from "$/ui/icons";
 import { LambdaPayloadStore } from "$/data/lambda-payload";
 import { useStageContext } from "../context";
-import { createEffect, createMemo } from "solid-js";
+import { Show, createEffect, createMemo } from "solid-js";
 import { createScan2 } from "$/data/store";
+import { setError } from "@modular-forms/solid";
 
 const InvokeRoot = styled("div", {
   base: {
@@ -216,22 +217,29 @@ export function Invoke(props: Props) {
 
   function handleInvoke(e: MouseEvent) {
     e.stopPropagation();
-    const payload = JSON.parse(invokeTextArea.value || "{}");
-    setTimeout(() => setInvoke("invoking", false), 2000);
-    setInvoke("invoking", true);
-    rep().mutate.function_invoke({
-      stageID: props.resource.stageID,
-      payload,
-      functionARN: props.resource.metadata.arn,
-    });
-    props.onInvoke();
+    try {
+      const payload = JSON.parse(invokeTextArea.value || "{}");
+      setInvoke("error", false);
+      setTimeout(() => setInvoke("invoking", false), 2000);
+      setInvoke("invoking", true);
+      rep().mutate.function_invoke({
+        stageID: props.resource.stageID,
+        payload,
+        functionARN: props.resource.metadata.arn,
+      });
+      props.onInvoke();
+    } catch {
+      setInvoke("error", true);
+    }
   }
   const [invoke, setInvoke] = createStore<{
     invoking: boolean;
     expand: boolean;
+    error: boolean;
     empty: boolean;
   }>({
     expand: false,
+    error: false,
     invoking: false,
     empty: true,
   });
@@ -323,37 +331,45 @@ export function Invoke(props: Props) {
           </IconButton>
           <LinkButton
             style={{ display: invoke.empty ? "none" : "inline" }}
-            onClick={() =>
-              saveControl.show(key(), JSON.parse(invokeTextArea.value))
-            }
+            onClick={() => {
+              const parsed = JSON.parse(invokeTextArea.value);
+              saveControl.show(key(), parsed);
+            }}
           >
             Save
           </LinkButton>
         </InvokeControlsLeft>
-        <Row vertical="center" space="4">
-          <InvokeControlsCancel
-            onClick={(e) => {
-              e.stopPropagation();
-              setInvoke("expand", false);
-            }}
-          >
-            Cancel
-          </InvokeControlsCancel>
-          <Button
-            color="secondary"
-            onClick={handleInvoke}
-            disabled={invoke.invoking}
-            class={InvokeControlsButton}
-          >
-            {invoke.invoking ? "Invoking" : "Invoke"}
-          </Button>
-          <TextButton
-            onClick={handleInvoke}
-            disabled={invoke.invoking}
-            class={InvokeControlsLinkButton}
-          >
-            {invoke.invoking ? "Invoking..." : "Invoke"}
-          </TextButton>
+        <Row vertical="center" space="7">
+          <Show when={invoke.error}>
+            <Text color="danger" size="sm">
+              Payload must be valid JSON.
+            </Text>
+          </Show>
+          <Row vertical="center" space="4">
+            <InvokeControlsCancel
+              onClick={(e) => {
+                e.stopPropagation();
+                setInvoke("expand", false);
+              }}
+            >
+              Cancel
+            </InvokeControlsCancel>
+            <Button
+              color="secondary"
+              onClick={handleInvoke}
+              disabled={invoke.invoking}
+              class={InvokeControlsButton}
+            >
+              {invoke.invoking ? "Invoking" : "Invoke"}
+            </Button>
+            <TextButton
+              onClick={handleInvoke}
+              disabled={invoke.invoking}
+              class={InvokeControlsLinkButton}
+            >
+              {invoke.invoking ? "Invoking..." : "Invoke"}
+            </TextButton>
+          </Row>
         </Row>
       </InvokeControls>
       <DialogPayloadSave control={(control) => (saveControl = control)} />
