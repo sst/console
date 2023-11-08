@@ -133,8 +133,8 @@ export function* generateData(
     yield* invocationFailMultiple();
     yield* invocationErrorStackTraceBase();
     yield* invocationFailMultipleWithStackTrace();
-    //    yield* invocationErrorStackTraceRaw();
-    //    yield* invocationErrorStackTraceFull();
+    yield* invocationErrorStackTraceRaw();
+    yield* invocationErrorStackTraceFull();
   }
 }
 
@@ -1804,6 +1804,40 @@ function* invocationErrorStackTraceBase(): Generator<DummyData, void, unknown> {
         message: "stack trace base",
         failed: true,
         stack: STACK_TRACE,
+      },
+    ],
+  });
+}
+
+function* invocationErrorStackTraceRaw(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 10 }).startOf("day"),
+    messages: [`simple failure`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "stack trace raw",
+        failed: true,
+        stack: STACK_TRACE_RAW,
+      },
+    ],
+  });
+}
+
+function* invocationErrorStackTraceFull(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 10 }).startOf("day"),
+    messages: [`simple failure`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "stack trace full",
+        failed: true,
+        stack: STACK_TRACE_FULL,
       },
     ],
   });
