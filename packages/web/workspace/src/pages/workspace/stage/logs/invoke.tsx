@@ -57,7 +57,9 @@ const InvokeRoot = styled("div", {
         overflow: "auto",
         minHeight: 170,
       },
-      false: {},
+      false: {
+        cursor: "text",
+      },
     },
   },
 });

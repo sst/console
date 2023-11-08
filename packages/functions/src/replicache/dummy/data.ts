@@ -1,4 +1,5 @@
 import { DateTime } from "luxon";
+import { createHash } from "crypto";
 import { AWS } from "@console/core/aws";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
@@ -7,7 +8,7 @@ import { Warning } from "@console/core/warning";
 import { Workspace } from "@console/core/workspace";
 import { Resource } from "@console/core/app/resource";
 import { Usage, Billing } from "@console/core/billing";
-import { StackFrame, Invocation } from "@console/core/log";
+import { StackFrame, ParsedError, Invocation } from "@console/core/log";
 
 export type DummyMode =
   // Waiting to connect
@@ -16,6 +17,8 @@ export type DummyMode =
   | "overview:base"
   // Overview
   | "overview:full"
+  // Logs
+  | "overview:base;logs:base"
   // Issues
   | "overview:base;issues:base"
   // Alerts
@@ -107,6 +110,25 @@ export function* generateData(
     yield* issueAlertsOverflowFrom();
     yield* issueAlertsMultipleFrom();
   }
+
+  if (modeMap["logs"]) {
+    yield* stageHasFunction();
+
+    yield* invocationBase();
+    yield* invocationEmpty();
+    yield* invocationNoLog();
+    yield* invocationColdStart();
+    yield* invocationIncomplete();
+    yield* invocationOverflowMessage();
+    yield* invocationWithRequestResponse();
+
+    yield* invocationErrorSimple();
+    yield* invocationFailSimple();
+    //    yield* invocationErrorMultiple();
+    //    yield* invocationErrorStackTraceBase();
+    //    yield* invocationErrorStackTraceRaw();
+    //    yield* invocationErrorStackTraceFull();
+  }
 }
 
 type DummyData =
@@ -120,12 +142,12 @@ type DummyData =
   | (Omit<Stage.Info, "workspaceID"> & { _type: "stage" })
   | (Omit<Issue.Info, "workspaceID"> & { _type: "issue" })
   | (Omit<Warning.Info, "workspaceID"> & { _type: "warning" })
+  | (Omit<Invocation, "workspaceID"> & { _type: "invocation" })
   | (Omit<Issue.Count, "workspaceID"> & { _type: "issueCount" })
   | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
   | (Omit<Billing.Stripe.Info, "workspaceID"> & { _type: "stripe" })
   | (Omit<Issue.Alert.Info, "workspaceID"> & { _type: "issueAlert" })
-  | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" })
-  | (Omit<Invocation, "workspaceID"> & { _type: "invocation" });
+  | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" });
 
 const USER_ID = "me@example.com";
 const USER_ID_ISSUE_ALERT = "alert-me@example.com";
@@ -165,6 +187,7 @@ const STAGE_NOT_SUPPORTED = "stage-not-supported";
 const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
 const STAGE_NO_ISSUES = "stage-no-issues";
 const STAGE_HAS_ISSUES = "stage-has-issues";
+const STAGE_HAS_FUNCTION = "stage-has-function";
 const STAGE_ISSUES_WARN_RATE = "stage-issues-warning-rate-limit";
 const STAGE_ISSUES_WARN_SUB = "stage-issues-warning-subscription";
 
@@ -188,6 +211,115 @@ const ISSUE_FN_NAME = "my-issues-func-long";
 const ISSUE_ID_NO_STACK_TRACE = "125";
 const ISSUE_ID_RAW_STACK_TRACE = "126";
 const ISSUE_ID_FULL_STACK_TRACE = "127";
+
+const STACK_TRACE = [
+  {
+    column: 17,
+    line: 24,
+    file: "packages/core/src/lambda/index.ts",
+    important: true,
+    context: [
+      `      const config = await Stage.assumeRole(input.stageID, input.extraParam, input.extraLongParamThatShouldOverflowBecauseItsTooLong);`,
+      `      constclient=newDynamoDBClient(config).thatDoesNotHaveAnyLinebreaksAndItShouldFailToBreakBecauseItsTooLongAndThisShouldFailBecauseItKeepsGoingAndGoingFurtherAndFurtherToTest;`,
+      `      const client = new LambdaClient(config);`,
+      `      await client.send(`,
+      `        new InvokeCommand({`,
+      `          FunctionName: input.functionName,`,
+      `          Payload: input.payload,`,
+    ],
+  },
+];
+const STACK_TRACE_RAW = [
+  {
+    raw: "at getServerSideProps (/var/task/.next/server/pages/ssr.js:98:11)",
+  },
+  {
+    raw: "at /var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/render.js:569:26",
+  },
+  {
+    raw: "at /var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/lib/trace/tracer.js:117:36",
+  },
+  {
+    raw: "at NoopContextManager.with (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7057)",
+  },
+  {
+    raw: "at ContextAPI.with (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:516)",
+  },
+  // Don't render this as pre
+  {
+    raw: `at  
+
+        ContextAPI.with
+
+        (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:516)`,
+  },
+];
+
+const STACK_TRACE_FULL = [
+  {
+    column: 39,
+    line: 5,
+    file: "node_modules/.pnpm/@smithy+smithy-client@2.1.12/node_modules/@smithy/smithy-client/dist-es/default-error-handler.js",
+    context: [
+      `  export const throwDefaultError = ({ output, parsedBody, exceptionCtor, errorCode }) => {`,
+      `    const $metadata = deserializeMetadata(output);`,
+      `    const statusCode = $metadata.httpStatusCode ? $metadata.httpStatusCode + "" : undefined;`,
+      `    const response = new exceptionCtor({`,
+      `      name: parsedBody?.code || parsedBody?.Code || errorCode || statusCode || "UnknownError",`,
+      `      $fault: "client",`,
+      `      $metadata,`,
+    ],
+  },
+  {
+    column: 52,
+    line: 5323,
+    file: "node_modules/.pnpm/@aws-sdk+client-dynamodb@3.33.0/node_modules/@aws-sdk/client-dynamodb/dist-es/protocols/Aws_json1_0.ts",
+    context: [
+      `      Type: __expectString,`,
+      `    });`,
+      `    Object.assign(contents, doc);`,
+      `    const exception = new ResourceNotFoundException({`,
+      `      $metadata: deserializeMetadata(output),`,
+      `      ...contents,`,
+      `    });`,
+    ],
+  },
+  {
+    raw: "processTicksAndRejections (node:internal/process/task_queues:96:5)",
+  },
+  {
+    column: 17,
+    line: 24,
+    file: "packages/core/src/lambda/index.ts",
+    important: true,
+    context: [
+      `      const config = await Stage.assumeRole(input.stageID, input.extraParam, input.extraLongParamThatShouldOverflowBecauseItsTooLong);`,
+      `      constclient=newDynamoDBClient(config).thatDoesNotHaveAnyLinebreaksAndItShouldFailToBreakBecauseItsTooLongAndThisShouldFailBecauseItKeepsGoingAndGoingFurtherAndFurtherToTest;`,
+      `      const client = new LambdaClient(config);`,
+      `      await client.send(`,
+      `        new InvokeCommand({`,
+      `          FunctionName: input.functionName,`,
+      `          Payload: input.payload,`,
+    ],
+  },
+  {
+    column: 41,
+    line: 99,
+    important: true,
+    file: "packages/functions/src/replicache/with/a/path/that/is/really/long/that/should/overflow/because/its/way/too/long/and/should/overflow/push1.ts",
+    context: [
+      `        const { args, name } = mutation;`,
+      `        const { data } = await invokeLambda({`,
+      `          functionName: name,`,
+      `          payload: JSON.stringify(args),`,
+      `        });`,
+      `        return JSON.parse(data);`,
+      `      }`,
+    ],
+  },
+];
+
+const LOGS_FN = "my-logs-func";
 
 let WARNING_COUNT = 0;
 
@@ -1149,28 +1281,35 @@ function* stageHasIssues(): Generator<DummyData, void, unknown> {
   });
 }
 
+function* stageHasFunction(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_HAS_FUNCTION,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_HAS_FUNCTION,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield func({
+    id: LOGS_FN,
+    stage: STAGE_HAS_FUNCTION,
+    handler: "packages/function.handler",
+    arn: `arn:aws:lambda:us-east-1:123456789012:function:${LOGS_FN}`,
+  });
+}
+
 function* issueBase(): Generator<DummyData, void, unknown> {
   yield issue({
     id: ISSUE_ID,
     error: "Error",
     message: "Some error message",
-    stack: [
-      {
-        column: 17,
-        line: 24,
-        file: "packages/core/src/lambda/index.ts",
-        important: true,
-        context: [
-          `      const config = await Stage.assumeRole(input.stageID, input.extraParam, input.extraLongParamThatShouldOverflowBecauseItsTooLong);`,
-          `      constclient=newDynamoDBClient(config).thatDoesNotHaveAnyLinebreaksAndItShouldFailToBreakBecauseItsTooLongAndThisShouldFailBecauseItKeepsGoingAndGoingFurtherAndFurtherToTest;`,
-          `      const client = new LambdaClient(config);`,
-          `      await client.send(`,
-          `        new InvokeCommand({`,
-          `          FunctionName: input.functionName,`,
-          `          Payload: input.payload,`,
-        ],
-      },
-    ],
+    stack: STACK_TRACE,
     invocation: invocation({
       startTime: DateTime.now().startOf("day"),
       messages: [
@@ -1236,31 +1375,7 @@ function* issueRawStackTrace(): Generator<DummyData, void, unknown> {
     id: ISSUE_ID_RAW_STACK_TRACE,
     error: "Error Raw Stack Trace",
     message: "Some error message",
-    stack: [
-      {
-        raw: "at getServerSideProps (/var/task/.next/server/pages/ssr.js:98:11)",
-      },
-      {
-        raw: "at /var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/render.js:569:26",
-      },
-      {
-        raw: "at /var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/lib/trace/tracer.js:117:36",
-      },
-      {
-        raw: "at NoopContextManager.with (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7057)",
-      },
-      {
-        raw: "at ContextAPI.with (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:516)",
-      },
-      // Don't render this as pre
-      {
-        raw: `at  
-
-        ContextAPI.with
-
-        (/var/task/node_modules/.ppm/next@13.4.7_@babel+core@7.22.5_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:516)`,
-      },
-    ],
+    stack: STACK_TRACE_RAW,
   });
   yield issueCount({
     group: ISSUE_ID_RAW_STACK_TRACE,
@@ -1272,69 +1387,7 @@ function* issueFullSourceMapStackTrace(): Generator<DummyData, void, unknown> {
     id: ISSUE_ID_FULL_STACK_TRACE,
     error: "Error Full Source Map Stack Trace",
     message: "Some error message",
-    stack: [
-      {
-        column: 39,
-        line: 5,
-        file: "node_modules/.pnpm/@smithy+smithy-client@2.1.12/node_modules/@smithy/smithy-client/dist-es/default-error-handler.js",
-        context: [
-          `  export const throwDefaultError = ({ output, parsedBody, exceptionCtor, errorCode }) => {`,
-          `    const $metadata = deserializeMetadata(output);`,
-          `    const statusCode = $metadata.httpStatusCode ? $metadata.httpStatusCode + "" : undefined;`,
-          `    const response = new exceptionCtor({`,
-          `      name: parsedBody?.code || parsedBody?.Code || errorCode || statusCode || "UnknownError",`,
-          `      $fault: "client",`,
-          `      $metadata,`,
-        ],
-      },
-      {
-        column: 52,
-        line: 5323,
-        file: "node_modules/.pnpm/@aws-sdk+client-dynamodb@3.33.0/node_modules/@aws-sdk/client-dynamodb/dist-es/protocols/Aws_json1_0.ts",
-        context: [
-          `      Type: __expectString,`,
-          `    });`,
-          `    Object.assign(contents, doc);`,
-          `    const exception = new ResourceNotFoundException({`,
-          `      $metadata: deserializeMetadata(output),`,
-          `      ...contents,`,
-          `    });`,
-        ],
-      },
-      {
-        raw: "processTicksAndRejections (node:internal/process/task_queues:96:5)",
-      },
-      {
-        column: 17,
-        line: 24,
-        file: "packages/core/src/lambda/index.ts",
-        important: true,
-        context: [
-          `      const config = await Stage.assumeRole(input.stageID, input.extraParam, input.extraLongParamThatShouldOverflowBecauseItsTooLong);`,
-          `      constclient=newDynamoDBClient(config).thatDoesNotHaveAnyLinebreaksAndItShouldFailToBreakBecauseItsTooLongAndThisShouldFailBecauseItKeepsGoingAndGoingFurtherAndFurtherToTest;`,
-          `      const client = new LambdaClient(config);`,
-          `      await client.send(`,
-          `        new InvokeCommand({`,
-          `          FunctionName: input.functionName,`,
-          `          Payload: input.payload,`,
-        ],
-      },
-      {
-        column: 41,
-        line: 99,
-        important: true,
-        file: "packages/functions/src/replicache/with/a/path/that/is/really/long/that/should/overflow/because/its/way/too/long/and/should/overflow/push1.ts",
-        context: [
-          `        const { args, name } = mutation;`,
-          `        const { data } = await invokeLambda({`,
-          `          functionName: name,`,
-          `          payload: JSON.stringify(args),`,
-          `        });`,
-          `        return JSON.parse(data);`,
-          `      }`,
-        ],
-      },
-    ],
+    stack: STACK_TRACE_FULL,
   });
   yield issueCount({
     group: ISSUE_ID_FULL_STACK_TRACE,
@@ -1551,6 +1604,139 @@ function* issueAlertsOverflowTo(): Generator<DummyData, void, unknown> {
       },
       type: "slack",
     },
+  });
+}
+
+function* invocationBase(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 788,
+    startTime: DateTime.now().startOf("day"),
+    messages: [
+      `test log line cases`,
+      `areallyreallylonglinethatshouldoverflowandwordwrapbutitdoesntbecauseitshouldntbeabletofitallthewaythroughthewidthofthepagebecauseitswaytoolongandwilloverflowalltheway`,
+      `scanning logs {
+  case: 'pre formatted text',
+  id: 'abcde12vgws358nwyjbb0n7m',
+  workspaceID: 'ab1mmlwfjisrf38lxyjitj3a',
+  timeCreated: '2023-11-02 13:36:22',
+  timeUpdated: '2023-11-02 17:42:00',
+  timeDeleted: null,
+  userID: 'zxc94z5o4m2yenuii7y77jcl',
+  profileID: 'qw5266007421c4ca08c3a9805d26d3081',
+  stageID: 'ertyw9srjl3x3llq9f4iurmn',
+  logGroup: '/aws/lambda/production-notes-app-busTargetbusdevOrderUpd-O5r7A2kRuBqp',
+  timeStart: '2023-11-02 17:00:00',
+  timeEnd: null
+}`,
+      `start 11/2/2023, 11:00 AM`,
+    ],
+  });
+}
+
+function* invocationIncomplete(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    startTime: DateTime.now().minus({ day: 1 }).startOf("day"),
+    messages: [`incomplete log`],
+  });
+}
+
+function* invocationEmpty(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 410,
+    startTime: DateTime.now().minus({ day: 2 }).startOf("day"),
+    messages: [],
+  });
+}
+
+function* invocationNoLog(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    startTime: DateTime.now().minus({ day: 3 }).startOf("day"),
+    messages: [],
+  });
+}
+
+function* invocationColdStart(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    cold: true,
+    duration: 53,
+    startTime: DateTime.now().minus({ day: 4 }).startOf("day"),
+    messages: [`cold start`],
+  });
+}
+
+function* invocationOverflowMessage(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 53,
+    startTime: DateTime.now().minus({ day: 5 }).startOf("day"),
+    messages: [
+      `areallyreallylonglinethatshouldoverflowandwordwrapbutitdoesntbecauseitshouldntbeabletofitallthewaythroughthewidthofthepagebecauseitswaytoolongandwilloverflowalltheway`,
+    ],
+  });
+}
+
+function* invocationWithRequestResponse(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 119,
+    input: {
+      version: "2.0",
+      routeKey: "POST /replicache/dummy/pull",
+      rawPath: "/replicache/dummy/pull",
+      authorization:
+        "Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjb3VudCIsInByb3BlcnRpZXMiOnsiYWNjb3VudElEIjoib2xneGZnOXA3NWQzdHQ1MXNjdTJuMzkyIiwiZW1haWwiOiJhaXJAbGl2ZS5jYSJ9LCJpYXQiOjE2OTU0MTE1NjR9.iwT9dUfm-qG8EneOUgyMEajIV2Ko_bYlXSCUoSmwyQyUD89GAoii_LXfnNqM9JR1VZrEEFBKS4Vxq1_i1FtW8vf3boOlrCT8iqYRn5BXuXx5-6X0JXb10dY51PqIYJgRAPzkH5w1yulg3BnQBaCfKWs349fZ6G2Cw7JCknDNZWLLlA_P9ovxfSJ_qBKXBxhJ99Z8Yz0u_OV4U8O2bZIezcnM221V2VzzKUYJ0CQqAClGYyvf7eBE9WWYsN4ghpcGp0GfiqUsATA6xIa1jaffUpiKwPbutXSLQJbrkI85S19HkTauOJ3cJ0RmEg3uJ2UNiXPAsNqHAtylGpSJsnLYHg",
+      headers: {
+        accept: "*/*",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-CA,en-US;q=0.9,en;q=0.8",
+      },
+      isBase64Encoded: false,
+    },
+    output: {
+      shortOption: "POST /replicache/dummy/pull",
+      longOption:
+        "Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjb3VudCIsInByb3BlcnRpZXMiOnsiYWNjb3VudElEIjoib2xneGZnOXA3NWQzdHQ1MXNjdTJuMzkyIiwiZW1haWwiOiJhaXJAbGl2ZS5jYSJ9LCJpYXQiOjE2OTU0MTE1NjR9.iwT9dUfm-qG8EneOUgyMEajIV2Ko_bYlXSCUoSmwyQyUD89GAoii_LXfnNqM9JR1VZrEEFBKS4Vxq1_i1FtW8vf3boOlrCT8iqYRn5BXuXx5-6X0JXb10dY51PqIYJgRAPzkH5w1yulg3BnQBaCfKWs349fZ6G2Cw7JCknDNZWLLlA_P9ovxfSJ_qBKXBxhJ99Z8Yz0u_OV4U8O2bZIezcnM221V2VzzKUYJ0CQqAClGYyvf7eBE9WWYsN4ghpcGp0GfiqUsATA6xIa1jaffUpiKwPbutXSLQJbrkI85S19HkTauOJ3cJ0RmEg3uJ2UNiXPAsNqHAtylGpSJsnLYHg",
+      nested: {
+        option: "*/*",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-CA,en-US;q=0.9,en;q=0.8",
+      },
+      booleanOption: false,
+    },
+    startTime: DateTime.now().minus({ day: 6 }).startOf("day"),
+    messages: [`with request and response`],
+  });
+}
+
+function* invocationErrorSimple(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 7 }).startOf("day"),
+    messages: [`simple error`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "simple error",
+        failed: false,
+        stack: [],
+      },
+    ],
+  });
+}
+
+function* invocationFailSimple(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 8 }).startOf("day"),
+    messages: [`simple failure`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "simple failure",
+        failed: true,
+        stack: [],
+      },
+    ],
   });
 }
 
@@ -1783,21 +1969,41 @@ function issue({
 }
 
 interface InvocationProps {
+  input?: any;
+  output?: any;
+  response?: any;
   cold?: boolean;
+  duration?: number;
   startTime: DateTime;
   messages?: string[];
+  errors?: (ParsedError & { id: string })[];
 }
 function invocation({
   cold,
-  startTime,
+  input,
+  errors,
+  output,
+  duration,
   messages,
+  startTime,
 }: InvocationProps): Invocation {
   return {
-    id: `${INVOCATION_COUNT++}`,
+    id: createHash("sha256").update(`${INVOCATION_COUNT++}`).digest("hex"),
+    input,
+    output,
     cold: cold || false,
     source: "123",
-    errors: [],
-    start: 1,
+    errors: errors || [],
+    report:
+      duration === undefined
+        ? duration
+        : {
+            duration,
+            memory: 128,
+            size: 2048,
+            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+          },
+    start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
           message,
@@ -1805,6 +2011,13 @@ function invocation({
           timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
         }))
       : [],
+  };
+}
+
+function globalInvocation(props: InvocationProps): DummyData {
+  return {
+    _type: "invocation",
+    ...invocation(props),
   };
 }
 

@@ -363,7 +363,7 @@ export function InvocationRow(props: {
                   Error
                 </TabTitle>
               </Show>
-              <Show when={props.local}>
+              <Show when={props.invocation.input || props.local}>
                 <TabTitle
                   size="mono_sm"
                   onClick={() => setTab("request")}
@@ -377,6 +377,8 @@ export function InvocationRow(props: {
                 >
                   Request
                 </TabTitle>
+              </Show>
+              <Show when={props.invocation.output || props.local}>
                 <TabTitle
                   size="mono_sm"
                   onClick={() => setTab("response")}
@@ -425,8 +427,8 @@ export function InvocationRow(props: {
                     setReplaying(true);
                     rep().mutate.function_invoke({
                       stageID: props.function.stageID,
-                      payload: structuredClone(unwrap(props.invocation.input)),
                       functionARN: props.function.metadata.arn,
+                      payload: structuredClone(unwrap(props.invocation.input)),
                     });
                     setTimeout(() => setReplaying(false), 2000);
                   }}
@@ -461,7 +463,9 @@ export function InvocationRow(props: {
                           .toUTC()
                           .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}
                       >
-                        {new Date(entry.timestamp).toLocaleTimeString()}
+                        {DateTime.fromMillis(entry.timestamp).toFormat(
+                          "HH:mm:ss:uu"
+                        )}
                       </LogTime>
                       <LogMessage>{entry.message}</LogMessage>
                     </Log>
