@@ -82,7 +82,6 @@ export function API({ stack, app }: StackContext) {
   const api = new Api(stack, "api", {
     defaults: {
       function: {
-        timeout: "29 seconds",
         bind: [
           auth,
           ...Object.values(secrets.database),
@@ -120,6 +119,7 @@ export function API({ stack, app }: StackContext) {
       "POST /rest/log/tail": {
         function: {
           handler: "packages/functions/src/rest/log/tail.handler",
+          timeout: "120 seconds",
           bind: [storage],
           permissions: ["iot"],
           nodejs: {

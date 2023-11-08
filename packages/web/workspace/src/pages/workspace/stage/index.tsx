@@ -4,6 +4,7 @@ import {
   Navigate,
   Route,
   Routes,
+  useMatch,
   useNavigate,
   useParams,
 } from "@solidjs/router";
@@ -158,6 +159,7 @@ export function Inner() {
       {
         icon: IconSubRight,
         title: "Issues",
+        disabled: Boolean(useMatch(() => "./issues")()),
         run: (control) => {
           nav("./issues");
           control.hide();
