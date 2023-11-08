@@ -130,7 +130,11 @@ export const unresolve = zod(Info.shape.id.array(), async (input) =>
 );
 
 function destinationIdentifier(config: StageCredentials) {
-  return `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}`;
+  return `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}` +
+    Config.STAGE ===
+    "production"
+    ? ""
+    : "#dev";
 }
 
 export const connectStage = zod(
