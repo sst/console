@@ -298,7 +298,10 @@ export function Logs() {
 
   const workspace = useWorkspace();
   createEffect(() => {
-    if (mode() === "live") return;
+    const m = mode();
+    const lg = logGroup();
+    if (m === "live") return;
+    if (!lg) return;
 
     if (query.view === "recent") {
       setID("search", createId());
