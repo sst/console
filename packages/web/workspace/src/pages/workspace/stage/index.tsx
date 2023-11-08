@@ -4,14 +4,16 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
+  useRoutes,
   useMatch,
   useNavigate,
   useParams,
 } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
-import { JSX, Match, Show, Switch, createMemo } from "solid-js";
-import { useCommandBar } from "$/pages/workspace/command-bar";
+import { JSX, Match, Show, Switch, createEffect, createMemo } from "solid-js";
+import { NavigationAction, useCommandBar } from "$/pages/workspace/command-bar";
 import {
   IssuesProvider,
   MINIMUM_VERSION,
@@ -154,27 +156,23 @@ export function Inner() {
   const workspace = useWorkspace();
 
   const nav = useNavigate();
+  const loc = useLocation();
+
   bar.register("stage", async () => {
     return [
-      {
-        icon: IconSubRight,
-        title: "Issues",
-        disabled: Boolean(useMatch(() => "./issues")()),
-        run: (control) => {
-          nav("./issues");
-          control.hide();
-        },
+      NavigationAction({
+        path: "./issues",
         category: ctx.stage.name,
-      },
-      {
+        title: "Issues",
+        nav,
+      }),
+      NavigationAction({
         icon: IconSubRight,
         title: "Resources",
-        run: (control) => {
-          nav("./resources");
-          control.hide();
-        },
+        path: "./resources",
         category: ctx.stage.name,
-      },
+        nav,
+      }),
       {
         icon: IconSubRight,
         title: "View logs...",
