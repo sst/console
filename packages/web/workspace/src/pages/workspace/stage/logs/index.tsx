@@ -286,7 +286,7 @@ export function Logs() {
     return "search";
   });
 
-  onMount(() => {
+  createEffect(() => {
     if (!query.view)
       setQuery(
         {
@@ -300,9 +300,12 @@ export function Logs() {
   createEffect(() => {
     const m = mode();
     const lg = logGroup();
+    const view = query.view;
+    const end = query.end;
     if (m === "live") return;
     if (!lg) return;
     console.log(
+      view,
       `https://${
         stage.stage.region
       }.console.aws.amazon.com/cloudwatch/home?region=${
@@ -310,17 +313,17 @@ export function Logs() {
       }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`
     );
 
-    if (query.view === "recent") {
+    if (view === "recent") {
       setID("search", createId());
       createSearch();
     }
 
-    if (query.view === "custom" && query.end) {
+    if (view === "custom" && end) {
       setID("search", createId());
-      createSearch(new Date(query.end).getTime());
+      createSearch(new Date(end).getTime());
     }
 
-    if (query.view === "tail") {
+    if (view === "tail") {
       const exists = pollerCache[logGroup()];
       if (exists) return;
       async function run() {
