@@ -37,7 +37,6 @@ import { Local } from "./pages/local";
 const Root = styled("div", {
   base: {
     inset: 0,
-    position: "fixed",
     lineHeight: 1,
     fontFamily: theme.font.family.body,
     fontSynthesis: "none",
@@ -50,6 +49,15 @@ const Root = styled("div", {
 globalStyle("html", {
   fontSize: 16,
   fontWeight: 400,
+  // Hardcode colors
+  "@media": {
+    "(prefers-color-scheme: light)": {
+      backgroundColor: "#FFFFFF",
+    },
+    "(prefers-color-scheme: dark)": {
+      backgroundColor: "#1A1A2D",
+    },
+  },
 });
 
 globalStyle("h1, h2, h3, h4, h5, h6, p", {
