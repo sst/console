@@ -48,6 +48,7 @@ const Root = styled("div", {
     selectors: {
       "&[data-focus]": {
         ...inputFocusStyles,
+        borderRadius: theme.borderRadius,
       },
     },
   },

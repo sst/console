@@ -451,7 +451,7 @@ export function Logs() {
       e.preventDefault();
       const el = document.querySelector<HTMLElement>("[data-focus]");
       if (el?.dataset.expanded) return;
-      el?.firstChild.click();
+      (el?.firstElementChild as HTMLElement).click();
     }
   });
 
