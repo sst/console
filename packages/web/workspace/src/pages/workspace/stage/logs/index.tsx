@@ -50,8 +50,9 @@ import { useInvocations } from "$/providers/invocation";
 import { DateTime } from "luxon";
 import { useWorkspace } from "../../context";
 import { useDummy } from "$/providers/dummy";
-import { createScan2 } from "$/data/store";
+import { createScan, createScan2 } from "$/data/store";
 import type { Invocation } from "@console/core/log";
+import { sortBy } from "remeda";
 
 const LogSwitchButton = styled("button", {
   base: {
@@ -351,6 +352,7 @@ export function Logs() {
   const activeSearch = LogSearchStore.get.watch(rep, () => [id.search]);
 
   async function createSearch(end?: number) {
+    if (dummy()) return;
     rep().mutate.log_search({
       id: id.search,
       profileID: await rep().profileID,
@@ -373,7 +375,11 @@ export function Logs() {
   });
 
   const dummy = useDummy();
-  const dummyInvocations = createScan2<Invocation>(() => "/invocation", rep);
+  const dummyInvocations = createScan<Invocation>(
+    () => "/invocation",
+    rep,
+    (all) => sortBy(all, (x) => x.start)
+  );
 
   const invocations = createMemo(() => {
     if (import.meta.env.DEV) {
