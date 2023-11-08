@@ -22,6 +22,8 @@ import {
 } from "@solid-primitives/event-listener";
 import { createMutationObserver } from "@solid-primitives/mutation-observer";
 import { utility } from "$/ui/utility";
+import { IconSubRight } from "$/ui/icons/custom";
+import { Navigator, useLocation, useNavigate } from "@solidjs/router";
 
 interface Action {
   icon: (props: any) => JSX.Element;
@@ -33,6 +35,35 @@ interface Action {
 }
 
 type ActionProvider = (filter: string, global: boolean) => Promise<Action[]>;
+
+export function NavigationAction(input: {
+  path: string;
+  prefix?: boolean;
+  title: string;
+  category: string;
+  icon?: (props: any) => JSX.Element;
+  nav: Navigator;
+}): Action {
+  const loc = useLocation();
+  return {
+    icon: input.icon || IconSubRight,
+    title: input.title,
+    category: input.category,
+    disabled:
+      (input.path.startsWith("/") &&
+        (!input.prefix
+          ? loc.pathname === input.path
+          : loc.pathname.startsWith(input.path))) ||
+      (input.path.startsWith("./") &&
+        (!input.prefix
+          ? loc.pathname.endsWith(input.path.substring(1))
+          : loc.pathname.includes(input.path.substring(1)))),
+    run: (control) => {
+      control.hide();
+      input.nav(input.path);
+    },
+  };
+}
 
 const Root = styled("div", {
   base: {

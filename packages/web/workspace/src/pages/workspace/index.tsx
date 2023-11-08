@@ -6,7 +6,7 @@ import {
   useParams,
 } from "@solidjs/router";
 import { ReplicacheProvider, useReplicache } from "$/providers/replicache";
-import { useCommandBar } from "./command-bar";
+import { NavigationAction, useCommandBar } from "./command-bar";
 import { Stage } from "./stage";
 import { Show, createEffect, createMemo } from "solid-js";
 import { WorkspaceStore } from "$/data/workspace";
@@ -54,44 +54,37 @@ export function Workspace() {
     if (id) storage.set("workspace", id);
   });
 
+  const loc = useLocation();
   bar.register("workspace", async () => {
+    console.log(loc.pathname, loc.key, loc.hash);
     return [
-      {
-        icon: IconSubRight,
+      NavigationAction({
         title: "Overview",
         category: "Workspace",
-        run: (control) => {
-          control.hide();
-          nav(`/${workspace()?.slug}`);
-        },
-      },
-      {
+        path: `/${workspace()?.slug}`,
+        nav,
+      }),
+      NavigationAction({
         icon: IconUserAdd,
         title: "Invite user to workspace",
         category: "Workspace",
-        run: (control) => {
-          control.hide();
-          nav(`/${workspace()?.slug}/user`);
-        },
-      },
-      {
+        path: `/${workspace()?.slug}/user`,
+        nav,
+      }),
+      NavigationAction({
         icon: IconConnect,
         title: "Connect an AWS Account",
         category: "Workspace",
-        run: (control) => {
-          control.hide();
-          nav(`/${workspace()?.slug}/account`);
-        },
-      },
-      {
+        path: `/${workspace()?.slug}/account`,
+        nav,
+      }),
+      NavigationAction({
         icon: IconWrenchScrewdriver,
         title: "Manage workspace settings",
         category: "Workspace",
-        run: (control) => {
-          control.hide();
-          nav(`/${workspace()?.slug}/settings`);
-        },
-      },
+        path: `/${workspace()?.slug}/settings`,
+        nav,
+      }),
     ];
   });
 
@@ -111,10 +104,8 @@ export function Workspace() {
 
 export function Content() {
   const bar = useCommandBar();
-  const rep = useReplicache();
   const nav = useNavigate();
   const params = useParams();
-  const loc = useLocation();
   const apps = AppStore.all.watch(useReplicache(), () => []);
   const stages = StageStore.list.watch(useReplicache(), () => []);
 
@@ -122,15 +113,14 @@ export function Content() {
     if (!input && global) return [];
     return stages().map((stage) => {
       const app = apps().find((item) => item.id === stage.appID)!;
-      return {
+      return NavigationAction({
         icon: IconApp,
         category: "Stage",
         title: `Go to "${app.name} / ${stage.name}"`,
-        run: async (control) => {
-          nav(`/${params.workspaceSlug}/${app.name}/${stage.name}`);
-          control.hide();
-        },
-      };
+        path: `/${params.workspaceSlug}/${app.name}/${stage.name}`,
+        prefix: true,
+        nav,
+      });
     });
   });
   return (
