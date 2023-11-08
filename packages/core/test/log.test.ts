@@ -65,6 +65,56 @@ test("node ignore warning", () => {
   expect(err).toBeUndefined();
 });
 
+test.only("node ignore warning", () => {
+  const err = Log.extractError([
+    "2023-11-08T18:49:34.278Z",
+    "0298adeb-949e-4e13-baa7-58560503cc7c",
+    "ERROR",
+    "{\n" +
+      "  clientName: 'S3Client',\n" +
+      "  commandName: 'GetObjectCommand',\n" +
+      "  input: {\n" +
+      "    Bucket: 'dev-playground-nextjs13s-regionals3bucketac0120ac-16q76yjxcbfcs',\n" +
+      "    Key: '_cache/T2S9VbFWTyFtfbPPrgCyi/ssg-fallback-true/ssg-ssr.cache'\n" +
+      "  },\n" +
+      "  error: NoSuchKey: The specified key does not exist.\n" +
+      "      at Rh (/var/task/cache.cjs:39:180621)\n" +
+      "      at Jke (/var/task/cache.cjs:39:148929)\n" +
+      "      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n" +
+      "      at async /var/task/cache.cjs:13:50582\n" +
+      "      at async file:///var/task/index.mjs:13:4961\n" +
+      "      at async file:///var/task/index.mjs:14:22859\n" +
+      "      at async /var/task/cache.cjs:41:49287\n" +
+      "      at async file:///var/task/index.mjs:36:116610\n" +
+      "      at async file:///var/task/index.mjs:36:117235\n" +
+      "      at async file:///var/task/index.mjs:2:35589 {\n" +
+      "    '$fault': 'client',\n" +
+      "    '$metadata': {\n" +
+      "      httpStatusCode: 404,\n" +
+      "      requestId: '1XEETRFPWHXGRZ2F',\n" +
+      "      extendedRequestId: 'mPsew50RgnXAiR5BRMJBpfQc+zigo+WJmRKKnypIIU/zzeM2yvsDlPKu7zTk8saR6ke5lWrNuvk=',\n" +
+      "      cfId: undefined,\n" +
+      "      attempts: 1,\n" +
+      "      totalRetryDelay: 0\n" +
+      "    },\n" +
+      "    Code: 'NoSuchKey',\n" +
+      "    Key: '_cache/T2S9VbFWTyFtfbPPrgCyi/ssg-fallback-true/ssg-ssr.cache',\n" +
+      "    RequestId: '1XEETRFPWHXGRZ2F',\n" +
+      "    HostId: 'mPsew50RgnXAiR5BRMJBpfQc+zigo+WJmRKKnypIIU/zzeM2yvsDlPKu7zTk8saR6ke5lWrNuvk='\n" +
+      "  },\n" +
+      "  metadata: {\n" +
+      "    httpStatusCode: 404,\n" +
+      "    requestId: '1XEETRFPWHXGRZ2F',\n" +
+      "    extendedRequestId: 'mPsew50RgnXAiR5BRMJBpfQc+zigo+WJmRKKnypIIU/zzeM2yvsDlPKu7zTk8saR6ke5lWrNuvk=',\n" +
+      "    cfId: undefined,\n" +
+      "    attempts: 1,\n" +
+      "    totalRetryDelay: 0\n" +
+      "  }\n" +
+      "}",
+  ]);
+  expect(err).toBeUndefined();
+});
+
 test("node logtail", () => {
   expectError([
     `2023-09-12T00:55:20.974Z`,
