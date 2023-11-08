@@ -302,6 +302,13 @@ export function Logs() {
     const lg = logGroup();
     if (m === "live") return;
     if (!lg) return;
+    console.log(
+      `https://${
+        stage.stage.region
+      }.console.aws.amazon.com/cloudwatch/home?region=${
+        stage.stage.region
+      }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`
+    );
 
     if (query.view === "recent") {
       setID("search", createId());
