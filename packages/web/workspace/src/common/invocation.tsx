@@ -297,22 +297,21 @@ export function InvocationRow(props: {
       props.invocation.start
     )
   );
-  //              const empty = createMemo(
-  //                () => mode() !== "live" && invocation.logs.length === 0
-  //              );
   const [replaying, setReplaying] = createSignal(false);
   const rep = useReplicache();
-  const level = props.invocation.errors.length
-    ? props.invocation.errors.some((error) => error.failed)
-      ? "fail"
-      : "error"
-    : "info";
+  const level = createMemo(() =>
+    props.invocation.errors.length
+      ? props.invocation.errors.some((error) => error.failed)
+        ? "fail"
+        : "error"
+      : "info"
+  );
 
   return (
     <Root
       focus={props.focus}
       expanded={expanded()}
-      level={level === "info" ? "info" : "danger"}
+      level={level() === "info" ? "info" : "danger"}
     >
       <Summary
         onClick={() => {
@@ -323,7 +322,7 @@ export function InvocationRow(props: {
           <CaretIcon>
             <IconCaretRight />
           </CaretIcon>
-          <Level level={level} />
+          <Level level={level()} />
         </Row>
         <Timestamp title={longDate()}>{shortDate()}</Timestamp>
         <Duration
