@@ -10,6 +10,7 @@ export const bus = createEmitter<{
   };
   log: LogEvent[];
   "log.url": string;
+  "bar.show": boolean;
   "invocation.url": string;
   invocation: Invocation[];
   "log.cleared": {

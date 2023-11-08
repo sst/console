@@ -1,8 +1,9 @@
 import { styled } from "@macaron-css/solid";
 import { theme } from "./theme";
-import { ParentProps } from "solid-js";
+import { ParentProps, createEffect, createSignal, untrack } from "solid-js";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { Portal } from "solid-js/web";
+import { bus } from "$/providers/bus";
 
 const Root = styled("div", {
   base: {
@@ -63,6 +64,10 @@ export function Modal(
       if (!props.show) return;
       props.onClose();
     }
+  });
+
+  bus.on("bar.show", () => {
+    if (props.show) props.onClose();
   });
 
   return (

@@ -24,6 +24,8 @@ import { createMutationObserver } from "@solid-primitives/mutation-observer";
 import { utility } from "$/ui/utility";
 import { IconSubRight } from "$/ui/icons/custom";
 import { Navigator, useLocation, useNavigate } from "@solidjs/router";
+import { useBus } from "sst/bus";
+import { bus } from "$/providers/bus";
 
 interface Action {
   icon: (props: any) => JSX.Element;
@@ -199,6 +201,7 @@ function createControl() {
 
   function show(...providers: string[]) {
     console.log("showing command bar");
+    bus.emit("bar.show", true);
     batch(() => {
       setActiveProviders(providers);
       setVisible(true);
