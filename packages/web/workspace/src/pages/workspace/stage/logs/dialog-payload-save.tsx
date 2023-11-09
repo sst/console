@@ -92,7 +92,7 @@ export function DialogPayloadSave(props: {
           </Stack>
           <FormField
             label="Event name"
-            hint="Give the event a short recognizable name"
+            hint="Give the event a short recognizable name."
           >
             <Input
               data-element={"save-payload-dialog-name"}

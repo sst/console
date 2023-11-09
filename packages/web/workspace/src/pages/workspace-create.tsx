@@ -67,8 +67,7 @@ export function WorkspaceCreate() {
 
   createEffect((prev) => {
     console.log(workspace());
-    if (prev && !pending())
-      setError(form, "slug", "Workspace name is not unique");
+    if (prev && !pending()) setError(form, "slug", "Workspace name is taken.");
     return pending();
   });
 

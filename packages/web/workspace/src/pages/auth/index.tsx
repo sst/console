@@ -86,6 +86,7 @@ export function Auth() {
         <Route path="email" component={Email} />
         <Route path="code" component={Code} />
         <Route path="" element={<Navigate href="email" />} />
+        <Route path="*" element={<span>404</span>} />
       </Routes>
     </Fullscreen>
   );

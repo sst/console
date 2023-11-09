@@ -48,7 +48,6 @@ const Root = styled("div", {
     selectors: {
       "&[data-focus]": {
         ...inputFocusStyles,
-        borderRadius: theme.borderRadius,
       },
     },
   },
@@ -60,12 +59,6 @@ const Root = styled("div", {
     level: {
       info: {},
       danger: {},
-    },
-    focus: {
-      true: {
-        ...inputFocusStyles,
-      },
-      false: {},
     },
   },
   defaultVariants: {
@@ -316,7 +309,6 @@ export function InvocationRow(props: {
   return (
     <Root
       data-element="invocation"
-      focus={props.focus}
       data-focus={props.focus ? true : undefined}
       data-expanded={expanded() ? true : undefined}
       expanded={expanded()}

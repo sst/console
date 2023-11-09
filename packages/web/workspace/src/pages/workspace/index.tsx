@@ -8,7 +8,7 @@ import {
 import { ReplicacheProvider, useReplicache } from "$/providers/replicache";
 import { NavigationAction, useCommandBar } from "./command-bar";
 import { Stage } from "./stage";
-import { Show, createEffect, createMemo } from "solid-js";
+import { Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import { WorkspaceStore } from "$/data/workspace";
 import { useAuth } from "$/providers/auth";
 import { IconWrenchScrewdriver } from "$/ui/icons";
@@ -54,9 +54,7 @@ export function Workspace() {
     if (id) storage.set("workspace", id);
   });
 
-  const loc = useLocation();
   bar.register("workspace", async () => {
-    console.log(loc.pathname, loc.key, loc.hash);
     return [
       NavigationAction({
         title: "Overview",
@@ -89,16 +87,18 @@ export function Workspace() {
   });
 
   return (
-    <Show when={workspace()}>
-      <ReplicacheProvider
-        accountID={storage.value.account}
-        workspaceID={workspace()!.id}
-      >
-        <WorkspaceContext.Provider value={() => workspace()!}>
-          <Content />
-        </WorkspaceContext.Provider>
-      </ReplicacheProvider>
-    </Show>
+    <Switch>
+      <Match when={workspace()}>
+        <ReplicacheProvider
+          accountID={storage.value.account}
+          workspaceID={workspace()!.id}
+        >
+          <WorkspaceContext.Provider value={() => workspace()!}>
+            <Content />
+          </WorkspaceContext.Provider>
+        </ReplicacheProvider>
+      </Match>
+    </Switch>
   );
 }
 
@@ -130,7 +130,8 @@ export function Content() {
       <Route path="settings" component={Settings} />
       <Route path="debug" component={Debug} />
       <Route path=":appName/:stageName/*" component={Stage} />
-      <Route path="*" component={Overview} />
+      <Route path="" component={Overview} />
+      <Route path="*" element={<span>404</span>} />
     </Routes>
   );
 }

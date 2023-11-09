@@ -49,6 +49,7 @@ export function Issues() {
           <Routes>
             <Route path="" element={<List />} />
             <Route path=":issueID" element={<Detail />} />
+            <Route path="*" element={<span>404</span>} />
           </Routes>
         </Match>
       </Switch>

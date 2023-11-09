@@ -193,7 +193,7 @@ export const App: Component = () => {
                               />
                               <Route path="/auth/code" component={Code} />
                               <Route
-                                path="*"
+                                path=""
                                 component={() => {
                                   const auth = useAuth();
                                   let existing = storage.value.account;
@@ -248,6 +248,7 @@ export const App: Component = () => {
                                   );
                                 }}
                               />
+                              <Route path="*" element={<span>404</span>} />
                             </Routes>
                           </CommandBar>
                         </InvocationProvider>

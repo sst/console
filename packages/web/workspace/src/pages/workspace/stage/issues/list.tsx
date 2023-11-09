@@ -653,6 +653,7 @@ const IssueRoot = styled("label", {
     borderStyle: "solid",
     borderWidth: "0 1px 1px 1px",
     borderColor: theme.color.divider.base,
+    position: "relative",
     ":last-child": {
       borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
     },
@@ -661,7 +662,6 @@ const IssueRoot = styled("label", {
     focus: {
       true: {
         ...inputFocusStyles,
-        borderRadius: theme.borderRadius,
       },
       false: {},
     },

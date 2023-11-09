@@ -243,7 +243,8 @@ export function Inner() {
               <Route path="resources/logs/:resourceID/*" component={Logs} />
               <Route path="issues/*" component={Issues} />
               <Route path="local/*" component={Local} />
-              <Route path="*" element={<Navigate href="resources" />} />
+              <Route path="" element={<Navigate href="resources" />} />
+              <Route path="*" element={<span>404</span>} />
             </Routes>
           </div>
         </Match>
