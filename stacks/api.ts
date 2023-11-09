@@ -128,6 +128,8 @@ export function API({ stack, app }: StackContext) {
         },
       },
       "GET /rest/local": "packages/functions/src/rest/local.handler",
+      "POST /rest/lambda/invoke":
+        "packages/functions/src/rest/lambda/invoke.handler",
       "GET /freshpaint/track": {
         type: "url",
         url: "https://api.perfalytics.com/track",

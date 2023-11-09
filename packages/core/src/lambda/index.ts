@@ -21,13 +21,14 @@ export const invoke = zod(
     const config = await Stage.assumeRole(input.stageID);
     if (!config) return;
     const client = new LambdaClient(config);
-    await client.send(
+    const result = await client.send(
       new InvokeCommand({
         FunctionName: input.functionARN,
         Payload: Buffer.from(JSON.stringify(input.payload)),
         InvocationType: "Event",
       })
     );
+    return result.$metadata.requestId!;
   }
 );
 

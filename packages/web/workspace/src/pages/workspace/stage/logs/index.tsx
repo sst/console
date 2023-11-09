@@ -422,6 +422,7 @@ export function Logs() {
       block: "nearest",
     });
   }
+
   createEventListener(window, "keypress", (e) => {
     console.log(document.activeElement?.tagName);
     if (document.activeElement?.tagName === "TEXTAREA") return;
@@ -635,8 +636,19 @@ export function Logs() {
                 }
               >
                 <Invoke
-                  onInvoke={() => {}}
                   control={(c) => (invokeControl = c)}
+                  onExpand={() => {
+                    if (mode() === "search") {
+                      setQuery(
+                        {
+                          view: "tail",
+                          end: undefined,
+                        },
+                        { replace: true }
+                      );
+                    }
+                  }}
+                  source={logGroupKey()}
                   resource={resource()!}
                 />
               </Show>

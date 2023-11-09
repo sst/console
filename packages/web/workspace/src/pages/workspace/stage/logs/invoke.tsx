@@ -33,6 +33,8 @@ import { useStageContext } from "../context";
 import { Show, createEffect, createMemo } from "solid-js";
 import { createScan2 } from "$/data/store";
 import { setError } from "@modular-forms/solid";
+import { useWorkspace } from "../../context";
+import { bus } from "$/providers/bus";
 
 const InvokeRoot = styled("div", {
   base: {
@@ -172,7 +174,8 @@ export interface InvokeControl {
 interface Props {
   resource: Extract<Resource.Info, { type: "Function" }>;
   control: (control: InvokeControl) => void;
-  onInvoke: () => void;
+  onExpand: () => void;
+  source: string;
 }
 
 export function Invoke(props: Props) {
@@ -214,21 +217,44 @@ export function Invoke(props: Props) {
     invokeTextArea.selectionEnd = 0;
     invokeTextArea.scrollTop = 0;
   }
+  const workspace = useWorkspace();
 
-  function handleInvoke(e: MouseEvent) {
-    e.stopPropagation();
+  async function handleInvoke() {
     try {
       const payload = JSON.parse(invokeTextArea.value || "{}");
       setInvoke("error", false);
-      setTimeout(() => setInvoke("invoking", false), 2000);
       setInvoke("invoking", true);
-      rep().mutate.function_invoke({
-        stageID: props.resource.stageID,
-        payload,
-        functionARN: props.resource.metadata.arn,
-      });
-      props.onInvoke();
-    } catch {
+      const result = await fetch(
+        import.meta.env.VITE_API_URL + "/rest/lambda/invoke",
+        {
+          headers: {
+            "x-sst-workspace": workspace().id,
+            authorization: rep().auth,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            stageID: props.resource.stageID,
+            payload,
+            functionARN: props.resource.metadata.arn,
+          }),
+          method: "POST",
+        }
+      ).then((r) => r.json());
+
+      bus.emit("invocation", [
+        {
+          id: result.requestID,
+          start: Date.now(),
+          logs: [],
+          cold: false,
+          input: payload,
+          errors: [],
+          source: props.source,
+        },
+      ]);
+      setInvoke("invoking", false);
+    } catch (ex) {
+      console.error(ex);
       setInvoke("error", true);
     }
   }
@@ -288,6 +314,7 @@ export function Invoke(props: Props) {
         height: "auto",
       }}
       onClick={() => {
+        props.onExpand();
         setInvoke("expand", true);
         invokeTextArea.focus();
       }}
@@ -310,14 +337,7 @@ export function Invoke(props: Props) {
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
             e.stopPropagation();
-            const payload = JSON.parse(invokeTextArea.value || "{}");
-            setTimeout(() => setInvoke("invoking", false), 2000);
-            setInvoke("invoking", true);
-            rep().mutate.function_invoke({
-              stageID: props.resource.stageID,
-              payload,
-              functionARN: props.resource.metadata.arn,
-            });
+            handleInvoke();
           }
         }}
       />
@@ -362,13 +382,6 @@ export function Invoke(props: Props) {
             >
               {invoke.invoking ? "Invoking" : "Invoke"}
             </Button>
-            <TextButton
-              onClick={handleInvoke}
-              disabled={invoke.invoking}
-              class={InvokeControlsLinkButton}
-            >
-              {invoke.invoking ? "Invoking..." : "Invoke"}
-            </TextButton>
           </Row>
         </Row>
       </InvokeControls>
