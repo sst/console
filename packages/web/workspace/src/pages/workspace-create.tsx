@@ -16,6 +16,7 @@ import { styled } from "@macaron-css/solid";
 import {
   FormError,
   createForm,
+  getValue,
   setError,
   valiForm,
 } from "@modular-forms/solid";
@@ -62,7 +63,6 @@ export function WorkspaceCreate() {
   const rep = createMemo(() => auth[storage.value.account].replicache);
   const id = createId();
   const workspace = WorkspaceStore.get.watch(rep, () => [id]);
-  const [slug, setSlug] = createSignal("");
   const pending = createMemo(() => workspace() != null);
 
   createEffect((prev) => {
@@ -82,7 +82,10 @@ export function WorkspaceCreate() {
       <Fullscreen inset="root">
         <Stack space="5">
           <Stack horizontal="center" space="5">
-            <AvatarInitialsIcon type="workspace" text={slug() || "-"} />
+            <AvatarInitialsIcon
+              type="workspace"
+              text={getValue(form, "slug") || "-"}
+            />
             <Stack horizontal="center" space="2">
               <Text size="lg" weight="medium">
                 Create a new workspace
