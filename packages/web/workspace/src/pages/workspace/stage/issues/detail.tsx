@@ -12,8 +12,9 @@ import {
   utility,
   Tag,
   Row,
-  Stack,
   Text,
+  Alert,
+  Stack,
   Button,
   Histogram,
   ButtonGroup,
@@ -285,6 +286,18 @@ export function Detail() {
             </Stack>
             <Stack space="2">
               <PanelTitle>Stack Trace</PanelTitle>
+              <Show when={issue().stack?.length && logInfo()?.missingSourcemap}>
+                <Alert level="info">
+                  Enable source maps to view the original stack trace.{" "}
+                  <a
+                    target="_blank"
+                    href="https://docs.sst.dev/advanced/source-maps"
+                  >
+                    Learn more
+                  </a>
+                  .
+                </Alert>
+              </Show>
               <StackTraceBackground>
                 <Show
                   when={issue().stack?.length}
@@ -298,15 +311,6 @@ export function Detail() {
                 </Show>
               </StackTraceBackground>
             </Stack>
-            <Show when={logInfo()?.missingSourcemap}>
-              <Stack space="2">
-                <PanelTitle>You can enable sourcemaps</PanelTitle>
-                <p>
-                  Follow this doc -
-                  https://docs.sst.dev/constructs/NextjsSite#sourcemaps
-                </p>
-              </Stack>
-            </Show>
             <Stack space="2">
               <Show
                 when={invocation()?.logs.length}

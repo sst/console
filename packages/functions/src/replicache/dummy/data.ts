@@ -1467,7 +1467,7 @@ function* issueMissingSourcemap(): Generator<DummyData, void, unknown> {
   yield func({
     id: ISSUE_FN_NAME_MISSING_SOURCEMAP,
     stage: STAGE_HAS_ISSUES,
-    handler: "packages/function.handler",
+    handler: "packages/no-source-map/function.handler",
     arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME_MISSING_SOURCEMAP}`,
     missingSourcemap: true,
   });
@@ -1475,6 +1475,7 @@ function* issueMissingSourcemap(): Generator<DummyData, void, unknown> {
   yield issue({
     id: ISSUE_ID_MISSING_SOURCEMAP,
     stage: STAGE_HAS_ISSUES,
+    stack: STACK_TRACE_RAW,
     error: "Error Missing Sourcemap",
     message: "Some error message",
     fnName: ISSUE_FN_NAME_MISSING_SOURCEMAP,
