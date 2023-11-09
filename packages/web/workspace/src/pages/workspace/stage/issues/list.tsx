@@ -37,6 +37,7 @@ import { filter, fromPairs, pipe, sortBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 import { IssueCountStore } from "$/data/issue";
 import { useCommandBar } from "../../command-bar";
+import { getLogInfo } from "./common";
 
 const COL_COUNT_WIDTH = 260;
 const COL_TIME_WIDTH = 140;
@@ -316,9 +317,6 @@ export function List() {
       warnings.filter((warning) => warning.type === "issue_rate_limited")
   );
   const resources = useResourcesContext();
-  const fns = createMemo(() =>
-    resources().flatMap((item) => (item.type === "Function" ? [item] : []))
-  );
 
   const [selected, setSelected] = createSignal<string[]>([]);
   const [warningExpanded, setWarningExpanded] = createSignal(false);
@@ -414,15 +412,10 @@ export function List() {
                               return "Missing permissions to add log subscriber";
                             return "Unknown";
                           })();
-                          return `${
-                            resources()
-                              .flatMap((x) =>
-                                x.id === item.target && x.type === "Function"
-                                  ? [x]
-                                  : []
-                              )
-                              .at(0)?.metadata.handler
-                          } (${reason})`;
+                          const logInfo = createMemo(() =>
+                            getLogInfo(resources(), item.target)
+                          );
+                          return `${logInfo()?.name} (${reason})`;
                         }
                       })
                       .filter(Boolean)
@@ -596,22 +589,15 @@ export function List() {
               >
                 <For each={filtered()}>
                   {(issue, i) => {
-                    const name = createMemo(() =>
-                      issue.pointer?.logGroup.split("/").at(-1)
+                    const logInfo = createMemo(() =>
+                      getLogInfo(resources(), issue.pointer?.logGroup)
                     );
-                    console.log(fns());
-                    const fn = createMemo(() =>
-                      fns().find(
-                        (x) => name() && x.metadata.arn.endsWith(name()!)
-                      )
-                    );
-                    console.log(fn());
                     return (
                       <IssueRow
                         issue={issue}
                         unread={view() === "active"}
                         last={i() === filtered().length - 1}
-                        handler={fn()?.metadata.handler || ""}
+                        logName={logInfo()?.name || ""}
                       />
                     );
                   }}
@@ -681,7 +667,7 @@ const IssueCheckbox = styled("input", {
 
 type IssueProps = {
   last: boolean;
-  handler: string;
+  logName: string;
   unread: boolean;
   issue: Issue.Info;
   focus?: boolean;
@@ -736,7 +722,7 @@ function IssueRow(props: IssueProps) {
             </Text>
 
             <Text code line leading="normal" size="mono_sm" color="dimmed">
-              {props.handler}
+              {props.logName}
             </Text>
           </Stack>
         </Stack>

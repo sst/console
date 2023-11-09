@@ -32,11 +32,7 @@ import {
   createMemo,
   onMount,
 } from "solid-js";
-import {
-  useFunctionsContext,
-  useResourcesContext,
-  useStageContext,
-} from "../context";
+import { useResourcesContext, useStageContext } from "../context";
 import type { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../../command-bar";
 import { DATETIME_LONG, parseTime } from "$/common/format";
@@ -53,6 +49,7 @@ import { useDummy } from "$/providers/dummy";
 import { createScan, createScan2 } from "$/data/store";
 import type { Invocation } from "@console/core/log";
 import { sortBy } from "remeda";
+import { getLogInfo } from "../issues/common";
 
 const LogSwitchButton = styled("button", {
   base: {
@@ -393,18 +390,7 @@ export function Logs() {
   let invokeControl!: InvokeControl;
   let rangeControl!: DialogRangeControl;
 
-  const functions = useFunctionsContext();
-
-  const title = createMemo(() => {
-    const [ref] = functions().get(resource()?.id || "") || [];
-    if (ref?.type === "NextjsSite" && ref.metadata.routes?.data) {
-      const match = ref.metadata.routes.data.find((item) =>
-        query.logGroup?.endsWith(item.logGroupPath)
-      );
-      if (match) return match.route;
-    }
-    return resource()?.metadata.handler;
-  });
+  const logInfo = createMemo(() => getLogInfo(resources(), query.logGroup));
 
   return (
     <Switch>
@@ -436,7 +422,7 @@ export function Logs() {
                   Logs
                 </Text>
                 <LogSwitchButton onClick={() => bar.show("resource")}>
-                  <span>{title()}</span>
+                  <span>{logInfo()?.name}</span>
                   <LogSwitchIcon>
                     <IconChevronUpDown />
                   </LogSwitchIcon>

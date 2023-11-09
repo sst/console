@@ -29,6 +29,7 @@ import { fromPairs } from "remeda";
 import { useResourcesContext, useStageContext } from "../context";
 import { useInvocations } from "$/providers/invocation";
 import { useCommandBar } from "../../command-bar";
+import { getLogInfo } from "./common";
 
 const DATETIME_NO_TIME = {
   month: "short",
@@ -177,17 +178,14 @@ export function Detail() {
     () => issue()?.invocation || invocations.forSource(issue()?.id).at(0)
   );
 
-  const name = createMemo(() => issue()?.pointer?.logGroup.split("/").at(-1));
   const resources = useResourcesContext();
-  const fn = createMemo(() =>
-    resources()
-      .flatMap((x) =>
-        name() && x.type === "Function" && x.metadata.arn.endsWith(name()!)
-          ? [x]
-          : []
-      )
-      .at(0)
+  const logInfo = createMemo(() =>
+    getLogInfo(resources(), issue()?.pointer?.logGroup)
   );
+
+  createEffect(() => {
+    console.log("logInfo", logInfo());
+  });
 
   const min = DateTime.now()
     .startOf("hour")
@@ -280,8 +278,8 @@ export function Detail() {
                 <Text break code leading="loose" size="mono_base">
                   {issue().message}
                 </Text>
-                <FunctionLink href={`../../resources/logs/${fn()?.id}`}>
-                  {fn()?.metadata.handler}
+                <FunctionLink href={`../../resources/logs/${logInfo()?.uri}`}>
+                  {logInfo()?.name}
                 </FunctionLink>
               </Stack>
             </Stack>
