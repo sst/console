@@ -45,6 +45,9 @@ const InvokeRoot = styled("div", {
     borderStyle: "solid",
     borderWidth: "0 1px 1px 1px",
     borderColor: theme.color.divider.base,
+    ":last-child": {
+      borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+    },
     ":focus-within": {},
   },
   variants: {

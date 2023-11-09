@@ -181,11 +181,53 @@ const EmptyIssuesSign = styled("div", {
     ...utility.stack(0),
     alignItems: "center",
     justifyContent: "center",
-    padding: `${theme.space[32]} ${theme.space[4]}`,
+    height: 300,
+    padding: `0 ${theme.space[4]}`,
     borderStyle: "solid",
     borderWidth: "0 1px 1px 1px",
     borderColor: theme.color.divider.base,
     borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+  },
+});
+
+const EmptyIssuesHelper = styled("div", {
+  base: {
+    ...utility.stack(5),
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const EmptyIssuesHelperHeader = styled("span", {
+  base: {
+    textAlign: "center",
+    marginLeft: theme.space[3.5],
+    marginRight: theme.space[3.5],
+    paddingBottom: theme.space[5],
+    borderBottom: `2px dashed ${theme.color.divider.base}`,
+    fontSize: theme.font.size.lg,
+  },
+});
+
+const EmptyIssuesHint = styled("ul", {
+  base: {
+    ...utility.stack(3),
+    paddingLeft: 30,
+    listStyle: "circle",
+    fontSize: theme.font.size.base,
+  },
+});
+
+const EmptyIssuesHintCode = styled("span", {
+  base: {
+    fontSize: theme.font.size.mono_base,
+    fontFamily: theme.font.family.code,
+  },
+});
+
+const EmptyIssuesCopy = styled("span", {
+  base: {
+    fontSize: theme.font.size.lg,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -606,30 +648,38 @@ export function List() {
                 when={filtered().length !== 0}
                 fallback={
                   <EmptyIssuesSign>
-                    <Text size="lg" color="dimmed">
-                      <Switch>
-                        <Match
-                          when={view() === "active" && issues().length === 0}
-                        >
-                          When your function fails or times out, an issue will
-                          show up here.
-                          <br />
-                          Alternatively, you can also report an issue like this
-                          `console.error(new Error("Report an issue"))`
-                        </Match>
-                        <Match
-                          when={view() === "active" && issues().length > 0}
-                        >
-                          No new issues
-                        </Match>
-                        <Match when={view() === "ignored"}>
-                          No ignored issues
-                        </Match>
-                        <Match when={view() === "resolved"}>
-                          No resolved issues
-                        </Match>
-                      </Switch>
-                    </Text>
+                    <Switch>
+                      <Match
+                        when={view() === "active" && issues().length === 0}
+                      >
+                        <EmptyIssuesHelper>
+                          <EmptyIssuesHelperHeader>
+                            Reporting Issues
+                          </EmptyIssuesHelperHeader>
+                          <EmptyIssuesHint>
+                            <li>
+                              Simply call{" "}
+                              <EmptyIssuesHintCode>
+                                `console.error(new Error("MyError"))`
+                              </EmptyIssuesHintCode>
+                            </li>
+                            <li>
+                              Function failures and timeouts are automatically
+                              detected
+                            </li>
+                          </EmptyIssuesHint>
+                        </EmptyIssuesHelper>
+                      </Match>
+                      <Match when={view() === "active" && issues().length > 0}>
+                        <EmptyIssuesCopy>No new issues</EmptyIssuesCopy>
+                      </Match>
+                      <Match when={view() === "ignored"}>
+                        <EmptyIssuesCopy>No ignored issues</EmptyIssuesCopy>
+                      </Match>
+                      <Match when={view() === "resolved"}>
+                        <EmptyIssuesCopy>No resolved issues</EmptyIssuesCopy>
+                      </Match>
+                    </Switch>
                   </EmptyIssuesSign>
                 }
               >
