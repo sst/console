@@ -608,7 +608,20 @@ export function List() {
                   <EmptyIssuesSign>
                     <Text size="lg" color="dimmed">
                       <Switch>
-                        <Match when={view() === "active"}>No new issues</Match>
+                        <Match
+                          when={view() === "active" && issues().length === 0}
+                        >
+                          When your function fails or times out, an issue will
+                          show up here.
+                          <br />
+                          Alternatively, you can also report an issue like this
+                          `console.error(new Error("Report an issue"))`
+                        </Match>
+                        <Match
+                          when={view() === "active" && issues().length > 0}
+                        >
+                          No new issues
+                        </Match>
                         <Match when={view() === "ignored"}>
                           No ignored issues
                         </Match>

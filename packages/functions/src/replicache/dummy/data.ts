@@ -93,6 +93,7 @@ export function* generateData(
 
   if (modeMap["issues"]) {
     yield* stageNoIssues();
+    yield* stageNoActiveIssues();
     yield* stageIssuesWarningSubscription();
     yield* stageIssuesWarningRateLimited();
     yield* stageHasIssues();
@@ -194,6 +195,7 @@ const STAGE_EMPTY = "stage-empty";
 const STAGE_NOT_SUPPORTED = "stage-not-supported";
 const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
 const STAGE_NO_ISSUES = "stage-no-issues";
+const STAGE_NO_ACTIVE_ISSUES = "stage-no-active-issues";
 const STAGE_HAS_ISSUES = "stage-has-issues";
 const STAGE_HAS_FUNCTION = "stage-has-function";
 const STAGE_ISSUES_WARN_RATE = "stage-issues-warning-rate-limit";
@@ -221,6 +223,7 @@ const ISSUE_ID_NO_STACK_TRACE = "125";
 const ISSUE_ID_RAW_STACK_TRACE = "126";
 const ISSUE_ID_FULL_STACK_TRACE = "127";
 const ISSUE_ID_MISSING_SOURCEMAP = "128";
+const ISSUE_ID_RESOLVED = "129";
 
 const STACK_TRACE = [
   {
@@ -1109,6 +1112,39 @@ function* stageNoIssues(): Generator<DummyData, void, unknown> {
       consumers: [],
       tableName: "jayair-console-dummy-notes-table",
     },
+  });
+}
+
+function* stageNoActiveIssues(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_NO_ACTIVE_ISSUES,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_NO_ACTIVE_ISSUES,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield resource({
+    type: "Table",
+    id: "notes-table",
+    stage: STAGE_NO_ACTIVE_ISSUES,
+    metadata: {
+      consumers: [],
+      tableName: "jayair-console-dummy-notes-table",
+    },
+  });
+  yield issue({
+    stage: STAGE_NO_ACTIVE_ISSUES,
+    id: ISSUE_ID_RESOLVED,
+    error: "Error",
+    message: "Some error message",
+    timeResolved: DateTime.now().startOf("day").toSQL()!,
   });
 }
 
@@ -2088,6 +2124,7 @@ interface IssueProps {
   message: string;
   stack?: StackFrame[];
   invocation?: Invocation;
+  timeResolved?: string;
 }
 function issue({
   id,
@@ -2096,6 +2133,7 @@ function issue({
   fnName,
   message,
   invocation,
+  timeResolved,
   stack,
 }: IssueProps): DummyData {
   return {
@@ -2103,7 +2141,7 @@ function issue({
     id,
     timeSeen: DateTime.now().startOf("day").toSQL()!,
     timeDeleted: null,
-    timeResolved: null,
+    timeResolved: timeResolved || null,
     timeIgnored: null,
     invocation: invocation || null,
     stageID: stage || STAGE_HAS_ISSUES,
