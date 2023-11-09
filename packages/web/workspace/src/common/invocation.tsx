@@ -309,7 +309,6 @@ export function InvocationRow(props: {
   return (
     <Root
       data-element="invocation"
-      focus={props.focus}
       data-focus={props.focus ? true : undefined}
       data-expanded={expanded() ? true : undefined}
       expanded={expanded()}
