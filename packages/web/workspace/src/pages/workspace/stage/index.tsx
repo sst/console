@@ -39,6 +39,7 @@ import { Fullscreen, Row, Stack, TabTitle, theme, utility, Text } from "$/ui";
 import { Local } from "./local";
 import { IconExclamationTriangle } from "$/ui/icons";
 import { styled } from "@macaron-css/solid";
+import { NotFound } from "../../not-found";
 import { useWorkspace } from "../context";
 import { useLocalContext } from "$/providers/local";
 
@@ -244,7 +245,7 @@ export function Inner() {
               <Route path="issues/*" component={Issues} />
               <Route path="local/*" component={Local} />
               <Route path="" element={<Navigate href="resources" />} />
-              <Route path="*" element={<span>404</span>} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
         </Match>

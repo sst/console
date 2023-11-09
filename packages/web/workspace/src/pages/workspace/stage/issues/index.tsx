@@ -17,6 +17,7 @@ import { useCommandBar } from "../../command-bar";
 import { IconApp } from "$/ui/icons/custom";
 import { IconArrowRight } from "$/ui/icons";
 import { Warning } from "../";
+import { NotFound } from "../../../not-found";
 import { useWorkspace } from "../../context";
 import { useStageContext } from "../context";
 
@@ -49,7 +50,7 @@ export function Issues() {
           <Routes>
             <Route path="" element={<List />} />
             <Route path=":issueID" element={<Detail />} />
-            <Route path="*" element={<span>404</span>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Match>
       </Switch>

@@ -15,6 +15,7 @@ import { Navigate, Route, Routes, useSearchParams } from "@solidjs/router";
 import { For, Show, createSignal, onMount } from "solid-js";
 import Botpoison from "@botpoison/browser";
 import { createSingleSelectListState } from "@kobalte/core";
+import { NotFound } from "../not-found";
 
 const Root = styled("div", {
   base: {
@@ -86,7 +87,7 @@ export function Auth() {
         <Route path="email" component={Email} />
         <Route path="code" component={Code} />
         <Route path="" element={<Navigate href="email" />} />
-        <Route path="*" element={<span>404</span>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Fullscreen>
   );

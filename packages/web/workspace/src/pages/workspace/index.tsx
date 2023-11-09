@@ -26,6 +26,7 @@ import {
 } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
+import { NotFound } from "../not-found";
 import { Debug } from "../debug";
 
 export function Workspace() {
@@ -131,7 +132,7 @@ export function Content() {
       <Route path="debug" component={Debug} />
       <Route path=":appName/:stageName/*" component={Stage} />
       <Route path="" component={Overview} />
-      <Route path="*" element={<span>404</span>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

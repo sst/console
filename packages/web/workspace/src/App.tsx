@@ -32,6 +32,7 @@ import { DummyConfigProvider, DummyProvider } from "./providers/dummy";
 import { InvocationProvider } from "./providers/invocation";
 import { FlagsProvider } from "./providers/flags";
 import { createGet } from "./data/store";
+import { NotFound } from "./pages/not-found";
 import { Local } from "./pages/local";
 
 const Root = styled("div", {
@@ -248,7 +249,7 @@ export const App: Component = () => {
                                   );
                                 }}
                               />
-                              <Route path="*" element={<span>404</span>} />
+                              <Route path="*" element={<NotFound />} />
                             </Routes>
                           </CommandBar>
                         </InvocationProvider>
