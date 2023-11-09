@@ -1,3 +1,4 @@
+import { CSSProperties } from "@macaron-css/core";
 import { Workspace } from "@console/core/workspace";
 import { Row, Stack, AvatarInitialsIcon, Text, theme } from "$/ui";
 import { IconApp } from "$/ui/icons/custom";
@@ -19,6 +20,17 @@ import {
 } from "solid-js";
 import { createInitializedContext } from "$/common/context";
 import { dropAllDatabases } from "replicache";
+
+const stageSwitcherStyles: CSSProperties = {
+  flexShrink: 0,
+  display: "flex",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  borderLeft: `1px solid ${theme.color.divider.base}`,
+  paddingLeft: theme.space[4],
+  gap: theme.space[3],
+  font: theme.font.family.heading,
+};
 
 const Root = styled("div", {
   base: {
@@ -43,6 +55,12 @@ const WorkspaceLogoLink = styled(Link, {
   },
 });
 
+const SSTConsoleTitle = styled(Link, {
+  base: {
+    ...stageSwitcherStyles,
+  },
+});
+
 const SSTIcon = styled("span", {
   base: {
     display: "flex",
@@ -58,14 +76,7 @@ const SSTIcon = styled("span", {
 
 const StageSwitcher = styled("button", {
   base: {
-    flexShrink: 0,
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    borderLeft: `1px solid ${theme.color.divider.base}`,
-    paddingLeft: theme.space[4],
-    gap: theme.space[3],
-    font: theme.font.family.heading,
+    ...stageSwitcherStyles,
   },
 });
 
@@ -190,6 +201,9 @@ export function Header(props: { app?: string; stage?: string }) {
                   <IconApp width="20" height="20" />
                 </SSTIcon>
               </Link>
+              <SSTConsoleTitle href="/">
+                <StageSwitcherCopyMain>Console</StageSwitcherCopyMain>
+              </SSTConsoleTitle>
             </>
           }
         >
