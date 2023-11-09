@@ -37,6 +37,11 @@ export function* generateData(
 ): Generator<DummyData, void, unknown> {
   console.log("generating for", mode);
 
+  // Reset auto-incrementing IDs
+  WARNING_COUNT = 0;
+  INVOCATION_COUNT = 0;
+  ISSUE_ALERT_COUNT = 0;
+
   const modeMap = stringToObject(mode);
 
   yield workspace({
@@ -123,11 +128,13 @@ export function* generateData(
     yield* invocationWithRequestResponse();
 
     yield* invocationErrorSimple();
+    yield* invocationErrorMessageOverflow();
     yield* invocationFailSimple();
-    //    yield* invocationErrorMultiple();
-    //    yield* invocationErrorStackTraceBase();
-    //    yield* invocationErrorStackTraceRaw();
-    //    yield* invocationErrorStackTraceFull();
+    yield* invocationFailMultiple();
+    yield* invocationErrorStackTraceBase();
+    yield* invocationFailMultipleWithStackTrace();
+    yield* invocationErrorStackTraceRaw();
+    yield* invocationErrorStackTraceFull();
   }
 }
 
@@ -321,11 +328,10 @@ const STACK_TRACE_FULL = [
 
 const LOGS_FN = "my-logs-func";
 
+// Auto-incrementing IDs
 let WARNING_COUNT = 0;
-
-let ISSUE_ALERT_COUNT = 0;
-
 let INVOCATION_COUNT = 0;
+let ISSUE_ALERT_COUNT = 0;
 
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
@@ -1723,6 +1729,28 @@ function* invocationErrorSimple(): Generator<DummyData, void, unknown> {
   });
 }
 
+function* invocationErrorMessageOverflow(): Generator<
+  DummyData,
+  void,
+  unknown
+> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 13 }).startOf("day"),
+    messages: [`simple error`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message:
+          "areallyreallylonglinethatshouldoverflowandwordwrapbutitdoesntbecauseitshouldntbeabletofitallthewaythroughthewidthofthepagebecauseitswaytoolongandwilloverflowalltheway",
+        failed: false,
+        stack: [],
+      },
+    ],
+  });
+}
+
 function* invocationFailSimple(): Generator<DummyData, void, unknown> {
   yield globalInvocation({
     duration: 306,
@@ -1733,6 +1761,109 @@ function* invocationFailSimple(): Generator<DummyData, void, unknown> {
         id: "1",
         error: "Error",
         message: "simple failure",
+        failed: true,
+        stack: [],
+      },
+    ],
+  });
+}
+
+function* invocationFailMultiple(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 9 }).startOf("day"),
+    messages: [`multiple failures`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "multiple failures 1",
+        failed: true,
+        stack: [],
+      },
+      {
+        id: "2",
+        error: "Error",
+        message: "multiple failures 2",
+        failed: true,
+        stack: [],
+      },
+    ],
+  });
+}
+
+function* invocationErrorStackTraceBase(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 10 }).startOf("day"),
+    messages: [`simple failure`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "stack trace base",
+        failed: true,
+        stack: STACK_TRACE,
+      },
+    ],
+  });
+}
+
+function* invocationErrorStackTraceRaw(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 10 }).startOf("day"),
+    messages: [`simple failure`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "stack trace raw",
+        failed: true,
+        stack: STACK_TRACE_RAW,
+      },
+    ],
+  });
+}
+
+function* invocationErrorStackTraceFull(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 10 }).startOf("day"),
+    messages: [`simple failure`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "stack trace full",
+        failed: true,
+        stack: STACK_TRACE_FULL,
+      },
+    ],
+  });
+}
+
+function* invocationFailMultipleWithStackTrace(): Generator<
+  DummyData,
+  void,
+  unknown
+> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 11 }).startOf("day"),
+    messages: [`simple failure`],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "multiple with stack trace 1",
+        failed: true,
+        stack: STACK_TRACE,
+      },
+      {
+        id: "1",
+        error: "Error",
+        message: "multiple without stack trace 2",
         failed: true,
         stack: [],
       },

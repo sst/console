@@ -13,6 +13,12 @@ export const ErrorList = styled("div", {
 
 const Title = styled("div", {
   base: {
+    fontFamily: theme.font.family.code,
+    fontWeight: theme.font.weight.medium,
+    color: theme.color.text.danger.surface,
+    lineHeight: theme.font.lineHeight,
+    fontSize: theme.font.size.mono_base,
+    wordBreak: "break-all",
     borderTop: `1px solid ${theme.color.divider.surface}`,
     padding: `${theme.space[3]} ${theme.space[4]} ${theme.space[2.5]}`,
     ":first-child": {
@@ -109,16 +115,7 @@ export function ErrorItem(props: { error: Invocation["errors"][number] }) {
   return (
     <>
       <Title>
-        <Text
-          code
-          weight="medium"
-          size="mono_base"
-          on="surface"
-          color="danger"
-          leading="loose"
-        >
-          {props.error.error}: {props.error.message}
-        </Text>
+        {props.error.error}: {props.error.message}
       </Title>
       <StackTrace stack={props.error.stack} />
     </>

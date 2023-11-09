@@ -234,9 +234,15 @@ export function Overview() {
 
   function renderAccount(account: Account.Info) {
     const apps = AppStore.all.watch(rep, () => []);
+    const local = useLocalContext();
     const children = createMemo(() => {
       return sortBy(
         stages().filter((stage) => stage.awsAccountID === account.id),
+        (c) =>
+          apps().find((app) => app.id === c.appID)?.name === local().app &&
+          c.name === local().stage
+            ? 0
+            : 1,
         (c) => apps().find((app) => app.id === c.appID)?.name || "",
         (c) => c.name
       );

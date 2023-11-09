@@ -13,7 +13,7 @@ import {
   SplitOptionsOption,
 } from "$/ui";
 import { formatSinceTime, parseTime } from "$/common/format";
-import { Link, useSearchParams } from "@solidjs/router";
+import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { theme } from "$/ui/theme";
 import type { Issue } from "@console/core/issue";
 import {
@@ -38,6 +38,8 @@ import { WarningStore } from "$/data/warning";
 import { IssueCountStore } from "$/data/issue";
 import { useCommandBar } from "../../command-bar";
 import { getLogInfo } from "./common";
+import { createShortcut } from "@solid-primitives/keyboard";
+import { createEventListener } from "@solid-primitives/event-listener";
 
 const COL_COUNT_WIDTH = 260;
 const COL_TIME_WIDTH = 140;
@@ -430,6 +432,37 @@ export function List() {
     );
   }
 
+  const [index, setIndex] = createSignal(-1);
+  function moveIndex(offset: -1 | 1) {
+    const next = index() + offset;
+    setIndex(Math.max(0, Math.min(next, filtered().length - 1)));
+    const el = document.querySelector("[data-focus]");
+    if (!el) return;
+    if (next === 0) {
+      el.scrollIntoView({
+        block: "end",
+      });
+      return;
+    }
+    el.scrollIntoView({
+      block: "nearest",
+    });
+  }
+
+  const nav = useNavigate();
+  createEventListener(window, "keypress", (e) => {
+    if (e.key === "j") moveIndex(1);
+    if (e.key === "k") moveIndex(-1);
+    if (e.key === "Enter") {
+      document.querySelector<HTMLElement>("[data-focus] a")?.click();
+    }
+    if (e.key === " ") {
+      e.stopPropagation();
+      e.preventDefault();
+      document.querySelector<HTMLElement>("[data-focus] input")?.click();
+    }
+  });
+
   return (
     <>
       <HeaderSlot>
@@ -595,6 +628,7 @@ export function List() {
                     return (
                       <IssueRow
                         issue={issue}
+                        focus={index() === i()}
                         unread={view() === "active"}
                         last={i() === filtered().length - 1}
                         logName={logInfo()?.name || ""}
@@ -627,6 +661,7 @@ const IssueRoot = styled("label", {
     focus: {
       true: {
         ...inputFocusStyles,
+        borderRadius: theme.borderRadius,
       },
       false: {},
     },
@@ -702,7 +737,7 @@ function IssueRow(props: IssueProps) {
   });
 
   return (
-    <IssueRoot focus={props.focus}>
+    <IssueRoot data-focus={props.focus ? true : undefined} focus={props.focus}>
       <IssueCol>
         <IssueCheckbox name="issue" value={props.issue.id} type="checkbox" />
       </IssueCol>
