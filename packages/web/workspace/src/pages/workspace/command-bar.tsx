@@ -391,7 +391,6 @@ export function CommandBar(props: ParentProps) {
               <FilterInput
                 value={control.input}
                 onInput={(e) => control.setInput(e.target.value)}
-                autofocus
                 placeholder="Type to search"
               />
             </Filter>
