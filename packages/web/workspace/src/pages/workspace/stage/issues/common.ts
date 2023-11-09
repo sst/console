@@ -29,6 +29,7 @@ export function getLogInfo(resources: Resource.Info[], logGroup?: string) {
               {
                 uri: `${serverFunction.id}?logGroup=${logGroup}`,
                 name: `Route: ${route.route}`,
+                missingSourcemap: serverFunction.metadata.missingSourcemap,
               },
             ];
           })() ?? []
@@ -36,7 +37,13 @@ export function getLogInfo(resources: Resource.Info[], logGroup?: string) {
       }
       // Function log group
       else if (x.type === "Function" && name && x.metadata.arn.endsWith(name)) {
-        return [{ uri: x.id, name: x.metadata.handler }];
+        return [
+          {
+            uri: x.id,
+            name: x.metadata.handler,
+            missingSourcemap: x.metadata.missingSourcemap,
+          },
+        ];
       }
       return [];
     })

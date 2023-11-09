@@ -298,6 +298,15 @@ export function Detail() {
                 </Show>
               </StackTraceBackground>
             </Stack>
+            <Show when={logInfo()?.missingSourcemap}>
+              <Stack space="2">
+                <PanelTitle>You can enable sourcemaps</PanelTitle>
+                <p>
+                  Follow this doc -
+                  https://docs.sst.dev/constructs/NextjsSite#sourcemaps
+                </p>
+              </Stack>
+            </Show>
             <Stack space="2">
               <Show
                 when={invocation()?.logs.length}

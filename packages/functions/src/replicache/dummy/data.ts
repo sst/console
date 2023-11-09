@@ -102,6 +102,7 @@ export function* generateData(
     yield* issueFullSourceMapStackTrace();
     yield* issueNoStackTrace();
     yield* issueLong();
+    yield* issueMissingSourcemap();
   }
 
   if (modeMap["alerts"] === "base") {
@@ -214,10 +215,12 @@ const ISSUE_WARN_FN_LONG = "my-warn-func-long";
 const ISSUE_ID = "123";
 const ISSUE_FN = "my-issues-func";
 const ISSUE_ID_LONG = "124";
-const ISSUE_FN_NAME = "my-issues-func-long";
+const ISSUE_FN_NAME_LONG = "my-issues-func-long";
+const ISSUE_FN_NAME_MISSING_SOURCEMAP = "my-issues-func-missing-sourcemap";
 const ISSUE_ID_NO_STACK_TRACE = "125";
 const ISSUE_ID_RAW_STACK_TRACE = "126";
 const ISSUE_ID_FULL_STACK_TRACE = "127";
+const ISSUE_ID_MISSING_SOURCEMAP = "128";
 
 const STACK_TRACE = [
   {
@@ -1402,11 +1405,12 @@ function* issueFullSourceMapStackTrace(): Generator<DummyData, void, unknown> {
 
 function* issueLong(): Generator<DummyData, void, unknown> {
   yield func({
-    id: ISSUE_FN_NAME,
+    id: ISSUE_FN_NAME_LONG,
     stage: STAGE_HAS_ISSUES,
+
     handler:
       "packages/path/to/function/that/should/overflow/because/its/too/long/and/it/keeps/going/because/it/really/is/way/too/long/function.handler",
-    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME}`,
+    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME_LONG}`,
   });
 
   yield issue({
@@ -1416,10 +1420,28 @@ function* issueLong(): Generator<DummyData, void, unknown> {
       "Errorlongmessagethatisreallylongandshouldoverflowbecauseitstoolonganditkeepsgoingandgoingforareallylongtime",
     message:
       "Someerrormessagethat'salsowaytoolongandshouldoverflowbecauseitstoolonganditkeepsgoingandgoingforareallylongtime",
-    fnName: ISSUE_FN_NAME,
+    fnName: ISSUE_FN_NAME_LONG,
   });
   yield issueCount({
     group: ISSUE_ID_LONG,
+  });
+}
+
+function* issueMissingSourcemap(): Generator<DummyData, void, unknown> {
+  yield func({
+    id: ISSUE_FN_NAME_MISSING_SOURCEMAP,
+    stage: STAGE_HAS_ISSUES,
+    handler: "packages/function.handler",
+    arn: `arn:aws:lambda:us-east-1:123456789012:function:${ISSUE_FN_NAME_MISSING_SOURCEMAP}`,
+    missingSourcemap: true,
+  });
+
+  yield issue({
+    id: ISSUE_ID_MISSING_SOURCEMAP,
+    stage: STAGE_HAS_ISSUES,
+    error: "Error Missing Sourcemap",
+    message: "Some error message",
+    fnName: ISSUE_FN_NAME_MISSING_SOURCEMAP,
   });
 }
 
@@ -2018,6 +2040,7 @@ interface FuncProps {
   live?: boolean;
   handler: string;
   runtime?: Extract<Resource.Info, { type: "Function" }>["metadata"]["runtime"];
+  missingSourcemap?: boolean;
 }
 function func({
   id,
@@ -2027,6 +2050,7 @@ function func({
   stage,
   handler,
   runtime,
+  missingSourcemap,
 }: FuncProps): DummyData {
   return resource({
     id,
@@ -2038,6 +2062,7 @@ function func({
       secrets: [],
       runtime: runtime || "nodejs18.x",
       arn: arn || "arn:aws:lambda:us-east-1:123456789012:function:my-func",
+      missingSourcemap,
     },
     enrichment: {
       size: size || 2048,
