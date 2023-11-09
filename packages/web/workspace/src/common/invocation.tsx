@@ -48,7 +48,6 @@ const Root = styled("div", {
     selectors: {
       "&[data-focus]": {
         ...inputFocusStyles,
-        borderRadius: theme.borderRadius,
       },
     },
   },
@@ -60,12 +59,6 @@ const Root = styled("div", {
     level: {
       info: {},
       danger: {},
-    },
-    focus: {
-      true: {
-        ...inputFocusStyles,
-      },
-      false: {},
     },
   },
   defaultVariants: {

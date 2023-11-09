@@ -100,7 +100,7 @@ export function DialogRange(props: {
           </Stack>
           <Row space="1">
             <Grower>
-              <FormField hint="Look for logs older than this date.">
+              <FormField hint="Look for logs older than the given date">
                 <Input ref={end} name="end" type="datetime-local" />
               </FormField>
             </Grower>

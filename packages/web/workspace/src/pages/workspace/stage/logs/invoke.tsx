@@ -352,17 +352,22 @@ export function Invoke(props: Props) {
           <LinkButton
             style={{ display: invoke.empty ? "none" : "inline" }}
             onClick={() => {
-              const parsed = JSON.parse(invokeTextArea.value);
-              saveControl.show(key(), parsed);
+              try {
+                const parsed = JSON.parse(invokeTextArea.value);
+                saveControl.show(key(), parsed);
+              } catch (ex) {
+                console.error(ex);
+                setInvoke("error", true);
+              }
             }}
           >
             Save
           </LinkButton>
         </InvokeControlsLeft>
-        <Row vertical="center" space="7">
+        <Row vertical="center" space="6">
           <Show when={invoke.error}>
-            <Text color="danger" size="sm">
-              Payload must be valid JSON.
+            <Text color="danger" size="sm" leading="normal">
+              Payload needs to be valid JSON.
             </Text>
           </Show>
           <Row vertical="center" space="4">
@@ -370,6 +375,7 @@ export function Invoke(props: Props) {
               onClick={(e) => {
                 e.stopPropagation();
                 setInvoke("expand", false);
+                setInvoke("error", false);
               }}
             >
               Cancel
