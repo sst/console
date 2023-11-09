@@ -33,7 +33,11 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-import { useResourcesContext, useStageContext } from "../context";
+import {
+  useFunctionsContext,
+  useResourcesContext,
+  useStageContext,
+} from "../context";
 import type { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../../command-bar";
 import { DATETIME_LONG, parseTime } from "$/common/format";
@@ -392,7 +396,11 @@ export function Logs() {
   let invokeControl!: InvokeControl;
   let rangeControl!: DialogRangeControl;
 
-  const logInfo = createMemo(() => getLogInfo(resources(), query.logGroup));
+  const title = createMemo(() =>
+    query.logGroup
+      ? getLogInfo(resources(), query.logGroup)?.name
+      : resource()?.metadata.handler
+  );
 
   function moveIndex(offset: -1 | 1) {
     const all = document.querySelectorAll<HTMLElement>(
@@ -481,7 +489,7 @@ export function Logs() {
                   Logs
                 </Text>
                 <LogSwitchButton onClick={() => bar.show("resource")}>
-                  <span>{logInfo()?.name}</span>
+                  <span>{title()}</span>
                   <LogSwitchIcon>
                     <IconChevronUpDown />
                   </LogSwitchIcon>
