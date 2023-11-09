@@ -23,6 +23,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { useNavigate } from "@solidjs/router";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
 import { minLength, object, string, regex } from "valibot";
+import { Header } from "./workspace/header";
 
 const CreateWorkspaceHint = styled("ul", {
   base: {
@@ -76,54 +77,61 @@ export function WorkspaceCreate() {
   });
 
   return (
-    <Fullscreen>
-      <Stack space="5">
-        <Stack horizontal="center" space="5">
-          <AvatarInitialsIcon type="workspace" text={slug() || "-"} />
-          <Stack horizontal="center" space="2">
-            <Text size="lg" weight="medium">
-              Create a new workspace
-            </Text>
-            <Text color="secondary" on="base">
-              Start by giving your workspace a name
-            </Text>
+    <>
+      <Header />
+      <Fullscreen inset="root">
+        <Stack space="5">
+          <Stack horizontal="center" space="5">
+            <AvatarInitialsIcon type="workspace" text={slug() || "-"} />
+            <Stack horizontal="center" space="2">
+              <Text size="lg" weight="medium">
+                Create a new workspace
+              </Text>
+              <Text color="secondary" on="base">
+                Start by giving your workspace a name
+              </Text>
+            </Stack>
+            <CreateWorkspaceHint>
+              <li>Create a workspace for your organization</li>
+              <li>Invite your team & connect your accounts</li>
+            </CreateWorkspaceHint>
           </Stack>
-          <CreateWorkspaceHint>
-            <li>Create a workspace for your organization</li>
-            <li>Invite your team & connect your accounts</li>
-          </CreateWorkspaceHint>
+          <Form
+            onSubmit={(data) => {
+              rep().mutate.workspace_create({
+                id,
+                slug: data.slug,
+              });
+            }}
+          >
+            <FieldList>
+              <Field name="slug">
+                {(field, props) => (
+                  <FormField
+                    hint={
+                      field.error
+                        ? field.error
+                        : "Needs to be lowercase, unique, and URL friendly."
+                    }
+                    color={field.error ? "danger" : "primary"}
+                  >
+                    <Input
+                      {...props}
+                      autofocus
+                      placeholder="your-company-name"
+                    />
+                  </FormField>
+                )}
+              </Field>
+              <Button type="submit" disabled={Boolean(pending())}>
+                <Show when={pending()} fallback="Create Workspace">
+                  Creating&hellip;
+                </Show>
+              </Button>
+            </FieldList>
+          </Form>
         </Stack>
-        <Form
-          onSubmit={(data) => {
-            rep().mutate.workspace_create({
-              id,
-              slug: data.slug,
-            });
-          }}
-        >
-          <FieldList>
-            <Field name="slug">
-              {(field, props) => (
-                <FormField
-                  hint={
-                    field.error
-                      ? field.error
-                      : "Needs to be lowercase, unique, and URL friendly."
-                  }
-                  color={field.error ? "danger" : "primary"}
-                >
-                  <Input {...props} autofocus placeholder="your-company-name" />
-                </FormField>
-              )}
-            </Field>
-            <Button type="submit" disabled={Boolean(pending())}>
-              <Show when={pending()} fallback="Create Workspace">
-                Creating&hellip;
-              </Show>
-            </Button>
-          </FieldList>
-        </Form>
-      </Stack>
-    </Fullscreen>
+      </Fullscreen>
+    </>
   );
 }

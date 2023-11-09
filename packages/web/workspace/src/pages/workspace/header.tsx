@@ -1,18 +1,21 @@
+import { Workspace } from "@console/core/workspace";
 import { Row, Stack, AvatarInitialsIcon, Text, theme } from "$/ui";
+import { IconApp } from "$/ui/icons/custom";
 import { IconChevronUpDown, IconMagnifyingGlass } from "$/ui/icons";
 import { utility } from "$/ui/utility";
 import { TextButton } from "$/ui/button";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
-import { useWorkspace } from "./context";
+import { WorkspaceContext } from "./context";
 import { useCommandBar } from "./command-bar";
 import {
   JSX,
-  ParentProps,
   Show,
+  onCleanup,
+  useContext,
+  ParentProps,
   createEffect,
   createSignal,
-  onCleanup,
 } from "solid-js";
 import { createInitializedContext } from "$/common/context";
 import { dropAllDatabases } from "replicache";
@@ -37,6 +40,19 @@ const Root = styled("div", {
 const WorkspaceLogoLink = styled(Link, {
   base: {
     display: "flex",
+  },
+});
+
+const SSTIcon = styled("span", {
+  base: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 36,
+    height: 36,
+    color: "#FFFBF9",
+    backgroundColor: "#395C6B",
+    borderRadius: theme.borderRadius,
   },
 });
 
@@ -159,35 +175,50 @@ export function HeaderSlot(props: ParentProps) {
 }
 
 export function Header(props: { app?: string; stage?: string }) {
-  const workspace = useWorkspace();
+  const workspace = useContext(WorkspaceContext);
   const bar = useCommandBar();
 
   return (
     <Root>
       <Row space="4" vertical="center">
-        <WorkspaceLogoLink href={`/${workspace().slug}`}>
-          <AvatarInitialsIcon type="workspace" text={workspace().slug} />
-        </WorkspaceLogoLink>
-        <StageSwitcher
-          onClick={() =>
-            props.stage
-              ? bar.show("stage-switcher")
-              : bar.show("workspace-switcher")
+        <Show
+          when={workspace}
+          fallback={
+            <>
+              <Link href="/">
+                <SSTIcon>
+                  <IconApp width="20" height="20" />
+                </SSTIcon>
+              </Link>
+            </>
           }
         >
-          <Show
-            when={props.stage}
-            fallback={
-              <StageSwitcherCopyMain>{workspace().slug}</StageSwitcherCopyMain>
+          <WorkspaceLogoLink href={`/${workspace!().slug}`}>
+            <AvatarInitialsIcon type="workspace" text={workspace!().slug} />
+          </WorkspaceLogoLink>
+          <StageSwitcher
+            onClick={() =>
+              props.stage
+                ? bar.show("stage-switcher")
+                : bar.show("workspace-switcher")
             }
           >
-            <Stack space="1.5">
-              <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
-              <Text color="dimmed">{props.stage}</Text>
-            </Stack>
-          </Show>
-          <SwitcherIcon />
-        </StageSwitcher>
+            <Show
+              when={props.stage}
+              fallback={
+                <StageSwitcherCopyMain>
+                  {workspace!().slug}
+                </StageSwitcherCopyMain>
+              }
+            >
+              <Stack space="1.5">
+                <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
+                <Text color="dimmed">{props.stage}</Text>
+              </Stack>
+            </Show>
+            <SwitcherIcon />
+          </StageSwitcher>
+        </Show>
       </Row>
       <Row space="4" vertical="center">
         <JumpToButton onClick={() => bar.show()}>
