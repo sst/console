@@ -17,7 +17,7 @@ export function getLogInfo(resources: Resource.Info[], logGroup?: string) {
               (y) =>
                 y.type === "Function" && y.metadata.arn === x.metadata.server
             );
-            if (!serverFunction) return;
+            if (!serverFunction || serverFunction.type !== "Function") return;
 
             // get the route matching the log group
             const route = x.metadata.routes.data.find((route) =>

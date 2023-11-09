@@ -21,8 +21,8 @@ importers:
         specifier: 10.2.69
         version: 10.2.69
       sst:
-        specifier: 2.34.4
-        version: 2.34.4(@types/react@18.0.25)
+        specifier: 2.36.1
+        version: 2.36.1(@types/react@18.0.25)
       turbo:
         specifier: ^1.10.13
         version: 1.10.13
@@ -148,8 +148,8 @@ importers:
         specifier: 0.19.13
         version: 0.19.13
       sst:
-        specifier: 2.34.4
-        version: 2.34.4(@types/react@18.0.25)
+        specifier: 2.36.1
+        version: 2.36.1(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -230,8 +230,8 @@ importers:
         specifier: ^18.16.0
         version: 18.17.15
       sst:
-        specifier: 2.34.4
-        version: 2.34.4(@types/react@18.0.25)
+        specifier: 2.36.1
+        version: 2.36.1(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -260,8 +260,8 @@ importers:
         specifier: ^3.3.0
         version: 3.4.3
       sst:
-        specifier: 2.34.4
-        version: 2.34.4(@types/react@18.0.25)
+        specifier: 2.36.1
+        version: 2.36.1(@types/react@18.0.25)
       tsx:
         specifier: ^3.12.7
         version: 3.12.8
@@ -352,8 +352,8 @@ importers:
         specifier: ^1.3.0
         version: 1.4.3(vite@3.2.7)
       sst:
-        specifier: 2.34.4
-        version: 2.34.4(@types/react@18.0.25)
+        specifier: 2.36.1
+        version: 2.36.1(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -11502,8 +11502,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.34.4(@types/react@18.0.25):
-    resolution: {integrity: sha512-6l6V8etoCXRS85PUz3aXTY4FPtGDK8K8UIdL5TrJjhfldwibTgrM5YvrM5nkyTpnfRQT4PSg6QbQ65xkhAaNvg==}
+  /sst@2.36.1(@types/react@18.0.25):
+    resolution: {integrity: sha512-sEUeM3y+D2Hr9RYkcgCu/ojlBt5kbOwBldcbgLX6G1Ee0dJQh+a9emPZMG/RiC/3DtnVqERM1mxTKRVueDNbDA==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0
