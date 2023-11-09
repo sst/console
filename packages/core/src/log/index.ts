@@ -393,7 +393,11 @@ export const expand = zod(
         if (!response) break;
         const events = pipe(
           response.events || [],
-          sortBy((evt) => (backwards ? -1 : 1) * evt.timestamp!)
+          sortBy(
+            (evt) => (backwards ? -1 : 1) * evt.timestamp!,
+            // @ts-ignore - eventId is not in the types
+            (evt) => (backwards ? -1 : 1) * evt.eventId!
+          )
         );
 
         for (const event of events) {
