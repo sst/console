@@ -212,6 +212,7 @@ function createControl() {
   }
 
   function hide() {
+    control.input().blur();
     setVisible(false);
   }
 

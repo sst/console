@@ -44,7 +44,7 @@ function init() {
       },
       hide() {
         setState("show", false);
-        input().value = "";
+        // input().value = "";
       },
     },
   };
@@ -103,7 +103,14 @@ export function DialogPayloadSave(props: {
             />
           </FormField>
           <Row space="5" vertical="center" horizontal="end">
-            <LinkButton onClick={() => control.hide()}>Cancel</LinkButton>
+            <LinkButton
+              onClick={(e) => {
+                e.stopPropagation();
+                control.hide();
+              }}
+            >
+              Cancel
+            </LinkButton>
             <Button color="secondary">Save Event</Button>
           </Row>
         </Stack>

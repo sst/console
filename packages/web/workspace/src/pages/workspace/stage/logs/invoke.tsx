@@ -307,96 +307,98 @@ export function Invoke(props: Props) {
   });
 
   return (
-    <InvokeRoot
-      expand={invoke.expand}
-      style={{
-        /** Overrides height set by Chrome after resizing **/
-        height: "auto",
-      }}
-      onClick={() => {
-        props.onExpand();
-        setInvoke("expand", true);
-        invokeTextArea.focus();
-      }}
-    >
-      <InvokePayloadLabel>
-        <InvokePayloadLabelIcon>
-          <IconCaretRightOutline />
-        </InvokePayloadLabelIcon>
-        <Text leading="normal" size="sm" color="dimmed">
-          Enter event payload
-        </Text>
-      </InvokePayloadLabel>
-      <InvokeTextArea
-        rows={7}
-        spellcheck={false}
-        ref={invokeTextArea}
-        onInput={(e) => {
-          setInvoke("empty", !Boolean(e.currentTarget.value));
+    <>
+      <InvokeRoot
+        expand={invoke.expand}
+        style={{
+          /** Overrides height set by Chrome after resizing **/
+          height: "auto",
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-            e.stopPropagation();
-            handleInvoke();
-          }
+        onClick={(e) => {
+          props.onExpand();
+          setInvoke("expand", true);
+          invokeTextArea.focus();
         }}
-      />
-      <InvokeControls>
-        <InvokeControlsLeft>
-          <IconButton
-            title="Load saved payloads"
-            onClick={() => manageControl.show()}
-          >
-            <IconBookmark display="block" width={24} height={24} />
-          </IconButton>
-          <LinkButton
-            style={{ display: invoke.empty ? "none" : "inline" }}
-            onClick={() => {
-              try {
-                const parsed = JSON.parse(invokeTextArea.value);
-                saveControl.show(key(), parsed);
-              } catch (ex) {
-                console.error(ex);
-                setInvoke("error", true);
-              }
-            }}
-          >
-            Save
-          </LinkButton>
-        </InvokeControlsLeft>
-        <Row vertical="center" space="6">
-          <Show when={invoke.error}>
-            <Text color="danger" size="sm" leading="normal">
-              Payload needs to be valid JSON.
-            </Text>
-          </Show>
-          <Row vertical="center" space="4">
-            <InvokeControlsCancel
-              onClick={(e) => {
-                e.stopPropagation();
-                setInvoke("expand", false);
-                setInvoke("error", false);
+      >
+        <InvokePayloadLabel>
+          <InvokePayloadLabelIcon>
+            <IconCaretRightOutline />
+          </InvokePayloadLabelIcon>
+          <Text leading="normal" size="sm" color="dimmed">
+            Enter event payload
+          </Text>
+        </InvokePayloadLabel>
+        <InvokeTextArea
+          rows={7}
+          spellcheck={false}
+          ref={invokeTextArea}
+          onInput={(e) => {
+            setInvoke("empty", !Boolean(e.currentTarget.value));
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.stopPropagation();
+              handleInvoke();
+            }
+          }}
+        />
+        <InvokeControls>
+          <InvokeControlsLeft>
+            <IconButton
+              title="Load saved payloads"
+              onClick={() => manageControl.show()}
+            >
+              <IconBookmark display="block" width={24} height={24} />
+            </IconButton>
+            <LinkButton
+              style={{ display: invoke.empty ? "none" : "inline" }}
+              onClick={() => {
+                try {
+                  const parsed = JSON.parse(invokeTextArea.value);
+                  saveControl.show(key(), parsed);
+                } catch (ex) {
+                  console.error(ex);
+                  setInvoke("error", true);
+                }
               }}
             >
-              Cancel
-            </InvokeControlsCancel>
-            <Button
-              color="secondary"
-              onClick={handleInvoke}
-              disabled={invoke.invoking}
-              class={InvokeControlsButton}
-            >
-              {invoke.invoking ? "Invoking" : "Invoke"}
-            </Button>
+              Save
+            </LinkButton>
+          </InvokeControlsLeft>
+          <Row vertical="center" space="6">
+            <Show when={invoke.error}>
+              <Text color="danger" size="sm" leading="normal">
+                Payload needs to be valid JSON.
+              </Text>
+            </Show>
+            <Row vertical="center" space="4">
+              <InvokeControlsCancel
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInvoke("expand", false);
+                  setInvoke("error", false);
+                }}
+              >
+                Cancel
+              </InvokeControlsCancel>
+              <Button
+                color="secondary"
+                onClick={handleInvoke}
+                disabled={invoke.invoking}
+                class={InvokeControlsButton}
+              >
+                {invoke.invoking ? "Invoking" : "Invoke"}
+              </Button>
+            </Row>
           </Row>
-        </Row>
-      </InvokeControls>
+        </InvokeControls>
+      </InvokeRoot>
       <DialogPayloadSave control={(control) => (saveControl = control)} />
       <DialogPayloadManage
         lambdaPayloads={lambdaPayloads()}
         onSelect={(item) => setPayload(item.payload)}
         control={(control) => (manageControl = control)}
       />
-    </InvokeRoot>
+    </>
   );
 }

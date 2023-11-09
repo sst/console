@@ -280,6 +280,7 @@ export function InvocationRow(props: {
   local: boolean;
   mixed?: boolean;
   focus?: boolean;
+  onClick?: () => void;
 }) {
   const [expanded, setExpanded] = createSignal(false);
   const [tab, setTab] = createSignal<
@@ -313,12 +314,11 @@ export function InvocationRow(props: {
       data-expanded={expanded() ? true : undefined}
       expanded={expanded()}
       level={level() === "info" ? "info" : "danger"}
+      onClick={(e) => {
+        setExpanded((r) => !r);
+      }}
     >
-      <Summary
-        onClick={() => {
-          setExpanded((r) => !r);
-        }}
-      >
+      <Summary>
         <Row flex={false} space="2" vertical="center">
           <CaretIcon>
             <IconCaretRight />
@@ -408,7 +408,10 @@ export function InvocationRow(props: {
               <Row space="4" vertical="center">
                 <Show when={props.onSavePayload}>
                   <TextButton
-                    onClick={() => props.onSavePayload?.()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      props.onSavePayload?.();
+                    }}
                     on="surface"
                     icon={<IconBookmark />}
                   >
@@ -424,7 +427,8 @@ export function InvocationRow(props: {
                   on="surface"
                   completing={replaying()}
                   icon={<IconArrowPath />}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setReplaying(true);
                     rep().mutate.function_invoke({
                       stageID: props.function.stageID,

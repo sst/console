@@ -54,6 +54,7 @@ export function Modal(
 ) {
   let content!: HTMLDivElement;
   createEventListener(document, "mouseup", (e) => {
+    if (!props.show) return;
     if (!content.contains(e.target as Node)) {
       props.onClose();
     }

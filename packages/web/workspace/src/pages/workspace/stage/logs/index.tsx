@@ -178,6 +178,8 @@ const LogMoreIndicatorIcon = styled("div", {
   },
 });
 
+const InvocationsList = styled("div", {});
+
 const [pollerCache, setPollerCache] = createStore<{ [key: string]: number }>(
   {}
 );
@@ -403,24 +405,23 @@ export function Logs() {
   );
 
   function moveIndex(offset: -1 | 1) {
-    const all = document.querySelectorAll<HTMLElement>(
-      `[data-element="invocation"]`
+    const all = Array.from(
+      document.querySelectorAll<HTMLElement>(`[data-element="invocation"]`)
     );
     if (all.length === 0) return;
-    console.log(all);
-    const f = document.querySelector<HTMLElement>(`[data-focus]`);
+    const focusedIndex = all.findIndex((x) => x.dataset.focus === "true");
+    const f = all[focusedIndex];
     if (!f) {
-      if (offset === 1) all.item(0)?.setAttribute("data-focus", "true");
-      if (offset === -1) all.item(-1)?.setAttribute("data-focus", "true");
+      if (offset === 1) all.at(0)?.setAttribute("data-focus", "true");
+      if (offset === -1) all.at(-1)?.setAttribute("data-focus", "true");
       return;
     }
 
-    const next =
-      offset === -1 ? f?.previousElementSibling : f?.nextElementSibling;
+    const next = all[focusedIndex + offset];
     if (!next) return;
     f.removeAttribute("data-focus");
     next.setAttribute("data-focus", "true");
-    if (!next.previousElementSibling) {
+    if (focusedIndex + offset === 0) {
       next.scrollIntoView({
         block: "end",
       });
@@ -432,16 +433,26 @@ export function Logs() {
   }
 
   createEventListener(window, "keypress", (e) => {
-    console.log(document.activeElement?.tagName);
-    if (document.activeElement?.tagName === "TEXTAREA") return;
+    if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName!))
+      return;
     if (e.key === "j") moveIndex(1);
     if (e.key === "k") moveIndex(-1);
     if (e.key === "Enter") {
-      document.querySelector<HTMLElement>("[data-focus] > *")?.click();
+      document.querySelector<HTMLElement>("[data-focus]")?.click();
     }
   });
 
   createEventListener(window, "keydown", (e) => {
+    if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName!))
+      return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      moveIndex(1);
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      moveIndex(-1);
+    }
     if (e.key === " ") {
       e.preventDefault();
       const el = document.querySelector<HTMLElement>("[data-focus]");
@@ -454,7 +465,7 @@ export function Logs() {
     if (e.key === " ") {
       e.preventDefault();
       document
-        .querySelector<HTMLElement>(`[data-focus][data-expanded="true"] > *`)
+        .querySelector<HTMLElement>(`[data-focus][data-expanded="true"]`)
         ?.click();
     }
   });
@@ -678,20 +689,31 @@ export function Logs() {
                   </Text>
                 </LogEmpty>
               </Show>
-              <For each={invocations()}>
-                {(invocation, i) => (
-                  <InvocationRow
-                    onSavePayload={() => {
-                      invokeControl.savePayload(
-                        structuredClone(unwrap(invocation.input))
-                      );
-                    }}
-                    invocation={invocation}
-                    local={mode() === "live"}
-                    function={resource()!}
-                  />
-                )}
-              </For>
+              <InvocationsList
+                onClick={(e) => {
+                  document
+                    .querySelector("[data-focus]")
+                    ?.removeAttribute("data-focus");
+                  e.target
+                    .closest<HTMLElement>(`[data-element="invocation"]`)
+                    ?.setAttribute("data-focus", "true");
+                }}
+              >
+                <For each={invocations()}>
+                  {(invocation, i) => (
+                    <InvocationRow
+                      onSavePayload={() => {
+                        invokeControl.savePayload(
+                          structuredClone(unwrap(invocation.input))
+                        );
+                      }}
+                      invocation={invocation}
+                      local={mode() === "live"}
+                      function={resource()!}
+                    />
+                  )}
+                </For>
+              </InvocationsList>
               <Show when={mode() === "search"}>
                 <Switch>
                   <Match when={activeSearch() && !activeSearch().outcome}>
