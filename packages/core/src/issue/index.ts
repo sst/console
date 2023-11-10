@@ -393,6 +393,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
 
     for (const resource of resources) {
       if (resource.type === "Function") {
+        if (resource.enrichment.live) continue;
         const logGroup = `/aws/lambda/${resource.metadata.arn.split(":")[6]}`;
         await subscribe(logGroup, resource.id);
       }
