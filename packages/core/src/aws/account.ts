@@ -316,7 +316,9 @@ export const integrate = zod(
                 },
               })
             )
-            .catch(() => {});
+            .catch((err) => {
+              console.error(err);
+            });
           if (!result) {
             console.log(region, "failed to update bucket notification");
             return;
