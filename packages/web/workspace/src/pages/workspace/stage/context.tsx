@@ -48,7 +48,11 @@ export function createStageContext() {
       return stage()!;
     },
     get connected() {
-      return local().app === app()?.name && local().stage === stage()?.name;
+      return (
+        local().app === app()?.name &&
+        local().stage === stage()?.name &&
+        (!local().region || stage()?.region === local().region)
+      );
     },
   };
 }
