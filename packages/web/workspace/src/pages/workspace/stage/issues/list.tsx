@@ -38,8 +38,12 @@ import { WarningStore } from "$/data/warning";
 import { IssueCountStore } from "$/data/issue";
 import { useCommandBar } from "../../command-bar";
 import { getLogInfo } from "./common";
-import { createShortcut } from "@solid-primitives/keyboard";
 import { createEventListener } from "@solid-primitives/event-listener";
+import {
+  KeyboardNavigator,
+  createKeyboardNavigator,
+  useKeyboardNavigator,
+} from "$/common/keyboard-navigator";
 
 const COL_COUNT_WIDTH = 260;
 const COL_TIME_WIDTH = 140;
@@ -326,6 +330,15 @@ export function List() {
       },
     ];
   });
+  const navigator = createKeyboardNavigator({
+    target: "[data-element='issue']",
+    onSelect: (el) => (el.querySelector("a") as HTMLElement).click(),
+    onPeek: (el, event) => {
+      if (event === "open") {
+        el.querySelector("input")?.click();
+      }
+    },
+  });
 
   const issues = useIssuesContext();
   const [search, setSearch] = useSearchParams<{
@@ -473,37 +486,6 @@ export function List() {
       </Warning>
     );
   }
-
-  const [index, setIndex] = createSignal(-1);
-  function moveIndex(offset: -1 | 1) {
-    const next = index() + offset;
-    setIndex(Math.max(0, Math.min(next, filtered().length - 1)));
-    const el = document.querySelector("[data-focus]");
-    if (!el) return;
-    if (next === 0) {
-      el.scrollIntoView({
-        block: "end",
-      });
-      return;
-    }
-    el.scrollIntoView({
-      block: "nearest",
-    });
-  }
-
-  const nav = useNavigate();
-  createEventListener(window, "keypress", (e) => {
-    if (e.key === "j") moveIndex(1);
-    if (e.key === "k") moveIndex(-1);
-    if (e.key === "Enter") {
-      document.querySelector<HTMLElement>("[data-focus] a")?.click();
-    }
-    if (e.key === " ") {
-      e.stopPropagation();
-      e.preventDefault();
-      document.querySelector<HTMLElement>("[data-focus] input")?.click();
-    }
-  });
 
   return (
     <>
@@ -703,22 +685,23 @@ export function List() {
                   </EmptyIssuesSign>
                 }
               >
-                <For each={filtered()}>
-                  {(issue, i) => {
-                    const logInfo = createMemo(() =>
-                      getLogInfo(resources(), issue.pointer?.logGroup)
-                    );
-                    return (
-                      <IssueRow
-                        issue={issue}
-                        focus={index() === i()}
-                        unread={view() === "active"}
-                        last={i() === filtered().length - 1}
-                        logName={logInfo()?.name || ""}
-                      />
-                    );
-                  }}
-                </For>
+                <KeyboardNavigator value={navigator}>
+                  <For each={filtered()}>
+                    {(issue, i) => {
+                      const logInfo = createMemo(() =>
+                        getLogInfo(resources(), issue.pointer?.logGroup)
+                      );
+                      return (
+                        <IssueRow
+                          issue={issue}
+                          unread={view() === "active"}
+                          last={i() === filtered().length - 1}
+                          logName={logInfo()?.name || ""}
+                        />
+                      );
+                    }}
+                  </For>
+                </KeyboardNavigator>
               </Show>
             </div>
           </form>
@@ -740,13 +723,10 @@ const IssueRoot = styled("label", {
     ":last-child": {
       borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
     },
-  },
-  variants: {
-    focus: {
-      true: {
+    selectors: {
+      "&[data-focus='true']": {
         ...inputFocusStyles,
       },
-      false: {},
     },
   },
 });
@@ -819,8 +799,16 @@ function IssueRow(props: IssueProps) {
       .map((hour) => ({ label: hour, value: hours[hour] || 0 }));
   });
 
+  const navigator = useKeyboardNavigator();
+
   return (
-    <IssueRoot data-focus={props.focus ? true : undefined} focus={props.focus}>
+    <IssueRoot
+      data-element="issue"
+      data-focus={props.focus ? true : undefined}
+      onClick={(e) => {
+        navigator?.focus(e.currentTarget);
+      }}
+    >
       <IssueCol>
         <IssueCheckbox name="issue" value={props.issue.id} type="checkbox" />
       </IssueCol>

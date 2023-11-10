@@ -44,6 +44,7 @@ export function NavigationAction(input: {
   title: string;
   category: string;
   icon?: (props: any) => JSX.Element;
+  disabled?: boolean;
   nav: Navigator;
 }): Action {
   const loc = useLocation();
@@ -52,6 +53,7 @@ export function NavigationAction(input: {
     title: input.title,
     category: input.category,
     disabled:
+      input.disabled ||
       (input.path.startsWith("/") &&
         (!input.prefix
           ? loc.pathname === input.path

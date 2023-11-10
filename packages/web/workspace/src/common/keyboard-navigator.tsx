@@ -39,7 +39,11 @@ export function createKeyboardNavigator(props: Props) {
   }
 
   createEventListener(window, "keydown", (e) => {
-    if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName!))
+    if (document.activeElement?.tagName === "TEXTARE") return;
+    if (
+      document.activeElement?.tagName === "INPUT" &&
+      (document.activeElement as HTMLInputElement).type === "text"
+    )
       return;
     if (e.key === "j") move(1);
     if (e.key === "k") move(-1);
@@ -66,8 +70,6 @@ export function createKeyboardNavigator(props: Props) {
   });
 
   createEventListener(window, "keyup", (e) => {
-    if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName!))
-      return;
     if (e.key === " ") {
       e.preventDefault();
       const el = focused();
@@ -96,14 +98,7 @@ export function createKeyboardNavigator(props: Props) {
 const KeyboardNavigatorContext =
   createContext<ReturnType<typeof createKeyboardNavigator>>();
 
-export function KeyboardNavigator(props: ParentProps<Props>) {
-  const navigator = createKeyboardNavigator(props);
-  return (
-    <KeyboardNavigatorContext.Provider value={navigator}>
-      {props.children}
-    </KeyboardNavigatorContext.Provider>
-  );
-}
+export const KeyboardNavigator = KeyboardNavigatorContext.Provider;
 
 export function useKeyboardNavigator() {
   const ctx = useContext(KeyboardNavigatorContext);

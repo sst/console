@@ -154,10 +154,8 @@ export function Inner() {
         .map((r) => r.type === "Stack" && r.enrichment.version)
         .sort()[0]
   );
-  const workspace = useWorkspace();
 
   const nav = useNavigate();
-  const loc = useLocation();
 
   bar.register("stage", async () => {
     return [
@@ -172,6 +170,14 @@ export function Inner() {
         title: "Resources",
         path: "./resources",
         category: ctx.stage.name,
+        nav,
+      }),
+      NavigationAction({
+        icon: IconSubRight,
+        title: "Local",
+        path: "./local",
+        category: ctx.stage.name,
+        disabled: !ctx.connected,
         nav,
       }),
       {

@@ -12,7 +12,10 @@ import { useResourcesContext, useStageContext } from "../context";
 import { filter, flatMap, pipe } from "remeda";
 import { IconArrowsUpDown, IconBoltSolid } from "$/ui/icons";
 import { useInvocations } from "$/providers/invocation";
-import { KeyboardNavigator } from "$/common/keyboard-navigator";
+import {
+  KeyboardNavigator,
+  createKeyboardNavigator,
+} from "$/common/keyboard-navigator";
 
 const Root = styled("div", {
   base: {
@@ -41,6 +44,19 @@ export function Local() {
   const invocations = createMemo(() =>
     invocationsContext.forSource("all").slice().reverse()
   );
+  const navigator = createKeyboardNavigator({
+    target: "[data-element='invocation']",
+    onSelect: (el) => (el.firstElementChild as HTMLElement).click(),
+    onPeek: (el, event) => {
+      if (event === "open" && !el.dataset.expanded) {
+        (el.firstElementChild as HTMLElement).click();
+      }
+
+      if (event === "close" && el.dataset.expanded) {
+        (el.firstElementChild as HTMLElement).click();
+      }
+    },
+  });
   return (
     <Root>
       <LogList>
@@ -79,19 +95,7 @@ export function Local() {
             </Show>
           </div>
         </LogLoadingIndicator>
-        <KeyboardNavigator
-          target="[data-element='invocation']"
-          onSelect={(el) => (el.firstElementChild as HTMLElement).click()}
-          onPeek={(el, event) => {
-            if (event === "open" && !el.dataset.expanded) {
-              (el.firstElementChild as HTMLElement).click();
-            }
-
-            if (event === "close" && el.dataset.expanded) {
-              (el.firstElementChild as HTMLElement).click();
-            }
-          }}
-        >
+        <KeyboardNavigator value={navigator}>
           <For each={invocations()}>
             {(invocation) => (
               <InvocationRow

@@ -429,6 +429,20 @@ export function Logs() {
       : resource()?.metadata.handler
   );
 
+  const navigator = createKeyboardNavigator({
+    target: "[data-element='invocation']",
+    onSelect: (el) => (el.firstElementChild as HTMLElement).click(),
+    onPeek: (el, event) => {
+      if (event === "open" && !el.dataset.expanded) {
+        (el.firstElementChild as HTMLElement).click();
+      }
+
+      if (event === "close" && el.dataset.expanded) {
+        (el.firstElementChild as HTMLElement).click();
+      }
+    },
+  });
+
   return (
     <Switch>
       <Match when={workspace().timeGated != null && !stage.connected}>
@@ -649,21 +663,7 @@ export function Logs() {
                 </LogEmpty>
               </Show>
               <Show when={invocations().length > 0}>
-                <KeyboardNavigator
-                  target="[data-element='invocation']"
-                  onSelect={(el) =>
-                    (el.firstElementChild as HTMLElement).click()
-                  }
-                  onPeek={(el, event) => {
-                    if (event === "open" && !el.dataset.expanded) {
-                      (el.firstElementChild as HTMLElement).click();
-                    }
-
-                    if (event === "close" && el.dataset.expanded) {
-                      (el.firstElementChild as HTMLElement).click();
-                    }
-                  }}
-                >
+                <KeyboardNavigator value={navigator}>
                   <For each={invocations()}>
                     {(invocation) => (
                       <InvocationRow
