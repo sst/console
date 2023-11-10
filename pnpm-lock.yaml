@@ -308,6 +308,9 @@ importers:
       '@solid-primitives/event-listener':
         specifier: ^2.2.13
         version: 2.3.0(solid-js@1.8.3)
+      '@solid-primitives/input-mask':
+        specifier: ^0.2.0
+        version: 0.2.0(solid-js@1.8.3)
       '@solid-primitives/keyboard':
         specifier: ^1.2.3
         version: 1.2.5(solid-js@1.8.3)
@@ -6538,6 +6541,17 @@ packages:
       solid-js: ^1.6.12
     dependencies:
       '@solid-primitives/utils': 6.2.1(solid-js@1.8.3)
+      solid-js: 1.8.3
+    dev: false
+
+  /@solid-primitives/input-mask@0.2.0(solid-js@1.8.3):
+    resolution: {integrity: sha512-bMvx9pOXc2gIvbj2hfU6hHrFDR02ZQFCpU6GaA5CGflgDBbjurO4Wu2qy9Cm5n/1p9wCcu1j/WnnVcAHD+Aoow==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    peerDependenciesMeta:
+      solid-js:
+        optional: true
+    dependencies:
       solid-js: 1.8.3
     dev: false
 

@@ -14,7 +14,9 @@ import { utility } from "$/ui/utility";
 import { styled } from "@macaron-css/solid";
 import { createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
+import { createInputMask } from "@solid-primitives/input-mask";
 import { DateTime } from "luxon";
+import { DATETIME_LONG } from "$/common/format";
 
 function init() {
   const [state, setState] = createStore<{
@@ -63,6 +65,16 @@ const GraphicStem = styled("div", {
 
 export type DialogRangeControl = ReturnType<typeof init>["control"];
 
+const DATES = ["M/d/yyyy", "yyyy-M-d", "MMM d yyyy", "MMM d", "M/d", "M-d"];
+const TIMES = ["h:m a", "h:ma", "h:m", "ha"];
+const FORMATS = [...DATES, ...TIMES];
+
+for (const d of DATES) {
+  for (const t of TIMES) {
+    FORMATS.push(`${d} ${t}`);
+  }
+}
+
 export function DialogRange(props: {
   onSelect: (end: Date) => void;
   control: (control: DialogRangeControl) => void;
@@ -72,7 +84,11 @@ export function DialogRange(props: {
 
   createEffect(() => {
     if (state.show) {
-      setTimeout(() => end.focus(), 0);
+      setTimeout(() => {
+        setStore({});
+        end.value = "";
+        end.focus();
+      }, 0);
     }
   });
 
@@ -80,15 +96,22 @@ export function DialogRange(props: {
     props.control(control);
   });
 
+  const [store, setStore] = createStore<{
+    parsed?: DateTime | undefined;
+    error?: boolean;
+  }>({});
+
   return (
     <Modal onClose={() => control.hide()} show={state.show}>
       <Form
         onSubmit={(e) => {
           e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          const end = new Date(fd.get("end")?.toString()!);
-          if (!end) return;
-          props.onSelect(end);
+          end.blur();
+          if (!store.parsed) {
+            end.focus();
+            return;
+          }
+          props.onSelect(store.parsed.toJSDate());
           control.hide();
         }}
       >
@@ -100,8 +123,45 @@ export function DialogRange(props: {
           </Stack>
           <Row space="1">
             <Grower>
-              <FormField hint="Look for logs older than the given date.">
-                <Input ref={end} name="end" type="datetime-local" />
+              <FormField
+                color={store.error ? "danger" : undefined}
+                hint={
+                  store.parsed
+                    ? "Looking for logs older than " +
+                      store.parsed.toLocaleString(DATETIME_LONG) +
+                      "."
+                    : store.error
+                    ? "Use a valid date format like " +
+                      DateTime.now().toFormat("MM/dd/yyyy h:m a") +
+                      "."
+                    : "Look for logs older than the given date."
+                }
+              >
+                <Input
+                  ref={end}
+                  name="end"
+                  onInput={() => setStore("error", false)}
+                  placeholder={DateTime.now().toFormat("MM/dd/yyyy h:m a")}
+                  onBlur={(e) => {
+                    for (const f of FORMATS) {
+                      const result = DateTime.fromFormat(
+                        e.currentTarget.value,
+                        f
+                      );
+                      if (result?.isValid) {
+                        setStore({
+                          error: false,
+                          parsed: result,
+                        });
+                        return;
+                      }
+                      setStore({
+                        error: true,
+                        parsed: undefined,
+                      });
+                    }
+                  }}
+                />
               </FormField>
             </Grower>
           </Row>
