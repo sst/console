@@ -448,6 +448,19 @@ export const IssueEmail = ({
       <Fonts assetsUrl={assetsUrl} />
       <Preview>{message}</Preview>
       <Body style={body} id={Math.random().toString()}>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "http://schema.org",
+            "@type": "EmailMessage",
+            potentialAction: {
+              "@type": "ViewAction",
+              url: url,
+              name: "View Issue",
+            },
+            description: "View the issue in SST Console",
+          })}
+        </script>
+
         <Container style={container}>
           <Section style={frame}>
             <Row>
