@@ -846,28 +846,30 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
           cleanFilepath(props.resource.metadata.path)
         }
       />
-      <Children>
-        <For
-          each={props.resource.metadata.routes?.data || []}
-          fallback={
-            <FunctionChild id={props.resource.metadata.server} tag="Server" />
-          }
-        >
-          {(item) => {
-            return (
-              <FunctionChild
-                logGroup={
-                  props.resource.metadata.routes?.logGroupPrefix +
-                  item.logGroupPath
-                }
-                title={item.route}
-                tagSize="small"
-                id={props.resource.metadata.server}
-              />
-            );
-          }}
-        </For>
-      </Children>
+      <Show when={props.resource.metadata.mode === "deployed"}>
+        <Children>
+          <For
+            each={props.resource.metadata.routes?.data || []}
+            fallback={
+              <FunctionChild id={props.resource.metadata.server} tag="Server" />
+            }
+          >
+            {(item) => {
+              return (
+                <FunctionChild
+                  logGroup={
+                    props.resource.metadata.routes?.logGroupPrefix +
+                    item.logGroupPath
+                  }
+                  title={item.route}
+                  tagSize="small"
+                  id={props.resource.metadata.server}
+                />
+              );
+            }}
+          </For>
+        </Children>
+      </Show>
     </>
   );
 }
@@ -887,9 +889,11 @@ export function SvelteKitSiteCard(props: CardProps<"SvelteKitSite">) {
           cleanFilepath(props.resource.metadata.path)
         }
       />
-      <Children>
-        <FunctionChild id={props.resource.metadata.server} tag="Server" />
-      </Children>
+      <Show when={props.resource.metadata.mode === "deployed"}>
+        <Children>
+          <FunctionChild id={props.resource.metadata.server} tag="Server" />
+        </Children>
+      </Show>
     </>
   );
 }
@@ -909,9 +913,11 @@ export function RemixSiteCard(props: CardProps<"RemixSite">) {
           cleanFilepath(props.resource.metadata.path)
         }
       />
-      <Children>
-        <FunctionChild id={props.resource.metadata.server} tag="Server" />
-      </Children>
+      <Show when={props.resource.metadata.mode === "deployed"}>
+        <Children>
+          <FunctionChild id={props.resource.metadata.server} tag="Server" />
+        </Children>
+      </Show>
     </>
   );
 }
@@ -931,9 +937,11 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
           cleanFilepath(props.resource.metadata.path)
         }
       />
-      <Children>
-        <FunctionChild id={props.resource.metadata.server} tag="Server" />
-      </Children>
+      <Show when={props.resource.metadata.mode === "deployed"}>
+        <Children>
+          <FunctionChild id={props.resource.metadata.server} tag="Server" />
+        </Children>
+      </Show>
     </>
   );
 }
@@ -953,9 +961,11 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
           cleanFilepath(props.resource.metadata.path)
         }
       />
-      <Children>
-        <FunctionChild id={props.resource.metadata.server} tag="Server" />
-      </Children>
+      <Show when={props.resource.metadata.mode === "deployed"}>
+        <Children>
+          <FunctionChild id={props.resource.metadata.server} tag="Server" />
+        </Children>
+      </Show>
     </>
   );
 }

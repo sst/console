@@ -749,7 +749,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
   });
   yield resource({
     type: "NextjsSite",
-    id: "nextjs-site-local-no-custom-domain",
+    id: "nextjs-site",
     stage: STAGE,
     metadata: {
       routes: {
@@ -783,13 +783,13 @@ function* stageBase(): Generator<DummyData, void, unknown> {
       edge: false,
       mode: "deployed",
       secrets: [],
-      url: "",
+      url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
       runtime: "nodejs18.x",
     },
   });
   yield resource({
     type: "NextjsSite",
-    id: "nextjs-site",
+    id: "nextjs-site-combined-logging",
     stage: STAGE,
     metadata: {
       customDomainUrl: "https://nextjs-site.com",
@@ -800,6 +800,22 @@ function* stageBase(): Generator<DummyData, void, unknown> {
       mode: "deployed",
       secrets: [],
       url: "https://ba0e4aszwi.execute-api.us-east-1.amazonaws.com",
+      runtime: "nodejs18.x",
+    },
+  });
+  yield resource({
+    type: "NextjsSite",
+    id: "nextjs-site-local",
+    stage: STAGE,
+    metadata: {
+      routes: undefined,
+      customDomainUrl: undefined,
+      server: FUNC_ARN_NEXTJS,
+      path: "./packages/nextjs-site/that/is/a/very/long/path/that/should/overflow/because/its/way/too/long",
+      edge: false,
+      mode: "placeholder",
+      secrets: [],
+      url: "",
       runtime: "nodejs18.x",
     },
   });
