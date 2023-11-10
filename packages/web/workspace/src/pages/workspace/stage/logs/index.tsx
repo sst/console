@@ -429,8 +429,6 @@ export function Logs() {
       : resource()?.metadata.handler
   );
 
-  const navigator = createKeyboardNavigator({});
-
   return (
     <Switch>
       <Match when={workspace().timeGated != null && !stage.connected}>
