@@ -272,7 +272,8 @@ export function List() {
           reset();
           control.hide();
         },
-        disabled: selected().length === 0 || search.view !== "active",
+        disabled:
+          selected().length === 0 || (search.view && search.view !== "active"),
         category: "Issues",
       },
       {
@@ -300,7 +301,8 @@ export function List() {
           reset();
           control.hide();
         },
-        disabled: selected().length === 0 || search.view !== "active",
+        disabled:
+          selected().length === 0 || (search.view && search.view !== "active"),
         category: "Issues",
       },
       {
