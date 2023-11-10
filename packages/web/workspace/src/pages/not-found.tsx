@@ -44,7 +44,7 @@ export function NotAllowed(props: ErrorScreenProps) {
       <Show when={props.header}>
         <Header />
       </Show>
-      <Fullscreen inset="root">
+      <Fullscreen inset={props.header ? "root" : "none"}>
         <Stack space="2.5" horizontal="center">
           <Text size="lg">Access not allowed</Text>
           <NotAllowedDesc>

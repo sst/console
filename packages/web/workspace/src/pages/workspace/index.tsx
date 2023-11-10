@@ -26,7 +26,7 @@ import {
 } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
-import { NotFound } from "../not-found";
+import { NotFound, NotAllowed } from "../not-found";
 import { Debug } from "../debug";
 import { useReplicacheStatus } from "$/providers/replicache-status";
 
@@ -94,7 +94,7 @@ export function Workspace() {
       <Match
         when={status.isSynced(rep().name) && !workspace() && workspace.ready}
       >
-        <NotAllowed />
+        <NotAllowed header />
       </Match>
       <Match when={workspace()}>
         <ReplicacheProvider
