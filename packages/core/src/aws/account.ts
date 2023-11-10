@@ -191,6 +191,7 @@ import { db } from "../drizzle";
 import { Realtime } from "../realtime";
 import { app, stage } from "../app/app.sql";
 import { createPipe, groupBy, mapValues, pipe } from "remeda";
+import { RETRY_STRATEGY } from "../util/aws";
 
 export const regions = zod(
   bootstrap.schema.shape.credentials,
@@ -302,8 +303,14 @@ export const integrate = zod(
           const b = await bootstrap(config);
           if (!b) return;
 
-          const s3 = new S3Client(config);
-          const eb = new EventBridgeClient(config);
+          const s3 = new S3Client({
+            ...config,
+            retryStrategy: RETRY_STRATEGY,
+          });
+          const eb = new EventBridgeClient({
+            ...config,
+            retryStrategy: RETRY_STRATEGY,
+          });
 
           console.log(region, "found sst bucket", b.bucket);
 
