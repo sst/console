@@ -272,12 +272,12 @@ export function List() {
           reset();
           control.hide();
         },
-        disabled: selected().length === 0 || search.view === "resolved",
+        disabled: selected().length === 0 || search.view !== "active",
         category: "Issues",
       },
       {
         icon: IconCaretRight,
-        title: `Unresolve ${selected().length} ${pluralize(
+        title: `Reopen ${selected().length} ${pluralize(
           "issue",
           selected().length
         )}`,
@@ -300,12 +300,12 @@ export function List() {
           reset();
           control.hide();
         },
-        disabled: selected().length === 0 || search.view === "ignored",
+        disabled: selected().length === 0 || search.view !== "active",
         category: "Issues",
       },
       {
         icon: IconCaretRight,
-        title: `Unignore ${selected().length} ${pluralize(
+        title: `Reopen ${selected().length} ${pluralize(
           "issue",
           selected().length
         )}`,

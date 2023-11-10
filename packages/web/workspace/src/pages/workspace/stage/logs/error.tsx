@@ -139,10 +139,8 @@ export function StackTrace(props: { stack: StackFrame[] }) {
     const minLeadingSpaces = Math.min(
       ...context.map((row) => countLeadingSpaces(row))
     );
-    // Max number of characters in the last line number string
-    const offset = Math.max(1, start - 4);
-    const active = Math.min(4, start - 1);
-    const maxLineNumberLength = (offset + context.length).toString().length;
+    const offset = Math.max(1, start - 3);
+    const active = Math.min(3, start - 1);
 
     return (
       <FrameContext>
@@ -159,7 +157,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                   color={index() === active ? "primary" : "dimmed"}
                   weight={index() === active ? "semibold" : "regular"}
                 >
-                  {(index() + offset).toString().padStart(maxLineNumberLength)}
+                  {(index() + offset).toString()}
                 </Text>
               </FrameContextNumber>
               <Text

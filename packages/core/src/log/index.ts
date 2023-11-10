@@ -112,6 +112,7 @@ export function createSourcemapCache(input: {
         })
       )
       .catch(() => {});
+    console.log(result);
     if (!result) return [];
     const maps = (result.Contents || []).map((item) => ({
       key: item.Key!,
