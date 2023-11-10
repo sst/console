@@ -249,7 +249,7 @@ export function createScan<T extends any>(
                 if (diff.op === "change") {
                   state[keyToIndex.get(diff.key)!] = reconcile(
                     structuredClone(diff.newValue) as T
-                  )(structuredClone(diff.oldValue));
+                  )(unwrap(state[keyToIndex.get(diff.key)!]) as T);
                 }
                 if (diff.op === "del") {
                   const toRemove = keyToIndex.get(diff.key)!;
