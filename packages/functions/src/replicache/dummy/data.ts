@@ -331,6 +331,17 @@ const STACK_TRACE_FULL = [
       `      }`,
     ],
   },
+  {
+    column: 17,
+    line: 2,
+    file: "packages/core/short/file/case.ts",
+    important: true,
+    context: [
+      `      const { args, name } = mutation;`,
+      `      const client = new LambdaClient(config);`,
+      `      return JSON.parse(data);`,
+    ],
+  },
 ];
 
 const LOGS_FN = "my-logs-func";
