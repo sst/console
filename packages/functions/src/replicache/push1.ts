@@ -1,4 +1,4 @@
-import { withActor, useActor } from "@console/core/actor";
+import { useActor } from "@console/core/actor";
 import {
   replicache_client_group,
   replicache_client,
@@ -11,7 +11,6 @@ import { ApiHandler, useJsonBody } from "sst/node/api";
 import { server } from "./server";
 import { Replicache } from "@console/core/replicache";
 import { VisibleError } from "@console/core/util/error";
-import { ZodError } from "zod";
 
 export const handler = ApiHandler(
   withApiAuth(async () => {
