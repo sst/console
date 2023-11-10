@@ -23,6 +23,7 @@ import { useDummy } from "./dummy";
 import { createGet } from "$/data/store";
 import { AWS } from "$/data/aws";
 import { IssueAlertStore, SlackTeamStore } from "$/data/app";
+import { useReplicacheStatus } from "./replicache-status";
 
 const mutators = new Client<ServerType>()
   .mutation("app_stage_sync", async () => {})
@@ -130,6 +131,7 @@ const ReplicacheContext =
 
 function createReplicache(workspaceID: string, token: string) {
   const dummy = useDummy();
+  const status = useReplicacheStatus();
   const replicache = new Replicache({
     name: workspaceID,
     auth: `Bearer ${token}`,
@@ -149,6 +151,10 @@ function createReplicache(workspaceID: string, token: string) {
       },
     },
   });
+
+  replicache.onSync = (syncing) => {
+    if (!syncing) status.markSynced(replicache.name);
+  };
 
   replicache.puller = async (req) => {
     const result = await fetch(replicache.pullURL, {

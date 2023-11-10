@@ -13,10 +13,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
     });
     bus.on("invocation.url", async (e) => {
       const data: Invocation[] = await fetch(e).then((r) => r.json());
-      console.time("log");
-      console.log("processing", data.length);
       bus.emit("invocation", data);
-      console.timeEnd("log");
     });
 
     bus.on("invocation", (invocations) => {

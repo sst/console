@@ -26,8 +26,9 @@ import {
 } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
-import { NotFound } from "../not-found";
+import { NotAllowed, NotFound } from "../not-found";
 import { Debug } from "../debug";
+import { useReplicacheStatus } from "$/providers/replicache-status";
 
 export function Workspace() {
   const params = useParams();
@@ -47,7 +48,6 @@ export function Workspace() {
   createEffect(() => {
     if (!workspace.ready) return;
     if (!workspace()) {
-      nav("/");
       return;
     }
     console.log("workspace", workspace());
@@ -87,8 +87,15 @@ export function Workspace() {
     ];
   });
 
+  const status = useReplicacheStatus();
+
   return (
     <Switch>
+      <Match
+        when={status.isSynced(rep().name) && !workspace() && workspace.ready}
+      >
+        <NotAllowed />
+      </Match>
       <Match when={workspace()}>
         <ReplicacheProvider
           accountID={storage.value.account}

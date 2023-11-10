@@ -1,21 +1,8 @@
-import {
-  Link,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from "@solidjs/router";
+import { Link, Route, Routes } from "@solidjs/router";
 import { Match, Switch } from "solid-js";
 import { List } from "./list";
 import { Detail } from "./detail";
-import { styled } from "@macaron-css/solid";
-import { HeaderSlot } from "../../header";
-import { theme, utility, Stack, Fullscreen } from "$/ui";
-import { IconExclamationTriangle } from "$/ui/icons";
-import { useCommandBar } from "../../command-bar";
-import { IconApp } from "$/ui/icons/custom";
-import { IconArrowRight } from "$/ui/icons";
+import { Fullscreen } from "$/ui";
 import { Warning } from "../";
 import { NotFound } from "../../../not-found";
 import { useWorkspace } from "../../context";

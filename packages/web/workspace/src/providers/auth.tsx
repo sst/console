@@ -10,6 +10,7 @@ import { useReplicache } from "./replicache";
 import { User } from "@console/core/user";
 import { UserStore } from "$/data/user";
 import { DateTime } from "luxon";
+import { useReplicacheStatus } from "./replicache-status";
 
 export * as AuthStore from "./auth";
 
@@ -71,6 +72,7 @@ export function AuthProvider(props: ParentProps) {
 
   const stores: AuthContextType = {};
   const dummy = useDummy();
+  const status = useReplicacheStatus();
   for (const token of Object.values(tokens)) {
     const rep = new Replicache({
       name: token.accountID,
@@ -91,6 +93,9 @@ export function AuthProvider(props: ParentProps) {
         rep.pull();
       }, 0);
       return result;
+    };
+    rep.onSync = (syncing) => {
+      if (!syncing) status.markSynced(token.accountID);
     };
 
     stores[token.accountID] = {

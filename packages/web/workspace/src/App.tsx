@@ -34,6 +34,7 @@ import { FlagsProvider } from "./providers/flags";
 import { createGet } from "./data/store";
 import { NotFound } from "./pages/not-found";
 import { Local } from "./pages/local";
+import { ReplicacheStatusProvider } from "./providers/replicache-status";
 
 const Root = styled("div", {
   base: {
@@ -170,94 +171,97 @@ export const App: Component = () => {
           <Route
             path="*"
             element={
-              <DummyProvider>
-                <AuthProvider>
-                  <DummyConfigProvider>
-                    <FlagsProvider>
-                      <RealtimeProvider />
-                      <LocalProvider>
-                        <InvocationProvider>
-                          <CommandBar>
-                            <GlobalCommands />
-                            <Routes>
-                              <Route path="local/*" component={Local} />
-                              <Route path="debug" component={Debug} />
-                              <Route path="design" component={Design} />
-                              <Route path="connect" component={Connect} />
-                              <Route
-                                path="workspace"
-                                component={WorkspaceCreate}
-                              />
-                              <Route
-                                path=":workspaceSlug/*"
-                                component={Workspace}
-                              />
-                              <Route path="/auth/code" component={Code} />
-                              <Route
-                                path=""
-                                component={() => {
-                                  const auth = useAuth();
-                                  let existing = storage.value.account;
-                                  if (!existing || !auth[existing]) {
-                                    existing = Object.keys(auth)[0];
-                                    storage.set("account", existing);
-                                  }
-                                  const workspaces = WorkspaceStore.list.watch(
-                                    () => auth[existing!].replicache,
-                                    () => []
-                                  );
+              <ReplicacheStatusProvider>
+                <DummyProvider>
+                  <AuthProvider>
+                    <DummyConfigProvider>
+                      <FlagsProvider>
+                        <RealtimeProvider />
+                        <LocalProvider>
+                          <InvocationProvider>
+                            <CommandBar>
+                              <GlobalCommands />
+                              <Routes>
+                                <Route path="local/*" component={Local} />
+                                <Route path="debug" component={Debug} />
+                                <Route path="design" component={Design} />
+                                <Route path="connect" component={Connect} />
+                                <Route
+                                  path="workspace"
+                                  component={WorkspaceCreate}
+                                />
+                                <Route
+                                  path=":workspaceSlug/*"
+                                  component={Workspace}
+                                />
+                                <Route path="/auth/code" component={Code} />
+                                <Route
+                                  path=""
+                                  component={() => {
+                                    const auth = useAuth();
+                                    let existing = storage.value.account;
+                                    if (!existing || !auth[existing]) {
+                                      existing = Object.keys(auth)[0];
+                                      storage.set("account", existing);
+                                    }
+                                    const workspaces =
+                                      WorkspaceStore.list.watch(
+                                        () => auth[existing!].replicache,
+                                        () => []
+                                      );
 
-                                  const init = createGet<boolean>(
-                                    () => "/init",
-                                    () => auth[existing!].replicache
-                                  );
+                                    const init = createGet<boolean>(
+                                      () => "/init",
+                                      () => auth[existing!].replicache
+                                    );
 
-                                  return (
-                                    <Switch>
-                                      <Match
-                                        when={
-                                          workspaces() &&
-                                          workspaces()!.length > 0
-                                        }
-                                      >
-                                        <Navigate
-                                          href={`/${
-                                            (
-                                              workspaces()!.find(
-                                                (w) =>
-                                                  w.id ===
-                                                  storage.value.workspace
-                                              ) || workspaces()![0]
-                                            ).slug
-                                          }`}
-                                        />
-                                      </Match>
-                                      <Match
-                                        when={
-                                          init.ready &&
-                                          init() &&
-                                          workspaces() &&
-                                          workspaces()!.length === 0
-                                        }
-                                      >
-                                        <Navigate href={`/workspace`} />
-                                      </Match>
-                                      <Match when={true}>
-                                        {/* <Splash /> */}
-                                      </Match>
-                                    </Switch>
-                                  );
-                                }}
-                              />
-                              <Route path="*" element={<NotFound />} />
-                            </Routes>
-                          </CommandBar>
-                        </InvocationProvider>
-                      </LocalProvider>
-                    </FlagsProvider>
-                  </DummyConfigProvider>
-                </AuthProvider>
-              </DummyProvider>
+                                    return (
+                                      <Switch>
+                                        <Match
+                                          when={
+                                            workspaces() &&
+                                            workspaces()!.length > 0
+                                          }
+                                        >
+                                          <Navigate
+                                            href={`/${
+                                              (
+                                                workspaces()!.find(
+                                                  (w) =>
+                                                    w.id ===
+                                                    storage.value.workspace
+                                                ) || workspaces()![0]
+                                              ).slug
+                                            }`}
+                                          />
+                                        </Match>
+                                        <Match
+                                          when={
+                                            init.ready &&
+                                            init() &&
+                                            workspaces() &&
+                                            workspaces()!.length === 0
+                                          }
+                                        >
+                                          <Navigate href={`/workspace`} />
+                                        </Match>
+                                        <Match when={true}>
+                                          {/* <Splash /> */}
+                                        </Match>
+                                      </Switch>
+                                    );
+                                  }}
+                                />
+                                <Route path="*" element={<NotFound />} />
+                              </Routes>
+                            </CommandBar>
+                          </InvocationProvider>
+                        </LocalProvider>
+                      </FlagsProvider>
+                    </DummyConfigProvider>
+                  </AuthProvider>
+                </DummyProvider>
+              </ReplicacheStatusProvider>
             }
           />
         </Routes>

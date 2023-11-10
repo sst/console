@@ -31,6 +31,8 @@ import { useResourcesContext, useStageContext } from "../context";
 import { useInvocations } from "$/providers/invocation";
 import { useCommandBar } from "../../command-bar";
 import { getLogInfo } from "./common";
+import { useReplicacheStatus } from "$/providers/replicache-status";
+import { NotFound } from "$/pages/not-found";
 
 const DATETIME_NO_TIME = {
   month: "short",
@@ -148,6 +150,7 @@ export function Detail() {
   const rep = useReplicache();
   const invocations = useInvocations();
   const issue = IssueStore.get.watch(rep, () => [ctx.stage.id, params.issueID]);
+  const replicacheStatus = useReplicacheStatus();
 
   const status = createMemo(() => {
     if (issue()?.timeIgnored) return "ignored";
@@ -267,197 +270,208 @@ export function Detail() {
   });
 
   return (
-    <Show when={issue()}>
-      <Container>
-        <Content>
-          <Stack space="7">
-            <Stack space="2">
-              <Text break code size="mono_2xl" weight="medium">
-                {issue().error}
-              </Text>
-              <Stack space="0" horizontal="start">
-                <Text break code leading="loose" size="mono_base">
-                  {issue().message}
+    <Switch>
+      <Match
+        when={replicacheStatus.isSynced(rep().name) && !issue() && issue.ready}
+      >
+        <NotFound />
+      </Match>
+      <Match when={issue()}>
+        <Container>
+          <Content>
+            <Stack space="7">
+              <Stack space="2">
+                <Text break code size="mono_2xl" weight="medium">
+                  {issue().error}
                 </Text>
-                <FunctionLink href={`../../resources/logs/${logInfo()?.uri}`}>
-                  {logInfo()?.name}
-                </FunctionLink>
+                <Stack space="0" horizontal="start">
+                  <Text break code leading="loose" size="mono_base">
+                    {issue().message}
+                  </Text>
+                  <FunctionLink href={`../../resources/logs/${logInfo()?.uri}`}>
+                    {logInfo()?.name}
+                  </FunctionLink>
+                </Stack>
               </Stack>
-            </Stack>
-            <Stack space="2">
-              <PanelTitle>Stack Trace</PanelTitle>
-              <Show when={issue().stack?.length && logInfo()?.missingSourcemap}>
-                <Alert level="info">
-                  Enable source maps to view the original stack trace.{" "}
-                  <a
-                    target="_blank"
-                    href="https://docs.sst.dev/advanced/source-maps"
-                  >
-                    Learn more
-                  </a>
-                  .
-                </Alert>
-              </Show>
-              <StackTraceBackground>
+              <Stack space="2">
+                <PanelTitle>Stack Trace</PanelTitle>
                 <Show
-                  when={issue().stack?.length}
-                  fallback={
-                    <StackTraceEmpty>
-                      <PanelEmptyCopy>No stack trace available</PanelEmptyCopy>
-                    </StackTraceEmpty>
-                  }
+                  when={issue().stack?.length && logInfo()?.missingSourcemap}
                 >
-                  <StackTrace stack={issue().stack || []} />
+                  <Alert level="info">
+                    Enable source maps to view the original stack trace.{" "}
+                    <a
+                      target="_blank"
+                      href="https://docs.sst.dev/advanced/source-maps"
+                    >
+                      Learn more
+                    </a>
+                    .
+                  </Alert>
                 </Show>
-              </StackTraceBackground>
-            </Stack>
-            <Stack space="2">
-              <Show
-                when={invocation()?.logs.length}
-                fallback={<PanelTitle>Logs</PanelTitle>}
-              >
-                <PanelTitle
-                  title={DateTime.fromMillis(invocation()?.logs[0].timestamp!)
-                    .toUTC()
-                    .toLocaleString(DateTime.DATETIME_FULL)}
-                >
-                  Logs —{" "}
-                  {DateTime.fromMillis(
-                    invocation()?.logs[0].timestamp!
-                  ).toLocaleString(DATETIME_NO_TIME)}
-                </PanelTitle>
-              </Show>
-              <LogsBackground>
+                <StackTraceBackground>
+                  <Show
+                    when={issue().stack?.length}
+                    fallback={
+                      <StackTraceEmpty>
+                        <PanelEmptyCopy>
+                          No stack trace available
+                        </PanelEmptyCopy>
+                      </StackTraceEmpty>
+                    }
+                  >
+                    <StackTrace stack={issue().stack || []} />
+                  </Show>
+                </StackTraceBackground>
+              </Stack>
+              <Stack space="2">
                 <Show
                   when={invocation()?.logs.length}
-                  fallback={
-                    <LogsLoading>
-                      <LogsLoadingIcon>
-                        <IconArrowPathSpin />
-                      </LogsLoadingIcon>
-                      <PanelEmptyCopy>Loading logs &hellip;</PanelEmptyCopy>
-                    </LogsLoading>
+                  fallback={<PanelTitle>Logs</PanelTitle>}
+                >
+                  <PanelTitle
+                    title={DateTime.fromMillis(invocation()?.logs[0].timestamp!)
+                      .toUTC()
+                      .toLocaleString(DateTime.DATETIME_FULL)}
+                  >
+                    Logs —{" "}
+                    {DateTime.fromMillis(
+                      invocation()?.logs[0].timestamp!
+                    ).toLocaleString(DATETIME_NO_TIME)}
+                  </PanelTitle>
+                </Show>
+                <LogsBackground>
+                  <Show
+                    when={invocation()?.logs.length}
+                    fallback={
+                      <LogsLoading>
+                        <LogsLoadingIcon>
+                          <IconArrowPathSpin />
+                        </LogsLoadingIcon>
+                        <PanelEmptyCopy>Loading logs &hellip;</PanelEmptyCopy>
+                      </LogsLoading>
+                    }
+                  >
+                    <For each={invocation()?.logs || []}>
+                      {(entry) => (
+                        <Log>
+                          <LogTime
+                            title={DateTime.fromMillis(entry.timestamp)
+                              .toUTC()
+                              .toLocaleString(
+                                DateTime.DATETIME_FULL_WITH_SECONDS
+                              )}
+                          >
+                            {new Date(entry.timestamp).toLocaleTimeString()}
+                          </LogTime>
+                          <LogMessage>{entry.message}</LogMessage>
+                        </Log>
+                      )}
+                    </For>
+                  </Show>
+                </LogsBackground>
+              </Stack>
+            </Stack>
+          </Content>
+          <Sidebar>
+            <Stack space="7">
+              <ButtonGroup>
+                <Button
+                  grouped="left"
+                  color="secondary"
+                  style={{ flex: "1 1 auto" }}
+                  active={Boolean(issue().timeIgnored)}
+                  onClick={() =>
+                    issue().timeIgnored
+                      ? rep().mutate.issue_unignore([issue()!.id])
+                      : rep().mutate.issue_ignore([issue()!.id])
                   }
                 >
-                  <For each={invocation()?.logs || []}>
-                    {(entry) => (
-                      <Log>
-                        <LogTime
-                          title={DateTime.fromMillis(entry.timestamp)
-                            .toUTC()
-                            .toLocaleString(
-                              DateTime.DATETIME_FULL_WITH_SECONDS
-                            )}
-                        >
-                          {new Date(entry.timestamp).toLocaleTimeString()}
-                        </LogTime>
-                        <LogMessage>{entry.message}</LogMessage>
-                      </Log>
-                    )}
-                  </For>
-                </Show>
-              </LogsBackground>
+                  <ButtonIcon>
+                    <IconNoSymbol />
+                  </ButtonIcon>
+                  Ignore
+                </Button>
+                <Button
+                  grouped="right"
+                  color="secondary"
+                  style={{ flex: "1 1 auto" }}
+                  active={Boolean(issue().timeResolved)}
+                  onClick={() =>
+                    issue().timeResolved
+                      ? rep().mutate.issue_unresolve([issue()!.id])
+                      : rep().mutate.issue_resolve([issue()!.id])
+                  }
+                >
+                  <ButtonIcon>
+                    <IconCheck />
+                  </ButtonIcon>
+                  Resolve
+                </Button>
+              </ButtonGroup>
+              <Stack space="2">
+                <PanelTitle>Last 24hrs</PanelTitle>
+                <Histogram
+                  width={300}
+                  height={40}
+                  units="Errors"
+                  currentTime={Date.now()}
+                  data={histogram()}
+                />
+              </Stack>
+              <Stack space="2">
+                <PanelTitle>Status</PanelTitle>
+                <Row>
+                  <Switch>
+                    <Match when={status() === "active"}>
+                      <Tag level="caution">Active</Tag>
+                    </Match>
+                    <Match when={status() === "ignored"}>
+                      <Tag level="info">Ignored</Tag>
+                    </Match>
+                    <Match when={status() === "resolved"}>
+                      <Tag level="tip">Resolved</Tag>
+                    </Match>
+                  </Switch>
+                </Row>
+              </Stack>
+              <Stack space="2">
+                <PanelTitle>Last Seen</PanelTitle>
+                <Text
+                  title={parseTime(issue().timeSeen).toLocaleString(
+                    DateTime.DATETIME_FULL
+                  )}
+                  color="secondary"
+                >
+                  {formatSinceTime(issue().timeSeen, true)}
+                </Text>
+              </Stack>
+              <Stack space="2">
+                <PanelTitle>First Seen</PanelTitle>
+                <Text
+                  title={parseTime(issue().timeCreated).toLocaleString(
+                    DateTime.DATETIME_FULL
+                  )}
+                  color="secondary"
+                >
+                  {formatSinceTime(issue().timeCreated, true)}
+                </Text>
+              </Stack>
+              <Stack space="2">
+                <PanelTitle>Feedback</PanelTitle>
+                <FeedbackCopy>
+                  <Text size="sm" color="secondary">
+                    Does something not look right?
+                  </Text>{" "}
+                  <a href="https://sst.dev/discord" target="_blank">
+                    Send us a message in #console on Discord.
+                  </a>
+                </FeedbackCopy>
+              </Stack>
             </Stack>
-          </Stack>
-        </Content>
-        <Sidebar>
-          <Stack space="7">
-            <ButtonGroup>
-              <Button
-                grouped="left"
-                color="secondary"
-                style={{ flex: "1 1 auto" }}
-                active={Boolean(issue().timeIgnored)}
-                onClick={() =>
-                  issue().timeIgnored
-                    ? rep().mutate.issue_unignore([issue()!.id])
-                    : rep().mutate.issue_ignore([issue()!.id])
-                }
-              >
-                <ButtonIcon>
-                  <IconNoSymbol />
-                </ButtonIcon>
-                Ignore
-              </Button>
-              <Button
-                grouped="right"
-                color="secondary"
-                style={{ flex: "1 1 auto" }}
-                active={Boolean(issue().timeResolved)}
-                onClick={() =>
-                  issue().timeResolved
-                    ? rep().mutate.issue_unresolve([issue()!.id])
-                    : rep().mutate.issue_resolve([issue()!.id])
-                }
-              >
-                <ButtonIcon>
-                  <IconCheck />
-                </ButtonIcon>
-                Resolve
-              </Button>
-            </ButtonGroup>
-            <Stack space="2">
-              <PanelTitle>Last 24hrs</PanelTitle>
-              <Histogram
-                width={300}
-                height={40}
-                units="Errors"
-                currentTime={Date.now()}
-                data={histogram()}
-              />
-            </Stack>
-            <Stack space="2">
-              <PanelTitle>Status</PanelTitle>
-              <Row>
-                <Switch>
-                  <Match when={status() === "active"}>
-                    <Tag level="caution">Active</Tag>
-                  </Match>
-                  <Match when={status() === "ignored"}>
-                    <Tag level="info">Ignored</Tag>
-                  </Match>
-                  <Match when={status() === "resolved"}>
-                    <Tag level="tip">Resolved</Tag>
-                  </Match>
-                </Switch>
-              </Row>
-            </Stack>
-            <Stack space="2">
-              <PanelTitle>Last Seen</PanelTitle>
-              <Text
-                title={parseTime(issue().timeSeen).toLocaleString(
-                  DateTime.DATETIME_FULL
-                )}
-                color="secondary"
-              >
-                {formatSinceTime(issue().timeSeen, true)}
-              </Text>
-            </Stack>
-            <Stack space="2">
-              <PanelTitle>First Seen</PanelTitle>
-              <Text
-                title={parseTime(issue().timeCreated).toLocaleString(
-                  DateTime.DATETIME_FULL
-                )}
-                color="secondary"
-              >
-                {formatSinceTime(issue().timeCreated, true)}
-              </Text>
-            </Stack>
-            <Stack space="2">
-              <PanelTitle>Feedback</PanelTitle>
-              <FeedbackCopy>
-                <Text size="sm" color="secondary">
-                  Does something not look right?
-                </Text>{" "}
-                <a href="https://sst.dev/discord" target="_blank">
-                  Send us a message in #console on Discord.
-                </a>
-              </FeedbackCopy>
-            </Stack>
-          </Stack>
-        </Sidebar>
-      </Container>
-    </Show>
+          </Sidebar>
+        </Container>
+      </Match>
+    </Switch>
   );
 }
