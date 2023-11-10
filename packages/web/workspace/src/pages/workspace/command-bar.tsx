@@ -268,6 +268,11 @@ function createControl() {
     () => control.reset()
   );
 
+  let isTyping = false;
+  makeEventListener(document, "mousemove", () => {
+    isTyping = false;
+  });
+
   const control = {
     get root() {
       const r = root();
@@ -348,7 +353,13 @@ function createControl() {
     get input() {
       return input();
     },
-    setInput,
+    get isTyping() {
+      return isTyping;
+    },
+    setInput(input: string) {
+      isTyping = true;
+      setInput(input);
+    },
     setActive: control.setActive,
     get groups() {
       return groups();
@@ -377,6 +388,7 @@ export function CommandBar(props: ParentProps) {
       if (control.visible) control.hide();
     }
   });
+
   const control = createControl();
   let scrolling: number | undefined;
   let modal!: HTMLDivElement;
@@ -412,6 +424,7 @@ export function CommandBar(props: ParentProps) {
                         <ActionRow
                           onMouseOver={(e) => {
                             const target = e.currentTarget;
+                            if (control.isTyping) return;
                             setTimeout(() => {
                               if (scrolling) return;
                               control.setActive(target, true);

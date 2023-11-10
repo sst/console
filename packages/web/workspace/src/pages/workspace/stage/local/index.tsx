@@ -12,6 +12,7 @@ import { useResourcesContext, useStageContext } from "../context";
 import { filter, flatMap, pipe } from "remeda";
 import { IconArrowsUpDown, IconBoltSolid } from "$/ui/icons";
 import { useInvocations } from "$/providers/invocation";
+import { KeyboardNavigator } from "$/common/keyboard-navigator";
 
 const Root = styled("div", {
   base: {
@@ -78,16 +79,30 @@ export function Local() {
             </Show>
           </div>
         </LogLoadingIndicator>
-        <For each={invocations()}>
-          {(invocation) => (
-            <InvocationRow
-              mixed
-              local
-              invocation={invocation}
-              function={functionByLocalID()[invocation.source!]}
-            />
-          )}
-        </For>
+        <KeyboardNavigator
+          target="[data-element='invocation']"
+          onSelect={(el) => (el.firstElementChild as HTMLElement).click()}
+          onPeek={(el, event) => {
+            if (event === "open" && !el.dataset.expanded) {
+              (el.firstElementChild as HTMLElement).click();
+            }
+
+            if (event === "close" && el.dataset.expanded) {
+              (el.firstElementChild as HTMLElement).click();
+            }
+          }}
+        >
+          <For each={invocations()}>
+            {(invocation) => (
+              <InvocationRow
+                mixed
+                local
+                invocation={invocation}
+                function={functionByLocalID()[invocation.source!]}
+              />
+            )}
+          </For>
+        </KeyboardNavigator>
       </LogList>
     </Root>
   );

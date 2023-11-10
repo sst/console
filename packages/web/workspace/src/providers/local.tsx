@@ -2,19 +2,18 @@ import {
   Accessor,
   ParentProps,
   createContext,
-  createEffect,
   createSignal,
   onCleanup,
   onMount,
   useContext,
 } from "solid-js";
 import { bus } from "./bus";
-import { createStore, produce } from "solid-js/store";
-import { useDummy, useDummyConfig } from "./dummy";
+import { useDummyConfig } from "./dummy";
 
 interface State {
   app?: string;
   stage?: string;
+  region?: string;
 }
 
 const localContext = createContext<Accessor<State>>(() => ({}));

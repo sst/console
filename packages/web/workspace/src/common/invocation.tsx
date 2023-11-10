@@ -21,6 +21,7 @@ import { Resource } from "@console/core/app/resource";
 import { Invocation } from "@console/core/log";
 import { Link } from "@solidjs/router";
 import { DateTime } from "luxon";
+import { useKeyboardNavigator } from "./keyboard-navigator";
 
 const shortDateOptions: Intl.DateTimeFormatOptions = {
   month: "short",
@@ -307,6 +308,8 @@ export function InvocationRow(props: {
       : "info"
   );
 
+  const navigator = useKeyboardNavigator();
+
   return (
     <Root
       data-element="invocation"
@@ -317,6 +320,7 @@ export function InvocationRow(props: {
     >
       <Summary
         onClick={(e) => {
+          navigator?.focus(e.currentTarget);
           setExpanded((r) => !r);
         }}
       >
