@@ -96,7 +96,6 @@ export function DialogPayloadSave(props: {
           >
             <Input
               data-element={"save-payload-dialog-name"}
-              autofocus
               name="name"
               minLength={1}
               placeholder="EventA"
