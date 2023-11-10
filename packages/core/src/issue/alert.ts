@@ -214,13 +214,14 @@ export const triggerIssue = zod(
         const context = (function () {
           const match = result.stack?.find((frame) => frame.important);
           if (!match?.context) return;
-          const max = (match.line! + match.context.length - 3).toString()
-            .length;
+          const offset = Math.max(1, match.line! - 3);
+          const active = Math.min(3, match.line! - 1);
+          const max = (offset + match.context.length - 1).toString().length;
           return [
             "# " + match.file,
             "-",
             ...match.context.map((line, index) => {
-              return `${(index + match.line! - 3)
+              return `${(index + offset)
                 .toString()
                 .padStart(max, " ")}  ${line}`;
             }),

@@ -321,9 +321,9 @@ function renderStacktraceFrameContext(
   const minLeadingSpaces = Math.min(
     ...context.map((row) => countLeadingSpaces(row))
   );
-  const maxIndexLength = Math.max(
-    ...context.map((_row, index) => (start + index).toString().length)
-  );
+  const offset = Math.max(1, start - 3);
+  const active = Math.min(3, start - 1);
+  const maxIndexLength = offset + context.length - 1;
 
   function padStringToEnd(input: string, desiredLength: number) {
     const numberOfSpaces = desiredLength - input.length;
@@ -337,7 +337,7 @@ function renderStacktraceFrameContext(
           <Column>
             <span
               style={
-                index === 3
+                index === active
                   ? stacktraceFrameContextImportant
                   : stacktraceFrameContext
               }
@@ -346,7 +346,7 @@ function renderStacktraceFrameContext(
                 split={68}
                 indent={maxIndexLength + 2}
                 text={`${padStringToEnd(
-                  (start + index - 3).toString(),
+                  (index + offset).toString(),
                   maxIndexLength
                 )}  ${row.substring(minLeadingSpaces)}`}
               />
