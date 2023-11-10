@@ -510,7 +510,7 @@ export const IssueEmail = ({
               <Text style={sectionLabel}>STACK TRACE</Text>
             </Section>
             <Section style={stacktraceContainer}>
-              {!issue.stack?.length && (
+              {!stack.length && (
                 <Row>
                   <Column>
                     <Text style={{ ...stacktraceFrame, ...compactText }}>
@@ -565,7 +565,7 @@ export const IssueEmail = ({
                         </Column>
                       </Row>
                     )}
-                    {index < (issue.stack?.length || 0) - 1 && (
+                    {index < (stack.length || 0) - 1 && (
                       <Row>
                         <Column>
                           <SurfaceHr />
