@@ -130,10 +130,7 @@ export const unresolve = zod(Info.shape.id.array(), async (input) =>
 );
 
 function destinationIdentifier(config: StageCredentials) {
-  return (
-    `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}` +
-    (Config.STAGE === "production" ? "" : "#dev")
-  );
+  return `sst#${config.region}#${config.awsAccountID}#${config.app}#${config.stage}`;
 }
 
 export const connectStage = zod(
@@ -283,7 +280,9 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
           await cw.send(
             new PutSubscriptionFilterCommand({
               destinationArn: destination,
-              filterName: uniqueIdentifier,
+              filterName:
+                uniqueIdentifier +
+                (Config.STAGE === "production" ? "" : `#dev`),
               filterPattern: [
                 `?"Invoke Error"`,
                 // OOM and other runtime error

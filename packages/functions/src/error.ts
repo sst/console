@@ -1,10 +1,9 @@
 import { ApiHandler } from "sst/node/api";
-
-console.log("Cold start!");
-
 export const handler = ApiHandler(async () => {
-  console.error("my error", new Error("logged error"));
-
+  console.error(new Error("logged error 1"));
+  console.error(new Error("logged error 2"));
+  console.error(new Error("logged error 3"));
+  console.error(new Error("logged error 4"));
   return {
     statusCode: 200,
     body: "A".repeat(1024 * 1024 * 10),

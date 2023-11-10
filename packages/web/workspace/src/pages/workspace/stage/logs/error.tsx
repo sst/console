@@ -2,6 +2,7 @@ import { utility, theme, Text, SpanSpacer } from "$/ui";
 import { IconChevronDown, IconChevronRight } from "$/ui/icons";
 import { Invocation, StackFrame } from "@console/core/log";
 import { styled } from "@macaron-css/solid";
+import { createMemoObject } from "@solidjs/router/dist/utils";
 import { For, Show, createMemo, createSignal } from "solid-js";
 
 export const ErrorList = styled("div", {
@@ -139,7 +140,9 @@ export function StackTrace(props: { stack: StackFrame[] }) {
       ...context.map((row) => countLeadingSpaces(row))
     );
     // Max number of characters in the last line number string
-    const maxLineNumberLength = (start + 3).toString().length;
+    const offset = Math.max(1, start - 4);
+    const active = Math.min(4, start - 1);
+    const maxLineNumberLength = (offset + 3).toString().length;
 
     return (
       <FrameContext>
@@ -153,10 +156,10 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                   disableSelect
                   size="mono_sm"
                   leading="loose"
-                  color={index() === 3 ? "primary" : "dimmed"}
-                  weight={index() === 3 ? "semibold" : "regular"}
+                  color={index() === active ? "primary" : "dimmed"}
+                  weight={index() === active ? "semibold" : "regular"}
                 >
-                  {index() + start - 3}
+                  {(index() + offset).toString().padStart(maxLineNumberLength)}
                 </Text>
               </FrameContextNumber>
               <Text
@@ -166,8 +169,8 @@ export function StackTrace(props: { stack: StackFrame[] }) {
                 on="surface"
                 size="mono_sm"
                 leading="loose"
-                weight={index() === 3 ? "medium" : "regular"}
-                color={index() === 3 ? "primary" : "secondary"}
+                weight={index() === active ? "medium" : "regular"}
+                color={index() === active ? "primary" : "secondary"}
               >
                 {line.substring(minLeadingSpaces)}
               </Text>
