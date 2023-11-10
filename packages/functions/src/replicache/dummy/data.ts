@@ -224,6 +224,7 @@ const ISSUE_ID_RAW_STACK_TRACE = "126";
 const ISSUE_ID_FULL_STACK_TRACE = "127";
 const ISSUE_ID_MISSING_SOURCEMAP = "128";
 const ISSUE_ID_RESOLVED = "129";
+const ISSUE_ID_IGNORED = "130";
 
 const STACK_TRACE = [
   {
@@ -1158,9 +1159,16 @@ function* stageNoActiveIssues(): Generator<DummyData, void, unknown> {
   yield issue({
     stage: STAGE_NO_ACTIVE_ISSUES,
     id: ISSUE_ID_RESOLVED,
-    error: "Error",
+    error: "Resolved Error",
     message: "Some error message",
     timeResolved: DateTime.now().startOf("day").toSQL()!,
+  });
+  yield issue({
+    stage: STAGE_NO_ACTIVE_ISSUES,
+    id: ISSUE_ID_IGNORED,
+    error: "Ignored Error",
+    message: "Some error message",
+    timeIgnored: DateTime.now().startOf("day").toSQL()!,
   });
 }
 
@@ -2140,8 +2148,9 @@ interface IssueProps {
   fnName?: string;
   message: string;
   stack?: StackFrame[];
-  invocation?: Invocation;
+  timeIgnored?: string;
   timeResolved?: string;
+  invocation?: Invocation;
 }
 function issue({
   id,
@@ -2150,6 +2159,7 @@ function issue({
   fnName,
   message,
   invocation,
+  timeIgnored,
   timeResolved,
   stack,
 }: IssueProps): DummyData {
@@ -2158,9 +2168,9 @@ function issue({
     id,
     timeSeen: DateTime.now().startOf("day").toSQL()!,
     timeDeleted: null,
-    timeResolved: timeResolved || null,
-    timeIgnored: null,
     invocation: invocation || null,
+    timeIgnored: timeIgnored || null,
+    timeResolved: timeResolved || null,
     stageID: stage || STAGE_HAS_ISSUES,
     error,
     message,

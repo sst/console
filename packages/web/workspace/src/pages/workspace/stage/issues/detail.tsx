@@ -375,40 +375,49 @@ export function Detail() {
           </Content>
           <Sidebar>
             <Stack space="7">
-              <ButtonGroup>
-                <Button
-                  grouped="left"
-                  color="secondary"
-                  style={{ flex: "1 1 auto" }}
-                  active={Boolean(issue().timeIgnored)}
-                  onClick={() =>
-                    issue().timeIgnored
-                      ? rep().mutate.issue_unignore([issue()!.id])
-                      : rep().mutate.issue_ignore([issue()!.id])
-                  }
-                >
-                  <ButtonIcon>
-                    <IconNoSymbol />
-                  </ButtonIcon>
-                  Ignore
-                </Button>
-                <Button
-                  grouped="right"
-                  color="secondary"
-                  style={{ flex: "1 1 auto" }}
-                  active={Boolean(issue().timeResolved)}
-                  onClick={() =>
-                    issue().timeResolved
-                      ? rep().mutate.issue_unresolve([issue()!.id])
-                      : rep().mutate.issue_resolve([issue()!.id])
-                  }
-                >
-                  <ButtonIcon>
-                    <IconCheck />
-                  </ButtonIcon>
-                  Resolve
-                </Button>
-              </ButtonGroup>
+              <Show
+                when={
+                  !Boolean(issue().timeIgnored) &&
+                  !Boolean(issue().timeResolved)
+                }
+                fallback={
+                  <Button
+                    color="secondary"
+                    onClick={() =>
+                      issue().timeIgnored
+                        ? rep().mutate.issue_unignore([issue()!.id])
+                        : rep().mutate.issue_unresolve([issue()!.id])
+                    }
+                  >
+                    Reopen Issue
+                  </Button>
+                }
+              >
+                <ButtonGroup>
+                  <Button
+                    grouped="left"
+                    color="secondary"
+                    style={{ flex: "1 1 auto" }}
+                    onClick={() => rep().mutate.issue_ignore([issue()!.id])}
+                  >
+                    <ButtonIcon>
+                      <IconNoSymbol />
+                    </ButtonIcon>
+                    Ignore
+                  </Button>
+                  <Button
+                    grouped="right"
+                    color="secondary"
+                    style={{ flex: "1 1 auto" }}
+                    onClick={() => rep().mutate.issue_resolve([issue()!.id])}
+                  >
+                    <ButtonIcon>
+                      <IconCheck />
+                    </ButtonIcon>
+                    Resolve
+                  </Button>
+                </ButtonGroup>
+              </Show>
               <Stack space="2">
                 <PanelTitle>Last 24hrs</PanelTitle>
                 <Histogram

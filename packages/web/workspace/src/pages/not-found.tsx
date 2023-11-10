@@ -1,3 +1,4 @@
+import { Show } from "solid-js";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
 import { theme } from "$/ui";
@@ -18,11 +19,16 @@ const NotAllowedDesc = styled("div", {
   },
 });
 
-export function NotFound() {
+interface ErrorScreenProps {
+  header?: boolean;
+}
+export function NotFound(props: ErrorScreenProps) {
   return (
     <>
-      <Header />
-      <Fullscreen inset="root">
+      <Show when={props.header}>
+        <Header />
+      </Show>
+      <Fullscreen inset={props.header ? "root" : "none"}>
         <Stack space="2.5" horizontal="center">
           <Text size="lg">Page not found</Text>
           <HomeLink href="/">Go back home</HomeLink>
@@ -32,10 +38,12 @@ export function NotFound() {
   );
 }
 
-export function NotAllowed() {
+export function NotAllowed(props: ErrorScreenProps) {
   return (
     <>
-      <Header />
+      <Show when={props.header}>
+        <Header />
+      </Show>
       <Fullscreen inset="root">
         <Stack space="2.5" horizontal="center">
           <Text size="lg">Access not allowed</Text>

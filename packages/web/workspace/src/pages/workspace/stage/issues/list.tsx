@@ -572,42 +572,62 @@ export function List() {
                   Error
                 </Text>
                 <Show when={selected().length > 0}>
-                  <ButtonGroup>
-                    <Button
-                      active={search.view === "ignored"}
-                      onClick={() => {
-                        search.view === "ignored"
-                          ? rep().mutate.issue_unignore(selected())
-                          : rep().mutate.issue_ignore(selected());
-                        reset();
-                      }}
-                      size="sm"
-                      grouped="left"
-                      color="secondary"
-                    >
-                      <ButtonIcon>
-                        <IconNoSymbol />
-                      </ButtonIcon>
-                      Ignore
-                    </Button>
-                    <Button
-                      active={search.view === "resolved"}
-                      onClick={() => {
-                        search.view === "resolved"
-                          ? rep().mutate.issue_unresolve(selected())
-                          : rep().mutate.issue_resolve(selected());
-                        reset();
-                      }}
-                      size="sm"
-                      grouped="right"
-                      color="secondary"
-                    >
-                      <ButtonIcon>
-                        <IconCheck />
-                      </ButtonIcon>
-                      Resolve
-                    </Button>
-                  </ButtonGroup>
+                  <Show
+                    when={
+                      search.view !== "ignored" && search.view !== "resolved"
+                    }
+                    fallback={
+                      <Button
+                        size="sm"
+                        color="secondary"
+                        onClick={() => {
+                          search.view === "ignored"
+                            ? rep().mutate.issue_unignore(selected())
+                            : rep().mutate.issue_unresolve(selected());
+                          reset();
+                        }}
+                      >
+                        Reopen Issue
+                      </Button>
+                    }
+                  >
+                    <ButtonGroup>
+                      <Button
+                        active={search.view === "ignored"}
+                        onClick={() => {
+                          search.view === "ignored"
+                            ? rep().mutate.issue_unignore(selected())
+                            : rep().mutate.issue_ignore(selected());
+                          reset();
+                        }}
+                        size="sm"
+                        grouped="left"
+                        color="secondary"
+                      >
+                        <ButtonIcon>
+                          <IconNoSymbol />
+                        </ButtonIcon>
+                        Ignore
+                      </Button>
+                      <Button
+                        active={search.view === "resolved"}
+                        onClick={() => {
+                          search.view === "resolved"
+                            ? rep().mutate.issue_unresolve(selected())
+                            : rep().mutate.issue_resolve(selected());
+                          reset();
+                        }}
+                        size="sm"
+                        grouped="right"
+                        color="secondary"
+                      >
+                        <ButtonIcon>
+                          <IconCheck />
+                        </ButtonIcon>
+                        Resolve
+                      </Button>
+                    </ButtonGroup>
+                  </Show>
                 </Show>
               </IssuesHeaderCol>
               <IssuesHeaderCol

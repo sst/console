@@ -380,7 +380,7 @@ function createControl() {
 
 type Control = ReturnType<typeof createControl>;
 
-const CommandbarContext = createContext<Control>();
+export const CommandbarContext = createContext<Control>();
 
 export function CommandBar(props: ParentProps) {
   createEventListener(document, "mouseup", (e) => {
