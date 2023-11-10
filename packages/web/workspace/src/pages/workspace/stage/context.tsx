@@ -175,6 +175,12 @@ export function useResourcesContext() {
 }
 
 export const MINIMUM_VERSION = "2.19.2";
+function parseVersion(input: string) {
+  return input
+    .split(".")
+    .map((item) => parseInt(item))
+    .reduce((acc, val, i) => acc + val * Math.pow(1000, 2 - i), 0);
+}
 export function useOutdated() {
   const resources = useResourcesContext();
   const stacks = createMemo(() =>
@@ -185,7 +191,7 @@ export function useOutdated() {
       (r) =>
         r.type === "Stack" &&
         r.enrichment.version &&
-        r.enrichment.version < MINIMUM_VERSION &&
+        parseVersion(r.enrichment.version) < parseVersion(MINIMUM_VERSION) &&
         !r.enrichment.version?.startsWith("0.0.0")
     )
   );
