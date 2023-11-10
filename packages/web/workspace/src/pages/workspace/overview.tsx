@@ -341,7 +341,7 @@ export function Overview() {
     <>
       <Header />
       <Switch>
-        <Match when={accounts() && accounts()?.length === 0}>
+        <Match when={accounts.ready && accounts()?.length === 0}>
           <Fullscreen>
             <Syncing>
               <Stack space="3.5">
