@@ -39,7 +39,7 @@ export function createKeyboardNavigator(props: Props) {
   }
 
   createEventListener(window, "keydown", (e) => {
-    if (document.activeElement?.tagName === "TEXTARE") return;
+    if (document.activeElement?.tagName === "TEXTAREA") return;
     if (
       document.activeElement?.tagName === "INPUT" &&
       (document.activeElement as HTMLInputElement).type === "text"
@@ -86,6 +86,7 @@ export function createKeyboardNavigator(props: Props) {
       );
       if (!match) return;
       const f = focused();
+      if (f === match) return;
       if (f) f.removeAttribute("data-focus");
       match.setAttribute("data-focus", "true");
     },
