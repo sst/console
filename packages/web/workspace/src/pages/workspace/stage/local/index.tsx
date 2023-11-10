@@ -66,7 +66,7 @@ export function Local() {
               </Switch>
             </Text>
           </Row>
-          <Row space="3.5" vertical="center">
+          <div>
             <Show when={invocations().length > 0}>
               <TextButton
                 onClick={() => {
@@ -76,7 +76,7 @@ export function Local() {
                 Clear
               </TextButton>
             </Show>
-          </Row>
+          </div>
         </LogLoadingIndicator>
         <For each={invocations()}>
           {(invocation) => (

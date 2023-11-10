@@ -12,6 +12,7 @@ import {
   IconChevronUpDown,
   IconMagnifyingGlass,
   IconEllipsisVertical,
+  IconEllipsisHorizontal,
   IconArrowPathRoundedSquare,
 } from "$/ui/icons";
 import { IconAws, IconArrowPathSpin } from "$/ui/icons/custom";
@@ -85,11 +86,23 @@ export const LogLoadingIndicator = styled("div", {
     height: 52,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `0 ${theme.space[3]}`,
+    padding: `0 ${theme.space[3]} 0 ${theme.space[3]}`,
     borderStyle: "solid",
-    borderWidth: 1,
+    borderWidth: `1px 1px 1px 1px`,
     borderColor: theme.color.divider.base,
+    backgroundColor: theme.color.background.surface,
     borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
+    ":last-child": {
+      borderRadius: theme.borderRadius,
+    },
+  },
+});
+
+export const LogLoadingIndicatorCopy = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary.surface,
   },
 });
 
@@ -110,7 +123,7 @@ export const LogLoadingIndicatorIcon = styled("div", {
         color: theme.color.accent,
       },
       false: {
-        color: theme.color.icon.dimmed,
+        color: theme.color.icon.secondary,
       },
     },
   },
@@ -175,6 +188,14 @@ const LogMoreIndicatorIcon = styled("div", {
     height: 20,
     color: theme.color.text.dimmed.base,
     opacity: theme.iconOpacity,
+  },
+});
+
+const LogMoreIndicatorCopy = styled("span", {
+  base: {
+    lineHeight: "normal",
+    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.sm,
   },
 });
 
@@ -534,13 +555,13 @@ export function Logs() {
                       </Match>
                     </Switch>
                   </LogLoadingIndicatorIcon>
-                  <Text leading="normal" color="dimmed" size="sm">
+                  <LogLoadingIndicatorCopy>
                     <Switch>
                       <Match when={mode() === "live" && !stage.connected}>
-                        Trying to connect to local `sst dev`&hellip;
+                        Trying to connect to local `sst dev`
                       </Match>
                       <Match when={mode() === "live"}>
-                        Tailing logs from local `sst dev`&hellip;
+                        Tailing logs from local `sst dev`
                       </Match>
                       <Match when={mode() === "search"}>
                         <Show when={query.end} fallback="Viewing past logs">
@@ -565,10 +586,9 @@ export function Logs() {
                             )
                           ).toLocaleString(DATETIME_LONG)}
                         </Show>
-                        &hellip;
                       </Match>
                     </Switch>
-                  </Text>
+                  </LogLoadingIndicatorCopy>
                 </Row>
                 <Row space="3.5" vertical="center">
                   <Show when={mode() !== "search" && invocations().length > 0}>
@@ -650,6 +670,7 @@ export function Logs() {
                 when={
                   (mode() === "tail" ||
                     mode() === "live" ||
+                    mode() === "search" ||
                     query.view === "recent") &&
                   resource()
                 }
@@ -689,31 +710,33 @@ export function Logs() {
                   </Text>
                 </LogEmpty>
               </Show>
-              <InvocationsList
-                onClick={(e) => {
-                  document
-                    .querySelector("[data-focus]")
-                    ?.removeAttribute("data-focus");
-                  e.target
-                    .closest<HTMLElement>(`[data-element="invocation"]`)
-                    ?.setAttribute("data-focus", "true");
-                }}
-              >
-                <For each={invocations()}>
-                  {(invocation, i) => (
-                    <InvocationRow
-                      onSavePayload={() => {
-                        invokeControl.savePayload(
-                          structuredClone(unwrap(invocation.input))
-                        );
-                      }}
-                      invocation={invocation}
-                      local={mode() === "live"}
-                      function={resource()!}
-                    />
-                  )}
-                </For>
-              </InvocationsList>
+              <Show when={invocations().length > 0}>
+                <InvocationsList
+                  onClick={(e) => {
+                    document
+                      .querySelector("[data-focus]")
+                      ?.removeAttribute("data-focus");
+                    e.target
+                      .closest<HTMLElement>(`[data-element="invocation"]`)
+                      ?.setAttribute("data-focus", "true");
+                  }}
+                >
+                  <For each={invocations()}>
+                    {(invocation) => (
+                      <InvocationRow
+                        onSavePayload={() => {
+                          invokeControl.savePayload(
+                            structuredClone(unwrap(invocation.input))
+                          );
+                        }}
+                        invocation={invocation}
+                        local={mode() === "live"}
+                        function={resource()!}
+                      />
+                    )}
+                  </For>
+                </InvocationsList>
+              </Show>
               <Show when={mode() === "search"}>
                 <Switch>
                   <Match when={activeSearch() && !activeSearch().outcome}>
@@ -721,7 +744,7 @@ export function Logs() {
                       <LogMoreIndicatorIcon>
                         <IconArrowPathSpin />
                       </LogMoreIndicatorIcon>
-                      <Text leading="normal" color="dimmed" size="sm">
+                      <LogMoreIndicatorCopy>
                         <Show
                           when={mode() === "search"}
                           fallback={<>Loading&hellip;</>}
@@ -736,19 +759,24 @@ export function Logs() {
                           </Show>
                           &hellip;
                         </Show>
-                      </Text>
+                      </LogMoreIndicatorCopy>
                     </LogMoreIndicator>
                   </Match>
                   <Match when={mode() === "search" && invocations().length}>
                     <LogMoreIndicator>
-                      <LogMoreIndicatorIcon>
-                        <IconEllipsisVertical />
-                      </LogMoreIndicatorIcon>
                       <Switch>
                         <Match when={activeSearch()?.outcome === "completed"}>
-                          <TextButton>No more logs</TextButton>
+                          <LogMoreIndicatorIcon>
+                            <IconEllipsisHorizontal />
+                          </LogMoreIndicatorIcon>
+                          <LogMoreIndicatorCopy>
+                            No more logs
+                          </LogMoreIndicatorCopy>
                         </Match>
                         <Match when={activeSearch()?.outcome === "partial"}>
+                          <LogMoreIndicatorIcon>
+                            <IconEllipsisVertical />
+                          </LogMoreIndicatorIcon>
                           <TextButton
                             onClick={() => {
                               const i = invocations();

@@ -54,7 +54,7 @@ const InvokeRoot = styled("div", {
     expand: {
       true: {
         ...utility.stack(0),
-        backgroundColor: theme.color.input.background,
+        //backgroundColor: theme.color.input.background,
         height: "auto",
         alignItems: "stretch",
         padding: 0,
@@ -328,7 +328,7 @@ export function Invoke(props: Props) {
             <IconCaretRightOutline />
           </InvokePayloadLabelIcon>
           <Text leading="normal" size="sm" color="dimmed">
-            Enter event payload
+            Enter event payload to invoke
           </Text>
         </InvokePayloadLabel>
         <InvokeTextArea
