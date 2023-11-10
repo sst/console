@@ -290,161 +290,163 @@ export const integrate = zod(
     const r = await regions(input.credentials);
     console.log("regions", r);
 
-    await Promise.all(
-      r.map(async (region) => {
-        const config = {
-          credentials: input.credentials,
-          region: region!,
-        };
-        console.log("integrating region", region);
+    try {
+      await Promise.all(
+        r.map(async (region) => {
+          const config = {
+            credentials: input.credentials,
+            region: region!,
+          };
+          console.log("integrating region", region);
 
-        const b = await bootstrap(config);
-        if (!b) return;
+          const b = await bootstrap(config);
+          if (!b) return;
 
-        const s3 = new S3Client(config);
-        const eb = new EventBridgeClient(config);
+          const s3 = new S3Client(config);
+          const eb = new EventBridgeClient(config);
 
-        console.log(region, "found sst bucket", b.bucket);
+          console.log(region, "found sst bucket", b.bucket);
 
-        const result = await s3
-          .send(
-            new PutBucketNotificationConfigurationCommand({
-              Bucket: b.bucket,
-              NotificationConfiguration: {
-                EventBridgeConfiguration: {},
-              },
-            })
-          )
-          .catch(() => {});
-        if (!result) {
-          console.log(region, "failed to update bucket notification");
-          return;
-        }
-        console.log(region, "updated bucket notifications");
-
-        await eb.send(
-          new PutRuleCommand({
-            Name: "SSTConsole" + suffix,
-            State: "ENABLED",
-            EventPattern: JSON.stringify({
-              source: ["aws.s3"],
-              detail: {
-                bucket: {
-                  name: [b.bucket],
+          const result = await s3
+            .send(
+              new PutBucketNotificationConfigurationCommand({
+                Bucket: b.bucket,
+                NotificationConfiguration: {
+                  EventBridgeConfiguration: {},
                 },
-              },
-            }),
-          })
-        );
-        await eb.send(
-          new PutTargetsCommand({
-            Rule: "SSTConsole" + suffix,
-            Targets: [
-              {
-                Arn: process.env.EVENT_BUS_ARN,
-                Id: "SSTConsole",
-                RoleArn: role.Role!.Arn,
-              },
-            ],
-          })
-        );
-        console.log(region, "created eventbus rule");
-
-        let token: string | undefined;
-        const existing = await useTransaction((tx) =>
-          tx
-            .select({
-              stageName: stage.name,
-              stageID: stage.id,
-              appName: app.name,
-            })
-            .from(stage)
-            .innerJoin(app, eq(stage.appID, app.id))
-            .where(
-              and(
-                eq(stage.awsAccountID, account.id),
-                eq(stage.region, region),
-                eq(stage.workspaceID, useWorkspace())
-              )
+              })
             )
-        ).then(
-          createPipe(
-            groupBy((r) => r.appName),
-            mapValues((rows) =>
-              rows.map((r) => [r.stageName, r.stageID] as const)
-            ),
-            mapValues((rows) => new Map(rows))
+            .catch(() => {});
+          if (!result) {
+            console.log(region, "failed to update bucket notification");
+            return;
+          }
+          console.log(region, "updated bucket notifications");
+
+          await eb.send(
+            new PutRuleCommand({
+              Name: "SSTConsole" + suffix,
+              State: "ENABLED",
+              EventPattern: JSON.stringify({
+                source: ["aws.s3"],
+                detail: {
+                  bucket: {
+                    name: [b.bucket],
+                  },
+                },
+              }),
+            })
+          );
+          await eb.send(
+            new PutTargetsCommand({
+              Rule: "SSTConsole" + suffix,
+              Targets: [
+                {
+                  Arn: process.env.EVENT_BUS_ARN,
+                  Id: "SSTConsole",
+                  RoleArn: role.Role!.Arn,
+                },
+              ],
+            })
+          );
+          console.log(region, "created eventbus rule");
+
+          let token: string | undefined;
+          const existing = await useTransaction((tx) =>
+            tx
+              .select({
+                stageName: stage.name,
+                stageID: stage.id,
+                appName: app.name,
+              })
+              .from(stage)
+              .innerJoin(app, eq(stage.appID, app.id))
+              .where(
+                and(
+                  eq(stage.awsAccountID, account.id),
+                  eq(stage.region, region),
+                  eq(stage.workspaceID, useWorkspace())
+                )
+              )
+          ).then(
+            createPipe(
+              groupBy((r) => r.appName),
+              mapValues((rows) =>
+                rows.map((r) => [r.stageName, r.stageID] as const)
+              ),
+              mapValues((rows) => new Map(rows))
+            )
+          );
+          while (true) {
+            const list = await s3.send(
+              new ListObjectsV2Command({
+                Prefix: "stackMetadata",
+                Bucket: b.bucket,
+                ContinuationToken: token,
+              })
+            );
+            const distinct = new Set(
+              list.Contents?.filter((item) => item.Key).map((item) =>
+                item.Key!.split("/").slice(0, 3).join("/")
+              ) || []
+            );
+
+            console.log("found", distinct);
+            for (const item of distinct) {
+              const [, appHint, stageHint] = item.split("/") || [];
+              if (!appHint || !stageHint) continue;
+              const [, stageName] = stageHint?.split(".");
+              const [, appName] = appHint?.split(".");
+              if (!stageName || !appName) continue;
+              existing[appName]?.delete(stageName);
+              await createTransaction(async () => {
+                let app = await App.fromName(appName).then((a) => a?.id);
+                if (!app)
+                  app = await App.create({
+                    name: appName,
+                  });
+
+                let stage = await App.Stage.fromName({
+                  appID: app,
+                  name: stageName,
+                  region,
+                  awsAccountID: input.awsAccountID,
+                }).then((s) => s?.id);
+                if (!stage) {
+                  stage = await App.Stage.connect({
+                    name: stageName,
+                    appID: app,
+                    region: config.region,
+                    awsAccountID: account.id,
+                  });
+                  await Replicache.poke();
+                }
+              });
+              console.log(region, "found", stageName, appName);
+            }
+
+            for (const [appName, stages] of Object.entries(existing)) {
+              for (const [stageName, stageID] of stages) {
+                console.log("could not find", appName, stageName, stageID);
+                await App.Stage.remove(stageID);
+              }
+            }
+            if (!list.ContinuationToken) break;
+          }
+        })
+      );
+    } finally {
+      await db
+        .update(awsAccount)
+        .set({
+          timeDiscovered: sql`CURRENT_TIMESTAMP()`,
+        })
+        .where(
+          and(
+            eq(awsAccount.id, input.awsAccountID),
+            eq(awsAccount.workspaceID, useWorkspace())
           )
         );
-        while (true) {
-          const list = await s3.send(
-            new ListObjectsV2Command({
-              Prefix: "stackMetadata",
-              Bucket: b.bucket,
-              ContinuationToken: token,
-            })
-          );
-          const distinct = new Set(
-            list.Contents?.filter((item) => item.Key).map((item) =>
-              item.Key!.split("/").slice(0, 3).join("/")
-            ) || []
-          );
-
-          console.log("found", distinct);
-          for (const item of distinct) {
-            const [, appHint, stageHint] = item.split("/") || [];
-            if (!appHint || !stageHint) continue;
-            const [, stageName] = stageHint?.split(".");
-            const [, appName] = appHint?.split(".");
-            if (!stageName || !appName) continue;
-            existing[appName]?.delete(stageName);
-            await createTransaction(async () => {
-              let app = await App.fromName(appName).then((a) => a?.id);
-              if (!app)
-                app = await App.create({
-                  name: appName,
-                });
-
-              let stage = await App.Stage.fromName({
-                appID: app,
-                name: stageName,
-                region,
-                awsAccountID: input.awsAccountID,
-              }).then((s) => s?.id);
-              if (!stage) {
-                stage = await App.Stage.connect({
-                  name: stageName,
-                  appID: app,
-                  region: config.region,
-                  awsAccountID: account.id,
-                });
-                await Replicache.poke();
-              }
-            });
-            console.log(region, "found", stageName, appName);
-          }
-
-          for (const [appName, stages] of Object.entries(existing)) {
-            for (const [stageName, stageID] of stages) {
-              console.log("could not find", appName, stageName, stageID);
-              await App.Stage.remove(stageID);
-            }
-          }
-          if (!list.ContinuationToken) break;
-        }
-      })
-    );
-
-    await db
-      .update(awsAccount)
-      .set({
-        timeDiscovered: sql`CURRENT_TIMESTAMP()`,
-      })
-      .where(
-        and(
-          eq(awsAccount.id, input.awsAccountID),
-          eq(awsAccount.workspaceID, useWorkspace())
-        )
-      );
+    }
   }
 );
