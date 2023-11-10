@@ -57,6 +57,10 @@ import type { Invocation } from "@console/core/log";
 import { sortBy } from "remeda";
 import { getLogInfo } from "../issues/common";
 import { createEventListener } from "@solid-primitives/event-listener";
+import {
+  KeyboardNavigator,
+  createKeyboardNavigator,
+} from "$/common/keyboard-navigator";
 
 const LogSwitchButton = styled("button", {
   base: {
@@ -425,71 +429,7 @@ export function Logs() {
       : resource()?.metadata.handler
   );
 
-  function moveIndex(offset: -1 | 1) {
-    const all = Array.from(
-      document.querySelectorAll<HTMLElement>(`[data-element="invocation"]`)
-    );
-    if (all.length === 0) return;
-    const focusedIndex = all.findIndex((x) => x.dataset.focus === "true");
-    const f = all[focusedIndex];
-    if (!f) {
-      if (offset === 1) all.at(0)?.setAttribute("data-focus", "true");
-      if (offset === -1) all.at(-1)?.setAttribute("data-focus", "true");
-      return;
-    }
-
-    const next = all[focusedIndex + offset];
-    if (!next) return;
-    f.removeAttribute("data-focus");
-    next.setAttribute("data-focus", "true");
-    if (focusedIndex + offset === 0) {
-      next.scrollIntoView({
-        block: "end",
-      });
-      return;
-    }
-    next.scrollIntoView({
-      block: "nearest",
-    });
-  }
-
-  createEventListener(window, "keypress", (e) => {
-    if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName!))
-      return;
-    if (e.key === "j") moveIndex(1);
-    if (e.key === "k") moveIndex(-1);
-    if (e.key === "Enter") {
-      document.querySelector<HTMLElement>("[data-focus] > *")?.click();
-    }
-  });
-
-  createEventListener(window, "keydown", (e) => {
-    if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName!))
-      return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      moveIndex(1);
-    }
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      moveIndex(-1);
-    }
-    if (e.key === " ") {
-      e.preventDefault();
-      const el = document.querySelector<HTMLElement>("[data-focus]");
-      if (el?.dataset.expanded) return;
-      (el?.firstElementChild as HTMLElement).click();
-    }
-  });
-
-  createEventListener(window, "keyup", (e) => {
-    if (e.key === " ") {
-      e.preventDefault();
-      document
-        .querySelector<HTMLElement>(`[data-focus][data-expanded="true"] > *`)
-        ?.click();
-    }
-  });
+  const navigator = createKeyboardNavigator({});
 
   return (
     <Switch>
@@ -711,14 +651,19 @@ export function Logs() {
                 </LogEmpty>
               </Show>
               <Show when={invocations().length > 0}>
-                <InvocationsList
-                  onClick={(e) => {
-                    document
-                      .querySelector("[data-focus]")
-                      ?.removeAttribute("data-focus");
-                    e.target
-                      .closest<HTMLElement>(`[data-element="invocation"]`)
-                      ?.setAttribute("data-focus", "true");
+                <KeyboardNavigator
+                  target="[data-element='invocation']"
+                  onSelect={(el) =>
+                    (el.firstElementChild as HTMLElement).click()
+                  }
+                  onPeek={(el, event) => {
+                    if (event === "open" && !el.dataset.expanded) {
+                      (el.firstElementChild as HTMLElement).click();
+                    }
+
+                    if (event === "close" && el.dataset.expanded) {
+                      (el.firstElementChild as HTMLElement).click();
+                    }
                   }}
                 >
                   <For each={invocations()}>
@@ -735,7 +680,7 @@ export function Logs() {
                       />
                     )}
                   </For>
-                </InvocationsList>
+                </KeyboardNavigator>
               </Show>
               <Show when={mode() === "search"}>
                 <Switch>
