@@ -25,6 +25,7 @@ import { useNavigate } from "@solidjs/router";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
 import { minLength, object, string, regex } from "valibot";
 import { Header } from "./workspace/header";
+import { unwrap } from "solid-js/store";
 
 const CreateWorkspaceHint = styled("ul", {
   base: {
@@ -66,7 +67,7 @@ export function WorkspaceCreate() {
   const pending = createMemo(() => workspace() != null);
 
   createEffect((prev) => {
-    console.log(workspace());
+    console.log(unwrap(workspace()));
     if (prev && !pending()) setError(form, "slug", "Workspace name is taken.");
     return pending();
   });
@@ -126,7 +127,7 @@ export function WorkspaceCreate() {
                   </FormField>
                 )}
               </Field>
-              <Button type="submit" disabled={Boolean(pending())}>
+              <Button type="submit" disabled={Boolean(pending()) && false}>
                 <Show when={pending()} fallback="Create Workspace">
                   Creating&hellip;
                 </Show>

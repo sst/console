@@ -100,9 +100,8 @@ export class Store<
       if (!value) throw new Error("Not found");
       await tx.del(pk);
     };
-    result.put = async (tx: WriteTransaction, args: any[], item: Item) => {
-      await tx.put("/" + this.#get!(...args).join("/"), item as any);
-    };
+    result.put = (tx: WriteTransaction, args: any[], item: Item) =>
+      tx.put("/" + this.#get!(...args).join("/"), item as any);
     return result as {
       [name in keyof Scanners]: ((
         tx: ReadTransaction,
@@ -159,7 +158,6 @@ export function createGet<T extends any>(
   createEffect(() => {
     if (unsubscribe) unsubscribe();
     const path = p();
-    console.log("watching", path);
     batch(() => {
       setData("value", undefined);
       setReady(false);
@@ -173,7 +171,7 @@ export function createGet<T extends any>(
             if (diff.op === "add") {
               setData("value", structuredClone(diff.newValue) as T);
             }
-            if (diff.op === "change") {
+            if (diff.op === "change" && data.value) {
               setData("value", reconcile(structuredClone(diff.newValue) as T));
             }
             if (diff.op === "del") setData("value", undefined);

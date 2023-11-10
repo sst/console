@@ -42,13 +42,9 @@ const AuthContext = createContext<AuthContextType>();
 
 const mutators = new Client<ServerType>()
   .mutation("workspace_create", async (tx, input) => {
-    console.log("running mutation");
     await WorkspaceStore.put(tx, [input.id!], {
       id: input.id!,
       slug: input.slug,
-      timeDeleted: null as any,
-      timeCreated: null as any,
-      timeUpdated: DateTime.now().toSQL()!,
     });
   })
   .build();
@@ -70,8 +66,6 @@ export function AuthProvider(props: ParentProps) {
     storage.set("account", payload.properties.accountID);
     set(tokens);
   }
-
-  console.log("Auth Info", tokens);
 
   if (Object.values(tokens).length === 0) return <Navigate href="/auth" />;
 
