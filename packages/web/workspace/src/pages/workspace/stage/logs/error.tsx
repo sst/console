@@ -142,7 +142,7 @@ export function StackTrace(props: { stack: StackFrame[] }) {
     // Max number of characters in the last line number string
     const offset = Math.max(1, start - 4);
     const active = Math.min(4, start - 1);
-    const maxLineNumberLength = (offset + 3).toString().length;
+    const maxLineNumberLength = (offset + context.length).toString().length;
 
     return (
       <FrameContext>
