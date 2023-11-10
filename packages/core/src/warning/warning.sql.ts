@@ -18,7 +18,7 @@ export const warning = mysqlTable(
     data: json("data"),
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.id),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     unique: uniqueIndex("unique").on(
       table.workspaceID,
       table.stageID,

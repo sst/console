@@ -13,6 +13,6 @@ export const lambdaPayload = mysqlTable(
     creator: json("creator").notNull().$type<Actor>(),
   },
   (table) => ({
-    primary: primaryKey(table.id, table.workspaceID),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
   })
 );

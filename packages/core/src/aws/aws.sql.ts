@@ -22,7 +22,7 @@ export const awsAccount = mysqlTable(
     }),
   },
   (table) => ({
-    primary: primaryKey(table.id, table.workspaceID),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     accountID: uniqueIndex("account_id").on(table.workspaceID, table.accountID),
     updated: index("updated").on(table.timeUpdated),
   })

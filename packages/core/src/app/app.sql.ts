@@ -16,7 +16,7 @@ export const app = mysqlTable(
     name: varchar("name", { length: 255 }).notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.id, table.workspaceID),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     name: uniqueIndex("name").on(table.workspaceID, table.name),
     updated: index("updated").on(table.timeUpdated),
   })
@@ -33,7 +33,7 @@ export const stage = mysqlTable(
     name: varchar("name", { length: 255 }).notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.id, table.workspaceID),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     name: uniqueIndex("name").on(
       table.appID,
       table.awsAccountID,
@@ -59,7 +59,7 @@ export const resource = mysqlTable(
     enrichment: json("enrichment").notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.id, table.workspaceID),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     addr: uniqueIndex("addr").on(table.workspaceID, table.stageID, table.addr),
   })
 );

@@ -19,7 +19,9 @@ export const log_poller = mysqlTable(
     executionARN: text("execution_arn"),
   },
   (table) => ({
-    primary: primaryKey(table.id, table.workspaceID),
+    primary: primaryKey({
+      columns: [table.workspaceID, table.id],
+    }),
     logGroup: uniqueIndex("log_group").on(
       table.workspaceID,
       table.stageID,
@@ -46,6 +48,6 @@ export const log_search = mysqlTable(
     outcome: mysqlEnum("outcome", ["completed", "partial"]),
   },
   (table) => ({
-    primary: primaryKey(table.id, table.workspaceID),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
   })
 );

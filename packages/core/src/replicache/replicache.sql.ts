@@ -9,13 +9,19 @@ import {
 import { timestamps, id } from "../util/sql";
 import { Actor } from "../actor";
 
-export const replicache_client_group = mysqlTable("replicache_client_group", {
-  ...timestamps,
-  id: char("id", { length: 36 }).primaryKey().notNull(),
-  actor: json("actor").$type<Actor>(),
-  cvrVersion: int("cvr_version").notNull(),
-  clientVersion: int("client_version").notNull(),
-});
+export const replicache_client_group = mysqlTable(
+  "replicache_client_group",
+  {
+    ...timestamps,
+    id: char("id", { length: 36 }),
+    actor: json("actor").$type<Actor>(),
+    cvrVersion: int("cvr_version").notNull(),
+    clientVersion: int("client_version").notNull(),
+  },
+  (table) => ({
+    primary: primaryKey({ columns: [table.id] }),
+  })
+);
 
 export const replicache_client = mysqlTable("replicache_client", {
   id: char("id", { length: 36 }).primaryKey(),
@@ -40,6 +46,6 @@ export const replicache_cvr = mysqlTable(
     clientVersion: int("client_version").notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.clientGroupID, table.id),
+    primary: primaryKey({ columns: [table.clientGroupID, table.id] }),
   })
 );

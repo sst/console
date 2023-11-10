@@ -20,7 +20,7 @@ export const usage = mysqlTable(
     invocations: bigint("invocations", { mode: "number" }).notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.id),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     stage: uniqueIndex("stage").on(table.workspaceID, table.stageID, table.day),
   })
 );
@@ -38,7 +38,7 @@ export const stripe = mysqlTable(
     standing: mysqlEnum("standing", ["good", "overdue"]),
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.id),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     workspace: uniqueIndex("workspaceID").on(table.workspaceID),
   })
 );

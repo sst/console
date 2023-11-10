@@ -13,7 +13,7 @@
     "@types/node": "^18.16.0",
     "@types/react": "18.0.25",
     "@types/relaxed-json": "^1.0.1",
-    "drizzle-kit": "0.19.13",
+    "drizzle-kit": "0.20.1",
     "sst": "2.36.1",
     "typescript": "^5.2.2",
     "vitest": "^0.25.3"
@@ -42,7 +42,7 @@
     "@slack/web-api": "^6.9.0",
     "@smithy/middleware-retry": "^2.0.5",
     "@smithy/util-retry": "^2.0.0",
-    "drizzle-orm": "0.28.5",
+    "drizzle-orm": "0.29.0",
     "drizzle-zod": "0.5.1",
     "luxon": "^3.3.0",
     "react": "18.2.0",

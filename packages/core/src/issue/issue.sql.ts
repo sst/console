@@ -47,7 +47,7 @@ export const issue = mysqlTable(
     invocation: blob<Invocation>("invocation"),
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.id),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     group: unique("group").on(table.workspaceID, table.stageID, table.group),
     updated: index("updated").on(table.workspaceID, table.timeUpdated),
   })
@@ -63,7 +63,9 @@ export const issueSubscriber = mysqlTable(
     logGroup: varchar("log_group", { length: 512 }),
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.stageID, table.id),
+    primary: primaryKey({
+      columns: [table.workspaceID, table.stageID, table.id],
+    }),
     unique: unique("unique").on(
       table.workspaceID,
       table.stageID,
@@ -86,7 +88,7 @@ export const issueCount = mysqlTable(
     count: bigint("count", { mode: "number" }).notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.id),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     unique: unique("unique").on(
       table.workspaceID,
       table.stageID,
@@ -103,7 +105,7 @@ export const issueAlertLimit = mysqlTable(
     ...timestamps,
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.id),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
   })
 );
 
@@ -116,6 +118,6 @@ export const issueAlert = mysqlTable(
     destination: json("destination").$type<Destination>().notNull(),
   },
   (table) => ({
-    primary: primaryKey(table.workspaceID, table.id),
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
   })
 );
