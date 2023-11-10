@@ -314,11 +314,12 @@ export function InvocationRow(props: {
       data-expanded={expanded() ? true : undefined}
       expanded={expanded()}
       level={level() === "info" ? "info" : "danger"}
-      onClick={(e) => {
-        setExpanded((r) => !r);
-      }}
     >
-      <Summary>
+      <Summary
+        onClick={(e) => {
+          setExpanded((r) => !r);
+        }}
+      >
         <Row flex={false} space="2" vertical="center">
           <CaretIcon>
             <IconCaretRight />

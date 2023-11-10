@@ -9,6 +9,7 @@ import { useDummy, useDummyConfig } from "./dummy";
 import { useReplicache } from "./replicache";
 import { User } from "@console/core/user";
 import { UserStore } from "$/data/user";
+import { DateTime } from "luxon";
 
 export * as AuthStore from "./auth";
 
@@ -41,13 +42,13 @@ const AuthContext = createContext<AuthContextType>();
 
 const mutators = new Client<ServerType>()
   .mutation("workspace_create", async (tx, input) => {
-    console.log("putting");
+    console.log("running mutation");
     await WorkspaceStore.put(tx, [input.id!], {
       id: input.id!,
       slug: input.slug,
-      timeUpdated: null as any,
+      timeDeleted: null as any,
       timeCreated: null as any,
-      timeDeleted: null,
+      timeUpdated: DateTime.now().toSQL()!,
     });
   })
   .build();

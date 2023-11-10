@@ -459,7 +459,7 @@ export function Logs() {
     if (e.key === "j") moveIndex(1);
     if (e.key === "k") moveIndex(-1);
     if (e.key === "Enter") {
-      document.querySelector<HTMLElement>("[data-focus]")?.click();
+      document.querySelector<HTMLElement>("[data-focus] > *")?.click();
     }
   });
 
@@ -486,7 +486,7 @@ export function Logs() {
     if (e.key === " ") {
       e.preventDefault();
       document
-        .querySelector<HTMLElement>(`[data-focus][data-expanded="true"]`)
+        .querySelector<HTMLElement>(`[data-focus][data-expanded="true"] > *`)
         ?.click();
     }
   });

@@ -328,7 +328,7 @@ export const handler = ApiHandler(
         const lastMutationIDChanges = Object.fromEntries(
           clients.map((c) => [c.id, c.mutationID] as const)
         );
-        if (patch.length > 0) {
+        if (patch.length > 0 || Object.keys(lastMutationIDChanges).length > 0) {
           console.log("inserting", req.clientGroupID);
           await tx
             .update(replicache_client_group)

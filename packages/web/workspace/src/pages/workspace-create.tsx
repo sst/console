@@ -61,7 +61,7 @@ export function WorkspaceCreate() {
   const storage = useStorage();
   const nav = useNavigate();
   const rep = createMemo(() => auth[storage.value.account].replicache);
-  const id = createId();
+  let id = createId();
   const workspace = WorkspaceStore.get.watch(rep, () => [id]);
   const pending = createMemo(() => workspace() != null);
 
@@ -99,8 +99,9 @@ export function WorkspaceCreate() {
             </CreateWorkspaceHint>
           </Stack>
           <Form
-            onSubmit={(data) => {
-              rep().mutate.workspace_create({
+            onSubmit={async (data) => {
+              console.log("submitting");
+              await rep().mutate.workspace_create({
                 id,
                 slug: data.slug,
               });
