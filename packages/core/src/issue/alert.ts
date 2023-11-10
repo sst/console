@@ -310,9 +310,9 @@ export const triggerIssue = zod(
                 ToAddresses: users.map((u) => u.email),
               },
               ReplyToAddresses: [
-                result.id + "+issue+alerts@" + process.env.EMAIL_DOMAIN,
+                `alert+issues+${result.id}@${process.env.EMAIL_DOMAIN}`,
               ],
-              FromEmailAddress: `${result.appName}/${result.stageName} via SST <${result.id}+issue+alerts@${process.env.EMAIL_DOMAIN}>`,
+              FromEmailAddress: `${result.appName}/${result.stageName} via SST <alert+issues+${result.id}@${process.env.EMAIL_DOMAIN}>`,
               Content: {
                 Simple: {
                   Body: {
@@ -448,8 +448,8 @@ export const triggerRateLimit = zod(
               Destination: {
                 ToAddresses: users.map((u) => u.email),
               },
-              ReplyToAddresses: ["issue+alerts@" + process.env.EMAIL_DOMAIN],
-              FromEmailAddress: `${input.app}/${input.stage} via SST <issue+alerts@${process.env.EMAIL_DOMAIN}>`,
+              ReplyToAddresses: [`alert+issues@${process.env.EMAIL_DOMAIN}`],
+              FromEmailAddress: `${input.app}/${input.stage} via SST <alert+issues@${process.env.EMAIL_DOMAIN}>`,
               Content: {
                 Simple: {
                   Body: {
