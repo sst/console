@@ -114,6 +114,7 @@ export function* generateData(
     yield* issueAlertsDoubleFrom();
     yield* issueAlertsMultipleTo();
     yield* issueAlertsOverflowTo();
+    yield* issueAlertsSlackWarning();
     yield* issueAlertsOverflowFrom();
     yield* issueAlertsMultipleFrom();
   }
@@ -1540,6 +1541,27 @@ function* issueAlertsStar(): Generator<DummyData, void, unknown> {
   });
 }
 
+function* issueAlertsSlackWarning(): Generator<DummyData, void, unknown> {
+  const ALERT_ID = "alert-slack-warning";
+
+  yield warning({
+    stage: "some-stage",
+    type: "issue_alert_slack",
+    target: ALERT_ID,
+  });
+  yield issueAlert({
+    id: ALERT_ID,
+    app: "*",
+    stage: "*",
+    destination: {
+      properties: {
+        channel: "#my-channel",
+      },
+      type: "slack",
+    },
+  });
+}
+
 function* issueAlertsSingle(): Generator<DummyData, void, unknown> {
   yield issueAlert({
     app: [APP_LOCAL],
@@ -2292,14 +2314,20 @@ function warning({ type, stage, target, data }: WarningProps): DummyData {
 }
 
 interface IssueAlertProps {
+  id?: string;
   app: Issue.Alert.Source["app"];
   stage: Issue.Alert.Source["stage"];
   destination: Issue.Alert.Destination;
 }
-function issueAlert({ app, stage, destination }: IssueAlertProps): DummyData {
+function issueAlert({
+  id,
+  app,
+  stage,
+  destination,
+}: IssueAlertProps): DummyData {
   return {
     _type: "issueAlert",
-    id: `${ISSUE_ALERT_COUNT++}`,
+    id: id || `${ISSUE_ALERT_COUNT++}`,
     source: {
       app,
       stage,
