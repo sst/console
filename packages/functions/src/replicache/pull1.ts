@@ -212,8 +212,8 @@ export const handler = ApiHandler(
                 )
               );
             if (!combined) combined = query;
-            else combined = combined.union(query);
-            const rows = await query.execute();
+            else combined = combined.unionAll(query);
+            // const rows = await query.execute();
             // results.push([name, rows]);
           }
           console.log("seperate", Date.now() - now);
