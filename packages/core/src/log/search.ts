@@ -5,8 +5,9 @@ import { zod } from "../util/zod";
 import { log_search } from "./log.sql";
 import { assertActor, useWorkspace } from "../actor";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { sqliteView } from "drizzle-orm/sqlite-core";
+import { db } from "../drizzle";
 
 export * as Search from "./search";
 export const Info = createSelectSchema(log_search, {
@@ -118,3 +119,11 @@ export const complete = zod(
         .execute()
     )
 );
+
+export async function cleanup() {
+  const result = await db
+    .delete(log_search)
+    .where(lt(log_search.timeCreated, sql`now() - interval 24 hour`))
+    .execute();
+  console.log("deleted", result.rowsAffected, "log search records");
+}
