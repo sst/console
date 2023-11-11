@@ -240,7 +240,9 @@ export const integrate = zod(
           PolicyName: "eventbus",
         })
       )
-      .catch((err) => {});
+      .catch((err) => {
+        console.error(err);
+      });
     console.log("deleted role policy");
     await iam
       .send(
@@ -248,7 +250,9 @@ export const integrate = zod(
           RoleName: roleName,
         })
       )
-      .catch((err) => {});
+      .catch((err) => {
+        console.error(err);
+      });
     console.log("deleted role");
 
     const role = await iam.send(
