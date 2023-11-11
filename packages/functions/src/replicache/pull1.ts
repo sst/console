@@ -26,7 +26,7 @@ import {
   replicache_cvr,
 } from "@console/core/replicache/replicache.sql";
 import { lambdaPayload } from "@console/core/lambda/lambda.sql";
-import { equals, mapValues } from "remeda";
+import { equals, groupBy, mapValues, pipe, toPairs } from "remeda";
 import { log_poller, log_search } from "@console/core/log/log.sql";
 import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 import { warning } from "@console/core/warning/warning.sql";
@@ -183,10 +183,14 @@ export const handler = ApiHandler(
           };
 
           const workspaceID = useWorkspace();
+
+          let combined: any = undefined;
+          let now = Date.now();
           for (const [name, table] of Object.entries(TABLES)) {
             const key = TABLE_KEY[name as TableName] ?? [table.id];
             const query = tx
               .select({
+                name: sql`${name}`,
                 id: table.id,
                 version: table.timeUpdated,
                 key: sql.join([
@@ -207,9 +211,22 @@ export const handler = ApiHandler(
                     : [])
                 )
               );
+            if (!combined) combined = query;
+            else combined = combined.union(query);
             const rows = await query.execute();
-            results.push([name, rows]);
+            // results.push([name, rows]);
           }
+          console.log("seperate", Date.now() - now);
+          now = Date.now();
+          const rows = await combined.execute();
+          results.push(
+            ...pipe(
+              rows,
+              groupBy((row: any) => row.name),
+              toPairs
+            )
+          );
+          console.log("combined", Date.now() - now);
         }
 
         if (actor.type === "account") {
