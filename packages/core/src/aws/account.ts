@@ -32,6 +32,7 @@ import {
   DeleteRoleCommand,
   DeleteRolePolicyCommand,
   IAMClient,
+  NoSuchEntityException,
   PutRolePolicyCommand,
 } from "@aws-sdk/client-iam";
 import { event } from "../event";
@@ -241,7 +242,8 @@ export const integrate = zod(
         })
       )
       .catch((err) => {
-        console.error(err);
+        if (err instanceof NoSuchEntityException) return;
+        throw err;
       });
     console.log("deleted role policy");
     await iam
@@ -251,7 +253,8 @@ export const integrate = zod(
         })
       )
       .catch((err) => {
-        console.error(err);
+        if (err instanceof NoSuchEntityException) return;
+        throw err;
       });
     console.log("deleted role");
 
