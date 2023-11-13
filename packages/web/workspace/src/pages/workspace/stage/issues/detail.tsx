@@ -362,7 +362,9 @@ export function Detail() {
                                 DateTime.DATETIME_FULL_WITH_SECONDS
                               )}
                           >
-                            {new Date(entry.timestamp).toLocaleTimeString()}
+                            {DateTime.fromMillis(entry.timestamp).toFormat(
+                              "HH:mm:ss:uu"
+                            )}
                           </LogTime>
                           <LogMessage>{entry.message}</LogMessage>
                         </Log>
