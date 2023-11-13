@@ -363,7 +363,7 @@ export function Detail() {
                               )}
                           >
                             {DateTime.fromMillis(entry.timestamp).toFormat(
-                              "HH:mm:ss:uu"
+                              "HH:mm:ss.SSS"
                             )}
                           </LogTime>
                           <LogMessage>{entry.message}</LogMessage>
