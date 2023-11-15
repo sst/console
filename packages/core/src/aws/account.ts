@@ -241,10 +241,7 @@ export const integrate = zod(
           PolicyName: "eventbus",
         })
       )
-      .catch((err) => {
-        if (err instanceof NoSuchEntityException) return;
-        throw err;
-      });
+      .catch((err) => {});
     console.log("deleted role policy");
     await iam
       .send(
@@ -252,10 +249,7 @@ export const integrate = zod(
           RoleName: roleName,
         })
       )
-      .catch((err) => {
-        if (err instanceof NoSuchEntityException) return;
-        throw err;
-      });
+      .catch((err) => {});
     console.log("deleted role");
 
     const role = await iam.send(
