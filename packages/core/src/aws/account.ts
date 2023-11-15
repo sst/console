@@ -33,7 +33,6 @@ import {
   DeleteRolePolicyCommand,
   EntityAlreadyExistsException,
   IAMClient,
-  NoSuchEntityException,
   PutRolePolicyCommand,
 } from "@aws-sdk/client-iam";
 import { event } from "../event";
@@ -75,9 +74,22 @@ export const create = zod(
             timeDiscovered: null,
           },
         });
+
+      const existing = await tx
+        .select({
+          id: awsAccount.id,
+        })
+        .from(awsAccount)
+        .where(
+          and(
+            eq(awsAccount.accountID, input.accountID),
+            eq(awsAccount.workspaceID, useWorkspace())
+          )
+        )
+        .then((rows) => rows.at(0));
       await createTransactionEffect(() =>
         Events.Created.publish({
-          awsAccountID: id,
+          awsAccountID: existing!.id,
         })
       );
       return id;
@@ -191,15 +203,13 @@ export const bootstrap = zod(
 );
 
 import { DescribeRegionsCommand, EC2Client } from "@aws-sdk/client-ec2";
-import { App, Stage } from "../app";
+import { App } from "../app";
 import { Replicache } from "../replicache";
 import { Config } from "sst/node/config";
 import { db } from "../drizzle";
-import { Realtime } from "../realtime";
 import { app, stage } from "../app/app.sql";
-import { createPipe, groupBy, mapValues, pipe } from "remeda";
+import { createPipe, groupBy, mapValues } from "remeda";
 import { RETRY_STRATEGY } from "../util/aws";
-import { useTransition } from "react";
 
 export const regions = zod(
   bootstrap.schema.shape.credentials,
@@ -248,7 +258,7 @@ export const integrate = zod(
           PolicyName: "eventbus",
         })
       )
-      .catch((err) => {});
+      .catch(() => {});
     console.log("deleted role policy");
     await iam
       .send(
@@ -256,7 +266,7 @@ export const integrate = zod(
           RoleName: roleName,
         })
       )
-      .catch((err) => {});
+      .catch(() => {});
     console.log("deleted role");
 
     const role = await iam
@@ -364,7 +374,7 @@ export const integrate = zod(
             {
               Arn: process.env.EVENT_BUS_ARN,
               Id: "SSTConsole",
-              RoleArn: role.Role!.Arn,
+              RoleArn: `arn:aws:iam::${account.accountID}:role/${roleName}`,
             },
           ],
         })
