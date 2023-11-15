@@ -476,6 +476,7 @@ export const integrate = zod(
           eq(awsAccount.workspaceID, useWorkspace())
         )
       );
+    await Replicache.poke();
 
     console.log("done");
   }
