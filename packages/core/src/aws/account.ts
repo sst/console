@@ -333,7 +333,7 @@ export const integrate = zod(
         });
       if (!result) {
         console.log(region, "failed to update bucket notification");
-        return;
+        continue;
       }
       console.log(region, "updated bucket notifications");
 

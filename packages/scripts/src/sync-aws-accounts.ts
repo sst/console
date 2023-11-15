@@ -9,7 +9,7 @@ import { workspace } from "@console/core/workspace/workspace.sql";
 const accounts = await db
   .select()
   .from(awsAccount)
-  .where(inArray(awsAccount.workspaceID, await promptWorkspaces()))
+  // .where(inArray(awsAccount.workspaceID, await promptWorkspaces()))
   .execute();
 
 await queue(100, accounts, (account) =>
