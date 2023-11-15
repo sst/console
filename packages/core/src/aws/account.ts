@@ -460,5 +460,7 @@ export const integrate = zod(
           eq(awsAccount.workspaceID, useWorkspace())
         )
       );
+
+    console.log("done");
   }
 );
