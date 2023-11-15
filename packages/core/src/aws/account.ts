@@ -31,6 +31,7 @@ import {
   CreateRoleCommand,
   DeleteRoleCommand,
   DeleteRolePolicyCommand,
+  EntityAlreadyExistsException,
   IAMClient,
   NoSuchEntityException,
   PutRolePolicyCommand,
@@ -252,23 +253,28 @@ export const integrate = zod(
       .catch((err) => {});
     console.log("deleted role");
 
-    const role = await iam.send(
-      new CreateRoleCommand({
-        RoleName: roleName,
-        AssumeRolePolicyDocument: JSON.stringify({
-          Version: "2012-10-17",
-          Statement: [
-            {
-              Effect: "Allow",
-              Principal: {
-                Service: "events.amazonaws.com",
+    const role = await iam
+      .send(
+        new CreateRoleCommand({
+          RoleName: roleName,
+          AssumeRolePolicyDocument: JSON.stringify({
+            Version: "2012-10-17",
+            Statement: [
+              {
+                Effect: "Allow",
+                Principal: {
+                  Service: "events.amazonaws.com",
+                },
+                Action: "sts:AssumeRole",
               },
-              Action: "sts:AssumeRole",
-            },
-          ],
-        }),
-      })
-    );
+            ],
+          }),
+        })
+      )
+      .catch((err) => {
+        if (err instanceof EntityAlreadyExistsException) return;
+        throw err;
+      });
     console.log("created role");
 
     await iam.send(
