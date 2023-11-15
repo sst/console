@@ -300,7 +300,7 @@ export const integrate = zod(
       console.log("integrating region", region);
 
       const b = await bootstrap(config);
-      if (!b) return;
+      if (!b) continue;
 
       const s3 = new S3Client({
         ...config,
