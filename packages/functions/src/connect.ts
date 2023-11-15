@@ -8,6 +8,7 @@ import { withActor } from "@console/core/actor";
 import { Replicache } from "@console/core/replicache";
 
 export async function handler(event: CloudFormationCustomResourceEvent) {
+  console.log(event);
   let status: CloudFormationCustomResourceResponse["Status"] = "SUCCESS";
   if (event.RequestType === "Create") {
     try {
@@ -41,6 +42,24 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   }
 
   if (event.RequestType === "Delete") {
+    await withActor(
+      {
+        type: "system",
+        properties: {
+          workspaceID: event.ResourceProperties.workspaceID,
+        },
+      },
+      async () => {
+        const account = await AWS.Account.fromAccountID(
+          event.ResourceProperties.accountID
+        );
+        if (!account) return;
+
+        await AWS.Account.Events.Removed.publish({
+          awsAccountID: account.id,
+        });
+      }
+    );
   }
 
   const json: CloudFormationCustomResourceResponse = {

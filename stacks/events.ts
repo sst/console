@@ -67,6 +67,16 @@ export function Events({ stack }: StackContext) {
     },
   });
 
+  bus.subscribe("aws.account.removed", {
+    handler: "packages/functions/src/events/aws-account-removed.handler",
+    bind: [...Object.values(secrets.database), bus],
+    timeout: "5 minute",
+    permissions: ["sts", "iot"],
+    environment: {
+      EVENT_BUS_ARN: bus.eventBusArn,
+    },
+  });
+
   bus.subscribe(
     "log.search.created",
     {

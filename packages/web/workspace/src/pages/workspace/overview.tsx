@@ -196,7 +196,11 @@ function splitCols(array: Account.Info[]) {
 export function Overview() {
   const rep = useReplicache();
   const [query] = useSearchParams();
-  const accounts = AccountStore.list.watch(rep, () => []);
+  const accounts = AccountStore.list.watch(
+    rep,
+    () => [],
+    (accounts) => accounts.filter((a) => !a.timeDeleted)
+  );
   const users = UserStore.list.watch(rep, () => []);
   const cols = createMemo(() => splitCols(accounts() || []));
   const stages = StageStore.list.watch(rep, () => []);

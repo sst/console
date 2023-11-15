@@ -49,6 +49,9 @@ export const Events = {
   Created: event("aws.account.created", {
     awsAccountID: z.string().cuid2(),
   }),
+  Removed: event("aws.account.removed", {
+    awsAccountID: z.string().cuid2(),
+  }),
 };
 
 export const create = zod(
@@ -68,6 +71,8 @@ export const create = zod(
         .onDuplicateKeyUpdate({
           set: {
             timeFailed: null,
+            timeDeleted: null,
+            timeDiscovered: null,
           },
         });
       await createTransactionEffect(() =>
@@ -194,6 +199,7 @@ import { Realtime } from "../realtime";
 import { app, stage } from "../app/app.sql";
 import { createPipe, groupBy, mapValues, pipe } from "remeda";
 import { RETRY_STRATEGY } from "../util/aws";
+import { useTransition } from "react";
 
 export const regions = zod(
   bootstrap.schema.shape.credentials,
@@ -463,4 +469,20 @@ export const integrate = zod(
 
     console.log("done");
   }
+);
+
+export const disconnect = zod(Info.shape.id, (input) =>
+  useTransaction(async (tx) => {
+    await tx
+      .update(awsAccount)
+      .set({
+        timeDeleted: sql`now()`,
+      })
+      .where(
+        and(
+          eq(awsAccount.id, input),
+          eq(awsAccount.workspaceID, useWorkspace())
+        )
+      );
+  })
 );
