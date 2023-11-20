@@ -497,6 +497,14 @@ export function InvocationRow(props: {
                 </Log>
               </Match>
               <Match when={tab() === "report"}>
+                <Show when={props.invocation.report?.init}>
+                  <Log>
+                    <LogReportKey>Cold Start</LogReportKey>
+                    <LogMessage>
+                      {formatDuration(props.invocation.report!.init!)}
+                    </LogMessage>
+                  </Log>
+                </Show>
                 <Log>
                   <LogReportKey>Duration</LogReportKey>
                   <LogMessage>

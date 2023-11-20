@@ -7,7 +7,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { AWS } from "../aws";
 import { SourceMapConsumer } from "source-map";
-import { filter, groupBy, map, maxBy, pipe, sortBy, values } from "remeda";
+import { filter, maxBy, pipe, sortBy } from "remeda";
 import { zod } from "../util/zod";
 import { z } from "zod";
 
@@ -39,6 +39,7 @@ export interface Invocation {
   errors: (ParsedError & { id: string })[];
   report?: {
     duration: number;
+    init?: number;
     size: number;
     memory: number;
     xray: string;
@@ -261,6 +262,7 @@ export function createProcessor(input: {
             duration: parseInt(tabs[2]?.split(" ")[2] || "0"),
             size: parseInt(tabs[3]?.split(" ")[2] || "0"),
             memory: parseInt(tabs[4]?.split(" ")[3] || "0"),
+            init: parseInt(tabs[5]?.split(" ")[2] || "0"),
             xray:
               tabs.find((line) => line.includes("XRAY"))?.split(" ")[2] || "",
           };
