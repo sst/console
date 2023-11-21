@@ -124,6 +124,9 @@ export function Issues({ stack }: StackContext) {
         permissions: ["ses"],
         timeout: "1 minute",
         bind: [...Object.values(secrets.database)],
+        environment: {
+          EMAIL_DOMAIN: use(DNS).domain,
+        },
       },
     },
     cdk: {
