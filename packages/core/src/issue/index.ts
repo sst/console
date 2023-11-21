@@ -23,6 +23,7 @@ import {
   ResourceAlreadyExistsException,
   ResourceNotFoundException,
   DeleteDestinationCommand,
+  DeleteSubscriptionFilterCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { Resource } from "../app/resource";
 import { z } from "zod";
@@ -236,8 +237,49 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
       stageID: config.stageID,
       types: ["Function", "NextjsSite"],
     });
-    const functions = resources.filter((x) => x.type === "Function");
+    const functions = resources.filter(
+      (x) => x.type === "Function" && !x.enrichment.live
+    );
     if (!functions.length) return;
+
+    const toDelete = await db
+      .select({
+        id: issueSubscriber.id,
+        logGroup: issueSubscriber.logGroup,
+      })
+      .from(issueSubscriber)
+      .where(
+        and(
+          eq(issueSubscriber.workspaceID, useWorkspace()),
+          eq(issueSubscriber.stageID, config.stageID),
+          not(
+            inArray(
+              issueSubscriber.functionID,
+              functions.map((x) => x.id)
+            )
+          )
+        )
+      );
+
+    for (const item of toDelete) {
+      console.log("deleting", item.logGroup);
+      await cw.send(
+        new DeleteSubscriptionFilterCommand({
+          filterName:
+            uniqueIdentifier + (Config.STAGE === "production" ? "" : `#dev`),
+          logGroupName: item.logGroup!,
+        })
+      );
+
+      await db
+        .delete(issueSubscriber)
+        .where(
+          and(
+            eq(issueSubscriber.workspaceID, useWorkspace()),
+            eq(issueSubscriber.id, item.id)
+          )
+        );
+    }
 
     await db.delete(issueSubscriber).where(
       and(
