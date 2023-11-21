@@ -121,6 +121,7 @@ export function Issues({ stack }: StackContext) {
     consumer: {
       function: {
         handler: "packages/functions/src/issues/issue-detected.queue",
+        permissions: ["ses"],
         bind: [...Object.values(secrets.database)],
       },
     },
