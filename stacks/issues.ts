@@ -122,6 +122,7 @@ export function Issues({ stack }: StackContext) {
       function: {
         handler: "packages/functions/src/issues/issue-detected.queue",
         permissions: ["ses"],
+        timeout: "1 minute",
         bind: [...Object.values(secrets.database)],
       },
     },
