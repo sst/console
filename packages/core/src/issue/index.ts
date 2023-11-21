@@ -263,13 +263,18 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
 
     for (const item of toDelete) {
       console.log("deleting", item.logGroup);
-      await cw.send(
-        new DeleteSubscriptionFilterCommand({
-          filterName:
-            uniqueIdentifier + (Config.STAGE === "production" ? "" : `#dev`),
-          logGroupName: item.logGroup!,
-        })
-      );
+      await cw
+        .send(
+          new DeleteSubscriptionFilterCommand({
+            filterName:
+              uniqueIdentifier + (Config.STAGE === "production" ? "" : `#dev`),
+            logGroupName: item.logGroup!,
+          })
+        )
+        .catch((e) => {
+          if (e instanceof ResourceNotFoundException) return;
+          throw e;
+        });
 
       await db
         .delete(issueSubscriber)
