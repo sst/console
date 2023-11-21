@@ -151,6 +151,7 @@ export const triggerIssue = zod(
     group: z.string(),
   }),
   async (input) => {
+    console.log("triggering issue", input);
     const result = await db
       .select({
         ...getTableColumns(issue),

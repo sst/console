@@ -5,7 +5,14 @@ import {
   Role,
   ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
-import { StackContext, KinesisStream, use, Config, Cron } from "sst/constructs";
+import {
+  StackContext,
+  KinesisStream,
+  use,
+  Config,
+  Cron,
+  Queue,
+} from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
 import { Storage } from "./storage";
@@ -110,11 +117,25 @@ export function Issues({ stack }: StackContext) {
     },
   });
 
+  const issueDetectedQueue = new Queue(stack, "issue-detected-queue", {
+    consumer: {
+      function: {
+        handler: "packages/functions/src/issues/issue-detected.queue",
+        bind: [...Object.values(secrets.database)],
+      },
+    },
+    cdk: {
+      queue: {
+        fifo: true,
+      },
+    },
+  });
+
   bus.subscribe(stack, "issue.detected", {
     handler: "packages/functions/src/issues/issue-detected.handler",
-    timeout: "15 minutes",
+    timeout: "1 minute",
     permissions: ["ses", "sts"],
-    bind: [...Object.values(secrets.database)],
+    bind: [...Object.values(secrets.database), issueDetectedQueue],
     environment: {
       EMAIL_DOMAIN: use(DNS).domain,
     },
