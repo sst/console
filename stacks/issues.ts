@@ -138,7 +138,7 @@ export function Issues({ stack }: StackContext) {
 
   bus.subscribe(stack, "issue.detected", {
     handler: "packages/functions/src/issues/issue-detected.handler",
-    timeout: "1 minute",
+    timeout: "5 minute",
     permissions: ["sts"],
     bind: [...Object.values(secrets.database), issueDetectedQueue],
   });
