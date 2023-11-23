@@ -419,10 +419,7 @@ export function Resources() {
     resources()
       .flatMap((r) => (r.type === "Stack" ? r.enrichment.outputs : []))
       .sort((a, b) => a.OutputKey!.localeCompare(b.OutputKey!))
-      .filter((o) => {
-        console.log(o);
-        return o.OutputValue && o.OutputValue?.trim() !== "";
-      })
+      .filter((o) => (o?.OutputValue?.trim() ?? "") !== "")
   );
 
   function renderOrphanFunctions() {
