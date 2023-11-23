@@ -1002,6 +1002,10 @@ function* stageBase(): Generator<DummyData, void, unknown> {
           fn: ref("index", STACK),
         },
         {
+          route: "$requestalleventprogress",
+          fn: ref("index", STACK),
+        },
+        {
           route: "$sendMessage",
           fn: ref("index", STACK),
         },
@@ -1047,6 +1051,29 @@ function* stageEmpty(): Generator<DummyData, void, unknown> {
     id: STAGE_EMPTY,
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_EMPTY,
+    enrichment: {
+      version: "1.0.0",
+      outputs: [],
+    },
+  });
+  yield resource({
+    type: "Stack",
+    id: STACK,
+    stage: STAGE_EMPTY,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [
+        {
+          OutputKey: "EmptyOutput",
+          OutputValue: "",
+        },
+      ],
+    },
   });
 }
 

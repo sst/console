@@ -46,6 +46,7 @@ import {
   IconDocumentDuplicate,
   IconExclamationTriangle,
 } from "$/ui/icons";
+import { sortBy } from "remeda";
 import {} from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
@@ -64,6 +65,13 @@ export const PageHeaderRoot = styled("div", {
     justifyContent: "space-between",
     padding: `0 ${theme.space[4]}`,
     borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const EmptyResourcesCopy = styled("span", {
+  base: {
+    fontSize: theme.font.size.lg,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -396,12 +404,94 @@ export function Header(props: HeaderProps) {
 }
 
 export function Resources() {
+  const functions = useFunctionsContext();
   const resources = useResourcesContext();
-  const stacks = createMemo(() =>
-    resources().filter((r) => r.type === "Stack")
-  );
   const outdated = useOutdated();
   const sortedResources = createMemo(() => sortResources([...resources()]));
+
+  const orphans = createMemo(() =>
+    [...functions().entries()]
+      .filter(([_, values]) => !values.length)
+      .map(([key]) => key)
+  );
+
+  const outputs = createMemo(() =>
+    resources()
+      .flatMap((r) => (r.type === "Stack" ? r.enrichment.outputs : []))
+      .sort((a, b) => a.OutputKey!.localeCompare(b.OutputKey!))
+      .filter((o) => o.OutputValue && o.OutputValue?.trim())
+  );
+
+  function renderOrphanFunctions() {
+    return (
+      <Show when={orphans().length}>
+        <Card>
+          <HeaderRoot>
+            <Row space="2" vertical="center">
+              <HeaderIcon title="Functions">
+                <IconFunction />
+              </HeaderIcon>
+              <Text weight="medium" on="surface" style={{ "flex-shrink": "0" }}>
+                Other Functions
+              </Text>
+            </Row>
+          </HeaderRoot>
+          <Children>
+            <For each={orphans()}>
+              {(orphan) => <FunctionChild id={orphan} />}
+            </For>
+          </Children>
+        </Card>
+      </Show>
+    );
+  }
+
+  function renderOutputs() {
+    return (
+      <Show when={outputs().length}>
+        <Card outputs>
+          <HeaderRoot>
+            <Text weight="medium" style={{ "flex-shrink": "0" }}>
+              Outputs
+            </Text>
+          </HeaderRoot>
+          <Children outputs>
+            <For each={outputs()}>
+              {(output) => {
+                const [copying, setCopying] = createSignal(false);
+                return (
+                  <Show
+                    when={
+                      output?.OutputValue && output.OutputValue?.trim() !== ""
+                    }
+                  >
+                    <Child outputs>
+                      <OutputsKey>{output.OutputKey}</OutputsKey>
+                      <Row space="3" vertical="center">
+                        <OutputsValue>{output.OutputValue}</OutputsValue>
+                        <ChildIconButton
+                          copying={copying()}
+                          onClick={() => {
+                            setCopying(true);
+                            navigator.clipboard.writeText(output.OutputValue!);
+                            setTimeout(() => setCopying(false), 2000);
+                          }}
+                        >
+                          <Show when={!copying()} fallback={<IconCheck />}>
+                            <IconDocumentDuplicate />
+                          </Show>
+                        </ChildIconButton>
+                      </Row>
+                    </Child>
+                  </Show>
+                );
+              }}
+            </For>
+          </Children>
+        </Card>
+      </Show>
+    );
+  }
 
   return (
     <Switch>
@@ -437,109 +527,131 @@ export function Resources() {
         </Show>
         <Content>
           <Stack space="4">
-            <Show when={outdated().length}>
-              <Alert level="info">
-                <span
-                  title={outdated()
-                    .map((s) => s.stackID)
-                    .join(", ")}
-                >
-                  Some of the stacks in this app are not supported by the SST
-                  Console.
-                </span>{" "}
-                <a target="_blank" href="https://github.com/sst/sst/releases">
-                  Upgrade them to at least v{MINIMUM_VERSION}.
-                </a>
-              </Alert>
+            <Show
+              when={
+                sortedResources().length || orphans().length || outputs().length
+              }
+              fallback={
+                <Fullscreen inset="stage">
+                  <EmptyResourcesCopy>
+                    Deploy a function to get started!
+                  </EmptyResourcesCopy>
+                </Fullscreen>
+              }
+            >
+              <Show when={outdated().length}>
+                <Alert level="info">
+                  <span
+                    title={outdated()
+                      .map((s) => s.stackID)
+                      .join(", ")}
+                  >
+                    Some of the stacks in this app are not supported by the SST
+                    Console.
+                  </span>{" "}
+                  <a target="_blank" href="https://github.com/sst/sst/releases">
+                    Upgrade them to at least v{MINIMUM_VERSION}.
+                  </a>
+                </Alert>
+              </Show>
+              <For each={sortedResources()}>
+                {(resource) => (
+                  <Card>
+                    <Switch>
+                      <Match when={resource.type === "Api" && resource}>
+                        {(resource) => <ApiCard resource={resource()} />}
+                      </Match>
+                      <Match
+                        when={resource.type === "ApiGatewayV1Api" && resource}
+                      >
+                        {(resource) => (
+                          <ApiGatewayV1ApiCard resource={resource()} />
+                        )}
+                      </Match>
+                      <Match when={resource.type === "AppSync" && resource}>
+                        {(resource) => <AppSyncCard resource={resource()} />}
+                      </Match>
+                      <Match
+                        when={resource.type === "WebSocketApi" && resource}
+                      >
+                        {(resource) => (
+                          <WebSocketApiCard resource={resource()} />
+                        )}
+                      </Match>
+                      <Match when={resource.type === "NextjsSite" && resource}>
+                        {(resource) => <NextjsSiteCard resource={resource()} />}
+                      </Match>
+                      <Match
+                        when={resource.type === "SvelteKitSite" && resource}
+                      >
+                        {(resource) => (
+                          <SvelteKitSiteCard resource={resource()} />
+                        )}
+                      </Match>
+                      <Match when={resource.type === "AstroSite" && resource}>
+                        {(resource) => <AstroSiteCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "RemixSite" && resource}>
+                        {(resource) => <RemixSiteCard resource={resource()} />}
+                      </Match>
+                      <Match
+                        when={resource.type === "SolidStartSite" && resource}
+                      >
+                        {(resource) => (
+                          <SolidStartSiteCard resource={resource()} />
+                        )}
+                      </Match>
+                      <Match when={resource.type === "StaticSite" && resource}>
+                        {(resource) => <StaticSiteCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "Table" && resource}>
+                        {(resource) => <TableCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "RDS" && resource}>
+                        {(resource) => <RDSCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "EventBus" && resource}>
+                        {(resource) => <EventBusCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "Topic" && resource}>
+                        {(resource) => <TopicCard resource={resource()} />}
+                      </Match>
+                      <Match
+                        when={resource.type === "KinesisStream" && resource}
+                      >
+                        {(resource) => (
+                          <KinesisStreamCard resource={resource()} />
+                        )}
+                      </Match>
+                      <Match when={resource.type === "Queue" && resource}>
+                        {(resource) => <QueueCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "Bucket" && resource}>
+                        {(resource) => <BucketCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "Cognito" && resource}>
+                        {(resource) => <CognitoCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "Cron" && resource}>
+                        {(resource) => <CronCard resource={resource()} />}
+                      </Match>
+                      <Match when={resource.type === "Script" && resource}>
+                        {(resource) => <ScriptCard resource={resource()} />}
+                      </Match>
+                    </Switch>
+                  </Card>
+                )}
+              </For>
+              {renderOrphanFunctions()}
+              {renderOutputs()}
             </Show>
-            <For each={sortedResources()}>
-              {(resource) => (
-                <Card>
-                  <Switch>
-                    <Match when={resource.type === "Api" && resource}>
-                      {(resource) => <ApiCard resource={resource()} />}
-                    </Match>
-                    <Match
-                      when={resource.type === "ApiGatewayV1Api" && resource}
-                    >
-                      {(resource) => (
-                        <ApiGatewayV1ApiCard resource={resource()} />
-                      )}
-                    </Match>
-                    <Match when={resource.type === "AppSync" && resource}>
-                      {(resource) => <AppSyncCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "WebSocketApi" && resource}>
-                      {(resource) => <WebSocketApiCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "NextjsSite" && resource}>
-                      {(resource) => <NextjsSiteCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "SvelteKitSite" && resource}>
-                      {(resource) => (
-                        <SvelteKitSiteCard resource={resource()} />
-                      )}
-                    </Match>
-                    <Match when={resource.type === "AstroSite" && resource}>
-                      {(resource) => <AstroSiteCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "RemixSite" && resource}>
-                      {(resource) => <RemixSiteCard resource={resource()} />}
-                    </Match>
-                    <Match
-                      when={resource.type === "SolidStartSite" && resource}
-                    >
-                      {(resource) => (
-                        <SolidStartSiteCard resource={resource()} />
-                      )}
-                    </Match>
-                    <Match when={resource.type === "StaticSite" && resource}>
-                      {(resource) => <StaticSiteCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "Table" && resource}>
-                      {(resource) => <TableCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "RDS" && resource}>
-                      {(resource) => <RDSCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "EventBus" && resource}>
-                      {(resource) => <EventBusCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "Topic" && resource}>
-                      {(resource) => <TopicCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "KinesisStream" && resource}>
-                      {(resource) => (
-                        <KinesisStreamCard resource={resource()} />
-                      )}
-                    </Match>
-                    <Match when={resource.type === "Queue" && resource}>
-                      {(resource) => <QueueCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "Bucket" && resource}>
-                      {(resource) => <BucketCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "Cognito" && resource}>
-                      {(resource) => <CognitoCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "Cron" && resource}>
-                      {(resource) => <CronCard resource={resource()} />}
-                    </Match>
-                    <Match when={resource.type === "Script" && resource}>
-                      {(resource) => <ScriptCard resource={resource()} />}
-                    </Match>
-                  </Switch>
-                </Card>
-              )}
-            </For>
-            <OrphanFunctionsCard />
-            <OutputsCard />
           </Stack>
         </Content>
       </Match>
     </Switch>
   );
 }
+
 function formatPath(path?: string) {
   return path ? (path === "." ? `"${path}"` : path) : `""`;
 }
@@ -586,6 +698,12 @@ export function ApiCard(props: CardProps<"Api">) {
 }
 
 export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
+  const sortedRoutes = createMemo(() =>
+    sortBy(
+      props.resource.metadata.routes || [],
+      (route) => route.route.slice(1).length
+    )
+  );
   return (
     <>
       <Header
@@ -595,7 +713,7 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
         }
       />
       <Children>
-        <For each={props.resource.metadata.routes}>
+        <For each={sortedRoutes()}>
           {(route) => {
             const method = createMemo(() => route.route.slice(1));
             const path = createMemo(() => route.route.split(" ")[1]);
@@ -603,7 +721,7 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
               <FunctionChild
                 tag={method()}
                 title={path()}
-                tagSize="large"
+                tagSize="auto"
                 id={route.fn?.node}
               />
             );
@@ -967,91 +1085,6 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
         </Children>
       </Show>
     </>
-  );
-}
-
-export function OutputsCard() {
-  const resources = useResourcesContext();
-  const outputs = createMemo(() =>
-    resources()
-      .flatMap((r) => (r.type === "Stack" ? r.enrichment.outputs : []))
-      .sort((a, b) => a.OutputKey!.localeCompare(b.OutputKey!))
-  );
-
-  return (
-    <Show when={outputs().length}>
-      <Card outputs>
-        <HeaderRoot>
-          <Text weight="medium" style={{ "flex-shrink": "0" }}>
-            Outputs
-          </Text>
-        </HeaderRoot>
-        <Children outputs>
-          <For each={outputs()}>
-            {(output) => {
-              const [copying, setCopying] = createSignal(false);
-              return (
-                <Show
-                  when={
-                    output?.OutputValue && output.OutputValue?.trim() !== ""
-                  }
-                >
-                  <Child outputs>
-                    <OutputsKey>{output.OutputKey}</OutputsKey>
-                    <Row space="3" vertical="center">
-                      <OutputsValue>{output.OutputValue}</OutputsValue>
-                      <ChildIconButton
-                        copying={copying()}
-                        onClick={() => {
-                          setCopying(true);
-                          navigator.clipboard.writeText(output.OutputValue!);
-                          setTimeout(() => setCopying(false), 2000);
-                        }}
-                      >
-                        <Show when={!copying()} fallback={<IconCheck />}>
-                          <IconDocumentDuplicate />
-                        </Show>
-                      </ChildIconButton>
-                    </Row>
-                  </Child>
-                </Show>
-              );
-            }}
-          </For>
-        </Children>
-      </Card>
-    </Show>
-  );
-}
-
-export function OrphanFunctionsCard() {
-  const functions = useFunctionsContext();
-  const orphans = createMemo(() =>
-    [...functions().entries()]
-      .filter(([_, values]) => !values.length)
-      .map(([key]) => key)
-  );
-
-  return (
-    <Show when={orphans().length}>
-      <Card>
-        <HeaderRoot>
-          <Row space="2" vertical="center">
-            <HeaderIcon title="Functions">
-              <IconFunction />
-            </HeaderIcon>
-            <Text weight="medium" on="surface" style={{ "flex-shrink": "0" }}>
-              Other Functions
-            </Text>
-          </Row>
-        </HeaderRoot>
-        <Children>
-          <For each={orphans()}>
-            {(orphan) => <FunctionChild id={orphan} />}
-          </For>
-        </Children>
-      </Card>
-    </Show>
   );
 }
 
