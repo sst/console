@@ -12,6 +12,7 @@ import {
   Config,
   Cron,
   Queue,
+  toCdkDuration,
 } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
@@ -132,6 +133,7 @@ export function Issues({ stack }: StackContext) {
     cdk: {
       queue: {
         fifo: true,
+        visibilityTimeout: toCdkDuration("5 minute"),
       },
     },
   });
