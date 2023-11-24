@@ -88,6 +88,7 @@ export function API({ stack, app }: StackContext) {
           ...secrets.stripe,
           bus,
         ],
+        timeout: "30 seconds",
         permissions: ["iot", "sts"],
         environment: {
           LOG_POLLER_ARN: poller.stateMachineArn,
