@@ -216,6 +216,7 @@ const disconnectStage = zod(z.custom<StageCredentials>(), async (config) => {
 
 export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
   const uniqueIdentifier = destinationIdentifier(config);
+  console.log("subscribing", uniqueIdentifier);
   const destination =
     Config.ISSUES_DESTINATION_PREFIX.replace("<region>", config.region) +
     uniqueIdentifier;
@@ -475,7 +476,7 @@ export const disableLogGroup = zod(
       retryStrategy: RETRY_STRATEGY,
     });
     const uniqueIdentifier = destinationIdentifier(input.config);
-    await cw
+    const deleted = await cw
       .send(
         new DeleteSubscriptionFilterCommand({
           filterName:
@@ -487,6 +488,7 @@ export const disableLogGroup = zod(
         if (e instanceof ResourceNotFoundException) return;
         throw e;
       });
+    if (!deleted) return;
     await createTransaction(async (tx) => {
       await Warning.create({
         target: input.logGroup,

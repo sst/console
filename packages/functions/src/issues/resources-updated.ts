@@ -6,7 +6,10 @@ import { EventHandler } from "sst/node/event-bus";
 export const handler = EventHandler(App.Stage.Events.ResourcesUpdated, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const config = await Stage.assumeRole(evt.properties.stageID);
-    if (!config) return;
+    if (!config) {
+      console.log("no config");
+      return;
+    }
     await Issue.subscribe(config);
   })
 );
