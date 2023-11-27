@@ -61,21 +61,8 @@ export const extract = zod(
           eq(stage.name, stageName!)
         )
       )
-      .leftJoin(
-        warning,
-        and(
-          eq(warning.workspaceID, awsAccount.workspaceID),
-          eq(warning.stageID, stage.id),
-          eq(warning.type, "issue_rate_limited"),
-          eq(warning.target, "none")
-        )
-      )
       .where(
-        and(
-          eq(awsAccount.accountID, accountID!),
-          isNull(awsAccount.timeFailed),
-          isNull(warning.id)
-        )
+        and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
       )
       .execute();
 
@@ -90,6 +77,7 @@ export const extract = zod(
         and(
           eq(issueCount.workspaceID, workspaces[0]!.workspaceID),
           eq(issueCount.stageID, workspaces[0]!.stageID),
+          eq(issueCount.logGroup, input.logGroup),
           eq(issueCount.hour, hour)
         )
       )
@@ -98,7 +86,7 @@ export const extract = zod(
 
     console.log("rate limit", count);
 
-    if (count > 100_000) {
+    if (count > 10_000) {
       await Promise.all(
         workspaces.map((workspace) =>
           withActor(
@@ -108,7 +96,11 @@ export const extract = zod(
                 workspaceID: workspace.workspaceID,
               },
             },
-            () => Events.RateLimited.publish({ stageID: workspace.stageID })
+            () =>
+              Events.RateLimited.publish({
+                stageID: workspace.stageID,
+                logGroup: input.logGroup,
+              })
           )
         )
       );
@@ -242,11 +234,13 @@ export const extract = zod(
             count: input.logEvents.length,
             workspaceID: row.workspaceID,
             group: "failed-to-process",
+            logGroup: input.logGroup,
           }))
         )
         .onDuplicateKeyUpdate({
           set: {
             count: sql`count + VALUES(count)`,
+            logGroup: input.logGroup,
           },
         })
         .execute();
@@ -306,12 +300,14 @@ export const extract = zod(
               count: items.length,
               workspaceID: row.workspaceID,
               group: items[0].group,
+              logGroup: input.logGroup,
             }))
           )
         )
         .onDuplicateKeyUpdate({
           set: {
             count: sql`count + VALUES(count)`,
+            logGroup: input.logGroup,
           },
         })
         .execute();

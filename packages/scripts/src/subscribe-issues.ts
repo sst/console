@@ -4,7 +4,6 @@ import { stage } from "@console/core/app/app.sql";
 import { Stage } from "@console/core/app";
 import { queue } from "@console/core/util/queue";
 import { issueSubscriber } from "@console/core/issue/issue.sql";
-import { promptWorkspaces } from "./common";
 import { useTransaction } from "@console/core/util/transaction";
 import { warning } from "@console/core/warning/warning.sql";
 
@@ -14,7 +13,7 @@ const stages = await db
   // .where(inArray(stage.workspaceID, await promptWorkspaces()))
   .execute();
 console.log("found", stages.length, "stages");
-await queue(1, stages, async (stage) =>
+await queue(100, stages, async (stage) =>
   withActor(
     {
       type: "system",

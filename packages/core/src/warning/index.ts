@@ -3,7 +3,7 @@ import { warning } from "./warning.sql";
 import { useTransaction } from "../util/transaction";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 export type Info = typeof warning.$inferSelect & Data;
 
@@ -64,7 +64,9 @@ export async function remove(input: Pick<Info, "type" | "stageID" | "target">) {
       .where(
         and(
           eq(warning.workspaceID, useWorkspace()),
-          eq(warning.stageID, input.stageID),
+          input.stageID
+            ? eq(warning.stageID, input.stageID)
+            : isNull(warning.stageID),
           eq(warning.type, input.type),
           eq(warning.target, input.target)
         )
@@ -81,7 +83,9 @@ export async function forType(input: Pick<Info, "type" | "stageID">) {
       .where(
         and(
           eq(warning.workspaceID, useWorkspace()),
-          input.stageID !== "" ? eq(warning.stageID, input.stageID) : undefined,
+          input.stageID
+            ? eq(warning.stageID, input.stageID)
+            : isNull(warning.stageID),
           eq(warning.type, input.type)
         )
       )

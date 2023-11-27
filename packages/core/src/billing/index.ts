@@ -83,7 +83,7 @@ export const updateGatingStatus = zod(z.void(), async () => {
 
     const warnings = await Warning.forType({
       type: "permission_usage",
-      stageID: "",
+      stageID: null,
     });
     if (warnings.length) return true;
 

@@ -32,7 +32,7 @@ import { Stage, StageCredentials } from "../app/stage";
 import { event } from "../event";
 import { Config } from "sst/node/config";
 import { Warning } from "../warning";
-import { useTransaction } from "../util/transaction";
+import { createTransaction, useTransaction } from "../util/transaction";
 import { Log } from "../log";
 import { Alert } from "./alert";
 
@@ -60,6 +60,7 @@ export const Events = {
   }),
   RateLimited: event("issue.rate_limited", {
     stageID: z.string(),
+    logGroup: z.string(),
   }),
   IssueDetected: event("issue.detected", {
     stageID: z.string(),
@@ -183,44 +184,37 @@ export const connectStage = zod(
   }
 );
 
-export const disconnectStage = zod(
-  z.custom<StageCredentials>(),
-  async (config) => {
-    const uniqueIdentifier = destinationIdentifier(config);
-    console.log("deleting", uniqueIdentifier);
-    const cw = new CloudWatchLogsClient({
-      region: config.region,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        sessionToken: process.env.AWS_SESSION_TOKEN!,
-      },
-      // retryStrategy: RETRY_STRATEGY,
-    });
+/** @deprecated */
+const disconnectStage = zod(z.custom<StageCredentials>(), async (config) => {
+  const uniqueIdentifier = destinationIdentifier(config);
+  console.log("deleting", uniqueIdentifier);
+  const cw = new CloudWatchLogsClient({
+    region: config.region,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      sessionToken: process.env.AWS_SESSION_TOKEN!,
+    },
+    // retryStrategy: RETRY_STRATEGY,
+  });
 
-    try {
-      await cw.send(
-        new DeleteDestinationCommand({
-          destinationName: uniqueIdentifier,
-        })
-      );
-      return true;
-    } catch (ex: any) {
-      if (ex instanceof ResourceNotFoundException) return false;
-      if (ex.name === "ThrottlingException") return false;
-      throw ex;
-    } finally {
-      cw.destroy();
-    }
+  try {
+    await cw.send(
+      new DeleteDestinationCommand({
+        destinationName: uniqueIdentifier,
+      })
+    );
+    return true;
+  } catch (ex: any) {
+    if (ex instanceof ResourceNotFoundException) return false;
+    if (ex.name === "ThrottlingException") return false;
+    throw ex;
+  } finally {
+    cw.destroy();
   }
-);
+});
 
 export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
-  const warnings = await Warning.forType({
-    stageID: config.stageID,
-    type: "issue_rate_limited",
-  });
-  if (warnings.length) return;
   const uniqueIdentifier = destinationIdentifier(config);
   const destination =
     Config.ISSUES_DESTINATION_PREFIX.replace("<region>", config.region) +
@@ -460,16 +454,57 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
         }
       }
     }
-    await Warning.remove({
-      target: "none",
-      type: "issue_rate_limited",
-      stageID: config.stageID,
-    });
   } finally {
     cw.destroy();
   }
 });
 
+export const disableLogGroup = zod(
+  z.object({
+    config: z.custom<StageCredentials>(),
+    logGroup: z.string(),
+  }),
+  async (input) => {
+    console.log("disabling", input.logGroup);
+    const cw = new CloudWatchLogsClient({
+      region: input.config.region,
+      credentials: input.config.credentials,
+      retryStrategy: RETRY_STRATEGY,
+    });
+    const uniqueIdentifier = destinationIdentifier(input.config);
+    await cw
+      .send(
+        new DeleteSubscriptionFilterCommand({
+          filterName:
+            uniqueIdentifier + (Config.STAGE === "production" ? "" : `#dev`),
+          logGroupName: input.logGroup,
+        })
+      )
+      .catch((e) => {
+        if (e instanceof ResourceNotFoundException) return;
+        throw e;
+      });
+    await createTransaction(async (tx) => {
+      await Warning.create({
+        target: input.logGroup,
+        type: "issue_rate_limited",
+        stageID: input.config.stageID,
+        data: {},
+      });
+      await tx
+        .delete(issueSubscriber)
+        .where(
+          and(
+            eq(issueSubscriber.workspaceID, useWorkspace()),
+            eq(issueSubscriber.stageID, input.config.stageID),
+            eq(issueSubscriber.logGroup, input.logGroup)
+          )
+        );
+    });
+  }
+);
+
+/** @deprecated */
 export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
   const disconnected = await disconnectStage(config);
   if (!disconnected) return;

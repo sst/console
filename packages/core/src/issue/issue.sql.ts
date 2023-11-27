@@ -85,6 +85,7 @@ export const issueCount = mysqlTable(
     }).notNull(),
     stageID: cuid("stage_id").notNull(),
     group: varchar("group", { length: 255 }).notNull(),
+    logGroup: varchar("log_group", { length: 512 }),
     count: bigint("count", { mode: "number" }).notNull(),
   },
   (table) => ({

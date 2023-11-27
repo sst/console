@@ -12,7 +12,7 @@ export const warning = mysqlTable(
   {
     ...workspaceID,
     ...timestamps,
-    stageID: cuid("stage_id").notNull(),
+    stageID: cuid("stage_id"),
     type: varchar("type", { length: 255 }).notNull(),
     target: varchar("target", { length: 255 }).notNull(),
     data: json("data"),

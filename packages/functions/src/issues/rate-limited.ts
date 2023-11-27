@@ -7,6 +7,9 @@ export const handler = EventHandler(Issue.Events.RateLimited, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const config = await Stage.assumeRole(evt.properties.stageID);
     if (!config) return;
-    await Issue.unsubscribe(config);
+    await Issue.disableLogGroup({
+      logGroup: evt.properties.logGroup,
+      config,
+    });
   })
 );
