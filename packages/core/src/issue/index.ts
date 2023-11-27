@@ -234,7 +234,10 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
     const functions = resources.filter(
       (x) => x.type === "Function" && !x.enrichment.live
     );
-    if (!functions.length) return;
+    if (!functions.length) {
+      console.log("no functions");
+      return;
+    }
 
     const toDelete = await db
       .select({
@@ -279,19 +282,6 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
           )
         );
     }
-
-    await db.delete(issueSubscriber).where(
-      and(
-        eq(issueSubscriber.workspaceID, useWorkspace()),
-        eq(issueSubscriber.stageID, config.stageID),
-        not(
-          inArray(
-            issueSubscriber.functionID,
-            functions.map((x) => x.id)
-          )
-        )
-      )
-    );
 
     const exists = await db
       .select({
