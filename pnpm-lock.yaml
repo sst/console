@@ -21,8 +21,8 @@ importers:
         specifier: 10.3.0
         version: 10.3.0
       sst:
-        specifier: 2.36.4
-        version: 2.36.4(@types/react@18.0.25)
+        specifier: 2.36.7
+        version: 2.36.7(@types/react@18.0.25)
       turbo:
         specifier: ^1.10.13
         version: 1.10.13
@@ -148,8 +148,8 @@ importers:
         specifier: 0.20.6
         version: 0.20.6
       sst:
-        specifier: 2.36.4
-        version: 2.36.4(@types/react@18.0.25)
+        specifier: 2.36.7
+        version: 2.36.7(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -230,8 +230,8 @@ importers:
         specifier: ^18.16.0
         version: 18.17.15
       sst:
-        specifier: 2.36.4
-        version: 2.36.4(@types/react@18.0.25)
+        specifier: 2.36.7
+        version: 2.36.7(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -260,8 +260,8 @@ importers:
         specifier: ^3.3.0
         version: 3.4.3
       sst:
-        specifier: 2.36.4
-        version: 2.36.4(@types/react@18.0.25)
+        specifier: 2.36.7
+        version: 2.36.7(@types/react@18.0.25)
       tsx:
         specifier: ^3.12.7
         version: 3.12.8
@@ -355,8 +355,8 @@ importers:
         specifier: ^1.3.0
         version: 1.4.3(vite@3.2.7)
       sst:
-        specifier: 2.36.4
-        version: 2.36.4(@types/react@18.0.25)
+        specifier: 2.36.7
+        version: 2.36.7(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -547,7 +547,7 @@ packages:
     engines: {node: '>=16.0.0'}
     dependencies:
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.433.0
+      '@aws-sdk/types': 3.451.0
       tslib: 2.6.2
 
   /@aws-crypto/supports-web-crypto@3.0.0:
@@ -565,8 +565,8 @@ packages:
   /@aws-crypto/util@5.2.0:
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
     dependencies:
-      '@aws-sdk/types': 3.433.0
-      '@smithy/util-utf8': 2.0.0
+      '@aws-sdk/types': 3.451.0
+      '@smithy/util-utf8': 2.0.2
       tslib: 2.6.2
 
   /@aws-sdk/client-cloudformation@3.433.0:
@@ -2019,7 +2019,7 @@ packages:
     dependencies:
       '@aws-sdk/client-cognito-identity': 3.454.0
       '@aws-sdk/types': 3.451.0
-      '@smithy/property-provider': 2.0.13
+      '@smithy/property-provider': 2.0.15
       '@smithy/types': 2.6.0
       tslib: 2.6.2
     transitivePeerDependencies:
@@ -2050,7 +2050,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-sdk/types': 3.451.0
-      '@smithy/property-provider': 2.0.13
+      '@smithy/property-provider': 2.0.15
       '@smithy/types': 2.6.0
       tslib: 2.6.2
 
@@ -2061,7 +2061,7 @@ packages:
       '@aws-sdk/types': 3.451.0
       '@smithy/fetch-http-handler': 2.2.7
       '@smithy/node-http-handler': 2.1.10
-      '@smithy/property-provider': 2.0.13
+      '@smithy/property-provider': 2.0.15
       '@smithy/protocol-http': 3.0.10
       '@smithy/smithy-client': 2.1.16
       '@smithy/types': 2.6.0
@@ -2113,9 +2113,9 @@ packages:
       '@aws-sdk/credential-provider-sso': 3.451.0
       '@aws-sdk/credential-provider-web-identity': 3.451.0
       '@aws-sdk/types': 3.451.0
-      '@smithy/credential-provider-imds': 2.0.18
-      '@smithy/property-provider': 2.0.13
-      '@smithy/shared-ini-file-loader': 2.2.2
+      '@smithy/credential-provider-imds': 2.1.2
+      '@smithy/property-provider': 2.0.15
+      '@smithy/shared-ini-file-loader': 2.2.5
       '@smithy/types': 2.6.0
       tslib: 2.6.2
     transitivePeerDependencies:
@@ -2169,9 +2169,9 @@ packages:
       '@aws-sdk/credential-provider-sso': 3.451.0
       '@aws-sdk/credential-provider-web-identity': 3.451.0
       '@aws-sdk/types': 3.451.0
-      '@smithy/credential-provider-imds': 2.0.18
-      '@smithy/property-provider': 2.0.13
-      '@smithy/shared-ini-file-loader': 2.2.2
+      '@smithy/credential-provider-imds': 2.1.2
+      '@smithy/property-provider': 2.0.15
+      '@smithy/shared-ini-file-loader': 2.2.5
       '@smithy/types': 2.6.0
       tslib: 2.6.2
     transitivePeerDependencies:
@@ -2204,8 +2204,8 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-sdk/types': 3.451.0
-      '@smithy/property-provider': 2.0.13
-      '@smithy/shared-ini-file-loader': 2.2.2
+      '@smithy/property-provider': 2.0.15
+      '@smithy/shared-ini-file-loader': 2.2.5
       '@smithy/types': 2.6.0
       tslib: 2.6.2
 
@@ -2246,8 +2246,8 @@ packages:
       '@aws-sdk/client-sso': 3.451.0
       '@aws-sdk/token-providers': 3.451.0
       '@aws-sdk/types': 3.451.0
-      '@smithy/property-provider': 2.0.13
-      '@smithy/shared-ini-file-loader': 2.2.2
+      '@smithy/property-provider': 2.0.15
+      '@smithy/shared-ini-file-loader': 2.2.5
       '@smithy/types': 2.6.0
       tslib: 2.6.2
     transitivePeerDependencies:
@@ -2278,7 +2278,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-sdk/types': 3.451.0
-      '@smithy/property-provider': 2.0.13
+      '@smithy/property-provider': 2.0.15
       '@smithy/types': 2.6.0
       tslib: 2.6.2
 
@@ -2298,8 +2298,8 @@ packages:
       '@aws-sdk/credential-provider-sso': 3.451.0
       '@aws-sdk/credential-provider-web-identity': 3.451.0
       '@aws-sdk/types': 3.451.0
-      '@smithy/credential-provider-imds': 2.0.18
-      '@smithy/property-provider': 2.0.13
+      '@smithy/credential-provider-imds': 2.1.2
+      '@smithy/property-provider': 2.0.15
       '@smithy/types': 2.6.0
       tslib: 2.6.2
     transitivePeerDependencies:
@@ -2594,7 +2594,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-sdk/types': 3.451.0
-      '@smithy/property-provider': 2.0.13
+      '@smithy/property-provider': 2.0.15
       '@smithy/protocol-http': 3.0.10
       '@smithy/signature-v4': 2.0.16
       '@smithy/types': 2.6.0
@@ -2691,7 +2691,7 @@ packages:
     dependencies:
       '@aws-sdk/signature-v4-multi-region': 3.451.0
       '@aws-sdk/util-user-agent-node': 3.451.0(aws-crt@1.19.0)
-      '@smithy/querystring-parser': 2.0.12
+      '@smithy/querystring-parser': 2.0.14
       '@smithy/signature-v4': 2.0.16
       '@smithy/types': 2.6.0
       '@smithy/util-middleware': 2.0.7
@@ -2844,9 +2844,9 @@ packages:
       '@smithy/middleware-stack': 2.0.8
       '@smithy/node-config-provider': 2.1.6
       '@smithy/node-http-handler': 2.1.10
-      '@smithy/property-provider': 2.0.13
+      '@smithy/property-provider': 2.0.15
       '@smithy/protocol-http': 3.0.10
-      '@smithy/shared-ini-file-loader': 2.2.2
+      '@smithy/shared-ini-file-loader': 2.2.5
       '@smithy/smithy-client': 2.1.16
       '@smithy/types': 2.6.0
       '@smithy/url-parser': 2.0.14
@@ -6475,6 +6475,7 @@ packages:
       '@smithy/types': 2.4.0
       '@smithy/url-parser': 2.0.12
       tslib: 2.6.2
+    dev: false
 
   /@smithy/credential-provider-imds@2.0.9:
     resolution: {integrity: sha512-K7WZRkHS5HZofRgK+O8W4YXXyaVexU1K6hp9vlUL/8CsnrFbZS9quyH/6hTROrYh2PuJr24yii1kc83NJdxMGQ==}
@@ -6929,6 +6930,7 @@ packages:
       '@smithy/shared-ini-file-loader': 2.2.2
       '@smithy/types': 2.4.0
       tslib: 2.6.2
+    dev: false
 
   /@smithy/node-config-provider@2.1.6:
     resolution: {integrity: sha512-HLqTs6O78m3M3z1cPLFxddxhEPv5MkVatfPuxoVO3A+cHZanNd/H5I6btcdHy6N2CB1MJ/lihJC92h30SESsBA==}
@@ -6987,6 +6989,7 @@ packages:
     dependencies:
       '@smithy/types': 2.4.0
       tslib: 2.6.2
+    dev: false
 
   /@smithy/property-provider@2.0.15:
     resolution: {integrity: sha512-YbRFBn8oiiC3o1Kn3a4KjGa6k47rCM9++5W9cWqYn9WnkyH+hBWgfJAckuxpyA2Hq6Ys4eFrWzXq6fqHEw7iew==}
@@ -7081,6 +7084,7 @@ packages:
     dependencies:
       '@smithy/types': 2.4.0
       tslib: 2.6.2
+    dev: false
 
   /@smithy/querystring-parser@2.0.14:
     resolution: {integrity: sha512-+cbtXWI9tNtQjlgQg3CA+pvL3zKTAxPnG3Pj6MP89CR3vi3QMmD0SOWoq84tqZDnJCxlsusbgIXk1ngMReXo+A==}
@@ -7133,6 +7137,7 @@ packages:
     dependencies:
       '@smithy/types': 2.4.0
       tslib: 2.6.2
+    dev: false
 
   /@smithy/shared-ini-file-loader@2.2.5:
     resolution: {integrity: sha512-LHA68Iu7SmNwfAVe8egmjDCy648/7iJR/fK1UnVw+iAOUJoEYhX2DLgVd5pWllqdDiRbQQzgaHLcRokM+UFR1w==}
@@ -7251,6 +7256,7 @@ packages:
       '@smithy/querystring-parser': 2.0.12
       '@smithy/types': 2.4.0
       tslib: 2.6.2
+    dev: false
 
   /@smithy/url-parser@2.0.14:
     resolution: {integrity: sha512-kbu17Y1AFXi5lNlySdDj7ZzmvupyWKCX/0jNZ8ffquRyGdbDZb+eBh0QnWqsSmnZa/ctyWaTf7n4l/pXLExrnw==}
@@ -7539,6 +7545,7 @@ packages:
     dependencies:
       '@smithy/util-buffer-from': 2.0.0
       tslib: 2.6.2
+    dev: false
 
   /@smithy/util-utf8@2.0.2:
     resolution: {integrity: sha512-qOiVORSPm6Ce4/Yu6hbSgNHABLP2VMv8QOC3tTDNHHlWY19pPyc++fBTbZPtx6egPXi4HQxKDnMxVxpbtX2GoA==}
@@ -13073,8 +13080,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.36.4(@types/react@18.0.25):
-    resolution: {integrity: sha512-44iD+CPzUQawlbvLc0Acnx0wOZAlkfUW1jYmL0lPKbf+DYbNP5pdgP4R4Qyh8K/NowroZVS0rpEFx78X7l4ehA==}
+  /sst@2.36.7(@types/react@18.0.25):
+    resolution: {integrity: sha512-SPuUelrMVjECOYfLxJpbJZW+42MjcFTYm/M6nfDndsCzsF2CBdziw6x3/5D2TzDNMooIDV6c3vyj08u5CEhvTw==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0
