@@ -2317,6 +2317,7 @@ function issueCount({ group, hour, count }: IssueCountProps): DummyData {
     count: count || 1,
     stageID: STAGE_HAS_ISSUES,
     timeDeleted: null,
+    logGroup: `/aws/lambda/${ISSUE_FN}`,
     ...timestamps,
   };
 }
