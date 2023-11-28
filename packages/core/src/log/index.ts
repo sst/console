@@ -366,7 +366,7 @@ export const expand = zod(
   async (input) => {
     const cw = new CloudWatchLogsClient({
       ...input.config,
-      retryStrategy: RETRY_STRATEGY,
+      // retryStrategy: RETRY_STRATEGY,
     });
 
     const offset = 1000 * 60 * 15;

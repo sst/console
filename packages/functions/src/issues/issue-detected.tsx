@@ -3,7 +3,6 @@ import { withActor } from "@console/core/actor";
 import { Issue } from "@console/core/issue";
 import { createId } from "@console/core/util/sql";
 import { Handler } from "sst/context";
-import { Config } from "sst/node/config";
 import { EventHandler, EventPayload } from "sst/node/event-bus";
 import { Queue } from "sst/node/queue";
 
