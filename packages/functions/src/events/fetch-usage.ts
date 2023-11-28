@@ -10,6 +10,7 @@ import { Resource } from "@console/core/app/resource";
 import { Billing } from "@console/core/billing";
 import { stripe } from "@console/core/stripe";
 import { Warning } from "@console/core/warning";
+import { uniq } from "remeda";
 
 export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
   withActor(evt.metadata.actor, async () => {
@@ -33,26 +34,14 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
         "SvelteKitSite",
       ],
     });
-    const functions = allResources
-      .filter((fn) => fn.type !== "Function" || !fn.enrichment.live)
-      .map((resource) => {
-        switch (resource.type) {
-          case "NextjsSite":
-            return resource.metadata.server;
-          case "AstroSite":
-            return resource.metadata.server;
-          case "RemixSite":
-            return resource.metadata.server;
-          case "SolidStartSite":
-            return resource.metadata.server;
-          case "SvelteKitSite":
-            return resource.metadata.server;
-          case "Function":
-            return resource.metadata.arn;
-        }
-      })
-      .flatMap((item) => (item ? [item] : []))
-      .map((item) => item.split(":").pop()) as string[];
+    const functions = uniq(
+      allResources
+        .flatMap((fn) =>
+          fn.type === "Function" && !fn.enrichment.live ? [fn] : []
+        )
+        .map((resource) => resource.metadata.arn)
+        .map((item) => item.split(":").pop()!)
+    );
     console.log(`> functions ${functions.length}/${allResources.length}`);
     if (!functions.length) {
       await Warning.remove({
