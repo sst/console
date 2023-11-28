@@ -7,9 +7,6 @@ export const handler = EventHandler(Stage.Events.Updated, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const config = await Stage.assumeRole(evt.properties.stageID);
     if (!config) return;
-    await Stage.syncMetadata({
-      stageID: evt.properties.stageID,
-      credentials: config.credentials,
-    });
+    await Stage.syncMetadata(config);
   })
 );

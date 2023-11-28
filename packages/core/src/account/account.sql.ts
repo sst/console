@@ -1,9 +1,4 @@
-import {
-  mysqlTable,
-  primaryKey,
-  uniqueIndex,
-  varchar,
-} from "drizzle-orm/mysql-core";
+import { mysqlTable, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 import { id, timestamps } from "../util/sql";
 
 export const account = mysqlTable(

@@ -182,6 +182,7 @@ export const bootstrap = zod(
 
       return {
         bucket,
+        version: "normal" as const,
       };
     }
 
@@ -202,6 +203,32 @@ export const bootstrap = zod(
   }
 );
 
+export const bootstrapIon = zod(
+  z.object({
+    credentials: z.custom<Credentials>(),
+    region: z.string(),
+  }),
+  async (input) => {
+    const ssm = new SSMClient(input);
+    try {
+      const param = await ssm
+        .send(
+          new GetParameterCommand({
+            Name: "/sst/bootstrap",
+          })
+        )
+        .catch(() => {});
+      if (!param?.Parameter?.Value) return;
+      return {
+        bucket: param.Parameter.Value,
+        version: "ion" as const,
+      };
+    } finally {
+      ssm.destroy();
+    }
+  }
+);
+
 import { DescribeRegionsCommand, EC2Client } from "@aws-sdk/client-ec2";
 import { App } from "../app";
 import { Replicache } from "../replicache";
@@ -210,6 +237,7 @@ import { db } from "../drizzle";
 import { app, stage } from "../app/app.sql";
 import { createPipe, groupBy, mapValues } from "remeda";
 import { RETRY_STRATEGY } from "../util/aws";
+import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 
 export const regions = zod(
   bootstrap.schema.shape.credentials,
@@ -269,7 +297,7 @@ export const integrate = zod(
       .catch(() => {});
     console.log("deleted role");
 
-    const role = await iam
+    await iam
       .send(
         new CreateRoleCommand({
           RoleName: roleName,
@@ -315,14 +343,18 @@ export const integrate = zod(
     console.log("regions", r);
 
     for (const region of r) {
+      if (region !== "us-east-1") continue;
       const config = {
         credentials: input.credentials,
         region: region!,
       };
       console.log("integrating region", region);
 
-      const b = await bootstrap(config);
-      if (!b) continue;
+      const bootstrapBuckets = await Promise.all([
+        bootstrap(config),
+        bootstrapIon(config),
+      ]).then((items) => items.flatMap((x) => (x ? [x] : [])));
+      if (!bootstrapBuckets.length) continue;
 
       const s3 = new S3Client({
         ...config,
@@ -333,25 +365,27 @@ export const integrate = zod(
         retryStrategy: RETRY_STRATEGY,
       });
 
-      console.log(region, "found sst bucket", b.bucket);
+      for (const b of bootstrapBuckets) {
+        console.log(region, "found", b.version, "bucket", b);
 
-      const result = await s3
-        .send(
-          new PutBucketNotificationConfigurationCommand({
-            Bucket: b.bucket,
-            NotificationConfiguration: {
-              EventBridgeConfiguration: {},
-            },
-          })
-        )
-        .catch((err) => {
-          console.error(err);
-        });
-      if (!result) {
-        console.log(region, "failed to update bucket notification");
-        continue;
+        const result = await s3
+          .send(
+            new PutBucketNotificationConfigurationCommand({
+              Bucket: b.bucket,
+              NotificationConfiguration: {
+                EventBridgeConfiguration: {},
+              },
+            })
+          )
+          .catch((err) => {
+            console.error(err);
+          });
+        if (!result) {
+          console.log(region, "failed to update bucket notification");
+          continue;
+        }
+        console.log(region, "updated bucket notifications");
       }
-      console.log(region, "updated bucket notifications");
 
       await eb.send(
         new PutRuleCommand({
@@ -361,7 +395,7 @@ export const integrate = zod(
             source: ["aws.s3"],
             detail: {
               bucket: {
-                name: [b.bucket],
+                name: bootstrapBuckets.map((b) => b.bucket),
               },
             },
           }),
@@ -408,61 +442,102 @@ export const integrate = zod(
         )
       );
 
-      while (true) {
-        const list = await s3.send(
-          new ListObjectsV2Command({
-            Prefix: "stackMetadata",
-            Bucket: b.bucket,
-            ContinuationToken: token,
-          })
-        );
-        const distinct = new Set(
-          list.Contents?.filter((item) => item.Key).map((item) =>
-            item.Key!.split("/").slice(0, 3).join("/")
-          ) || []
-        );
+      const stages = [] as { app: string; stage: string }[];
+      for (const b of bootstrapBuckets) {
+        while (true) {
+          if (b.version === "normal") {
+            const list = await s3.send(
+              new ListObjectsV2Command({
+                Prefix: "stackMetadata",
+                Bucket: b.bucket,
+                ContinuationToken: token,
+              })
+            );
+            const distinct = new Set(
+              list.Contents?.filter((item) => item.Key).map((item) =>
+                item.Key!.split("/").slice(0, 3).join("/")
+              ) || []
+            );
 
-        console.log("found", distinct);
-        for (const item of distinct) {
-          const [, appHint, stageHint] = item.split("/") || [];
-          if (!appHint || !stageHint) continue;
-          const [, stageName] = stageHint?.split(".");
-          const [, appName] = appHint?.split(".");
-          if (!stageName || !appName) continue;
-          existing[appName]?.delete(stageName);
-          await createTransaction(async () => {
-            let app = await App.fromName(appName).then((a) => a?.id);
-            if (!app)
-              app = await App.create({
-                name: appName,
+            console.log("found", distinct);
+            for (const item of distinct) {
+              const [, appHint, stageHint] = item.split("/") || [];
+              if (!appHint || !stageHint) continue;
+              const [, stageName] = stageHint?.split(".");
+              const [, appName] = appHint?.split(".");
+              if (!stageName || !appName) continue;
+              stages.push({
+                app: appName,
+                stage: stageName,
               });
-
-            let stage = await App.Stage.fromName({
-              appID: app,
-              name: stageName,
-              region,
-              awsAccountID: input.awsAccountID,
-            }).then((s) => s?.id);
-            if (!stage) {
-              stage = await App.Stage.connect({
-                name: stageName,
-                appID: app,
-                region: config.region,
-                awsAccountID: account.id,
-              });
-              await Replicache.poke();
+              existing[appName]?.delete(stageName);
+              console.log(region, "found", stageName, appName);
             }
-          });
-          console.log(region, "found", stageName, appName);
-        }
 
-        for (const [appName, stages] of Object.entries(existing)) {
-          for (const [stageName, stageID] of stages) {
-            console.log("could not find", appName, stageName, stageID);
-            await App.Stage.remove(stageID);
+            if (!list.ContinuationToken) break;
+            token = list.ContinuationToken;
+          }
+
+          if (b.version === "ion") {
+            const list = await s3.send(
+              new ListObjectsV2Command({
+                Prefix: ".pulumi/stacks/",
+                Bucket: b.bucket,
+                ContinuationToken: token,
+              })
+            );
+
+            for (const item of list.Contents || []) {
+              const key = item.Key;
+              if (!key) continue;
+              if (!key.endsWith(".json")) continue;
+              const splits = key.split("/");
+              const appName = splits.at(-2);
+              const stageName = splits.at(-1)?.split(".").at(0);
+              stages.push({
+                app: appName!,
+                stage: stageName!,
+              });
+            }
+            if (!list.ContinuationToken) break;
+            token = list.ContinuationToken;
           }
         }
-        if (!list.ContinuationToken) break;
+      }
+      for (const item of stages) {
+        console.log("found", item);
+        await createTransaction(async () => {
+          let app = await App.fromName(item.app).then((a) => a?.id);
+          if (!app) {
+            console.log("creating app", item.app);
+            app = await App.create({
+              name: item.app,
+            });
+          }
+
+          let stage = await App.Stage.fromName({
+            appID: app,
+            name: item.stage,
+            region,
+            awsAccountID: input.awsAccountID,
+          }).then((s) => s?.id);
+          if (!stage) {
+            console.log("connecting stage", item.app, item.stage);
+            stage = await App.Stage.connect({
+              name: item.stage,
+              appID: app,
+              region: config.region,
+              awsAccountID: account.id,
+            });
+            await Replicache.poke();
+          }
+        });
+      }
+      for (const [appName, stages] of Object.entries(existing)) {
+        for (const [stageName, stageID] of stages) {
+          console.log("could not find", appName, stageName, stageID);
+          await App.Stage.remove(stageID);
+        }
       }
     }
     await db
