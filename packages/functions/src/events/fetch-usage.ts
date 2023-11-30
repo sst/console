@@ -25,14 +25,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
     // Get all function resources
     const allResources = await Resource.listFromStageID({
       stageID,
-      types: [
-        "Function",
-        "NextjsSite",
-        "AstroSite",
-        "RemixSite",
-        "SolidStartSite",
-        "SvelteKitSite",
-      ],
+      types: ["Function"],
     });
     const functions = uniq(
       allResources
@@ -168,7 +161,7 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
             action: "set",
           },
           {
-            idempotencyKey: `${workspaceID}-${stageID}-${timestamp + 4}`,
+            idempotencyKey: `${workspaceID}-${stageID}-${timestamp}`,
           }
         );
       } catch (e: any) {
