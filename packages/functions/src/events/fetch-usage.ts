@@ -166,6 +166,10 @@ export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
         );
       } catch (e: any) {
         console.log(e.message);
+        // TODO: aren't there instanceof checks we can do
+        if (e.message.startsWith("Keys for idempotent requests")) {
+          return;
+        }
         if (
           e.message.startsWith(
             "Cannot create the usage record with this timestamp"
