@@ -290,6 +290,7 @@ export const triggerIssue = zod(
             workspace: result.workspaceSlug,
           })
         );
+        console.log("rendered email");
         const users = await db
           .select({
             email: user.email,

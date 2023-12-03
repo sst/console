@@ -123,6 +123,7 @@ export function Issues({ stack }: StackContext) {
       function: {
         handler: "packages/functions/src/issues/issue-detected.queue",
         permissions: ["ses"],
+        memorySize: "2 GB",
         timeout: "5 minute",
         bind: [...Object.values(secrets.database)],
         environment: {
