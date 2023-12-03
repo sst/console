@@ -280,7 +280,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
 
   return createTransaction(async (tx) => {
     if (missing) {
-      remove(input.stageID);
+      await remove(input.stageID);
       return;
     }
     const existing = await tx
