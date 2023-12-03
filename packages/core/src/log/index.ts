@@ -471,11 +471,11 @@ export function extractError(tabs: string[]): ParsedError | undefined {
     };
   }
 
-  // Timeout
-  if (tabs.length === 1 && tabs[0]?.includes("Runtime.ExitError")) {
+  // Runtime exit error
+  if (tabs.some((line) => line.includes("Runtime.ExitError"))) {
     return {
       error: "RuntimeExitError",
-      message: tabs[0],
+      message: tabs.join("\t"),
       stack: [],
       failed: true,
     };
