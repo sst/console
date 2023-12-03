@@ -471,6 +471,16 @@ export function extractError(tabs: string[]): ParsedError | undefined {
     };
   }
 
+  // Timeout
+  if (tabs.length === 1 && tabs[0]?.includes("Runtime.ExitError")) {
+    return {
+      error: "RuntimeExitError",
+      message: tabs[0],
+      stack: [],
+      failed: true,
+    };
+  }
+
   // Generic AWS error handling
   if (
     tabs[3]?.includes("Invoke Error") ||
