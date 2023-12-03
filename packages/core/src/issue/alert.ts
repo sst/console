@@ -207,6 +207,8 @@ export const triggerIssue = zod(
       .from(issueAlert)
       .where(eq(issueAlert.workspaceID, useWorkspace()));
 
+    console.log("alerts", alerts.length);
+
     for (const alert of alerts) {
       const { source, destination } = alert;
       if (!matchAlert(result.appName, result.stageName, source)) continue;
@@ -277,6 +279,7 @@ export const triggerIssue = zod(
       }
 
       if (destination.type === "email") {
+        console.log("rendering email");
         const html = render(
           IssueEmail({
             issue: result,
