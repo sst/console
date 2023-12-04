@@ -195,7 +195,11 @@ function splitCols(array: Account.Info[]) {
 
 export function Overview() {
   const rep = useReplicache();
-  const [query] = useSearchParams();
+  const [query, setQuery] = useSearchParams<{
+    force?: string;
+    users?: string;
+    accounts?: string;
+  }>();
   const accounts = AccountStore.list.watch(
     rep,
     () => [],
@@ -216,6 +220,9 @@ export function Overview() {
   const storage = useStorage();
   const selfEmail = createMemo(() => auth[storage.value.account].session.email);
 
+  const showAccounts = createMemo(() => {
+    return (query.accounts || null)?.split(",") ?? [];
+  });
   const sortedUsers = createMemo(() =>
     sortUsers(
       users().filter((u) => !u.timeDeleted),
@@ -227,7 +234,6 @@ export function Overview() {
       ? sortedUsers().slice(0, OVERFLOW_USERS_DISPLAY)
       : sortedUsers()
   );
-  const [showUsersOverflow, setUsersShowOverflow] = createSignal(false);
 
   createEffect(() => {
     if (accounts.ready && !accounts().length && !query.force)
@@ -235,6 +241,23 @@ export function Overview() {
         replace: true,
       });
   });
+
+  function setShowAccounts(id: string) {
+    setQuery({
+      accounts: (showAccounts().includes(id)
+        ? showAccounts()
+        : showAccounts().concat(id)
+      ).join(","),
+    });
+  }
+
+  function unsetShowAccounts(id: string) {
+    setQuery({
+      accounts: showAccounts()
+        .filter((account) => account !== id)
+        .join(","),
+    });
+  }
 
   function renderAccount(account: Account.Info) {
     const apps = AppStore.all.watch(rep, () => []);
@@ -256,7 +279,9 @@ export function Overview() {
         ? children().slice(0, OVERFLOW_APPS_DISPLAY)
         : children()
     );
-    const [showOverflow, setShowOverflow] = createSignal(false);
+    const showOverflow = createMemo(() => {
+      return showAccounts().includes(account.accountID);
+    });
     return (
       <Card>
         <CardHeader>
@@ -329,7 +354,13 @@ export function Overview() {
           </Show>
           <Show when={children().length > OVERFLOW_APPS_COUNT}>
             <CardOverflowRow>
-              <TextButton onClick={() => setShowOverflow(!showOverflow())}>
+              <TextButton
+                onClick={() => {
+                  showOverflow()
+                    ? unsetShowAccounts(account.accountID)
+                    : setShowAccounts(account.accountID);
+                }}
+              >
                 <Show when={showOverflow()} fallback="Show all apps">
                   Hide
                 </Show>
@@ -441,11 +472,7 @@ export function Overview() {
                         </Row>
                       </CardHeader>
                       <div>
-                        <For
-                          each={
-                            showUsersOverflow() ? sortedUsers() : usersCapped()
-                          }
-                        >
+                        <For each={query.users ? sortedUsers() : usersCapped()}>
                           {(user) => <UserCard id={user.id} />}
                         </For>
                         <Show
@@ -454,11 +481,13 @@ export function Overview() {
                           <CardOverflowRow>
                             <TextButton
                               onClick={() =>
-                                setUsersShowOverflow(!showUsersOverflow())
+                                setQuery({
+                                  users: query.users ? undefined : "1",
+                                })
                               }
                             >
                               <Show
-                                when={showUsersOverflow()}
+                                when={query.users}
                                 fallback="Show all users"
                               >
                                 Hide
