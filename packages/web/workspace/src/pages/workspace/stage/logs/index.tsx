@@ -445,7 +445,11 @@ export function Logs() {
 
   return (
     <Switch>
-      <Match when={workspace().timeGated != null && !stage.connected}>
+      <Match
+        when={
+          workspace().timeGated != null && !stage.connected && !stage.isFree
+        }
+      >
         <Fullscreen inset="stage">
           <Warning
             title="Update billing details"

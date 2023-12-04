@@ -20,7 +20,10 @@ await queue(100, accounts, (account) =>
         workspaceID: account.workspaceID,
       },
     },
-    () => AWS.Account.Events.Created.publish({ awsAccountID: account.id })
+    async () => {
+      await AWS.Account.Events.Created.publish({ awsAccountID: account.id });
+      await new Promise((resolve) => setTimeout(resolve, 30_000));
+    }
   )
 );
 

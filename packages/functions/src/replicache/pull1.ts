@@ -69,6 +69,7 @@ const TABLE_KEY = {
   resource: [resource.stageID, resource.id],
   issueCount: [issueCount.group, issueCount.id],
   warning: [warning.stageID, warning.type, warning.id],
+  usage: [usage.stageID, usage.id],
   stripe: [],
 } as {
   [key in TableName]?: MySqlColumn[];

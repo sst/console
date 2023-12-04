@@ -18,5 +18,5 @@ export const PRICING_PLAN: PricingPlan = [
 export const UsageStore = new Store()
   .type<Usage>()
   .scan("list", () => [`usage`])
-  .get((id: string) => [`usage`, id])
+  .scan("forStage", (stageID: string) => [`usage`, stageID])
   .build();

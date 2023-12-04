@@ -18,6 +18,8 @@ import { ResourceIcon } from "$/common/resource-icon";
 import { createInitializedContext } from "$/common/context";
 import { IssueStore } from "$/data/issue";
 import { ResourceStore } from "$/data/resource";
+import { UsageStore } from "$/data/usage";
+import { sumBy } from "remeda";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -39,6 +41,11 @@ export function createStageContext() {
       )
   );
   const local = useLocalContext();
+  const usage = UsageStore.forStage.watch(
+    rep,
+    () => [stage()?.id || "unknown"],
+    (items) => sumBy(items, (item) => item.invocations)
+  );
 
   return {
     get app() {
@@ -53,6 +60,9 @@ export function createStageContext() {
         local().stage === stage()?.name &&
         (!local().region || stage()?.region === local().region)
       );
+    },
+    get isFree() {
+      return usage() < 1_000_000;
     },
   };
 }

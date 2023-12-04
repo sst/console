@@ -14,7 +14,9 @@ export function Issues() {
   return (
     <>
       <Switch>
-        <Match when={workspace().timeGated != null && !ctx.connected}>
+        <Match
+          when={workspace().timeGated != null && !ctx.connected && !ctx.isFree}
+        >
           <Fullscreen inset="stage">
             <Warning
               title="Update billing details"
