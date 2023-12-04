@@ -343,7 +343,6 @@ export const integrate = zod(
     console.log("regions", r);
 
     for (const region of r) {
-      if (region !== "us-east-1") continue;
       const config = {
         credentials: input.credentials,
         region: region!,
