@@ -2109,6 +2109,7 @@ function stage({ id, appID, region, awsAccountID }: StageProps): DummyData {
     awsAccountID,
     timeDeleted: null,
     region: region || "us-east-1",
+    unsupported: false,
     ...timestamps,
   };
 }

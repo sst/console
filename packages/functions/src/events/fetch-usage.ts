@@ -15,6 +15,11 @@ import { uniq } from "remeda";
 export const handler = EventHandler(Stage.Events.UsageRequested, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const { stageID, daysOffset } = evt.properties;
+
+    // Check if stage is unsupported
+    const stage = await Stage.fromID(stageID);
+    if (stage?.unsupported) return;
+
     const startDate = DateTime.now()
       .toUTC()
       .startOf("day")
