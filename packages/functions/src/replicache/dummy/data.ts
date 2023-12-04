@@ -94,8 +94,9 @@ export function* generateData(
   if (modeMap["issues"]) {
     yield* stageNoIssues();
     yield* stageNoActiveIssues();
-    yield* stageIssuesWarningSubscription();
+    yield* stageIssuesWarningMixed();
     yield* stageIssuesWarningRateLimited();
+    yield* stageIssuesWarningSubscription();
     yield* stageHasIssues();
 
     yield* issueBase();
@@ -199,6 +200,7 @@ const STAGE_NO_ISSUES = "stage-no-issues";
 const STAGE_NO_ACTIVE_ISSUES = "stage-no-active-issues";
 const STAGE_HAS_ISSUES = "stage-has-issues";
 const STAGE_HAS_FUNCTION = "stage-has-function";
+const STAGE_ISSUES_WARN_MIXED = "stage-issues-warning-mixed";
 const STAGE_ISSUES_WARN_RATE = "stage-issues-warning-rate-limit";
 const STAGE_ISSUES_WARN_SUB = "stage-issues-warning-subscription";
 
@@ -213,7 +215,11 @@ const FUNC_ARN_SSR = "arn:aws:lambda:us-east-1:123456789012:function:my-func";
 const FUNC_ARN_NEXTJS = "arn:aws:lambda:us-east-1:123456789012:function:nextjs";
 
 const ISSUE_WARN_FN = "my-warn-func";
+const ISSUE_WARN_FN_ARN =
+  "arn:aws:lambda:us-east-1:123456789012:function:my-warn-func";
 const ISSUE_WARN_FN_LONG = "my-warn-func-long";
+const ISSUE_WARN_FN_LONG_ARN =
+  "arn:aws:lambda:us-east-1:123456789012:function:my-warn-func-long";
 
 const ISSUE_ID = "123";
 const ISSUE_FN = "my-issues-func";
@@ -1211,41 +1217,6 @@ function* stageNoActiveIssues(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* stageIssuesWarningRateLimited(): Generator<DummyData, void, unknown> {
-  yield stage({
-    id: STAGE_ISSUES_WARN_RATE,
-    appID: APP_LOCAL,
-    awsAccountID: ACCOUNT_ID,
-  });
-  yield resource({
-    type: "Stack",
-    id: "stackA",
-    stage: STAGE_ISSUES_WARN_RATE,
-    enrichment: {
-      version: "2.19.2",
-      outputs: [],
-    },
-  });
-  yield func({
-    id: ISSUE_WARN_FN,
-    stage: STAGE_ISSUES_WARN_RATE,
-    handler: "packages/function.handler",
-  });
-  yield warning({
-    stage: STAGE_ISSUES_WARN_RATE,
-    type: "issue_rate_limited",
-  });
-  yield warning({
-    stage: STAGE_ISSUES_WARN_RATE,
-    type: "log_subscription",
-    data: {
-      error: "unknown",
-      message: "Some error message",
-    },
-    target: ISSUE_WARN_FN,
-  });
-}
-
 function* stageIssuesWarningSubscription(): Generator<
   DummyData,
   void,
@@ -1267,24 +1238,9 @@ function* stageIssuesWarningSubscription(): Generator<
   });
   yield func({
     id: ISSUE_WARN_FN,
+    arn: ISSUE_WARN_FN_ARN,
     stage: STAGE_ISSUES_WARN_SUB,
     handler: "packages/function.handler",
-  });
-  yield func({
-    id: ISSUE_WARN_FN_LONG,
-    stage: STAGE_ISSUES_WARN_SUB,
-    handler:
-      "packages/path/of/a/really/long/function/name/that/should/overflow/because/it/is/way/too/long/and/it/keeps/going/and/going/and/lets/make/it/longer/just/for/fun/function.handler",
-  });
-
-  yield warning({
-    stage: STAGE_ISSUES_WARN_SUB,
-    type: "log_subscription",
-    data: {
-      error: "unknown",
-      message: "Some error message",
-    },
-    target: ISSUE_WARN_FN,
   });
   yield warning({
     stage: STAGE_ISSUES_WARN_SUB,
@@ -1306,12 +1262,95 @@ function* stageIssuesWarningSubscription(): Generator<
     stage: STAGE_ISSUES_WARN_SUB,
     type: "log_subscription",
     data: {
-      error: "noisy",
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
+  });
+}
+
+function* stageIssuesWarningRateLimited(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ISSUES_WARN_RATE,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_ISSUES_WARN_RATE,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield func({
+    id: ISSUE_WARN_FN,
+    arn: ISSUE_WARN_FN_ARN,
+    stage: STAGE_ISSUES_WARN_RATE,
+    handler: "packages/function.handler",
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_RATE,
+    type: "issue_rate_limited",
+    target: ISSUE_WARN_FN,
+  });
+}
+
+function* stageIssuesWarningMixed(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ISSUES_WARN_MIXED,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield resource({
+    type: "Stack",
+    id: "stackA",
+    stage: STAGE_ISSUES_WARN_MIXED,
+    enrichment: {
+      version: "2.19.2",
+      outputs: [],
+    },
+  });
+  yield func({
+    id: ISSUE_WARN_FN,
+    arn: ISSUE_WARN_FN_ARN,
+    stage: STAGE_ISSUES_WARN_MIXED,
+    handler: "packages/function.handler",
+  });
+  yield func({
+    id: ISSUE_WARN_FN_LONG,
+    arn: ISSUE_WARN_FN_LONG_ARN,
+    stage: STAGE_ISSUES_WARN_MIXED,
+    handler:
+      "packages/path/of/a/really/long/function/name/that/should/overflow/because/it/is/way/too/long/and/it/keeps/going/and/going/and/lets/make/it/longer/just/for/fun/function.handler",
+  });
+
+  yield warning({
+    stage: STAGE_ISSUES_WARN_MIXED,
+    type: "issue_rate_limited",
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_MIXED,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
+    },
+    target: ISSUE_WARN_FN,
+  });
+  yield warning({
+    stage: STAGE_ISSUES_WARN_MIXED,
+    type: "log_subscription",
+    data: {
+      error: "unknown",
+      message: "Some error message",
     },
     target: ISSUE_WARN_FN_LONG,
   });
   yield warning({
-    stage: STAGE_ISSUES_WARN_SUB,
+    stage: STAGE_ISSUES_WARN_MIXED,
     type: "log_subscription",
     data: {
       error: "unknown",
@@ -1320,7 +1359,7 @@ function* stageIssuesWarningSubscription(): Generator<
     target: ISSUE_WARN_FN,
   });
   yield warning({
-    stage: STAGE_ISSUES_WARN_SUB,
+    stage: STAGE_ISSUES_WARN_MIXED,
     type: "log_subscription",
     data: {
       error: "unknown",
@@ -1329,7 +1368,7 @@ function* stageIssuesWarningSubscription(): Generator<
     target: ISSUE_WARN_FN,
   });
   yield warning({
-    stage: STAGE_ISSUES_WARN_SUB,
+    stage: STAGE_ISSUES_WARN_MIXED,
     type: "log_subscription",
     data: {
       error: "unknown",
@@ -1338,16 +1377,7 @@ function* stageIssuesWarningSubscription(): Generator<
     target: ISSUE_WARN_FN,
   });
   yield warning({
-    stage: STAGE_ISSUES_WARN_SUB,
-    type: "log_subscription",
-    data: {
-      error: "unknown",
-      message: "Some error message",
-    },
-    target: ISSUE_WARN_FN,
-  });
-  yield warning({
-    stage: STAGE_ISSUES_WARN_SUB,
+    stage: STAGE_ISSUES_WARN_MIXED,
     type: "log_subscription",
     data: {
       error: "unknown",

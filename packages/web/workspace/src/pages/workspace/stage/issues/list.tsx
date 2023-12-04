@@ -99,8 +99,9 @@ const WarningDetails = styled("div", {
 
 const WarningDetailsScroll = styled("div", {
   base: {
+    ...utility.stack(3),
     overflowY: "auto",
-    maxHeight: 140,
+    maxHeight: 170,
     fontSize: theme.font.size.sm,
     lineHeight: theme.font.lineHeight,
   },
@@ -112,10 +113,10 @@ const WarningDetailsTitle = styled("div", {
   },
 });
 
-const WarningDetailsDesc = styled("div", {
+const WarningDetailsDesc = styled("ul", {
   base: {
     ...utility.text.pre,
-    marginLeft: theme.space[4],
+    paddingLeft: theme.space[5],
     color: theme.color.text.secondary.surface,
   },
 });
@@ -404,13 +405,13 @@ export function List() {
                 when={rateWarnings().length > 0}
                 fallback={
                   <>
-                    There was a problem enabling Issues. Check out the details
-                    and try again, or contact us if you need help.{" "}
+                    There was a problem enabling Issues for some of your
+                    functions.{" "}
                   </>
                 }
               >
-                You hit a soft limit for Issues. You can re-enable it or contact
-                us to have the limit lifted.{" "}
+                You hit a rate limit for some of your functions. You can
+                re-enable them or contact us to have the limit lifted.{" "}
               </Show>
               <WarningMoreButton
                 onClick={() => setWarningExpanded(!warningExpanded())}
@@ -431,54 +432,75 @@ export function List() {
               });
             }}
           >
-            {rateWarnings().length > 0 ? "Enable Issues" : "Retry"}
+            {rateWarnings().length > 0 ? "Enable" : "Retry"}
           </Button>
         </Row>
         <Show when={warningExpanded()}>
           <WarningDetails>
             <WarningDetailsScroll>
-              <Show
-                when={rateWarnings().length === 0}
-                fallback={
-                  <WarningDetailsTitle>
-                    We temporarily paused Issues for your workspace because it
-                    hit a soft limit for the number of Issues per hour. Feel
-                    free to re-enable it. Or,{" "}
-                    <a href="mailto:help@sst.dev">get in touch with us</a> if
-                    you'd like the limit lifted.
-                  </WarningDetailsTitle>
-                }
-              >
+              <Show when={rateWarnings().length > 0}>
                 <Stack space="1">
                   <WarningDetailsTitle>
-                    There was a problem enabling Issues for the following
-                    functions. <a href="mailto:help@sst.dev">Contact us</a> if
-                    you need help.
+                    These functions hit a soft limit for the number of Issues
+                    per hour; re-enable them. Or,{" "}
+                    <a href="mailto:help@sst.dev">
+                      contact us to lift the limit.
+                    </a>
                   </WarningDetailsTitle>
                   <WarningDetailsDesc>
-                    -{" "}
-                    {subWarnings()
-                      .map((item) => {
-                        if (item.type === "log_subscription") {
-                          const reason = (function () {
-                            if (item.data.error === "noisy")
-                              return "Rate Limited";
-                            if (item.data.error === "unknown")
-                              return "Unknown error: " + item.data.message;
-                            if (item.data.error === "limited")
-                              return "Too many existing log subscribers";
-                            if (item.data.error === "permissions")
-                              return "Missing permissions to add log subscriber";
-                            return "Unknown";
-                          })();
-                          const logInfo = createMemo(() =>
-                            getLogInfo(resources(), item.target)
-                          );
-                          return `${logInfo()?.name} (${reason})`;
-                        }
-                      })
-                      .filter(Boolean)
-                      .join("\n- ")}
+                    <For
+                      each={rateWarnings()
+                        .map((item) => {
+                          if (item.type === "issue_rate_limited") {
+                            const logInfo = createMemo(() =>
+                              getLogInfo(resources(), item.target)
+                            );
+                            return logInfo()?.name;
+                          }
+                        })
+                        .filter(Boolean)}
+                    >
+                      {(item) => <li>{item}</li>}
+                    </For>
+                  </WarningDetailsDesc>
+                </Stack>
+              </Show>
+              <Show when={subWarnings().length > 0}>
+                <Stack space="1">
+                  <WarningDetailsTitle>
+                    We could not enable Issues for these functions. You can fix
+                    the problem and try again. Or,{" "}
+                    <a href="mailto:help@sst.dev">
+                      contact us if you need help.
+                    </a>
+                  </WarningDetailsTitle>
+                  <WarningDetailsDesc>
+                    <For
+                      each={subWarnings()
+                        .map((item) => {
+                          if (item.type === "log_subscription") {
+                            const reason = (function () {
+                              switch (item.data.error) {
+                                case "unknown":
+                                  return "Unknown error: " + item.data.message;
+                                case "limited":
+                                  return "Too many existing log subscribers";
+                                case "permissions":
+                                  return "Missing permissions to add log subscriber";
+                                default:
+                                  return "Unknown";
+                              }
+                            })();
+                            const logInfo = createMemo(() =>
+                              getLogInfo(resources(), item.target)
+                            );
+                            return `${logInfo()?.name} (${reason})`;
+                          }
+                        })
+                        .filter(Boolean)}
+                    >
+                      {(item) => <li>{item}</li>}
+                    </For>
                   </WarningDetailsDesc>
                 </Stack>
               </Show>
