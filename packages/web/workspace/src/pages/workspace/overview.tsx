@@ -42,7 +42,7 @@ import {
 } from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
-import { sortBy } from "remeda";
+import { filter, flatMap, groupBy, map, pipe, sortBy, toPairs } from "remeda";
 import { useWorkspace } from "./context";
 import { useFlags } from "$/providers/flags";
 import { User } from "@console/core/user";
@@ -55,23 +55,6 @@ const OVERFLOW_USERS_DISPLAY = 5;
 const Root = styled("div", {
   base: {
     padding: theme.space[4],
-  },
-});
-
-const Announcement = styled("div", {
-  base: {
-    backgroundColor: theme.color.background.surface,
-    padding: theme.space[3],
-    textAlign: "center",
-  },
-});
-
-const AnnouncementLinkIcon = styled("span", {
-  base: {
-    top: 2,
-    paddingLeft: 1,
-    position: "relative",
-    opacity: theme.iconOpacity,
   },
 });
 
@@ -208,17 +191,24 @@ export function Overview() {
   const users = UserStore.list.watch(rep, () => []);
   const cols = createMemo(() => splitCols(accounts() || []));
   const stages = StageStore.list.watch(rep, () => []);
-  const workspace = useWorkspace();
+  const apps = AppStore.all.watch(rep, () => []);
   const usages = UsageStore.list.watch(rep, () => []);
-  const invocations = createMemo(() =>
-    usages()
-      .map((usage) => usage.invocations)
-      .reduce((a, b) => a + b, 0)
-  );
   const nav = useNavigate();
   const auth = useAuth();
   const storage = useStorage();
   const selfEmail = createMemo(() => auth[storage.value.account].session.email);
+  const ambiguous = createMemo(() => {
+    const result = pipe(
+      stages(),
+      groupBy((s) => `${apps().find((a) => a.id === s.appID)?.name}/${s.name}`),
+      toPairs,
+      filter(([, stages]) => stages.length > 1),
+      flatMap(([_, stages]) => stages),
+      map((s) => s.id)
+    );
+    console.log({ ambiguous: result });
+    return new Set(result);
+  });
 
   const showAccounts = createMemo(() => {
     return (query.accounts || null)?.split(",") ?? [];
@@ -260,7 +250,6 @@ export function Overview() {
   }
 
   function renderAccount(account: Account.Info) {
-    const apps = AppStore.all.watch(rep, () => []);
     const local = useLocalContext();
     const children = createMemo(() => {
       return sortBy(
@@ -334,7 +323,9 @@ export function Overview() {
             </CardStatus>
           </Show>
           <For each={showOverflow() ? children() : childrenCapped()}>
-            {(stage) => <StageCard stage={stage} />}
+            {(stage) => (
+              <StageCard ambiguous={ambiguous().has(stage.id)} stage={stage} />
+            )}
           </For>
           <Show
             when={
@@ -547,12 +538,17 @@ const StageCardTags = styled("div", {
 
 interface StageCardProps {
   stage: Stage.Info;
+  ambiguous?: boolean;
 }
 function StageCard(props: StageCardProps) {
   const app = AppStore.get.watch(useReplicache(), () => [props.stage.appID]);
   const local = useLocalContext();
   return (
-    <StageRoot href={`${app()?.name}/${props.stage.name}`}>
+    <StageRoot
+      href={`${app()?.name}/${
+        props.ambiguous ? props.stage.id : props.stage.name
+      }`}
+    >
       <Row space="2" vertical="center">
         <StageIcon>
           <IconApp />

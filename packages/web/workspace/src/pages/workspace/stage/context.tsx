@@ -4,6 +4,7 @@ import {
   ParentProps,
   Show,
   createContext,
+  createEffect,
   createMemo,
   useContext,
 } from "solid-js";
@@ -37,7 +38,9 @@ export function createStageContext() {
     () => [],
     (items) =>
       items.find(
-        (stage) => stage.appID === app()?.id && stage.name === params.stageName
+        (stage) =>
+          stage.appID === app()?.id &&
+          (stage.name === params.stageName || stage.id === params.stageName)
       )
   );
   const local = useLocalContext();

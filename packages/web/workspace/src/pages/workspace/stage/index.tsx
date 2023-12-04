@@ -1,18 +1,5 @@
-import { useReplicache } from "$/providers/replicache";
-import {
-  Link,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-  useRoutes,
-  useMatch,
-  useNavigate,
-  useParams,
-} from "@solidjs/router";
-import { StageStore } from "$/data/stage";
-import { AppStore } from "$/data/app";
-import { JSX, Match, Show, Switch, createEffect, createMemo } from "solid-js";
+import { Link, Navigate, Route, Routes, useNavigate } from "@solidjs/router";
+import { JSX, Match, Show, Switch, createMemo } from "solid-js";
 import { NavigationAction, useCommandBar } from "$/pages/workspace/command-bar";
 import {
   IssuesProvider,
@@ -28,40 +15,20 @@ import {
 import { Logs } from "./logs";
 import { Issues } from "./issues";
 import { Resources } from "./resources";
-import { IconApp, IconStage, IconSubRight } from "$/ui/icons/custom";
+import { IconSubRight } from "$/ui/icons/custom";
 import {
   Header,
   PageHeader,
   HeaderProvider,
   useHeaderContext,
 } from "../header";
-import { Fullscreen, Row, Stack, TabTitle, theme, utility, Text } from "$/ui";
+import { Fullscreen, Row, Stack, TabTitle, theme, utility } from "$/ui";
 import { Local } from "./local";
 import { IconExclamationTriangle } from "$/ui/icons";
 import { styled } from "@macaron-css/solid";
 import { NotFound } from "../../not-found";
-import { useWorkspace } from "../context";
-import { useLocalContext } from "$/providers/local";
 
 export function Stage() {
-  const rep = useReplicache();
-  const nav = useNavigate();
-  const params = useParams();
-
-  const app = AppStore.all.watch(
-    rep,
-    () => [],
-    (items) => items.find((app) => app.name === params.appName)
-  );
-  const stage = StageStore.list.watch(
-    rep,
-    () => [],
-    (items) =>
-      items.find(
-        (stage) => stage.appID === app()?.id && stage.name === params.stageName
-      )
-  );
-
   const stageContext = createStageContext();
 
   return (

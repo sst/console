@@ -491,6 +491,8 @@ export const integrate = zod(
               const splits = key.split("/");
               const appName = splits.at(-2);
               const stageName = splits.at(-1)?.split(".").at(0);
+              if (!appName || !stageName) continue;
+              existing[appName]?.delete(stageName);
               stages.push({
                 app: appName!,
                 stage: stageName!,
