@@ -329,6 +329,19 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         })
         .execute();
 
+    const stacks = resources.filter((x) => x.type === "Stack");
+    const unsupported =
+      stacks.length ===
+      stacks.filter((x) => parseVersion(x.enrichment.version) < MINIMUM_VERSION)
+        .length;
+
+    await tx
+      .update(stage)
+      .set({ unsupported })
+      .where(
+        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace()))
+      );
+
     const toDelete = [...existing.values()];
     console.log("deleting", toDelete.length, "resources");
     if (toDelete.length)
@@ -403,3 +416,11 @@ export const remove = zod(Info.shape.id, (stageID) =>
     await createTransactionEffect(() => Replicache.poke());
   })
 );
+
+function parseVersion(input: string) {
+  return input
+    .split(".")
+    .map((item) => parseInt(item))
+    .reduce((acc, val, i) => acc + val * Math.pow(1000, 2 - i), 0);
+}
+const MINIMUM_VERSION = parseVersion("2.19.2");

@@ -4,6 +4,7 @@ import {
   mysqlTable,
   primaryKey,
   uniqueIndex,
+  boolean,
   varchar,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid } from "../util/sql";
@@ -31,6 +32,7 @@ export const stage = mysqlTable(
     awsAccountID: cuid("aws_account_id").notNull(),
     region: varchar("region", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
+    unsupported: boolean("unsupported"),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),
