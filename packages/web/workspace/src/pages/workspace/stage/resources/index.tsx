@@ -1129,7 +1129,7 @@ function FunctionChild(props: {
                   exists().metadata.handler
                     ? new URL(
                         "https://example.com/" + exists().metadata.handler
-                      ).pathname
+                      ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >
