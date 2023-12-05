@@ -31,7 +31,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             }
             // merge safely with existing invocation
             // invocations from server could be partial
-            if (exists) {
+            if (exists && !exists.report) {
               if (invocation.end) exists.end = invocation.end;
               if (invocation.input) exists.input = invocation.input;
               if (invocation.output) exists.output = invocation.output;
@@ -39,11 +39,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
                 exists.errors.push(...invocation.errors);
                 exists.errors = uniqBy(invocation.errors, (e) => e.id);
               }
-              if (invocation.report)
-                exists.report = {
-                  ...exists.report,
-                  ...invocation.report,
-                };
+              if (invocation.report) exists.report = invocation.report;
               if (invocation.start) exists.start = invocation.start;
               if (invocation.end) exists.end = invocation.end;
               if (invocation.logs) {
