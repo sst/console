@@ -8,6 +8,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.352.0",
+    "@console/mail": "workspace:*",
+    "@jsx-email/render": "^1.1.0",
     "@tsconfig/node16": "^1.0.3",
     "luxon": "^3.3.0",
     "sst": "2.36.7",
