@@ -26,6 +26,7 @@ import {
   S3Client,
   PutBucketNotificationConfigurationCommand,
   ListObjectsV2Command,
+  NoSuchBucket,
 } from "@aws-sdk/client-s3";
 import {
   CreateRoleCommand,
@@ -443,13 +444,19 @@ export const integrate = zod(
       for (const b of bootstrapBuckets) {
         while (true) {
           if (b.version === "normal") {
-            const list = await s3.send(
-              new ListObjectsV2Command({
-                Prefix: "stackMetadata",
-                Bucket: b.bucket,
-                ContinuationToken: token,
-              })
-            );
+            const list = await s3
+              .send(
+                new ListObjectsV2Command({
+                  Prefix: "stackMetadata",
+                  Bucket: b.bucket,
+                  ContinuationToken: token,
+                })
+              )
+              .catch((err) => {
+                if (err instanceof NoSuchBucket) return;
+                throw err;
+              });
+            if (!list) break;
             const distinct = new Set(
               list.Contents?.filter((item) => item.Key).map((item) =>
                 item.Key!.split("/").slice(0, 3).join("/")
