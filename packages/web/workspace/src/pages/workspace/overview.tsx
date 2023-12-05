@@ -527,6 +527,14 @@ const StageIcon = styled("div", {
     height: 16,
     color: theme.color.icon.secondary,
   },
+  variants: {
+    dimmed: {
+      true: {
+        color: theme.color.icon.dimmed,
+      },
+      false: {},
+    },
+  },
 });
 
 const StageCardTags = styled("div", {
@@ -551,7 +559,7 @@ function StageCard(props: StageCardProps) {
       }`}
     >
       <Row space="2" vertical="center">
-        <StageIcon>
+        <StageIcon dimmed={props.stage.unsupported || false}>
           <IconApp />
         </StageIcon>
         <Row space="1" vertical="center">
