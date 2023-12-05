@@ -20,6 +20,7 @@ export const handler = Handler("kinesis_stream", (event) =>
       properties: {},
     },
     async () => {
+      console.log("got", event.Records.length, "records");
       const incomplete: string[] = event.Records.map(
         (r) => r.eventID
       ).reverse();
@@ -29,6 +30,20 @@ export const handler = Handler("kinesis_stream", (event) =>
       }, 1000 * 60);
       const { Records } = event;
       for (const record of Records) {
+        console.log(
+          "arrival",
+          new Date(
+            record.kinesis.approximateArrivalTimestamp * 1000
+          ).toISOString()
+        );
+        if (
+          Date.now() - record.kinesis.approximateArrivalTimestamp * 1000 >
+          1000 * 60 * 60
+        ) {
+          incomplete.pop();
+          console.log("too old");
+          continue;
+        }
         if (timeout) break;
         const decoded = JSON.parse(
           unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
