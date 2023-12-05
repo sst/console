@@ -23,6 +23,7 @@ import { dropAllDatabases } from "replicache";
 
 const stageSwitcherStyles: CSSProperties = {
   flexShrink: 0,
+  maxWidth: 400,
   display: "flex",
   justifyContent: "flex-start",
   alignItems: "center",
@@ -82,14 +83,30 @@ const StageSwitcher = styled("button", {
 
 const StageSwitcherCopyMain = styled("span", {
   base: {
+    ...utility.text.line,
     fontSize: theme.font.size.lg,
     fontWeight: theme.font.weight.medium,
     color: theme.color.text.secondary.base,
   },
 });
 
+const StageSwitcherCopySub = styled("span", {
+  base: {
+    ...utility.text.line,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const StageSwitcherCopy = styled("div", {
+  base: {
+    ...utility.stack(1.5),
+    minWidth: 0,
+  },
+});
+
 const SwitcherIcon = styled(IconChevronUpDown, {
   base: {
+    flex: "0 0 auto",
     color: theme.color.text.dimmed.base,
     width: 28,
     height: 28,
@@ -220,15 +237,17 @@ export function Header(props: { app?: string; stage?: string }) {
             <Show
               when={props.stage}
               fallback={
-                <StageSwitcherCopyMain>
-                  {workspace!().slug}
-                </StageSwitcherCopyMain>
+                <StageSwitcherCopy>
+                  <StageSwitcherCopyMain>
+                    {workspace!().slug}
+                  </StageSwitcherCopyMain>
+                </StageSwitcherCopy>
               }
             >
-              <Stack space="1.5">
+              <StageSwitcherCopy>
                 <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
-                <Text color="dimmed">{props.stage}</Text>
-              </Stack>
+                <StageSwitcherCopySub>{props.stage}</StageSwitcherCopySub>
+              </StageSwitcherCopy>
             </Show>
             <SwitcherIcon />
           </StageSwitcher>

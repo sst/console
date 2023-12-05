@@ -575,6 +575,9 @@ function StageCard(props: StageCardProps) {
             Local
           </Tag>
         </Show>
+        <Show when={props.stage.unsupported}>
+          <Tag style="outline">Unsupported</Tag>
+        </Show>
         <Tag style="outline">{props.stage.region}</Tag>
       </StageCardTags>
     </StageRoot>
