@@ -405,8 +405,15 @@ export function Header(props: HeaderProps) {
 
 export function Resources() {
   const functions = useFunctionsContext();
-  const resources = useResourcesContext();
   const outdated = useOutdated();
+
+  // Display resources from non-outdated stacks
+  const resourcesAll = useResourcesContext();
+  const resources = createMemo(() => {
+    const stackIDs = outdated().map((o) => o.stackID);
+    return resourcesAll().filter((r) => !stackIDs.includes(r.stackID));
+  });
+
   const sortedResources = createMemo(() => sortResources([...resources()]));
 
   const orphans = createMemo(() =>
