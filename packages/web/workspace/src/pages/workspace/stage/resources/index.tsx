@@ -1079,6 +1079,12 @@ export function RDSCard(props: CardProps<"RDS">) {
         resource={props.resource}
         description={props.resource.metadata.defaultDatabaseName}
       />
+      <Children>
+        <FunctionChild
+          id={props.resource.metadata.migrator?.node}
+          tag="Migrator"
+        />
+      </Children>
     </>
   );
 }

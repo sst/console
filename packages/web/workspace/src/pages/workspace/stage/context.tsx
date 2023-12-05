@@ -257,6 +257,7 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           );
           break;
         case "RDS":
+          push(resource, resource.metadata.migrator);
           break;
         case "Queue":
           push(resource, resource.metadata.consumer);
@@ -286,6 +287,9 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           resource.metadata.rules.forEach((item) =>
             item.targets.forEach((t) => push(resource, t))
           );
+          break;
+        case "Service":
+          push(resource, resource.metadata.devFunction);
           break;
         case "AstroSite":
           push(resource, resource.metadata.server);
