@@ -2,15 +2,14 @@ import { Link, Navigate, Route, Routes, useNavigate } from "@solidjs/router";
 import { JSX, Match, Show, Switch, createMemo } from "solid-js";
 import { NavigationAction, useCommandBar } from "$/pages/workspace/command-bar";
 import {
-  IssuesProvider,
-  MINIMUM_VERSION,
-  ResourcesProvider,
-  StageContext,
-  createStageContext,
-  useIssuesContext,
   useOutdated,
-  useResourcesContext,
+  StageContext,
+  IssuesProvider,
   useStageContext,
+  MINIMUM_VERSION,
+  useIssuesContext,
+  ResourcesProvider,
+  createStageContext,
 } from "./context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
@@ -110,10 +109,6 @@ export function Inner() {
       issues().filter((item) => !item.timeResolved && !item.timeIgnored).length
   );
   const header = useHeaderContext();
-  const resources = useResourcesContext();
-  const stacks = createMemo(() =>
-    resources().filter((r) => r.type === "Stack")
-  );
   const outdated = useOutdated();
   const minVersion = createMemo(
     () =>
@@ -170,7 +165,7 @@ export function Inner() {
     <>
       <Header app={ctx.app.name} stage={ctx.stage.name} />
       <Switch>
-        <Match when={stacks().length === outdated().length}>
+        <Match when={ctx.stage.unsupported}>
           <Fullscreen inset="root">
             <Warning
               title={

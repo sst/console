@@ -88,7 +88,6 @@ export function* generateData(
     yield* stageBase();
     yield* stageEmpty();
     yield* stageNotSupported();
-    yield* stagePartlySupported();
   }
 
   if (modeMap["issues"]) {
@@ -1111,8 +1110,9 @@ function* stageEmpty(): Generator<DummyData, void, unknown> {
 
 function* stageNotSupported(): Generator<DummyData, void, unknown> {
   yield stage({
-    id: STAGE_NOT_SUPPORTED,
     appID: APP_LOCAL,
+    unsupported: true,
+    id: STAGE_NOT_SUPPORTED,
     awsAccountID: ACCOUNT_ID,
   });
   yield resource({
@@ -1123,57 +1123,6 @@ function* stageNotSupported(): Generator<DummyData, void, unknown> {
       version: "1.0.0",
       outputs: [],
     },
-  });
-}
-
-function* stagePartlySupported(): Generator<DummyData, void, unknown> {
-  const FN_NODE = "index";
-
-  yield stage({
-    id: STAGE_PARTLY_SUPPORTED,
-    appID: APP_LOCAL,
-    awsAccountID: ACCOUNT_ID,
-  });
-
-  yield resource({
-    type: "Stack",
-    id: "stackA",
-    stage: STAGE_PARTLY_SUPPORTED,
-    enrichment: {
-      version: "1.0.0",
-      outputs: [],
-    },
-  });
-  yield resource({
-    type: "Stack",
-    id: STACK_WORKING,
-    stage: STAGE_PARTLY_SUPPORTED,
-    enrichment: {
-      version: "2.19.2",
-      outputs: [],
-    },
-  });
-  yield resource({
-    type: "Table",
-    id: "notes-table",
-    stage: STAGE_PARTLY_SUPPORTED,
-    metadata: {
-      consumers: [
-        {
-          fn: {
-            node: FN_NODE,
-            stack: STACK_WORKING,
-          },
-          name: "consumer1",
-        },
-      ],
-      tableName: "jayair-console-dummy-notes-table",
-    },
-  });
-  yield func({
-    id: FN_NODE,
-    stage: STAGE_PARTLY_SUPPORTED,
-    handler: "packages/function.handler",
   });
 }
 

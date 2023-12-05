@@ -13,7 +13,6 @@ import {
 import {
   MINIMUM_VERSION,
   useFunctionsContext,
-  useOutdated,
   useResourcesContext,
 } from "../context";
 import { styled } from "@macaron-css/solid";
@@ -405,8 +404,6 @@ export function Header(props: HeaderProps) {
 
 export function Resources() {
   const functions = useFunctionsContext();
-  const outdated = useOutdated();
-
   const resources = useResourcesContext();
 
   const sortedResources = createMemo(() => sortResources([...resources()]));
@@ -541,21 +538,6 @@ export function Resources() {
                 </Fullscreen>
               }
             >
-              <Show when={outdated().length}>
-                <Alert level="info">
-                  <span
-                    title={outdated()
-                      .map((s) => s.stackID)
-                      .join(", ")}
-                  >
-                    Some of the stacks in this app are not supported by the SST
-                    Console.
-                  </span>{" "}
-                  <a target="_blank" href="https://github.com/sst/sst/releases">
-                    Upgrade them to at least v{MINIMUM_VERSION}.
-                  </a>
-                </Alert>
-              </Show>
               <For each={sortedResources()}>
                 {(resource) => (
                   <Card>
