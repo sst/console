@@ -47,7 +47,7 @@ export function Issues({ stack }: StackContext) {
           eventSource: {
             reportBatchItemFailures: true,
             bisectBatchOnError: true,
-            startingPosition: StartingPosition.TRIM_HORIZON,
+            startingPosition: StartingPosition.LATEST,
             parallelizationFactor: 10,
           },
         },
