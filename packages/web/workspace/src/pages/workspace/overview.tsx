@@ -589,7 +589,7 @@ function StageCard(props: StageCardProps) {
           </Tag>
         </Show>
         <Show when={props.stage.unsupported}>
-          <Tag style="outline">Update</Tag>
+          <Tag style="outline">Upgrade</Tag>
         </Show>
         <Tag style="outline">{props.stage.region}</Tag>
       </StageCardTags>
