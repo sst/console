@@ -323,7 +323,7 @@ function renderStacktraceFrameContext(
   );
   const offset = Math.max(1, start - 3);
   const active = Math.min(3, start - 1);
-  const maxIndexLength = offset + context.length - 1;
+  const maxIndexLength = (offset + context.length - 1).toString().length;
 
   function padStringToEnd(input: string, desiredLength: number) {
     const numberOfSpaces = desiredLength - input.length;
