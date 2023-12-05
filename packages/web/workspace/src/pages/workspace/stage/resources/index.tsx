@@ -263,6 +263,14 @@ function getUrl(url?: string, customDomainUrl?: string) {
   return customDomainUrl ? customDomainUrl : url ? url : undefined;
 }
 
+function getFunctionById(resources: Resource.Info[], id: string) {
+  return resources.find(
+    (r) =>
+      r.type === "Function" &&
+      (r.id === id || r.addr === id || r.metadata.arn === id)
+  ) as Extract<Resource.Info, { type: "Function" }> | undefined;
+}
+
 function resourcePriority(resource: Resource.Info) {
   switch (resource.type) {
     case "RemixSite":
@@ -409,9 +417,13 @@ export function Resources() {
   const sortedResources = createMemo(() => sortResources([...resources()]));
 
   const orphans = createMemo(() =>
-    [...functions().entries()]
-      .filter(([_, values]) => !values.length)
-      .map(([key]) => key)
+    sortBy(
+      [...functions().entries()]
+        .filter(([_, values]) => !values.length)
+        .map(([key]) => key),
+      (id) => (getFunctionById(resources(), id)?.enrichment?.size ? 0 : 1),
+      (id) => getFunctionById(resources(), id)?.metadata.handler || ""
+    )
   );
 
   const outputs = createMemo(() =>
@@ -1097,16 +1109,7 @@ function FunctionChild(props: {
   tagSize?: ComponentProps<typeof Tag>["size"];
 }) {
   const resources = useResourcesContext();
-  const fn = createMemo(
-    () =>
-      resources().find(
-        (r) =>
-          r.type === "Function" &&
-          (r.id === props.id ||
-            r.addr === props.id ||
-            r.metadata.arn === props.id)
-      ) as Extract<Resource.Info, { type: "Function" }> | undefined
-  );
+  const fn = createMemo(() => getFunctionById(resources(), props.id!));
   const runtime = createMemo(
     () => fn()?.metadata.runtime || fn()?.enrichment.runtime || ""
   );
