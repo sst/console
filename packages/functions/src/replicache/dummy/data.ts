@@ -404,6 +404,7 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
     deleted: true,
   });
 
+  yield* overviewSortApps();
   yield* overviewLongApps();
 
   yield app({ id: APP_ID, name: "my-sst-app" });
@@ -461,6 +462,31 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
       awsAccountID: ACCOUNT_ID_SYNCING_FULL,
     });
   }
+}
+
+function* overviewSortApps(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: "b-supported-b",
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield stage({
+    id: "b-supported-a",
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield stage({
+    id: "a-unsupported-b",
+    appID: APP_LOCAL,
+    unsupported: true,
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield stage({
+    id: "a-unsupported-a",
+    appID: APP_LOCAL,
+    unsupported: true,
+    awsAccountID: ACCOUNT_ID,
+  });
 }
 
 function* overviewLongApps(): Generator<DummyData, void, unknown> {
@@ -2099,8 +2125,15 @@ interface StageProps {
   appID: string;
   region?: string;
   awsAccountID: string;
+  unsupported?: boolean;
 }
-function stage({ id, appID, region, awsAccountID }: StageProps): DummyData {
+function stage({
+  id,
+  appID,
+  region,
+  unsupported,
+  awsAccountID,
+}: StageProps): DummyData {
   return {
     _type: "stage",
     id,
@@ -2109,7 +2142,7 @@ function stage({ id, appID, region, awsAccountID }: StageProps): DummyData {
     awsAccountID,
     timeDeleted: null,
     region: region || "us-east-1",
-    unsupported: false,
+    unsupported: unsupported || false,
     ...timestamps,
   };
 }

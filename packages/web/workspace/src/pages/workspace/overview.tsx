@@ -259,6 +259,7 @@ export function Overview() {
           c.name === local().stage
             ? 0
             : 1,
+        (c) => (c.unsupported ? 1 : 0),
         (c) => apps().find((app) => app.id === c.appID)?.name || "",
         (c) => c.name
       );
@@ -554,13 +555,25 @@ function StageCard(props: StageCardProps) {
           <IconApp />
         </StageIcon>
         <Row space="1" vertical="center">
-          <Text line size="base" weight="medium" leading="normal">
+          <Text
+            line
+            size="base"
+            weight="medium"
+            leading="normal"
+            color={props.stage.unsupported ? "dimmed" : "primary"}
+          >
             {app()?.name}
           </Text>
           <Text size="base" color="dimmed">
             /
           </Text>
-          <Text line size="base" weight="medium" leading="normal">
+          <Text
+            line
+            size="base"
+            weight="medium"
+            leading="normal"
+            color={props.stage.unsupported ? "dimmed" : "primary"}
+          >
             {props.stage.name}
           </Text>
         </Row>
@@ -576,7 +589,7 @@ function StageCard(props: StageCardProps) {
           </Tag>
         </Show>
         <Show when={props.stage.unsupported}>
-          <Tag style="outline">Unsupported</Tag>
+          <Tag style="outline">Update</Tag>
         </Show>
         <Tag style="outline">{props.stage.region}</Tag>
       </StageCardTags>
