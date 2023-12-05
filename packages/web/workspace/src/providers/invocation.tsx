@@ -19,6 +19,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
     bus.on("invocation", (invocations) => {
       setStore(
         produce((state) => {
+          const now = Date.now();
           for (const invocation of invocations) {
             let source = state[invocation.source];
             if (!source) state[invocation.source] = source = [];
@@ -55,6 +56,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
               }
             }
           }
+          console.log("invocations", Date.now() - now, invocations.length);
         })
       );
     });
