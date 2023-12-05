@@ -407,12 +407,7 @@ export function Resources() {
   const functions = useFunctionsContext();
   const outdated = useOutdated();
 
-  // Display resources from non-outdated stacks
-  const resourcesAll = useResourcesContext();
-  const resources = createMemo(() => {
-    const stackIDs = outdated().map((o) => o.stackID);
-    return resourcesAll().filter((r) => !stackIDs.includes(r.stackID));
-  });
+  const resources = useResourcesContext();
 
   const sortedResources = createMemo(() => sortResources([...resources()]));
 
@@ -1143,8 +1138,11 @@ function FunctionChild(props: {
               <Show
                 when={props.title}
                 fallback={
-                  new URL("https://example.com/" + exists().metadata.handler)
-                    .pathname
+                  exists().metadata.handler
+                    ? new URL(
+                        "https://example.com/" + exists().metadata.handler
+                      ).pathname
+                    : exists().cfnID
                 }
               >
                 {formatPath(props.title)}
