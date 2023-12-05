@@ -332,8 +332,11 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
     const stacks = resources.filter((x) => x.type === "Stack");
     const unsupported =
       stacks.length ===
-      stacks.filter((x) => parseVersion(x.enrichment.version) < MINIMUM_VERSION)
-        .length;
+      stacks.filter(
+        (x) =>
+          !x.enrichment.version ||
+          parseVersion(x.enrichment.version) < MINIMUM_VERSION
+      ).length;
 
     await tx
       .update(stage)
