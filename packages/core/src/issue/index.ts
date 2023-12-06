@@ -470,6 +470,20 @@ export const disableLogGroup = zod(
   }),
   async (input) => {
     console.log("disabling", input.logGroup);
+    const existing = await db
+      .select()
+      .from(issueSubscriber)
+      .where(
+        and(
+          eq(issueSubscriber.workspaceID, useWorkspace()),
+          eq(issueSubscriber.stageID, input.config.stageID),
+          eq(issueSubscriber.logGroup, input.logGroup)
+        )
+      );
+    if (!existing.length) {
+      console.log("no existing");
+      return;
+    }
     const cw = new CloudWatchLogsClient({
       region: input.config.region,
       credentials: input.config.credentials,
