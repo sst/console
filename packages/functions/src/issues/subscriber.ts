@@ -30,11 +30,15 @@ export const handler = Handler("kinesis_stream", (event) =>
       }, 1000 * 60);
       const { Records } = event;
       for (const record of Records) {
+        if (timeout) break;
         console.log(
           "arrival",
           new Date(
             record.kinesis.approximateArrivalTimestamp * 1000
-          ).toISOString()
+          ).toISOString(),
+          new Date().toISOString(),
+          "diff",
+          Date.now() - record.kinesis.approximateArrivalTimestamp * 1000
         );
         if (
           Date.now() - record.kinesis.approximateArrivalTimestamp * 1000 >
@@ -44,7 +48,6 @@ export const handler = Handler("kinesis_stream", (event) =>
           console.log("too old");
           continue;
         }
-        if (timeout) break;
         const decoded = JSON.parse(
           unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
         );
@@ -60,6 +63,7 @@ export const handler = Handler("kinesis_stream", (event) =>
         }
       }
 
+      console.log("incomplete", incomplete.length);
       const response = {
         batchItemFailures: incomplete.map((id) => ({
           itemIdentifier: id,

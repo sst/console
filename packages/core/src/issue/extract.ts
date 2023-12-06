@@ -32,7 +32,10 @@ export const extract = zod(
 
     const { logStream } = input;
     const [filter] = input.subscriptionFilters;
-    if (!filter) return;
+    if (!filter) {
+      console.log("filter missing");
+      return;
+    }
     console.log("filter", filter);
     const [_prefix, region, accountID, appName, stageName] = filter.split("#");
 
@@ -66,7 +69,10 @@ export const extract = zod(
       )
       .execute();
 
-    if (!workspaces.length) return;
+    if (!workspaces.length) {
+      console.log("no matching workspaces");
+      return;
+    }
 
     const count = await db
       .select({
@@ -222,6 +228,8 @@ export const extract = zod(
         return errors;
       }
     );
+
+    console.log("found", errors?.length || 0, "errors");
 
     if (!errors || errors.length === 0) {
       await db
