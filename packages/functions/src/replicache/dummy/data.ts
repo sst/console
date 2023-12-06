@@ -133,6 +133,7 @@ export function* generateData(
     yield* invocationErrorSimple();
     yield* invocationErrorMessageOverflow();
     yield* invocationFailSimple();
+    yield* invocationFailSimpleNoLog();
     yield* invocationFailMultiple();
     yield* invocationErrorStackTraceBase();
     yield* invocationFailMultipleWithStackTrace();
@@ -1909,6 +1910,23 @@ function* invocationFailSimple(): Generator<DummyData, void, unknown> {
         id: "1",
         error: "Error",
         message: "simple failure",
+        failed: true,
+        stack: [],
+      },
+    ],
+  });
+}
+
+function* invocationFailSimpleNoLog(): Generator<DummyData, void, unknown> {
+  yield globalInvocation({
+    duration: 306,
+    startTime: DateTime.now().minus({ day: 8 }).startOf("day"),
+    messages: [],
+    errors: [
+      {
+        id: "1",
+        error: "Error",
+        message: "simple failure no log",
         failed: true,
         stack: [],
       },

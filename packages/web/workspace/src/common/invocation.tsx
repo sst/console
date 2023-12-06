@@ -1,5 +1,5 @@
 import { ErrorList, ErrorItem } from "$/pages/workspace/stage/logs/error";
-import { Row, TabTitle, Tag, TextButton, theme, utility } from "$/ui";
+import { Row, Stack, TabTitle, Tag, TextButton, theme, utility } from "$/ui";
 import { IconBookmark, IconArrowPath } from "$/ui/icons";
 import { IconCaretRight } from "$/ui/icons/custom";
 import { inputFocusStyles } from "$/ui/form";
@@ -125,22 +125,16 @@ const DetailHeader = styled("div", {
   },
 });
 
-const Logs = styled("div", {
+const DetailContent = styled("div", {
   base: {
     borderRadius: theme.borderRadius,
-    padding: `0 ${theme.space[4]}`,
     backgroundColor: theme.color.background.surface,
   },
-  variants: {
-    error: {
-      true: {
-        padding: `0`,
-      },
-      false: {},
-    },
-  },
-  defaultVariants: {
-    error: false,
+});
+
+const DetailRow = styled("div", {
+  base: {
+    padding: `0 ${theme.space[4]}`,
   },
 });
 
@@ -285,7 +279,7 @@ export function InvocationRow(props: {
 }) {
   const [expanded, setExpanded] = createSignal(false);
   const [tab, setTab] = createSignal<
-    "logs" | "request" | "response" | "error" | "report"
+    "logs" | "request" | "response" | "report"
   >("logs");
 
   const shortDate = createMemo(() =>
@@ -360,15 +354,6 @@ export function InvocationRow(props: {
               >
                 Logs
               </TabTitle>
-              <Show when={props.invocation.errors.length}>
-                <TabTitle
-                  size="mono_sm"
-                  onClick={() => setTab("error")}
-                  state={tab() === "error" ? "active" : "inactive"}
-                >
-                  Error
-                </TabTitle>
-              </Show>
               <Show when={props.invocation.input || props.local}>
                 <TabTitle
                   size="mono_sm"
@@ -448,74 +433,111 @@ export function InvocationRow(props: {
               </Row>
             </Show>
           </DetailHeader>
-          <Logs error={tab() === "error"}>
-            <Switch>
-              <Match when={tab() === "error"}>
-                <ErrorList>
-                  <For each={props.invocation.errors}>
-                    {(error) => <ErrorItem error={error} />}
-                  </For>
-                </ErrorList>
-              </Match>
-              <Match when={tab() === "logs"}>
-                <Show when={props.invocation.logs.length === 0}>
-                  <Log>
-                    <LogMessage dimmed>
-                      Nothing was logged in this invocation
-                    </LogMessage>
-                  </Log>
-                </Show>
-                <For each={props.invocation.logs}>
-                  {(entry) => (
-                    <Log>
-                      <LogTime
-                        title={DateTime.fromMillis(entry.timestamp)
-                          .toUTC()
-                          .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}
-                      >
-                        {DateTime.fromMillis(entry.timestamp).toFormat(
-                          "HH:mm:ss.SSS"
+          <Switch>
+            <Match when={tab() === "logs"}>
+              <Stack space="1.5">
+                <DetailContent>
+                  <Show when={props.invocation.errors.length}>
+                    <ErrorList>
+                      <For each={props.invocation.errors}>
+                        {(error) => <ErrorItem error={error} />}
+                      </For>
+                    </ErrorList>
+                  </Show>
+                </DetailContent>
+                <DetailContent>
+                  <DetailRow>
+                    <Show
+                      when={props.invocation.logs.length > 0}
+                      fallback={
+                        <Log>
+                          <LogMessage dimmed>
+                            Nothing was logged in this invocation
+                          </LogMessage>
+                        </Log>
+                      }
+                    >
+                      <For each={props.invocation.logs}>
+                        {(entry) => (
+                          <Log>
+                            <LogTime
+                              title={DateTime.fromMillis(entry.timestamp)
+                                .toUTC()
+                                .toLocaleString(
+                                  DateTime.DATETIME_FULL_WITH_SECONDS
+                                )}
+                            >
+                              {DateTime.fromMillis(entry.timestamp).toFormat(
+                                "HH:mm:ss.SSS"
+                              )}
+                            </LogTime>
+                            <LogMessage>{entry.message}</LogMessage>
+                          </Log>
                         )}
-                      </LogTime>
-                      <LogMessage>{entry.message}</LogMessage>
-                    </Log>
-                  )}
-                </For>
-              </Match>
-              <Match when={tab() === "request"}>
-                <Log>
-                  <LogMessage>
-                    {JSON.stringify(props.invocation.input, null, 2)}
-                  </LogMessage>
-                </Log>
-              </Match>
-              <Match when={tab() === "response"}>
-                <Log>
-                  <LogMessage>
-                    {JSON.stringify(props.invocation.output, null, 2)}
-                  </LogMessage>
-                </Log>
-              </Match>
-              <Match when={tab() === "report"}>
-                <Show when={props.invocation.report?.init}>
+                      </For>
+                    </Show>
+                  </DetailRow>
+                </DetailContent>
+              </Stack>
+            </Match>
+            <Match when={tab() === "request"}>
+              <DetailContent>
+                <DetailRow>
                   <Log>
-                    <LogReportKey>Cold Start</LogReportKey>
                     <LogMessage>
-                      {formatDuration(props.invocation.report!.init!)}
+                      {JSON.stringify(props.invocation.input, null, 2)}
                     </LogMessage>
                   </Log>
-                </Show>
-                <Log>
-                  <LogReportKey>Duration</LogReportKey>
-                  <LogMessage>
-                    {formatDuration(props.invocation.report?.duration || 0)}
-                  </LogMessage>
-                </Log>
-                <Show when={props.invocation.report?.memory}>
+                </DetailRow>
+              </DetailContent>
+            </Match>
+            <Match when={tab() === "response"}>
+              <DetailContent>
+                <DetailRow>
                   <Log>
-                    <LogReportKey>Memory used</LogReportKey>
                     <LogMessage>
-                      <Show when={props.invocation.report?.memory}>
+                      {JSON.stringify(props.invocation.output, null, 2)}
+                    </LogMessage>
+                  </Log>
+                </DetailRow>
+              </DetailContent>
+            </Match>
+            <Match when={tab() === "report"}>
+              <DetailContent>
+                <DetailRow>
+                  <Show when={props.invocation.report?.init}>
+                    <Log>
+                      <LogReportKey>Cold Start</LogReportKey>
+                      <LogMessage>
+                        {formatDuration(props.invocation.report!.init!)}
+                      </LogMessage>
+                    </Log>
+                  </Show>
+                  <Log>
+                    <LogReportKey>Duration</LogReportKey>
+                    <LogMessage>
+                      {formatDuration(props.invocation.report?.duration || 0)}
+                    </LogMessage>
+                  </Log>
+                  <Show when={props.invocation.report?.memory}>
+                    <Log>
+                      <LogReportKey>Memory used</LogReportKey>
+                      <LogMessage>
+                        <Show when={props.invocation.report?.memory}>
+                          {(size) => {
+                            const formattedSize = formatBytes(
+                              size() * 1024 * 1024
+                            );
+                            return `${formattedSize.value}${formattedSize.unit}`;
+                          }}
+                        </Show>
+                      </LogMessage>
+                    </Log>
+                  </Show>
+                  <Log>
+                    <LogReportKey>Memory size</LogReportKey>
+                    <LogMessage>
+                      <Show when={props.invocation.report?.size}>
                         {(size) => {
                           const formattedSize = formatBytes(
                             size() * 1024 * 1024
@@ -525,27 +547,16 @@ export function InvocationRow(props: {
                       </Show>
                     </LogMessage>
                   </Log>
-                </Show>
-                <Log>
-                  <LogReportKey>Memory size</LogReportKey>
-                  <LogMessage>
-                    <Show when={props.invocation.report?.size}>
-                      {(size) => {
-                        const formattedSize = formatBytes(size() * 1024 * 1024);
-                        return `${formattedSize.value}${formattedSize.unit}`;
-                      }}
-                    </Show>
-                  </LogMessage>
-                </Log>
-                <Show when={props.invocation.report?.xray}>
-                  <Log>
-                    <LogReportKey>X-Ray ID</LogReportKey>
-                    <LogMessage>{props.invocation.report?.xray}</LogMessage>
-                  </Log>
-                </Show>
-              </Match>
-            </Switch>
-          </Logs>
+                  <Show when={props.invocation.report?.xray}>
+                    <Log>
+                      <LogReportKey>X-Ray ID</LogReportKey>
+                      <LogMessage>{props.invocation.report?.xray}</LogMessage>
+                    </Log>
+                  </Show>
+                </DetailRow>
+              </DetailContent>
+            </Match>
+          </Switch>
         </Detail>
       </Show>
     </Root>

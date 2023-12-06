@@ -442,7 +442,7 @@ export function List() {
                 <Stack space="1">
                   <WarningDetailsTitle>
                     These functions hit a soft limit for the number of Issues
-                    per hour; re-enable them. Or,{" "}
+                    per hour; you can re-enable them. Or,{" "}
                     <a href="mailto:help@sst.dev">
                       contact us to lift the limit.
                     </a>

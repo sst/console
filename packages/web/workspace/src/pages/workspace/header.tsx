@@ -84,6 +84,7 @@ const StageSwitcher = styled("button", {
 const StageSwitcherCopyMain = styled("span", {
   base: {
     ...utility.text.line,
+    lineHeight: "normal",
     fontSize: theme.font.size.lg,
     fontWeight: theme.font.weight.medium,
     color: theme.color.text.secondary.base,
@@ -93,6 +94,7 @@ const StageSwitcherCopyMain = styled("span", {
 const StageSwitcherCopySub = styled("span", {
   base: {
     ...utility.text.line,
+    lineHeight: "normal",
     color: theme.color.text.dimmed.base,
   },
 });
