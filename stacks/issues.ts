@@ -20,6 +20,8 @@ import { Storage } from "./storage";
 import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 import { StreamMode } from "aws-cdk-lib/aws-kinesis";
 import { DNS } from "./dns";
+import * as actions from "aws-cdk-lib/aws-cloudwatch-actions";
+import { Alerts } from "./alerts";
 
 export function Issues({ stack }: StackContext) {
   const secrets = use(Secrets);
@@ -59,6 +61,13 @@ export function Issues({ stack }: StackContext) {
       },
     },
   });
+  kinesisStream.cdk.stream
+    .metricGetRecordsIteratorAgeMilliseconds()
+    .createAlarm(stack, "issues-iterator-age", {
+      threshold: 1000 * 60,
+      evaluationPeriods: 3,
+    })
+    .addAlarmAction(new actions.SnsAction(use(Alerts)));
 
   const kinesisRole = new Role(stack, "issues-subscription", {
     assumedBy: new ServicePrincipal("logs.amazonaws.com"),

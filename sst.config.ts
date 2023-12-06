@@ -11,6 +11,7 @@ import { Secrets } from "./stacks/secrets";
 import { Connect } from "./stacks/connect";
 import { Realtime } from "./stacks/realtime";
 import { Storage } from "./stacks/storage";
+import { Alerts } from "./stacks/alerts";
 
 export default {
   config(input) {
@@ -31,6 +32,7 @@ export default {
     app
       .stack(DNS)
       .stack(Email)
+      .stack(Alerts)
       .stack(Storage)
       .stack(Secrets)
       .stack(Auth)
