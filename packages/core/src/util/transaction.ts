@@ -3,7 +3,7 @@ import {
   PlanetScalePreparedQueryHKT,
   PlanetscaleQueryResultHKT,
 } from "drizzle-orm/planetscale-serverless";
-import { Context } from "sst/context";
+import { Context } from "sst/context/context2.js";
 import { db } from "../drizzle";
 import { ExtractTablesWithRelations } from "drizzle-orm";
 
@@ -19,7 +19,7 @@ type TxOrDb = Transaction | typeof db;
 const TransactionContext = Context.create<{
   tx: TxOrDb;
   effects: (() => void | Promise<void>)[];
-}>();
+}>("TransactionContext");
 
 export async function useTransaction<T>(callback: (trx: TxOrDb) => Promise<T>) {
   try {
@@ -51,9 +51,12 @@ export async function createTransaction<T>(
     const effects: (() => void | Promise<void>)[] = [];
     const result = await db.transaction(
       async (tx) => {
-        TransactionContext.provide({ tx, effects });
-        const result = await callback(tx);
-        TransactionContext.reset();
+        const result = await TransactionContext.with(
+          { tx, effects },
+          async () => {
+            return callback(tx);
+          }
+        );
         return result;
       },
       {

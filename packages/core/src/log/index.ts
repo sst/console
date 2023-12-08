@@ -576,6 +576,11 @@ export function extractError(tabs: string[]): ParsedError | undefined {
       message: message,
       stack: stack
         .map((l) => l.trim())
+        .map((raw, index) => {
+          // Last line sometimes has extra content after the file+line number
+          if (index !== stack.length - 1) return raw;
+          return raw.split("{")[0]!.trimEnd();
+        })
         .map((raw) => ({
           raw,
         })),
