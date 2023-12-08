@@ -538,6 +538,10 @@ export function extractError(tabs: string[]): ParsedError | undefined {
         // logtail
         if (part.message && part.stack) {
           const [description, ...stack] = part.stack;
+          if (!description) {
+            console.error(new Error("unexpected part " + part));
+            continue;
+          }
           const [_, error, message] =
             description!.match(/([A-Z]\w+): (.+)$/s) ?? [];
           return {
