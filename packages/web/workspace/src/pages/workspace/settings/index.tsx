@@ -338,24 +338,28 @@ export function Settings() {
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE} horizontal="start" id="billing">
           <Stack space={PANEL_HEADER_SPACE}>
-            <Text size="lg" weight="medium">
-              Delete Workspace
+            <Text size="lg" weight="medium" color="danger">
+              Remove Workspace
             </Text>
-            <Text size="sm" color="dimmed">
-              Delete workspace, disconnect aws accounts and remove all data
+            <Text size="sm" color="danger">
+              Remove all your data and disconnect your AWS accounts
             </Text>
           </Stack>
           <Stack space="3.5" horizontal="start">
             <Button
               color="danger"
               onClick={async () => {
-                if (!confirm("Are you sure you want to delete this workspace?"))
+                if (
+                  !confirm(
+                    "Are you sure you want to remove this workspace? You cannot undo this."
+                  )
+                )
                   return;
                 await account().mutate.workspace_remove(workspace().id);
                 nav("/");
               }}
             >
-              Delete Workspace
+              Remove Workspace
             </Button>
           </Stack>
         </Stack>

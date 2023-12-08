@@ -297,9 +297,10 @@ export function Overview() {
                 when={account.timeDiscovered}
                 fallback="Rescanning account…"
               >
-                Rescan AWS account
+                Rescan account
               </Show>
             </Dropdown.Item>
+            <Dropdown.Seperator />
             <Dropdown.Item
               onSelect={() => {
                 if (!confirm("Are you sure you want to remove this account?"))
