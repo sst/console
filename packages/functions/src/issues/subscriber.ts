@@ -3,6 +3,7 @@ import { unzipSync } from "zlib";
 import { withActor } from "@console/core/actor";
 import { Handler } from "sst/context";
 import { KinesisStreamEvent, KinesisStreamBatchResponse } from "aws-lambda";
+import { queue } from "@console/core/util/queue";
 
 declare module "sst/context" {
   interface Handlers {
@@ -28,9 +29,8 @@ export const handler = Handler("kinesis_stream", (event) =>
       setTimeout(() => {
         timeout = true;
       }, 1000 * 60);
-      const { Records } = event;
-      for (const record of Records) {
-        if (timeout) break;
+      await queue(5, event.Records, async (record) => {
+        if (timeout) return;
         console.log(
           "arrival",
           new Date(
@@ -46,14 +46,14 @@ export const handler = Handler("kinesis_stream", (event) =>
         ) {
           incomplete.pop();
           console.log("too old");
-          continue;
+          return;
         }
         const decoded = JSON.parse(
           unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
         );
         if (decoded.messageType !== "DATA_MESSAGE") {
           incomplete.pop();
-          continue;
+          return;
         }
         try {
           await Issue.extract(decoded);
@@ -61,7 +61,7 @@ export const handler = Handler("kinesis_stream", (event) =>
         } catch (ex) {
           console.error(ex);
         }
-      }
+      });
 
       console.log("incomplete", incomplete.length);
       const response = {

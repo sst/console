@@ -1,5 +1,21 @@
 // Vitest Snapshot v1
 
+exports[`extra fields at end of stack trace 1`] = `
+{
+  "error": "HTTPError",
+  "failed": false,
+  "message": "Response code 401 (Unauthorized)",
+  "stack": [
+    {
+      "raw": "at Request2.<anonymous> (file:///var/task/src/foo.mjs:19386:37)",
+    },
+    {
+      "raw": "at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+    },
+  ],
+}
+`;
+
 exports[`node inline 1`] = `
 {
   "error": "DatabaseError",
@@ -34,13 +50,7 @@ exports[`node inline 1`] = `
       "raw": "at async createTransaction (file:///var/task/packages/functions/src/replicache/push1.mjs:55322:20)",
     },
     {
-      "raw": "at async file:///var/task/packages/functions/src/replicache/push1.mjs:76380:5 {
-  status: 400,
-  body: {
-    message: \`target: sst.-.primary: vttablet: rpc error: code = AlreadyExists desc = Duplicate entry 'foo' for key 'workspace.slug' (errno 1062) (sqlstate 23000) (CallerID: lq15hm6s0ctusshuarsx): Sql: \\"insert into workspace(id, time_created, time_updated, time_deleted, slug, stripe_customer_id, stripe_subscription_id, stripe_subscription_item_id) values (:vtg1 /* VARCHAR */, default, default, default, :vtg2 /* VARCHAR */, default, default, default)\\", BindVars: {REDACTED}\`,
-    code: 'UNKNOWN'
-  }
-}",
+      "raw": "at async file:///var/task/packages/functions/src/replicache/push1.mjs:76380:5",
     },
   ],
 }
@@ -111,62 +121,7 @@ exports[`node inline multiline 1`] = `
       "raw": "at processTicksAndRejections (node:internal/process/task_queues:96:5)",
     },
     {
-      "raw": "at async db.transaction.isolationLevel (file:///var/task/packages/functions/src/replicache/push1.mjs:55329:25) {
-  issues: [
-    {
-      code: 'too_small',
-      minimum: 1,
-      type: 'string',
-      inclusive: true,
-      exact: false,
-      message: 'String must contain at least 1 character(s)',
-      path: [Array]
-    },
-    {
-      code: 'too_small',
-      minimum: 3,
-      type: 'string',
-      inclusive: true,
-      exact: false,
-      message: 'String must contain at least 3 character(s)',
-      path: [Array]
-    },
-    {
-      validation: 'regex',
-      code: 'invalid_string',
-      message: 'Invalid',
-      path: [Array]
-    }
-  ],
-  addIssue: [Function (anonymous)],
-  addIssues: [Function (anonymous)],
-  errors: [
-    {
-      code: 'too_small',
-      minimum: 1,
-      type: 'string',
-      inclusive: true,
-      exact: false,
-      message: 'String must contain at least 1 character(s)',
-      path: [Array]
-    },
-    {
-      code: 'too_small',
-      minimum: 3,
-      type: 'string',
-      inclusive: true,
-      exact: false,
-      message: 'String must contain at least 3 character(s)',
-      path: [Array]
-    },
-    {
-      validation: 'regex',
-      code: 'invalid_string',
-      message: 'Invalid',
-      path: [Array]
-    }
-  ]
-}",
+      "raw": "at async db.transaction.isolationLevel (file:///var/task/packages/functions/src/replicache/push1.mjs:55329:25)",
     },
   ],
 }
@@ -412,9 +367,7 @@ exports[`node weird error 1`] = `
       "raw": "at async file:///var/task/src/apps/docs-server/[path+]/route.mjs:86991:26",
     },
     {
-      "raw": "at async Runtime.handler (file:///var/task/src/apps/docs-server/[path+]/route.mjs:86039:12) {
-  type: 'ResourceNotFound'
-}",
+      "raw": "at async Runtime.handler (file:///var/task/src/apps/docs-server/[path+]/route.mjs:86039:12)",
     },
   ],
 }
@@ -436,20 +389,7 @@ exports[`node with brackets 1`] = `
       "raw": "at async runMiddlewares (file:///var/task/packages/functions/user/editProfile.mjs:826148:17)",
     },
     {
-      "raw": "at async runRequest (file:///var/task/packages/functions/user/editProfile.mjs:826106:5) {
-  statusCode: 400,
-  status: 400,
-  expose: true,
-  [cause]: [
-    {
-      instancePath: '/body/username',
-      schemaPath: '#/properties/body/properties/username/pattern',
-      keyword: 'pattern',
-      params: [Object],
-      message: 'must match pattern \\"^[a-zA-Z][a-zA-Z0-9_-]{2,19}$\\"'
-    }
-  ]
-}",
+      "raw": "at async runRequest (file:///var/task/packages/functions/user/editProfile.mjs:826106:5)",
     },
   ],
 }
