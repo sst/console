@@ -538,7 +538,7 @@ export function extractError(tabs: string[]): ParsedError | undefined {
         // logtail
         if (part.message && part.stack) {
           const [description, ...stack] = part.stack;
-          if (!description) {
+          if (!description || !description.match) {
             console.error(new Error("unexpected part " + part));
             continue;
           }
