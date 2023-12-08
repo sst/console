@@ -48,6 +48,9 @@ const mutators = new Client<ServerType>()
       slug: input.slug,
     });
   })
+  .mutation("workspace_remove", async (tx, input) => {
+    await WorkspaceStore.remove(tx, input);
+  })
   .build();
 
 export function AuthProvider(props: ParentProps) {
@@ -77,6 +80,12 @@ export function AuthProvider(props: ParentProps) {
     const rep = new Replicache({
       name: token.accountID,
       auth: `Bearer ${token.token}`,
+      indexes: {
+        id: {
+          allowEmpty: true,
+          jsonPointer: "/id",
+        },
+      },
       licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
       pullURL:
         import.meta.env.VITE_API_URL +
@@ -113,6 +122,12 @@ export function useAuth() {
   const result = useContext(AuthContext);
   if (!result) throw new Error("useAuth must be used within a AuthProvider");
   return result;
+}
+
+export function useAccountReplicache() {
+  const auth = useAuth();
+  const storage = useStorage();
+  return () => auth[storage.value.account].replicache;
 }
 
 export function useCurrentUser() {

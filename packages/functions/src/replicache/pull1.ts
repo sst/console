@@ -241,10 +241,12 @@ export const handler = ApiHandler(
                 version: user.timeUpdated,
               })
               .from(user)
+              .innerJoin(workspace, eq(user.workspaceID, workspace.id))
               .where(
                 and(
                   eq(user.email, actor.properties.email),
-                  isNull(user.timeDeleted)
+                  isNull(user.timeDeleted),
+                  isNull(workspace.timeDeleted)
                 )
               )
               .execute(),
@@ -262,7 +264,8 @@ export const handler = ApiHandler(
             .where(
               and(
                 eq(user.email, actor.properties.email),
-                isNull(user.timeDeleted)
+                isNull(user.timeDeleted),
+                isNull(workspace.timeDeleted)
               )
             )
             .execute();

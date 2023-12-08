@@ -12,10 +12,11 @@ import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "../header";
 import { AppStore, SlackTeamStore, StripeStore } from "$/data/app";
-import { useAuth } from "$/providers/auth";
+import { useAccountReplicache, useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { Alerts } from "./alerts";
+import { useNavigate } from "@solidjs/router";
 
 const PANEL_CONTENT_SPACE = "10";
 const PANEL_HEADER_SPACE = "3";
@@ -185,6 +186,8 @@ export function Settings() {
   }
 
   const stripe = StripeStore.get.watch(rep, () => []);
+  const account = useAccountReplicache();
+  const nav = useNavigate();
 
   return (
     <>
@@ -332,6 +335,30 @@ export function Settings() {
         <Show when={flags.alerts}>
           <Integrations />
         </Show>
+        <Divider />
+        <Stack space={PANEL_CONTENT_SPACE} horizontal="start" id="billing">
+          <Stack space={PANEL_HEADER_SPACE}>
+            <Text size="lg" weight="medium">
+              Delete Workspace
+            </Text>
+            <Text size="sm" color="dimmed">
+              Delete workspace, disconnect aws accounts and remove all data
+            </Text>
+          </Stack>
+          <Stack space="3.5" horizontal="start">
+            <Button
+              color="danger"
+              onClick={async () => {
+                if (!confirm("Are you sure you want to delete this workspace?"))
+                  return;
+                await account().mutate.workspace_remove(workspace().id);
+                nav("/");
+              }}
+            >
+              Delete Workspace
+            </Button>
+          </Stack>
+        </Stack>
       </SettingsRoot>
     </>
   );

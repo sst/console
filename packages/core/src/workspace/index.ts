@@ -5,10 +5,12 @@ import { workspace } from "./workspace.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { event } from "../event";
 import { VisibleError } from "../util/error";
+import { assertActor } from "../actor";
+import { user } from "../user/user.sql";
 
 export const Events = {
   Created: event("workspace.created", {
@@ -61,6 +63,32 @@ export const create = zod(
       );
       return id;
     })
+);
+
+export const remove = zod(Info.shape.id, (input) =>
+  useTransaction(async (tx) => {
+    const account = assertActor("account");
+    const row = await tx
+      .select({
+        workspaceID: user.workspaceID,
+      })
+      .from(user)
+      .where(
+        and(
+          eq(user.workspaceID, input),
+          eq(user.email, account.properties.email)
+        )
+      )
+      .execute()
+      .then((rows) => rows.at(0));
+    if (!row) return;
+    await tx
+      .update(workspace)
+      .set({
+        timeDeleted: sql`now()`,
+      })
+      .where(eq(workspace.id, row.workspaceID));
+  })
 );
 
 export const list = zod(z.void(), () =>
