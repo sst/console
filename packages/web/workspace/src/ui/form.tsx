@@ -31,10 +31,8 @@ export const inputDisabledStyles: CSSProperties = {
 };
 
 export const inputFocusStyles: CSSProperties = {
-  boxShadow: `
-    0 0 1px 1px inset hsla(${theme.color.blue.d1}, 100%),
-    ${theme.color.input.shadow}
-  `,
+  outlineOffset: 0,
+  outline: `hsla(${theme.color.blue.d1}, 100%) solid 1px`,
 };
 
 export const inputDangerTextStyles: CSSProperties = {
@@ -43,6 +41,7 @@ export const inputDangerTextStyles: CSSProperties = {
 
 export const inputDangerFocusStyles: CSSProperties = {
   ...inputDangerTextStyles,
+  outlineColor: `hsla(${theme.color.red.l2}, 50%)`,
   boxShadow: `
     0 0 1px 1px inset hsla(${theme.color.red.l2}, 100%),
     ${theme.color.input.shadow}

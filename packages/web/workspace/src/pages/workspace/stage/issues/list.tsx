@@ -750,6 +750,7 @@ const IssueRoot = styled("label", {
     selectors: {
       "&[data-focus='true']": {
         ...inputFocusStyles,
+        outlineOffset: -1,
       },
     },
   },

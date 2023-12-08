@@ -49,6 +49,7 @@ const Root = styled("div", {
     selectors: {
       "&[data-focus]": {
         ...inputFocusStyles,
+        outlineOffset: -1,
       },
     },
   },
