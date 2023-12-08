@@ -98,6 +98,9 @@ const mutators = new Client<ServerType>()
       item.timeDiscovered = null;
     });
   })
+  .mutation("aws_account_remove", async (tx, input) => {
+    await AWS.AccountStore.remove(tx, input);
+  })
   .mutation("issue_alert_create", async (tx, input) => {
     await IssueAlertStore.put(tx, [input.id!], {
       id: input.id,

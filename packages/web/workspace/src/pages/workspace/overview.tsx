@@ -300,6 +300,15 @@ export function Overview() {
                 Rescan AWS account
               </Show>
             </Dropdown.Item>
+            <Dropdown.Item
+              onSelect={() => {
+                if (!confirm("Are you sure you want to remove this account?"))
+                  return;
+                rep().mutate.aws_account_remove(account.id);
+              }}
+            >
+              Remove account
+            </Dropdown.Item>
           </Dropdown>
         </CardHeader>
         <div>

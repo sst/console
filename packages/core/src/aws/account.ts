@@ -15,6 +15,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { Credentials } from ".";
 import {
   CloudFormationClient,
+  DeleteStackCommand,
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
 import {
@@ -560,6 +561,26 @@ export const integrate = zod(
     await Replicache.poke();
 
     console.log("done");
+  }
+);
+
+export const disintegrate = zod(
+  z.object({
+    awsAccountID: Info.shape.id,
+    credentials: z.custom<Credentials>(),
+  }),
+  async (input) => {
+    const client = new CloudFormationClient({
+      credentials: input.credentials,
+    });
+
+    try {
+      await client.send(
+        new DeleteStackCommand({ StackName: `SSTConsole-${useWorkspace()}` })
+      );
+    } finally {
+      client.destroy();
+    }
   }
 );
 
