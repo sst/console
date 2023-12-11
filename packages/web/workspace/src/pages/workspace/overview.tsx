@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { AppStore } from "$/data/app";
 import { UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
@@ -55,6 +56,31 @@ const OVERFLOW_USERS_DISPLAY = 5;
 const Root = styled("div", {
   base: {
     padding: theme.space[4],
+  },
+});
+
+const Announcement = styled("div", {
+  base: {
+    backgroundColor: theme.color.background.surface,
+    padding: theme.space[3],
+    textAlign: "center",
+  },
+});
+
+const AnnouncementTag = styled("span", {
+  base: {
+    ...utility.text.label,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.secondary.surface,
+  },
+});
+
+const AnnouncementLinkIcon = styled("span", {
+  base: {
+    top: 2,
+    paddingLeft: 1,
+    position: "relative",
+    opacity: theme.iconOpacity,
   },
 });
 
@@ -400,36 +426,27 @@ export function Overview() {
         </Match>
         <Match when={true}>
           <>
-            {/*
-            <Announcement>
-              <Text
-                code
-                uppercase
-                on="surface"
-                size="mono_sm"
-                weight="medium"
-                color="secondary"
-              >
-                New
-              </Text>
-              <Text size="sm" on="surface" color="dimmed">
-                {" "}
-                —{" "}
-              </Text>
-              <Text size="sm" on="surface" color="secondary">
-                View local logs from all your functions in one tab.{" "}
-                <a
-                  href="https://docs.sst.dev/advanced/console-updates#local-logs-tab"
-                  target="_blank"
-                >
-                  Learn more
-                  <AnnouncementLinkIcon>
-                    <IconChevronRight width="13" height="13" />
-                  </AnnouncementLinkIcon>
-                </a>
-              </Text>
-            </Announcement>
-            */}
+            <Show when={DateTime.now() < DateTime.fromISO("2023-12-18")}>
+              <Announcement>
+                <AnnouncementTag>New</AnnouncementTag>
+                <Text size="sm" on="surface" color="dimmed">
+                  {" "}
+                  —{" "}
+                </Text>
+                <Text size="sm" on="surface" color="secondary">
+                  Reorganize your accounts and remove old workspaces.{" "}
+                  <a
+                    href="https://docs.sst.dev/advanced/console-updates#remove-workspaces"
+                    target="_blank"
+                  >
+                    Learn more
+                    <AnnouncementLinkIcon>
+                      <IconChevronRight width="13" height="13" />
+                    </AnnouncementLinkIcon>
+                  </a>
+                </Text>
+              </Announcement>
+            </Show>
             <Root>
               <Stack space="4">
                 <Row space="5" vertical="center" horizontal="between">

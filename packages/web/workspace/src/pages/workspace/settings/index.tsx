@@ -351,7 +351,7 @@ export function Settings() {
               onClick={async () => {
                 if (
                   !confirm(
-                    "Are you sure you want to remove this workspace? You cannot undo this."
+                    "Are you sure you want to remove this workspace?\n\nYou cannot undo this."
                   )
                 )
                   return;

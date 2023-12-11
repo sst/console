@@ -1093,8 +1093,8 @@ export function RDSCard(props: CardProps<"RDS">) {
       />
       <Children>
         <FunctionChild
-          id={props.resource.metadata.migrator?.node}
           tag="Migrator"
+          id={props.resource.metadata.migrator?.node}
         />
       </Children>
     </>

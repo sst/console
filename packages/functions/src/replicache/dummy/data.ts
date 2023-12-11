@@ -1061,21 +1061,31 @@ function* stageBase(): Generator<DummyData, void, unknown> {
       customDomainUrl: "ws://api.sst.dev",
       httpApiId: "someapi",
     },
-  }),
-    yield resource({
-      type: "RDS",
-      id: "my-rds",
-      stage: STAGE,
-      metadata: {
-        engine: "postgresql11.13",
-        secretArn: "arn",
-        clusterArn: "arn",
-        clusterIdentifier: "jayair-console-my-rds",
-        defaultDatabaseName: "acme",
-        types: undefined,
-        migrator: undefined,
-      },
-    });
+  });
+  yield resource({
+    type: "RDS",
+    id: "my-rds",
+    stage: STAGE,
+    metadata: {
+      engine: "postgresql11.13",
+      secretArn: "arn",
+      clusterArn: "arn",
+      clusterIdentifier: "jayair-console-my-rds",
+      defaultDatabaseName: "acme",
+      types: undefined,
+      migrator: ref("index", STACK),
+    },
+  });
+  yield resource({
+    type: "Script",
+    id: "my-script",
+    stage: STAGE,
+    metadata: {
+      createfn: ref("index", STACK),
+      deletefn: ref("index", STACK),
+      updatefn: ref("index", STACK),
+    },
+  });
 }
 
 function* stageEmpty(): Generator<DummyData, void, unknown> {
