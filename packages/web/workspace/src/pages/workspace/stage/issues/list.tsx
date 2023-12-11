@@ -494,7 +494,7 @@ export function List() {
                             const logInfo = createMemo(() =>
                               getLogInfo(resources(), item.target)
                             );
-                            return `${logInfo()?.name} (${reason})`;
+                            return `${logInfo()?.name}: ${reason}`;
                           }
                         })
                         .filter(Boolean)}
