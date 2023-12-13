@@ -35,6 +35,7 @@ interface InviteEmailProps {
   workspace: string;
   assetsUrl: string;
   consoleUrl: string;
+  inviterEmail: string;
 }
 export const InviteEmail = ({
   workspace = "seed",
