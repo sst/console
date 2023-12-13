@@ -18,7 +18,7 @@ import {
   HrProps as JEHrProps,
   TextProps as JETextProps,
 } from "@jsx-email/all";
-import { Hr, Text, Fonts, SplitString } from "../components";
+import { Hr, Text, Fonts, SurfaceHr, SplitString } from "../components";
 import {
   unit,
   GREY_COLOR,
