@@ -8,8 +8,17 @@ import { createId } from "@paralleldrive/cuid2";
 import { useReplicache } from "$/providers/replicache";
 import { useNavigate } from "@solidjs/router";
 import { Header } from "./header";
+import {
+  FormError,
+  createForm,
+  setError,
+  submit,
+  valiForm,
+} from "@modular-forms/solid";
+import { object, string, email, toLowerCase } from "valibot";
+import { UserStore } from "$/data/user";
 
-const Form = styled("form", {
+const FieldList = styled("form", {
   base: {
     width: 320,
     ...utility.stack(5),
@@ -20,6 +29,15 @@ export function User() {
   const workspace = useWorkspace();
   const rep = useReplicache();
   const nav = useNavigate();
+  const [form, { Form, Field }] = createForm({
+    validate: valiForm(
+      object({
+        email: string(),
+      })
+    ),
+    validateOn: "input",
+  });
+  const users = UserStore.list.watch(rep, () => []);
   return (
     <>
       <Header />
@@ -35,28 +53,44 @@ export function User() {
             </Text>
           </Stack>
           <Form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
+            onSubmit={async (data) => {
+              if (users().some((u) => u.email === data.email)) {
+                setError(form, "email", "User already invited.");
+                return;
+              }
               const id = createId();
-              const email = fd.get("email") as string;
               await rep().mutate.user_create({
                 id,
-                email,
+                email: data.email,
               });
               nav(`/${workspace()?.slug}`);
             }}
           >
-            <FormField>
-              <Input
-                type="email"
-                ref={(r) => setTimeout(() => r?.focus())}
-                autofocus
-                name="email"
-                placeholder="user@example.com"
-              />
-            </FormField>
-            <Button type="submit">Send Invite</Button>
+            <FieldList>
+              <Field name="email">
+                {(field, props) => (
+                  <FormField
+                    hint={field.error}
+                    color={field.error ? "danger" : "primary"}
+                  >
+                    <Input
+                      {...props}
+                      autofocus
+                      placeholder="user@example.com"
+                    />
+                  </FormField>
+                )}
+              </Field>
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  submit(form);
+                }}
+                type="submit"
+              >
+                Send Invite
+              </Button>
+            </FieldList>
           </Form>
         </Stack>
       </Fullscreen>

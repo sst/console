@@ -13,16 +13,10 @@ import {
   AvatarInitialsIcon,
 } from "$/ui";
 import { styled } from "@macaron-css/solid";
-import {
-  FormError,
-  createForm,
-  getValue,
-  setError,
-  valiForm,
-} from "@modular-forms/solid";
+import { createForm, getValue, setError, valiForm } from "@modular-forms/solid";
 import { createId } from "@paralleldrive/cuid2";
 import { useNavigate } from "@solidjs/router";
-import { Show, createEffect, createMemo, createSignal } from "solid-js";
+import { Show, createEffect, createMemo } from "solid-js";
 import { minLength, object, string, regex } from "valibot";
 import { Header } from "./workspace/header";
 import { unwrap } from "solid-js/store";
