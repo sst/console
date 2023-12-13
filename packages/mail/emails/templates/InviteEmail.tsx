@@ -26,38 +26,32 @@ import {
   breadcrumb,
   compactText,
   buttonPrimary,
-  breadcrumbSeparator,
   breadcrumbColonSeparator,
 } from "../styles";
 
 const LOCAL_ASSETS_URL = "/static";
 
-interface IssueRateLimitEmailProps {
-  app: string;
-  stage: string;
+interface InviteEmailProps {
   workspace: string;
-  subject: string;
-  message: string;
   assetsUrl: string;
   consoleUrl: string;
 }
-export const IssueRateLimitEmail = ({
-  app = "console",
+export const InviteEmail = ({
   workspace = "seed",
-  stage = "production",
-  subject = "Issues temporarily disabled",
-  message = "Some of your functions hit a soft limit for the number of issues per hour. You can re-enable them or contact us to lift the limit.",
   assetsUrl = LOCAL_ASSETS_URL,
   consoleUrl = "https://console.sst.dev",
-}: IssueRateLimitEmailProps) => {
-  const url = `${consoleUrl}/${workspace}/${app}/${stage}/issues`;
+  inviterEmail = "patrick@bikinibottom.com",
+}: InviteEmailProps) => {
+  const subject = `Join the ${workspace} workspace`;
+  const messagePlain = `You've been invited by ${inviterEmail} to join the ${workspace} workspace in the SST Console.`;
+  const url = `${consoleUrl}/${workspace}`;
   return (
     <Html lang="en">
       <Head>
-        <title>{`SST — ${message}`}</title>
+        <title>{`SST — ${messagePlain}`}</title>
       </Head>
       <Fonts assetsUrl={assetsUrl} />
-      <Preview>{message}</Preview>
+      <Preview>{messagePlain}</Preview>
       <Body style={body} id={Math.random().toString()}>
         <Container style={container}>
           <Section style={frame}>
@@ -73,7 +67,7 @@ export const IssueRateLimitEmail = ({
               </Column>
               <Column align="right">
                 <Button style={buttonPrimary} href={url}>
-                  <span style={code}>Enable Issues</span>
+                  <span style={code}>Join Workspace</span>
                 </Button>
               </Column>
             </Row>
@@ -86,13 +80,9 @@ export const IssueRateLimitEmail = ({
 
             <Section>
               <Text style={{ ...compactText, ...breadcrumb }}>
-                <span>{workspace}</span>
+                <span>SST</span>
                 <span style={{ ...code, ...breadcrumbColonSeparator }}>:</span>
-                <span>{app}</span>
-                <span style={{ ...code, ...breadcrumbSeparator }}>
-                  &nbsp;/&nbsp;
-                </span>
-                <span>{stage}</span>
+                <span>{workspace}</span>
               </Text>
               <Text style={{ ...heading, ...compactText }}>
                 <Link style={code} href={url}>
@@ -102,7 +92,15 @@ export const IssueRateLimitEmail = ({
             </Section>
             <Section style={{ padding: `${unit}px 0 0 0` }}>
               <Text style={{ ...compactText, ...code }}>
-                <SplitString text={message} split={63} />
+                You've been invited by {inviterEmail} to join the{" "}
+                <Link style={code} href={url}>
+                  {workspace}
+                </Link>{" "}
+                workspace in the{" "}
+                <Link style={code} href={consoleUrl}>
+                  SST Console
+                </Link>
+                .
               </Text>
             </Section>
 
@@ -119,11 +117,8 @@ export const IssueRateLimitEmail = ({
                 </Link>
               </Column>
               <Column align="right">
-                <Link
-                  style={footerLink}
-                  href={`${consoleUrl}/${workspace}/settings#alerts`}
-                >
-                  Settings
+                <Link style={footerLink} href="https://docs.sst.dev/console">
+                  About
                 </Link>
               </Column>
             </Row>
@@ -134,4 +129,4 @@ export const IssueRateLimitEmail = ({
   );
 };
 
-export default IssueRateLimitEmail;
+export default InviteEmail;

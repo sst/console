@@ -373,7 +373,7 @@ export const triggerRateLimit = zod(
       const workspaceID = useWorkspace();
       const workspace = await Workspace.fromID(workspaceID);
       const message =
-        "You hit a soft limit for Issues. You can re-enable it or contact us to have the limit lifted.";
+        "Some of your functions hit a soft limit for the number of issues per hour. You can re-enable them or contact us to lift the limit.";
 
       if (destination.type === "slack") {
         const link = `https://console.sst.dev/${workspace!.slug}/${input.app}/${

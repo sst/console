@@ -441,8 +441,8 @@ export function List() {
               <Show when={rateWarnings().length > 0}>
                 <Stack space="1">
                   <WarningDetailsTitle>
-                    These functions hit a soft limit for the number of Issues
-                    per hour; you can re-enable them. Or,{" "}
+                    These functions hit a soft limit for the number of issues
+                    per hour. You can re-enable them, or{" "}
                     <a href="mailto:help@sst.dev">
                       contact us to lift the limit.
                     </a>

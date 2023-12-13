@@ -18,109 +18,37 @@ import {
   HrProps as JEHrProps,
   TextProps as JETextProps,
 } from "@jsx-email/all";
+import { Hr, Text, Fonts, SplitString } from "../components";
+import {
+  unit,
+  GREY_COLOR,
+  BLUE_COLOR,
+  TEXT_COLOR,
+  SECONDARY_COLOR,
+  DIMMED_COLOR,
+  DIVIDER_COLOR,
+  BACKGROUND_COLOR,
+  SURFACE_COLOR,
+  SURFACE_DIVIDER_COLOR,
+  body,
+  container,
+  frame,
+  textColor,
+  code,
+  headingHr,
+  buttonPrimary,
+  compactText,
+  breadcrumb,
+  breadcrumbSeparator,
+  breadcrumbColonSeparator,
+  heading,
+  sectionLabel,
+  footerLink,
+} from "../styles";
 
 import type { Issue } from "../../../core/src/issue";
 
 const LOCAL_ASSETS_URL = "/static";
-
-const unit = 16;
-
-const GREY_COLOR = [
-  "#1A1A2E", //0
-  "#2F2F41", //1
-  "#444454", //2
-  "#585867", //3
-  "#6D6D7A", //4
-  "#82828D", //5
-  "#9797A0", //6
-  "#ACACB3", //7
-  "#C1C1C6", //8
-  "#D5D5D9", //9
-  "#EAEAEC", //10
-  "#FFFFFF", //11
-];
-
-const BLUE_COLOR = "#395C6B";
-const TEXT_COLOR = GREY_COLOR[0];
-const SECONDARY_COLOR = GREY_COLOR[5];
-const DIMMED_COLOR = GREY_COLOR[7];
-const DIVIDER_COLOR = GREY_COLOR[10];
-const BACKGROUND_COLOR = "#F0F0F1";
-const SURFACE_COLOR = DIVIDER_COLOR;
-const SURFACE_DIVIDER_COLOR = GREY_COLOR[9];
-
-const body = {
-  background: BACKGROUND_COLOR,
-};
-
-const container = {
-  minWidth: "600px",
-};
-
-const frame = {
-  padding: `${unit * 1.5}px`,
-  border: `1px solid ${SURFACE_DIVIDER_COLOR}`,
-  background: "#FFF",
-  borderRadius: "6px",
-  boxShadow: `0 1px 2px rgba(0,0,0,0.03),
-              0 2px 4px rgba(0,0,0,0.03),
-              0 2px 6px rgba(0,0,0,0.03)`,
-};
-
-const textColor = {
-  color: TEXT_COLOR,
-};
-
-const code = {
-  fontFamily: "IBM Plex Mono, monospace",
-};
-
-const headingHr = {
-  margin: `${unit}px 0`,
-};
-
-const buttonPrimary = {
-  ...code,
-  padding: "12px 18px",
-  color: "#FFF",
-  borderRadius: "4px",
-  background: BLUE_COLOR,
-  fontSize: "12px",
-  fontWeight: 500,
-};
-
-const compactText = {
-  margin: "0 0 2px",
-};
-
-const issueBreadcrumb = {
-  fontSize: "14px",
-  color: SECONDARY_COLOR,
-};
-
-const issueWorkspaceSeparator = {
-  padding: " 0 4px",
-  color: DIMMED_COLOR,
-};
-
-const issueBreadcrumbSeparator = {
-  color: DIVIDER_COLOR,
-};
-
-const issueHeading = {
-  ...code,
-  fontSize: "22px",
-  fontWeight: 600,
-};
-
-const sectionLabel = {
-  ...code,
-  ...compactText,
-  letterSpacing: "0.5px",
-  fontSize: "13px",
-  fontWeight: 500,
-  color: DIMMED_COLOR,
-};
 
 const stacktraceContainer = {
   padding: `${unit * 0.75}px ${unit}px`,
@@ -155,10 +83,6 @@ const stacktraceFrameContextImportant = {
   fontWeight: 500,
 };
 
-const footerLink = {
-  fontSize: "14px",
-};
-
 function countLeadingSpaces(str: string) {
   let count = 0;
   for (let char of str) {
@@ -171,103 +95,6 @@ function countLeadingSpaces(str: string) {
     }
   }
   return count;
-}
-
-function Text(props: JETextProps) {
-  return <JEText {...props} style={{ ...textColor, ...props.style }} />;
-}
-
-function Hr(props: JEHrProps) {
-  return (
-    <JEHr
-      {...props}
-      style={{ borderTop: `1px solid ${DIVIDER_COLOR}`, ...props.style }}
-    />
-  );
-}
-
-function SurfaceHr(props: JEHrProps) {
-  return (
-    <JEHr
-      {...props}
-      style={{
-        borderTop: `1px solid ${SURFACE_DIVIDER_COLOR}`,
-        ...props.style,
-      }}
-    />
-  );
-}
-
-function Fonts({ assetsUrl }: { assetsUrl: string }) {
-  return (
-    <>
-      <Font
-        fontFamily="IBM Plex Mono"
-        fallbackFontFamily="monospace"
-        webFont={{
-          url: `${assetsUrl}/ibm-plex-mono-latin-400.woff2`,
-          format: "woff2",
-        }}
-        fontWeight="400"
-        fontStyle="normal"
-      />
-      <Font
-        fontFamily="IBM Plex Mono"
-        fallbackFontFamily="monospace"
-        webFont={{
-          url: `${assetsUrl}/ibm-plex-mono-latin-500.woff2`,
-          format: "woff2",
-        }}
-        fontWeight="500"
-        fontStyle="normal"
-      />
-      <Font
-        fontFamily="IBM Plex Mono"
-        fallbackFontFamily="monospace"
-        webFont={{
-          url: `${assetsUrl}/ibm-plex-mono-latin-600.woff2`,
-          format: "woff2",
-        }}
-        fontWeight="600"
-        fontStyle="normal"
-      />
-      <Font
-        fontFamily="IBM Plex Mono"
-        fallbackFontFamily="monospace"
-        webFont={{
-          url: `${assetsUrl}/ibm-plex-mono-latin-700.woff2`,
-          format: "woff2",
-        }}
-        fontWeight="700"
-        fontStyle="normal"
-      />
-      <Font
-        fontFamily="Rubik"
-        fallbackFontFamily={["Helvetica", "Arial", "sans-serif"]}
-        webFont={{
-          url: `${assetsUrl}/rubik-latin.woff2`,
-          format: "woff2",
-        }}
-        fontWeight="400 500 600 700"
-        fontStyle="normal"
-      />
-    </>
-  );
-}
-
-function SplitString({ text, split }: { text: string; split: number }) {
-  const segments: JSX.Element[] = [];
-  for (let i = 0; i < text.length; i += split) {
-    segments.push(
-      <React.Fragment key={`${i}text`}>
-        {text.slice(i, i + split)}
-      </React.Fragment>
-    );
-    if (i + split < text.length) {
-      segments.push(<wbr key={`${i}wbr`} />);
-    }
-  }
-  return <>{segments}</>;
 }
 
 // @ts-expect-error
@@ -487,16 +314,16 @@ export const IssueEmail = ({
             </Row>
 
             <Section>
-              <Text style={{ ...compactText, ...issueBreadcrumb }}>
+              <Text style={{ ...compactText, ...breadcrumb }}>
                 <span>{workspace}</span>
-                <span style={{ ...code, ...issueWorkspaceSeparator }}>:</span>
+                <span style={{ ...code, ...breadcrumbColonSeparator }}>:</span>
                 <span>{app}</span>
-                <span style={{ ...code, ...issueBreadcrumbSeparator }}>
+                <span style={{ ...code, ...breadcrumbSeparator }}>
                   &nbsp;/&nbsp;
                 </span>
                 <span>{stage}</span>
               </Text>
-              <Text style={{ ...issueHeading, ...compactText }}>
+              <Text style={{ ...heading, ...compactText }}>
                 <Link style={code} href={url}>
                   <SplitString text={issue.error} split={40} />
                 </Link>
