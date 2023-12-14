@@ -178,6 +178,10 @@ export function Detail() {
     ).then((x) => x.json());
   });
 
+  createEffect(() => {
+    console.log(issue());
+  });
+
   const invocation = createMemo(
     () => issue()?.invocation || invocations.forSource(issue()?.id).at(0)
   );
