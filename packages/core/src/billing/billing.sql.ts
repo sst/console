@@ -6,6 +6,7 @@ import {
   mysqlEnum,
   bigint,
   varchar,
+  timestamp,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid } from "../util/sql";
 
@@ -36,6 +37,7 @@ export const stripe = mysqlTable(
       length: 255,
     }),
     standing: mysqlEnum("standing", ["good", "overdue"]),
+    timeTrialEnded: timestamp("time_trial_ended", { mode: "string" }),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),

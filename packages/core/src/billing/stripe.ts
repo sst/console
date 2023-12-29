@@ -93,6 +93,18 @@ export const setStanding = zod(
     )
 );
 
+export const grantTrial = zod(z.string().nonempty(), (timeTrialEnded) =>
+  useTransaction((tx) =>
+    tx
+      .update(stripe)
+      .set({
+        timeTrialEnded: timeTrialEnded,
+      })
+      .where(eq(stripe.workspaceID, useWorkspace()))
+      .execute()
+  )
+);
+
 export const removeSubscription = zod(
   z.string().nonempty(),
   (stripeSubscriptionID) =>

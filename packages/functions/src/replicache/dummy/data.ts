@@ -2166,6 +2166,7 @@ function stripe({ standing }: StripeProps): DummyData {
     standing: standing || "good",
     subscriptionItemID: "sub_item_123",
     timeDeleted: null,
+    timeTrialEnded: null,
     ...timestamps,
   };
 }

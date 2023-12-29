@@ -74,12 +74,17 @@ export const updateGatingStatus = zod(z.void(), async () => {
     const subscriptionStatus = customer?.standing;
     if (subscriptionStatus === "overdue") return true;
 
+    console.log({
+      ended: customer?.timeTrialEnded,
+      now: DateTime.now().toSQL(),
+    });
     if (
-      ["vn5ubp6sxv52de6cso8kb015", "tviez52nfa0b6aerfw9wh597"].includes(
-        customer?.workspaceID || ""
-      )
-    )
+      customer?.timeTrialEnded &&
+      customer.timeTrialEnded > DateTime.now().toSQL()!
+    ) {
+      console.log("Trial STILL ON!!!");
       return false;
+    }
 
     const warnings = await Warning.forType({
       type: "permission_usage",
