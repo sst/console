@@ -123,7 +123,6 @@ export function findUser(workspaceID: string, email: string) {
 }
 
 export const sendEmailInvite = zod(Info.shape.id, async (id) => {
-  const subject = "Issues temporarily disabled";
   const data = await db
     .select({
       workspace: workspace.slug,
@@ -134,6 +133,7 @@ export const sendEmailInvite = zod(Info.shape.id, async (id) => {
     .where(and(eq(user.id, id), eq(user.workspaceID, useWorkspace())))
     .then((rows) => rows[0]);
   if (!data) return;
+  const subject = `Join ${data.workspace} on SST`;
   const html = render(
     InviteEmail({
       assetsUrl: `https://console.sst.dev/email`,
