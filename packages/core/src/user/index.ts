@@ -8,7 +8,7 @@ import { db } from "../drizzle";
 import { and, eq, sql } from "drizzle-orm";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { user } from "./user.sql";
-import { assertActor, useWorkspace } from "../actor";
+import { useWorkspace } from "../actor";
 import { event } from "../event";
 import { render } from "@jsx-email/render";
 import { InviteEmail } from "@console/mail/emails/templates/InviteEmail";
@@ -68,7 +68,7 @@ export const create = zod(
         .where(
           and(eq(user.email, input.email), eq(user.workspaceID, useWorkspace()))
         )
-        .then((rows) => rows[0].id);
+        .then((rows) => rows[0]!.id);
       await createTransactionEffect(() =>
         Events.UserCreated.publish({ userID: id })
       );
@@ -133,7 +133,7 @@ export const sendEmailInvite = zod(Info.shape.id, async (id) => {
     .innerJoin(workspace, eq(workspace.id, user.workspaceID))
     .where(and(eq(user.id, id), eq(user.workspaceID, useWorkspace())))
     .then((rows) => rows[0]);
-
+  if (!data) return;
   const html = render(
     InviteEmail({
       assetsUrl: `https://console.sst.dev/email`,
