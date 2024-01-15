@@ -8,6 +8,7 @@ export default defineConfig({
   plugins: [inspect(), macaronVitePlugin(), solidPlugin() as any],
   server: {
     port: 3000,
+    host: "0.0.0.0",
   },
   optimizeDeps: {
     esbuildOptions: {

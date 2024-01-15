@@ -54,7 +54,9 @@ export function User() {
           </Stack>
           <Form
             onSubmit={async (data) => {
-              if (users().some((u) => u.email === data.email)) {
+              if (
+                users().some((u) => !u.timeDeleted && u.email === data.email)
+              ) {
                 setError(form, "email", "User already invited.");
                 return;
               }

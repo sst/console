@@ -1,6 +1,7 @@
 import { EventBus, StackContext, use } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Storage } from "./storage";
+import { DNS } from "./dns";
 
 export function Events({ stack }: StackContext) {
   const bus = new EventBus(stack, "bus", {
@@ -74,6 +75,15 @@ export function Events({ stack }: StackContext) {
     permissions: ["sts", "iot"],
     environment: {
       EVENT_BUS_ARN: bus.eventBusArn,
+    },
+  });
+
+  bus.subscribe("user.created", {
+    handler: "packages/functions/src/events/user-created.handler",
+    permissions: ["ses"],
+    bind: [...Object.values(secrets.database)],
+    environment: {
+      EMAIL_DOMAIN: use(DNS).domain,
     },
   });
 

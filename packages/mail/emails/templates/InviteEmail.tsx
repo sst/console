@@ -35,16 +35,14 @@ interface InviteEmailProps {
   workspace: string;
   assetsUrl: string;
   consoleUrl: string;
-  inviterEmail: string;
 }
 export const InviteEmail = ({
   workspace = "seed",
   assetsUrl = LOCAL_ASSETS_URL,
   consoleUrl = "https://console.sst.dev",
-  inviterEmail = "patrick@bikinibottom.com",
 }: InviteEmailProps) => {
   const subject = `Join the ${workspace} workspace`;
-  const messagePlain = `You've been invited by ${inviterEmail} to join the ${workspace} workspace in the SST Console.`;
+  const messagePlain = `You've been invited to join the ${workspace} workspace in the SST Console.`;
   const url = `${consoleUrl}/${workspace}`;
   return (
     <Html lang="en">
@@ -93,7 +91,7 @@ export const InviteEmail = ({
             </Section>
             <Section style={{ padding: `${unit}px 0 0 0` }}>
               <Text style={{ ...compactText, ...code }}>
-                You've been invited by {inviterEmail} to join the{" "}
+                You've been invited to join the{" "}
                 <Link style={code} href={url}>
                   {workspace}
                 </Link>{" "}

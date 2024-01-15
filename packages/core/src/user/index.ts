@@ -6,9 +6,16 @@ import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "../drizzle";
 import { and, eq, sql } from "drizzle-orm";
-import { useTransaction } from "../util/transaction";
+import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { user } from "./user.sql";
 import { assertActor, useWorkspace } from "../actor";
+import { event } from "../event";
+import { render } from "@jsx-email/render";
+import { InviteEmail } from "@console/mail/emails/templates/InviteEmail";
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import { workspace } from "../workspace/workspace.sql";
+
+const ses = new SESv2Client({});
 
 export const Info = createSelectSchema(user, {
   id: (schema) => schema.id.cuid2(),
@@ -16,6 +23,12 @@ export const Info = createSelectSchema(user, {
   workspaceID: (schema) => schema.workspaceID.cuid2(),
 });
 export type Info = z.infer<typeof Info>;
+
+export const Events = {
+  UserCreated: event("user.created", {
+    userID: z.string().cuid2(),
+  }),
+};
 
 export function list() {
   return useTransaction((tx) =>
@@ -33,11 +46,10 @@ export const create = zod(
     }),
   (input) =>
     useTransaction(async (tx) => {
-      const id = input.id ?? createId();
       await tx
         .insert(user)
         .values({
-          id,
+          id: input.id ?? createId(),
           email: input.email,
           workspaceID: useWorkspace(),
           timeSeen: input.first ? sql`CURRENT_TIMESTAMP()` : null,
@@ -48,6 +60,18 @@ export const create = zod(
           },
         })
         .execute();
+      const id = await tx
+        .select({
+          id: user.id,
+        })
+        .from(user)
+        .where(
+          and(eq(user.email, input.email), eq(user.workspaceID, useWorkspace()))
+        )
+        .then((rows) => rows[0].id);
+      await createTransactionEffect(() =>
+        Events.UserCreated.publish({ userID: id })
+      );
       return id;
     })
 );
@@ -97,3 +121,52 @@ export function findUser(workspaceID: string, email: string) {
       .then((rows) => rows[0]);
   });
 }
+
+export const sendEmailInvite = zod(Info.shape.id, async (id) => {
+  const subject = "Issues temporarily disabled";
+  const data = await db
+    .select({
+      workspace: workspace.slug,
+      email: user.email,
+    })
+    .from(user)
+    .innerJoin(workspace, eq(workspace.id, user.workspaceID))
+    .where(and(eq(user.id, id), eq(user.workspaceID, useWorkspace())))
+    .then((rows) => rows[0]);
+
+  const html = render(
+    InviteEmail({
+      assetsUrl: `https://console.sst.dev/email`,
+      workspace: data.workspace,
+      consoleUrl: `https://console.sst.dev`,
+    })
+  );
+  try {
+    await ses.send(
+      new SendEmailCommand({
+        Destination: {
+          ToAddresses: [data.email],
+        },
+        ReplyToAddresses: [`invite@${process.env.EMAIL_DOMAIN}`],
+        FromEmailAddress: `SST <invite@${process.env.EMAIL_DOMAIN}>`,
+        Content: {
+          Simple: {
+            Body: {
+              Html: {
+                Data: html,
+              },
+              Text: {
+                Data: html,
+              },
+            },
+            Subject: {
+              Data: subject,
+            },
+          },
+        },
+      })
+    );
+  } catch (ex) {
+    console.error(ex);
+  }
+});
