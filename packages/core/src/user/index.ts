@@ -8,7 +8,7 @@ import { db } from "../drizzle";
 import { and, eq, sql } from "drizzle-orm";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { user } from "./user.sql";
-import { useWorkspace } from "../actor";
+import { useActor, useWorkspace } from "../actor";
 import { event } from "../event";
 import { render } from "@jsx-email/render";
 import { InviteEmail } from "@console/mail/emails/templates/InviteEmail";
@@ -123,6 +123,8 @@ export function findUser(workspaceID: string, email: string) {
 }
 
 export const sendEmailInvite = zod(Info.shape.id, async (id) => {
+  const actor = useActor();
+  if (actor.type !== "user") return;
   const data = await db
     .select({
       workspace: workspace.slug,
