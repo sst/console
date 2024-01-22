@@ -27,19 +27,31 @@ import { Replicache } from "../replicache";
 export * as Stage from "./stage";
 
 export const Events = {
-  Connected: event("app.stage.connected", {
-    stageID: z.string().nonempty(),
-  }),
-  Updated: event("app.stage.updated", {
-    stageID: z.string().nonempty(),
-  }),
-  ResourcesUpdated: event("app.stage.resources_updated", {
-    stageID: z.string().nonempty(),
-  }),
-  UsageRequested: event("app.stage.usage_requested", {
-    stageID: z.string().nonempty(),
-    daysOffset: z.number().int().min(1),
-  }),
+  Connected: event(
+    "app.stage.connected",
+    z.object({
+      stageID: z.string().nonempty(),
+    })
+  ),
+  Updated: event(
+    "app.stage.updated",
+    z.object({
+      stageID: z.string().nonempty(),
+    })
+  ),
+  ResourcesUpdated: event(
+    "app.stage.resources_updated",
+    z.object({
+      stageID: z.string().nonempty(),
+    })
+  ),
+  UsageRequested: event(
+    "app.stage.usage_requested",
+    z.object({
+      stageID: z.string().nonempty(),
+      daysOffset: z.number().int().min(1),
+    })
+  ),
 };
 
 export const Info = createSelectSchema(stage, {

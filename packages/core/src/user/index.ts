@@ -25,9 +25,12 @@ export const Info = createSelectSchema(user, {
 export type Info = z.infer<typeof Info>;
 
 export const Events = {
-  UserCreated: event("user.created", {
-    userID: z.string().cuid2(),
-  }),
+  UserCreated: event(
+    "user.created",
+    z.object({
+      userID: z.string().cuid2(),
+    })
+  ),
 };
 
 export function list() {

@@ -21,8 +21,8 @@ importers:
         specifier: 10.3.0
         version: 10.3.0
       sst:
-        specifier: 2.37.0
-        version: 2.37.0(@types/react@18.0.25)
+        specifier: 2.39.7
+        version: 2.39.7(@types/react@18.0.25)
       turbo:
         specifier: ^1.10.13
         version: 1.10.13
@@ -151,8 +151,8 @@ importers:
         specifier: 0.20.6
         version: 0.20.6
       sst:
-        specifier: 2.37.0
-        version: 2.37.0(@types/react@18.0.25)
+        specifier: 2.39.7
+        version: 2.39.7(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -233,8 +233,8 @@ importers:
         specifier: ^18.16.0
         version: 18.17.15
       sst:
-        specifier: 2.37.0
-        version: 2.37.0(@types/react@18.0.25)
+        specifier: 2.39.7
+        version: 2.39.7(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -272,8 +272,8 @@ importers:
         specifier: ^3.3.0
         version: 3.4.3
       sst:
-        specifier: 2.37.0
-        version: 2.37.0(@types/react@18.0.25)
+        specifier: 2.39.7
+        version: 2.39.7(@types/react@18.0.25)
       tsx:
         specifier: ^3.12.7
         version: 3.12.8
@@ -367,8 +367,8 @@ importers:
         specifier: ^1.3.0
         version: 1.4.3(vite@3.2.7)
       sst:
-        specifier: 2.37.0
-        version: 2.37.0(@types/react@18.0.25)
+        specifier: 2.39.7
+        version: 2.39.7(@types/react@18.0.25)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -13368,8 +13368,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /sst@2.37.0(@types/react@18.0.25):
-    resolution: {integrity: sha512-dAR2vum4T+tRqkSxRqKkEAelp7vOef4+YZABTCQbYymJ2KROxjq/X9L/RF1FEGFB8cWwnK3ZXhsHba1xReDO+A==}
+  /sst@2.39.7(@types/react@18.0.25):
+    resolution: {integrity: sha512-cJ/AbVXuWBC9Lawbk9WUobejjsrZknfKIKEvbnwQaiJ0vLJ4VjR/NMj1X5Oh1JJeeLnRLrRIL3Al2BKuzuIQbw==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

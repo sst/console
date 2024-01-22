@@ -3,11 +3,10 @@ import { withActor } from "@console/core/actor";
 import { Issue } from "@console/core/issue";
 import { createId } from "@console/core/util/sql";
 import { Handler } from "sst/context";
-import { EventHandler, EventPayload } from "sst/node/event-bus";
+import { EventHandler } from "sst/node/event-bus";
 import { Queue } from "sst/node/queue";
 
 const sqs = new SQSClient({});
-
 export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
   withActor(event.metadata.actor, async () => {
     console.log(
@@ -32,8 +31,7 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
 export const queue = Handler("sqs", async (event) => {
   console.log("got", event.Records.length, "records");
   for (const record of event.Records) {
-    const evt: EventPayload<(typeof Issue)["Events"]["IssueDetected"]> =
-      JSON.parse(record.body);
+    const evt = JSON.parse(record.body);
     await withActor(evt.metadata.actor, async () => {
       await Issue.Alert.triggerIssue(evt.properties);
     });

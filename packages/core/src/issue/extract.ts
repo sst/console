@@ -17,10 +17,9 @@ import {
 } from "../util/transaction";
 import { zod } from "../util/zod";
 import { issueCount, issue } from "./issue.sql";
-import { warning } from "../warning/warning.sql";
 
 export const extract = zod(
-  z.custom<(typeof Events.ErrorDetected.shape.properties)["records"][number]>(),
+  z.custom<(typeof Events.ErrorDetected.$output.records)[number]>(),
   async (input) => {
     // do not process self
     if (

@@ -42,33 +42,45 @@ export type Count = typeof issueCount.$inferSelect;
 export { Alert } from "./alert";
 
 export const Events = {
-  ErrorDetected: event("issue.error_detected", {
-    records: z
-      .object({
-        logGroup: z.string(),
-        logStream: z.string(),
-        subscriptionFilters: z.string().array(),
-        logEvents: z
-          .object({
-            id: z.string(),
-            timestamp: z.number(),
-            message: z.string(),
-          })
-          .array(),
-      })
-      .array(),
-  }),
-  RateLimited: event("issue.rate_limited", {
-    stageID: z.string(),
-    logGroup: z.string(),
-  }),
-  IssueDetected: event("issue.detected", {
-    stageID: z.string(),
-    group: z.string(),
-  }),
-  SubscribeRequested: event("issue.subscribe_requested", {
-    stageID: z.string(),
-  }),
+  ErrorDetected: event(
+    "issue.error_detected",
+    z.object({
+      records: z
+        .object({
+          logGroup: z.string(),
+          logStream: z.string(),
+          subscriptionFilters: z.string().array(),
+          logEvents: z
+            .object({
+              id: z.string(),
+              timestamp: z.number(),
+              message: z.string(),
+            })
+            .array(),
+        })
+        .array(),
+    })
+  ),
+  RateLimited: event(
+    "issue.rate_limited",
+    z.object({
+      stageID: z.string(),
+      logGroup: z.string(),
+    })
+  ),
+  IssueDetected: event(
+    "issue.detected",
+    z.object({
+      stageID: z.string(),
+      group: z.string(),
+    })
+  ),
+  SubscribeRequested: event(
+    "issue.subscribe_requested",
+    z.object({
+      stageID: z.string(),
+    })
+  ),
 };
 
 export const ignore = zod(Info.shape.id.array(), async (input) =>

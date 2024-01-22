@@ -18,9 +18,12 @@ import { useWorkspace } from "../actor";
 import { RETRY_STRATEGY } from "../util/aws";
 
 export const Events = {
-  Updated: event("app.resource.updated", {
-    resourceID: z.string().nonempty(),
-  }),
+  Updated: event(
+    "app.resource.updated",
+    z.object({
+      resourceID: z.string().nonempty(),
+    })
+  ),
 };
 
 type Model = InferModel<typeof resource>;

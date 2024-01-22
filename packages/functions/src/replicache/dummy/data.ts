@@ -797,6 +797,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
     id: "nextjs-site",
     stage: STAGE,
     metadata: {
+      prefetchSecrets: false,
       routes: {
         logGroupPrefix: "",
         data: [
@@ -837,6 +838,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
     id: "nextjs-site-combined-logging",
     stage: STAGE,
     metadata: {
+      prefetchSecrets: false,
       customDomainUrl: "https://nextjs-site.com",
       routes: undefined,
       server: FUNC_ARN_NEXTJS,
@@ -853,6 +855,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
     id: "nextjs-site-local",
     stage: STAGE,
     metadata: {
+      prefetchSecrets: false,
       routes: undefined,
       customDomainUrl: undefined,
       server: FUNC_ARN_NEXTJS,
@@ -869,6 +872,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
     id: "svelte-site",
     stage: STAGE,
     metadata: {
+      prefetchSecrets: false,
       customDomainUrl: "https://svelte-site.com",
       server: "arn:aws:lambda:us-east-1:123456789012:function:my-func",
       path: "packages/svelte-site",
@@ -884,6 +888,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
     id: "remix-site",
     stage: STAGE,
     metadata: {
+      prefetchSecrets: false,
       customDomainUrl: "https://remix-site.com",
       server: FUNC_ARN_SSR,
       path: "packages/remix-site",
@@ -899,6 +904,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
     id: "astro-site",
     stage: STAGE,
     metadata: {
+      prefetchSecrets: false,
       customDomainUrl: "https://astro-site.com",
       server: FUNC_ARN_SSR,
       path: "packages/astro-site",
@@ -914,6 +920,7 @@ function* stageBase(): Generator<DummyData, void, unknown> {
     id: "solid-site",
     stage: STAGE,
     metadata: {
+      prefetchSecrets: false,
       customDomainUrl: "https://solid-site.com",
       server: FUNC_ARN_SSR,
       path: "packages/solid-site",
@@ -2220,6 +2227,7 @@ function func({
     stage,
     type: "Function",
     metadata: {
+      prefetchSecrets: false,
       handler,
       localId: id,
       secrets: [],

@@ -13,9 +13,12 @@ import { assertActor } from "../actor";
 import { user } from "../user/user.sql";
 
 export const Events = {
-  Created: event("workspace.created", {
-    workspaceID: z.string().nonempty(),
-  }),
+  Created: event(
+    "workspace.created",
+    z.object({
+      workspaceID: z.string().nonempty(),
+    })
+  ),
 };
 
 export class WorkspaceExistsError extends VisibleError {

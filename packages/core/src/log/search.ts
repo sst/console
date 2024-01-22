@@ -16,9 +16,12 @@ export const Info = createSelectSchema(log_search, {
 export type Info = z.infer<typeof Info>;
 
 export const Events = {
-  Created: event("log.search.created", {
-    id: z.string().cuid2(),
-  }),
+  Created: event(
+    "log.search.created",
+    z.object({
+      id: z.string().cuid2(),
+    })
+  ),
 };
 
 export const fromID = zod(Info.shape.id, (id) =>

@@ -47,12 +47,18 @@ export const Info = createSelectSchema(awsAccount, {
 export type Info = z.infer<typeof Info>;
 
 export const Events = {
-  Created: event("aws.account.created", {
-    awsAccountID: z.string().cuid2(),
-  }),
-  Removed: event("aws.account.removed", {
-    awsAccountID: z.string().cuid2(),
-  }),
+  Created: event(
+    "aws.account.created",
+    z.object({
+      awsAccountID: z.string().cuid2(),
+    })
+  ),
+  Removed: event(
+    "aws.account.removed",
+    z.object({
+      awsAccountID: z.string().cuid2(),
+    })
+  ),
 };
 
 export const create = zod(
