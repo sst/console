@@ -288,6 +288,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         .checkpoint.latest;
       const stackID = checkpoint.resources[0].urn;
       const metadata = checkpoint.resources[0].outputs._metadata || {};
+      if (!stackID) continue;
 
       for (const res of checkpoint.resources) {
         console.log(res);
