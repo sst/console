@@ -23,6 +23,7 @@ import { Enrichers, Resource } from "./resource";
 import { db } from "../drizzle";
 import { event } from "../event";
 import { Replicache } from "../replicache";
+import { Pulumi } from "../pulumi";
 
 export * as Stage from "./stage";
 
@@ -191,7 +192,16 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
   ]).then((x) => x.flatMap((x) => (x ? [x] : [])));
   console.log("bootstrap", bootstrap);
   if (!bootstrap.length) return;
-  const resources = [] as any[];
+  const resources = [] as {
+    [key in Resource.Info["type"]]: {
+      type: key;
+      id: string;
+      stackID: string;
+      addr: string;
+      data: Resource.InfoByType<key>["metadata"];
+      enrichment: Resource.InfoByType<key>["enrichment"];
+    };
+  }[Resource.Info["type"]][];
   let missing = true;
   const s3 = new S3Client(input);
   for (const b of bootstrap) {
@@ -288,53 +298,105 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         .checkpoint.latest;
       if (!checkpoint) continue;
       const stackID = checkpoint.resources[0].urn;
-      const metadata = checkpoint.resources[0].outputs._metadata || {};
       if (!stackID) continue;
 
       for (const res of checkpoint.resources) {
-        console.log(res);
-        const base: Record<string, any> = {
-          id: res.urn,
+        console.log(JSON.stringify(res, null, 4));
+        const base = {
+          id: Pulumi.nameFromURN(res.urn),
           addr: res.urn,
           stackID,
           data: {},
         };
-        if (res.type === "pulumi:pulumi:Stack") {
-          base.type = "Stack";
-          base.data = {};
-          base.enrichment = {
-            outputs: Object.entries(res.outputs)
-              .filter(([key]) => !key.startsWith("_"))
-              .map(([key, value]) => ({
-                OutputKey: key,
-                OutputValue: value,
-              })),
-            version: "3.0.0",
-          };
+
+        if (res.type === "pulumi:pulumi:Stack" && res.outputs) {
+          resources.push({
+            ...base,
+            type: "Stack",
+            data: {},
+            enrichment: {
+              outputs: Object.entries(res.outputs)
+                .filter(([key]) => !key.startsWith("_"))
+                .map(([key, value]) => ({
+                  OutputKey: key,
+                  OutputValue: value as string,
+                })),
+              version: "3.0.0",
+            },
+          });
         }
 
-        if (res.type === "aws:lambda/function:Function") {
-          type Resource = Resource.InfoByType<"Function">;
-          base.type = "Function";
-          base.data = {
-            runtime: res.outputs.runtime,
-            arn: res.outputs.arn,
-            handler: metadata[res.parent]?.handler,
-            localId: res.outputs.environment?.variables?.SST_FUNCTION_ID,
-            secrets: [],
-            missingSourcemap: undefined,
-            prefetchSecrets: undefined,
-          } satisfies Resource["metadata"];
-          base.enrichment = {
-            runtime: res.outputs.runtime,
-            size: res.outputs.sourceCodeSize,
-            live: res.outputs.environment?.variables?.SST_FUNCTION_ID != null,
-          } satisfies Resource["enrichment"];
+        if (res.type === "sst:aws:Function") {
+          const child = checkpoint.resources.find(
+            (child: any) =>
+              child.parent === res.urn &&
+              child.type === "aws:lambda/function:Function"
+          );
+          if (!child) continue;
+          resources.push({
+            ...base,
+            type: "Function",
+            data: {
+              runtime: child.outputs.runtime,
+              arn: child.outputs.arn,
+              handler: res.outputs._metadata.handler,
+              localId: child.outputs.environment?.variables?.SST_FUNCTION_ID,
+              secrets: [],
+              missingSourcemap: undefined,
+              prefetchSecrets: undefined,
+            },
+            enrichment: {
+              runtime: child.outputs.runtime,
+              size: child.outputs.sourceCodeSize,
+              live:
+                child.outputs.environment?.variables?.SST_FUNCTION_ID != null,
+            },
+          });
         }
 
-        if (base.type) {
-          console.log("transformed", base);
-          resources.push(base);
+        if (res.type === "sst:aws:Bucket") {
+          const child = checkpoint.resources.find(
+            (child: any) =>
+              child.parent === res.urn &&
+              child.type === "aws:s3/bucketV2:BucketV2"
+          );
+          if (!child) continue;
+          resources.push({
+            ...base,
+            type: "Bucket",
+            data: {
+              name: child.outputs.bucket,
+              notifications: [],
+              notificationNames: [],
+            },
+            enrichment: {},
+          });
+        }
+
+        if (res.type === "sst:aws:Cron") {
+          const fn = checkpoint.resources.find(
+            (child: any) =>
+              child.parent === res.urn && child.type === "sst:aws:Function"
+          );
+          const rule = checkpoint.resources.find(
+            (child: any) =>
+              child.parent === res.urn &&
+              child.type === "aws:cloudwatch/eventRule:EventRule"
+          );
+
+          resources.push({
+            ...base,
+            type: "Cron",
+            data: {
+              job: {
+                node: fn.urn,
+                stack: stackID,
+              },
+              schedule: rule.outputs.scheduleExpression,
+              ruleName: rule.outputs.name,
+            },
+            enrichment: {},
+          });
         }
       }
       missing = false;
