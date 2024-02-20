@@ -11,7 +11,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
 import { awsAccount } from "../aws/aws.sql";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { AWS, Credentials } from "../aws";
+import { AWS } from "../aws";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
@@ -461,7 +461,9 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
       stacks.length ===
       stacks.filter(
         (x) =>
+          // @ts-ignore
           !x.enrichment.version ||
+          // @ts-ignore
           parseVersion(x.enrichment.version) < MINIMUM_VERSION
       ).length;
 
