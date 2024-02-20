@@ -7,6 +7,7 @@ import {
   Wait,
   WaitTime,
 } from "aws-cdk-lib/aws-stepfunctions";
+import { Function as CDKFunction } from "aws-cdk-lib/aws-lambda";
 import * as events from "aws-cdk-lib/aws-events";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { StackContext, Api, use, Function, EventBus } from "sst/constructs";

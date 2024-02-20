@@ -1,5 +1,4 @@
 export * as Realtime from ".";
-import { IoTClient } from "@aws-sdk/client-iot";
 import {
   IoTDataPlaneClient,
   PublishCommand,

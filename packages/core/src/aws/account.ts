@@ -227,10 +227,14 @@ export const bootstrapIon = zod(
         )
         .catch(() => {});
       if (!param?.Parameter?.Value) return;
+      console.log("found ion bucket", param.Parameter.Value);
+      const parsed = JSON.parse(param.Parameter.Value);
       return {
-        bucket: param.Parameter.Value,
+        bucket: parsed.state,
         version: "ion" as const,
       };
+    } catch {
+      return;
     } finally {
       ssm.destroy();
     }
@@ -470,7 +474,7 @@ export const integrate = zod(
               ) || []
             );
 
-            console.log("found", distinct);
+            console.log("found", b.version, distinct);
             for (const item of distinct) {
               const [, appHint, stageHint] = item.split("/") || [];
               if (!appHint || !stageHint) continue;
@@ -492,7 +496,7 @@ export const integrate = zod(
           if (b.version === "ion") {
             const list = await s3.send(
               new ListObjectsV2Command({
-                Prefix: ".pulumi/stacks/",
+                Prefix: "app/",
                 Bucket: b.bucket,
                 ContinuationToken: token,
               })
@@ -506,6 +510,7 @@ export const integrate = zod(
               const appName = splits.at(-2);
               const stageName = splits.at(-1)?.split(".").at(0);
               if (!appName || !stageName) continue;
+              console.log("found", b.version, appName, stageName);
               existing[appName]?.delete(stageName);
               stages.push({
                 app: appName!,

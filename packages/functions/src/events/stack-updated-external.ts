@@ -35,11 +35,22 @@ export const handler = async (evt: Payload) => {
     evt["detail-type"] === "Object Created" ||
     evt["detail-type"] === "Object Deleted"
   ) {
-    if (!evt.detail.object.key.startsWith("stackMetadata")) return;
+    if (
+      !evt.detail.object.key.startsWith("stackMetadata") &&
+      !evt.detail.object.key.startsWith("app")
+    ) {
+      console.log("skipping", evt.detail.object.key);
+      return;
+    }
     const [, appHint, stageHint] = evt.detail.object.key.split("/");
+    console.log({ appHint, stageHint });
     if (!stageHint || !appHint) return;
-    let [, stageName] = stageHint?.split(".");
-    const [, appName] = appHint?.split(".");
+    let stageName = stageHint.endsWith(".json")
+      ? stageHint.split(".")[0]
+      : stageHint?.split(".").at(-1);
+    const appName = appHint.includes(".")
+      ? appHint?.split(".").at(-1)
+      : appHint;
     console.log("processing", appName, stageName);
     const { account, region } = evt;
 

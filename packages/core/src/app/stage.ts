@@ -19,7 +19,7 @@ import {
   NoSuchKey,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { Enrichers } from "./resource";
+import { Enrichers, Resource } from "./resource";
 import { db } from "../drizzle";
 import { event } from "../event";
 import { Replicache } from "../replicache";
@@ -269,12 +269,12 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
     }
 
     if (b.version === "ion") {
-      console.log(`.pulumi/stacks/${input.app}/${input.stage}.json`);
+      console.log(`app/${input.app}/${input.stage}.json`);
       const result = await s3
         .send(
           new GetObjectCommand({
             Bucket: b.bucket,
-            Key: `.pulumi/stacks/${input.app}/${input.stage}.json`,
+            Key: `app/${input.app}/${input.stage}.json`,
           })
         )
         .catch((err) => {
@@ -284,11 +284,62 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           throw err;
         });
       if (!result) continue;
-      console.log(JSON.parse(await result.Body?.transformToString()!));
+      const checkpoint = JSON.parse(await result.Body?.transformToString()!)
+        .checkpoint.latest;
+      const stackID = checkpoint.resources[0].urn;
+      const metadata = checkpoint.resources[0].outputs._metadata || {};
+
+      for (const res of checkpoint.resources) {
+        console.log(res);
+        const base: Record<string, any> = {
+          id: res.urn,
+          addr: res.urn,
+          stackID,
+          data: {},
+        };
+        if (res.type === "pulumi:pulumi:Stack") {
+          base.type = "Stack";
+          base.data = {};
+          base.enrichment = {
+            outputs: Object.entries(res.outputs)
+              .filter(([key]) => !key.startsWith("_"))
+              .map(([key, value]) => ({
+                OutputKey: key,
+                OutputValue: value,
+              })),
+            version: "3.0.0",
+          };
+        }
+
+        if (res.type === "aws:lambda/function:Function") {
+          type Resource = Resource.InfoByType<"Function">;
+          base.type = "Function";
+          base.data = {
+            runtime: res.outputs.runtime,
+            arn: res.outputs.arn,
+            handler: metadata[res.parent]?.handler,
+            localId: res.outputs.environment?.variables?.SST_FUNCTION_ID,
+            secrets: [],
+            missingSourcemap: undefined,
+            prefetchSecrets: undefined,
+          } satisfies Resource["metadata"];
+          base.enrichment = {
+            runtime: res.outputs.runtime,
+            size: res.outputs.sourceCodeSize,
+            live: res.outputs.environment?.variables?.SST_FUNCTION_ID != null,
+          } satisfies Resource["enrichment"];
+        }
+
+        if (base.type) {
+          console.log("transformed", base);
+          resources.push(base);
+        }
+      }
       missing = false;
     }
   }
   s3.destroy();
+  console.log("resources", JSON.stringify(resources, null, 4));
 
   return createTransaction(async (tx) => {
     if (missing) {
