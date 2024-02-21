@@ -415,6 +415,7 @@ export function Logs() {
     if (import.meta.env.DEV) {
       if (dummy()) return dummyInvocations();
     }
+    console.log("invocation source", logGroupKey());
     const result = invocationsContext.forSource(logGroupKey()) || [];
     if (mode() === "tail" || mode() === "live") return result.slice().reverse();
     return result;

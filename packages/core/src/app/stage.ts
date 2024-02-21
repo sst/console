@@ -339,7 +339,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
               runtime: child.outputs.runtime,
               arn: child.outputs.arn,
               handler: res.outputs._metadata.handler,
-              localId: child.outputs.environment?.variables?.SST_FUNCTION_ID,
+              localId: base.addr,
               secrets: [],
               missingSourcemap: undefined,
               prefetchSecrets: undefined,
