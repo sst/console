@@ -1,6 +1,7 @@
 import {
   bigint,
   char,
+  index,
   int,
   json,
   mysqlTable,
@@ -23,17 +24,23 @@ export const replicache_client_group = mysqlTable(
   })
 );
 
-export const replicache_client = mysqlTable("replicache_client", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
-  mutationID: bigint("mutation_id", {
-    mode: "number",
+export const replicache_client = mysqlTable(
+  "replicache_client",
+  {
+    id: char("id", { length: 36 }).notNull().primaryKey(),
+    mutationID: bigint("mutation_id", {
+      mode: "number",
+    })
+      .default(0)
+      .notNull(),
+    ...timestamps,
+    clientGroupID: char("client_group_id", { length: 36 }).notNull(),
+    clientVersion: int("client_version").notNull(),
+  },
+  (table) => ({
+    clientGroupID: index("client_group_id").on(table.clientGroupID),
   })
-    .default(0)
-    .notNull(),
-  ...timestamps,
-  clientGroupID: char("client_group_id", { length: 36 }).notNull(),
-  clientVersion: int("client_version").notNull(),
-});
+);
 
 export const replicache_cvr = mysqlTable(
   "replicache_cvr",

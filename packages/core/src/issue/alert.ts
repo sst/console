@@ -309,6 +309,7 @@ export const triggerIssue = zod(
           "sending email to",
           users.map((u) => u.email)
         );
+        if (!users.length) continue;
         try {
           await ses.send(
             new SendEmailCommand({
