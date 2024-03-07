@@ -10,6 +10,7 @@ export function Billing({ stack }: StackContext) {
     cdk: {
       queue: {
         fifo: true,
+        visibilityTimeout: Duration.seconds(180),
       },
     },
     consumer: {
@@ -22,6 +23,7 @@ export function Billing({ stack }: StackContext) {
         handler: "packages/functions/src/events/fetch-usage.handler",
         bind: [...Object.values(secrets.database), ...secrets.stripe, bus],
         permissions: ["sts", "iot"],
+        timeout: "3 minutes",
       },
     },
   });
