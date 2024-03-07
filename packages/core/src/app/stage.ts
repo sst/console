@@ -228,52 +228,51 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         continue;
       }
       console.log("found", list.Contents?.length, "stacks");
-      const results = await Promise.all(
-        list.Contents?.map(async (obj) => {
-          const stackID = obj.Key?.split("/").pop()!.split(".")[1];
-          const result = await s3
-            .send(
-              new GetObjectCommand({
-                Key: obj.Key!,
-                Bucket: b.bucket,
-              })
-            )
-            .catch((err) => {
-              if (err instanceof NoSuchKey) {
-                return;
-              }
-              throw err;
-            });
-          if (!result) return [];
-          const body = await result
-            .Body!.transformToString()
-            .then((x) => JSON.parse(x));
-          const r = [];
-          body.push({
-            type: "Stack",
-            id: stackID,
-            addr: stackID,
-            data: {},
+      const results: any[] = [];
+      for (const obj of list.Contents) {
+        const stackID = obj.Key?.split("/").pop()!.split(".")[1];
+        const result = await s3
+          .send(
+            new GetObjectCommand({
+              Key: obj.Key!,
+              Bucket: b.bucket,
+            })
+          )
+          .catch((err) => {
+            if (err instanceof NoSuchKey) {
+              return;
+            }
+            throw err;
           });
-          for (let res of body) {
-            const { type } = res;
-            const enrichment =
-              type in Enrichers
-                ? await Enrichers[type as keyof typeof Enrichers](
-                    res,
-                    input.credentials,
-                    input.region
-                  ).catch(() => ({}))
-                : {};
-            r.push({
-              ...res,
-              stackID,
-              enrichment,
-            });
-          }
-          return r;
-        }) || []
-      ).then((x) => x.flat());
+        if (!result) continue;
+        const body = await result
+          .Body!.transformToString()
+          .then((x) => JSON.parse(x));
+        const r = [];
+        body.push({
+          type: "Stack",
+          id: stackID,
+          addr: stackID,
+          data: {},
+        });
+        for (let res of body) {
+          const { type } = res;
+          const enrichment =
+            type in Enrichers
+              ? await Enrichers[type as keyof typeof Enrichers](
+                  res,
+                  input.credentials,
+                  input.region
+                ).catch(() => ({}))
+              : {};
+          r.push({
+            ...res,
+            stackID,
+            enrichment,
+          });
+        }
+        results.push(...r);
+      }
       resources.push(...results);
       missing = false;
     }
