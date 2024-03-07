@@ -396,6 +396,26 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             enrichment: {},
           });
         }
+
+        if (res.type === "sst:aws:Nextjs") {
+          resources.push({
+            ...base,
+            type: "NextjsSite",
+            enrichment: {},
+            data: {
+              url: res.outputs.url,
+              edge: res.outputs.edge,
+              mode: res.outputs.mode,
+              path: res.outputs.path,
+              server: res.outputs.server,
+              routes: undefined,
+              runtime: "nodejs20.x",
+              prefetchSecrets: true,
+              secrets: [],
+              customDomainUrl: res.outputs.url,
+            },
+          });
+        }
       }
       missing = false;
     }
