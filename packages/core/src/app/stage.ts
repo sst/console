@@ -403,16 +403,16 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             type: "NextjsSite",
             enrichment: {},
             data: {
-              url: res.outputs.url,
-              edge: res.outputs.edge,
-              mode: res.outputs.mode,
-              path: res.outputs.path,
-              server: res.outputs.server,
+              url: res.outputs._metadata.url,
+              edge: res.outputs._metadata.edge,
+              mode: res.outputs._metadata.mode,
+              path: res.outputs._metadata.path,
+              server: res.outputs._metadata.server,
               routes: undefined,
               runtime: "nodejs20.x",
               prefetchSecrets: true,
               secrets: [],
-              customDomainUrl: res.outputs.url,
+              customDomainUrl: res.outputs._metadata.url,
             },
           });
         }
