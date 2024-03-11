@@ -426,7 +426,7 @@ export function Overview() {
         </Match>
         <Match when={true}>
           <>
-            <Show when={DateTime.now() < DateTime.fromISO("2023-12-18")}>
+            <Show when={DateTime.now() < DateTime.fromISO("2024-03-31")}>
               <Announcement>
                 <AnnouncementTag>New</AnnouncementTag>
                 <Text size="sm" on="surface" color="dimmed">
@@ -434,11 +434,8 @@ export function Overview() {
                   —{" "}
                 </Text>
                 <Text size="sm" on="surface" color="secondary">
-                  Reorganize your accounts and remove old workspaces.{" "}
-                  <a
-                    href="https://docs.sst.dev/advanced/console-updates#remove-workspaces"
-                    target="_blank"
-                  >
+                  Want to host the Console in your AWS account?{" "}
+                  <a href="https://forms.gle/iBVtq6zi6biAbZKy7" target="_blank">
                     Learn more
                     <AnnouncementLinkIcon>
                       <IconChevronRight width="13" height="13" />

@@ -9,8 +9,10 @@ import {
   theme,
   utility,
 } from "$/ui";
+import { DateTime } from "luxon";
 import { IconApp } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
+import { IconChevronRight } from "$/ui/icons";
 import { Navigate, Route, Routes, useSearchParams } from "@solidjs/router";
 import { For, Show, createSignal, onMount } from "solid-js";
 import Botpoison from "@botpoison/browser";
@@ -70,13 +72,24 @@ const NewConsoleTips = styled("ul", {
   },
 });
 
-const OldConsoleSign = styled("div", {
+const Announcement = styled("div", {
   base: {
-    ...utility.row(2.5),
-    alignItems: "flex-start",
-    backgroundColor: theme.color.background.surface,
+    backgroundColor: theme.color.background.blue,
     borderRadius: theme.borderRadius,
-    padding: `${theme.space[3.5]} ${theme.space[3.5]}`,
+    width: "100%",
+    paddingInline: theme.space[1],
+    paddingBlock: theme.space[3],
+    textAlign: "center",
+    lineHeight: 1.4,
+  },
+});
+
+const AnnouncementLinkIcon = styled("span", {
+  base: {
+    top: 2,
+    paddingLeft: 1,
+    position: "relative",
+    opacity: theme.iconOpacity,
   },
 });
 
@@ -120,6 +133,19 @@ export function Email() {
               Sign in with your email to get started
             </Text>
           </Stack>
+          <Show when={DateTime.now() < DateTime.fromISO("2024-03-31")}>
+            <Announcement>
+              <Text size="sm" on="surface" color="secondary">
+                {" "}
+                <a href="https://forms.gle/iBVtq6zi6biAbZKy7" target="_blank">
+                  Host the Console in your AWS account
+                  <AnnouncementLinkIcon>
+                    <IconChevronRight width="13" height="13" />
+                  </AnnouncementLinkIcon>
+                </a>
+              </Text>
+            </Announcement>
+          </Show>
           <NewConsoleTips>
             <li>View logs and manage all your apps</li>
             <li>Get alerts for any issues in your apps</li>
