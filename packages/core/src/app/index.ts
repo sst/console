@@ -27,12 +27,19 @@ export const create = zod(
   (input) =>
     useTransaction(async (tx) => {
       const id = input.id ?? createId();
-      await tx.insert(app).values({
+      await tx.insert(app).ignore().values({
         id,
         workspaceID: useWorkspace(),
         name: input.name,
       });
-      return id;
+      return tx
+        .select({ id: app.id })
+        .from(app)
+        .where(
+          and(eq(app.name, input.name), eq(app.workspaceID, useWorkspace()))
+        )
+        .execute()
+        .then((rows) => rows[0]!.id);
     })
 );
 
