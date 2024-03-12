@@ -628,11 +628,16 @@ export const expand = zod(
     });
     if (!invocation) return;
 
-    await db
-      .update(issue)
-      .set({
-        invocation,
-      })
-      .where(and(eq(issue.workspaceID, useWorkspace()), eq(issue.id, row.id)));
+    while (true) {
+      const result = await db
+        .update(issue)
+        .set({
+          invocation,
+        })
+        .where(and(eq(issue.workspaceID, useWorkspace()), eq(issue.id, row.id)))
+        .catch(() => false)
+        .then(() => true);
+      if (result) break;
+    }
   }
 );
