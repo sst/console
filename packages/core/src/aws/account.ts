@@ -494,14 +494,19 @@ export const integrate = zod(
           }
 
           if (b.version === "ion") {
-            const list = await s3.send(
-              new ListObjectsV2Command({
-                Prefix: "app/",
-                Bucket: b.bucket,
-                ContinuationToken: token,
-              })
-            );
-
+            const list = await s3
+              .send(
+                new ListObjectsV2Command({
+                  Prefix: "app/",
+                  Bucket: b.bucket,
+                  ContinuationToken: token,
+                })
+              )
+              .catch((err) => {
+                if (err instanceof NoSuchBucket) return;
+                throw err;
+              });
+            if (!list) break;
             for (const item of list.Contents || []) {
               const key = item.Key;
               if (!key) continue;
