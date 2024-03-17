@@ -307,7 +307,9 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           data: {},
         };
 
-        if (res.type === "pulumi:pulumi:Stack" && res.outputs) {
+        if (!res.outputs) continue;
+
+        if (res.type === "pulumi:pulumi:Stack") {
           resources.push({
             ...base,
             type: "Stack",
