@@ -307,15 +307,13 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           data: {},
         };
 
-        if (!res.outputs) continue;
-
         if (res.type === "pulumi:pulumi:Stack") {
           resources.push({
             ...base,
             type: "Stack",
             data: {},
             enrichment: {
-              outputs: Object.entries(res.outputs)
+              outputs: Object.entries(res.outputs || {})
                 .filter(([key]) => !key.startsWith("_"))
                 .map(([key, value]) => ({
                   OutputKey: key,
@@ -327,7 +325,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         }
 
         if (res.type === "sst:aws:Function") {
-          if (res.outputs._metadata.internal) continue;
+          if (res.outputs?._metadata.internal) continue;
           const child = checkpoint.resources.find(
             (child: any) =>
               child.parent === res.urn &&
@@ -338,19 +336,19 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             ...base,
             type: "Function",
             data: {
-              runtime: child.outputs.runtime,
-              arn: child.outputs.arn,
-              handler: res.outputs._metadata.handler,
+              runtime: child.outputs?.runtime,
+              arn: child.outputs?.arn,
+              handler: res.outputs?._metadata.handler,
               localId: base.addr,
               secrets: [],
               missingSourcemap: undefined,
               prefetchSecrets: undefined,
             },
             enrichment: {
-              runtime: child.outputs.runtime,
-              size: child.outputs.sourceCodeSize,
+              runtime: child.outputs?.runtime,
+              size: child.outputs?.sourceCodeSize,
               live:
-                child.outputs.environment?.variables?.SST_FUNCTION_ID != null,
+                child.outputs?.environment?.variables?.SST_FUNCTION_ID != null,
             },
           });
         }
@@ -366,7 +364,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             ...base,
             type: "Bucket",
             data: {
-              name: child.outputs.bucket,
+              name: child.outputs?.bucket,
               notifications: [],
               notificationNames: [],
             },
@@ -393,8 +391,8 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
                 node: fn.urn,
                 stack: stackID,
               },
-              schedule: rule.outputs.scheduleExpression,
-              ruleName: rule.outputs.name,
+              schedule: rule.outputs?.scheduleExpression,
+              ruleName: rule.outputs?.name,
             },
             enrichment: {},
           });
@@ -406,11 +404,11 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             type: "NextjsSite",
             enrichment: {},
             data: {
-              url: res.outputs._metadata.url,
-              edge: res.outputs._metadata.edge,
-              mode: res.outputs._metadata.mode,
-              path: res.outputs._metadata.path,
-              server: res.outputs._metadata.server,
+              url: res.outputs?._metadata.url,
+              edge: res.outputs?._metadata.edge,
+              mode: res.outputs?._metadata.mode,
+              path: res.outputs?._metadata.path,
+              server: res.outputs?._metadata.server,
               routes: undefined,
               runtime: "nodejs20.x",
               prefetchSecrets: true,
