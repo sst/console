@@ -353,6 +353,56 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           });
         }
 
+        if (res.type === "sst:aws:ApiGatewayV2") {
+          const routes = checkpoint.resources.filter(
+            (child: any) =>
+              child.parent === res.urn &&
+              child.type === "aws:apigatewayv2/route:Route"
+          );
+          const api = checkpoint.resources.find(
+            (child: any) =>
+              child.parent === res.urn &&
+              child.type === "aws:apigatewayv2/api:Api"
+          );
+
+          resources.push({
+            ...base,
+            type: "Api",
+            enrichment: {},
+            data: {
+              url: api.outputs?.apiEndpoint,
+              routes: routes.flatMap((route: any) => {
+                const [, target] = route.outputs?.target?.split("/");
+                if (!target) return [];
+                const integration = checkpoint.resources.find(
+                  (r: any) =>
+                    r.type === "aws:apigatewayv2/integration:Integration" &&
+                    r.id === target
+                );
+                const fn = checkpoint.resources.find(
+                  (r: any) =>
+                    r.type === "aws:lambda/function:Function" &&
+                    r.outputs.urn === integration?.outputs?.arn
+                );
+
+                return [
+                  {
+                    type: "function",
+                    fn: {
+                      node: fn.parent,
+                      stack: stackID,
+                    },
+                    route: route.outputs?.routeKey,
+                  },
+                ];
+              }),
+              graphql: false,
+              httpApiId: "",
+              customDomainUrl: "",
+            },
+          });
+        }
+
         if (res.type === "sst:aws:Bucket") {
           const child = checkpoint.resources.find(
             (child: any) =>
