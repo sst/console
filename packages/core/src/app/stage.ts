@@ -467,6 +467,42 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             },
           });
         }
+        if (res.type === "sst:aws:Astro") {
+          resources.push({
+            ...base,
+            type: "AstroSite",
+            enrichment: {},
+            data: {
+              url: res.outputs?._metadata.url,
+              edge: res.outputs?._metadata.edge,
+              mode: res.outputs?._metadata.mode,
+              path: res.outputs?._metadata.path,
+              server: res.outputs?._metadata.server,
+              runtime: "nodejs20.x",
+              prefetchSecrets: true,
+              secrets: [],
+              customDomainUrl: res.outputs?._metadata?.url,
+            },
+          });
+        }
+        if (res.type === "sst:aws:Remix") {
+          resources.push({
+            ...base,
+            type: "RemixSite",
+            enrichment: {},
+            data: {
+              url: res.outputs?._metadata.url,
+              edge: res.outputs?._metadata.edge,
+              mode: res.outputs?._metadata.mode,
+              path: res.outputs?._metadata.path,
+              server: res.outputs?._metadata.server,
+              runtime: "nodejs20.x",
+              prefetchSecrets: true,
+              secrets: [],
+              customDomainUrl: res.outputs?._metadata?.url,
+            },
+          });
+        }
       }
       missing = false;
     }
