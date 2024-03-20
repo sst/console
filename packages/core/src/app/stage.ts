@@ -413,7 +413,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
               runtime: "nodejs20.x",
               prefetchSecrets: true,
               secrets: [],
-              customDomainUrl: res.outputs._metadata.url,
+              customDomainUrl: res.outputs?._metadata?.url,
             },
           });
         }
