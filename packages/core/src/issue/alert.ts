@@ -3,6 +3,7 @@ import { createId } from "@paralleldrive/cuid2";
 import {
   eq,
   and,
+  isNotNull,
   isNull,
   gt,
   sql,
@@ -302,7 +303,8 @@ export const triggerIssue = zod(
               destination.properties.users === "*"
                 ? undefined
                 : inArray(user.id, destination.properties.users),
-              isNull(user.timeDeleted)
+              isNull(user.timeDeleted),
+              isNotNull(user.timeSeen)
             )
           );
         console.log(
