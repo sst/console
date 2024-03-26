@@ -90,6 +90,7 @@ export function API({ stack, app }: StackContext) {
           bus,
         ],
         timeout: "30 seconds",
+        memorySize: "2 GB",
         permissions: ["iot", "sts"],
         environment: {
           LOG_POLLER_ARN: poller.stateMachineArn,
