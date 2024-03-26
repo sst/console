@@ -413,6 +413,7 @@ export const handler = ApiHandler(
       const buff = gzipSync(response.body || "");
       response.body = buff.toString("base64");
       response.isBase64Encoded = true;
+      console.log("done gzip");
     }
 
     return response;
