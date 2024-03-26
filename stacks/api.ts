@@ -90,7 +90,6 @@ export function API({ stack, app }: StackContext) {
           bus,
         ],
         timeout: "30 seconds",
-        memorySize: "4 GB",
         permissions: ["iot", "sts"],
         environment: {
           LOG_POLLER_ARN: poller.stateMachineArn,
@@ -98,7 +97,12 @@ export function API({ stack, app }: StackContext) {
       },
     },
     routes: {
-      "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
+      "POST /replicache/pull": {
+        function: {
+          handler: "packages/functions/src/replicache/pull.handler",
+          memorySize: "4 GB",
+        },
+      },
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
       "POST /replicache/pull1":
         "packages/functions/src/replicache/pull1.handler",
