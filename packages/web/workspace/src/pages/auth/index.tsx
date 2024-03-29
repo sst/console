@@ -133,7 +133,7 @@ export function Email() {
               Sign in with your email to get started
             </Text>
           </Stack>
-          <Show when={DateTime.now() < DateTime.fromISO("2024-03-31")}>
+          <Show when={DateTime.now() < DateTime.fromISO("2024-03-28")}>
             <Announcement>
               <Text size="sm" on="surface" color="secondary">
                 {" "}
