@@ -22,7 +22,7 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
             ].join("-"),
           })
         ),
-        Issue.expand(event.properties),
+        // Issue.expand(event.properties),
       ])
     );
   })
