@@ -290,6 +290,7 @@ export const extract = zod(
             timeUpdated: sql`CURRENT_TIMESTAMP()`,
             pointer: sql`VALUES(pointer)`,
             timeSeen: sql`VALUES(time_seen)`,
+            invocation: null,
             timeResolved: null,
             resolver: null,
           },
