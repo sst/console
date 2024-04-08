@@ -253,6 +253,7 @@ export function Code() {
                 }}
                 data-element="code"
                 maxLength={1}
+                inputmode="numeric"
                 autofocus
                 disabled={disabled()}
                 type="text"
