@@ -301,25 +301,34 @@ export const handler = ApiHandler(
 
           if (!ids.length) continue;
           const table = TABLES[name as keyof typeof TABLES];
-          const rows = await tx
-            .select()
-            .from(table)
-            .where(
-              and(
-                "workspaceID" in table && actor.type === "user"
-                  ? eq(table.workspaceID, useWorkspace())
-                  : undefined,
-                inArray(table.id, ids)
+          let offset = 0;
+          const page = 1000;
+          while (true) {
+            console.log("fetching", name, "offset", offset);
+            const rows = await tx
+              .select()
+              .from(table)
+              .where(
+                and(
+                  "workspaceID" in table && actor.type === "user"
+                    ? eq(table.workspaceID, useWorkspace())
+                    : undefined,
+                  inArray(table.id, ids)
+                )
               )
-            )
-            .execute();
-          for (const row of rows) {
-            const key = keys[row.id]!;
-            patch.push({
-              op: "put",
-              key,
-              value: row,
-            });
+              .offset(offset)
+              .limit(page)
+              .execute();
+            for (const row of rows) {
+              const key = keys[row.id]!;
+              patch.push({
+                op: "put",
+                key,
+                value: row,
+              });
+            }
+            if (rows.length < page) break;
+            offset += rows.length;
           }
         }
 

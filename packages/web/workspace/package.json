@@ -39,6 +39,7 @@
     "aws-iot-device-sdk-v2": "^1.13.1",
     "luxon": "^3.4.3",
     "modern-normalize": "^1.1.0",
+    "posthog-js": "^1.121.2",
     "remeda": "^1.17.1",
     "replicache": "^13.0.0",
     "solid-js": "^1.8.3",

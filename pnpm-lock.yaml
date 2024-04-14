@@ -350,6 +350,9 @@ importers:
       modern-normalize:
         specifier: ^1.1.0
         version: 1.1.0
+      posthog-js:
+        specifier: ^1.121.2
+        version: 1.121.2
       remeda:
         specifier: ^1.17.1
         version: 1.26.0
@@ -10638,6 +10641,10 @@ packages:
       reusify: 1.0.4
     dev: false
 
+  /fflate@0.4.8:
+    resolution: {integrity: sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==}
+    dev: false
+
   /figures@5.0.0:
     resolution: {integrity: sha512-ej8ksPF4x6e5wvK9yevct0UCXh8TTFlWGVLlgjZuoBH1HwjIfKE/IdL5mq89sFA7zELi1VhKpmtDnrs7zWyeyg==}
     engines: {node: '>=14'}
@@ -12711,6 +12718,17 @@ packages:
       nanoid: 3.3.6
       picocolors: 1.0.0
       source-map-js: 1.0.2
+    dev: false
+
+  /posthog-js@1.121.2:
+    resolution: {integrity: sha512-2rhPgzeOaSR7Ztf77fGxGnUavBJCV3+tR5O1UHsnygxKL+XIt+Vr9i/hYYgu9Gz9/eq2Y7sxpszjxSTDMZprRQ==}
+    dependencies:
+      fflate: 0.4.8
+      preact: 10.20.2
+    dev: false
+
+  /preact@10.20.2:
+    resolution: {integrity: sha512-S1d1ernz3KQ+Y2awUxKakpfOg2CEmJmwOP+6igPx6dgr6pgDvenqYviyokWso2rhHvGtTlWWnJDa7RaPbQerTg==}
     dev: false
 
   /prettier@2.8.4:

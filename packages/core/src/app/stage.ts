@@ -427,6 +427,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             (child: any) =>
               child.parent === res.urn && child.type === "sst:aws:Function"
           );
+          if (!fn) continue;
           const rule = checkpoint.resources.find(
             (child: any) =>
               child.parent === res.urn &&

@@ -1,5 +1,9 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
+import posthog from "posthog-js";
+posthog.init("phc_M0b2lW4smpsGIufiTBZ22USKwCy0fyqljMOGufJc79p", {
+  api_host: "https://telemetry.ion.sst.dev",
+});
 
 import "modern-normalize/modern-normalize.css";
 import { App } from "./App";
