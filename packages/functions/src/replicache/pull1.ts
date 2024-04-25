@@ -185,8 +185,6 @@ export const handler = ApiHandler(
 
           const workspaceID = useWorkspace();
 
-          let combined: any = undefined;
-          let now = Date.now();
           for (const [name, table] of Object.entries(TABLES)) {
             const key = TABLE_KEY[name as TableName] ?? [table.id];
             const query = tx
@@ -212,22 +210,9 @@ export const handler = ApiHandler(
                     : [])
                 )
               );
-            if (!combined) combined = query;
-            else combined = combined.unionAll(query);
-            // const rows = await query.execute();
-            // results.push([name, rows]);
+            const rows = await query.execute();
+            results.push([name, rows]);
           }
-          console.log("seperate", Date.now() - now);
-          now = Date.now();
-          const rows = await combined.execute();
-          results.push(
-            ...pipe(
-              rows,
-              groupBy((row: any) => row.name),
-              toPairs
-            )
-          );
-          console.log("combined", Date.now() - now);
         }
 
         if (actor.type === "account") {
