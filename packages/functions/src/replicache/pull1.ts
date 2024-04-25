@@ -210,6 +210,7 @@ export const handler = ApiHandler(
                     : [])
                 )
               );
+            console.log("getting updated from", name);
             const rows = await query.execute();
             results.push([name, rows]);
           }
