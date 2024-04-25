@@ -146,15 +146,15 @@ export const extract = zod(
             const splits = event.message.split(`\t`).map((x) => x.trim());
             const extracted = Log.extractError(splits);
             if (!extracted) {
-              // console.log("no error found", splits);
               return;
             }
+            console.log("extracted error");
             const err = await Log.applySourcemap(
               sourcemapCache,
               event.timestamp,
               extracted
             );
-
+            console.log("applied sourcemap");
             if (
               err.error !== "Runtime.HandlerNotFound" &&
               err.stack.length &&
