@@ -33,7 +33,6 @@ export function Issues({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/issues/subscriber.handler",
           timeout: "15 minutes",
-          memorySize: "3008 MB",
           nodejs: {
             install: ["source-map"],
           },
