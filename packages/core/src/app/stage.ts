@@ -217,7 +217,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         )
         .catch((err) => {
           if (err.name === "AccessDenied") return;
-          if (err instanceof NoSuchBucket) return;
+          if (err.name === "NoSuchBucket") return;
           throw err;
         });
       if (!list) {
