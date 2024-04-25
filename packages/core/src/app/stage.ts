@@ -239,9 +239,9 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             })
           )
           .catch((err) => {
-            if (err instanceof NoSuchKey) {
-              return;
-            }
+            if (err.name === "AccessDenied") return;
+            if (err.name === "NoSuchBucket") return;
+            if (err.name === "NoSuchKey") return;
             throw err;
           });
         if (!result) continue;
@@ -287,9 +287,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           })
         )
         .catch((err) => {
-          if (err instanceof NoSuchKey) {
-            return;
-          }
+          if (err instanceof NoSuchKey) return;
           throw err;
         });
       if (!result) continue;
