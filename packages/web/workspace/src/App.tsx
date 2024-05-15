@@ -99,8 +99,8 @@ macaron$(() =>
     globalStyle(selector, {
       opacity: 1,
       color: theme.color.text.dimmed.base,
-    })
-  )
+    }),
+  ),
 );
 
 globalStyle("body", {
@@ -140,8 +140,8 @@ macaron$(() =>
     globalStyle(selector, {
       // Mimic WebKit text selection color
       backgroundColor: "#B4D5FE",
-    })
-  )
+    }),
+  ),
 );
 
 globalStyle("ul, ol", {
@@ -151,7 +151,9 @@ globalStyle("ul, ol", {
 
 export const App: Component = () => {
   const [theme, setTheme] = createSignal<string>(
-    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light",
   );
 
   const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
@@ -208,12 +210,12 @@ export const App: Component = () => {
                                     const workspaces =
                                       WorkspaceStore.list.watch(
                                         () => auth[existing!].replicache,
-                                        () => []
+                                        () => [],
                                       );
 
                                     const init = createGet<boolean>(
                                       () => "/init",
-                                      () => auth[existing!].replicache
+                                      () => auth[existing!].replicache,
                                     );
 
                                     return (
@@ -230,7 +232,7 @@ export const App: Component = () => {
                                                 workspaces()!.find(
                                                   (w) =>
                                                     w.id ===
-                                                    storage.value.workspace
+                                                    storage.value.workspace,
                                                 ) || workspaces()![0]
                                               ).slug
                                             }`}
@@ -245,9 +247,6 @@ export const App: Component = () => {
                                           }
                                         >
                                           <Navigate href={`/workspace`} />
-                                        </Match>
-                                        <Match when={true}>
-                                          {/* <Splash /> */}
                                         </Match>
                                       </Switch>
                                     );
@@ -287,11 +286,11 @@ function GlobalCommands() {
             users.map(async (user) => {
               const workspace = await WorkspaceStore.get(tx, user.workspaceID);
               return { account: account, workspace };
-            })
+            }),
           );
         });
         return workspaces;
-      })
+      }),
     ).then((x) => x.flat());
     const splits = location.pathname.split("/");
     return [

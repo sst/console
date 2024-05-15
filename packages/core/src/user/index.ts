@@ -29,13 +29,17 @@ export const Events = {
     "user.created",
     z.object({
       userID: z.string().cuid2(),
-    })
+    }),
   ),
 };
 
 export function list() {
   return useTransaction((tx) =>
-    tx.select().from(user).where(eq(user.workspaceID, useWorkspace())).execute()
+    tx
+      .select()
+      .from(user)
+      .where(eq(user.workspaceID, useWorkspace()))
+      .execute(),
   );
 }
 
@@ -69,14 +73,17 @@ export const create = zod(
         })
         .from(user)
         .where(
-          and(eq(user.email, input.email), eq(user.workspaceID, useWorkspace()))
+          and(
+            eq(user.email, input.email),
+            eq(user.workspaceID, useWorkspace()),
+          ),
         )
         .then((rows) => rows[0]!.id);
       await createTransactionEffect(() =>
-        Events.UserCreated.publish({ userID: id })
+        Events.UserCreated.publish({ userID: id }),
       );
       return id;
-    })
+    }),
 );
 
 export const remove = zod(Info.shape.id, (input) =>
@@ -89,7 +96,7 @@ export const remove = zod(Info.shape.id, (input) =>
       .where(and(eq(user.id, input), eq(user.workspaceID, useWorkspace())))
       .execute();
     return input;
-  })
+  }),
 );
 
 export const fromID = zod(Info.shape.id, async (id) =>
@@ -100,7 +107,7 @@ export const fromID = zod(Info.shape.id, async (id) =>
       .where(and(eq(user.id, id), eq(user.workspaceID, useWorkspace())))
       .execute()
       .then((rows) => rows[0]);
-  })
+  }),
 );
 
 export const fromEmail = zod(Info.shape.email, async (email) =>
@@ -111,7 +118,7 @@ export const fromEmail = zod(Info.shape.email, async (email) =>
       .where(and(eq(user.email, email), eq(user.workspaceID, useWorkspace())))
       .execute()
       .then((rows) => rows[0]);
-  })
+  }),
 );
 
 export function findUser(workspaceID: string, email: string) {
@@ -140,11 +147,12 @@ export const sendEmailInvite = zod(Info.shape.id, async (id) => {
   if (!data) return;
   const subject = `Join ${data.workspace} on SST`;
   const html = render(
+    // @ts-ignore
     InviteEmail({
       assetsUrl: `https://console.sst.dev/email`,
       workspace: data.workspace,
       consoleUrl: `https://console.sst.dev`,
-    })
+    }),
   );
   try {
     await ses.send(
@@ -169,7 +177,7 @@ export const sendEmailInvite = zod(Info.shape.id, async (id) => {
             },
           },
         },
-      })
+      }),
     );
   } catch (ex) {
     console.error(ex);

@@ -16,7 +16,7 @@
     "sst": "2.39.7",
     "typescript": "^5.2.2",
     "vitest": "^0.25.3",
-    "drizzle-kit": "^0.21.1-674c9c2"
+    "drizzle-kit": "0.21.2"
   },
   "dependencies": {
     "@aws-sdk/client-cloudformation": "^3.433.0",
@@ -43,7 +43,7 @@
     "@slack/web-api": "^6.9.0",
     "@smithy/middleware-retry": "^2.0.5",
     "@smithy/util-retry": "^2.0.0",
-    "drizzle-orm": "0.29.0",
+    "drizzle-orm": "0.30.10",
     "drizzle-zod": "0.5.1",
     "luxon": "^3.3.0",
     "react": "18.2.0",

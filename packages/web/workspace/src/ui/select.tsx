@@ -2,7 +2,6 @@ import { Select as KSelect, Separator as KSeperator } from "@kobalte/core";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { IconCheck, IconChevronDown } from "./icons";
-import { Text } from "./text";
 import { utility } from "./utility";
 import { theme } from "./theme";
 import {
@@ -167,7 +166,6 @@ const Seperator = styled(KSeperator.Root, {
   },
 });
 
-// @ts-expect-error
 const Listbox = styled(KSelect.Listbox, {
   base: {
     selectors: {
@@ -207,7 +205,7 @@ export function Select(props: SingleSelect) {
   const [rootProps, selectProps] = splitProps(
     props,
     ["name", "placeholder", "options", "required", "disabled"],
-    ["placeholder", "ref", "onInput", "onChange", "onBlur"]
+    ["placeholder", "ref", "onInput", "onChange", "onBlur"],
   );
   const [getValue, setValue] = createSignal<Option>();
   createEffect(() => {
@@ -267,7 +265,7 @@ export function MultiSelect(props: MultiSelectProps) {
   const [rootProps, selectProps] = splitProps(
     props,
     ["name", "placeholder", "options", "required", "disabled"],
-    ["placeholder", "ref", "onInput", "onChange", "onBlur"]
+    ["placeholder", "ref", "onInput", "onChange", "onBlur"],
   );
   const [getValue, setValue] = createSignal<Option[]>();
   createComputed(() => {

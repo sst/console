@@ -26,7 +26,7 @@
     "@botpoison/node": "^0.1.10",
     "@console/mail": "workspace:*",
     "@octokit/rest": "^19.0.7",
-    "drizzle-orm": "0.29.0",
+    "drizzle-orm": "^0.30.10",
     "fast-jwt": "^2.2.1",
     "hono": "^3.9.2",
     "luxon": "^3.3.0",

@@ -29,7 +29,6 @@ import { user } from "../user/user.sql";
 import { KnownBlock } from "@slack/web-api";
 import { Warning } from "../warning";
 import { warning } from "../warning/warning.sql";
-import { App, Stage } from "../app";
 import { Workspace } from "../workspace";
 
 export * as Alert from "./alert";
@@ -72,8 +71,8 @@ export const list = zod(z.void(), (input) =>
       .from(issueAlert)
       .where(eq(issueAlert.workspaceID, useWorkspace()))
       .execute()
-      .then((rows) => rows as Info[])
-  )
+      .then((rows) => rows as Info[]),
+  ),
 );
 
 export const put = zod(
@@ -103,11 +102,11 @@ export const put = zod(
           and(
             eq(warning.workspaceID, useWorkspace()),
             eq(warning.type, "issue_alert_slack"),
-            eq(warning.target, id)
-          )
+            eq(warning.target, id),
+          ),
         );
       return id;
-    })
+    }),
 );
 
 export const create = zod(
@@ -130,7 +129,7 @@ export const create = zod(
         },
       });
       return id;
-    })
+    }),
 );
 
 export const remove = zod(Info.shape.id, (input) =>
@@ -140,10 +139,10 @@ export const remove = zod(Info.shape.id, (input) =>
       .where(
         and(
           eq(issueAlert.id, input),
-          eq(issueAlert.workspaceID, useWorkspace())
-        )
-      )
-  )
+          eq(issueAlert.workspaceID, useWorkspace()),
+        ),
+      ),
+  ),
 );
 
 export const triggerIssue = zod(
@@ -165,18 +164,18 @@ export const triggerIssue = zod(
       .innerJoin(workspace, eq(workspace.id, issue.workspaceID))
       .innerJoin(
         stage,
-        and(eq(stage.id, issue.stageID), eq(stage.workspaceID, useWorkspace()))
+        and(eq(stage.id, issue.stageID), eq(stage.workspaceID, useWorkspace())),
       )
       .innerJoin(
         app,
-        and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace()))
+        and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace())),
       )
       .leftJoin(
         issueAlertLimit,
         and(
           eq(issueAlertLimit.workspaceID, useWorkspace()),
-          eq(issueAlertLimit.id, issue.id)
-        )
+          eq(issueAlertLimit.id, issue.id),
+        ),
       )
       .where(
         and(
@@ -189,10 +188,10 @@ export const triggerIssue = zod(
             // do not alert more than once every 30min
             lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
             // if issue resolved after last alert, send alert
-            gt(issue.timeResolved, issueAlertLimit.timeUpdated)
+            gt(issue.timeResolved, issueAlertLimit.timeUpdated),
           ),
-          isNull(issue.timeIgnored)
-        )
+          isNull(issue.timeIgnored),
+        ),
       )
       .then((rows) => rows[0]);
 
@@ -282,6 +281,7 @@ export const triggerIssue = zod(
       if (destination.type === "email") {
         console.log("rendering email");
         const html = render(
+          // @ts-ignore
           IssueEmail({
             issue: result,
             stage: result.stageName,
@@ -289,7 +289,7 @@ export const triggerIssue = zod(
             assetsUrl: `https://console.sst.dev/email`,
             consoleUrl: "https://console.sst.dev",
             workspace: result.workspaceSlug,
-          })
+          }),
         );
         console.log("rendered email");
         const users = await db
@@ -304,12 +304,12 @@ export const triggerIssue = zod(
                 ? undefined
                 : inArray(user.id, destination.properties.users),
               isNull(user.timeDeleted),
-              isNotNull(user.timeSeen)
-            )
+              isNotNull(user.timeSeen),
+            ),
           );
         console.log(
           "sending email to",
-          users.map((u) => u.email)
+          users.map((u) => u.email),
         );
         if (!users.length) continue;
         try {
@@ -337,7 +337,7 @@ export const triggerIssue = zod(
                   },
                 },
               },
-            })
+            }),
           );
         } catch (ex) {
           console.error(ex);
@@ -357,7 +357,7 @@ export const triggerIssue = zod(
             timeUpdated: sql`NOW()`,
           },
         });
-  }
+  },
 );
 
 export const triggerRateLimit = zod(
@@ -423,6 +423,7 @@ export const triggerRateLimit = zod(
       if (destination.type === "email") {
         const subject = "Issues temporarily disabled";
         const html = render(
+          // @ts-ignore
           IssueRateLimitEmail({
             stage: input.stage,
             app: input.app,
@@ -431,7 +432,7 @@ export const triggerRateLimit = zod(
             assetsUrl: `https://console.sst.dev/email`,
             consoleUrl: "https://console.sst.dev",
             workspace: workspace!.slug,
-          })
+          }),
         );
         const users = await db
           .select({
@@ -444,12 +445,12 @@ export const triggerRateLimit = zod(
               destination.properties.users === "*"
                 ? undefined
                 : inArray(user.id, destination.properties.users),
-              isNull(user.timeDeleted)
-            )
+              isNull(user.timeDeleted),
+            ),
           );
         console.log(
           "sending email to",
-          users.map((u) => u.email)
+          users.map((u) => u.email),
         );
         try {
           await ses.send(
@@ -474,14 +475,14 @@ export const triggerRateLimit = zod(
                   },
                 },
               },
-            })
+            }),
           );
         } catch (ex) {
           console.error(ex);
         }
       }
     }
-  }
+  },
 );
 
 function matchAlert(appName: string, stageName: string, source: Source) {
