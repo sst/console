@@ -6,17 +6,17 @@
   "scripts": {
     "test": "sst bind vitest",
     "typecheck": "tsc --noEmit --incremental",
-    "db:push": "sst bind drizzle-kit push:mysql"
+    "db": "sst bind drizzle-kit"
   },
   "devDependencies": {
     "@types/luxon": "^3.3.1",
     "@types/node": "^18.16.0",
     "@types/react": "18.0.25",
     "@types/relaxed-json": "^1.0.1",
-    "drizzle-kit": "0.20.6",
     "sst": "2.39.7",
     "typescript": "^5.2.2",
-    "vitest": "^0.25.3"
+    "vitest": "^0.25.3",
+    "drizzle-kit": "^0.21.1-674c9c2"
   },
   "dependencies": {
     "@aws-sdk/client-cloudformation": "^3.433.0",

@@ -10,8 +10,8 @@ export default defineConfig({
   strict: true,
   schema: "./src/**/*.sql.ts",
   verbose: true,
-  driver: "mysql2",
+  dialect: "mysql",
   dbCredentials: {
-    uri: `mysql://${connection.user}:${connection.password}@${connection.host}:3306/sst?ssl={"rejectUnauthorized":true}`,
+    url: `mysql://${connection.user}:${connection.password}@${connection.host}/sst`,
   },
 });

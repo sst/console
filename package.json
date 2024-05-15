@@ -25,5 +25,9 @@
     "sst": "2.39.7",
     "turbo": "^1.10.13",
     "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "drizzle-kit": "^0.21.1",
+    "drizzle-orm": "^0.30.10"
   }
 }
