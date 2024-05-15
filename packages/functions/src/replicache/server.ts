@@ -13,6 +13,7 @@ import { and, db, eq, or } from "@console/core/drizzle";
 import { useTransaction } from "@console/core/util/transaction";
 import { issueSubscriber } from "@console/core/issue/issue.sql";
 import { warning } from "@console/core/warning/warning.sql";
+import { Github } from "@console/core/github";
 import { Slack } from "@console/core/slack";
 
 export const server = new Server()
@@ -28,6 +29,7 @@ export const server = new Server()
   .expose("issue_alert_create", Issue.Alert.create)
   .expose("issue_alert_put", Issue.Alert.put)
   .expose("issue_alert_remove", Issue.Alert.remove)
+  .expose("github_disconnect", Github.disconnect)
   .expose("slack_disconnect", Slack.disconnect)
   .expose("workspace_remove", Workspace.remove)
   .mutation("aws_account_remove", z.string(), async (input) => {

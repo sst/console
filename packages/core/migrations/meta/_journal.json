@@ -8,6 +8,20 @@
       "when": 1715709621390,
       "tag": "0000_workable_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1715783414737,
+      "tag": "0001_curvy_scourge",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1715788134273,
+      "tag": "0002_natural_veda",
+      "breakpoints": true
     }
   ]
 }

@@ -4,14 +4,12 @@ import { Secrets } from "./secrets";
 import { DNS } from "./dns";
 
 export function Auth({ stack, app }: StackContext) {
-  const { slack, github, database, botpoison } = use(Secrets);
+  const { slack, database, botpoison } = use(Secrets);
   const dns = use(DNS);
   const auth = new SSTAuth(stack, "auth", {
     authenticator: {
       handler: "packages/functions/src/auth.handler",
       bind: [
-        github.GITHUB_CLIENT_ID,
-        github.GITHUB_CLIENT_SECRET,
         database.PLANETSCALE_PASSWORD,
         database.PLANETSCALE_USERNAME,
         ...slack,

@@ -87,6 +87,7 @@ export function API({ stack, app }: StackContext) {
           auth,
           ...Object.values(secrets.database),
           ...secrets.stripe,
+          ...secrets.github,
           bus,
         ],
         timeout: "30 seconds",
@@ -143,6 +144,15 @@ export function API({ stack, app }: StackContext) {
       "GET /freshpaint/{proxy+}": {
         type: "url",
         url: "https://perfalytics.com/{proxy}",
+      },
+      "GET /github/installed":
+        "packages/functions/src/github/installed.handler",
+      "GET /github/connect": "packages/functions/src/github/connect.handler",
+      "POST /github/webhook": {
+        function: {
+          handler: "packages/functions/src/github/webhook.handler",
+          timeout: "120 seconds",
+        },
       },
       "GET /": "packages/functions/src/index.handler",
     },

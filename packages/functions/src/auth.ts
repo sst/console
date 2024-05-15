@@ -3,7 +3,6 @@ import {
   OauthAdapter,
   AuthHandler,
   CodeAdapter,
-  GithubAdapter,
 } from "sst/node/future/auth";
 import { Config } from "sst/node/config";
 import { Account } from "@console/core/account";
@@ -21,12 +20,6 @@ const ses = new SESv2Client({});
 export const handler = AuthHandler({
   sessions,
   providers: {
-    github: GithubAdapter({
-      mode: "oauth",
-      scope: "read:user user:email",
-      clientID: Config.GITHUB_CLIENT_ID,
-      clientSecret: Config.GITHUB_CLIENT_SECRET,
-    }),
     slack: OauthAdapter({
       issuer: new Issuer({
         authorization_endpoint: "https://slack.com/oauth/v2/authorize",
@@ -170,7 +163,7 @@ export const handler = AuthHandler({
           <html>
             <script>
               if (window.opener) {
-                window.opener.postMessage("success", "*")
+                window.opener.postMessage("slack.success", "*")
                 window.close()
               }
             </script>

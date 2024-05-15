@@ -22,7 +22,7 @@ import { WarningStore } from "$/data/warning";
 import { useDummy } from "./dummy";
 import { createGet } from "$/data/store";
 import { AWS } from "$/data/aws";
-import { IssueAlertStore, SlackTeamStore } from "$/data/app";
+import { IssueAlertStore, SlackTeamStore, GithubOrgStore } from "$/data/app";
 import { useReplicacheStatus } from "./replicache-status";
 
 const mutators = new Client<ServerType>()
@@ -125,6 +125,12 @@ const mutators = new Client<ServerType>()
     const all = await SlackTeamStore.all(tx);
     for (const team of all) {
       await SlackTeamStore.remove(tx, team.id);
+    }
+  })
+  .mutation("github_disconnect", async (tx, input) => {
+    const all = await GithubOrgStore.all(tx);
+    for (const org of all) {
+      await GithubOrgStore.remove(tx, org.id);
     }
   })
   .build();

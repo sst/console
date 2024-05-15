@@ -1,0 +1,1 @@
+CREATE INDEX `org_id` ON `github_org` (`org_id`);

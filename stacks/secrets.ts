@@ -5,15 +5,15 @@ export function Secrets(ctx: StackContext) {
     database: Config.Secret.create(
       ctx.stack,
       "PLANETSCALE_USERNAME",
-      "PLANETSCALE_PASSWORD",
-    ),
-    github: Config.Secret.create(
-      ctx.stack,
-      "GITHUB_CLIENT_ID",
-      "GITHUB_CLIENT_SECRET",
+      "PLANETSCALE_PASSWORD"
     ),
     botpoison: new Config.Secret(ctx.stack, "BOTPOISON_SECRET_KEY"),
     cloudflare: new Config.Secret(ctx.stack, "CLOUDFLARE_TOKEN"),
+    github: [
+      new Config.Secret(ctx.stack, "GITHUB_APP_ID"),
+      new Config.Secret(ctx.stack, "GITHUB_PRIVATE_KEY"),
+      new Config.Secret(ctx.stack, "GITHUB_WEBHOOK_SECRET"),
+    ],
     slack: [
       new Config.Secret(ctx.stack, "SLACK_CLIENT_ID"),
       new Config.Secret(ctx.stack, "SLACK_CLIENT_SECRET"),

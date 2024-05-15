@@ -5,13 +5,18 @@ import { styled } from "@macaron-css/solid";
 import { useWorkspace } from "../context";
 import { utility } from "$/ui/utility";
 import { Toggle } from "$/ui/switch";
-import { IconLogosSlack } from "$/ui/icons/custom";
+import { IconLogosSlack, IconLogosGitHub } from "$/ui/icons/custom";
 import { formatNumber } from "$/common/format";
 import { useFlags } from "$/providers/flags";
 import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "../header";
-import { AppStore, SlackTeamStore, StripeStore } from "$/data/app";
+import {
+  AppStore,
+  SlackTeamStore,
+  StripeStore,
+  GithubOrgStore,
+} from "$/data/app";
 import { useAccountReplicache, useAuth } from "$/providers/auth";
 import { useStorage } from "$/providers/account";
 import { createEventListener } from "@solid-primitives/event-listener";
@@ -377,13 +382,21 @@ function Integrations() {
     () => [],
     (all) => all.at(0)
   );
+  const githubOrg = GithubOrgStore.all.watch(
+    rep,
+    () => [],
+    (all) => all.at(0)
+  );
 
   const [overrideSlack, setOverrideSlack] = createSignal(false);
+  const [overrideGithub, setOverrideGithub] = createSignal(false);
+
   createEventListener(
     () => window,
     "message",
     (e) => {
-      if (e.data === "success") setOverrideSlack(true);
+      if (e.data === "slack.success") setOverrideSlack(true);
+      if (e.data === "github.success") setOverrideGithub(true);
     }
   );
 
@@ -440,6 +453,53 @@ function Integrations() {
               }}
             />
             <input type="hidden" name="provider" value="slack" />
+            <input type="hidden" name="workspaceID" value={workspace().id} />
+            <input
+              type="hidden"
+              name="token"
+              value={auth[storage.value.account].session.token}
+            />
+          </form>
+        </Row>
+        <Row space="3.5" horizontal="between" vertical="center" id="github">
+          <Row space="3" vertical="center">
+            <IconLogosGitHub width="32" height="32" />
+            <Stack space="1.5">
+              <Text weight="medium">GitHub</Text>
+              <Show
+                when={githubOrg()}
+                fallback={
+                  <Text size="sm" color="dimmed">
+                    Connect to your GitHub repo
+                  </Text>
+                }
+              >
+                <Text size="sm" color="dimmed">
+                  Connected to{" "}
+                  <Text color="dimmed" size="sm" weight="medium">
+                    {githubOrg()?.orgSlug}
+                  </Text>
+                </Text>
+              </Show>
+            </Stack>
+          </Row>
+          <form
+            action={import.meta.env.VITE_API_URL + "/github/connect"}
+            method="get"
+            target="newWindow"
+          >
+            <Toggle
+              checked={Boolean(githubOrg()) || overrideGithub()}
+              onClick={(e) => {
+                if (githubOrg()) {
+                  rep().mutate.github_disconnect(githubOrg()!.id);
+                  setOverrideGithub(false);
+                  return;
+                }
+                e.currentTarget.closest("form")?.submit();
+              }}
+            />
+            <input type="hidden" name="provider" value="github" />
             <input type="hidden" name="workspaceID" value={workspace().id} />
             <input
               type="hidden"
