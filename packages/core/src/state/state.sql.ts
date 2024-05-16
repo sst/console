@@ -21,7 +21,7 @@ export const stateResourceTable = mysqlTable(
     urn: varchar("urn", { length: 255 }).notNull(),
     outputs: json("outputs").notNull(),
     inputs: json("inputs").notNull(),
-    parent: varchar("urn", { length: 255 }),
+    parent: varchar("parent", { length: 255 }),
     custom: boolean("custom").notNull(),
     timeCreated: timestamp("time_created", {
       mode: "string",
@@ -43,7 +43,7 @@ export const stateResourceTable = mysqlTable(
       table.workspaceID,
       table.stageID,
       table.urn,
-      table.timeUpdated,
+      table.timeUpdated
     ),
-  }),
+  })
 );
