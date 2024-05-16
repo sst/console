@@ -1,34 +1,19 @@
 ## Usage
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+### `pnpm dev`
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+Runs the app in the development mode `http://localhost:3000`
 
-```bash
-$ npm install # or pnpm install or yarn install
-```
+### Dummy
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+To run the dummy
 
-## Available Scripts
+1. Add the following to `/etc/hosts`
+   
+   ```bash
+   127.0.0.1       localhost dummy.localhost
+   ```
 
-In the project directory, you can run:
+2. Go to `http://dummy.localhost:3000` and login
 
-### `npm dev` or `npm start`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+3. [Select the mode](/packages/functions/src/replicache/dummy/data.ts) with `http://dummy.localhost:3000?dummy=<mode>`
