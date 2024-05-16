@@ -51,8 +51,8 @@ export const handler = async (evt: Payload) => {
     const appName = appHint.includes(".")
       ? appHint?.split(".").at(-1)
       : appHint;
-    console.log("processing", appName, stageName);
     const { account, region } = evt;
+    console.log("processing", appName, stageName, account, region);
 
     const rows = await db
       .select({
@@ -64,7 +64,10 @@ export const handler = async (evt: Payload) => {
       .from(awsAccount)
       .leftJoin(
         app,
-        and(eq(app.name, appName!), eq(app.workspaceID, awsAccount.workspaceID))
+        and(
+          eq(app.name, appName!),
+          eq(app.workspaceID, awsAccount.workspaceID),
+        ),
       )
       .leftJoin(stage, and(eq(stage.name, stageName!), eq(stage.appID, app.id)))
       .where(and(eq(awsAccount.accountID, account)))
@@ -87,7 +90,7 @@ export const handler = async (evt: Payload) => {
               await createTransactionEffect(() =>
                 Stage.Events.Updated.publish({
                   stageID: row.stageID!,
-                })
+                }),
               );
               return;
             }
@@ -105,7 +108,7 @@ export const handler = async (evt: Payload) => {
               name: stageName!,
               awsAccountID: row.id,
             });
-          })
+          }),
       );
       console.log("done", row);
     }

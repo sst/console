@@ -1,4 +1,5 @@
 import {
+  foreignKey,
   mysqlTable,
   primaryKey,
   timestamp,
@@ -20,5 +21,15 @@ export const workspace = mysqlTable(
   },
   (table) => ({
     slug: uniqueIndex("slug").on(table.slug),
-  })
+  }),
 );
+
+export function workspaceIndexes(table: any) {
+  return {
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
+    workspace: foreignKey({
+      foreignColumns: [workspace.id],
+      columns: [table.workspaceID],
+    }),
+  };
+}

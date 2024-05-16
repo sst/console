@@ -1,4 +1,4 @@
-import { char, timestamp, datetime } from "drizzle-orm/mysql-core";
+import { char, timestamp, datetime, foreignKey } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
 
 export { createId } from "@paralleldrive/cuid2";
