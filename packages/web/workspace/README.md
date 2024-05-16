@@ -1,8 +1,8 @@
 ## Usage
 
-### `pnpm dev`
+### Dev
 
-Runs the app in the development mode `http://localhost:3000`
+Runs the app in dev mode with `pnpm dev` and go to `http://localhost:3000`
 
 ### Dummy
 
