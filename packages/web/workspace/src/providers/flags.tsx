@@ -18,6 +18,9 @@ export const { use: useFlags, provider: FlagsProvider } =
         return true;
         return local || internal() || Boolean(search.flag_alerts);
       },
+      get deploys() {
+        return local || internal();
+      },
       ready: true,
     };
   });

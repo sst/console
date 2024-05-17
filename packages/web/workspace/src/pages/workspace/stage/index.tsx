@@ -1,6 +1,7 @@
 import { Link, Navigate, Route, Routes, useNavigate } from "@solidjs/router";
 import { JSX, Match, Show, Switch, createMemo } from "solid-js";
 import { NavigationAction, useCommandBar } from "$/pages/workspace/command-bar";
+import { useFlags } from "$/providers/flags";
 import {
   useOutdated,
   StageContext,
@@ -13,6 +14,7 @@ import {
 } from "./context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
+import { Updates } from "./updates";
 import { Resources } from "./resources";
 import { IconSubRight } from "$/ui/icons/custom";
 import {
@@ -101,6 +103,7 @@ export function Warning(props: WarningProps) {
 }
 
 export function Inner() {
+  const flags = useFlags();
   const bar = useCommandBar();
   const ctx = useStageContext();
   const issues = useIssuesContext();
@@ -191,6 +194,11 @@ export function Inner() {
               <Link href="resources">
                 <TabTitle>Resources</TabTitle>
               </Link>
+              <Show when={flags.deploys}>
+                <Link href="updates">
+                  <TabTitle>Updates</TabTitle>
+                </Link>
+              </Show>
               <Link href="issues">
                 <TabTitle
                   count={issuesCount() ? issuesCount().toString() : undefined}
@@ -210,6 +218,7 @@ export function Inner() {
             <Routes>
               <Route path="resources" component={Resources} />
               <Route path="resources/logs/:resourceID/*" component={Logs} />
+              <Route path="updates" component={Updates} />
               <Route path="issues/*" component={Issues} />
               <Route path="local/*" component={Local} />
               <Route path="" element={<Navigate href="resources" />} />
