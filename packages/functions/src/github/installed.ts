@@ -30,7 +30,7 @@ export const handler = ApiHandler(async (event) => {
 
   // No workspaceID when the installation is updated from GitHub console
   if (!workspaceID) {
-    await withActor({ type: "public" }, async () => {
+    await withActor({ type: "public", properties: {} }, async () => {
       await Github.Events.Installed.publish({ installationID });
     });
   }

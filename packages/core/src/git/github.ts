@@ -21,11 +21,6 @@ export const Events = {
   ),
 };
 
-export type GithubRepo = {
-  id: number;
-  name: string;
-};
-
 export const Info = createSelectSchema(githubOrg);
 export type Info = z.infer<typeof Info>;
 
@@ -102,7 +97,7 @@ export const syncRepos = zod(
 
     // fetch repos from GitHub
     const octokit = await app.getInstallationOctokit(input.installationID);
-    const repos = [];
+    const repos: { id: number; name: string }[] = [];
     for (let page = 1; ; page++) {
       const ret = await octokit.rest.apps.listReposAccessibleToInstallation({
         per_page: 100,
