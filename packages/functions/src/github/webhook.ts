@@ -1,4 +1,4 @@
-import { Github } from "@console/core/github";
+import { Github } from "@console/core/git/github";
 import { App } from "octokit";
 import { ApiHandler, useBody, useHeader } from "sst/node/api";
 import { Config } from "sst/node/config";
@@ -13,8 +13,8 @@ const app = new App({
 
 export const handler = ApiHandler(async (event) => {
   app.webhooks.on("installation.deleted", async (event) => {
-    const orgID = event.payload.installation.account!.id;
-    await Github.disconnectAll(orgID);
+    const installationID = event.payload.installation.id;
+    await Github.disconnectAll(installationID);
   });
 
   const ret = await app.webhooks.verifyAndReceive({

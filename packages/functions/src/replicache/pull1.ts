@@ -38,7 +38,7 @@ import {
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
 import { db } from "@console/core/drizzle";
-import { githubOrg } from "@console/core/github/github.sql";
+import { githubOrg } from "@console/core/git/git.sql";
 import { slackTeam } from "@console/core/slack/slack.sql";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { gzipSync } from "zlib";

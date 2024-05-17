@@ -1,6 +1,6 @@
 import type { App } from "@console/core/app";
 import { Store } from "./store";
-import { Github } from "@console/core/github";
+import { Github } from "@console/core/git/github";
 import { Slack } from "@console/core/slack";
 import { Issue } from "@console/core/issue";
 import { Billing } from "@console/core/billing";

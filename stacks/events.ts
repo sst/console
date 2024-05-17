@@ -78,6 +78,13 @@ export function Events({ stack }: StackContext) {
     },
   });
 
+  bus.subscribe("github.installed", {
+    handler: "packages/functions/src/events/github-installed.handler",
+    bind: [...Object.values(secrets.database), bus, ...secrets.github],
+    timeout: "15 minute",
+    permissions: ["sts", "iot"],
+  });
+
   bus.subscribe("user.created", {
     handler: "packages/functions/src/events/user-created.handler",
     permissions: ["ses"],

@@ -7,6 +7,7 @@ import {
 } from "@solidjs/router";
 import { ReplicacheProvider, useReplicache } from "$/providers/replicache";
 import { NavigationAction, useCommandBar } from "./command-bar";
+import { App } from "./app";
 import { Stage } from "./stage";
 import { Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import { WorkspaceStore } from "$/data/workspace";
@@ -137,6 +138,7 @@ export function Content() {
       <Route path="account" component={Account} />
       <Route path="settings" component={Settings} />
       <Route path="debug" component={Debug} />
+      <Route path="new/:appName/*" component={App} />
       <Route path=":appName/:stageName/*" component={Stage} />
       <Route path="" component={Overview} />
       <Route path="*" element={<NotFound header />} />

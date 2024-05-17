@@ -477,7 +477,7 @@ function Integrations() {
                 <Text size="sm" color="dimmed">
                   Connected to{" "}
                   <Text color="dimmed" size="sm" weight="medium">
-                    {githubOrg()?.orgSlug}
+                    {githubOrg()?.login}
                   </Text>
                 </Text>
               </Show>
