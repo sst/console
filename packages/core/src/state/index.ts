@@ -62,7 +62,7 @@ export module State {
       if (!lock.updateID) return;
       if (!lock.command) return;
       if (!lock.created) return;
-      console.log("creating state update", lock.updateID);
+      console.log("creating state update", lock);
       await useTransaction(async (tx) => {
         await tx.insert(stateUpdateTable).values({
           workspaceID: useWorkspace(),
