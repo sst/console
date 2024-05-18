@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { zod } from "../util/zod";
-import { stateUpdateTable, stateResourceTable, Source } from "./state.sql";
+import {
+  stateUpdateTable,
+  stateResourceTable,
+  Source,
+  UpdateCommand,
+} from "./state.sql";
 import { createTransaction, useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { DateTime } from "luxon";
@@ -62,11 +67,12 @@ export module State {
       if (!lock.updateID) return;
       if (!lock.command) return;
       if (!lock.created) return;
-      console.log("creating state update", lock);
+      const command = UpdateCommand.safeParse(lock.command);
+      if (!command.success) return;
       await useTransaction(async (tx) => {
         await tx.insert(stateUpdateTable).values({
           workspaceID: useWorkspace(),
-          command: lock.command as any,
+          command: command.data,
           id: lock.updateID,
           stageID: input.config.stageID,
           source: {

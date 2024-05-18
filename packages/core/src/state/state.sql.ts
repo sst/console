@@ -63,6 +63,13 @@ export const Source = z.discriminatedUnion("type", [
 ]);
 export type Source = z.infer<typeof Source>;
 
+export const UpdateCommand = z.union([
+  z.literal("deploy"),
+  z.literal("refresh"),
+  z.literal("remove"),
+  z.literal("edit"),
+]);
+
 export const stateUpdateTable = mysqlTable(
   "state_update",
   {
