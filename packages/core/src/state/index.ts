@@ -41,7 +41,8 @@ export module State {
       const obj = await s3.send(
         new GetObjectCommand({
           Bucket: bootstrap.bucket,
-          Key: ["lock", input.config.app, input.config.stage].join("/"),
+          Key:
+            ["lock", input.config.app, input.config.stage].join("/") + ".json",
           VersionId: input.versionID,
         })
       );
