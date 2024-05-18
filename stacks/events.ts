@@ -110,5 +110,11 @@ export function Events({ stack }: StackContext) {
     }
   );
 
+  bus.subscribe(["state.lock.created"], {
+    handler: "packages/functions/src/events/state-lock-created.handler",
+    bind: [...Object.values(secrets.database)],
+    permissions: ["sts"],
+  });
+
   return bus;
 }
