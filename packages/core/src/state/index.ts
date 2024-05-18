@@ -119,7 +119,7 @@ export module State {
         resourceDeleted: number;
         resourceSame: number;
         timeStarted: string;
-        timeEnded: string;
+        timeCompleted: string;
       };
       console.log({ summary });
       await useTransaction(async (tx) => {
@@ -133,7 +133,7 @@ export module State {
             timeStarted: DateTime.fromISO(summary.timeStarted).toSQL({
               includeOffset: false,
             })!,
-            timeCompleted: DateTime.fromISO(summary.timeEnded).toSQL({
+            timeCompleted: DateTime.fromISO(summary.timeCompleted).toSQL({
               includeOffset: false,
             })!,
           })
