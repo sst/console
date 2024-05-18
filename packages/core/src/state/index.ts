@@ -31,6 +31,7 @@ export module State {
       config: z.custom<StageCredentials>(),
     }),
     async (input) => {
+      console.log("getLock", input);
       const s3 = new S3Client({
         ...input.config,
         retryStrategy: RETRY_STRATEGY,
@@ -49,6 +50,9 @@ export module State {
         command: string;
         created: string;
       };
+      if (!jsonData.updateID) return;
+      if (!jsonData.command) return;
+      if (!jsonData.created) return;
       return jsonData;
     }
   );

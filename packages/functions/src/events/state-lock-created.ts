@@ -7,7 +7,6 @@ import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(State.Event.LockCreated, (evt) =>
   withActor(evt.metadata.actor, async () => {
-    console.log("here");
     const config = await Stage.assumeRole(evt.properties.stageID);
     if (!config) return;
     const lock = await State.getLock({
@@ -15,6 +14,7 @@ export const handler = EventHandler(State.Event.LockCreated, (evt) =>
       config,
     });
     if (!lock) return;
+    console.log("creating update", evt.properties, lock);
     await createTransaction(async () => {
       await State.createUpdate({
         command: lock.command as any,

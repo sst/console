@@ -206,10 +206,8 @@ export function Settings() {
             View and manage your workspace settings
           </Text>
         </Stack>
-        <Show when={flags.alerts}>
-          <Divider />
-          <Alerts />
-        </Show>
+        <Divider />
+        <Alerts />
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE}>
           <Stack space={PANEL_HEADER_SPACE}>
@@ -336,9 +334,7 @@ export function Settings() {
             </Show>
           </Stack>
         </Stack>
-        <Show when={flags.alerts}>
-          <Integrations />
-        </Show>
+        <Integrations />
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE} horizontal="start" id="billing">
           <Stack space={PANEL_HEADER_SPACE}>

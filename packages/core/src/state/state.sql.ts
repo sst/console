@@ -67,7 +67,7 @@ export const stateUpdateTable = mysqlTable(
   "state_update",
   {
     ...workspaceID,
-    stageID: cuid("state_id").notNull(),
+    stageID: cuid("stage_id").notNull(),
     command: mysqlEnum("command", [
       "deploy",
       "refresh",

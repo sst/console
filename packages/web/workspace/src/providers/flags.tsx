@@ -11,13 +11,8 @@ export const { use: useFlags, provider: FlagsProvider } =
     const email = createMemo(() => auth[storage.value.account].session.email);
     const internal = createMemo(() => email().endsWith("@sst.dev"));
     const local = window.location.hostname.includes("localhost");
-    const [search] = useSearchParams();
 
     return {
-      get alerts() {
-        return true;
-        return local || internal() || Boolean(search.flag_alerts);
-      },
       get deploys() {
         return local || internal();
       },
