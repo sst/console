@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "8c8c10fd-0419-4651-8016-4e777f0bf763",
+  "id": "ce42b463-8b6d-4f83-b700-fffcd1bca654",
   "prevId": "251268c3-a9ab-4f0e-a1e3-6eeeda665e15",
   "tables": {
     "account": {
@@ -1942,6 +1942,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "action": {
+          "name": "action",
+          "type": "enum('created','updated','deleted')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "inputs": {
           "name": "inputs",
           "type": "json",
@@ -2012,7 +2019,7 @@
             "workspace_id",
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -2036,6 +2043,160 @@
           ]
         }
       }
+    },
+    "state_update": {
+      "name": "state_update",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(24)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "char(24)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stage_id": {
+          "name": "stage_id",
+          "type": "char(24)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "command": {
+          "name": "command",
+          "type": "enum('deploy','refresh','remove','edit')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "time_created": {
+          "name": "time_created",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "time_updated": {
+          "name": "time_updated",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "time_deleted": {
+          "name": "time_deleted",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "time_started": {
+          "name": "time_started",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "time_completed": {
+          "name": "time_completed",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resource_deleted": {
+          "name": "resource_deleted",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resource_created": {
+          "name": "resource_created",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resource_updated": {
+          "name": "resource_updated",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resource_same": {
+          "name": "resource_same",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "errors": {
+          "name": "errors",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "state_update_workspace_id_workspace_id_fk": {
+          "name": "state_update_workspace_id_workspace_id_fk",
+          "tableFrom": "state_update",
+          "tableTo": "workspace",
+          "columnsFrom": [
+            "workspace_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "state_update_workspace_id_stage_id_stage_workspace_id_id_fk": {
+          "name": "state_update_workspace_id_stage_id_stage_workspace_id_id_fk",
+          "tableFrom": "state_update",
+          "tableTo": "stage",
+          "columnsFrom": [
+            "workspace_id",
+            "stage_id"
+          ],
+          "columnsTo": [
+            "workspace_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "state_update_workspace_id_id_pk": {
+          "name": "state_update_workspace_id_id_pk",
+          "columns": [
+            "workspace_id",
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
     },
     "user": {
       "name": "user",
@@ -2289,8 +2450,6 @@
   "_meta": {
     "schemas": {},
     "tables": {},
-    "columns": {
-      "\"github_org\".\"slug\"": "\"github_org\".\"login\""
-    }
+    "columns": {}
   }
 }

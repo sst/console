@@ -41,7 +41,7 @@ export const stateResourceTable = mysqlTable(
     stageID: foreignKey({
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
-    }),
+    }).onDelete("cascade"),
     urn: unique("urn").on(
       table.workspaceID,
       table.stageID,
@@ -94,6 +94,6 @@ export const stateUpdateTable = mysqlTable(
     stageID: foreignKey({
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
-    }),
+    }).onDelete("cascade"),
   })
 );
