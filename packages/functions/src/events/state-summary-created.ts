@@ -5,12 +5,12 @@ import { createTransaction } from "@console/core/util/transaction";
 import { DateTime } from "luxon";
 import { EventHandler } from "sst/node/event-bus";
 
-export const handler = EventHandler(State.Event.LockCreated, (evt) =>
+export const handler = EventHandler(State.Event.SummaryCreated, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const config = await Stage.assumeRole(evt.properties.stageID);
     if (!config) return;
-    await State.receiveLock({
-      versionID: evt.properties.versionID,
+    await State.receiveSummary({
+      updateID: evt.properties.updateID,
       config,
     });
   })

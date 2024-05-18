@@ -116,5 +116,11 @@ export function Events({ stack }: StackContext) {
     permissions: ["sts"],
   });
 
+  bus.subscribe(["state.summary.created"], {
+    handler: "packages/functions/src/events/state-summary-created.handler",
+    bind: [...Object.values(secrets.database)],
+    permissions: ["sts"],
+  });
+
   return bus;
 }

@@ -33,6 +33,7 @@ type Payload = {
 }[keyof Events];
 
 export const handler = async (evt: Payload) => {
+  console.log(evt);
   if (evt.detail.object.key.startsWith("lock")) {
     if (evt["detail-type"] === "Object Created") {
       console.log("lock created");
@@ -86,6 +87,28 @@ export const handler = async (evt: Payload) => {
     }
   }
 
+  if (evt.detail.object.key.startsWith("summary")) {
+    let [, appHint, stageHint, updateID] = evt.detail.object.key.split("/");
+    updateID = updateID!.split(".")[0];
+    const stages = await findStages(stageHint!, appHint!, evt.account);
+    for (const row of stages) {
+      await withActor(
+        {
+          type: "system",
+          properties: {
+            workspaceID: row.workspaceID,
+          },
+        },
+        () =>
+          State.Event.SummaryCreated.publish({
+            stageID: row.stageID!,
+            updateID: updateID!,
+          })
+      );
+    }
+    return;
+  }
+
   if (
     evt["detail-type"] === "Object Created" ||
     evt["detail-type"] === "Object Deleted"
@@ -110,7 +133,6 @@ export const handler = async (evt: Payload) => {
     console.log("processing", appName, stageName, account, region);
 
     const rows = await findStages(stageName!, appName!, account);
-    console.log("matches", rows);
 
     for (const row of rows) {
       await withActor(
@@ -170,5 +192,6 @@ async function findStages(stageName: string, appName: string, account: string) {
       .where(and(eq(awsAccount.accountID, account)))
       .execute();
   });
+  console.log("matches", rows);
   return rows;
 }

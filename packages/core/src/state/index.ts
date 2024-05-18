@@ -19,19 +19,27 @@ export module State {
       "state.lock.created",
       z.object({ stageID: z.string(), versionID: z.string() })
     ),
+    LockRemoved: event(
+      "state.lock.removed",
+      z.object({ stageID: z.string(), versionID: z.string() })
+    ),
+    SummaryCreated: event(
+      "state.summary.created",
+      z.object({ stageID: z.string(), updateID: z.string() })
+    ),
   };
 
   export const Update = createSelectSchema(stateUpdateTable, {
     source: Source,
   });
 
-  export const getLock = zod(
+  export const receiveLock = zod(
     z.object({
       versionID: z.string(),
       config: z.custom<StageCredentials>(),
     }),
     async (input) => {
-      console.log("getLock", input);
+      console.log("receiveLock");
       const s3 = new S3Client({
         ...input.config,
         retryStrategy: RETRY_STRATEGY,
@@ -46,15 +54,90 @@ export module State {
           VersionId: input.versionID,
         })
       );
-      const jsonData = JSON.parse(await obj.Body!.transformToString()) as {
+      const lock = JSON.parse(await obj.Body!.transformToString()) as {
         updateID: string;
         command: string;
         created: string;
       };
-      if (!jsonData.updateID) return;
-      if (!jsonData.command) return;
-      if (!jsonData.created) return;
-      return jsonData;
+      if (!lock.updateID) return;
+      if (!lock.command) return;
+      if (!lock.created) return;
+      console.log("creating state update", lock.updateID);
+      await useTransaction(async (tx) => {
+        await tx.insert(stateUpdateTable).values({
+          workspaceID: useWorkspace(),
+          command: lock.command as any,
+          id: lock.updateID,
+          stageID: input.config.stageID,
+          source: {
+            type: "cli",
+            properties: {},
+          },
+          timeStarted: DateTime.fromISO(lock.created).toSQL({
+            includeOffset: false,
+          })!,
+        });
+      });
+    }
+  );
+
+  export const receiveSummary = zod(
+    z.object({
+      updateID: z.string(),
+      config: z.custom<StageCredentials>(),
+    }),
+    async (input) => {
+      console.log("receive summary", input.updateID);
+      const s3 = new S3Client({
+        ...input.config,
+        retryStrategy: RETRY_STRATEGY,
+      });
+      const bootstrap = await AWS.Account.bootstrapIon(input.config);
+      if (!bootstrap) return;
+      const obj = await s3.send(
+        new GetObjectCommand({
+          Bucket: bootstrap.bucket,
+          Key:
+            [
+              "summary",
+              input.config.app,
+              input.config.stage,
+              input.updateID,
+            ].join("/") + ".json",
+        })
+      );
+      const summary = JSON.parse(await obj.Body!.transformToString()) as {
+        updateID: string;
+        resourceUpdated: number;
+        resourceCreated: number;
+        resourceDeleted: number;
+        resourceSame: number;
+        timeStarted: string;
+        timeEnded: string;
+      };
+      console.log({ summary });
+      await useTransaction(async (tx) => {
+        await tx
+          .update(stateUpdateTable)
+          .set({
+            resourceUpdated: summary.resourceUpdated,
+            resourceCreated: summary.resourceCreated,
+            resourceDeleted: summary.resourceDeleted,
+            resourceSame: summary.resourceSame,
+            timeStarted: DateTime.fromISO(summary.timeStarted).toSQL({
+              includeOffset: false,
+            })!,
+            timeCompleted: DateTime.fromISO(summary.timeEnded).toSQL({
+              includeOffset: false,
+            })!,
+          })
+          .where(
+            and(
+              eq(stateUpdateTable.workspaceID, useWorkspace()),
+              eq(stateUpdateTable.id, input.updateID)
+            )
+          );
+      });
     }
   );
 
@@ -77,7 +160,7 @@ export module State {
       )
   );
 
-  export const startDeployment = zod(
+  export const startUpdate = zod(
     Update.pick({ id: true, timeStarted: true }).required({
       timeStarted: true,
     }),
