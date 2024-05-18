@@ -37,7 +37,8 @@ export const handler = async (evt: Payload) => {
     if (evt["detail-type"] === "Object Created") {
       console.log("lock created");
       await useTransaction(async (tx) => {
-        const [, appHint, stageHint] = evt.detail.object.key.split("/");
+        let [, appHint, stageHint] = evt.detail.object.key.split("/");
+        [stageHint] = stageHint.split(".");
         const stages = await findStages(stageHint!, appHint!, evt.account);
         for (const row of stages) {
           await withActor(
