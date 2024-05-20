@@ -18,7 +18,7 @@ import {
 } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { stripe, usage } from "@console/core/billing/billing.sql";
-import { app, appRepo, resource, stage } from "@console/core/app/app.sql";
+import { app, appRepo, env, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import {
   replicache_client,
@@ -50,6 +50,7 @@ export const TABLES = {
   awsAccount,
   app,
   appRepo,
+  env,
   stage,
   resource,
   log_poller,

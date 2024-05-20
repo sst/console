@@ -27,6 +27,7 @@ import {
   SlackTeamStore,
   GithubOrgStore,
   AppRepoStore,
+  EnvStore,
 } from "$/data/app";
 import { useReplicacheStatus } from "./replicache-status";
 
@@ -148,6 +149,19 @@ const mutators = new Client<ServerType>()
   })
   .mutation("app_repo_disconnect", async (tx, input) => {
     await AppRepoStore.remove(tx, input);
+  })
+  .mutation("env_create", async (tx, input) => {
+    await EnvStore.put(tx, [input.id!], {
+      id: input.id,
+      appID: input.appID,
+      stageName: input.stageName,
+      key: input.key,
+      value: input.value,
+      timeCreated: new Date().toISOString(),
+    });
+  })
+  .mutation("env_remove", async (tx, input) => {
+    await EnvStore.remove(tx, input);
   })
   .build();
 

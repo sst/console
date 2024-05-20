@@ -1,5 +1,6 @@
 import type { App } from "@console/core/app";
 import { Store } from "./store";
+import { Env } from "@console/core/app/env";
 import { Github } from "@console/core/git/github";
 import { Slack } from "@console/core/slack";
 import { Issue } from "@console/core/issue";
@@ -16,6 +17,12 @@ export const AppRepoStore = new Store()
   .type<AppRepo.Info>()
   .scan("all", () => ["appRepo"])
   .get((id: string) => ["appRepo", id])
+  .build();
+
+export const EnvStore = new Store()
+  .type<Env.Info>()
+  .scan("all", () => ["env"])
+  .get((id: string) => ["env", id])
   .build();
 
 export const GithubOrgStore = new Store()

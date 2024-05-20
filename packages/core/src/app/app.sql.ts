@@ -7,6 +7,7 @@ import {
   boolean,
   varchar,
   foreignKey,
+  text,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid } from "../util/sql";
 import { RepoSource } from "./repo";
@@ -78,6 +79,31 @@ export const appRepo = mysqlTable(
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),
+    appID: foreignKey({
+      columns: [table.workspaceID, table.appID],
+      foreignColumns: [app.workspaceID, app.id],
+    }).onDelete("cascade"),
+  })
+);
+
+export const env = mysqlTable(
+  "env",
+  {
+    ...workspaceID,
+    ...timestamps,
+    appID: cuid("app_id").notNull(),
+    stageName: varchar("stage_name", { length: 255 }).notNull(),
+    key: varchar("key", { length: 255 }).notNull(),
+    value: text("value").notNull(),
+  },
+  (table) => ({
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
+    key: uniqueIndex("key").on(
+      table.workspaceID,
+      table.appID,
+      table.stageName,
+      table.key
+    ),
     appID: foreignKey({
       columns: [table.workspaceID, table.appID],
       foreignColumns: [app.workspaceID, app.id],

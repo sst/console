@@ -71,6 +71,13 @@
       "when": 1716224556225,
       "tag": "0009_lovely_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1716238662926,
+      "tag": "0010_wandering_colossus",
+      "breakpoints": true
     }
   ]
 }
