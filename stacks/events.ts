@@ -122,5 +122,11 @@ export function Events({ stack }: StackContext) {
     permissions: ["sts"],
   });
 
+  bus.subscribe(["state.history.created"], {
+    handler: "packages/functions/src/events/state-history-created.handler",
+    bind: [...Object.values(secrets.database)],
+    permissions: ["sts"],
+  });
+
   return bus;
 }

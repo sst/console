@@ -14,43 +14,6 @@ import { stage } from "../app/app.sql";
 import { workspaceIndexes } from "../workspace/workspace.sql";
 import { z } from "zod";
 
-export const stateResourceTable = mysqlTable(
-  "state_resource",
-  {
-    ...workspaceID,
-    stageID: cuid("stage_id").notNull(),
-    type: varchar("type", { length: 255 }).notNull(),
-    urn: varchar("urn", { length: 255 }).notNull(),
-    outputs: json("outputs").notNull(),
-    action: mysqlEnum("action", ["created", "updated", "deleted"]).notNull(),
-    inputs: json("inputs").notNull(),
-    parent: varchar("parent", { length: 255 }),
-    custom: boolean("custom").notNull(),
-    timeCreated: timestamp("time_created", {
-      mode: "string",
-    }).notNull(),
-    timeUpdated: timestamp("time_updated", {
-      mode: "string",
-    }).notNull(),
-    timeDeleted: timestamp("time_deleted", {
-      mode: "string",
-    }),
-  },
-  (table) => ({
-    ...workspaceIndexes(table),
-    stageID: foreignKey({
-      columns: [table.workspaceID, table.stageID],
-      foreignColumns: [stage.workspaceID, stage.id],
-    }).onDelete("cascade"),
-    urn: unique("urn").on(
-      table.workspaceID,
-      table.stageID,
-      table.urn,
-      table.timeUpdated
-    ),
-  })
-);
-
 export const Source = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("cli"),
@@ -101,6 +64,49 @@ export const stateUpdateTable = mysqlTable(
     stageID: foreignKey({
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
+    }).onDelete("cascade"),
+  })
+);
+
+export const stateResourceTable = mysqlTable(
+  "state_resource",
+  {
+    ...workspaceID,
+    stageID: cuid("stage_id").notNull(),
+    updateID: cuid("update_id").notNull(),
+    type: varchar("type", { length: 255 }).notNull(),
+    urn: varchar("urn", { length: 255 }).notNull(),
+    outputs: json("outputs").notNull(),
+    action: mysqlEnum("action", ["created", "updated", "deleted"]).notNull(),
+    inputs: json("inputs").notNull(),
+    parent: varchar("parent", { length: 255 }),
+    custom: boolean("custom").notNull(),
+    timeCreated: timestamp("time_created", {
+      mode: "string",
+    }).notNull(),
+    timeUpdated: timestamp("time_updated", {
+      mode: "string",
+    }).notNull(),
+    timeDeleted: timestamp("time_deleted", {
+      mode: "string",
+    }),
+  },
+  (table) => ({
+    ...workspaceIndexes(table),
+    stageID: foreignKey({
+      columns: [table.workspaceID, table.stageID],
+      foreignColumns: [stage.workspaceID, stage.id],
+    }).onDelete("cascade"),
+    urn: unique("urn").on(
+      table.workspaceID,
+      table.stageID,
+      table.updateID,
+      table.urn
+    ),
+    updateID: foreignKey({
+      name: "update_id",
+      columns: [table.workspaceID, table.updateID],
+      foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
     }).onDelete("cascade"),
   })
 );

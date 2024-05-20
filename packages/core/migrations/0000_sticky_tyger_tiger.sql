@@ -19,6 +19,31 @@ CREATE TABLE `app` (
 	CONSTRAINT `name` UNIQUE(`workspace_id`,`name`)
 );
 --> statement-breakpoint
+CREATE TABLE `app_repo` (
+	`id` char(24) NOT NULL,
+	`workspace_id` char(24) NOT NULL,
+	`time_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`time_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`time_deleted` timestamp,
+	`app_id` char(24) NOT NULL,
+	`source` json NOT NULL,
+	CONSTRAINT `app_repo_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `env` (
+	`id` char(24) NOT NULL,
+	`workspace_id` char(24) NOT NULL,
+	`time_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`time_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`time_deleted` timestamp,
+	`app_id` char(24) NOT NULL,
+	`stage_name` varchar(255) NOT NULL,
+	`key` varchar(255) NOT NULL,
+	`value` text NOT NULL,
+	CONSTRAINT `env_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`),
+	CONSTRAINT `key` UNIQUE(`workspace_id`,`app_id`,`stage_name`,`key`)
+);
+--> statement-breakpoint
 CREATE TABLE `resource` (
 	`id` char(24) NOT NULL,
 	`workspace_id` char(24) NOT NULL,
@@ -91,6 +116,32 @@ CREATE TABLE `usage` (
 	`invocations` bigint NOT NULL,
 	CONSTRAINT `usage_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`),
 	CONSTRAINT `stage` UNIQUE(`workspace_id`,`stage_id`,`day`)
+);
+--> statement-breakpoint
+CREATE TABLE `github_org` (
+	`id` char(24) NOT NULL,
+	`workspace_id` char(24) NOT NULL,
+	`time_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`time_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`time_deleted` timestamp,
+	`org_id` bigint NOT NULL,
+	`login` varchar(255) NOT NULL,
+	`installation_id` bigint NOT NULL,
+	CONSTRAINT `github_org_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`),
+	CONSTRAINT `org` UNIQUE(`workspace_id`,`org_id`)
+);
+--> statement-breakpoint
+CREATE TABLE `github_repo` (
+	`id` char(24) NOT NULL,
+	`workspace_id` char(24) NOT NULL,
+	`time_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`time_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`time_deleted` timestamp,
+	`org_id` bigint NOT NULL,
+	`repo_id` bigint NOT NULL,
+	`name` varchar(255) NOT NULL,
+	CONSTRAINT `github_repo_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`),
+	CONSTRAINT `repo` UNIQUE(`workspace_id`,`org_id`,`repo_id`)
 );
 --> statement-breakpoint
 CREATE TABLE `issue` (
@@ -253,6 +304,44 @@ CREATE TABLE `slack_team` (
 	CONSTRAINT `team` UNIQUE(`workspace_id`,`team_id`)
 );
 --> statement-breakpoint
+CREATE TABLE `state_resource` (
+	`id` char(24) NOT NULL,
+	`workspace_id` char(24) NOT NULL,
+	`stage_id` char(24) NOT NULL,
+	`update_id` char(24) NOT NULL,
+	`type` varchar(255) NOT NULL,
+	`urn` varchar(255) NOT NULL,
+	`outputs` json NOT NULL,
+	`action` enum('created','updated','deleted') NOT NULL,
+	`inputs` json NOT NULL,
+	`parent` varchar(255),
+	`custom` boolean NOT NULL,
+	`time_created` timestamp NOT NULL,
+	`time_updated` timestamp NOT NULL,
+	`time_deleted` timestamp,
+	CONSTRAINT `state_resource_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`),
+	CONSTRAINT `urn` UNIQUE(`workspace_id`,`stage_id`,`update_id`,`urn`)
+);
+--> statement-breakpoint
+CREATE TABLE `state_update` (
+	`id` char(24) NOT NULL,
+	`workspace_id` char(24) NOT NULL,
+	`stage_id` char(24) NOT NULL,
+	`command` enum('deploy','refresh','remove','edit') NOT NULL,
+	`source` json NOT NULL,
+	`time_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`time_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`time_deleted` timestamp,
+	`time_started` timestamp,
+	`time_completed` timestamp,
+	`resource_deleted` int,
+	`resource_created` int,
+	`resource_updated` int,
+	`resource_same` int,
+	`errors` int,
+	CONSTRAINT `state_update_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`)
+);
+--> statement-breakpoint
 CREATE TABLE `user` (
 	`id` char(24) NOT NULL,
 	`workspace_id` char(24) NOT NULL,
@@ -290,9 +379,18 @@ CREATE TABLE `workspace` (
 	CONSTRAINT `slug` UNIQUE(`slug`)
 );
 --> statement-breakpoint
+ALTER TABLE `app_repo` ADD CONSTRAINT `app_repo_workspace_id_app_id_app_workspace_id_id_fk` FOREIGN KEY (`workspace_id`,`app_id`) REFERENCES `app`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `env` ADD CONSTRAINT `env_workspace_id_app_id_app_workspace_id_id_fk` FOREIGN KEY (`workspace_id`,`app_id`) REFERENCES `app`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `github_repo` ADD CONSTRAINT `github_repo_workspace_id_org_id` FOREIGN KEY (`workspace_id`,`org_id`) REFERENCES `github_org`(`workspace_id`,`org_id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `state_resource` ADD CONSTRAINT `state_resource_workspace_id_workspace_id_fk` FOREIGN KEY (`workspace_id`) REFERENCES `workspace`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `state_resource` ADD CONSTRAINT `state_resource_workspace_id_stage_id_stage_workspace_id_id_fk` FOREIGN KEY (`workspace_id`,`stage_id`) REFERENCES `stage`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `state_resource` ADD CONSTRAINT `update_id` FOREIGN KEY (`workspace_id`,`update_id`) REFERENCES `state_update`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `state_update` ADD CONSTRAINT `state_update_workspace_id_workspace_id_fk` FOREIGN KEY (`workspace_id`) REFERENCES `workspace`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `state_update` ADD CONSTRAINT `state_update_workspace_id_stage_id_stage_workspace_id_id_fk` FOREIGN KEY (`workspace_id`,`stage_id`) REFERENCES `stage`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX `updated` ON `app` (`time_updated`);--> statement-breakpoint
 CREATE INDEX `updated` ON `stage` (`time_updated`);--> statement-breakpoint
 CREATE INDEX `updated` ON `aws_account` (`time_updated`);--> statement-breakpoint
+CREATE INDEX `installation_id` ON `github_org` (`org_id`);--> statement-breakpoint
 CREATE INDEX `updated` ON `issue` (`workspace_id`,`time_updated`);--> statement-breakpoint
 CREATE INDEX `client_group_id` ON `replicache_client` (`client_group_id`);--> statement-breakpoint
 CREATE INDEX `email_global` ON `user` (`email`);
