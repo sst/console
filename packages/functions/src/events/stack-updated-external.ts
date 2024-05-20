@@ -2,7 +2,6 @@ import { withActor } from "@console/core/actor";
 import { App, Stage } from "@console/core/app";
 import { app, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
-import { db } from "@console/core/drizzle";
 import { State } from "@console/core/state";
 import { createId } from "@console/core/util/sql";
 import {
@@ -103,6 +102,31 @@ export const handler = async (evt: Payload) => {
           State.Event.SummaryCreated.publish({
             stageID: row.stageID!,
             updateID: updateID!,
+          })
+      );
+    }
+    return;
+  }
+
+  if (
+    evt["detail-type"] === "Object Created" &&
+    evt.detail.object.key.startsWith("history")
+  ) {
+    let [, appHint, stageHint, updateID] = evt.detail.object.key.split("/");
+    updateID = updateID!.split(".")[0];
+    const stages = await findStages(stageHint!, appHint!, evt.account);
+    for (const row of stages) {
+      await withActor(
+        {
+          type: "system",
+          properties: {
+            workspaceID: row.workspaceID,
+          },
+        },
+        () =>
+          State.Event.HistoryCreated.publish({
+            stageID: row.stageID!,
+            key: evt.detail.object.key,
           })
       );
     }
