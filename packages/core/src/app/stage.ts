@@ -16,6 +16,7 @@ import { AWS } from "../aws";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
+  NoSuchBucket,
   NoSuchKey,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -288,6 +289,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         )
         .catch((err) => {
           if (err instanceof NoSuchKey) return;
+          if (err instanceof NoSuchBucket) return;
           throw err;
         });
       if (!result) continue;
