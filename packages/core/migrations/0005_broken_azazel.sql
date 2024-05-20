@@ -1,1 +1,0 @@
-ALTER TABLE `state_resource` ADD `action` enum('created','updated','deleted') NOT NULL;
