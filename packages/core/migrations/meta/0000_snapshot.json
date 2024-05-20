@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "bae02e55-ad75-45fa-89b9-50f795292bbe",
+  "id": "815816ac-ed90-44f1-b175-8e004cfb3a20",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -229,8 +229,8 @@
       },
       "uniqueConstraints": {}
     },
-    "env": {
-      "name": "env",
+    "run_env": {
+      "name": "run_env",
       "columns": {
         "id": {
           "name": "id",
@@ -312,9 +312,9 @@
         }
       },
       "foreignKeys": {
-        "env_workspace_id_app_id_app_workspace_id_id_fk": {
-          "name": "env_workspace_id_app_id_app_workspace_id_id_fk",
-          "tableFrom": "env",
+        "run_env_workspace_id_app_id_app_workspace_id_id_fk": {
+          "name": "run_env_workspace_id_app_id_app_workspace_id_id_fk",
+          "tableFrom": "run_env",
           "tableTo": "app",
           "columnsFrom": [
             "workspace_id",
@@ -329,8 +329,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "env_workspace_id_id_pk": {
-          "name": "env_workspace_id_id_pk",
+        "run_env_workspace_id_id_pk": {
+          "name": "run_env_workspace_id_id_pk",
           "columns": [
             "workspace_id",
             "id"

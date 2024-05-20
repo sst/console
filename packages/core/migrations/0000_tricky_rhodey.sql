@@ -30,7 +30,7 @@ CREATE TABLE `app_repo` (
 	CONSTRAINT `app_repo_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`)
 );
 --> statement-breakpoint
-CREATE TABLE `env` (
+CREATE TABLE `run_env` (
 	`id` char(24) NOT NULL,
 	`workspace_id` char(24) NOT NULL,
 	`time_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -40,7 +40,7 @@ CREATE TABLE `env` (
 	`stage_name` varchar(255) NOT NULL,
 	`key` varchar(255) NOT NULL,
 	`value` text NOT NULL,
-	CONSTRAINT `env_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`),
+	CONSTRAINT `run_env_workspace_id_id_pk` PRIMARY KEY(`workspace_id`,`id`),
 	CONSTRAINT `key` UNIQUE(`workspace_id`,`app_id`,`stage_name`,`key`)
 );
 --> statement-breakpoint
@@ -380,7 +380,7 @@ CREATE TABLE `workspace` (
 );
 --> statement-breakpoint
 ALTER TABLE `app_repo` ADD CONSTRAINT `app_repo_workspace_id_app_id_app_workspace_id_id_fk` FOREIGN KEY (`workspace_id`,`app_id`) REFERENCES `app`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `env` ADD CONSTRAINT `env_workspace_id_app_id_app_workspace_id_id_fk` FOREIGN KEY (`workspace_id`,`app_id`) REFERENCES `app`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `run_env` ADD CONSTRAINT `run_env_workspace_id_app_id_app_workspace_id_id_fk` FOREIGN KEY (`workspace_id`,`app_id`) REFERENCES `app`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `github_repo` ADD CONSTRAINT `github_repo_workspace_id_org_id` FOREIGN KEY (`workspace_id`,`org_id`) REFERENCES `github_org`(`workspace_id`,`org_id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `state_resource` ADD CONSTRAINT `state_resource_workspace_id_workspace_id_fk` FOREIGN KEY (`workspace_id`) REFERENCES `workspace`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `state_resource` ADD CONSTRAINT `state_resource_workspace_id_stage_id_stage_workspace_id_id_fk` FOREIGN KEY (`workspace_id`,`stage_id`) REFERENCES `stage`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

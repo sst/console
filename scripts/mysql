@@ -1,3 +1,3 @@
 #!/bin/sh
 
-mysql -h "aws.connect.psdb.cloud" -u $SST_Secret_value_PLANETSCALE_USERNAME -p$SST_Secret_value_PLANETSCALE_PASSWORD sst
+mysql --silent -h "aws.connect.psdb.cloud" -u $SST_Secret_value_PLANETSCALE_USERNAME -p$SST_Secret_value_PLANETSCALE_PASSWORD sst
