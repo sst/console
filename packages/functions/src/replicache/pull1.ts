@@ -293,7 +293,7 @@ export const handler = ApiHandler(
           if (!ids.length) continue;
           const table = TABLES[name as keyof typeof TABLES];
           let offset = 0;
-          const page = 1000;
+          const page = 10_000;
           while (true) {
             console.log("fetching", name, "offset", offset);
             const rows = await tx
