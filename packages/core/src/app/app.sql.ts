@@ -87,7 +87,7 @@ export const appRepo = mysqlTable(
 );
 
 export const env = mysqlTable(
-  "env",
+  "run_env",
   {
     ...workspaceID,
     ...timestamps,
