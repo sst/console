@@ -18,7 +18,7 @@ import {
 } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { stripe, usage } from "@console/core/billing/billing.sql";
-import { app, resource, stage } from "@console/core/app/app.sql";
+import { app, appRepo, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import {
   replicache_client,
@@ -38,7 +38,7 @@ import {
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
 import { db } from "@console/core/drizzle";
-import { githubOrg } from "@console/core/git/git.sql";
+import { githubOrg, githubRepo } from "@console/core/git/git.sql";
 import { slackTeam } from "@console/core/slack/slack.sql";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { gzipSync } from "zlib";
@@ -49,6 +49,7 @@ export const TABLES = {
   user,
   awsAccount,
   app,
+  appRepo,
   stage,
   resource,
   log_poller,
@@ -60,6 +61,7 @@ export const TABLES = {
   issueCount,
   issueAlert,
   githubOrg,
+  githubRepo,
   slackTeam,
   usage,
 };

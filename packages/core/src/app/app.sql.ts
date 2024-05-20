@@ -9,7 +9,7 @@ import {
   foreignKey,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid } from "../util/sql";
-//import { RepoData } from "./repo";
+import { RepoSource } from "./repo";
 
 export const app = mysqlTable(
   "app",
@@ -68,19 +68,19 @@ export const resource = mysqlTable(
   })
 );
 
-//export const appRepo = mysqlTable(
-//  "app_repo",
-//  {
-//    ...workspaceID,
-//    ...timestamps,
-//    appID: cuid("app_id").notNull(),
-//    data: json("data").$type<RepoData>().notNull(),
-//  },
-//  (table) => ({
-//    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
-//    appID: foreignKey({
-//      columns: [table.workspaceID, table.appID],
-//      foreignColumns: [app.workspaceID, app.id],
-//    }),
-//  })
-//);
+export const appRepo = mysqlTable(
+  "app_repo",
+  {
+    ...workspaceID,
+    ...timestamps,
+    appID: cuid("app_id").notNull(),
+    source: json("source").$type<RepoSource>().notNull(),
+  },
+  (table) => ({
+    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
+    appID: foreignKey({
+      columns: [table.workspaceID, table.appID],
+      foreignColumns: [app.workspaceID, app.id],
+    }).onDelete("cascade"),
+  })
+);

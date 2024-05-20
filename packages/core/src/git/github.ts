@@ -21,8 +21,10 @@ export const Events = {
   ),
 };
 
-export const Info = createSelectSchema(githubOrg);
-export type Info = z.infer<typeof Info>;
+export const OrgInfo = createSelectSchema(githubOrg);
+export type OrgInfo = z.infer<typeof OrgInfo>;
+export const RepoInfo = createSelectSchema(githubRepo);
+export type RepoInfo = z.infer<typeof RepoInfo>;
 
 const app = new App({
   appId: Config.GITHUB_APP_ID,
@@ -60,7 +62,7 @@ export const connect = zod(z.number(), async (installationID) => {
   await Events.Installed.publish({ installationID });
 });
 
-export const disconnect = zod(Info.shape.id, (id) =>
+export const disconnect = zod(OrgInfo.shape.id, (id) =>
   useTransaction((tx) => {
     return tx
       .delete(githubOrg)

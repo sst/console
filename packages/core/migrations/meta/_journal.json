@@ -64,6 +64,13 @@
       "when": 1716059554254,
       "tag": "0008_regular_forge",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1716224556225,
+      "tag": "0009_lovely_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }

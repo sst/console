@@ -22,7 +22,12 @@ import { WarningStore } from "$/data/warning";
 import { useDummy } from "./dummy";
 import { createGet } from "$/data/store";
 import { AWS } from "$/data/aws";
-import { IssueAlertStore, SlackTeamStore, GithubOrgStore } from "$/data/app";
+import {
+  IssueAlertStore,
+  SlackTeamStore,
+  GithubOrgStore,
+  AppRepoStore,
+} from "$/data/app";
 import { useReplicacheStatus } from "./replicache-status";
 
 const mutators = new Client<ServerType>()
@@ -132,6 +137,17 @@ const mutators = new Client<ServerType>()
     for (const org of all) {
       await GithubOrgStore.remove(tx, org.id);
     }
+  })
+  .mutation("app_repo_connect", async (tx, input) => {
+    await AppRepoStore.put(tx, [input.id!], {
+      id: input.id,
+      appID: input.appID,
+      source: input.source,
+      timeCreated: new Date().toISOString(),
+    });
+  })
+  .mutation("app_repo_disconnect", async (tx, input) => {
+    await AppRepoStore.remove(tx, input);
   })
   .build();
 

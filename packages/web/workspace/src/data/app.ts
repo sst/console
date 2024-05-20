@@ -4,6 +4,7 @@ import { Github } from "@console/core/git/github";
 import { Slack } from "@console/core/slack";
 import { Issue } from "@console/core/issue";
 import { Billing } from "@console/core/billing";
+import { AppRepo } from "@console/core/app/repo";
 
 export const AppStore = new Store()
   .type<App.Info>()
@@ -11,10 +12,22 @@ export const AppStore = new Store()
   .get((id: string) => ["app", id])
   .build();
 
+export const AppRepoStore = new Store()
+  .type<AppRepo.Info>()
+  .scan("all", () => ["appRepo"])
+  .get((id: string) => ["appRepo", id])
+  .build();
+
 export const GithubOrgStore = new Store()
-  .type<Github.Info>()
+  .type<Github.OrgInfo>()
   .scan("all", () => ["githubOrg"])
   .get((id: string) => ["githubOrg", id])
+  .build();
+
+export const GithubRepoStore = new Store()
+  .type<Github.RepoInfo>()
+  .scan("all", () => ["githubRepo"])
+  .get((id: string) => ["githubRepo", id])
   .build();
 
 export const SlackTeamStore = new Store()
