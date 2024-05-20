@@ -296,10 +296,6 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
       const stackID = checkpoint?.resources?.[0].urn;
       if (!stackID) continue;
       console.log(checkpoint);
-      await State.sync({
-        stageID: input.stageID,
-        checkpoint: checkpoint,
-      });
       for (const res of checkpoint.resources) {
         console.log(JSON.stringify(res, null, 4));
         const base = {
