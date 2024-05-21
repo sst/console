@@ -5,15 +5,16 @@ import {
   stateResourceTable,
   Source,
   UpdateCommand,
+  Command,
 } from "./state.sql";
-import { createTransaction, useTransaction } from "../util/transaction";
+import { useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { DateTime } from "luxon";
 import { useWorkspace } from "../actor";
 import { and, eq, sql } from "drizzle-orm";
 import { event } from "../event";
 import { createSelectSchema } from "drizzle-zod";
-import { Stage, StageCredentials } from "../app/stage";
+import { StageCredentials } from "../app/stage";
 import {
   S3Client,
   GetObjectCommand,
@@ -42,10 +43,52 @@ export module State {
     ),
   };
 
-  export const Update = createSelectSchema(stateUpdateTable, {
+  export const Update = z.object({
+    id: z.string().cuid(),
+    stageID: z.string().cuid(),
+    command: z.enum(Command),
     source: Source,
+    time: z.object({
+      created: z.string(),
+      deleted: z.string().optional(),
+      updated: z.string(),
+      started: z.string().optional(),
+      completed: z.string().optional(),
+    }),
+    resource: z.object({
+      created: z.number().optional(),
+      updated: z.number().optional(),
+      deleted: z.number().optional(),
+      same: z.number().optional(),
+    }),
+    errors: z.number().optional(),
   });
   export type Update = z.infer<typeof Update>;
+
+  export function serializeUpdate(
+    input: typeof stateUpdateTable.$inferSelect
+  ): Update {
+    return {
+      id: input.id,
+      command: input.command,
+      resource: {
+        same: input.resourceSame || undefined,
+        created: input.resourceCreated || undefined,
+        updated: input.resourceUpdated || undefined,
+        deleted: input.resourceDeleted || undefined,
+      },
+      time: {
+        created: input.timeCreated.toISOString(),
+        updated: input.timeUpdated.toISOString(),
+        deleted: input.timeDeleted?.toISOString(),
+        started: input.timeStarted?.toISOString(),
+        completed: input.timeCompleted?.toISOString(),
+      },
+      source: input.source,
+      errors: input.errors || undefined,
+      stageID: input.stageID,
+    };
+  }
 
   export const receiveHistory = zod(
     z.object({
@@ -134,8 +177,8 @@ export module State {
             return "updated";
           })(),
           id: createId(),
-          timeUpdated: DateTime.fromISO(resource.modified).toSQL()!,
-          timeCreated: DateTime.fromISO(resource.created).toSQL()!,
+          timeUpdated: new Date(resource.modified),
+          timeCreated: new Date(resource.created),
           workspaceID: useWorkspace(),
           type: resource.type,
           urn: resource.urn,
@@ -153,8 +196,8 @@ export module State {
           updateID,
           action: "deleted",
           id: createId(),
-          timeUpdated: DateTime.now().toSQL()!,
-          timeCreated: resource.created,
+          timeUpdated: new Date(),
+          timeCreated: new Date(resource.created),
           workspaceID: useWorkspace(),
           type: resource.type,
           urn: resource.urn,
@@ -214,9 +257,7 @@ export module State {
             type: "cli",
             properties: {},
           },
-          timeStarted: DateTime.fromISO(lock.created).toUTC().toSQL({
-            includeOffset: false,
-          })!,
+          timeStarted: new Date(lock.created),
         });
       });
     }
@@ -265,14 +306,8 @@ export module State {
             resourceCreated: summary.resourceCreated,
             resourceDeleted: summary.resourceDeleted,
             resourceSame: summary.resourceSame,
-            timeStarted: DateTime.fromISO(summary.timeStarted).toUTC().toSQL({
-              includeOffset: false,
-            })!,
-            timeCompleted: DateTime.fromISO(summary.timeCompleted)
-              .toUTC()
-              .toSQL({
-                includeOffset: false,
-              })!,
+            timeStarted: new Date(summary.timeStarted),
+            timeCompleted: new Date(summary.timeCompleted),
           })
           .where(
             and(
@@ -300,26 +335,6 @@ export module State {
           source: input.source,
           command: input.command,
         })
-      )
-  );
-
-  export const startUpdate = zod(
-    Update.pick({ id: true, timeStarted: true }).required({
-      timeStarted: true,
-    }),
-    (input) =>
-      useTransaction(async (tx) =>
-        tx
-          .update(stateUpdateTable)
-          .set({
-            timeStarted: input.timeStarted,
-          })
-          .where(
-            and(
-              eq(stateUpdateTable.id, input.id),
-              eq(stateUpdateTable.workspaceID, useWorkspace())
-            )
-          )
       )
   );
 }

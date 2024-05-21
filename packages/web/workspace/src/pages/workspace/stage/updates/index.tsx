@@ -238,11 +238,11 @@ function Update(props: UpdateProps) {
           <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
           <Show when={props.timeStarted}>
             <UpdateTime
-              title={parseTime(props.timeStarted!).toLocaleString(
+              title={DateTime.fromISO(props.timeStarted!).toLocaleString(
                 DateTime.DATETIME_FULL,
               )}
             >
-              {formatSinceTime(props.timeStarted!)}
+              {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
             </UpdateTime>
           </Show>
         </UpdateSource>
@@ -271,15 +271,15 @@ export function Updates() {
     <Content>
       <div>
         <For
-          each={sortBy(updates(), [(item) => item.timeStarted || "", "desc"])}
+          each={sortBy(updates(), [(item) => item.time.started || "", "desc"])}
         >
           {(item, index) => (
             <Update
               id={(updates().length - index()).toString()}
               source={item.source.type}
               command={item.command}
-              timeStarted={item.timeStarted || undefined}
-              timeCompleted={item.timeCompleted || undefined}
+              timeStarted={item.time.started}
+              timeCompleted={item.time.completed}
             />
           )}
         </For>

@@ -46,6 +46,7 @@ import {
   stateResourceTable,
   stateUpdateTable,
 } from "@console/core/state/state.sql";
+import { State } from "@console/core/state";
 
 export const TABLES = {
   workspace,
@@ -85,6 +86,14 @@ const TABLE_KEY = {
   stripe: [],
 } as {
   [key in TableName]?: MySqlColumn[];
+};
+
+const TABLE_PROJECTION = {
+  stateUpdate(input) {
+    return State.serializeUpdate(input);
+  },
+} as {
+  [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
 };
 
 export const handler = ApiHandler(
@@ -292,6 +301,7 @@ export const handler = ApiHandler(
 
         // new data
         for (const [name, items] of Object.entries(toPut)) {
+          console.log(name);
           const ids = items.map((item) => item.id);
           const keys = Object.fromEntries(
             items.map((item) => [item.id, item.key])
@@ -317,12 +327,15 @@ export const handler = ApiHandler(
               .offset(offset)
               .limit(page)
               .execute();
+            const projection =
+              TABLE_PROJECTION[name as keyof typeof TABLE_PROJECTION];
+
             for (const row of rows) {
               const key = keys[row.id]!;
               patch.push({
                 op: "put",
                 key,
-                value: row,
+                value: projection ? projection(row as any) : row,
               });
             }
             if (rows.length < page) break;

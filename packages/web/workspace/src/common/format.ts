@@ -78,11 +78,11 @@ export function formatDuration(ms: number): string {
 
 export function formatSinceTime(
   timestamp: string,
-  useFullFormat?: boolean
+  useFullFormat?: boolean,
 ): string {
   const diffInSeconds = Math.max(
     0,
-    Math.ceil(parseTime(timestamp).diffNow().as("seconds") * -1)
+    Math.ceil(parseTime(timestamp).diffNow().as("seconds") * -1),
   );
 
   if (diffInSeconds < 60) {
@@ -100,8 +100,8 @@ export function formatSinceTime(
         ? "1 minute ago"
         : `${diffInMinutes} minutes ago`
       : diffInMinutes === 1
-      ? "1min ago"
-      : `${diffInMinutes}mins ago`;
+        ? "1min ago"
+        : `${diffInMinutes}mins ago`;
   }
 
   const diffInHours = Math.round(diffInMinutes / 60);
@@ -111,8 +111,8 @@ export function formatSinceTime(
         ? "1 hour ago"
         : `${diffInHours} hours ago`
       : diffInHours === 1
-      ? "1hr ago"
-      : `${diffInHours}hrs ago`;
+        ? "1hr ago"
+        : `${diffInHours}hrs ago`;
   }
 
   const diffInDays = Math.round(diffInHours / 24);
@@ -122,8 +122,8 @@ export function formatSinceTime(
         ? "1 day ago"
         : `${diffInDays} days ago`
       : diffInDays === 1
-      ? "1d ago"
-      : `${diffInDays}d ago`;
+        ? "1d ago"
+        : `${diffInDays}d ago`;
   }
 
   const diffInWeeks = Math.round(diffInDays / 7);
@@ -133,8 +133,8 @@ export function formatSinceTime(
         ? "1 week ago"
         : `${diffInWeeks} weeks ago`
       : diffInWeeks === 1
-      ? "1wk ago"
-      : `${diffInWeeks}wks ago`;
+        ? "1wk ago"
+        : `${diffInWeeks}wks ago`;
   }
 
   const diffInMonths = Math.round(diffInDays / 30);
@@ -144,8 +144,8 @@ export function formatSinceTime(
         ? "1 month ago"
         : `${diffInMonths} months ago`
       : diffInMonths === 1
-      ? "1mo ago"
-      : `${diffInMonths}mos ago`;
+        ? "1mo ago"
+        : `${diffInMonths}mos ago`;
   }
 
   const diffInYears = Math.round(diffInDays / 365);
@@ -154,6 +154,6 @@ export function formatSinceTime(
       ? "1 year ago"
       : `${diffInYears} years ago`
     : diffInYears === 1
-    ? "1yr ago"
-    : `${diffInYears}yrs ago`;
+      ? "1yr ago"
+      : `${diffInYears}yrs ago`;
 }

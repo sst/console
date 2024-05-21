@@ -35,6 +35,17 @@ export const timestamps = {
   }),
 };
 
+export const timestampsNext = {
+  timeCreated: timestamp("time_created")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  timeUpdated: timestamp("time_updated")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`)
+    .onUpdateNow(),
+  timeDeleted: timestamp("time_deleted"),
+};
+
 import { customType } from "drizzle-orm/mysql-core";
 import { gunzipSync, gzipSync } from "zlib";
 

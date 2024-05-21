@@ -9,7 +9,7 @@ import {
   timestamp,
   int,
 } from "drizzle-orm/mysql-core";
-import { cuid, timestamps, workspaceID } from "../util/sql";
+import { cuid, timestamps, timestampsNext, workspaceID } from "../util/sql";
 import { stage } from "../app/app.sql";
 import { workspaceIndexes } from "../workspace/workspace.sql";
 import { z } from "zod";
@@ -33,25 +33,18 @@ export const UpdateCommand = z.union([
   z.literal("edit"),
 ]);
 
+export const Command = ["deploy", "refresh", "remove", "edit"] as const;
+
 export const stateUpdateTable = mysqlTable(
   "state_update",
   {
     ...workspaceID,
     stageID: cuid("stage_id").notNull(),
-    command: mysqlEnum("command", [
-      "deploy",
-      "refresh",
-      "remove",
-      "edit",
-    ]).notNull(),
+    command: mysqlEnum("command", Command).notNull(),
     source: json("source").$type<Source>().notNull(),
-    ...timestamps,
-    timeStarted: timestamp("time_started", {
-      mode: "string",
-    }),
-    timeCompleted: timestamp("time_completed", {
-      mode: "string",
-    }),
+    ...timestampsNext,
+    timeStarted: timestamp("time_started"),
+    timeCompleted: timestamp("time_completed"),
     resourceDeleted: int("resource_deleted"),
     resourceCreated: int("resource_created"),
     resourceUpdated: int("resource_updated"),
@@ -81,15 +74,9 @@ export const stateResourceTable = mysqlTable(
     inputs: json("inputs").notNull(),
     parent: varchar("parent", { length: 255 }),
     custom: boolean("custom").notNull(),
-    timeCreated: timestamp("time_created", {
-      mode: "string",
-    }).notNull(),
-    timeUpdated: timestamp("time_updated", {
-      mode: "string",
-    }).notNull(),
-    timeDeleted: timestamp("time_deleted", {
-      mode: "string",
-    }),
+    timeCreated: timestamp("time_created").notNull(),
+    timeUpdated: timestamp("time_updated").notNull(),
+    timeDeleted: timestamp("time_deleted"),
   },
   (table) => ({
     ...workspaceIndexes(table),
