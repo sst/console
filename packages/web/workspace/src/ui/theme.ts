@@ -391,8 +391,8 @@ const dark = ((): typeof light => {
     d3: `${color.base.red}, 42%`,
     d2: `${color.base.red}, 48%`,
     d1: `${color.base.red}, 54%`,
-    l1: `${color.base.red}, 68%`,
-    l2: `${color.base.red}, 74%`,
+    l1: `${color.base.red}, 62%`,
+    l2: `${color.base.red}, 68%`,
   };
 
   const accent = `hsla(${base.brand}, 100%)`;

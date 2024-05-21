@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { AWS } from "@console/core/aws";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
+import { State } from "@console/core/state";
 import { App, Stage } from "@console/core/app";
 import { Warning } from "@console/core/warning";
 import { Workspace } from "@console/core/workspace";
@@ -40,6 +41,7 @@ export function* generateData(
   console.log("generating for", mode);
 
   // Reset auto-incrementing IDs
+  UPDATE_ID = 0;
   WARNING_COUNT = 0;
   INVOCATION_COUNT = 0;
   ISSUE_ALERT_COUNT = 0;
@@ -88,8 +90,7 @@ export function* generateData(
 
   if (modeMap["updates"]) {
     yield* stageBase();
-    yield* stageEmpty();
-    yield* stageNotSupported();
+    yield* updatesBase();
   }
 
   if (modeMap["resources"]) {
@@ -151,10 +152,9 @@ export function* generateData(
 }
 
 type DummyData =
-  | (DummyConfig & {
-    _type: "dummyConfig";
-  })
+  | (DummyConfig & { _type: "dummyConfig" })
   | (Workspace.Info & { _type: "workspace" })
+  | (State.Update & { _type: "stateUpdate" })
   | (Omit<Usage, "workspaceID"> & { _type: "usage" })
   | (Omit<App.Info, "workspaceID"> & { _type: "app" })
   | (Omit<User.Info, "workspaceID"> & { _type: "user" })
@@ -362,6 +362,7 @@ const STACK_TRACE_FULL = [
 const LOGS_FN = "my-logs-func";
 
 // Auto-incrementing IDs
+let UPDATE_ID = 0;
 let WARNING_COUNT = 0;
 let INVOCATION_COUNT = 0;
 let ISSUE_ALERT_COUNT = 0;
@@ -1443,6 +1444,78 @@ function* stageHasFunction(): Generator<DummyData, void, unknown> {
   });
 }
 
+function* updatesBase(): Generator<DummyData, void, unknown> {
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    timeStarted: DateTime.now().minus({ minutes: 2 }).toISO()!,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    errors: 1,
+    command: "edit",
+    timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 4 }).toISO()!,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    command: "refresh",
+    timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 5 }).toISO()!,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    command: "remove",
+    timeStarted: DateTime.now().minus({ minutes: 8 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 6 }).toISO()!,
+    same: 20,
+    created: 1,
+    updated: 2,
+    deleted: 3,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    timeStarted: DateTime.now().minus({ minutes: 9 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 7 }).toISO()!,
+    same: 20,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    timeStarted: DateTime.now().minus({ minutes: 10 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 8 }).toISO()!,
+    deleted: 4,
+    same: 16,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    timeStarted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
+    updated: 20,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 10 }).toISO()!,
+    created: 2,
+    updated: 4,
+    same: 14,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    timeStarted: DateTime.now().minus({ minutes: 13 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    created: 20,
+  });
+}
+
 function* issueBase(): Generator<DummyData, void, unknown> {
   yield issue({
     id: ISSUE_ID,
@@ -2421,5 +2494,55 @@ function issueAlert({
     destination,
     timeDeleted: null,
     ...timestamps,
+  };
+}
+
+interface UpdateProps {
+  id: number;
+  stage: string;
+  errors?: number;
+  source?: "cli" | "ci";
+  timeCreated?: string;
+  timeStarted?: string;
+  timeCompleted?: string;
+  same?: number;
+  created?: number;
+  updated?: number;
+  deleted?: number;
+  command?: "deploy" | "refresh" | "remove" | "edit";
+}
+function update({
+  id,
+  stage,
+  errors,
+  command,
+  source,
+  timeCreated,
+  timeStarted,
+  timeCompleted,
+  same,
+  created,
+  updated,
+  deleted,
+}: UpdateProps): DummyData {
+  return {
+    _type: "stateUpdate",
+    id: `${id}`,
+    stageID: stage,
+    command: command || "deploy",
+    source: { type: source || "cli", properties: {} },
+    time: {
+      updated: DateTime.now().startOf("day").toISO()!,
+      created: timeCreated || DateTime.now().startOf("day").toISO()!,
+      started: timeStarted || DateTime.now().startOf("day").toISO()!,
+      completed: timeCompleted,
+    },
+    resource: {
+      same: same || 0,
+      created: created || 0,
+      updated: updated || 0,
+      deleted: deleted || 0,
+    },
+    errors: errors || undefined,
   };
 }

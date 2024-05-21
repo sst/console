@@ -1,7 +1,8 @@
 import { For, Show, createEffect, createMemo } from "solid-js";
+import { Link } from "@solidjs/router";
 import { DateTime } from "luxon";
 import { styled } from "@macaron-css/solid";
-import { Row, Text, Stack, theme, utility, LinkButton } from "$/ui";
+import { Row, Tag, Text, Stack, theme, utility, LinkButton } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import { IconEllipsisVertical } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
@@ -10,6 +11,8 @@ import { StateUpdateStore } from "$/data/app";
 import { useReplicache } from "$/providers/replicache";
 import { useStageContext } from "../context";
 import { sortBy } from "remeda";
+
+const LEGEND_WIDTH = 100;
 
 const CMD_MAP = {
   deploy: "sst deploy",
@@ -21,7 +24,7 @@ const CMD_MAP = {
 const STATUS_MAP = {
   queued: "Queued",
   canceled: "Canceled",
-  updated: "Updated",
+  updated: "Complete",
   error: "Error",
   updating: "In Progress",
 };
@@ -101,10 +104,85 @@ const UpdateStatusIcon = styled("div", {
   },
 });
 
+const UpdateLink = styled(Link, {
+  base: {
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const UpdateLinkPrefix = styled("span", {
+  base: {
+    fontWeight: theme.font.weight.regular,
+    fontSize: theme.font.size.sm,
+  },
+});
+
 const UpdateStatusCopy = styled("p", {
   base: {
-    fontSize: theme.font.size.sm,
-    color: theme.color.text.secondary.base,
+    fontSize: theme.font.size.xs,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const UpdateRightCol = styled(UpdateCol, {
+  base: {
+    ...utility.row(3),
+    width: 280,
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+});
+
+const UpdateChangeTagsRoot = styled("div", {
+  base: {
+    ...utility.row("px"),
+  },
+});
+
+const UpdateChangeTag = styled("div", {
+  base: {
+    height: 16,
+    lineHeight: 1,
+    display: "flex",
+    alignItems: "center",
+    textTransform: "uppercase",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    fontWeight: theme.font.weight.semibold,
+    justifyContent: "center",
+    fontSize: "0.625rem",
+    ":first-child": {
+      borderTopLeftRadius: 2,
+      borderBottomLeftRadius: 2,
+    },
+    ":last-child": {
+      borderTopRightRadius: 2,
+      borderBottomRightRadius: 2,
+    },
+  },
+  variants: {
+    type: {
+      created: {
+        backgroundColor: `hsla(${theme.color.blue.l2}, 100%)`,
+      },
+      deleted: {
+        backgroundColor: `hsla(${theme.color.red.l1}, 100%)`,
+      },
+      updated: {
+        backgroundColor: `hsla(${theme.color.brand.l2}, 100%)`,
+      },
+      same: {
+        backgroundColor: theme.color.background.selected,
+      },
+    },
+  },
+});
+
+const UpdateNoChanges = styled("span", {
+  base: {
+    ...utility.text.label,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -122,21 +200,6 @@ const UpdateSource = styled(UpdateCol, {
     alignItems: "flex-end",
   },
 });
-
-// const UpdateSourceLabel = styled("span", {
-//   base: {
-//     ...utility.text.label,
-//     color: theme.color.text.dimmed.base,
-//     fontSize: theme.font.size.mono_sm,
-//   },
-// });
-//
-// const UpdateSourceCopy = styled("span", {
-//   base: {
-//     fontSize: theme.font.size.sm,
-//     color: theme.color.text.primary.base,
-//   },
-// });
 
 const UpdateCmd = styled("span", {
   base: {
@@ -201,8 +264,10 @@ type UpdateProps = {
   resourceSame?: number;
   timeCanceled?: string;
   timeCompleted?: string;
-  resourceCreated?: number;
-  resourceUpdated?: number;
+  same?: number;
+  created?: number;
+  updated?: number;
+  deleted?: number;
   command: "deploy" | "refresh" | "remove" | "edit";
 };
 function Update(props: UpdateProps) {
@@ -224,42 +289,131 @@ function Update(props: UpdateProps) {
       <UpdateStatus>
         <UpdateStatusIcon status={status()} />
         <Stack space="2">
-          <p>
-            <Text size="sm" color="secondary">
-              #
-            </Text>
+          <UpdateLink href={props.id}>
+            <UpdateLinkPrefix>#</UpdateLinkPrefix>
             {props.id}
-          </p>
+          </UpdateLink>
           <UpdateStatusCopy>{STATUS_MAP[status()]}</UpdateStatusCopy>
         </Stack>
       </UpdateStatus>
-      <UpdateActions>
-        <UpdateSource>
-          <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
-          <Show when={props.timeStarted}>
-            <UpdateTime
-              title={DateTime.fromISO(props.timeStarted!).toLocaleString(
-                DateTime.DATETIME_FULL,
-              )}
-            >
-              {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
-            </UpdateTime>
-          </Show>
-        </UpdateSource>
-        <Dropdown
-          size="sm"
-          icon={<IconEllipsisVertical width={18} height={18} />}
-        >
-          <Dropdown.Item disabled={status() !== "updated"}>
-            View State
-          </Dropdown.Item>
-          <Show when={props.source === "ci"}>
-            <Dropdown.Seperator />
-            <Dropdown.Item>View Logs</Dropdown.Item>
-          </Show>
-        </Dropdown>
-      </UpdateActions>
+      <UpdateRightCol>
+        <ChangeLegend
+          same={props.same}
+          created={props.created}
+          updated={props.updated}
+          deleted={props.deleted}
+        />
+        <UpdateActions>
+          <UpdateSource>
+            <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
+            <Show when={props.timeStarted}>
+              <UpdateTime
+                title={DateTime.fromISO(props.timeStarted!).toLocaleString(
+                  DateTime.DATETIME_FULL,
+                )}
+              >
+                {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
+              </UpdateTime>
+            </Show>
+          </UpdateSource>
+          <Dropdown
+            size="sm"
+            icon={<IconEllipsisVertical width={18} height={18} />}
+          >
+            <Dropdown.Item disabled={status() !== "updated"}>
+              View State
+            </Dropdown.Item>
+            <Show when={props.source === "ci"}>
+              <Dropdown.Seperator />
+              <Dropdown.Item>View Logs</Dropdown.Item>
+            </Show>
+          </Dropdown>
+        </UpdateActions>
+      </UpdateRightCol>
     </UpdateRoot>
+  );
+}
+
+type ChangeLegendProps = {
+  same?: number;
+  created?: number;
+  updated?: number;
+  deleted?: number;
+};
+function ChangeLegend(props: ChangeLegendProps) {
+  const same = () => props.same! ?? 0;
+  const created = () => props.created! ?? 0;
+  const updated = () => props.updated! ?? 0;
+  const deleted = () => props.deleted! ?? 0;
+
+  const total = () => same() + created() + updated() + deleted();
+
+  const widths = createMemo(() => {
+    const nonZero = [same(), created(), updated(), deleted()].filter((n) => n !== 0).length;
+
+    let sameWidth = Math.ceil(same() / total() * LEGEND_WIDTH / 4) * 4;
+    let createdWidth = Math.ceil(created() / total() * LEGEND_WIDTH / 4) * 4;
+    let updatedWidth = Math.ceil(updated() / total() * LEGEND_WIDTH / 4) * 4;
+    let deletedWidth = Math.ceil(deleted() / total() * LEGEND_WIDTH / 4) * 4;
+
+    const calculatedTotalWidth = sameWidth + createdWidth + updatedWidth + deletedWidth;
+    const widthDifference = LEGEND_WIDTH - ((nonZero - 1) + calculatedTotalWidth);
+
+    if (widthDifference !== 0) {
+      const maxWidth = Math.max(sameWidth, createdWidth, updatedWidth, deletedWidth);
+      if (maxWidth === sameWidth) {
+        sameWidth += widthDifference;
+      } else if (maxWidth === createdWidth) {
+        createdWidth += widthDifference;
+      } else if (maxWidth === updatedWidth) {
+        updatedWidth += widthDifference;
+      } else if (maxWidth === deletedWidth) {
+        deletedWidth += widthDifference;
+      }
+    }
+    return {
+      same: sameWidth,
+      created: createdWidth,
+      updated: updatedWidth,
+      deleted: deletedWidth,
+    };
+  });
+
+  return (
+    <Show when={total() > 0} fallback={
+      <UpdateNoChanges>No changes</UpdateNoChanges>
+    }>
+      <UpdateChangeTagsRoot>
+        <Show when={created() !== 0}>
+          <UpdateChangeTag
+            type="created"
+            title={`${countCopy(created())} added`}
+            style={{ width: `${widths().created}px` }}
+          />
+        </Show>
+        <Show when={deleted() !== 0}>
+          <UpdateChangeTag
+            type="deleted"
+            title={`${countCopy(deleted())} deleted`}
+            style={{ width: `${widths().deleted}px` }}
+          />
+        </Show>
+        <Show when={updated() !== 0}>
+          <UpdateChangeTag
+            type="updated"
+            title={`${countCopy(updated())} updated`}
+            style={{ width: `${widths().updated}px` }}
+          />
+        </Show>
+        <Show when={same() !== 0}>
+          <UpdateChangeTag
+            type="same"
+            title={`${countCopy(same())} unchanged`}
+            style={{ width: `${widths().same}px` }}
+          />
+        </Show>
+      </UpdateChangeTagsRoot>
+    </Show>
   );
 }
 
@@ -267,6 +421,7 @@ export function Updates() {
   const rep = useReplicache();
   const ctx = useStageContext();
   const updates = StateUpdateStore.forStage.watch(rep, () => [ctx.stage.id]);
+  console.log({ updates: updates() });
   return (
     <Content>
       <div>
@@ -276,14 +431,23 @@ export function Updates() {
           {(item, index) => (
             <Update
               id={(updates().length - index()).toString()}
-              source={item.source.type}
+              errors={item.errors}
               command={item.command}
+              source={item.source.type}
               timeStarted={item.time.started}
               timeCompleted={item.time.completed}
+              same={item.resource.same}
+              created={item.resource.created}
+              updated={item.resource.updated}
+              deleted={item.resource.deleted}
             />
           )}
         </For>
       </div>
     </Content>
   );
+}
+
+function countCopy(count?: number) {
+  return count! > 1 ? `${count} resources` : "1 resource";
 }
