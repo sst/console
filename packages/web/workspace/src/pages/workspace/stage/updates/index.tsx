@@ -1,4 +1,4 @@
-import { For, Show, createEffect } from "solid-js";
+import { For, Show, createEffect, createMemo } from "solid-js";
 import { DateTime } from "luxon";
 import { styled } from "@macaron-css/solid";
 import { Row, Text, Stack, theme, utility, LinkButton } from "$/ui";
@@ -207,20 +207,22 @@ type UpdateProps = {
 };
 function Update(props: UpdateProps) {
   createEffect(() => console.log({ ...props }));
-  const status = props.timeCompleted
-    ? props.errors
-      ? "error"
-      : "updated"
-    : props.timeCanceled
-      ? "canceled"
-      : props.timeQueued
-        ? "queued"
-        : "updating";
+  const status = createMemo(() =>
+    props.timeCompleted
+      ? props.errors
+        ? "error"
+        : "updated"
+      : props.timeCanceled
+        ? "canceled"
+        : props.timeQueued
+          ? "queued"
+          : "updating",
+  );
 
   return (
     <UpdateRoot>
       <UpdateStatus>
-        <UpdateStatusIcon status={status} />
+        <UpdateStatusIcon status={status()} />
         <Stack space="2">
           <p>
             <Text size="sm" color="secondary">
@@ -228,7 +230,7 @@ function Update(props: UpdateProps) {
             </Text>
             {props.id}
           </p>
-          <UpdateStatusCopy>{STATUS_MAP[status]}</UpdateStatusCopy>
+          <UpdateStatusCopy>{STATUS_MAP[status()]}</UpdateStatusCopy>
         </Stack>
       </UpdateStatus>
       <UpdateActions>
@@ -248,7 +250,7 @@ function Update(props: UpdateProps) {
           size="sm"
           icon={<IconEllipsisVertical width={18} height={18} />}
         >
-          <Dropdown.Item disabled={status !== "updated"}>
+          <Dropdown.Item disabled={status() !== "updated"}>
             View State
           </Dropdown.Item>
           <Show when={props.source === "ci"}>
@@ -269,11 +271,11 @@ export function Updates() {
     <Content>
       <div>
         <For
-          each={sortBy(updates(), (item) => item.timeStarted || "").reverse()}
+          each={sortBy(updates(), [(item) => item.timeStarted || "", "desc"])}
         >
-          {(item) => (
+          {(item, index) => (
             <Update
-              id={item.id}
+              id={(updates().length - index()).toString()}
               source={item.source.type}
               command={item.command}
               timeStarted={item.timeStarted || undefined}
