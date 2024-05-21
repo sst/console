@@ -268,9 +268,10 @@ export function Updates() {
           {(item) => (
             <Update
               id={item.id}
+              source={item.source.type}
               command={item.command}
-              timeStarted={item.timeStarted}
-              timeCompleted={item.timeCompleted}
+              timeStarted={item.timeStarted || ""}
+              timeCompleted={item.timeCompleted || undefined}
             />
           )}
         </For>
