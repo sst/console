@@ -1,11 +1,12 @@
 import type { App } from "@console/core/app";
 import { Store } from "./store";
-import { Env } from "@console/core/app/env";
-import { Github } from "@console/core/git/github";
-import { Slack } from "@console/core/slack";
-import { Issue } from "@console/core/issue";
-import { Billing } from "@console/core/billing";
-import { AppRepo } from "@console/core/app/repo";
+import type { Env } from "@console/core/app/env";
+import type { Github } from "@console/core/git/github";
+import type { Slack } from "@console/core/slack";
+import type { Issue } from "@console/core/issue";
+import type { Billing } from "@console/core/billing";
+import type { AppRepo } from "@console/core/app/repo";
+import type { State } from "@console/core/state";
 
 export const AppStore = new Store()
   .type<App.Info>()
@@ -52,4 +53,10 @@ export const IssueAlertStore = new Store()
 export const StripeStore = new Store()
   .type<Billing.Stripe.Info>()
   .get(() => ["stripe"])
+  .build();
+
+export const StateUpdateStore = new Store()
+  .type<State.Update>()
+  .scan("forStage", (stageID: string) => ["stateUpdate", stageID])
+  .get((stageID: string, issueID: string) => ["stateUpdate", stageID, issueID])
   .build();

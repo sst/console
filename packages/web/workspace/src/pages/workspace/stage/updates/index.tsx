@@ -1,20 +1,14 @@
-import { Show } from "solid-js";
+import { For, Show } from "solid-js";
 import { DateTime } from "luxon";
 import { styled } from "@macaron-css/solid";
-import {
-  Row,
-  Text,
-  Stack,
-  theme,
-  utility,
-  LinkButton
-} from "$/ui";
+import { Row, Text, Stack, theme, utility, LinkButton } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
-import {
-  IconEllipsisVertical,
-} from "$/ui/icons";
+import { IconEllipsisVertical } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
 import { formatSinceTime, parseTime } from "$/common/format";
+import { StateUpdateStore } from "$/data/app";
+import { useReplicache } from "$/providers/replicache";
+import { useStageContext } from "../context";
 
 const CMD_MAP = {
   deploy: "sst deploy",
@@ -182,7 +176,7 @@ const UpdateTime = styled("span", {
  * - Date
  * - Link to view state
  * - Duration
- * - Status: started, finished, 
+ * - Status: started, finished,
  * - Source: CLI
  * - Command: Update, Refresh, Remove, Edit
  *
@@ -226,7 +220,12 @@ function Update(props: UpdateProps) {
       <UpdateStatus>
         <UpdateStatusIcon status={status} />
         <Stack space="2">
-          <p><Text size="sm" color="secondary">#</Text>{props.id}</p>
+          <p>
+            <Text size="sm" color="secondary">
+              #
+            </Text>
+            {props.id}
+          </p>
           <UpdateStatusCopy>{STATUS_MAP[status]}</UpdateStatusCopy>
         </Stack>
       </UpdateStatus>
@@ -235,15 +234,19 @@ function Update(props: UpdateProps) {
           <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
           <UpdateTime
             title={parseTime(props.timeStarted).toLocaleString(
-              DateTime.DATETIME_FULL
+              DateTime.DATETIME_FULL,
             )}
-          >{formatSinceTime(props.timeStarted)}</UpdateTime>
+          >
+            {formatSinceTime(props.timeStarted)}
+          </UpdateTime>
         </UpdateSource>
         <Dropdown
           size="sm"
           icon={<IconEllipsisVertical width={18} height={18} />}
         >
-          <Dropdown.Item disabled={status !== "updated"}>View State</Dropdown.Item>
+          <Dropdown.Item disabled={status !== "updated"}>
+            View State
+          </Dropdown.Item>
           <Show when={props.source === "ci"}>
             <Dropdown.Seperator />
             <Dropdown.Item>View Logs</Dropdown.Item>
@@ -255,44 +258,22 @@ function Update(props: UpdateProps) {
 }
 
 export function Updates() {
+  const rep = useReplicache();
+  const ctx = useStageContext();
+  const updates = StateUpdateStore.forStage.watch(rep, () => [ctx.stage.id]);
   return (
     <Content>
       <div>
-        <Update
-          id="101"
-          source="cli"
-          command="deploy"
-          timeStarted={DateTime.now().minus({ minute: 2 }).toSQL()!}
-        />
-        <Update
-          id="100"
-          source="cli"
-          command="remove"
-          timeStarted={DateTime.now().minus({ minute: 4 }).toSQL()!}
-          timeQueued={DateTime.now().minus({ minute: 4 }).toSQL()!}
-        />
-        <Update
-          id="99"
-          source="cli"
-          command="refresh"
-          timeStarted={DateTime.now().minus({ hour: 1 }).toSQL()!}
-          timeCanceled={DateTime.now().minus({ hour: 1 }).toSQL()!}
-        />
-        <Update
-          id="98"
-          errors={1}
-          source="cli"
-          command="edit"
-          timeStarted={DateTime.now().minus({ day: 2 }).toSQL()!}
-          timeCompleted={DateTime.now().minus({ day: 2 }).toSQL()!}
-        />
-        <Update
-          id="98"
-          source="cli"
-          command="deploy"
-          timeStarted={DateTime.now().minus({ week: 2 }).toSQL()!}
-          timeCompleted={DateTime.now().minus({ week: 2 }).toSQL()!}
-        />
+        <For each={updates()}>
+          {(item) => (
+            <Update
+              id={item.id}
+              command={item.command}
+              timeStarted={item.timeStarted}
+              timeCompleted={item.timeCompleted}
+            />
+          )}
+        </For>
       </div>
     </Content>
   );

@@ -42,6 +42,10 @@ import { githubOrg, githubRepo } from "@console/core/git/git.sql";
 import { slackTeam } from "@console/core/slack/slack.sql";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { gzipSync } from "zlib";
+import {
+  stateResourceTable,
+  stateUpdateTable,
+} from "@console/core/state/state.sql";
 
 export const TABLES = {
   workspace,
@@ -65,6 +69,8 @@ export const TABLES = {
   githubRepo,
   slackTeam,
   usage,
+  stateUpdate: stateUpdateTable,
+  stateResource: stateResourceTable,
 };
 
 type TableName = keyof typeof TABLES;
@@ -75,6 +81,7 @@ const TABLE_KEY = {
   issueCount: [issueCount.group, issueCount.id],
   warning: [warning.stageID, warning.type, warning.id],
   usage: [usage.stageID, usage.id],
+  stateUpdate: [stateUpdateTable.stageID, stateUpdateTable.id],
   stripe: [],
 } as {
   [key in TableName]?: MySqlColumn[];

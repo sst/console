@@ -45,6 +45,7 @@ export module State {
   export const Update = createSelectSchema(stateUpdateTable, {
     source: Source,
   });
+  export type Update = z.infer<typeof Update>;
 
   export const receiveHistory = zod(
     z.object({
