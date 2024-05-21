@@ -120,6 +120,8 @@ export module State {
         const previous = previousResources[urn];
         delete previousResources[urn];
         if (previous && previous.modified === resource.modified) continue;
+        resource.inputs = resource.inputs || {};
+        resource.outputs = resource.outputs || {};
         delete resource.inputs["__provider"];
         delete resource.outputs["__provider"];
         inserts.push({
@@ -137,8 +139,8 @@ export module State {
           type: resource.type,
           urn: resource.urn,
           custom: resource.boolean,
-          inputs: resource.inputs || {},
-          outputs: resource.outputs || {},
+          inputs: resource.inputs,
+          outputs: resource.outputs,
           parent: resource.parent,
         });
       }
