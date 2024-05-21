@@ -26,7 +26,7 @@ import {
   replicache_cvr,
 } from "@console/core/replicache/replicache.sql";
 import { lambdaPayload } from "@console/core/lambda/lambda.sql";
-import { equals, groupBy, mapValues, pipe, toPairs } from "remeda";
+import { equals, mapValues } from "remeda";
 import { log_poller, log_search } from "@console/core/log/log.sql";
 import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 import { warning } from "@console/core/warning/warning.sql";
@@ -233,7 +233,7 @@ export const handler = ApiHandler(
               );
             console.log("getting updated from", name);
             const rows = await query.execute();
-            results.push([name, rows]);
+            results.push([name, rows as any]);
           }
         }
 
