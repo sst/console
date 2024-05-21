@@ -23,6 +23,8 @@ export type DummyMode =
   | "overview:base;issues:base"
   // Alerts
   | "overview:base;alerts:base"
+  // Updates
+  | "overview:base;updates:base"
   // Resources
   | "overview:base;resources:base"
   // With billing details
@@ -84,6 +86,12 @@ export function* generateData(
   if (modeMap["usage"] === "overage")
     yield usage({ day: "2021-01-01", invocations: 12300099000 });
 
+  if (modeMap["updates"]) {
+    yield* stageBase();
+    yield* stageEmpty();
+    yield* stageNotSupported();
+  }
+
   if (modeMap["resources"]) {
     yield* stageBase();
     yield* stageEmpty();
@@ -144,8 +152,8 @@ export function* generateData(
 
 type DummyData =
   | (DummyConfig & {
-      _type: "dummyConfig";
-    })
+    _type: "dummyConfig";
+  })
   | (Workspace.Info & { _type: "workspace" })
   | (Omit<Usage, "workspaceID"> & { _type: "usage" })
   | (Omit<App.Info, "workspaceID"> & { _type: "app" })
@@ -2329,18 +2337,18 @@ function invocation({
       duration === undefined
         ? duration
         : {
-            duration,
-            memory: 128,
-            size: 2048,
-            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
-          },
+          duration,
+          memory: 128,
+          size: 2048,
+          xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+        },
     start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
-          message,
-          id: `log-${INVOCATION_COUNT}-${i}`,
-          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-        }))
+        message,
+        id: `log-${INVOCATION_COUNT}-${i}`,
+        timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+      }))
       : [],
   };
 }
