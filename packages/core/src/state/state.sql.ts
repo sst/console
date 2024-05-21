@@ -74,9 +74,9 @@ export const stateResourceTable = mysqlTable(
     inputs: json("inputs").notNull(),
     parent: varchar("parent", { length: 255 }),
     custom: boolean("custom").notNull(),
-    timeCreated: timestamp("time_created").notNull(),
-    timeUpdated: timestamp("time_updated").notNull(),
-    timeDeleted: timestamp("time_deleted"),
+    ...timestampsNext,
+    timeStateCreated: timestamp("time_state_created"),
+    timeStateModified: timestamp("time_state_modified"),
   },
   (table) => ({
     ...workspaceIndexes(table),
