@@ -165,9 +165,10 @@ export module State {
         });
       }
       console.log("inserting", inserts);
-      await useTransaction(async (tx) => {
-        await tx.insert(stateResourceTable).ignore().values(inserts);
-      });
+      if (inserts.length)
+        await useTransaction(async (tx) => {
+          await tx.insert(stateResourceTable).ignore().values(inserts);
+        });
     }
   );
 
@@ -202,6 +203,7 @@ export module State {
       if (!lock.created) return;
       const command = UpdateCommand.safeParse(lock.command);
       if (!command.success) return;
+      console.log(lock);
       await useTransaction(async (tx) => {
         await tx.insert(stateUpdateTable).values({
           workspaceID: useWorkspace(),
@@ -212,7 +214,7 @@ export module State {
             type: "cli",
             properties: {},
           },
-          timeStarted: DateTime.fromISO(lock.created).toSQL({
+          timeStarted: DateTime.fromISO(lock.created).toUTC().toSQL({
             includeOffset: false,
           })!,
         });
@@ -263,12 +265,14 @@ export module State {
             resourceCreated: summary.resourceCreated,
             resourceDeleted: summary.resourceDeleted,
             resourceSame: summary.resourceSame,
-            timeStarted: DateTime.fromISO(summary.timeStarted).toSQL({
+            timeStarted: DateTime.fromISO(summary.timeStarted).toUTC().toSQL({
               includeOffset: false,
             })!,
-            timeCompleted: DateTime.fromISO(summary.timeCompleted).toSQL({
-              includeOffset: false,
-            })!,
+            timeCompleted: DateTime.fromISO(summary.timeCompleted)
+              .toUTC()
+              .toSQL({
+                includeOffset: false,
+              })!,
           })
           .where(
             and(

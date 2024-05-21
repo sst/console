@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { For, Show, createEffect } from "solid-js";
 import { DateTime } from "luxon";
 import { styled } from "@macaron-css/solid";
 import { Row, Text, Stack, theme, utility, LinkButton } from "$/ui";
@@ -9,6 +9,7 @@ import { formatSinceTime, parseTime } from "$/common/format";
 import { StateUpdateStore } from "$/data/app";
 import { useReplicache } from "$/providers/replicache";
 import { useStageContext } from "../context";
+import { sortBy } from "remeda";
 
 const CMD_MAP = {
   deploy: "sst deploy",
@@ -194,7 +195,7 @@ const UpdateTime = styled("span", {
 type UpdateProps = {
   id: string;
   errors?: number;
-  timeStarted: string;
+  timeStarted?: string;
   timeQueued?: string;
   source: "ci" | "cli";
   resourceSame?: number;
@@ -205,6 +206,7 @@ type UpdateProps = {
   command: "deploy" | "refresh" | "remove" | "edit";
 };
 function Update(props: UpdateProps) {
+  createEffect(() => console.log({ ...props }));
   const status = props.timeCompleted
     ? props.errors
       ? "error"
@@ -232,13 +234,15 @@ function Update(props: UpdateProps) {
       <UpdateActions>
         <UpdateSource>
           <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
-          <UpdateTime
-            title={parseTime(props.timeStarted).toLocaleString(
-              DateTime.DATETIME_FULL,
-            )}
-          >
-            {formatSinceTime(props.timeStarted)}
-          </UpdateTime>
+          <Show when={props.timeStarted}>
+            <UpdateTime
+              title={parseTime(props.timeStarted!).toLocaleString(
+                DateTime.DATETIME_FULL,
+              )}
+            >
+              {formatSinceTime(props.timeStarted!)}
+            </UpdateTime>
+          </Show>
         </UpdateSource>
         <Dropdown
           size="sm"
@@ -264,13 +268,15 @@ export function Updates() {
   return (
     <Content>
       <div>
-        <For each={updates()}>
+        <For
+          each={sortBy(updates(), (item) => item.timeStarted || "").reverse()}
+        >
           {(item) => (
             <Update
               id={item.id}
               source={item.source.type}
               command={item.command}
-              timeStarted={item.timeStarted || ""}
+              timeStarted={item.timeStarted || undefined}
               timeCompleted={item.timeCompleted || undefined}
             />
           )}
