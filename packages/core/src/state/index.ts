@@ -4,6 +4,7 @@ import {
   stateUpdateTable,
   stateResourceTable,
   Source,
+  Action,
   UpdateCommand,
   Command,
 } from "./state.sql";
@@ -65,6 +66,27 @@ export module State {
   });
   export type Update = z.infer<typeof Update>;
 
+  export const Resource = z.object({
+    id: z.string().cuid(),
+    stageID: z.string().cuid(),
+    updateID: z.string().cuid(),
+    type: z.string(),
+    urn: z.string(),
+    action: z.enum(Action),
+    outputs: z.any(),
+    inputs: z.any(),
+    parent: z.string().optional(),
+    custom: z.any().optional(),
+    time: z.object({
+      created: z.string(),
+      deleted: z.string().optional(),
+      updated: z.string(),
+      stateCreated: z.string().optional(),
+      stateModified: z.string().optional(),
+    }),
+  });
+  export type Resource = z.infer<typeof Resource>;
+
   export function serializeUpdate(
     input: typeof stateUpdateTable.$inferSelect
   ): Update {
@@ -87,6 +109,30 @@ export module State {
       source: input.source,
       errors: input.errors || undefined,
       stageID: input.stageID,
+    };
+  }
+
+  export function serializeResource(
+    input: typeof stateResourceTable.$inferSelect
+  ): Resource {
+    return {
+      id: input.id,
+      type: input.type,
+      action: input.action,
+      time: {
+        created: input.timeCreated.toISOString(),
+        updated: input.timeUpdated.toISOString(),
+        deleted: input.timeDeleted?.toISOString(),
+        stateCreated: input.timeStateCreated?.toISOString(),
+        stateModified: input.timeStateModified?.toISOString(),
+      },
+      stageID: input.stageID,
+      custom: input.custom,
+      updateID: input.updateID,
+      urn: input.urn,
+      inputs: input.inputs,
+      parent: input.parent || undefined,
+      outputs: input.outputs,
     };
   }
 

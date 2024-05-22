@@ -83,6 +83,11 @@ const TABLE_KEY = {
   warning: [warning.stageID, warning.type, warning.id],
   usage: [usage.stageID, usage.id],
   stateUpdate: [stateUpdateTable.stageID, stateUpdateTable.id],
+  stateResource: [
+    stateResourceTable.stageID,
+    stateResourceTable.updateID,
+    stateResourceTable.id,
+  ],
   stripe: [],
 } as {
   [key in TableName]?: MySqlColumn[];
@@ -91,6 +96,9 @@ const TABLE_KEY = {
 const TABLE_PROJECTION = {
   stateUpdate(input) {
     return State.serializeUpdate(input);
+  },
+  stateResource(input) {
+    return State.serializeResource(input);
   },
 } as {
   [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;

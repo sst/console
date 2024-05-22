@@ -61,6 +61,8 @@ export const stateUpdateTable = mysqlTable(
   })
 );
 
+export const Action = ["created", "updated", "deleted"] as const;
+
 export const stateResourceTable = mysqlTable(
   "state_resource",
   {
@@ -70,7 +72,7 @@ export const stateResourceTable = mysqlTable(
     type: varchar("type", { length: 255 }).notNull(),
     urn: varchar("urn", { length: 255 }).notNull(),
     outputs: json("outputs").notNull(),
-    action: mysqlEnum("action", ["created", "updated", "deleted"]).notNull(),
+    action: mysqlEnum("action", Action).notNull(),
     inputs: json("inputs").notNull(),
     parent: varchar("parent", { length: 255 }),
     custom: boolean("custom").notNull(),
