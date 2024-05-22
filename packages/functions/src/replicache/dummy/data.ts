@@ -1453,6 +1453,13 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
+    errors: 2,
+    timeStarted: DateTime.now().minus({ minutes: 4 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 3 }).toISO()!,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
     errors: 1,
     command: "edit",
     timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,

@@ -6,6 +6,7 @@ import { Row, Tag, Text, Stack, theme, utility, LinkButton } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import { IconEllipsisVertical } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
+import { globalKeyframes, style } from "@macaron-css/core";
 import { formatSinceTime, parseTime } from "$/common/format";
 import { StateUpdateStore } from "$/data/app";
 import { useReplicache } from "$/providers/replicache";
@@ -71,7 +72,7 @@ const UpdateCol = styled("div", {
 
 const UpdateStatus = styled(UpdateCol, {
   base: {
-    ...utility.row(3),
+    ...utility.row(4),
     width: 320,
     alignItems: "center",
   },
@@ -99,8 +100,24 @@ const UpdateStatusIcon = styled("div", {
       },
       updating: {
         backgroundColor: `hsla(${theme.color.base.brand}, 100%)`,
+        animation: "glow-pulse-status 1.7s linear infinite alternate",
       },
     },
+  },
+});
+
+globalKeyframes("glow-pulse-status", {
+  "0%": {
+    opacity: 0.3,
+    filter: `drop-shadow(0 0 0px ${theme.color.accent})`,
+  },
+  "50%": {
+    opacity: 1,
+    filter: `drop-shadow(0 0 1px ${theme.color.accent})`,
+  },
+  "100%": {
+    opacity: 0.3,
+    filter: `drop-shadow(0 0 0px ${theme.color.accent})`,
   },
 });
 
@@ -133,13 +150,32 @@ const UpdateRightCol = styled(UpdateCol, {
   },
 });
 
-const UpdateChangeTagsRoot = styled("div", {
+const ChangeLegendRoot = styled("div", {
   base: {
     ...utility.row("px"),
   },
+  variants: {
+    empty: {
+      true: {
+        height: 16,
+        width: 100,
+        borderRadius: 2,
+        backgroundSize: "4px 4px",
+        backgroundColor: "transparent",
+        border: `1px solid ${theme.color.background.surface}`,
+        backgroundImage: `repeating-linear-gradient(
+          45deg,
+          ${theme.color.background.selected} 0,
+          ${theme.color.background.selected} 1px,
+          transparent 0,
+          transparent 50%
+        )`,
+      },
+    },
+  },
 });
 
-const UpdateChangeTag = styled("div", {
+const ChangeLegendTag = styled("div", {
   base: {
     height: 16,
     lineHeight: 1,
@@ -172,17 +208,9 @@ const UpdateChangeTag = styled("div", {
         backgroundColor: `hsla(${theme.color.brand.l2}, 100%)`,
       },
       same: {
-        backgroundColor: theme.color.background.selected,
+        backgroundColor: theme.color.divider.base,
       },
     },
-  },
-});
-
-const UpdateNoChanges = styled("span", {
-  base: {
-    ...utility.text.label,
-    fontSize: theme.font.size.mono_sm,
-    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -272,6 +300,7 @@ type UpdateProps = {
 };
 function Update(props: UpdateProps) {
   createEffect(() => console.log({ ...props }));
+  const errors = () => props.errors! ?? 0;
   const status = createMemo(() =>
     props.timeCompleted
       ? props.errors
@@ -293,7 +322,11 @@ function Update(props: UpdateProps) {
             <UpdateLinkPrefix>#</UpdateLinkPrefix>
             {props.id}
           </UpdateLink>
-          <UpdateStatusCopy>{STATUS_MAP[status()]}</UpdateStatusCopy>
+          <UpdateStatusCopy>{
+            status() === "error"
+              ? errorCountCopy(errors())
+              : STATUS_MAP[status()]
+          }</UpdateStatusCopy>
         </Stack>
       </UpdateStatus>
       <UpdateRightCol>
@@ -380,40 +413,39 @@ function ChangeLegend(props: ChangeLegendProps) {
   });
 
   return (
-    <Show when={total() > 0} fallback={
-      <UpdateNoChanges>No changes</UpdateNoChanges>
-    }>
-      <UpdateChangeTagsRoot>
-        <Show when={created() !== 0}>
-          <UpdateChangeTag
-            type="created"
-            title={`${countCopy(created())} added`}
-            style={{ width: `${widths().created}px` }}
-          />
-        </Show>
-        <Show when={deleted() !== 0}>
-          <UpdateChangeTag
-            type="deleted"
-            title={`${countCopy(deleted())} deleted`}
-            style={{ width: `${widths().deleted}px` }}
-          />
-        </Show>
-        <Show when={updated() !== 0}>
-          <UpdateChangeTag
-            type="updated"
-            title={`${countCopy(updated())} updated`}
-            style={{ width: `${widths().updated}px` }}
-          />
-        </Show>
-        <Show when={same() !== 0}>
-          <UpdateChangeTag
-            type="same"
-            title={`${countCopy(same())} unchanged`}
-            style={{ width: `${widths().same}px` }}
-          />
-        </Show>
-      </UpdateChangeTagsRoot>
-    </Show>
+    <ChangeLegendRoot
+      empty={total() === 0}
+      title={total() === 0 ? "No changes" : undefined}
+    >
+      <Show when={created() !== 0}>
+        <ChangeLegendTag
+          type="created"
+          title={`${countCopy(created())} added`}
+          style={{ width: `${widths().created}px` }}
+        />
+      </Show>
+      <Show when={deleted() !== 0}>
+        <ChangeLegendTag
+          type="deleted"
+          title={`${countCopy(deleted())} deleted`}
+          style={{ width: `${widths().deleted}px` }}
+        />
+      </Show>
+      <Show when={updated() !== 0}>
+        <ChangeLegendTag
+          type="updated"
+          title={`${countCopy(updated())} updated`}
+          style={{ width: `${widths().updated}px` }}
+        />
+      </Show>
+      <Show when={same() !== 0}>
+        <ChangeLegendTag
+          type="same"
+          title={`${countCopy(same())} unchanged`}
+          style={{ width: `${widths().same}px` }}
+        />
+      </Show>
+    </ChangeLegendRoot>
   );
 }
 
@@ -421,7 +453,6 @@ export function Updates() {
   const rep = useReplicache();
   const ctx = useStageContext();
   const updates = StateUpdateStore.forStage.watch(rep, () => [ctx.stage.id]);
-  console.log({ updates: updates() });
   return (
     <Content>
       <div>
@@ -450,4 +481,8 @@ export function Updates() {
 
 function countCopy(count?: number) {
   return count! > 1 ? `${count} resources` : "1 resource";
+}
+
+function errorCountCopy(count?: number) {
+  return count! > 1 ? `${count} errors` : "Error";
 }

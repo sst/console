@@ -1,7 +1,9 @@
 import { Link, Navigate, Route, Routes, useNavigate } from "@solidjs/router";
 import { JSX, Match, Show, Switch, createMemo } from "solid-js";
+import { StateUpdateStore } from "$/data/app";
 import { NavigationAction, useCommandBar } from "$/pages/workspace/command-bar";
 import { useFlags } from "$/providers/flags";
+import { useReplicache } from "$/providers/replicache";
 import {
   useOutdated,
   StageContext,
@@ -104,6 +106,7 @@ export function Warning(props: WarningProps) {
 
 export function Inner() {
   const flags = useFlags();
+  const rep = useReplicache();
   const bar = useCommandBar();
   const ctx = useStageContext();
   const issues = useIssuesContext();
@@ -111,6 +114,7 @@ export function Inner() {
     () =>
       issues().filter((item) => !item.timeResolved && !item.timeIgnored).length
   );
+  const updates = StateUpdateStore.forStage.watch(rep, () => [ctx.stage.id]);
   const header = useHeaderContext();
   const outdated = useOutdated();
   const minVersion = createMemo(
@@ -194,7 +198,7 @@ export function Inner() {
               <Link href="resources">
                 <TabTitle>Resources</TabTitle>
               </Link>
-              <Show when={flags.deploys}>
+              <Show when={flags.deploys && updates().length > 0}>
                 <Link href="updates">
                   <TabTitle>Updates</TabTitle>
                 </Link>
