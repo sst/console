@@ -222,7 +222,7 @@ export function Inner() {
             <Routes>
               <Route path="resources" component={Resources} />
               <Route path="resources/logs/:resourceID/*" component={Logs} />
-              <Route path="updates" component={Updates} />
+              <Route path="updates/*" component={Updates} />
               <Route path="issues/*" component={Issues} />
               <Route path="local/*" component={Local} />
               <Route path="" element={<Navigate href="resources" />} />

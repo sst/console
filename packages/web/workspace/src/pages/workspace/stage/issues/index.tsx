@@ -39,7 +39,7 @@ export function Issues() {
           <Routes>
             <Route path="" element={<List />} />
             <Route path=":issueID" element={<Detail />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<NotFound inset="stage" />} />
           </Routes>
         </Match>
       </Switch>

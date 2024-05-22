@@ -20,6 +20,7 @@ const NotAllowedDesc = styled("div", {
 });
 
 interface ErrorScreenProps {
+  inset?: "root" | "none" | "stage";
   header?: boolean;
 }
 export function NotFound(props: ErrorScreenProps) {
@@ -28,7 +29,7 @@ export function NotFound(props: ErrorScreenProps) {
       <Show when={props.header}>
         <Header />
       </Show>
-      <Fullscreen inset={props.header ? "root" : "none"}>
+      <Fullscreen inset={props.inset ? props.inset : props.header ? "root" : "none"}>
         <Stack space="2.5" horizontal="center">
           <Text size="lg">Page not found</Text>
           <HomeLink href="/">Go back home</HomeLink>
@@ -44,7 +45,7 @@ export function NotAllowed(props: ErrorScreenProps) {
       <Show when={props.header}>
         <Header />
       </Show>
-      <Fullscreen inset={props.header ? "root" : "none"}>
+      <Fullscreen inset={props.inset ? props.inset : props.header ? "root" : "none"}>
         <Stack space="2.5" horizontal="center">
           <Text size="lg">Access not allowed</Text>
           <NotAllowedDesc>
