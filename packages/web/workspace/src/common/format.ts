@@ -58,7 +58,7 @@ export function formatNumber(num: number, lowercase?: boolean): string {
   return num.toString(); // fallback
 }
 
-export function formatDuration(ms: number): string {
+export function formatDuration(ms: number, useFullFormat?: boolean): string {
   const milliseconds = ms % 1000;
   const seconds = Math.floor(ms / 1000) % 60;
   const totalSeconds = Math.round(ms / 1000);
@@ -66,13 +66,13 @@ export function formatDuration(ms: number): string {
   const hours = Math.floor(ms / (1000 * 60 * 60));
 
   if (ms < 1000) {
-    return milliseconds + "ms";
+    return milliseconds + (useFullFormat ? " milliseconds" : "ms");
   } else if (ms < 1000 * 60) {
-    return (seconds + milliseconds / 1000).toFixed(2) + "s";
+    return (seconds + milliseconds / 1000).toFixed(2) + (useFullFormat ? " seconds" : "s");
   } else if (ms < 1000 * 60 * 60) {
-    return totalSeconds + "s";
+    return totalSeconds + (useFullFormat ? " seconds" : "s");
   } else {
-    return hours + ":" + (minutes < 10 ? "0" : "") + minutes + "h";
+    return hours + ":" + (minutes < 10 ? "0" : "") + minutes + (useFullFormat ? " hours" : "h");
   }
 }
 

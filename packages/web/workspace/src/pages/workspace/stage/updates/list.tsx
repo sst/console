@@ -2,12 +2,12 @@ import { For, Show, createEffect, createMemo } from "solid-js";
 import { Link } from "@solidjs/router";
 import { DateTime } from "luxon";
 import { styled } from "@macaron-css/solid";
-import { Row, Tag, Text, Stack, theme, utility, LinkButton } from "$/ui";
+import { Stack, theme, utility } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import { IconEllipsisVertical } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
-import { globalKeyframes, style } from "@macaron-css/core";
-import { formatSinceTime, parseTime } from "$/common/format";
+import { globalKeyframes } from "@macaron-css/core";
+import { formatSinceTime } from "$/common/format";
 import { StateUpdateStore } from "$/data/app";
 import { useReplicache } from "$/providers/replicache";
 import { useStageContext } from "../context";
@@ -15,14 +15,14 @@ import { sortBy } from "remeda";
 
 const LEGEND_WIDTH = 100;
 
-const CMD_MAP = {
+export const CMD_MAP = {
   deploy: "sst deploy",
   refresh: "sst refresh",
   remove: "sst remove",
   edit: "sst state edit",
 };
 
-const STATUS_MAP = {
+export const STATUS_MAP = {
   queued: "Queued",
   canceled: "Canceled",
   updated: "Complete",
@@ -78,7 +78,7 @@ const UpdateStatus = styled(UpdateCol, {
   },
 });
 
-const UpdateStatusIcon = styled("div", {
+export const UpdateStatusIcon = styled("div", {
   base: {
     width: 12,
     height: 12,
@@ -129,6 +129,7 @@ const UpdateLink = styled(Link, {
 
 const UpdateLinkPrefix = styled("span", {
   base: {
+    marginRight: 1,
     fontWeight: theme.font.weight.regular,
     fontSize: theme.font.size.sm,
   },
@@ -461,7 +462,7 @@ export function List() {
         >
           {(item, index) => (
             <Update
-              id={(updates().length - index()).toString()}
+              id={item.id}
               errors={item.errors}
               command={item.command}
               source={item.source.type}
@@ -483,6 +484,6 @@ function countCopy(count?: number) {
   return count! > 1 ? `${count} resources` : "1 resource";
 }
 
-function errorCountCopy(count?: number) {
+export function errorCountCopy(count?: number) {
   return count! > 1 ? `${count} errors` : "Error";
 }
