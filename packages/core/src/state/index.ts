@@ -194,7 +194,8 @@ export module State {
             async (result) =>
               JSON.parse(await result.Body!.transformToString()).checkpoint
                 .latest
-          );
+          )
+          .catch(() => ({}));
         console.log("found previous", previousKey);
       }
       if (!previousState.resources) previousState.resources = [];
@@ -273,14 +274,18 @@ export module State {
       });
       const bootstrap = await AWS.Account.bootstrapIon(input.config);
       if (!bootstrap) return;
-      const obj = await s3.send(
-        new GetObjectCommand({
-          Bucket: bootstrap.bucket,
-          Key:
-            ["lock", input.config.app, input.config.stage].join("/") + ".json",
-          VersionId: input.versionID,
-        })
-      );
+      const obj = await s3
+        .send(
+          new GetObjectCommand({
+            Bucket: bootstrap.bucket,
+            Key:
+              ["lock", input.config.app, input.config.stage].join("/") +
+              ".json",
+            VersionId: input.versionID,
+          })
+        )
+        .catch(() => {});
+      if (!obj) return;
       const lock = JSON.parse(await obj.Body!.transformToString()) as {
         updateID: string;
         command: string;
@@ -321,18 +326,21 @@ export module State {
       });
       const bootstrap = await AWS.Account.bootstrapIon(input.config);
       if (!bootstrap) return;
-      const obj = await s3.send(
-        new GetObjectCommand({
-          Bucket: bootstrap.bucket,
-          Key:
-            [
-              "summary",
-              input.config.app,
-              input.config.stage,
-              input.updateID,
-            ].join("/") + ".json",
-        })
-      );
+      const obj = await s3
+        .send(
+          new GetObjectCommand({
+            Bucket: bootstrap.bucket,
+            Key:
+              [
+                "summary",
+                input.config.app,
+                input.config.stage,
+                input.updateID,
+              ].join("/") + ".json",
+          })
+        )
+        .catch(() => {});
+      if (!obj) return;
       const summary = JSON.parse(await obj.Body!.transformToString()) as {
         updateID: string;
         resourceUpdated: number;
