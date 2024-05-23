@@ -1,11 +1,25 @@
-import { For, Show, Match, Switch, createMemo, createEffect, createSignal } from "solid-js";
+import {
+  For,
+  Show,
+  Match,
+  Switch,
+  createMemo,
+  createEffect,
+  createSignal,
+} from "solid-js";
 import { useReplicache } from "$/providers/replicache";
 import { Link, useParams } from "@solidjs/router";
-import { StateUpdateStore, StateResourceStore } from "$/data/app";
+import { StateUpdateStore, StateEventStore } from "$/data/app";
 import { State } from "@console/core/state";
 import { DateTime } from "luxon";
 import { useStageContext } from "../context";
-import { CMD_MAP, STATUS_MAP, countCopy, errorCountCopy, UpdateStatusIcon } from "./list";
+import {
+  CMD_MAP,
+  STATUS_MAP,
+  countCopy,
+  errorCountCopy,
+  UpdateStatusIcon,
+} from "./list";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
@@ -200,31 +214,44 @@ export function Detail() {
   const rep = useReplicache();
   const ctx = useStageContext();
   const replicacheStatus = useReplicacheStatus();
-  const update = StateUpdateStore.get.watch(rep, () => [ctx.stage.id, params.updateID]);
-  const resources = StateResourceStore.forUpdate.watch(rep, () => [ctx.stage.id, params.updateID]);
+  const update = StateUpdateStore.get.watch(rep, () => [
+    ctx.stage.id,
+    params.updateID,
+  ]);
+  const resources = StateEventStore.forUpdate.watch(rep, () => [
+    ctx.stage.id,
+    params.updateID,
+  ]);
 
-  const errors = () => update() && update().errors ? update().errors : 0;
+  const errors = () => (update() && update().errors ? update().errors : 0);
   const status = createMemo(() => {
     if (!update()) return;
     return update().time.completed
       ? update().errors
         ? "error"
         : "updated"
-      // : update().time.canceled
-      //   ? "canceled"
-      //   : update().time.queued
-      //     ? "queued"
-      : "updating";
+      : // : update().time.canceled
+        //   ? "canceled"
+        //   : update().time.queued
+        //     ? "queued"
+        "updating";
   });
-  const deleted = createMemo(() => resources().filter((r) => r.action === "deleted"));
-  const created = createMemo(() => resources().filter((r) => r.action === "created"));
-  const updated = createMemo(() => resources().filter((r) => r.action === "updated"));
-
+  const deleted = createMemo(() =>
+    resources().filter((r) => r.action === "deleted"),
+  );
+  const created = createMemo(() =>
+    resources().filter((r) => r.action === "created"),
+  );
+  const updated = createMemo(() =>
+    resources().filter((r) => r.action === "updated"),
+  );
 
   return (
     <Switch>
       <Match
-        when={replicacheStatus.isSynced(rep().name) && !update() && update.ready}
+        when={
+          replicacheStatus.isSynced(rep().name) && !update() && update.ready
+        }
       >
         <NotFound inset="stage" />
       </Match>
@@ -237,18 +264,20 @@ export function Detail() {
                   <PageTitle>
                     <UpdateStatusIcon status={status()} />
                     <PageTitleCopy>
-                      Update <PageTitlePrefix>#</PageTitlePrefix>{update().id}
+                      Update <PageTitlePrefix>#</PageTitlePrefix>
+                      {update().id}
                     </PageTitleCopy>
                   </PageTitle>
-                  <PageTitleStatus>{
-                    status() === "error"
+                  <PageTitleStatus>
+                    {status() === "error"
                       ? errorCountCopy(errors())
-                      : STATUS_MAP[status()!]
-                  }</PageTitleStatus>
+                      : STATUS_MAP[status()!]}
+                  </PageTitleStatus>
                 </Stack>
                 <Show when={update().errors}>
                   <ErrorInfo>
-                    Invalid component name "FunctionA". Component names must be unique.
+                    Invalid component name "FunctionA". Component names must be
+                    unique.
                   </ErrorInfo>
                 </Show>
               </Stack>
@@ -257,9 +286,7 @@ export function Detail() {
                   <Stack space="2">
                     <PanelTitle>Removed</PanelTitle>
                     <ResourceRoot action="deleted">
-                      <For each={deleted()}>
-                        {(r) => <Resource {...r} />}
-                      </For>
+                      <For each={deleted()}>{(r) => <Resource {...r} />}</For>
                     </ResourceRoot>
                   </Stack>
                 </Show>
@@ -267,9 +294,7 @@ export function Detail() {
                   <Stack space="2">
                     <PanelTitle>Added</PanelTitle>
                     <ResourceRoot action="created">
-                      <For each={created()}>
-                        {(r) => <Resource {...r} />}
-                      </For>
+                      <For each={created()}>{(r) => <Resource {...r} />}</For>
                     </ResourceRoot>
                   </Stack>
                 </Show>
@@ -277,9 +302,7 @@ export function Detail() {
                   <Stack space="2">
                     <PanelTitle>Updated</PanelTitle>
                     <ResourceRoot action="updated">
-                      <For each={updated()}>
-                        {(r) => <Resource {...r} />}
-                      </For>
+                      <For each={updated()}>{(r) => <Resource {...r} />}</For>
                     </ResourceRoot>
                   </Stack>
                 </Show>
@@ -302,40 +325,38 @@ export function Detail() {
                 <PanelTitle>Started</PanelTitle>
                 <Text
                   color="secondary"
-                  title={update().time.started
-                    ? DateTime.fromISO(update().time.started!).toLocaleString(
-                      DateTime.DATETIME_FULL,
-                    )
-                    : undefined
+                  title={
+                    update().time.started
+                      ? DateTime.fromISO(update().time.started!).toLocaleString(
+                          DateTime.DATETIME_FULL,
+                        )
+                      : undefined
                   }
                 >
-                  {
-                    update().time.started
-                      ? formatSinceTime(DateTime.fromISO(update().time.started!).toSQL()!, true)
-                      : "—"
-                  }
+                  {update().time.started
+                    ? formatSinceTime(
+                        DateTime.fromISO(update().time.started!).toSQL()!,
+                        true,
+                      )
+                    : "—"}
                 </Text>
               </Stack>
               <Stack space="2">
                 <PanelTitle>Duration</PanelTitle>
                 <Text color="secondary">
-                  {
-                    update().time.started && update().time.completed
-                      ? formatDuration(
+                  {update().time.started && update().time.completed
+                    ? formatDuration(
                         DateTime.fromISO(update().time.completed!)
                           .diff(DateTime.fromISO(update().time.started!))
                           .as("milliseconds"),
-                        true
+                        true,
                       )
-                      : "—"
-                  }
+                    : "—"}
                 </Text>
               </Stack>
               <Stack space="2">
                 <PanelTitle>Command</PanelTitle>
-                <PanelValueMono>
-                  {CMD_MAP[update().command]}
-                </PanelValueMono>
+                <PanelValueMono>{CMD_MAP[update().command]}</PanelValueMono>
               </Stack>
             </Stack>
           </Sidebar>
@@ -345,7 +366,7 @@ export function Detail() {
   );
 }
 
-function Resource(props: State.Resource) {
+function Resource(props: State.ResourceEvent) {
   const [copying, setCopying] = createSignal(false);
   return (
     <ResourceChild>

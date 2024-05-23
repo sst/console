@@ -58,11 +58,11 @@ export const StripeStore = new Store()
 export const StateUpdateStore = new Store()
   .type<State.Update>()
   .scan("forStage", (stageID: string) => ["stateUpdate", stageID])
-  .get((stageID: string, updateID: string) => ["stateUpdate", stageID, updateID])
+  .get((stageID: string, issueID: string) => ["stateUpdate", stageID, issueID])
   .build();
 
 export const StateEventStore = new Store()
-  .type<State.Resource>()
+  .type<State.ResourceEvent>()
   .scan("forStage", (stageID: string) => ["stateEvent", stageID])
   .scan("forUpdate", (stageID: string, updateID: string) => [
     "stateEvent",

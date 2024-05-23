@@ -66,7 +66,7 @@ export module State {
   });
   export type Update = z.infer<typeof Update>;
 
-  export const Resource = z.object({
+  export const ResourceEvent = z.object({
     id: z.string().cuid(),
     stageID: z.string().cuid(),
     updateID: z.string().cuid(),
@@ -85,7 +85,7 @@ export module State {
       stateModified: z.string().optional(),
     }),
   });
-  export type Resource = z.infer<typeof Resource>;
+  export type ResourceEvent = z.infer<typeof ResourceEvent>;
 
   export function serializeUpdate(
     input: typeof stateUpdateTable.$inferSelect
@@ -114,7 +114,7 @@ export module State {
 
   export function serializeEvent(
     input: typeof stateEventTable.$inferSelect
-  ): Resource {
+  ): ResourceEvent {
     return {
       id: input.id,
       type: input.type,

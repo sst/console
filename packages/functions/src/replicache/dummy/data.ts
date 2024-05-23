@@ -36,7 +36,7 @@ export type DummyMode =
   | "overview:base;usage:overage;resources:base;workspace:gated;subscription:overdue";
 
 export function* generateData(
-  mode: DummyMode
+  mode: DummyMode,
 ): Generator<DummyData, void, unknown> {
   console.log("generating for", mode);
 
@@ -156,7 +156,7 @@ type DummyData =
   | (DummyConfig & { _type: "dummyConfig" })
   | (Workspace.Info & { _type: "workspace" })
   | (State.Update & { _type: "stateUpdate" })
-  | (State.Resource & { _type: "stateResource" })
+  | (State.ResourceEvent & { _type: "stateEvent" })
   | (Omit<Usage, "workspaceID"> & { _type: "usage" })
   | (Omit<App.Info, "workspaceID"> & { _type: "app" })
   | (Omit<User.Info, "workspaceID"> & { _type: "user" })
@@ -1504,7 +1504,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 5 }).toISO()!,
   });
-  yield* stateResourceError();
+  yield* stateEventError();
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
@@ -1524,7 +1524,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     timeStarted: DateTime.now().minus({ minutes: 4 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 3 }).toISO()!,
   });
-  yield* stateResourceBase();
+  yield* stateEventBase();
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
@@ -1532,8 +1532,8 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* stateResourceBase(): Generator<DummyData, void, unknown> {
-  yield stateResource({
+function* stateEventBase(): Generator<DummyData, void, unknown> {
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1541,7 +1541,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
     action: "deleted",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1549,7 +1549,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionB",
     action: "deleted",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1557,7 +1557,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC",
     action: "deleted",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1565,7 +1565,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionD",
     action: "deleted",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1573,7 +1573,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionE",
     action: "deleted",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1581,7 +1581,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:cloudwatch/logGroup:LogGroup::FunctionALogGroup",
     action: "created",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1589,7 +1589,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:cloudwatch/logGroup:LogGroup::FunctionBLogGroup",
     action: "created",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1597,7 +1597,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair",
     action: "updated",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1605,7 +1605,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionARole",
     action: "updated",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1613,7 +1613,7 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionBRole",
     action: "updated",
   });
-  yield stateResource({
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -1623,8 +1623,8 @@ function* stateResourceBase(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* stateResourceError(): Generator<DummyData, void, unknown> {
-  yield stateResource({
+function* stateEventError(): Generator<DummyData, void, unknown> {
+  yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
@@ -2528,18 +2528,18 @@ function invocation({
       duration === undefined
         ? duration
         : {
-          duration,
-          memory: 128,
-          size: 2048,
-          xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
-        },
+            duration,
+            memory: 128,
+            size: 2048,
+            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+          },
     start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
-        message,
-        id: `log-${INVOCATION_COUNT}-${i}`,
-        timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-      }))
+          message,
+          id: `log-${INVOCATION_COUNT}-${i}`,
+          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+        }))
       : [],
   };
 }
@@ -2666,17 +2666,17 @@ function update({
 }
 
 interface ResourceProps {
-  id: number,
-  stageID: State.Resource["stageID"];
-  update: number,
-  type: State.Resource["type"];
-  urn: State.Resource["urn"];
-  action: State.Resource["action"];
-  outputs?: State.Resource["outputs"];
-  inputs?: State.Resource["inputs"];
-  parent?: State.Resource["parent"];
+  id: number;
+  stageID: State.ResourceEvent["stageID"];
+  update: number;
+  type: State.ResourceEvent["type"];
+  urn: State.ResourceEvent["urn"];
+  action: State.ResourceEvent["action"];
+  outputs?: State.ResourceEvent["outputs"];
+  inputs?: State.ResourceEvent["inputs"];
+  parent?: State.ResourceEvent["parent"];
 }
-function stateResource({
+function stateEvent({
   id,
   stageID,
   update,
@@ -2688,7 +2688,7 @@ function stateResource({
   parent,
 }: ResourceProps): DummyData {
   return {
-    _type: "stateResource",
+    _type: "stateEvent",
     id: `${id}`,
     stageID,
     updateID: `${update}`,
