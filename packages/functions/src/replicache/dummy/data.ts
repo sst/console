@@ -1501,6 +1501,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     id: ++UPDATE_ID,
     stage: STAGE,
     errors: 2,
+    deleted: 1,
     timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 5 }).toISO()!,
   });

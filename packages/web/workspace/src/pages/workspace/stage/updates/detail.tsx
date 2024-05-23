@@ -87,6 +87,18 @@ const ErrorInfo = styled("div", {
   },
 });
 
+const ResourceEmpty = styled("div", {
+  base: {
+    height: 200,
+    border: `1px solid ${theme.color.divider.base}`,
+    borderRadius: theme.borderRadius,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: theme.color.text.dimmed.base,
+  },
+});
+
 const ResourceRoot = styled("div", {
   base: {
     borderRadius: theme.borderRadius,
@@ -231,20 +243,16 @@ export function Detail() {
         ? "error"
         : "updated"
       : // : update().time.canceled
-        //   ? "canceled"
-        //   : update().time.queued
-        //     ? "queued"
-        "updating";
+         ? "canceled"
+         : update().time.queued
+           ? "queued"
+      pdating";
   });
-  const deleted = createMemo(() =>
-    resources().filter((r) => r.action === "deleted"),
-  );
-  const created = createMemo(() =>
-    resources().filter((r) => r.action === "created"),
-  );
-  const updated = createMemo(() =>
-    resources().filter((r) => r.action === "updated"),
-  );
+  const deleted = createMemo(() => resources().filter((r) => r.action === "deleted"));
+  const created = createMemo(() => resources().filter((r) => r.action === "created"));
+  const updated = createMemo(() => resources().filter((r) => r.action === "updated"));
+  const isEmpty = createMemo(() => update() && !deleted().length && !created().length && !updated().length && !update().resource.same);
+
 
   return (
     <Switch>
@@ -282,39 +290,51 @@ export function Detail() {
                 </Show>
               </Stack>
               <Stack space="5">
-                <Show when={deleted().length}>
-                  <Stack space="2">
-                    <PanelTitle>Removed</PanelTitle>
-                    <ResourceRoot action="deleted">
-                      <For each={deleted()}>{(r) => <Resource {...r} />}</For>
-                    </ResourceRoot>
-                  </Stack>
-                </Show>
-                <Show when={created().length}>
-                  <Stack space="2">
-                    <PanelTitle>Added</PanelTitle>
-                    <ResourceRoot action="created">
-                      <For each={created()}>{(r) => <Resource {...r} />}</For>
-                    </ResourceRoot>
-                  </Stack>
-                </Show>
-                <Show when={updated().length}>
-                  <Stack space="2">
-                    <PanelTitle>Updated</PanelTitle>
-                    <ResourceRoot action="updated">
-                      <For each={updated()}>{(r) => <Resource {...r} />}</For>
-                    </ResourceRoot>
-                  </Stack>
-                </Show>
-                <Show when={update().resource.same! > 0}>
-                  <Stack space="2">
-                    <PanelTitle>Unchanged</PanelTitle>
-                    <ResourceRoot action="same">
-                      <ResourceChildEmpty>
-                        {countCopy(update().resource.same!)} were not changed.
-                      </ResourceChildEmpty>
-                    </ResourceRoot>
-                  </Stack>
+                <Show when={!isEmpty()} fallback={
+                  <ResourceEmpty>
+                    No changes
+                  </ResourceEmpty>
+                }>
+                  <Show when={deleted().length}>
+                    <Stack space="2">
+                      <PanelTitle>Removed</PanelTitle>
+                      <ResourceRoot action="deleted">
+                        <For each={deleted()}>
+                          {(r) => <Resource {...r} />}
+                        </For>
+                      </ResourceRoot>
+                    </Stack>
+                  </Show>
+                  <Show when={created().length}>
+                    <Stack space="2">
+                      <PanelTitle>Added</PanelTitle>
+                      <ResourceRoot action="created">
+                        <For each={created()}>
+                          {(r) => <Resource {...r} />}
+                        </For>
+                      </ResourceRoot>
+                    </Stack>
+                  </Show>
+                  <Show when={updated().length}>
+                    <Stack space="2">
+                      <PanelTitle>Updated</PanelTitle>
+                      <ResourceRoot action="updated">
+                        <For each={updated()}>
+                          {(r) => <Resource {...r} />}
+                        </For>
+                      </ResourceRoot>
+                    </Stack>
+                  </Show>
+                  <Show when={update().resource.same! > 0}>
+                    <Stack space="2">
+                      <PanelTitle>Unchanged</PanelTitle>
+                      <ResourceRoot action="same">
+                        <ResourceChildEmpty>
+                          {countCopy(update().resource.same!)} were not changed
+                        </ResourceChildEmpty>
+                      </ResourceRoot>
+                    </Stack>
+                  </Show>
                 </Show>
               </Stack>
             </Stack>
@@ -328,16 +348,16 @@ export function Detail() {
                   title={
                     update().time.started
                       ? DateTime.fromISO(update().time.started!).toLocaleString(
-                          DateTime.DATETIME_FULL,
-                        )
+                        teTime.DATETIME_FULL,
+                      
                       : undefined
                   }
                 >
                   {update().time.started
                     ? formatSinceTime(
-                        DateTime.fromISO(update().time.started!).toSQL()!,
-                        true,
-                      )
+                      teTime.fromISO(update().time.started!).toSQL()!,
+                      ue,
+                    
                     : "—"}
                 </Text>
               </Stack>
@@ -346,11 +366,11 @@ export function Detail() {
                 <Text color="secondary">
                   {update().time.started && update().time.completed
                     ? formatDuration(
-                        DateTime.fromISO(update().time.completed!)
-                          .diff(DateTime.fromISO(update().time.started!))
-                          .as("milliseconds"),
-                        true,
-                      )
+                      teTime.fromISO(update().time.completed!)
+                        iff(DateTime.fromISO(update().time.started!))
+                        s("milliseconds"),
+                      ue,
+                    
                     : "—"}
                 </Text>
               </Stack>
