@@ -42,6 +42,7 @@ export function* generateData(
 
   // Reset auto-incrementing IDs
   UPDATE_ID = 0;
+  STATE_RES_ID = 0;
   WARNING_COUNT = 0;
   INVOCATION_COUNT = 0;
   ISSUE_ALERT_COUNT = 0;
@@ -155,6 +156,7 @@ type DummyData =
   | (DummyConfig & { _type: "dummyConfig" })
   | (Workspace.Info & { _type: "workspace" })
   | (State.Update & { _type: "stateUpdate" })
+  | (State.Resource & { _type: "stateResource" })
   | (Omit<Usage, "workspaceID"> & { _type: "usage" })
   | (Omit<App.Info, "workspaceID"> & { _type: "app" })
   | (Omit<User.Info, "workspaceID"> & { _type: "user" })
@@ -363,6 +365,7 @@ const LOGS_FN = "my-logs-func";
 
 // Auto-incrementing IDs
 let UPDATE_ID = 0;
+let STATE_RES_ID = 0;
 let WARNING_COUNT = 0;
 let INVOCATION_COUNT = 0;
 let ISSUE_ALERT_COUNT = 0;
@@ -1448,29 +1451,40 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 2 }).toISO()!,
+    timeStarted: DateTime.now().minus({ minutes: 13 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    created: 20,
   });
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    errors: 2,
-    timeStarted: DateTime.now().minus({ minutes: 4 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 3 }).toISO()!,
+    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 10 }).toISO()!,
+    created: 2,
+    updated: 4,
+    same: 14,
   });
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    errors: 1,
-    command: "edit",
-    timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 4 }).toISO()!,
+    timeStarted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
+    updated: 20,
   });
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    command: "refresh",
-    timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 5 }).toISO()!,
+    timeStarted: DateTime.now().minus({ minutes: 10 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 8 }).toISO()!,
+    deleted: 4,
+    same: 16,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    timeStarted: DateTime.now().minus({ minutes: 9 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 7 }).toISO()!,
+    same: 20,
   });
   yield update({
     id: ++UPDATE_ID,
@@ -1486,40 +1500,137 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 9 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 7 }).toISO()!,
-    same: 20,
+    errors: 2,
+    timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 5 }).toISO()!,
+  });
+  yield* stateResourceError();
+  yield update({
+    id: ++UPDATE_ID,
+    stage: STAGE,
+    errors: 1,
+    command: "edit",
+    timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 4 }).toISO()!,
   });
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 10 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 8 }).toISO()!,
-    deleted: 4,
-    same: 16,
-  });
-  yield update({
-    id: ++UPDATE_ID,
-    stage: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 11 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
-    updated: 20,
-  });
-  yield update({
-    id: ++UPDATE_ID,
-    stage: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 10 }).toISO()!,
+    command: "refresh",
+    same: 15,
     created: 2,
     updated: 4,
-    same: 14,
+    deleted: 5,
+    timeStarted: DateTime.now().minus({ minutes: 4 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 3 }).toISO()!,
   });
+  yield* stateResourceBase();
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 13 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
-    created: 20,
+    timeStarted: DateTime.now().minus({ minutes: 2 }).toISO()!,
+  });
+}
+
+function* stateResourceBase(): Generator<DummyData, void, unknown> {
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "sst:aws:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
+    action: "deleted",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "sst:aws:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionB",
+    action: "deleted",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "sst:aws:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC",
+    action: "deleted",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "sst:aws:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionD",
+    action: "deleted",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "sst:aws:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionE",
+    action: "deleted",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "aws:cloudwatch/logGroup:LogGroup",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:cloudwatch/logGroup:LogGroup::FunctionALogGroup",
+    action: "created",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "aws:cloudwatch/logGroup:LogGroup",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:cloudwatch/logGroup:LogGroup::FunctionBLogGroup",
+    action: "created",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "pulumi:pulumi:Stack",
+    urn: "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair",
+    action: "updated",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "aws:iam/role:Role",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionARole",
+    action: "updated",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "aws:iam/role:Role",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionBRole",
+    action: "updated",
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "aws:iam/role:Role",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionCRole",
+    action: "updated",
+  });
+}
+
+function* stateResourceError(): Generator<DummyData, void, unknown> {
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE,
+    update: UPDATE_ID,
+    type: "sst:aws:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
+    action: "deleted",
   });
 }
 
@@ -2516,7 +2627,7 @@ interface UpdateProps {
   created?: number;
   updated?: number;
   deleted?: number;
-  command?: "deploy" | "refresh" | "remove" | "edit";
+  command?: State.Update["command"];
 }
 function update({
   id,
@@ -2551,5 +2662,45 @@ function update({
       deleted: deleted || 0,
     },
     errors: errors || undefined,
+  };
+}
+
+interface ResourceProps {
+  id: number,
+  stageID: State.Resource["stageID"];
+  update: number,
+  type: State.Resource["type"];
+  urn: State.Resource["urn"];
+  action: State.Resource["action"];
+  outputs?: State.Resource["outputs"];
+  inputs?: State.Resource["inputs"];
+  parent?: State.Resource["parent"];
+}
+function stateResource({
+  id,
+  stageID,
+  update,
+  type,
+  urn,
+  action,
+  outputs,
+  inputs,
+  parent,
+}: ResourceProps): DummyData {
+  return {
+    _type: "stateResource",
+    id: `${id}`,
+    stageID,
+    updateID: `${update}`,
+    type,
+    urn,
+    action,
+    outputs: outputs || {},
+    inputs: inputs || {},
+    parent,
+    time: {
+      created: DateTime.now().startOf("day").toISO()!,
+      updated: DateTime.now().startOf("day").toISO()!,
+    },
   };
 }

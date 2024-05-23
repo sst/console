@@ -20,12 +20,12 @@ export const handler = ApiHandler(async () => {
     !workspaceID
       ? session
       : {
-          type: "user",
-          properties: {
-            workspaceID,
-            userID: "dummy-user",
-          },
+        type: "user",
+        properties: {
+          workspaceID,
+          userID: "dummy-user",
         },
+      },
     () => {
       const actor = useActor();
       NotPublic();

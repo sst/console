@@ -68,7 +68,9 @@ export function formatDuration(ms: number, useFullFormat?: boolean): string {
   if (ms < 1000) {
     return milliseconds + (useFullFormat ? " milliseconds" : "ms");
   } else if (ms < 1000 * 60) {
-    return (seconds + milliseconds / 1000).toFixed(2) + (useFullFormat ? " seconds" : "s");
+    return (milliseconds === 0
+      ? seconds
+      : (seconds + milliseconds / 1000).toFixed(2)) + (useFullFormat ? " seconds" : "s");
   } else if (ms < 1000 * 60 * 60) {
     return totalSeconds + (useFullFormat ? " seconds" : "s");
   } else {

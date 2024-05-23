@@ -163,12 +163,12 @@ export function Detail() {
     if (issue()?.invocation) return;
     await fetch(
       import.meta.env.VITE_API_URL +
-        "/rest/log?" +
-        new URLSearchParams({
-          pointer: JSON.stringify(issue()!.pointer),
-          stageID: issue()!.stageID,
-          groupID: issue()!.group,
-        }),
+      "/rest/log?" +
+      new URLSearchParams({
+        pointer: JSON.stringify(issue()!.pointer),
+        stageID: issue()!.stageID,
+        groupID: issue()!.group,
+      }),
       {
         headers: {
           authorization: rep().auth,
@@ -278,7 +278,7 @@ export function Detail() {
       <Match
         when={replicacheStatus.isSynced(rep().name) && !issue() && issue.ready}
       >
-        <NotFound />
+        <NotFound inset="stage" />
       </Match>
       <Match when={issue()}>
         <Container>

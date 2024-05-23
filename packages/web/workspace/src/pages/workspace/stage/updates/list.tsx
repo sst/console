@@ -13,6 +13,7 @@ import { useReplicache } from "$/providers/replicache";
 import { useStageContext } from "../context";
 import { sortBy } from "remeda";
 
+const LEGEND_RES = 2;
 const LEGEND_WIDTH = 100;
 
 export const CMD_MAP = {
@@ -385,10 +386,10 @@ function ChangeLegend(props: ChangeLegendProps) {
   const widths = createMemo(() => {
     const nonZero = [same(), created(), updated(), deleted()].filter((n) => n !== 0).length;
 
-    let sameWidth = Math.ceil(same() / total() * LEGEND_WIDTH / 4) * 4;
-    let createdWidth = Math.ceil(created() / total() * LEGEND_WIDTH / 4) * 4;
-    let updatedWidth = Math.ceil(updated() / total() * LEGEND_WIDTH / 4) * 4;
-    let deletedWidth = Math.ceil(deleted() / total() * LEGEND_WIDTH / 4) * 4;
+    let sameWidth = Math.ceil(same() / total() * LEGEND_WIDTH / LEGEND_RES) * LEGEND_RES;
+    let createdWidth = Math.ceil(created() / total() * LEGEND_WIDTH / LEGEND_RES) * LEGEND_RES;
+    let updatedWidth = Math.ceil(updated() / total() * LEGEND_WIDTH / LEGEND_RES) * LEGEND_RES;
+    let deletedWidth = Math.ceil(deleted() / total() * LEGEND_WIDTH / LEGEND_RES) * LEGEND_RES;
 
     const calculatedTotalWidth = sameWidth + createdWidth + updatedWidth + deletedWidth;
     const widthDifference = LEGEND_WIDTH - ((nonZero - 1) + calculatedTotalWidth);
@@ -418,18 +419,18 @@ function ChangeLegend(props: ChangeLegendProps) {
       empty={total() === 0}
       title={total() === 0 ? "No changes" : undefined}
     >
-      <Show when={created() !== 0}>
-        <ChangeLegendTag
-          type="created"
-          title={`${countCopy(created())} added`}
-          style={{ width: `${widths().created}px` }}
-        />
-      </Show>
       <Show when={deleted() !== 0}>
         <ChangeLegendTag
           type="deleted"
           title={`${countCopy(deleted())} deleted`}
           style={{ width: `${widths().deleted}px` }}
+        />
+      </Show>
+      <Show when={created() !== 0}>
+        <ChangeLegendTag
+          type="created"
+          title={`${countCopy(created())} added`}
+          style={{ width: `${widths().created}px` }}
         />
       </Show>
       <Show when={updated() !== 0}>
@@ -480,7 +481,7 @@ export function List() {
   );
 }
 
-function countCopy(count?: number) {
+export function countCopy(count?: number) {
   return count! > 1 ? `${count} resources` : "1 resource";
 }
 
