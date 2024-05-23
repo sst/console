@@ -438,28 +438,28 @@ function ChangeLegend(props: ChangeLegendProps) {
       <Show when={deleted() !== 0}>
         <ChangeLegendTag
           type="deleted"
-          title={`${countCopy(deleted())} deleted`}
+          title={`${deleted()} deleted`}
           style={{ width: `${widths().deleted}px` }}
         />
       </Show>
       <Show when={created() !== 0}>
         <ChangeLegendTag
           type="created"
-          title={`${countCopy(created())} added`}
+          title={`${created()} added`}
           style={{ width: `${widths().created}px` }}
         />
       </Show>
       <Show when={updated() !== 0}>
         <ChangeLegendTag
           type="updated"
-          title={`${countCopy(updated())} updated`}
+          title={`${updated()} updated`}
           style={{ width: `${widths().updated}px` }}
         />
       </Show>
       <Show when={same() !== 0}>
         <ChangeLegendTag
           type="same"
-          title={`${countCopy(same())} unchanged`}
+          title={`${same()} unchanged`}
           style={{ width: `${widths().same}px` }}
         />
       </Show>

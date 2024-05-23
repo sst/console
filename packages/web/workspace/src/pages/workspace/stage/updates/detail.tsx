@@ -16,7 +16,6 @@ import { useStageContext } from "../context";
 import {
   CMD_MAP,
   STATUS_MAP,
-  countCopy,
   errorCountCopy,
   UpdateStatusIcon,
 } from "./list";
@@ -416,4 +415,8 @@ function Resource(props: State.ResourceEvent) {
       <ResourceValue>{props.type}</ResourceValue>
     </ResourceChild>
   );
+}
+
+function countCopy(count?: number) {
+  return count! > 1 ? `${count} resources` : "1 resource";
 }
