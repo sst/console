@@ -9,7 +9,10 @@ export const { use: useFlags, provider: FlagsProvider } =
     const auth = useAuth();
     const storage = useStorage();
     const email = createMemo(() => auth[storage.value.account].session.email);
-    const internal = createMemo(() => email().endsWith("@sst.dev"));
+    const search = useSearchParams();
+    const internal = createMemo(
+      () => email().endsWith("@sst.dev") || search.get("internal") === "true"
+    );
     const local = window.location.hostname.includes("localhost");
 
     return {
