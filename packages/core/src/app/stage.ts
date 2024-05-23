@@ -511,12 +511,12 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
   }
   s3.destroy();
   console.log("resources", JSON.stringify(resources, null, 4));
+  if (missing) {
+    await remove(input.stageID);
+    return;
+  }
 
   return createTransaction(async (tx) => {
-    if (missing) {
-      await remove(input.stageID);
-      return;
-    }
     const existing = await tx
       .select({
         id: resource.id,
@@ -637,7 +637,7 @@ export const assumeRole = zod(Info.shape.id, async (stageID) => {
 });
 
 export const remove = zod(Info.shape.id, (stageID) =>
-  createTransaction(async (tx) => {
+  useTransaction(async (tx) => {
     console.log("removing stage", stageID);
     await tx
       .delete(stage)
