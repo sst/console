@@ -197,6 +197,7 @@ export module State {
           );
         console.log("found previous", previousKey);
       }
+      if (!previousState.resources) previousState.resources = [];
 
       const resources = Object.fromEntries(
         state.resources.map((r: any) => [r.urn, r])

@@ -25,6 +25,7 @@ import { db } from "../drizzle";
 import { event } from "../event";
 import { Replicache } from "../replicache";
 import { Pulumi } from "../pulumi";
+import { issueSubscriber } from "../issue/issue.sql";
 
 export * as Stage from "./stage";
 
@@ -649,6 +650,16 @@ export const remove = zod(Info.shape.id, (stageID) =>
         and(
           eq(resource.stageID, stageID),
           eq(resource.workspaceID, useWorkspace())
+        )
+      )
+      .execute();
+
+    await tx
+      .delete(issueSubscriber)
+      .where(
+        and(
+          eq(issueSubscriber.stageID, stageID),
+          eq(issueSubscriber.workspaceID, useWorkspace())
         )
       )
       .execute();
