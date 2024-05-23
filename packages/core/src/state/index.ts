@@ -300,7 +300,7 @@ export module State {
       await useTransaction(async (tx) => {
         const result = await tx
           .select({
-            count: sql<number>`COUNT(*)`,
+            count: count(),
           })
           .from(stateUpdateTable)
           .where(
