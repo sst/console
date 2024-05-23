@@ -234,8 +234,7 @@ export function Detail() {
   const resources = StateEventStore.forUpdate.watch(
     rep,
     () => [ctx.stage.id, params.updateID],
-    (resources) =>
-      sortBy(resources, [(r) => r.urn.split("::").at(-1)!, "desc"]),
+    (resources) => sortBy(resources, [(r) => r.urn.split("::").at(-1)!, "asc"]),
   );
 
   const errors = () => (update() && update().errors ? update().errors : 0);
