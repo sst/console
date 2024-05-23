@@ -8,7 +8,7 @@ import {
   UpdateCommand,
   Command,
 } from "./state.sql";
-import { useTransaction } from "../util/transaction";
+import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
 import { and, count, eq, sql } from "drizzle-orm";
@@ -21,6 +21,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { RETRY_STRATEGY } from "../util/aws";
 import { AWS } from "../aws";
+import { Replicache } from "../replicache";
 
 export module State {
   export const Event = {
@@ -259,6 +260,7 @@ export module State {
       }
       if (inserts.length)
         await useTransaction(async (tx) => {
+          await createTransactionEffect(() => Replicache.poke());
           await tx.insert(stateEventTable).ignore().values(inserts);
         });
     }
@@ -326,6 +328,8 @@ export module State {
           },
           timeStarted: new Date(lock.created),
         });
+
+        await createTransactionEffect(() => Replicache.poke());
       });
     }
   );
@@ -385,6 +389,7 @@ export module State {
               eq(stateUpdateTable.id, input.updateID)
             )
           );
+        await createTransactionEffect(() => Replicache.poke());
       });
     }
   );
@@ -410,6 +415,7 @@ export module State {
             )
           )
           .then((result) => result[0]?.count || 0);
+        await createTransactionEffect(() => Replicache.poke());
         return tx.insert(stateUpdateTable).ignore().values({
           id: input.id,
           stageID: input.stageID,
