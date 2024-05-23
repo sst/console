@@ -225,8 +225,12 @@ export module State {
             return "updated";
           })(),
           id: createId(),
-          timeStateModified: new Date(resource.modified),
-          timeStateCreated: new Date(resource.created),
+          timeStateModified: resource.modified
+            ? new Date(resource.modified)
+            : null,
+          timeStateCreated: resource.created
+            ? new Date(resource.created)
+            : null,
           workspaceID: useWorkspace(),
           type: resource.type,
           urn: resource.urn,
@@ -253,7 +257,6 @@ export module State {
           parent: resource.parent,
         });
       }
-      console.log("inserting", inserts);
       if (inserts.length)
         await useTransaction(async (tx) => {
           await tx.insert(stateEventTable).ignore().values(inserts);
