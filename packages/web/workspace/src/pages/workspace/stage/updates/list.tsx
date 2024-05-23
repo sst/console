@@ -287,6 +287,7 @@ const UpdateTime = styled("span", {
  */
 type UpdateProps = {
   id: string;
+  index: string;
   errors?: number;
   timeStarted?: string;
   timeQueued?: string;
@@ -322,13 +323,13 @@ function Update(props: UpdateProps) {
         <Stack space="2">
           <UpdateLink href={props.id}>
             <UpdateLinkPrefix>#</UpdateLinkPrefix>
-            {props.id}
+            {props.index}
           </UpdateLink>
-          <UpdateStatusCopy>{
-            status() === "error"
+          <UpdateStatusCopy>
+            {status() === "error"
               ? errorCountCopy(errors())
-              : STATUS_MAP[status()]
-          }</UpdateStatusCopy>
+              : STATUS_MAP[status()]}
+          </UpdateStatusCopy>
         </Stack>
       </UpdateStatus>
       <UpdateRightCol>
@@ -384,18 +385,33 @@ function ChangeLegend(props: ChangeLegendProps) {
   const total = () => same() + created() + updated() + deleted();
 
   const widths = createMemo(() => {
-    const nonZero = [same(), created(), updated(), deleted()].filter((n) => n !== 0).length;
+    const nonZero = [same(), created(), updated(), deleted()].filter(
+      (n) => n !== 0,
+    ).length;
 
-    let sameWidth = Math.ceil(same() / total() * LEGEND_WIDTH / LEGEND_RES) * LEGEND_RES;
-    let createdWidth = Math.ceil(created() / total() * LEGEND_WIDTH / LEGEND_RES) * LEGEND_RES;
-    let updatedWidth = Math.ceil(updated() / total() * LEGEND_WIDTH / LEGEND_RES) * LEGEND_RES;
-    let deletedWidth = Math.ceil(deleted() / total() * LEGEND_WIDTH / LEGEND_RES) * LEGEND_RES;
+    let sameWidth =
+      Math.ceil(((same() / total()) * LEGEND_WIDTH) / LEGEND_RES) * LEGEND_RES;
+    let createdWidth =
+      Math.ceil(((created() / total()) * LEGEND_WIDTH) / LEGEND_RES) *
+      LEGEND_RES;
+    let updatedWidth =
+      Math.ceil(((updated() / total()) * LEGEND_WIDTH) / LEGEND_RES) *
+      LEGEND_RES;
+    let deletedWidth =
+      Math.ceil(((deleted() / total()) * LEGEND_WIDTH) / LEGEND_RES) *
+      LEGEND_RES;
 
-    const calculatedTotalWidth = sameWidth + createdWidth + updatedWidth + deletedWidth;
-    const widthDifference = LEGEND_WIDTH - ((nonZero - 1) + calculatedTotalWidth);
+    const calculatedTotalWidth =
+      sameWidth + createdWidth + updatedWidth + deletedWidth;
+    const widthDifference = LEGEND_WIDTH - (nonZero - 1 + calculatedTotalWidth);
 
     if (widthDifference !== 0) {
-      const maxWidth = Math.max(sameWidth, createdWidth, updatedWidth, deletedWidth);
+      const maxWidth = Math.max(
+        sameWidth,
+        createdWidth,
+        updatedWidth,
+        deletedWidth,
+      );
       if (maxWidth === sameWidth) {
         sameWidth += widthDifference;
       } else if (maxWidth === createdWidth) {
@@ -463,6 +479,7 @@ export function List() {
         >
           {(item, index) => (
             <Update
+              index={item.index}
               id={item.id}
               errors={item.errors}
               command={item.command}

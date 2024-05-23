@@ -27,6 +27,7 @@ import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
 import { IconCheck, IconDocumentDuplicate } from "$/ui/icons";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
+import { sortBy } from "remeda";
 
 const RES_LEFT_BORDER = "4px";
 
@@ -230,10 +231,12 @@ export function Detail() {
     ctx.stage.id,
     params.updateID,
   ]);
-  const resources = StateEventStore.forUpdate.watch(rep, () => [
-    ctx.stage.id,
-    params.updateID,
-  ]);
+  const resources = StateEventStore.forUpdate.watch(
+    rep,
+    () => [ctx.stage.id, params.updateID],
+    (resources) =>
+      sortBy(resources, [(r) => r.urn.split("::").at(-1)!, "desc"]),
+  );
 
   const errors = () => (update() && update().errors ? update().errors : 0);
   const status = createMemo(() => {
@@ -243,16 +246,28 @@ export function Detail() {
         ? "error"
         : "updated"
       : // : update().time.canceled
-      //   ? "canceled"
-      //   : update().time.queued
-      //     ? "queued"
-      "updating";
+        //   ? "canceled"
+        //   : update().time.queued
+        //     ? "queued"
+        "updating";
   });
-  const deleted = createMemo(() => resources().filter((r) => r.action === "deleted"));
-  const created = createMemo(() => resources().filter((r) => r.action === "created"));
-  const updated = createMemo(() => resources().filter((r) => r.action === "updated"));
-  const isEmpty = createMemo(() => update() && !deleted().length && !created().length && !updated().length && !update().resource.same);
-
+  const deleted = createMemo(() =>
+    resources().filter((r) => r.action === "deleted"),
+  );
+  const created = createMemo(() =>
+    resources().filter((r) => r.action === "created"),
+  );
+  const updated = createMemo(() =>
+    resources().filter((r) => r.action === "updated"),
+  );
+  const isEmpty = createMemo(
+    () =>
+      update() &&
+      !deleted().length &&
+      !created().length &&
+      !updated().length &&
+      !update().resource.same,
+  );
 
   return (
     <Switch>
@@ -273,7 +288,7 @@ export function Detail() {
                     <UpdateStatusIcon status={status()} />
                     <PageTitleCopy>
                       Update <PageTitlePrefix>#</PageTitlePrefix>
-                      {update().id}
+                      {update().index}
                     </PageTitleCopy>
                   </PageTitle>
                   <PageTitleStatus>
@@ -290,18 +305,15 @@ export function Detail() {
                 </Show>
               </Stack>
               <Stack space="5">
-                <Show when={!isEmpty()} fallback={
-                  <ResourceEmpty>
-                    No changes
-                  </ResourceEmpty>
-                }>
+                <Show
+                  when={!isEmpty()}
+                  fallback={<ResourceEmpty>No changes</ResourceEmpty>}
+                >
                   <Show when={deleted().length}>
                     <Stack space="2">
                       <PanelTitle>Removed</PanelTitle>
                       <ResourceRoot action="deleted">
-                        <For each={deleted()}>
-                          {(r) => <Resource {...r} />}
-                        </For>
+                        <For each={deleted()}>{(r) => <Resource {...r} />}</For>
                       </ResourceRoot>
                     </Stack>
                   </Show>
@@ -309,9 +321,7 @@ export function Detail() {
                     <Stack space="2">
                       <PanelTitle>Added</PanelTitle>
                       <ResourceRoot action="created">
-                        <For each={created()}>
-                          {(r) => <Resource {...r} />}
-                        </For>
+                        <For each={created()}>{(r) => <Resource {...r} />}</For>
                       </ResourceRoot>
                     </Stack>
                   </Show>
@@ -319,9 +329,7 @@ export function Detail() {
                     <Stack space="2">
                       <PanelTitle>Updated</PanelTitle>
                       <ResourceRoot action="updated">
-                        <For each={updated()}>
-                          {(r) => <Resource {...r} />}
-                        </For>
+                        <For each={updated()}>{(r) => <Resource {...r} />}</For>
                       </ResourceRoot>
                     </Stack>
                   </Show>
@@ -348,16 +356,16 @@ export function Detail() {
                   title={
                     update().time.started
                       ? DateTime.fromISO(update().time.started!).toLocaleString(
-                        DateTime.DATETIME_FULL,
-                      )
+                          DateTime.DATETIME_FULL,
+                        )
                       : undefined
                   }
                 >
                   {update().time.started
                     ? formatSinceTime(
-                      DateTime.fromISO(update().time.started!).toSQL()!,
-                      true,
-                    )
+                        DateTime.fromISO(update().time.started!).toSQL()!,
+                        true,
+                      )
                     : "—"}
                 </Text>
               </Stack>
@@ -366,11 +374,11 @@ export function Detail() {
                 <Text color="secondary">
                   {update().time.started && update().time.completed
                     ? formatDuration(
-                      DateTime.fromISO(update().time.completed!)
-                        .diff(DateTime.fromISO(update().time.started!))
-                        .as("milliseconds"),
-                      true,
-                    )
+                        DateTime.fromISO(update().time.completed!)
+                          .diff(DateTime.fromISO(update().time.started!))
+                          .as("milliseconds"),
+                        true,
+                      )
                     : "—"}
                 </Text>
               </Stack>
@@ -388,11 +396,11 @@ export function Detail() {
 
 function Resource(props: State.ResourceEvent) {
   const [copying, setCopying] = createSignal(false);
+  const name = createMemo(() => props.urn.split("::").at(-1));
   return (
     <ResourceChild>
-      <ResourceKey>{props.type}</ResourceKey>
       <Row space="3" vertical="center">
-        <ResourceValue>{props.urn}</ResourceValue>
+        <ResourceKey>{name()}</ResourceKey>
         <ResourceCopyButton
           copying={copying()}
           onClick={() => {
@@ -406,6 +414,7 @@ function Resource(props: State.ResourceEvent) {
           </Show>
         </ResourceCopyButton>
       </Row>
+      <ResourceValue>{props.type}</ResourceValue>
     </ResourceChild>
   );
 }

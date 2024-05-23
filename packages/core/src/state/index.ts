@@ -44,6 +44,7 @@ export module State {
 
   export const Update = z.object({
     id: z.string().cuid2(),
+    index: z.number(),
     stageID: z.string().cuid2(),
     command: z.enum(Command),
     source: Source,
@@ -90,6 +91,7 @@ export module State {
   ): Update {
     return {
       id: input.id,
+      index: input.index || 1,
       command: input.command,
       resource: {
         same: input.resourceSame || undefined,
