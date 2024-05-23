@@ -10,11 +10,9 @@ import {
 } from "./state.sql";
 import { useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
-import { DateTime } from "luxon";
 import { useWorkspace } from "../actor";
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { event } from "../event";
-import { createSelectSchema } from "drizzle-zod";
 import { StageCredentials } from "../app/stage";
 import {
   S3Client,
@@ -45,8 +43,8 @@ export module State {
   };
 
   export const Update = z.object({
-    id: z.string().cuid(),
-    stageID: z.string().cuid(),
+    id: z.string().cuid2(),
+    stageID: z.string().cuid2(),
     command: z.enum(Command),
     source: Source,
     time: z.object({
@@ -67,9 +65,9 @@ export module State {
   export type Update = z.infer<typeof Update>;
 
   export const ResourceEvent = z.object({
-    id: z.string().cuid(),
-    stageID: z.string().cuid(),
-    updateID: z.string().cuid(),
+    id: z.string().cuid2(),
+    stageID: z.string().cuid2(),
+    updateID: z.string().cuid2(),
     type: z.string(),
     urn: z.string(),
     action: z.enum(Action),
@@ -310,6 +308,7 @@ export module State {
             )
           )
           .then((result) => result[0]?.count || 0);
+        console.log(result);
         await tx.insert(stateUpdateTable).values({
           workspaceID: useWorkspace(),
           command: command.data,
@@ -396,7 +395,7 @@ export module State {
       useTransaction(async (tx) => {
         const result = await tx
           .select({
-            count: sql<number>`COUNT(*)`,
+            count: count(),
           })
           .from(stateUpdateTable)
           .where(
