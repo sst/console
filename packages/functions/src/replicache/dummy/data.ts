@@ -2647,6 +2647,7 @@ function update({
   return {
     _type: "stateUpdate",
     id: `${id}`,
+    index: id,
     stageID: stage,
     command: command || "deploy",
     source: { type: source || "cli", properties: {} },
