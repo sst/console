@@ -8,6 +8,7 @@ import {
   unique,
   timestamp,
   int,
+  bigint,
 } from "drizzle-orm/mysql-core";
 import { cuid, timestamps, timestampsNext, workspaceID } from "../util/sql";
 import { stage } from "../app/app.sql";
@@ -42,6 +43,7 @@ export const stateUpdateTable = mysqlTable(
     stageID: cuid("stage_id").notNull(),
     command: mysqlEnum("command", Command).notNull(),
     source: json("source").$type<Source>().notNull(),
+    index: bigint("index", { mode: "number" }),
     ...timestampsNext,
     timeStarted: timestamp("time_started"),
     timeCompleted: timestamp("time_completed"),
@@ -55,9 +57,11 @@ export const stateUpdateTable = mysqlTable(
   (table) => ({
     ...workspaceIndexes(table),
     stageID: foreignKey({
+      name: "state_update_stage_id",
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
     }).onDelete("cascade"),
+    // index: unique("index").on(table.workspaceID, table.stageID, table.index),
   })
 );
 

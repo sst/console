@@ -298,10 +298,23 @@ export module State {
       if (!command.success) return;
       console.log(lock);
       await useTransaction(async (tx) => {
+        const result = await tx
+          .select({
+            count: sql<number>`COUNT(*)`,
+          })
+          .from(stateUpdateTable)
+          .where(
+            and(
+              eq(stateUpdateTable.workspaceID, useWorkspace()),
+              eq(stateUpdateTable.stageID, input.config.stageID)
+            )
+          )
+          .then((result) => result[0]?.count || 0);
         await tx.insert(stateUpdateTable).values({
           workspaceID: useWorkspace(),
           command: command.data,
           id: lock.updateID,
+          index: result + 1,
           stageID: input.config.stageID,
           source: {
             type: "cli",
@@ -380,14 +393,26 @@ export module State {
       command: true,
     }),
     (input) =>
-      useTransaction((tx) =>
-        tx.insert(stateUpdateTable).ignore().values({
+      useTransaction(async (tx) => {
+        const result = await tx
+          .select({
+            count: sql<number>`COUNT(*)`,
+          })
+          .from(stateUpdateTable)
+          .where(
+            and(
+              eq(stateUpdateTable.workspaceID, useWorkspace()),
+              eq(stateUpdateTable.stageID, input.stageID)
+            )
+          )
+          .then((result) => result[0]?.count || 0);
+        return tx.insert(stateUpdateTable).ignore().values({
           id: input.id,
           stageID: input.stageID,
           workspaceID: useWorkspace(),
           source: input.source,
           command: input.command,
-        })
-      )
+        });
+      })
   );
 }
