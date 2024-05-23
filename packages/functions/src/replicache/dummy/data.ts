@@ -1538,16 +1538,16 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
-    type: "sst:aws:Function",
-    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
+    type: "pulumi-nodejs:dynamic:Resource",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$pulumi-nodejs:dynamic:Resource::FunctionACodeUpdater.sst.aws.FunctionCodeUpdater",
     action: "deleted",
   });
   yield stateEvent({
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
-    type: "sst:aws:Function",
-    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionB",
+    type: "aws:lambda/function:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:lambda/function:Function::FunctionAFunction",
     action: "deleted",
   });
   yield stateEvent({
@@ -1602,8 +1602,8 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
     id: ++STATE_RES_ID,
     stageID: STAGE,
     update: UPDATE_ID,
-    type: "aws:iam/role:Role",
-    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionARole",
+    type: "aws:route53/record:Record",
+    urn: "urn:pulumi:production::www::sst:aws:Astro$sst:aws:CDN$sst:aws:Certificate$aws:route53/record:Record::AstroCdnSslCNAMERecord65b719819635197c400ab3714200afd1ionsstdev",
     action: "updated",
   });
   yield stateEvent({

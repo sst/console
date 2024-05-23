@@ -244,10 +244,10 @@ export function Detail() {
         ? "error"
         : "updated"
       : // : update().time.canceled
-        //   ? "canceled"
-        //   : update().time.queued
-        //     ? "queued"
-        "updating";
+      //   ? "canceled"
+      //   : update().time.queued
+      //     ? "queued"
+      "updating";
   });
   const deleted = createMemo(() =>
     resources().filter((r) => r.action === "deleted"),
@@ -354,16 +354,16 @@ export function Detail() {
                   title={
                     update().time.started
                       ? DateTime.fromISO(update().time.started!).toLocaleString(
-                          DateTime.DATETIME_FULL,
-                        )
+                        DateTime.DATETIME_FULL,
+                      )
                       : undefined
                   }
                 >
                   {update().time.started
                     ? formatSinceTime(
-                        DateTime.fromISO(update().time.started!).toSQL()!,
-                        true,
-                      )
+                      DateTime.fromISO(update().time.started!).toSQL()!,
+                      true,
+                    )
                     : "—"}
                 </Text>
               </Stack>
@@ -372,11 +372,11 @@ export function Detail() {
                 <Text color="secondary">
                   {update().time.started && update().time.completed
                     ? formatDuration(
-                        DateTime.fromISO(update().time.completed!)
-                          .diff(DateTime.fromISO(update().time.started!))
-                          .as("milliseconds"),
-                        true,
-                      )
+                      DateTime.fromISO(update().time.completed!)
+                        .diff(DateTime.fromISO(update().time.started!))
+                        .as("milliseconds"),
+                      true,
+                    )
                     : "—"}
                 </Text>
               </Stack>
@@ -397,9 +397,11 @@ function Resource(props: State.ResourceEvent) {
   const name = createMemo(() => props.urn.split("::").at(-1));
   return (
     <ResourceChild>
-      <Row space="3" vertical="center">
         <ResourceKey>{name()}</ResourceKey>
+      <Row space="3" vertical="center">
+      <ResourceValue>{props.type}</ResourceValue>
         <ResourceCopyButton
+          title="Copy URN"
           copying={copying()}
           onClick={() => {
             setCopying(true);
@@ -412,7 +414,6 @@ function Resource(props: State.ResourceEvent) {
           </Show>
         </ResourceCopyButton>
       </Row>
-      <ResourceValue>{props.type}</ResourceValue>
     </ResourceChild>
   );
 }
