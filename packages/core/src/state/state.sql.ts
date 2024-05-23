@@ -63,7 +63,45 @@ export const stateUpdateTable = mysqlTable(
 
 export const Action = ["created", "updated", "deleted"] as const;
 
-export const stateResourceTable = mysqlTable(
+export const stateEventTable = mysqlTable(
+  "state_event",
+  {
+    ...workspaceID,
+    stageID: cuid("stage_id").notNull(),
+    updateID: cuid("update_id").notNull(),
+    type: varchar("type", { length: 255 }).notNull(),
+    urn: varchar("urn", { length: 255 }).notNull(),
+    outputs: json("outputs").notNull(),
+    action: mysqlEnum("action", Action).notNull(),
+    inputs: json("inputs").notNull(),
+    parent: varchar("parent", { length: 255 }),
+    custom: boolean("custom").notNull(),
+    ...timestampsNext,
+    timeStateCreated: timestamp("time_state_created"),
+    timeStateModified: timestamp("time_state_modified"),
+  },
+  (table) => ({
+    ...workspaceIndexes(table),
+    stageID: foreignKey({
+      name: "state_event_stage_id",
+      columns: [table.workspaceID, table.stageID],
+      foreignColumns: [stage.workspaceID, stage.id],
+    }).onDelete("cascade"),
+    urn: unique("urn").on(
+      table.workspaceID,
+      table.stageID,
+      table.updateID,
+      table.urn
+    ),
+    updateID: foreignKey({
+      name: "state_event_update_id",
+      columns: [table.workspaceID, table.updateID],
+      foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
+    }).onDelete("cascade"),
+  })
+);
+
+export const stateResourceTableOld = mysqlTable(
   "state_resource",
   {
     ...workspaceID,

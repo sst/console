@@ -43,7 +43,7 @@ import { slackTeam } from "@console/core/slack/slack.sql";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { gzipSync } from "zlib";
 import {
-  stateResourceTable,
+  stateEventTable,
   stateUpdateTable,
 } from "@console/core/state/state.sql";
 import { State } from "@console/core/state";
@@ -71,7 +71,7 @@ export const TABLES = {
   slackTeam,
   usage,
   stateUpdate: stateUpdateTable,
-  stateResource: stateResourceTable,
+  stateEvent: stateEventTable,
 };
 
 type TableName = keyof typeof TABLES;
@@ -83,10 +83,10 @@ const TABLE_KEY = {
   warning: [warning.stageID, warning.type, warning.id],
   usage: [usage.stageID, usage.id],
   stateUpdate: [stateUpdateTable.stageID, stateUpdateTable.id],
-  stateResource: [
-    stateResourceTable.stageID,
-    stateResourceTable.updateID,
-    stateResourceTable.id,
+  stateEvent: [
+    stateEventTable.stageID,
+    stateEventTable.updateID,
+    stateEventTable.id,
   ],
   stripe: [],
 } as {
@@ -94,12 +94,8 @@ const TABLE_KEY = {
 };
 
 const TABLE_PROJECTION = {
-  stateUpdate(input) {
-    return State.serializeUpdate(input);
-  },
-  stateResource(input) {
-    return State.serializeResource(input);
-  },
+  stateUpdate: (input) => State.serializeUpdate(input),
+  stateEvent: (input) => State.serializeEvent(input),
 } as {
   [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
 };

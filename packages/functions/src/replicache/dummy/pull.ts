@@ -60,7 +60,7 @@ export const handler = ApiHandler(async () => {
       const keys = {
         resource: (item: any) => [item._type, item.stageID, item.id],
         stateUpdate: (item: any) => [item._type, item.stageID, item.id],
-        stateResource: (item: any) => [
+        stateEvent: (item: any) => [
           item._type,
           item.stageID,
           item.updateID,

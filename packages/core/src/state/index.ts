@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zod } from "../util/zod";
 import {
   stateUpdateTable,
-  stateResourceTable,
+  stateEventTable,
   Source,
   Action,
   UpdateCommand,
@@ -112,8 +112,8 @@ export module State {
     };
   }
 
-  export function serializeResource(
-    input: typeof stateResourceTable.$inferSelect
+  export function serializeEvent(
+    input: typeof stateEventTable.$inferSelect
   ): Resource {
     return {
       id: input.id,
@@ -207,7 +207,7 @@ export module State {
         previousState.resources.map((r: any) => [r.urn, r])
       );
 
-      const inserts = [] as (typeof stateResourceTable.$inferInsert)[];
+      const inserts = [] as (typeof stateEventTable.$inferInsert)[];
       for (const [urn, resource] of Object.entries(resources)) {
         const previous = previousResources[urn];
         delete previousResources[urn];
@@ -256,7 +256,7 @@ export module State {
       console.log("inserting", inserts);
       if (inserts.length)
         await useTransaction(async (tx) => {
-          await tx.insert(stateResourceTable).ignore().values(inserts);
+          await tx.insert(stateEventTable).ignore().values(inserts);
         });
     }
   );
