@@ -243,10 +243,10 @@ export function Detail() {
         ? "error"
         : "updated"
       : // : update().time.canceled
-         ? "canceled"
-         : update().time.queued
-           ? "queued"
-      pdating";
+      //   ? "canceled"
+      //   : update().time.queued
+      //     ? "queued"
+      "updating";
   });
   const deleted = createMemo(() => resources().filter((r) => r.action === "deleted"));
   const created = createMemo(() => resources().filter((r) => r.action === "created"));
@@ -348,16 +348,16 @@ export function Detail() {
                   title={
                     update().time.started
                       ? DateTime.fromISO(update().time.started!).toLocaleString(
-                        teTime.DATETIME_FULL,
-                      
+                        DateTime.DATETIME_FULL,
+                      )
                       : undefined
                   }
                 >
                   {update().time.started
                     ? formatSinceTime(
-                      teTime.fromISO(update().time.started!).toSQL()!,
-                      ue,
-                    
+                      DateTime.fromISO(update().time.started!).toSQL()!,
+                      true,
+                    )
                     : "—"}
                 </Text>
               </Stack>
@@ -366,11 +366,11 @@ export function Detail() {
                 <Text color="secondary">
                   {update().time.started && update().time.completed
                     ? formatDuration(
-                      teTime.fromISO(update().time.completed!)
-                        iff(DateTime.fromISO(update().time.started!))
-                        s("milliseconds"),
-                      ue,
-                    
+                      DateTime.fromISO(update().time.completed!)
+                        .diff(DateTime.fromISO(update().time.started!))
+                        .as("milliseconds"),
+                      true,
+                    )
                     : "—"}
                 </Text>
               </Stack>
