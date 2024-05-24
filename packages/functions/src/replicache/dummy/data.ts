@@ -2666,7 +2666,7 @@ function update({
       updated: updated || 0,
       deleted: deleted || 0,
     },
-    errors: errors || undefined,
+    errors: errors || [],
   };
 }
 
