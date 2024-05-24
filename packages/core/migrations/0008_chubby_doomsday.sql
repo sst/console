@@ -1,0 +1,2 @@
+ALTER TABLE `state_resource` ADD CONSTRAINT `state_resource_stage_id` FOREIGN KEY (`workspace_id`,`stage_id`) REFERENCES `stage`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `state_resource` ADD CONSTRAINT `state_resource_update_id` FOREIGN KEY (`workspace_id`,`update_id`) REFERENCES `state_update`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;

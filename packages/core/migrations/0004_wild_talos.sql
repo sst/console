@@ -1,0 +1,1 @@
+ALTER TABLE `state_resource` DROP COLUMN `action`;

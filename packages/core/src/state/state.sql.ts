@@ -105,7 +105,7 @@ export const stateEventTable = mysqlTable(
   })
 );
 
-export const stateResourceTableOld = mysqlTable(
+export const stateResourceTable = mysqlTable(
   "state_resource",
   {
     ...workspaceID,
@@ -114,7 +114,6 @@ export const stateResourceTableOld = mysqlTable(
     type: varchar("type", { length: 255 }).notNull(),
     urn: varchar("urn", { length: 255 }).notNull(),
     outputs: json("outputs").notNull(),
-    action: mysqlEnum("action", Action).notNull(),
     inputs: json("inputs").notNull(),
     parent: varchar("parent", { length: 255 }),
     custom: boolean("custom").notNull(),
@@ -125,17 +124,13 @@ export const stateResourceTableOld = mysqlTable(
   (table) => ({
     ...workspaceIndexes(table),
     stageID: foreignKey({
+      name: "state_resource_stage_id",
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
     }).onDelete("cascade"),
-    urn: unique("urn").on(
-      table.workspaceID,
-      table.stageID,
-      table.updateID,
-      table.urn
-    ),
+    urn: unique("urn").on(table.workspaceID, table.stageID, table.urn),
     updateID: foreignKey({
-      name: "update_id",
+      name: "state_resource_update_id",
       columns: [table.workspaceID, table.updateID],
       foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
     }).onDelete("cascade"),

@@ -44,6 +44,7 @@ import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { gzipSync } from "zlib";
 import {
   stateEventTable,
+  stateResourceTable,
   stateUpdateTable,
 } from "@console/core/state/state.sql";
 import { State } from "@console/core/state";
@@ -72,6 +73,7 @@ export const TABLES = {
   usage,
   stateUpdate: stateUpdateTable,
   stateEvent: stateEventTable,
+  stateResource: stateResourceTable,
 };
 
 type TableName = keyof typeof TABLES;
@@ -83,6 +85,7 @@ const TABLE_KEY = {
   warning: [warning.stageID, warning.type, warning.id],
   usage: [usage.stageID, usage.id],
   stateUpdate: [stateUpdateTable.stageID, stateUpdateTable.id],
+  stateResource: [stateResourceTable.stageID, stateResourceTable.id],
   stateEvent: [
     stateEventTable.stageID,
     stateEventTable.updateID,
@@ -96,6 +99,7 @@ const TABLE_KEY = {
 const TABLE_PROJECTION = {
   stateUpdate: (input) => State.serializeUpdate(input),
   stateEvent: (input) => State.serializeEvent(input),
+  stateResource: (input) => State.serializeResource(input),
 } as {
   [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
 };

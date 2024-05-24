@@ -61,6 +61,12 @@ export const StateUpdateStore = new Store()
   .get((stageID: string, issueID: string) => ["stateUpdate", stageID, issueID])
   .build();
 
+export const StateResourceStore = new Store()
+  .type<State.Resource>()
+  .scan("forStage", (stageID: string) => ["stateResource", stageID])
+  .get((stageID: string, id: string) => ["stateResource", stageID, id])
+  .build();
+
 export const StateEventStore = new Store()
   .type<State.ResourceEvent>()
   .scan("forStage", (stageID: string) => ["stateEvent", stageID])

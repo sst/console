@@ -7,11 +7,12 @@ import {
   Action,
   UpdateCommand,
   Command,
+  stateResourceTable,
 } from "./state.sql";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, inArray, sql } from "drizzle-orm";
 import { event } from "../event";
 import { StageCredentials } from "../app/stage";
 import {
@@ -66,13 +67,12 @@ export module State {
   });
   export type Update = z.infer<typeof Update>;
 
-  export const ResourceEvent = z.object({
+  export const Resource = z.object({
     id: z.string().cuid2(),
     stageID: z.string().cuid2(),
     updateID: z.string().cuid2(),
     type: z.string(),
     urn: z.string(),
-    action: z.enum(Action),
     outputs: z.any(),
     inputs: z.any(),
     parent: z.string().optional(),
@@ -84,6 +84,11 @@ export module State {
       stateCreated: z.string().optional(),
       stateModified: z.string().optional(),
     }),
+  });
+  export type Resource = z.infer<typeof Resource>;
+
+  export const ResourceEvent = Resource.extend({
+    action: z.enum(Action),
   });
   export type ResourceEvent = z.infer<typeof ResourceEvent>;
 
@@ -117,9 +122,17 @@ export module State {
     input: typeof stateEventTable.$inferSelect
   ): ResourceEvent {
     return {
+      ...serializeResource(input),
+      action: input.action,
+    };
+  }
+
+  export function serializeResource(
+    input: typeof stateResourceTable.$inferSelect
+  ): Resource {
+    return {
       id: input.id,
       type: input.type,
-      action: input.action,
       time: {
         created: input.timeCreated.toISOString(),
         updated: input.timeUpdated.toISOString(),
@@ -208,23 +221,19 @@ export module State {
         previousState.resources.map((r: any) => [r.urn, r])
       );
 
-      const inserts = [] as (typeof stateEventTable.$inferInsert)[];
+      const eventInserts = [] as (typeof stateEventTable.$inferInsert)[];
+      const resourceInserts = [] as (typeof stateResourceTable.$inferInsert)[];
+      const resourceDeletes = [] as string[];
       for (const [urn, resource] of Object.entries(resources)) {
         const previous = previousResources[urn];
         delete previousResources[urn];
-        if (previous && previous.modified === resource.modified) continue;
         resource.inputs = resource.inputs || {};
         resource.outputs = resource.outputs || {};
         delete resource.inputs["__provider"];
         delete resource.outputs["__provider"];
-        inserts.push({
+        resourceInserts.push({
           stageID: input.config.stageID,
           updateID,
-          action: (() => {
-            if (!previous) return "created";
-            if (previous.action === "deleted") return "created";
-            return "updated";
-          })(),
           id: createId(),
           timeStateModified: resource.modified
             ? new Date(resource.modified)
@@ -235,16 +244,26 @@ export module State {
           workspaceID: useWorkspace(),
           type: resource.type,
           urn: resource.urn,
-          custom: resource.boolean,
+          custom: resource.custom,
           inputs: resource.inputs,
           outputs: resource.outputs,
           parent: resource.parent,
         });
+        if (!previous || previous.modified !== resource.modified) {
+          eventInserts.push({
+            ...resourceInserts.at(-1)!,
+            action: (() => {
+              if (!previous) return "created";
+              if (previous.action === "deleted") return "created";
+              return "updated";
+            })(),
+          });
+        }
       }
 
       for (const urn of Object.keys(previousResources)) {
         const resource = previousResources[urn];
-        inserts.push({
+        eventInserts.push({
           stageID: input.config.stageID,
           updateID,
           action: "deleted",
@@ -257,12 +276,39 @@ export module State {
           outputs: {},
           parent: resource.parent,
         });
+        resource.deletes.push(resource.urn);
       }
-      if (inserts.length)
-        await useTransaction(async (tx) => {
-          await createTransactionEffect(() => Replicache.poke());
-          await tx.insert(stateEventTable).ignore().values(inserts);
-        });
+      await useTransaction(async (tx) => {
+        await createTransactionEffect(() => Replicache.poke());
+        if (eventInserts.length)
+          await tx.insert(stateEventTable).ignore().values(eventInserts);
+        if (resourceInserts.length)
+          await tx
+            .insert(stateResourceTable)
+            .values(resourceInserts)
+            .onDuplicateKeyUpdate({
+              set: {
+                updateID: sql`VALUES(update_id)`,
+                timeStateCreated: sql`VALUES(time_state_created)`,
+                timeStateModified: sql`VALUES(time_state_modified)`,
+                type: sql`VALUES(type)`,
+                custom: sql`VALUES(custom)`,
+                inputs: sql`VALUES(inputs)`,
+                outputs: sql`VALUES(outputs)`,
+                parent: sql`VALUES(parent)`,
+              },
+            });
+        if (resourceDeletes.length)
+          await tx
+            .delete(stateResourceTable)
+            .where(
+              and(
+                eq(stateResourceTable.workspaceID, useWorkspace()),
+                eq(stateResourceTable.stageID, input.config.stageID),
+                inArray(stateResourceTable.urn, resourceDeletes)
+              )
+            );
+      });
     }
   );
 
