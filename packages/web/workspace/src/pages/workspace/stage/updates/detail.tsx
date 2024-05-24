@@ -13,12 +13,7 @@ import { StateUpdateStore, StateEventStore } from "$/data/app";
 import { State } from "@console/core/state";
 import { DateTime } from "luxon";
 import { useStageContext } from "../context";
-import {
-  CMD_MAP,
-  STATUS_MAP,
-  errorCountCopy,
-  UpdateStatusIcon,
-} from "./list";
+import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
@@ -236,18 +231,18 @@ export function Detail() {
     (resources) => sortBy(resources, [(r) => r.urn.split("::").at(-1)!, "asc"]),
   );
 
-  const errors = () => (update() && update().errors ? update().errors : 0);
+  const errors = () => update()?.errors.length || 0;
   const status = createMemo(() => {
     if (!update()) return;
     return update().time.completed
-      ? update().errors
+      ? errors()
         ? "error"
         : "updated"
       : // : update().time.canceled
-      //   ? "canceled"
-      //   : update().time.queued
-      //     ? "queued"
-      "updating";
+        //   ? "canceled"
+        //   : update().time.queued
+        //     ? "queued"
+        "updating";
   });
   const deleted = createMemo(() =>
     resources().filter((r) => r.action === "deleted"),
@@ -295,7 +290,7 @@ export function Detail() {
                       : STATUS_MAP[status()!]}
                   </PageTitleStatus>
                 </Stack>
-                <Show when={update().errors}>
+                <Show when={errors()}>
                   <ErrorInfo>
                     Invalid component name "FunctionA". Component names must be
                     unique.
@@ -354,16 +349,16 @@ export function Detail() {
                   title={
                     update().time.started
                       ? DateTime.fromISO(update().time.started!).toLocaleString(
-                        DateTime.DATETIME_FULL,
-                      )
+                          DateTime.DATETIME_FULL,
+                        )
                       : undefined
                   }
                 >
                   {update().time.started
                     ? formatSinceTime(
-                      DateTime.fromISO(update().time.started!).toSQL()!,
-                      true,
-                    )
+                        DateTime.fromISO(update().time.started!).toSQL()!,
+                        true,
+                      )
                     : "—"}
                 </Text>
               </Stack>
@@ -372,11 +367,11 @@ export function Detail() {
                 <Text color="secondary">
                   {update().time.started && update().time.completed
                     ? formatDuration(
-                      DateTime.fromISO(update().time.completed!)
-                        .diff(DateTime.fromISO(update().time.started!))
-                        .as("milliseconds"),
-                      true,
-                    )
+                        DateTime.fromISO(update().time.completed!)
+                          .diff(DateTime.fromISO(update().time.started!))
+                          .as("milliseconds"),
+                        true,
+                      )
                     : "—"}
                 </Text>
               </Stack>
@@ -397,9 +392,9 @@ function Resource(props: State.ResourceEvent) {
   const name = createMemo(() => props.urn.split("::").at(-1));
   return (
     <ResourceChild>
-        <ResourceKey>{name()}</ResourceKey>
+      <ResourceKey>{name()}</ResourceKey>
       <Row space="3" vertical="center">
-      <ResourceValue>{props.type}</ResourceValue>
+        <ResourceValue>{props.type}</ResourceValue>
         <ResourceCopyButton
           title="Copy URN"
           copying={copying()}

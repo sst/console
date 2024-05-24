@@ -288,7 +288,7 @@ const UpdateTime = styled("span", {
 type UpdateProps = {
   id: string;
   index: string;
-  errors?: number;
+  errors?: any[];
   timeStarted?: string;
   timeQueued?: string;
   source: "ci" | "cli";
@@ -303,10 +303,10 @@ type UpdateProps = {
 };
 function Update(props: UpdateProps) {
   createEffect(() => console.log({ ...props }));
-  const errors = () => props.errors! ?? 0;
+  const errors = () => props.errors?.length || 0;
   const status = createMemo(() =>
     props.timeCompleted
-      ? props.errors
+      ? errors()
         ? "error"
         : "updated"
       : props.timeCanceled

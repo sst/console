@@ -7,6 +7,7 @@ import {
   Action,
   UpdateCommand,
   Command,
+  Error,
   stateResourceTable,
 } from "./state.sql";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
@@ -63,7 +64,7 @@ export module State {
       deleted: z.number().optional(),
       same: z.number().optional(),
     }),
-    errors: z.number().optional(),
+    errors: Error.array(),
   });
   export type Update = z.infer<typeof Update>;
 
@@ -132,7 +133,7 @@ export module State {
         completed: input.timeCompleted?.toISOString(),
       },
       source: input.source,
-      errors: input.errors || undefined,
+      errors: input.errors || [],
       stageID: input.stageID,
     };
   }
@@ -401,7 +402,6 @@ export module State {
             )
           )
           .then((result) => result[0]?.count || 0);
-        console.log(result);
         await tx.insert(stateUpdateTable).values({
           workspaceID: useWorkspace(),
           command: command.data,
@@ -449,6 +449,7 @@ export module State {
         .catch(() => {});
       if (!obj) return;
       const summary = JSON.parse(await obj.Body!.transformToString()) as {
+        version: string;
         updateID: string;
         resourceUpdated: number;
         resourceCreated: number;
@@ -456,8 +457,11 @@ export module State {
         resourceSame: number;
         timeStarted: string;
         timeCompleted: string;
+        errors: {
+          urn: string;
+          message: string;
+        }[];
       };
-      console.log({ summary });
       await useTransaction(async (tx) => {
         await tx
           .update(stateUpdateTable)
@@ -466,7 +470,7 @@ export module State {
             resourceCreated: summary.resourceCreated,
             resourceDeleted: summary.resourceDeleted,
             resourceSame: summary.resourceSame,
-            timeStarted: new Date(summary.timeStarted),
+            errors: summary.errors,
             timeCompleted: new Date(summary.timeCompleted),
           })
           .where(

@@ -51,7 +51,7 @@ export const stateUpdateTable = mysqlTable(
     resourceCreated: int("resource_created"),
     resourceUpdated: int("resource_updated"),
     resourceSame: int("resource_same"),
-    errors: int("errors"),
+    errors: json("errors").$type<Error[]>(),
   },
 
   (table) => ({
@@ -66,6 +66,11 @@ export const stateUpdateTable = mysqlTable(
 );
 
 export const Action = ["created", "updated", "deleted"] as const;
+export const Error = z.object({
+  urn: z.string(),
+  message: z.string(),
+});
+export type Error = z.infer<typeof Error>;
 
 export const stateEventTable = mysqlTable(
   "state_event",
