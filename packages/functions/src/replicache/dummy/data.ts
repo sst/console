@@ -1500,7 +1500,10 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    errors: 2,
+    errors: [
+      { urn: "", message: "error 1" },
+      { urn: "", message: "error 2" },
+    ],
     deleted: 1,
     timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 5 }).toISO()!,
@@ -1509,7 +1512,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    errors: 1,
+    errors: [{ urn: "", message: "error 1" }],
     command: "edit",
     timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 4 }).toISO()!,
@@ -2619,7 +2622,7 @@ function issueAlert({
 interface UpdateProps {
   id: number;
   stage: string;
-  errors?: number;
+  errors?: State.Update["errors"];
   source?: "cli" | "ci";
   timeCreated?: string;
   timeStarted?: string;
