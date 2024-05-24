@@ -113,19 +113,19 @@ export function Events({ stack }: StackContext) {
   bus.subscribe(["state.lock.created"], {
     handler: "packages/functions/src/events/state-lock-created.handler",
     bind: [...Object.values(secrets.database)],
-    permissions: ["sts"],
+    permissions: ["sts", "iot"],
   });
 
   bus.subscribe(["state.summary.created"], {
     handler: "packages/functions/src/events/state-summary-created.handler",
     bind: [...Object.values(secrets.database)],
-    permissions: ["sts"],
+    permissions: ["sts", "iot"],
   });
 
   bus.subscribe(["state.history.created"], {
     handler: "packages/functions/src/events/state-history-created.handler",
     bind: [...Object.values(secrets.database)],
-    permissions: ["sts"],
+    permissions: ["sts", "iot"],
   });
 
   return bus;
