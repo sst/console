@@ -276,7 +276,7 @@ export module State {
           outputs: {},
           parent: resource.parent,
         });
-        resource.deletes.push(resource.urn);
+        resourceDeletes.push(resource.urn);
       }
       await useTransaction(async (tx) => {
         await createTransactionEffect(() => Replicache.poke());
