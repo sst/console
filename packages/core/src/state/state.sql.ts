@@ -111,6 +111,8 @@ export const stateResourceTable = mysqlTable(
     ...workspaceID,
     stageID: cuid("stage_id").notNull(),
     updateID: cuid("update_id").notNull(),
+    updateCreatedID: cuid("update_created_id"),
+    updateModifiedID: cuid("update_modified_id"),
     type: varchar("type", { length: 255 }).notNull(),
     urn: varchar("urn", { length: 255 }).notNull(),
     outputs: json("outputs").notNull(),
@@ -130,8 +132,13 @@ export const stateResourceTable = mysqlTable(
     }).onDelete("cascade"),
     urn: unique("urn").on(table.workspaceID, table.stageID, table.urn),
     updateID: foreignKey({
-      name: "state_resource_update_id",
-      columns: [table.workspaceID, table.updateID],
+      name: "state_resource_update_created_id",
+      columns: [table.workspaceID, table.updateCreatedID],
+      foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
+    }).onDelete("cascade"),
+    modifiedID: foreignKey({
+      name: "state_resource_update_modified_id",
+      columns: [table.workspaceID, table.updateModifiedID],
       foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
     }).onDelete("cascade"),
   })

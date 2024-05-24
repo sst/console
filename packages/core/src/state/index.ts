@@ -70,6 +70,29 @@ export module State {
   export const Resource = z.object({
     id: z.string().cuid2(),
     stageID: z.string().cuid2(),
+    type: z.string(),
+    urn: z.string(),
+    outputs: z.any(),
+    inputs: z.any(),
+    parent: z.string().optional(),
+    custom: z.any().optional(),
+    update: z.object({
+      createdID: z.string().cuid2(),
+      modifiedID: z.string().cuid2().optional(),
+    }),
+    time: z.object({
+      created: z.string(),
+      deleted: z.string().optional(),
+      updated: z.string(),
+      stateCreated: z.string().optional(),
+      stateModified: z.string().optional(),
+    }),
+  });
+  export type Resource = z.infer<typeof Resource>;
+
+  export const ResourceEvent = z.object({
+    id: z.string().cuid2(),
+    stageID: z.string().cuid2(),
     updateID: z.string().cuid2(),
     type: z.string(),
     urn: z.string(),
@@ -84,10 +107,6 @@ export module State {
       stateCreated: z.string().optional(),
       stateModified: z.string().optional(),
     }),
-  });
-  export type Resource = z.infer<typeof Resource>;
-
-  export const ResourceEvent = Resource.extend({
     action: z.enum(Action),
   });
   export type ResourceEvent = z.infer<typeof ResourceEvent>;
@@ -122,7 +141,22 @@ export module State {
     input: typeof stateEventTable.$inferSelect
   ): ResourceEvent {
     return {
-      ...serializeResource(input),
+      id: input.id,
+      type: input.type,
+      time: {
+        created: input.timeCreated.toISOString(),
+        updated: input.timeUpdated.toISOString(),
+        deleted: input.timeDeleted?.toISOString(),
+        stateCreated: input.timeStateCreated?.toISOString(),
+        stateModified: input.timeStateModified?.toISOString(),
+      },
+      stageID: input.stageID,
+      custom: input.custom,
+      updateID: input.updateID,
+      urn: input.urn,
+      inputs: input.inputs,
+      parent: input.parent || undefined,
+      outputs: input.outputs,
       action: input.action,
     };
   }
@@ -142,7 +176,10 @@ export module State {
       },
       stageID: input.stageID,
       custom: input.custom,
-      updateID: input.updateID,
+      update: {
+        createdID: input.updateCreatedID!,
+        modifiedID: input.updateModifiedID!,
+      },
       urn: input.urn,
       inputs: input.inputs,
       parent: input.parent || undefined,
@@ -233,7 +270,9 @@ export module State {
         delete resource.outputs["__provider"];
         resourceInserts.push({
           stageID: input.config.stageID,
-          updateID,
+          updateID: updateID,
+          updateCreatedID: updateID,
+          updateModifiedID: updateID,
           id: createId(),
           timeStateModified: resource.modified
             ? new Date(resource.modified)
@@ -252,6 +291,7 @@ export module State {
         if (!previous || previous.modified !== resource.modified) {
           eventInserts.push({
             ...resourceInserts.at(-1)!,
+            updateID: updateID,
             action: (() => {
               if (!previous) return "created";
               if (previous.action === "deleted") return "created";
@@ -288,7 +328,7 @@ export module State {
             .values(resourceInserts)
             .onDuplicateKeyUpdate({
               set: {
-                updateID: sql`VALUES(update_id)`,
+                updateModifiedID: sql`VALUES(update_modified_id)`,
                 timeStateCreated: sql`VALUES(time_state_created)`,
                 timeStateModified: sql`VALUES(time_state_modified)`,
                 type: sql`VALUES(type)`,

@@ -1,0 +1,4 @@
+ALTER TABLE `state_resource` ADD `update_created_id` char(24);--> statement-breakpoint
+ALTER TABLE `state_resource` ADD `update_modified_id` char(24);--> statement-breakpoint
+ALTER TABLE `state_resource` ADD CONSTRAINT `state_resource_update_created_id` FOREIGN KEY (`workspace_id`,`update_created_id`) REFERENCES `state_update`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `state_resource` ADD CONSTRAINT `state_resource_update_modified_id` FOREIGN KEY (`workspace_id`,`update_modified_id`) REFERENCES `state_update`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;
