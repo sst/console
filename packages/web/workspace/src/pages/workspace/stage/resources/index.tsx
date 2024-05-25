@@ -4,6 +4,7 @@ import {
   Show,
   Match,
   Switch,
+  Component,
   createMemo,
   createSignal,
   createEffect,
@@ -12,12 +13,15 @@ import {
 } from "solid-js";
 import {
   MINIMUM_VERSION,
+  useStageContext,
   useFunctionsContext,
   useResourcesContext,
 } from "../context";
+import { useReplicache } from "$/providers/replicache";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
+import { Dropdown } from "$/ui/dropdown";
 import { Fullscreen, Row, Stack } from "$/ui/layout";
 import {
   Tag,
@@ -28,27 +32,87 @@ import {
   SplitOptionsOption,
 } from "$/ui";
 import {
+  IconJob,
+  IconApi,
+  IconRDS,
+  IconAuth,
+  IconCron,
+  IconStack,
+  IconTable,
+  IconTopic,
+  IconQueue,
+  IconScript,
+  IconBucket,
+  IconAppSync,
+  IconCognito,
+  IconEventBus,
   IconFunction,
+  IconConstruct,
   IconGoRuntime,
+  IconRemixSite,
+  IconAstroSite,
+  IconNextjsSite,
+  IconStaticSite,
   IconJavaRuntime,
   IconNodeRuntime,
   IconRustRuntime,
+  IconWebSocketApi,
+  IconKinesisStream,
   IconPythonRuntime,
   IconDotNetRuntime,
+  IconSvelteKitSite,
+  IconSolidStartSite,
+  IconApiGatewayV1Api,
   IconContainerRuntime,
+  IconAws,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
+import type { State } from "@console/core/state";
 import { Link, Route, Routes } from "@solidjs/router";
+import { StateResourceStore } from "$/data/app";
 import { Syncing } from "$/ui/loader";
 import {
   IconCheck,
+  IconEllipsisVertical,
   IconDocumentDuplicate,
   IconExclamationTriangle,
 } from "$/ui/icons";
 import { sortBy } from "remeda";
-import {} from "@solid-primitives/keyboard";
+import { Dynamic } from "solid-js/web"
+import { } from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
+
+const ION_ICON_MAP: { [key: string]: Component } = {
+  "sst:aws:Auth": IconAuth,
+  "sst:aws:Cron": IconCron,
+  "sst:aws:Router": IconApi,
+  // "sst:aws:Job": IconJob,
+  "sst:aws:Queue": IconQueue,
+  "sst:aws:Postgres": IconRDS,
+  "sst:aws:Dynamo": IconTable,
+  "sst:aws:Bus": IconEventBus,
+  "sst:aws:Bucket": IconBucket,
+  "sst:aws:SnsTopic": IconTopic,
+  "sst:aws:Astro": IconAstroSite,
+  "sst:aws:Nuxt": IconStaticSite,
+  "sst:aws:Remix": IconRemixSite,
+  "sst:aws:AppSync": IconAppSync,
+  "sst:aws:ApiGatewayV2": IconApi,
+  // "sst:aws:Script": IconScript,
+  "sst:aws:Function": IconFunction,
+  "sst:aws:Nextjs": IconNextjsSite,
+  "sst:aws:Realtime": IconWebSocketApi,
+  "sst:aws:StaticSite": IconStaticSite,
+  "sst:aws:SvelteKit": IconSvelteKitSite,
+  "sst:aws:CognitoUserPool": IconCognito,
+  "sst:aws:SolidStart": IconSolidStartSite,
+  "sst:aws:CognitoIdentityPool": IconCognito,
+  // "sst:aws:KinesisStream": IconKinesisStream,
+  "sst:aws:ApiGatewayWebSocket": IconWebSocketApi,
+  // "sst:aws:ApiGatewayV1Api": IconApiGatewayV1Api,
+  "pulumi:pulumi:Stack": IconStack,
+};
 
 const Content = styled("div", {
   base: {
@@ -80,7 +144,7 @@ const Card = styled("div", {
     backgroundColor: theme.color.background.surface,
   },
   variants: {
-    outputs: {
+    outline: {
       true: {
         backgroundColor: "transparent",
         border: `1px solid ${theme.color.divider.base}`,
@@ -100,12 +164,55 @@ const HeaderRoot = styled("div", {
   },
 });
 
+const HeaderTitle = styled("span", {
+  base: {
+    color: theme.color.text.primary.surface,
+    fontWeight: theme.font.weight.medium,
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.primary.base,
+      },
+    },
+  },
+});
+
+const HeaderTitleLink = styled(Link, {
+  base: {
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const HeaderTitleTagline = styled("span", {
+  base: {
+    color: theme.color.text.secondary.surface,
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.secondary.base,
+      },
+    },
+  },
+});
+
+
 const HeaderIcon = styled("div", {
   base: {
     flexShrink: 0,
     width: 18,
     height: 18,
     color: theme.color.icon.secondary,
+  },
+  variants: {
+    outline: {
+      true: {
+        opacity: theme.iconOpacity,
+      },
+    },
   },
 });
 
@@ -137,7 +244,7 @@ const Children = styled("div", {
     },
   },
   variants: {
-    outputs: {
+    outline: {
       true: {
         borderColor: theme.color.divider.base,
       },
@@ -160,7 +267,7 @@ export const Child = styled("div", {
     },
   },
   variants: {
-    outputs: {
+    outline: {
       true: {
         borderColor: theme.color.divider.base,
       },
@@ -234,17 +341,42 @@ export const ChildIconButton = styled("button", {
   },
 });
 
-const OutputsValue = styled("span", {
+const ChildValue = styled("span", {
+  base: {
+    ...utility.text.line,
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.surface,
+    lineHeight: "normal",
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.dimmed.base,
+      },
+    },
+  },
+});
+
+const ChildKey = styled("span", {
   base: {
     ...utility.text.line,
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_base,
-    color: theme.color.text.dimmed.base,
+    color: theme.color.text.primary.surface,
     lineHeight: "normal",
+    minWidth: "33%",
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.primary.base,
+      },
+    },
   },
 });
 
-const OutputsKey = styled("span", {
+const ChildKeyLink = styled(Link, {
   base: {
     ...utility.text.line,
     fontFamily: theme.font.family.code,
@@ -257,6 +389,18 @@ const OutputsKey = styled("span", {
 function cleanFilepath(path: string) {
   if (!path) return;
   return path.replace(/^\.?\//, "");
+}
+
+function isValidHttpUrl(string: string): boolean {
+  let url;
+
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false;
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:";
 }
 
 function getUrl(url?: string, customDomainUrl?: string) {
@@ -309,6 +453,107 @@ function resourcePriority(resource: Resource.Info) {
   }
 }
 
+function stateResourcePriority(resource: SortedStateResource) {
+  switch (resource.type) {
+    case "sst:aws:Nuxt":
+    case "sst:aws:Remix":
+    case "sst:aws:Astro":
+    case "sst:aws:Nextjs":
+    case "sst:aws:SvelteKit":
+    case "sst:aws:SolidStart":
+      return 1;
+    case "sst:aws:StaticSite":
+      return 2;
+    case "sst:aws:Auth":
+    case "sst:aws:Router":
+    case "sst:aws:ApiGatewayV2":
+      return 3;
+    case "sst:aws:Function":
+      return 4;
+    case "sst:aws:AppSync":
+    case "sst:aws:ApiGatewayWebSocket":
+      return 5;
+    case "sst:aws:Bucket":
+      return 6;
+    case "sst:aws:Dynamo":
+    case "sst:aws:Postgres":
+      return 7;
+    case "sst:aws:Cron":
+      return 8;
+    case "sst:aws:Bus":
+      return 9;
+    case "sst:aws:Queue":
+    case "sst:aws:SnsTopic":
+      return 10;
+    case "sst:aws:CognitoUserPool":
+    case "sst:aws:CognitoIdentityPool":
+      return 11;
+    case "pulumi:pulumi:Stack":
+      return 101;
+    default:
+      if (resource.type.startsWith("pulumi:providers:")) {
+        return 101;
+      }
+      else {
+        return 100;
+      }
+  }
+}
+
+type SortedStateResource = State.Resource & {
+  name: string;
+  children: SortedStateResource[];
+};
+function sortStateResources(resources: State.Resource[]): SortedStateResource[] {
+  // Initialize an array to store root objects
+  const roots: SortedStateResource[] = [];
+  // Create a map to store each object by its id
+  const idMap: { [key: string]: SortedStateResource } = {};
+
+  resources.forEach((r) => {
+    idMap[r.urn] = { ...r, name: r.urn.split("::").at(-1)!, children: [] };
+  });
+
+  resources.forEach(r => {
+    if (r.parent === undefined) {
+      // If the object has no parent, it is a root object
+      roots.push(idMap[r.urn]);
+    } else {
+      // If the object is a direct child of the stack, it is a root object
+      if (idMap[r.parent].type === "pulumi:pulumi:Stack") {
+        roots.push(idMap[r.urn]);
+      }
+      // If the object has a parent, add it to the parent's children array
+      if (idMap[r.parent]) {
+        idMap[r.parent].children.push(idMap[r.urn]);
+      }
+    }
+  });
+
+  // Function to recursively collect all descendants
+  function collectDescendants(r: SortedStateResource) {
+    // If the object is a stack, it has no children
+    if (r.type === "pulumi:pulumi:Stack") {
+      return [];
+    }
+
+    let allChildren = [...r.children];
+    r.children.forEach(child => {
+      if (idMap[child.urn]) {
+        allChildren = allChildren.concat(collectDescendants(child));
+      }
+    });
+    return sortBy(allChildren, r => r.name);
+  }
+
+  // Update each object to have a flattened list of all descendants
+  Object.values(idMap).forEach(r => {
+    r.children = collectDescendants(r);
+  });
+
+  return sortBy(roots, r => stateResourcePriority(r), r => r.name);
+}
+
 function sortResources(resources: Resource.Info[]): Resource.Info[] {
   const displayResources = resources.filter(
     (r) =>
@@ -342,8 +587,8 @@ function sortResources(resources: Resource.Info[]): Resource.Info[] {
           ? 1
           : -1
         : a.type > b.type
-        ? 1
-        : -1
+          ? 1
+          : -1
       : priority;
   });
 }
@@ -411,6 +656,8 @@ export function Header(props: HeaderProps) {
 }
 
 export function Resources() {
+  const rep = useReplicache();
+  const ctx = useStageContext();
   const functions = useFunctionsContext();
   const resources = useResourcesContext();
 
@@ -432,6 +679,34 @@ export function Resources() {
       .sort((a, b) => a.OutputKey!.localeCompare(b.OutputKey!))
       .filter((o) => (o?.OutputValue?.trim() ?? "") !== "")
   );
+
+  // State resources
+  const stateResources = StateResourceStore.forStage.watch(rep, () => [ctx.stage.id]);
+  const SortedStateResource = createMemo(() => sortStateResources([...stateResources()]));
+  const stateOutputs = createMemo(() => {
+    const outputs: { key: string; value: string }[] = [];
+
+    SortedStateResource().forEach(r => {
+      r.type === "pulumi:pulumi:Stack" && console.log(r.outputs);
+
+      if (r.type === "pulumi:pulumi:Stack") {
+        Object.keys(r.outputs).forEach(key => {
+          if (typeof r.outputs[key] === "string") {
+            outputs.push({ key, value: r.outputs[key] });
+          }
+        });
+      }
+      else if (r.type.startsWith("sst:")) {
+        Object.keys(r.outputs).forEach(key => {
+          if (key === "_hint") {
+            outputs.push({ key: r.name, value: r.outputs[key] });
+          }
+        });
+      }
+    });
+
+    return sortBy(outputs, o => o.key);
+  });
 
   function renderOrphanFunctions() {
     return (
@@ -460,13 +735,13 @@ export function Resources() {
   function renderOutputs() {
     return (
       <Show when={outputs().length}>
-        <Card outputs>
+        <Card outline>
           <HeaderRoot>
             <Text weight="medium" style={{ "flex-shrink": "0" }}>
               Outputs
             </Text>
           </HeaderRoot>
-          <Children outputs>
+          <Children outline>
             <For each={outputs()}>
               {(output) => {
                 const [copying, setCopying] = createSignal(false);
@@ -476,10 +751,10 @@ export function Resources() {
                       output?.OutputValue && output.OutputValue?.trim() !== ""
                     }
                   >
-                    <Child outputs>
-                      <OutputsKey>{output.OutputKey}</OutputsKey>
+                    <Child outline>
+                      <ChildKey>{output.OutputKey}</ChildKey>
                       <Row space="3" vertical="center">
-                        <OutputsValue>{output.OutputValue}</OutputsValue>
+                        <ChildValue>{output.OutputValue}</ChildValue>
                         <ChildIconButton
                           copying={copying()}
                           onClick={() => {
@@ -504,9 +779,127 @@ export function Resources() {
     );
   }
 
+  function renderStateOutputs() {
+    return (
+      <Show when={stateOutputs().length}>
+        <Card>
+          <HeaderRoot>
+            <HeaderTitle>
+              Outputs
+            </HeaderTitle>
+          </HeaderRoot>
+          <Children>
+            <For each={stateOutputs()}>
+              {(output) => {
+                const [copying, setCopying] = createSignal(false);
+                return (
+                  <Show
+                    when={
+                      output.value && output.value.trim() !== ""
+                    }
+                  >
+                    <Child>
+                      <ChildKey>{output.key}</ChildKey>
+                      <Row space="3" vertical="center">
+                        <ChildValue>{output.value}</ChildValue>
+                        <ChildIconButton
+                          copying={copying()}
+                          onClick={() => {
+                            setCopying(true);
+                            navigator.clipboard.writeText(output.value!);
+                            setTimeout(() => setCopying(false), 2000);
+                          }}
+                        >
+                          <Show when={!copying()} fallback={<IconCheck />}>
+                            <IconDocumentDuplicate />
+                          </Show>
+                        </ChildIconButton>
+                      </Row>
+                    </Child>
+                  </Show>
+                );
+              }}
+            </For>
+          </Children>
+        </Card>
+      </Show>
+    );
+  }
+
+  function renderStateResource(resource: SortedStateResource) {
+    const hint = resource.outputs["_hint"] ? resource.outputs["_hint"] as string : undefined;
+    return (
+      <Card outline>
+        <HeaderRoot>
+          <Row space="2" vertical="center">
+            <Row space="2" vertical="center">
+              <HeaderIcon outline>
+                <Show
+                  fallback={<IconConstruct />}
+                  when={ION_ICON_MAP.hasOwnProperty(resource.type)}
+                >
+                  <Dynamic component={ION_ICON_MAP[resource.type]} />
+                </Show>
+              </HeaderIcon>
+              <HeaderTitleLink href={resource.id}>
+                {resource.type}
+              </HeaderTitleLink>
+            </Row>
+            <HeaderTitleTagline outline>
+              {resource.name}
+            </HeaderTitleTagline>
+          </Row>
+          <Show when={hint && isValidHttpUrl(hint)}>
+            <HeaderDescription>
+              <HeaderDescriptionLink
+                href={hint}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {hint}
+              </HeaderDescriptionLink>
+            </HeaderDescription>
+          </Show>
+        </HeaderRoot>
+        <Children outline>
+          <For each={resource.children}>
+            {(child) => {
+              const [copying, setCopying] = createSignal(false);
+              return (
+                <Child outline>
+                  <ChildKeyLink href={child.id}>{child.name}</ChildKeyLink>
+                  <Row space="3" vertical="center">
+                    <ChildValue outline>{child.type}</ChildValue>
+                    <Dropdown
+                      size="sm"
+                      disabled={copying()}
+                      icon={copying()
+                        ? <IconCheck width={18} height={18} />
+                        : <IconEllipsisVertical width={18} height={18} />
+                      }
+                    >
+                      <Dropdown.Item
+                        onSelect={() => {
+                          setCopying(true);
+                          navigator.clipboard.writeText(child.urn);
+                          setTimeout(() => setCopying(false), 2000);
+                        }}>
+                        Copy URN
+                      </Dropdown.Item>
+                    </Dropdown>
+                  </Row>
+                </Child>
+              );
+            }}
+          </For>
+        </Children>
+      </Card>
+    );
+  }
+
   return (
     <Switch>
-      <Match when={!resources().length}>
+      <Match when={!resources().length || !stateResources().length}>
         <Fullscreen>
           <Syncing>Waiting for resources&hellip;</Syncing>
         </Fullscreen>
@@ -536,113 +929,129 @@ export function Resources() {
             </Routes>
           </PageHeaderRoot>
         </Show>
-        <Content>
-          <Stack space="4">
-            <Show
-              when={
-                sortedResources().length || orphans().length || outputs().length
-              }
-              fallback={
-                <Fullscreen inset="stage">
-                  <EmptyResourcesCopy>
-                    Deploy a function to get started!
-                  </EmptyResourcesCopy>
-                </Fullscreen>
-              }
-            >
-              <For each={sortedResources()}>
-                {(resource) => (
-                  <Card>
-                    <Switch>
-                      <Match when={resource.type === "Api" && resource}>
-                        {(resource) => <ApiCard resource={resource()} />}
-                      </Match>
-                      <Match
-                        when={resource.type === "ApiGatewayV1Api" && resource}
-                      >
-                        {(resource) => (
-                          <ApiGatewayV1ApiCard resource={resource()} />
-                        )}
-                      </Match>
-                      <Match when={resource.type === "AppSync" && resource}>
-                        {(resource) => <AppSyncCard resource={resource()} />}
-                      </Match>
-                      <Match
-                        when={resource.type === "WebSocketApi" && resource}
-                      >
-                        {(resource) => (
-                          <WebSocketApiCard resource={resource()} />
-                        )}
-                      </Match>
-                      <Match when={resource.type === "NextjsSite" && resource}>
-                        {(resource) => <NextjsSiteCard resource={resource()} />}
-                      </Match>
-                      <Match
-                        when={resource.type === "SvelteKitSite" && resource}
-                      >
-                        {(resource) => (
-                          <SvelteKitSiteCard resource={resource()} />
-                        )}
-                      </Match>
-                      <Match when={resource.type === "AstroSite" && resource}>
-                        {(resource) => <AstroSiteCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "RemixSite" && resource}>
-                        {(resource) => <RemixSiteCard resource={resource()} />}
-                      </Match>
-                      <Match
-                        when={resource.type === "SolidStartSite" && resource}
-                      >
-                        {(resource) => (
-                          <SolidStartSiteCard resource={resource()} />
-                        )}
-                      </Match>
-                      <Match when={resource.type === "StaticSite" && resource}>
-                        {(resource) => <StaticSiteCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "Table" && resource}>
-                        {(resource) => <TableCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "RDS" && resource}>
-                        {(resource) => <RDSCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "EventBus" && resource}>
-                        {(resource) => <EventBusCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "Topic" && resource}>
-                        {(resource) => <TopicCard resource={resource()} />}
-                      </Match>
-                      <Match
-                        when={resource.type === "KinesisStream" && resource}
-                      >
-                        {(resource) => (
-                          <KinesisStreamCard resource={resource()} />
-                        )}
-                      </Match>
-                      <Match when={resource.type === "Queue" && resource}>
-                        {(resource) => <QueueCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "Bucket" && resource}>
-                        {(resource) => <BucketCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "Cognito" && resource}>
-                        {(resource) => <CognitoCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "Cron" && resource}>
-                        {(resource) => <CronCard resource={resource()} />}
-                      </Match>
-                      <Match when={resource.type === "Script" && resource}>
-                        {(resource) => <ScriptCard resource={resource()} />}
-                      </Match>
-                    </Switch>
-                  </Card>
-                )}
-              </For>
-              {renderOrphanFunctions()}
-              {renderOutputs()}
-            </Show>
-          </Stack>
-        </Content>
+        <Switch>
+          <Match when={stateResources().length}>
+            <Content>
+              <Stack space="4">
+                {renderStateOutputs()}
+                <Stack space="5">
+                  <For each={SortedStateResource()}>
+                    {renderStateResource}
+                  </For>
+                </Stack>
+              </Stack>
+            </Content>
+          </Match>
+          <Match when={true}>
+            <Content>
+              <Stack space="4">
+                <Show
+                  when={
+                    sortedResources().length || orphans().length || outputs().length
+                  }
+                  fallback={
+                    <Fullscreen inset="stage">
+                      <EmptyResourcesCopy>
+                        Deploy a function to get started!
+                      </EmptyResourcesCopy>
+                    </Fullscreen>
+                  }
+                >
+                  <For each={sortedResources()}>
+                    {(resource) => (
+                      <Card>
+                        <Switch>
+                          <Match when={resource.type === "Api" && resource}>
+                            {(resource) => <ApiCard resource={resource()} />}
+                          </Match>
+                          <Match
+                            when={resource.type === "ApiGatewayV1Api" && resource}
+                          >
+                            {(resource) => (
+                              <ApiGatewayV1ApiCard resource={resource()} />
+                            )}
+                          </Match>
+                          <Match when={resource.type === "AppSync" && resource}>
+                            {(resource) => <AppSyncCard resource={resource()} />}
+                          </Match>
+                          <Match
+                            when={resource.type === "WebSocketApi" && resource}
+                          >
+                            {(resource) => (
+                              <WebSocketApiCard resource={resource()} />
+                            )}
+                          </Match>
+                          <Match when={resource.type === "NextjsSite" && resource}>
+                            {(resource) => <NextjsSiteCard resource={resource()} />}
+                          </Match>
+                          <Match
+                            when={resource.type === "SvelteKitSite" && resource}
+                          >
+                            {(resource) => (
+                              <SvelteKitSiteCard resource={resource()} />
+                            )}
+                          </Match>
+                          <Match when={resource.type === "AstroSite" && resource}>
+                            {(resource) => <AstroSiteCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "RemixSite" && resource}>
+                            {(resource) => <RemixSiteCard resource={resource()} />}
+                          </Match>
+                          <Match
+                            when={resource.type === "SolidStartSite" && resource}
+                          >
+                            {(resource) => (
+                              <SolidStartSiteCard resource={resource()} />
+                            )}
+                          </Match>
+                          <Match when={resource.type === "StaticSite" && resource}>
+                            {(resource) => <StaticSiteCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "Table" && resource}>
+                            {(resource) => <TableCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "RDS" && resource}>
+                            {(resource) => <RDSCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "EventBus" && resource}>
+                            {(resource) => <EventBusCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "Topic" && resource}>
+                            {(resource) => <TopicCard resource={resource()} />}
+                          </Match>
+                          <Match
+                            when={resource.type === "KinesisStream" && resource}
+                          >
+                            {(resource) => (
+                              <KinesisStreamCard resource={resource()} />
+                            )}
+                          </Match>
+                          <Match when={resource.type === "Queue" && resource}>
+                            {(resource) => <QueueCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "Bucket" && resource}>
+                            {(resource) => <BucketCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "Cognito" && resource}>
+                            {(resource) => <CognitoCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "Cron" && resource}>
+                            {(resource) => <CronCard resource={resource()} />}
+                          </Match>
+                          <Match when={resource.type === "Script" && resource}>
+                            {(resource) => <ScriptCard resource={resource()} />}
+                          </Match>
+                        </Switch>
+                      </Card>
+                    )}
+                  </For>
+                  {renderOrphanFunctions()}
+                  {renderOutputs()}
+                </Show>
+              </Stack>
+            </Content>
+          </Match>
+        </Switch>
       </Match>
     </Switch>
   );
@@ -1131,8 +1540,8 @@ function FunctionChild(props: {
                 fallback={
                   exists().metadata.handler
                     ? new URL(
-                        "https://example.com/" + exists().metadata.handler
-                      ).pathname.replace(/\/+/g, "/")
+                      "https://example.com/" + exists().metadata.handler
+                    ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >
