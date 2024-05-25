@@ -12,6 +12,7 @@ import { Link, useParams } from "@solidjs/router";
 import { StateUpdateStore, StateEventStore } from "$/data/app";
 import { State } from "@console/core/state";
 import { DateTime } from "luxon";
+import { Dropdown } from "$/ui/dropdown";
 import { useStageContext } from "../context";
 import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
 import { NotFound } from "$/pages/not-found";
@@ -19,7 +20,7 @@ import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
 import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
-import { IconCheck, IconDocumentDuplicate } from "$/ui/icons";
+import { IconCheck, IconEllipsisVertical } from "$/ui/icons";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
 import { sortBy } from "remeda";
 
@@ -395,19 +396,23 @@ function Resource(props: State.ResourceEvent) {
       <ResourceKey>{name()}</ResourceKey>
       <Row space="3" vertical="center">
         <ResourceValue>{props.type}</ResourceValue>
-        <ResourceCopyButton
-          title="Copy URN"
-          copying={copying()}
-          onClick={() => {
-            setCopying(true);
-            navigator.clipboard.writeText(props.urn);
-            setTimeout(() => setCopying(false), 2000);
-          }}
+        <Dropdown
+          size="sm"
+          disabled={copying()}
+          icon={copying()
+            ? <IconCheck width={18} height={18} />
+            : <IconEllipsisVertical width={18} height={18} />
+          }
         >
-          <Show when={!copying()} fallback={<IconCheck />}>
-            <IconDocumentDuplicate />
-          </Show>
-        </ResourceCopyButton>
+          <Dropdown.Item
+            onSelect={() => {
+              setCopying(true);
+              navigator.clipboard.writeText(props.urn);
+              setTimeout(() => setCopying(false), 2000);
+            }}>
+            Copy URN
+          </Dropdown.Item>
+        </Dropdown>
       </Row>
     </ResourceChild>
   );

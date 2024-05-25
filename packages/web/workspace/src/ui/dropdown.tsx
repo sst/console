@@ -17,7 +17,9 @@ const Trigger = styled(DropdownMenu.Trigger, {
   base: {
     ...utility.row(2),
     ...inputStyles,
+    maxWidth: 200,
     alignItems: "center",
+    color: theme.color.icon.secondary,
     justifyContent: "space-between",
     ":focus": {
       ...inputFocusStyles,
@@ -27,8 +29,13 @@ const Trigger = styled(DropdownMenu.Trigger, {
     },
     ":disabled": {
       ...inputDisabledStyles,
+      boxShadow: "none",
     },
-    maxWidth: 200,
+    selectors: {
+      "&:hover:not([disabled])": {
+        color: theme.color.icon.primary,
+      },
+    },
   },
   variants: {
     size: {
@@ -45,6 +52,9 @@ const Trigger = styled(DropdownMenu.Trigger, {
         boxShadow: "none",
         appearance: "none",
         background: "none",
+        ":disabled": {
+          backgroundColor: "transparent",
+        },
       },
       false: {},
     },
@@ -82,11 +92,7 @@ const DownIcon = styled(DropdownMenu.Icon, {
 const TriggerIcon = styled("span", {
   base: {
     display: "flex",
-    color: theme.color.icon.secondary,
     transition: `color ${theme.colorFadeDuration} ease-out`,
-    ":hover": {
-      color: theme.color.icon.primary,
-    },
   },
 });
 

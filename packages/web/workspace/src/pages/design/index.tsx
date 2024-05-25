@@ -681,6 +681,9 @@ export function Design() {
               A really really really long dropdown option that should overflow
             </Dropdown.Item>
           </Dropdown>
+          <Dropdown disabled label="Dropdown">
+            <Dropdown.Item>Live</Dropdown.Item>
+          </Dropdown>
         </Variant>
         <Variant name="RadioGroup">
           <Dropdown label="Dropdown">
@@ -729,6 +732,9 @@ export function Design() {
         </Variant>
         <Variant name="Icon">
           <Dropdown icon={<IconBookmark width={24} height={24} />}>
+            <Dropdown.Item>Live</Dropdown.Item>
+          </Dropdown>
+          <Dropdown disabled icon={<IconBookmark width={24} height={24} />}>
             <Dropdown.Item>Live</Dropdown.Item>
           </Dropdown>
         </Variant>

@@ -352,18 +352,18 @@ function Update(props: UpdateProps) {
               </UpdateTime>
             </Show>
           </UpdateSource>
-          <Dropdown
-            size="sm"
-            icon={<IconEllipsisVertical width={18} height={18} />}
-          >
-            <Dropdown.Item disabled={status() !== "updated"}>
-              View State
-            </Dropdown.Item>
-            <Show when={props.source === "ci"}>
+          <Show when={props.source === "ci"}>
+            <Dropdown
+              size="sm"
+              icon={<IconEllipsisVertical width={18} height={18} />}
+            >
+              <Dropdown.Item disabled={status() !== "updated"}>
+                View State
+              </Dropdown.Item>
               <Dropdown.Seperator />
               <Dropdown.Item>View Logs</Dropdown.Item>
-            </Show>
-          </Dropdown>
+            </Dropdown>
+          </Show>
         </UpdateActions>
       </UpdateRightCol>
     </UpdateRoot>
