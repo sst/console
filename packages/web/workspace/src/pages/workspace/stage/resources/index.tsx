@@ -888,7 +888,7 @@ export function Resources() {
 
   return (
     <Switch>
-      <Match when={!resources().length || !stateResources().length}>
+      <Match when={!resources().length && !stateResources().length}>
         <Fullscreen>
           <Syncing>Waiting for resources&hellip;</Syncing>
         </Fullscreen>
