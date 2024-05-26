@@ -4,11 +4,10 @@ import {
   ParentProps,
   Show,
   createContext,
-  createEffect,
   createMemo,
   useContext,
 } from "solid-js";
-import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
+import { useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore } from "$/data/app";
 import { Resource } from "@console/core/app/resource";
@@ -31,7 +30,7 @@ export function createStageContext() {
   const app = AppStore.all.watch(
     rep,
     () => [],
-    (items) => items.find((app) => app.name === params.appName)
+    (items) => items.find((app) => app.name === params.appName),
   );
   const stage = StageStore.list.watch(
     rep,
@@ -40,14 +39,14 @@ export function createStageContext() {
       items.find(
         (stage) =>
           stage.appID === app()?.id &&
-          (stage.name === params.stageName || stage.id === params.stageName)
-      )
+          (stage.name === params.stageName || stage.id === params.stageName),
+      ),
   );
   const local = useLocalContext();
   const usage = UsageStore.forStage.watch(
     rep,
     () => [stage()?.id || "unknown"],
-    (items) => sumBy(items, (item) => item.invocations)
+    (items) => sumBy(items, (item) => item.invocations),
   );
 
   return {
@@ -108,7 +107,7 @@ export function ResourcesProvider(props: ParentProps) {
       if (!fn) return [];
       const run = (control: any) => {
         nav(
-          `/${params.workspaceSlug}/${appName}/${stageName}/resources/logs/${fn.id}`
+          `/${params.workspaceSlug}/${appName}/${stageName}/resources/logs/${fn.id}`,
         );
         control.hide();
       };
@@ -125,11 +124,11 @@ export function ResourcesProvider(props: ParentProps) {
         switch (resource.type) {
           case "NextjsSite":
             return (
-              resource.metadata.routes?.data?.map((item) => ({
+              resource.metadata.routes?.data?.map((item: any) => ({
                 icon: IconNextjsSite,
                 category: "NextJS Routes",
                 title: `${item.route}`,
-                run(control) {
+                run(control: any) {
                   nav(
                     `/${
                       params.workspaceSlug
@@ -138,7 +137,7 @@ export function ResourcesProvider(props: ParentProps) {
                     }?logGroup=${
                       resource.metadata.routes!.logGroupPrefix +
                       item.logGroupPath
-                    }`
+                    }`,
                   );
                   control.hide();
                 },
@@ -150,8 +149,9 @@ export function ResourcesProvider(props: ParentProps) {
                 icon: IconApi,
                 category: "API Routes",
                 title: `${
-                  resource.metadata.routes.find((r) => r.fn?.node === fn.addr)
-                    ?.route
+                  resource.metadata.routes.find(
+                    (r: any) => r.fn?.node === fn.addr,
+                  )?.route
                 }`,
                 run,
               },
@@ -197,7 +197,7 @@ function parseVersion(input: string) {
 export function useOutdated() {
   const resources = useResourcesContext();
   const stacks = createMemo(() =>
-    resources().filter((r) => r.type === "Stack")
+    resources().filter((r) => r.type === "Stack"),
   );
   return createMemo(() =>
     stacks().filter(
@@ -205,8 +205,8 @@ export function useOutdated() {
         r.type === "Stack" &&
         r.enrichment.version &&
         parseVersion(r.enrichment.version) < parseVersion(MINIMUM_VERSION) &&
-        !r.enrichment.version?.startsWith("0.0.0")
-    )
+        !r.enrichment.version?.startsWith("0.0.0"),
+    ),
   );
 }
 
@@ -221,7 +221,7 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
         (r) =>
           r.type === "Function" &&
           ((typeof fn !== "string" && r.addr === fn.node) ||
-            r.metadata.arn === fn)
+            r.metadata.arn === fn),
       ) as Extract<Resource.Info, { type: "Function" }> | undefined;
       if (!match) return;
 
@@ -236,13 +236,19 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           if (!result.get(resource.id)) result.set(resource.id, []);
           break;
         case "Api":
-          resource.metadata.routes.forEach((route) => push(resource, route.fn));
+          resource.metadata.routes.forEach((route: any) =>
+            push(resource, route.fn),
+          );
           break;
         case "WebSocketApi":
-          resource.metadata.routes.forEach((route) => push(resource, route.fn));
+          resource.metadata.routes.forEach((route: any) =>
+            push(resource, route.fn),
+          );
           break;
         case "ApiGatewayV1Api":
-          resource.metadata.routes.forEach((route) => push(resource, route.fn));
+          resource.metadata.routes.forEach((route: any) =>
+            push(resource, route.fn),
+          );
           break;
         case "Cron":
           push(resource, resource.metadata.job);
@@ -252,8 +258,8 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
         case "Job":
           break;
         case "Table":
-          resource.metadata.consumers.forEach((consumer) =>
-            push(resource, consumer.fn)
+          resource.metadata.consumers.forEach((consumer: any) =>
+            push(resource, consumer.fn),
           );
           break;
         case "RDS":
@@ -263,11 +269,13 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           push(resource, resource.metadata.consumer);
           break;
         case "Topic":
-          resource.metadata.subscribers.forEach((item) => push(resource, item));
+          resource.metadata.subscribers.forEach((item: any) =>
+            push(resource, item),
+          );
           break;
         case "Bucket":
-          resource.metadata.notifications.forEach((item) =>
-            push(resource, item)
+          resource.metadata.notifications.forEach((item: any) =>
+            push(resource, item),
           );
           break;
         case "Script":
@@ -276,16 +284,18 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           push(resource, resource.metadata.updatefn);
           break;
         case "Cognito":
-          resource.metadata.triggers.forEach((item) => push(resource, item.fn));
+          resource.metadata.triggers.forEach((item: any) =>
+            push(resource, item.fn),
+          );
           break;
         case "AppSync":
-          resource.metadata.dataSources.forEach((item) =>
-            push(resource, item.fn)
+          resource.metadata.dataSources.forEach((item: any) =>
+            push(resource, item.fn),
           );
           break;
         case "EventBus":
-          resource.metadata.rules.forEach((item) =>
-            item.targets.forEach((t) => push(resource, t))
+          resource.metadata.rules.forEach((item: any) =>
+            item.targets.forEach((t: any) => push(resource, t)),
           );
           break;
         case "Service":
@@ -309,8 +319,8 @@ function createFunctionsContext(resources: () => Resource.Info[] | undefined) {
           push(resource, resource.metadata.server);
           break;
         case "KinesisStream":
-          resource.metadata.consumers.forEach((item) =>
-            push(resource, item.fn)
+          resource.metadata.consumers.forEach((item: any) =>
+            push(resource, item.fn),
           );
           break;
         case "SlsNextjsSite":

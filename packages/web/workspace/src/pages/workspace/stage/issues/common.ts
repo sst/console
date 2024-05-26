@@ -15,13 +15,13 @@ export function getLogInfo(resources: Resource.Info[], logGroup?: string) {
             // get the server function for the NextjsSite
             const serverFunction = resources.find(
               (y) =>
-                y.type === "Function" && y.metadata.arn === x.metadata.server
+                y.type === "Function" && y.metadata.arn === x.metadata.server,
             );
             if (!serverFunction || serverFunction.type !== "Function") return;
 
             // get the route matching the log group
-            const route = x.metadata.routes.data.find((route) =>
-              logGroup?.endsWith(route.logGroupPath)
+            const route = x.metadata.routes.data.find((route: any) =>
+              logGroup?.endsWith(route.logGroupPath),
             );
             if (!route) return;
 

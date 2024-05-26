@@ -30,39 +30,107 @@ type Model = InferModel<typeof resource>;
 type Metadata =
   | {
       type: "WebSocketApi";
-      data: any;
+      data: Record<string, any>;
     }
   | {
       type: "Api";
-      data: any;
+      data: Record<string, any>;
     }
   | {
       type: "Bucket";
-      data: any;
+      data: Record<string, any>;
     }
   | {
       type: "Cron";
-      data: any;
+      data: Record<string, any>;
     }
   | {
       type: "NextjsSite";
-      data: any;
+      data: Record<string, any>;
     }
   | {
       type: "RemixSite";
-      data: any;
+      data: Record<string, any>;
     }
   | {
       type: "AstroSite";
-      data: any;
+      data: Record<string, any>;
+    }
+  | {
+      type: "SvelteKitSite";
+      data: Record<string, any>;
+    }
+  | {
+      type: "SolidStartSite";
+      data: Record<string, any>;
+    }
+  | {
+      type: "AppSync";
+      data: Record<string, any>;
+    }
+  | {
+      type: "StaticSite";
+      data: Record<string, any>;
+    }
+  | {
+      type: "ApiGatewayV1Api";
+      data: Record<string, any>;
+    }
+  | {
+      type: "Table";
+      data: Record<string, any>;
+    }
+  | {
+      type: "RDS";
+      data: Record<string, any>;
+    }
+  | {
+      type: "EventBus";
+      data: Record<string, any>;
+    }
+  | {
+      type: "Queue";
+      data: Record<string, any>;
+    }
+  | {
+      type: "Topic";
+      data: Record<string, any>;
+    }
+  | {
+      type: "KinesisStream";
+      data: Record<string, any>;
+    }
+  | {
+      type: "Cognito";
+      data: Record<string, any>;
+    }
+  | {
+      type: "Auth";
+      data: Record<string, any>;
+    }
+  | {
+      type: "Script";
+      data: Record<string, any>;
+    }
+  | {
+      type: "SlsNextjsSite";
+      data: Record<string, any>;
+    }
+  | {
+      type: "Service";
+      data: Record<string, any>;
+    }
+  | {
+      type: "Job";
+      data: Record<string, any>;
     }
   | {
       type: "Stack";
-      data: any;
+      data: Record<string, any>;
     }
   | {
       type: "Function";
-      data: any;
+      data: Record<string, any>;
     };
 
 export type Info = {

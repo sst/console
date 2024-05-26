@@ -7,12 +7,9 @@ import {
   Component,
   createMemo,
   createSignal,
-  createEffect,
   ComponentProps,
-  createResource,
 } from "solid-js";
 import {
-  MINIMUM_VERSION,
   useStageContext,
   useFunctionsContext,
   useResourcesContext,
@@ -23,16 +20,8 @@ import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { Dropdown } from "$/ui/dropdown";
 import { Fullscreen, Row, Stack } from "$/ui/layout";
+import { Tag, Text, TabTitle, SplitOptions, SplitOptionsOption } from "$/ui";
 import {
-  Tag,
-  Text,
-  Alert,
-  TabTitle,
-  SplitOptions,
-  SplitOptionsOption,
-} from "$/ui";
-import {
-  IconJob,
   IconApi,
   IconRDS,
   IconAuth,
@@ -41,7 +30,6 @@ import {
   IconTable,
   IconTopic,
   IconQueue,
-  IconScript,
   IconBucket,
   IconAppSync,
   IconCognito,
@@ -57,14 +45,11 @@ import {
   IconNodeRuntime,
   IconRustRuntime,
   IconWebSocketApi,
-  IconKinesisStream,
   IconPythonRuntime,
   IconDotNetRuntime,
   IconSvelteKitSite,
   IconSolidStartSite,
-  IconApiGatewayV1Api,
   IconContainerRuntime,
-  IconAws,
 } from "$/ui/icons/custom";
 import { Resource } from "@console/core/app/resource";
 import type { State } from "@console/core/state";
@@ -75,11 +60,10 @@ import {
   IconCheck,
   IconEllipsisVertical,
   IconDocumentDuplicate,
-  IconExclamationTriangle,
 } from "$/ui/icons";
 import { sortBy } from "remeda";
-import { Dynamic } from "solid-js/web"
-import { } from "@solid-primitives/keyboard";
+import { Dynamic } from "solid-js/web";
+import {} from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
 
@@ -198,7 +182,6 @@ const HeaderTitleTagline = styled("span", {
     },
   },
 });
-
 
 const HeaderIcon = styled("div", {
   base: {
@@ -411,7 +394,7 @@ function getFunctionById(resources: Resource.Info[], id: string) {
   return resources.find(
     (r) =>
       r.type === "Function" &&
-      (r.id === id || r.addr === id || r.metadata.arn === id)
+      (r.id === id || r.addr === id || r.metadata.arn === id),
   ) as Extract<Resource.Info, { type: "Function" }> | undefined;
 }
 
@@ -493,8 +476,7 @@ function stateResourcePriority(resource: SortedStateResource) {
     default:
       if (resource.type.startsWith("pulumi:providers:")) {
         return 101;
-      }
-      else {
+      } else {
         return 100;
       }
   }
@@ -504,7 +486,9 @@ type SortedStateResource = State.Resource & {
   name: string;
   children: SortedStateResource[];
 };
-function sortStateResources(resources: State.Resource[]): SortedStateResource[] {
+function sortStateResources(
+  resources: State.Resource[],
+): SortedStateResource[] {
   // Initialize an array to store root objects
   const roots: SortedStateResource[] = [];
   // Create a map to store each object by its id
@@ -514,7 +498,7 @@ function sortStateResources(resources: State.Resource[]): SortedStateResource[] 
     idMap[r.urn] = { ...r, name: r.urn.split("::").at(-1)!, children: [] };
   });
 
-  resources.forEach(r => {
+  resources.forEach((r) => {
     if (r.parent === undefined) {
       // If the object has no parent, it is a root object
       roots.push(idMap[r.urn]);
@@ -538,20 +522,24 @@ function sortStateResources(resources: State.Resource[]): SortedStateResource[] 
     }
 
     let allChildren = [...r.children];
-    r.children.forEach(child => {
+    r.children.forEach((child) => {
       if (idMap[child.urn]) {
         allChildren = allChildren.concat(collectDescendants(child));
       }
     });
-    return sortBy(allChildren, r => r.name);
+    return sortBy(allChildren, (r) => r.name);
   }
 
   // Update each object to have a flattened list of all descendants
-  Object.values(idMap).forEach(r => {
+  Object.values(idMap).forEach((r) => {
     r.children = collectDescendants(r);
   });
 
-  return sortBy(roots, r => stateResourcePriority(r), r => r.name);
+  return sortBy(
+    roots,
+    (r) => stateResourcePriority(r),
+    (r) => r.name,
+  );
 }
 
 function sortResources(resources: Resource.Info[]): Resource.Info[] {
@@ -576,7 +564,7 @@ function sortResources(resources: Resource.Info[]): Resource.Info[] {
       r.type === "KinesisStream" ||
       r.type === "SvelteKitSite" ||
       r.type === "SolidStartSite" ||
-      r.type === "ApiGatewayV1Api"
+      r.type === "ApiGatewayV1Api",
   );
 
   return displayResources.sort((a, b) => {
@@ -619,7 +607,7 @@ export function Header(props: HeaderProps) {
   const icon = createMemo(
     () =>
       props.icon ||
-      ResourceIcon[props.resource.type as keyof typeof ResourceIcon]
+      ResourceIcon[props.resource.type as keyof typeof ResourceIcon],
   );
   return (
     <HeaderRoot>
@@ -669,35 +657,38 @@ export function Resources() {
         .filter(([_, values]) => !values.length)
         .map(([key]) => key),
       (id) => (getFunctionById(resources(), id)?.enrichment?.size ? 0 : 1),
-      (id) => getFunctionById(resources(), id)?.metadata.handler || ""
-    )
+      (id) => getFunctionById(resources(), id)?.metadata.handler || "",
+    ),
   );
 
   const outputs = createMemo(() =>
     resources()
       .flatMap((r) => (r.type === "Stack" ? r.enrichment.outputs : []))
       .sort((a, b) => a.OutputKey!.localeCompare(b.OutputKey!))
-      .filter((o) => (o?.OutputValue?.trim() ?? "") !== "")
+      .filter((o) => (o?.OutputValue?.trim() ?? "") !== ""),
   );
 
   // State resources
-  const stateResources = StateResourceStore.forStage.watch(rep, () => [ctx.stage.id]);
-  const SortedStateResource = createMemo(() => sortStateResources([...stateResources()]));
+  const stateResources = StateResourceStore.forStage.watch(rep, () => [
+    ctx.stage.id,
+  ]);
+  const SortedStateResource = createMemo(() =>
+    sortStateResources([...stateResources()]),
+  );
   const stateOutputs = createMemo(() => {
     const outputs: { key: string; value: string }[] = [];
 
-    SortedStateResource().forEach(r => {
+    SortedStateResource().forEach((r) => {
       r.type === "pulumi:pulumi:Stack" && console.log(r.outputs);
 
       if (r.type === "pulumi:pulumi:Stack") {
-        Object.keys(r.outputs).forEach(key => {
+        Object.keys(r.outputs).forEach((key) => {
           if (typeof r.outputs[key] === "string") {
             outputs.push({ key, value: r.outputs[key] });
           }
         });
-      }
-      else if (r.type.startsWith("sst:")) {
-        Object.keys(r.outputs).forEach(key => {
+      } else if (r.type.startsWith("sst:")) {
+        Object.keys(r.outputs).forEach((key) => {
           if (key === "_hint") {
             outputs.push({ key: r.name, value: r.outputs[key] });
           }
@@ -705,7 +696,7 @@ export function Resources() {
       }
     });
 
-    return sortBy(outputs, o => o.key);
+    return sortBy(outputs, (o) => o.key);
   });
 
   function renderOrphanFunctions() {
@@ -784,20 +775,14 @@ export function Resources() {
       <Show when={stateOutputs().length}>
         <Card>
           <HeaderRoot>
-            <HeaderTitle>
-              Outputs
-            </HeaderTitle>
+            <HeaderTitle>Outputs</HeaderTitle>
           </HeaderRoot>
           <Children>
             <For each={stateOutputs()}>
               {(output) => {
                 const [copying, setCopying] = createSignal(false);
                 return (
-                  <Show
-                    when={
-                      output.value && output.value.trim() !== ""
-                    }
-                  >
+                  <Show when={output.value && output.value.trim() !== ""}>
                     <Child>
                       <ChildKey>{output.key}</ChildKey>
                       <Row space="3" vertical="center">
@@ -827,7 +812,9 @@ export function Resources() {
   }
 
   function renderStateResource(resource: SortedStateResource) {
-    const hint = resource.outputs["_hint"] ? resource.outputs["_hint"] as string : undefined;
+    const hint = resource.outputs["_hint"]
+      ? (resource.outputs["_hint"] as string)
+      : undefined;
     return (
       <Card outline>
         <HeaderRoot>
@@ -845,9 +832,7 @@ export function Resources() {
                 {resource.type}
               </HeaderTitleLink>
             </Row>
-            <HeaderTitleTagline outline>
-              {resource.name}
-            </HeaderTitleTagline>
+            <HeaderTitleTagline outline>{resource.name}</HeaderTitleTagline>
           </Row>
           <Show when={hint && isValidHttpUrl(hint)}>
             <HeaderDescription>
@@ -873,9 +858,12 @@ export function Resources() {
                     <Dropdown
                       size="sm"
                       disabled={copying()}
-                      icon={copying()
-                        ? <IconCheck width={18} height={18} />
-                        : <IconEllipsisVertical width={18} height={18} />
+                      icon={
+                        copying() ? (
+                          <IconCheck width={18} height={18} />
+                        ) : (
+                          <IconEllipsisVertical width={18} height={18} />
+                        )
                       }
                     >
                       <Dropdown.Item
@@ -883,7 +871,8 @@ export function Resources() {
                           setCopying(true);
                           navigator.clipboard.writeText(child.urn);
                           setTimeout(() => setCopying(false), 2000);
-                        }}>
+                        }}
+                      >
                         Copy URN
                       </Dropdown.Item>
                     </Dropdown>
@@ -935,9 +924,7 @@ export function Resources() {
               <Stack space="4">
                 {renderStateOutputs()}
                 <Stack space="5">
-                  <For each={SortedStateResource()}>
-                    {renderStateResource}
-                  </For>
+                  <For each={SortedStateResource()}>{renderStateResource}</For>
                 </Stack>
               </Stack>
             </Content>
@@ -947,7 +934,9 @@ export function Resources() {
               <Stack space="4">
                 <Show
                   when={
-                    sortedResources().length || orphans().length || outputs().length
+                    sortedResources().length ||
+                    orphans().length ||
+                    outputs().length
                   }
                   fallback={
                     <Fullscreen inset="stage">
@@ -965,14 +954,18 @@ export function Resources() {
                             {(resource) => <ApiCard resource={resource()} />}
                           </Match>
                           <Match
-                            when={resource.type === "ApiGatewayV1Api" && resource}
+                            when={
+                              resource.type === "ApiGatewayV1Api" && resource
+                            }
                           >
                             {(resource) => (
                               <ApiGatewayV1ApiCard resource={resource()} />
                             )}
                           </Match>
                           <Match when={resource.type === "AppSync" && resource}>
-                            {(resource) => <AppSyncCard resource={resource()} />}
+                            {(resource) => (
+                              <AppSyncCard resource={resource()} />
+                            )}
                           </Match>
                           <Match
                             when={resource.type === "WebSocketApi" && resource}
@@ -981,8 +974,12 @@ export function Resources() {
                               <WebSocketApiCard resource={resource()} />
                             )}
                           </Match>
-                          <Match when={resource.type === "NextjsSite" && resource}>
-                            {(resource) => <NextjsSiteCard resource={resource()} />}
+                          <Match
+                            when={resource.type === "NextjsSite" && resource}
+                          >
+                            {(resource) => (
+                              <NextjsSiteCard resource={resource()} />
+                            )}
                           </Match>
                           <Match
                             when={resource.type === "SvelteKitSite" && resource}
@@ -991,21 +988,35 @@ export function Resources() {
                               <SvelteKitSiteCard resource={resource()} />
                             )}
                           </Match>
-                          <Match when={resource.type === "AstroSite" && resource}>
-                            {(resource) => <AstroSiteCard resource={resource()} />}
-                          </Match>
-                          <Match when={resource.type === "RemixSite" && resource}>
-                            {(resource) => <RemixSiteCard resource={resource()} />}
+                          <Match
+                            when={resource.type === "AstroSite" && resource}
+                          >
+                            {(resource) => (
+                              <AstroSiteCard resource={resource()} />
+                            )}
                           </Match>
                           <Match
-                            when={resource.type === "SolidStartSite" && resource}
+                            when={resource.type === "RemixSite" && resource}
+                          >
+                            {(resource) => (
+                              <RemixSiteCard resource={resource()} />
+                            )}
+                          </Match>
+                          <Match
+                            when={
+                              resource.type === "SolidStartSite" && resource
+                            }
                           >
                             {(resource) => (
                               <SolidStartSiteCard resource={resource()} />
                             )}
                           </Match>
-                          <Match when={resource.type === "StaticSite" && resource}>
-                            {(resource) => <StaticSiteCard resource={resource()} />}
+                          <Match
+                            when={resource.type === "StaticSite" && resource}
+                          >
+                            {(resource) => (
+                              <StaticSiteCard resource={resource()} />
+                            )}
                           </Match>
                           <Match when={resource.type === "Table" && resource}>
                             {(resource) => <TableCard resource={resource()} />}
@@ -1013,8 +1024,12 @@ export function Resources() {
                           <Match when={resource.type === "RDS" && resource}>
                             {(resource) => <RDSCard resource={resource()} />}
                           </Match>
-                          <Match when={resource.type === "EventBus" && resource}>
-                            {(resource) => <EventBusCard resource={resource()} />}
+                          <Match
+                            when={resource.type === "EventBus" && resource}
+                          >
+                            {(resource) => (
+                              <EventBusCard resource={resource()} />
+                            )}
                           </Match>
                           <Match when={resource.type === "Topic" && resource}>
                             {(resource) => <TopicCard resource={resource()} />}
@@ -1033,7 +1048,9 @@ export function Resources() {
                             {(resource) => <BucketCard resource={resource()} />}
                           </Match>
                           <Match when={resource.type === "Cognito" && resource}>
-                            {(resource) => <CognitoCard resource={resource()} />}
+                            {(resource) => (
+                              <CognitoCard resource={resource()} />
+                            )}
                           </Match>
                           <Match when={resource.type === "Cron" && resource}>
                             {(resource) => <CronCard resource={resource()} />}
@@ -1072,7 +1089,7 @@ export function ApiCard(props: CardProps<"Api">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1104,10 +1121,9 @@ export function ApiCard(props: CardProps<"Api">) {
 
 export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
   const sortedRoutes = createMemo(() =>
-    sortBy(
+    sortBy((route: any) => route.route.slice(1).length)(
       props.resource.metadata.routes || [],
-      (route) => route.route.slice(1).length
-    )
+    ),
   );
   return (
     <>
@@ -1144,7 +1160,7 @@ export function ApiGatewayV1ApiCard(props: CardProps<"ApiGatewayV1Api">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1242,7 +1258,7 @@ export function AppSyncCard(props: CardProps<"AppSync">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl || props.resource.metadata.url
@@ -1342,7 +1358,7 @@ export function StaticSiteCard(props: CardProps<"StaticSite">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1361,7 +1377,7 @@ export function NextjsSiteCard(props: CardProps<"NextjsSite">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1404,7 +1420,7 @@ export function SvelteKitSiteCard(props: CardProps<"SvelteKitSite">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1428,7 +1444,7 @@ export function RemixSiteCard(props: CardProps<"RemixSite">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1452,7 +1468,7 @@ export function AstroSiteCard(props: CardProps<"AstroSite">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1476,7 +1492,7 @@ export function SolidStartSiteCard(props: CardProps<"SolidStartSite">) {
         resource={props.resource}
         link={getUrl(
           props.resource.metadata.url,
-          props.resource.metadata.customDomainUrl
+          props.resource.metadata.customDomainUrl,
         )}
         description={
           props.resource.metadata.customDomainUrl ||
@@ -1520,7 +1536,7 @@ function FunctionChild(props: {
   const resources = useResourcesContext();
   const fn = createMemo(() => getFunctionById(resources(), props.id!));
   const runtime = createMemo(
-    () => fn()?.metadata.runtime || fn()?.enrichment.runtime || ""
+    () => fn()?.metadata.runtime || fn()?.enrichment.runtime || "",
   );
   return (
     <Show when={fn()}>
@@ -1540,8 +1556,8 @@ function FunctionChild(props: {
                 fallback={
                   exists().metadata.handler
                     ? new URL(
-                      "https://example.com/" + exists().metadata.handler
-                    ).pathname.replace(/\/+/g, "/")
+                        "https://example.com/" + exists().metadata.handler,
+                      ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >
