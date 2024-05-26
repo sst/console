@@ -65,6 +65,7 @@ export function workspaces() {
       .where(
         and(
           eq(user.email, actor.properties.email),
+          isNull(user.timeDeleted),
           isNull(workspace.timeDeleted),
         ),
       )
