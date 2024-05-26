@@ -61,6 +61,7 @@ import {
   KeyboardNavigator,
   createKeyboardNavigator,
 } from "$/common/keyboard-navigator";
+import { profileID } from "$/providers/realtime";
 
 const LogSwitchButton = styled("button", {
   base: {
@@ -206,7 +207,7 @@ const LogMoreIndicatorCopy = styled("span", {
 const InvocationsList = styled("div", {});
 
 const [pollerCache, setPollerCache] = createStore<{ [key: string]: number }>(
-  {}
+  {},
 );
 
 export function Logs() {
@@ -233,7 +234,7 @@ export function Logs() {
     () =>
       resources().find((x) => x.id === params.resourceID) as
         | Resource.InfoByType<"Function">
-        | undefined
+        | undefined,
   );
 
   const logGroup = createMemo(() => {
@@ -262,7 +263,7 @@ export function Logs() {
               view: "tail",
               end: undefined,
             },
-            { replace: true }
+            { replace: true },
           );
           bar.hide();
         },
@@ -278,7 +279,7 @@ export function Logs() {
               view: "recent",
               end: undefined,
             },
-            { replace: true }
+            { replace: true },
           );
           bar.hide();
         },
@@ -323,7 +324,7 @@ export function Logs() {
         {
           view: "recent",
         },
-        { replace: true }
+        { replace: true },
       );
   });
 
@@ -341,7 +342,7 @@ export function Logs() {
         stage.stage.region
       }.console.aws.amazon.com/cloudwatch/home?region=${
         stage.stage.region
-      }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`
+      }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`,
     );
 
     if (view === "recent") {
@@ -363,7 +364,7 @@ export function Logs() {
           body: JSON.stringify({
             stageID: stage.stage.id,
             logGroup: logGroup(),
-            profileID: await rep().profileID,
+            profileID: profileID,
           }),
           headers: {
             "x-sst-workspace": workspace().id,
@@ -385,7 +386,7 @@ export function Logs() {
     if (dummy()) return;
     rep().mutate.log_search({
       id: id.search,
-      profileID: await rep().profileID,
+      profileID: profileID,
       stageID: stage.stage.id,
       logGroup: logGroup(),
       timeStart: null,
@@ -408,7 +409,7 @@ export function Logs() {
   const dummyInvocations = createScan<Invocation>(
     () => "/invocation",
     rep,
-    (all) => sortBy(all, (x) => x.start)
+    (all) => sortBy(all, (x) => x.start),
   );
 
   const invocations = createMemo(() => {
@@ -427,7 +428,7 @@ export function Logs() {
   const title = createMemo(() =>
     query.logGroup
       ? getLogInfo(resources(), query.logGroup)?.name
-      : resource()?.metadata.handler
+      : resource()?.metadata.handler,
   );
 
   const navigator = createKeyboardNavigator({
@@ -525,7 +526,7 @@ export function Logs() {
                           <span>
                             Viewing logs older than{" "}
                             {DateTime.fromISO(query.end!).toLocaleString(
-                              DATETIME_LONG
+                              DATETIME_LONG,
                             )}
                           </span>
                         </Show>
@@ -539,8 +540,8 @@ export function Logs() {
                           {DateTime.fromMillis(
                             Math.min(
                               invocations().at(-1)?.start || Number.MAX_VALUE,
-                              pollerCache[logGroup()]
-                            )
+                              pollerCache[logGroup()],
+                            ),
                           ).toLocaleString(DATETIME_LONG)}
                         </Show>
                       </Match>
@@ -564,7 +565,7 @@ export function Logs() {
                       onClick={() => {
                         invocationsContext.clear(logGroupKey());
                         createSearch(
-                          query.end ? new Date(query.end).getTime() : undefined
+                          query.end ? new Date(query.end).getTime() : undefined,
                         );
                       }}
                     >
@@ -588,7 +589,7 @@ export function Logs() {
                             },
                             {
                               replace: true,
-                            }
+                            },
                           );
                         }}
                       >
@@ -641,7 +642,7 @@ export function Logs() {
                           view: "tail",
                           end: undefined,
                         },
-                        { replace: true }
+                        { replace: true },
                       );
                     }
                   }}
@@ -674,7 +675,7 @@ export function Logs() {
                       <InvocationRow
                         onSavePayload={() => {
                           invokeControl.savePayload(
-                            structuredClone(unwrap(invocation.input))
+                            structuredClone(unwrap(invocation.input)),
                           );
                         }}
                         invocation={invocation}

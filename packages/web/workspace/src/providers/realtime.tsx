@@ -5,6 +5,8 @@ import { createId } from "@paralleldrive/cuid2";
 import { useDummy } from "./dummy";
 import { useAuth2 } from "./auth2";
 
+export const profileID = createId();
+
 export function RealtimeProvider() {
   let connection: mqtt.MqttClientConnection;
   const auth = useAuth2();
@@ -42,13 +44,12 @@ export function RealtimeProvider() {
             mqtt.QoS.AtLeastOnce
           );
 
-          if (false)
-            await connection.subscribe(
-              `console/${
-                import.meta.env.VITE_STAGE
-              }/${workspace}/${"unknown"}/#`,
-              mqtt.QoS.AtLeastOnce
-            );
+          await connection.subscribe(
+            `console/${import.meta.env.VITE_STAGE}/${
+              workspace.id
+            }/${profileID}/#`,
+            mqtt.QoS.AtLeastOnce
+          );
         }
       });
       connection.on("interrupt", (e) => {
