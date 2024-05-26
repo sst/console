@@ -21,10 +21,10 @@ export const { use: useDummy, provider: DummyProvider } =
 export const { use: useDummyConfig, provider: DummyConfigProvider } =
   createInitializedContext("dummyConfig", () => {
     const result = () => ({
-      user: "asd",
+      user: "me@example.com",
       local: {
-        app: "foo",
-        stage: "bar",
+        app: "my-sst-app",
+        stage: "local",
       },
     });
     result.ready = true;
