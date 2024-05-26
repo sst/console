@@ -1,4 +1,4 @@
-import { Replicache, ReadTransaction, WriteTransaction } from "replicache";
+import { Replicache } from "replicache";
 import {
   ParentProps,
   Show,
@@ -8,7 +8,6 @@ import {
   useContext,
 } from "solid-js";
 import { Splash } from "$/ui";
-import { useAuth } from "./auth";
 import { Client } from "@console/functions/replicache/framework";
 import type { ServerType } from "@console/functions/replicache/server";
 import { bus } from "./bus";
@@ -30,6 +29,7 @@ import {
   EnvStore,
 } from "$/data/app";
 import { useReplicacheStatus } from "./replicache-status";
+import { useAuth2 } from "./auth2";
 
 const mutators = new Client<ServerType>()
   .mutation("app_stage_sync", async () => {})
@@ -127,13 +127,13 @@ const mutators = new Client<ServerType>()
   .mutation("issue_alert_remove", async (tx, input) => {
     await IssueAlertStore.remove(tx, input);
   })
-  .mutation("slack_disconnect", async (tx, input) => {
+  .mutation("slack_disconnect", async (tx) => {
     const all = await SlackTeamStore.all(tx);
     for (const team of all) {
       await SlackTeamStore.remove(tx, team.id);
     }
   })
-  .mutation("github_disconnect", async (tx, input) => {
+  .mutation("github_disconnect", async (tx) => {
     const all = await GithubOrgStore.all(tx);
     for (const org of all) {
       await GithubOrgStore.remove(tx, org.id);
@@ -236,31 +236,24 @@ function createReplicache(workspaceID: string, token: string) {
 }
 
 export function ReplicacheProvider(
-  props: ParentProps<{ accountID: string; workspaceID: string }>
+  props: ParentProps<{ workspaceID: string }>
 ) {
-  const tokens = useAuth();
-  const token = createMemo(() => tokens[props.accountID]?.session.token);
-
+  const auth = useAuth2();
   const rep = createMemo(() => {
-    return createReplicache(props.workspaceID, token()!);
+    return createReplicache(props.workspaceID, auth.current.token);
   });
-
   makeEventListener(window, "focus", () => {
     console.log("refocused");
     rep().pull();
   });
-
   bus.on("poke", (properties) => {
     if (properties.workspaceID !== props.workspaceID) return;
     rep().pull();
   });
-
   onCleanup(() => {
     rep().close();
   });
-
   const init = createGet(() => "/init", rep);
-
   return (
     <Show when={rep() && init()} fallback={<Splash />}>
       <ReplicacheContext.Provider value={rep}>

@@ -6,36 +6,26 @@ import { styled } from "@macaron-css/solid";
 import { darkClass, lightClass, theme } from "./ui/theme";
 import { globalStyle, macaron$ } from "@macaron-css/core";
 import { dropAllDatabases } from "replicache";
-import {
-  Match,
-  Switch,
-  onCleanup,
-  Component,
-  createMemo,
-  createSignal,
-} from "solid-js";
+import { Match, Switch, onCleanup, Component, createSignal } from "solid-js";
 import { Navigate, Route, Router, Routes, useNavigate } from "@solidjs/router";
 import { Auth, Code } from "./pages/auth";
-import { AuthProvider, useAuth } from "./providers/auth";
+import { AuthProvider } from "./providers/auth";
 import { RealtimeProvider } from "./providers/realtime";
 import { CommandBar, useCommandBar } from "./pages/workspace/command-bar";
 import { Debug } from "./pages/debug";
 import { Design } from "./pages/design";
-import { Connect } from "./pages/connect";
 import { Workspace } from "./pages/workspace";
 import { WorkspaceCreate } from "./pages/workspace-create";
-import { WorkspaceStore } from "./data/workspace";
-import { UserStore } from "./data/user";
 import { IconLogout, IconAddCircle, IconWorkspace } from "./ui/icons/custom";
 import { LocalProvider } from "./providers/local";
 import { useStorage } from "./providers/account";
 import { DummyConfigProvider, DummyProvider } from "./providers/dummy";
 import { InvocationProvider } from "./providers/invocation";
 import { FlagsProvider } from "./providers/flags";
-import { createGet } from "./data/store";
 import { NotFound } from "./pages/not-found";
 import { Local } from "./pages/local";
 import { ReplicacheStatusProvider } from "./providers/replicache-status";
+import { AuthProvider2, useAuth2 } from "./providers/auth2";
 
 const Root = styled("div", {
   base: {
@@ -174,21 +164,20 @@ export const App: Component = () => {
           <Route
             path="*"
             element={
-              <ReplicacheStatusProvider>
-                <DummyProvider>
-                  <AuthProvider>
-                    <DummyConfigProvider>
-                      <FlagsProvider>
-                        <RealtimeProvider />
-                        <LocalProvider>
-                          <InvocationProvider>
-                            <CommandBar>
+              <CommandBar>
+                <AuthProvider2>
+                  <ReplicacheStatusProvider>
+                    <DummyProvider>
+                      <DummyConfigProvider>
+                        <FlagsProvider>
+                          <RealtimeProvider />
+                          <LocalProvider>
+                            <InvocationProvider>
                               <GlobalCommands />
                               <Routes>
                                 <Route path="local/*" component={Local} />
                                 <Route path="debug" component={Debug} />
                                 <Route path="design" component={Design} />
-                                <Route path="connect" component={Connect} />
                                 <Route
                                   path="workspace"
                                   component={WorkspaceCreate}
@@ -201,51 +190,32 @@ export const App: Component = () => {
                                 <Route
                                   path=""
                                   component={() => {
-                                    const auth = useAuth();
-                                    let existing = storage.value.account;
-                                    if (!existing || !auth[existing]) {
-                                      existing = Object.keys(auth)[0];
-                                      storage.set("account", existing);
-                                    }
-                                    const workspaces =
-                                      WorkspaceStore.list.watch(
-                                        () => auth[existing!].replicache,
-                                        () => [],
-                                      );
-
-                                    const init = createGet<boolean>(
-                                      () => "/init",
-                                      () => auth[existing!].replicache,
+                                    const auth = useAuth2();
+                                    console.log(
+                                      "HERE",
+                                      auth.current.workspaces,
                                     );
 
                                     return (
                                       <Switch>
                                         <Match
                                           when={
-                                            workspaces() &&
-                                            workspaces()!.length > 0
+                                            auth.current.workspaces.length > 0
                                           }
                                         >
                                           <Navigate
                                             href={`/${
                                               (
-                                                workspaces()!.find(
+                                                auth.current.workspaces.find(
                                                   (w) =>
                                                     w.id ===
                                                     storage.value.workspace,
-                                                ) || workspaces()![0]
+                                                ) || auth.current.workspaces[0]
                                               ).slug
                                             }`}
                                           />
                                         </Match>
-                                        <Match
-                                          when={
-                                            init.ready &&
-                                            init() &&
-                                            workspaces() &&
-                                            workspaces()!.length === 0
-                                          }
-                                        >
+                                        <Match when={true}>
                                           <Navigate href={`/workspace`} />
                                         </Match>
                                       </Switch>
@@ -254,14 +224,14 @@ export const App: Component = () => {
                                 />
                                 <Route path="*" element={<NotFound />} />
                               </Routes>
-                            </CommandBar>
-                          </InvocationProvider>
-                        </LocalProvider>
-                      </FlagsProvider>
-                    </DummyConfigProvider>
-                  </AuthProvider>
-                </DummyProvider>
-              </ReplicacheStatusProvider>
+                            </InvocationProvider>
+                          </LocalProvider>
+                        </FlagsProvider>
+                      </DummyConfigProvider>
+                    </DummyProvider>
+                  </ReplicacheStatusProvider>
+                </AuthProvider2>
+              </CommandBar>
             }
           />
         </Routes>
@@ -272,37 +242,28 @@ export const App: Component = () => {
 
 function GlobalCommands() {
   const bar = useCommandBar();
-  const auth = useAuth();
-  const nav = useNavigate();
+  const auth = useAuth2();
   const storage = useStorage();
-  const selfEmail = createMemo(() => auth[storage.value.account].session.email);
-
+  const nav = useNavigate();
   bar.register("workspace-switcher", async () => {
-    const workspaces = await Promise.all(
-      Object.values(auth).map(async (account) => {
-        const workspaces = await account.replicache.query(async (tx) => {
-          const users = await UserStore.list(tx);
-          return Promise.all(
-            users.map(async (user) => {
-              const workspace = await WorkspaceStore.get(tx, user.workspaceID);
-              return { account: account, workspace };
-            }),
-          );
-        });
-        return workspaces;
-      }),
-    ).then((x) => x.flat());
+    const workspaces = auth.all.flatMap((account) =>
+      account.workspaces.map((w) => ({
+        accountID: account.token,
+        workspace: w,
+      })),
+    );
     const splits = location.pathname.split("/");
     return [
       ...workspaces
-        .filter((w) => w.workspace?.slug !== splits[1])
-        .map((w) => ({
-          title: `Switch to ${w.workspace?.slug} workspace`,
+        .filter((item) => item.workspace?.slug !== splits[1])
+        .map((item) => ({
+          title: `Switch to ${item.workspace.slug} workspace`,
           category: "Workspace",
           icon: IconWorkspace,
           run: (control: any) => {
-            storage.set("account", w.account.session.accountID);
-            nav(`/${w.workspace.slug}`);
+            console.log("switching to", item.accountID, item.workspace.slug);
+            auth.switch(item.accountID);
+            nav(`/${item.workspace.slug}`);
             control.hide();
           },
         })),
@@ -313,21 +274,6 @@ function GlobalCommands() {
         run: (control) => {
           nav("/workspace");
           control.hide();
-        },
-      },
-    ];
-  });
-
-  bar.register("account", async () => {
-    return [
-      {
-        category: "Account",
-        title: `Logout from ${selfEmail()}`,
-        icon: IconLogout,
-        run: async () => {
-          await dropAllDatabases();
-          localStorage.clear();
-          location.href = "/";
         },
       },
     ];

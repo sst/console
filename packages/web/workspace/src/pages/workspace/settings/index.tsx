@@ -7,21 +7,14 @@ import { utility } from "$/ui/utility";
 import { Toggle } from "$/ui/switch";
 import { IconLogosSlack, IconLogosGitHub } from "$/ui/icons/custom";
 import { formatNumber } from "$/common/format";
-import { useFlags } from "$/providers/flags";
 import { useReplicache } from "$/providers/replicache";
 import { PRICING_PLAN, PricingPlan, UsageStore } from "$/data/usage";
 import { Header } from "../header";
-import {
-  AppStore,
-  SlackTeamStore,
-  StripeStore,
-  GithubOrgStore,
-} from "$/data/app";
-import { useAccountReplicache, useAuth } from "$/providers/auth";
-import { useStorage } from "$/providers/account";
+import { SlackTeamStore, StripeStore, GithubOrgStore } from "$/data/app";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { Alerts } from "./alerts";
 import { useNavigate } from "@solidjs/router";
+import { useAuth2 } from "$/providers/auth2";
 
 const PANEL_CONTENT_SPACE = "10";
 const PANEL_HEADER_SPACE = "3";
@@ -123,8 +116,8 @@ export function Settings() {
       .reduce((a, b) => a + b, 0)
   );
   console.log("usages", usages().length);
+  const auth = useAuth2();
   const workspace = useWorkspace();
-  const flags = useFlags();
   const cycle = createMemo(() => {
     const data = usages();
     const start = data[0] ? DateTime.fromSQL(data[0].day) : DateTime.now();
@@ -164,13 +157,13 @@ export function Settings() {
     );
   }
 
-  function handleHoverManageSubscription(e: MouseEvent) {
+  function handleHoverManageSubscription() {
     if (portalLink) return;
     console.log("generate portal link");
     portalLink = generatePortalLink();
   }
 
-  function handleHoverSubscribe(e: MouseEvent) {
+  function handleHoverSubscribe() {
     if (checkoutLink) return;
     console.log("generate checkout link");
     checkoutLink = generateCheckoutLink();
@@ -191,7 +184,6 @@ export function Settings() {
   }
 
   const stripe = StripeStore.get.watch(rep, () => []);
-  const account = useAccountReplicache();
   const nav = useNavigate();
 
   return (
@@ -355,7 +347,16 @@ export function Settings() {
                   )
                 )
                   return;
-                await account().mutate.workspace_remove(workspace().id);
+
+                await fetch(import.meta.env.VITE_API_URL + "/rest/workspace", {
+                  method: "DELETE",
+                  headers: {
+                    authorization: `Bearer ${auth.current.token}`,
+                    "content-type": "application/json",
+                  },
+                  body: JSON.stringify(workspace().id),
+                });
+                await auth.refresh();
                 nav("/");
               }}
             >
@@ -371,8 +372,7 @@ export function Settings() {
 function Integrations() {
   const rep = useReplicache();
   const workspace = useWorkspace();
-  const auth = useAuth();
-  const storage = useStorage();
+  const auth = useAuth2();
   const slackTeam = SlackTeamStore.all.watch(
     rep,
     () => [],
@@ -395,8 +395,6 @@ function Integrations() {
       if (e.data === "github.success") setOverrideGithub(true);
     }
   );
-
-  const apps = AppStore.all.watch(rep, () => []);
 
   return (
     <>
@@ -450,11 +448,7 @@ function Integrations() {
             />
             <input type="hidden" name="provider" value="slack" />
             <input type="hidden" name="workspaceID" value={workspace().id} />
-            <input
-              type="hidden"
-              name="token"
-              value={auth[storage.value.account].session.token}
-            />
+            <input type="hidden" name="token" value={auth.current.token} />
           </form>
         </Row>
         <Row space="3.5" horizontal="between" vertical="center" id="github">
@@ -497,11 +491,7 @@ function Integrations() {
             />
             <input type="hidden" name="provider" value="github" />
             <input type="hidden" name="workspaceID" value={workspace().id} />
-            <input
-              type="hidden"
-              name="token"
-              value={auth[storage.value.account].session.token}
-            />
+            <input type="hidden" name="token" value={auth.current.token} />
           </form>
         </Row>
       </Stack>

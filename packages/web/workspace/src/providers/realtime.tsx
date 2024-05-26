@@ -1,41 +1,18 @@
 import { iot, mqtt } from "aws-iot-device-sdk-v2";
 import { onCleanup, onMount } from "solid-js";
-import { useAuth } from "./auth";
-import { WorkspaceStore } from "$/data/workspace";
 import { bus } from "./bus";
 import { createId } from "@paralleldrive/cuid2";
 import { useDummy } from "./dummy";
+import { useAuth2 } from "./auth2";
 
 export function RealtimeProvider() {
   let connection: mqtt.MqttClientConnection;
-  const auth = useAuth();
+  const auth = useAuth2();
   const dummy = useDummy();
 
   onMount(async () => {
     const url = import.meta.env.VITE_IOT_HOST;
-    const tokens = Object.values(auth)
-      .map((account) => account.session.token)
-      .join(";");
-    const workspaces = new Map<string, string[]>();
-    let profileID = "";
-    for (const [accountID, account] of Object.entries(auth)) {
-      const list = await account.replicache.query((tx) =>
-        WorkspaceStore.list(tx)
-      );
-      profileID = await account.replicache.profileID;
-      for (const workspace of list) {
-        if (!workspace.timeCreated) {
-          console.log("fake", workspace);
-          continue;
-        }
-        let arr = workspaces.get(workspace.id);
-        if (!arr) {
-          workspaces.set(workspace.id, [accountID]);
-          continue;
-        }
-        arr.push(accountID);
-      }
-    }
+    const tokens = auth.all.map((account) => account.token).join(";");
 
     async function createConnection() {
       if (dummy()) return;
@@ -58,19 +35,18 @@ export function RealtimeProvider() {
 
       connection.on("connect", async () => {
         console.log("WS connected");
-        for (const workspace of workspaces.keys()) {
-          console.log("subscribing to", workspace, profileID);
-
+        for (const workspace of auth.all.flatMap((a) => a.workspaces)) {
+          console.log("subscribing to", workspace);
           await connection.subscribe(
-            `console/${import.meta.env.VITE_STAGE}/${workspace}/all/#`,
+            `console/${import.meta.env.VITE_STAGE}/${workspace.id}/all/#`,
             mqtt.QoS.AtLeastOnce
           );
 
-          if (profileID)
+          if (false)
             await connection.subscribe(
               `console/${
                 import.meta.env.VITE_STAGE
-              }/${workspace}/${profileID}/#`,
+              }/${workspace}/${"unknown"}/#`,
               mqtt.QoS.AtLeastOnce
             );
         }

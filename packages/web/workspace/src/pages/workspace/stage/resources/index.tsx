@@ -887,7 +887,7 @@ export function Resources() {
     );
   }
 
-  const flag = useFlags()
+  const flag = useFlags();
 
   return (
     <Switch>

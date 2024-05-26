@@ -27,7 +27,7 @@ import { Navigator, useLocation, useNavigate } from "@solidjs/router";
 import { useBus } from "sst/bus";
 import { bus } from "$/providers/bus";
 
-interface Action {
+export interface Action {
   icon: (props: any) => JSX.Element;
   disabled?: boolean;
   title: string;
@@ -245,7 +245,7 @@ function createControl() {
       p.map(async (provider) => {
         const actions = await provider(input(), activeProviders().length === 0);
         return actions;
-      })
+      }),
     ).then((x) => x.flat());
     setActions(actions);
   });
@@ -257,18 +257,18 @@ function createControl() {
         (action) =>
           action.title.toLowerCase().includes(input().toLowerCase()) ||
           Boolean(
-            action.category?.toLowerCase().includes(input().toLowerCase())
-          )
+            action.category?.toLowerCase().includes(input().toLowerCase()),
+          ),
       ),
       filter((action) => !action.disabled),
-      groupBy((a) => a.category)
+      groupBy((a) => a.category),
     );
   });
 
   createMutationObserver(
     () => root()?.querySelector(`[data-element="results"]`)!,
     { childList: true },
-    () => control.reset()
+    () => control.reset(),
   );
 
   let isTyping = false;
@@ -293,7 +293,7 @@ function createControl() {
     },
     active() {
       return control.root.querySelector(
-        "[data-element='action'].active"
+        "[data-element='action'].active",
       ) as HTMLElement;
     },
     setActive(el: Element, disableScroll?: boolean) {

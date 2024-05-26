@@ -1,4 +1,4 @@
-import { createStorageSignal, makePersisted } from "@solid-primitives/storage";
+import { makePersisted } from "@solid-primitives/storage";
 import { ParentProps, createContext, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 

@@ -1,6 +1,3 @@
-import { WorkspaceStore } from "$/data/workspace";
-import { useStorage } from "$/providers/account";
-import { useAuth } from "$/providers/auth";
 import {
   Text,
   Input,
@@ -14,12 +11,12 @@ import {
 } from "$/ui";
 import { styled } from "@macaron-css/solid";
 import { createForm, getValue, setError, valiForm } from "@modular-forms/solid";
-import { createId } from "@paralleldrive/cuid2";
 import { useNavigate } from "@solidjs/router";
-import { Show, createEffect, createMemo } from "solid-js";
+import { Show } from "solid-js";
 import { minLength, object, string, regex } from "valibot";
 import { Header } from "./workspace/header";
-import { unwrap } from "solid-js/store";
+import { useAuth2 } from "$/providers/auth2";
+import { Workspace } from "@console/core/workspace";
 
 const CreateWorkspaceHint = styled("ul", {
   base: {
@@ -49,26 +46,11 @@ export function WorkspaceCreate() {
           minLength(3, "Must be at least 3 characters long."),
           regex(/^[a-z0-9\-]+$/, "Must be lowercase, URL friendly."),
         ]),
-      })
+      }),
     ),
   });
-  const auth = useAuth();
-  const storage = useStorage();
+  const auth = useAuth2();
   const nav = useNavigate();
-  const rep = createMemo(() => auth[storage.value.account].replicache);
-  let id = createId();
-  const workspace = WorkspaceStore.get.watch(rep, () => [id]);
-  const pending = createMemo(() => workspace() != null);
-
-  createEffect((prev) => {
-    console.log(unwrap(workspace()));
-    if (prev && !pending()) setError(form, "slug", "Workspace name is taken.");
-    return pending();
-  });
-
-  createEffect(() => {
-    if (workspace()?.timeCreated) nav("/" + workspace()?.slug + "/account");
-  });
 
   return (
     <>
@@ -96,10 +78,24 @@ export function WorkspaceCreate() {
           <Form
             onSubmit={async (data) => {
               console.log("submitting");
-              await rep().mutate.workspace_create({
-                id,
-                slug: data.slug,
-              });
+              const result = await fetch(
+                import.meta.env.VITE_API_URL + "/rest/workspace",
+                {
+                  method: "POST",
+                  headers: {
+                    authorization: `Bearer ${auth.current.token}`,
+                    "content-type": "application/json",
+                  },
+                  body: JSON.stringify(data),
+                },
+              );
+              if (!result.ok) {
+                setError(form, "slug", "Workspace name is taken.");
+                return;
+              }
+              await auth.refresh();
+              const workspace = (await result.json()) as Workspace.Info;
+              nav(`/${workspace.slug}`);
             }}
           >
             <FieldList>
@@ -121,8 +117,8 @@ export function WorkspaceCreate() {
                   </FormField>
                 )}
               </Field>
-              <Button type="submit" disabled={Boolean(pending()) && false}>
-                <Show when={pending()} fallback="Create Workspace">
+              <Button type="submit" disabled={form.submitting}>
+                <Show when={form.submitting} fallback="Create Workspace">
                   Creating&hellip;
                 </Show>
               </Button>

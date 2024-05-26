@@ -112,7 +112,7 @@ export function Inner() {
   const issues = useIssuesContext();
   const issuesCount = createMemo(
     () =>
-      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length
+      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length,
   );
   const updates = StateUpdateStore.forStage.watch(rep, () => [ctx.stage.id]);
   const header = useHeaderContext();
@@ -121,7 +121,7 @@ export function Inner() {
     () =>
       outdated()
         .map((r) => r.type === "Stack" && r.enrichment.version)
-        .sort()[0]
+        .sort()[0],
   );
 
   const nav = useNavigate();

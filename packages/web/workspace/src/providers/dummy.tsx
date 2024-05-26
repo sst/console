@@ -1,14 +1,7 @@
 import { createInitializedContext } from "$/common/context";
-import {
-  DummyConfig,
-  DummyMode,
-} from "@console/functions/replicache/dummy/data";
+import { DummyMode } from "@console/functions/replicache/dummy/data";
 import { useSearchParams } from "@solidjs/router";
-import { useReplicache } from "./replicache";
-import { useAuth } from "./auth";
-import { createEffect, createMemo } from "solid-js";
 import { useStorage } from "./account";
-import { createGet } from "$/data/store";
 
 export const { use: useDummy, provider: DummyProvider } =
   createInitializedContext("dummy", () => {
@@ -27,14 +20,13 @@ export const { use: useDummy, provider: DummyProvider } =
 
 export const { use: useDummyConfig, provider: DummyConfigProvider } =
   createInitializedContext("dummyConfig", () => {
-    const auth = useAuth();
-    const storage = useStorage();
-    const rep = createMemo(() => auth[storage.value.account].replicache);
-    const config = createGet<DummyConfig>(() => "/dummyConfig", rep);
-
-    createEffect(() => {
-      if (config()) console.log("dummy config", config());
+    const result = () => ({
+      user: "asd",
+      local: {
+        app: "foo",
+        stage: "bar",
+      },
     });
-
-    return config;
+    result.ready = true;
+    return result;
   });

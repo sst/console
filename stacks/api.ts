@@ -131,6 +131,9 @@ export function API({ stack, app }: StackContext) {
         },
       },
       "GET /rest/local": "packages/functions/src/rest/local.handler",
+      "GET /rest/account": "packages/functions/src/rest/account.handler",
+      "POST /rest/workspace": "packages/functions/src/rest/workspace.create",
+      "DELETE /rest/workspace": "packages/functions/src/rest/workspace.remove",
       "POST /rest/lambda/invoke":
         "packages/functions/src/rest/lambda/invoke.handler",
       "GET /freshpaint/track": {
@@ -160,18 +163,6 @@ export function API({ stack, app }: StackContext) {
       domainName: "api." + dns.domain,
       hostedZone: dns.zone.zoneName,
     },
-  });
-
-  const hono = new Function(stack, "hono", {
-    url: true,
-    handler: "packages/functions/src/hono/index.handler",
-    runtime: "nodejs18.x",
-    nodejs: {
-      splitting: true,
-    },
-  });
-  stack.addOutputs({
-    hono: hono.url,
   });
 
   api.addRoutes(stack, {

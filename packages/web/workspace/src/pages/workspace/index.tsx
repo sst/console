@@ -1,17 +1,9 @@
-import {
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-  useParams,
-} from "@solidjs/router";
+import { Route, Routes, useNavigate, useParams } from "@solidjs/router";
 import { ReplicacheProvider, useReplicache } from "$/providers/replicache";
 import { NavigationAction, useCommandBar } from "./command-bar";
 import { App } from "./app";
 import { Stage } from "./stage";
-import { Match, Show, Switch, createEffect, createMemo } from "solid-js";
-import { WorkspaceStore } from "$/data/workspace";
-import { useAuth } from "$/providers/auth";
+import { Match, Switch, createEffect, createMemo } from "solid-js";
 import { IconWrenchScrewdriver } from "$/ui/icons";
 import { User } from "./user";
 import { Account } from "./account";
@@ -19,41 +11,27 @@ import { Settings } from "./settings";
 import { Overview } from "./overview";
 import { WorkspaceContext } from "./context";
 import { AppStore } from "$/data/app";
-import {
-  IconApp,
-  IconUserAdd,
-  IconConnect,
-  IconSubRight,
-} from "$/ui/icons/custom";
+import { IconApp, IconUserAdd, IconConnect } from "$/ui/icons/custom";
 import { StageStore } from "$/data/stage";
 import { useStorage } from "$/providers/account";
 import { NotFound, NotAllowed } from "../not-found";
 import { Debug } from "../debug";
-import { useReplicacheStatus } from "$/providers/replicache-status";
+import { useAuth2 } from "$/providers/auth2";
 
 export function Workspace() {
   const params = useParams();
-  const auth = useAuth();
+  const auth = useAuth2();
   const storage = useStorage();
   const nav = useNavigate();
-  const rep = createMemo(() => auth[storage.value.account].replicache);
-  const workspace = WorkspaceStore.list.watch(
-    rep,
-    () => [],
-    (workspaces) =>
-      workspaces.find((item) => item.slug === params.workspaceSlug)
+  const workspace = createMemo(() =>
+    auth.current.workspaces.find((item) => item.slug === params.workspaceSlug),
   );
-
   const bar = useCommandBar();
 
   createEffect(() => {
-    if (!workspace.ready) return;
-    if (!workspace()) {
-      return;
-    }
-    console.log("workspace", workspace());
-    const id = workspace()?.id;
-    if (id) storage.set("workspace", id);
+    const w = workspace();
+    if (!w) return;
+    storage.set("workspace", w.id);
   });
 
   bar.register("workspace", async () => {
@@ -88,20 +66,13 @@ export function Workspace() {
     ];
   });
 
-  const status = useReplicacheStatus();
-
   return (
     <Switch>
-      <Match
-        when={status.isSynced(rep().name) && !workspace() && workspace.ready}
-      >
+      <Match when={!workspace()}>
         <NotAllowed header />
       </Match>
       <Match when={workspace()}>
-        <ReplicacheProvider
-          accountID={storage.value.account}
-          workspaceID={workspace()!.id}
-        >
+        <ReplicacheProvider workspaceID={workspace()!.id}>
           <WorkspaceContext.Provider value={() => workspace()!}>
             <Content />
           </WorkspaceContext.Provider>

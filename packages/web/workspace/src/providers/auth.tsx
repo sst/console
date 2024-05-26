@@ -9,7 +9,6 @@ import { useDummy, useDummyConfig } from "./dummy";
 import { useReplicache } from "./replicache";
 import { User } from "@console/core/user";
 import { UserStore } from "$/data/user";
-import { DateTime } from "luxon";
 import { useReplicacheStatus } from "./replicache-status";
 
 export * as AuthStore from "./auth";

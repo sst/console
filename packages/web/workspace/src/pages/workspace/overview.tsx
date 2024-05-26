@@ -3,9 +3,6 @@ import { AppStore } from "$/data/app";
 import { UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
-import { PRICING_PLAN, UsageStore } from "$/data/usage";
-import { useAuth, useCurrentUser } from "$/providers/auth";
-import { useStorage } from "$/providers/account";
 import { useReplicache } from "$/providers/replicache";
 import {
   theme,
@@ -20,7 +17,6 @@ import {
 import { Fullscreen } from "$/ui/layout";
 import { Dropdown } from "$/ui/dropdown";
 import {
-  IconArrowPath,
   IconChevronRight,
   IconEllipsisVertical,
   IconExclamationTriangle,
@@ -32,21 +28,12 @@ import type { Stage } from "@console/core/app";
 import type { Account } from "@console/core/aws/account";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
-import {
-  For,
-  Match,
-  Show,
-  Switch,
-  createSignal,
-  createEffect,
-  createMemo,
-} from "solid-js";
+import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
 import { filter, flatMap, groupBy, map, pipe, sortBy, toPairs } from "remeda";
-import { useWorkspace } from "./context";
-import { useFlags } from "$/providers/flags";
 import { User } from "@console/core/user";
+import { useAuth2 } from "$/providers/auth2";
 
 const OVERFLOW_APPS_COUNT = 9;
 const OVERFLOW_APPS_DISPLAY = 6;
@@ -176,7 +163,7 @@ function sortUsers(users: User.Info[], selfEmail: string): User.Info[] {
     users,
     (user) => (user.email === selfEmail ? 0 : 1), // Your own user
     (user) => (!user.timeSeen ? 0 : 1), // Invites
-    (user) => user.email.length // Sort by length
+    (user) => user.email.length, // Sort by length
   );
 }
 
@@ -212,17 +199,15 @@ export function Overview() {
   const accounts = AccountStore.list.watch(
     rep,
     () => [],
-    (accounts) => accounts.filter((a) => !a.timeDeleted)
+    (accounts) => accounts.filter((a) => !a.timeDeleted),
   );
+  const auth = useAuth2();
   const users = UserStore.list.watch(rep, () => []);
   const cols = createMemo(() => splitCols(accounts() || []));
   const stages = StageStore.list.watch(rep, () => []);
   const apps = AppStore.all.watch(rep, () => []);
-  const usages = UsageStore.list.watch(rep, () => []);
   const nav = useNavigate();
-  const auth = useAuth();
-  const storage = useStorage();
-  const selfEmail = createMemo(() => auth[storage.value.account].session.email);
+  const selfEmail = createMemo(() => auth.current.email);
   const ambiguous = createMemo(() => {
     const result = pipe(
       stages(),
@@ -230,7 +215,7 @@ export function Overview() {
       toPairs,
       filter(([, stages]) => stages.length > 1),
       flatMap(([_, stages]) => stages),
-      map((s) => s.id)
+      map((s) => s.id),
     );
     console.log({ ambiguous: result });
     return new Set(result);
@@ -242,13 +227,13 @@ export function Overview() {
   const sortedUsers = createMemo(() =>
     sortUsers(
       users().filter((u) => !u.timeDeleted),
-      selfEmail()
-    )
+      selfEmail(),
+    ),
   );
   const usersCapped = createMemo(() =>
     sortedUsers().length > OVERFLOW_USERS_COUNT
       ? sortedUsers().slice(0, OVERFLOW_USERS_DISPLAY)
-      : sortedUsers()
+      : sortedUsers(),
   );
 
   createEffect(() => {
@@ -287,13 +272,13 @@ export function Overview() {
             : 1,
         (c) => (c.unsupported ? 1 : 0),
         (c) => apps().find((app) => app.id === c.appID)?.name || "",
-        (c) => c.name
+        (c) => c.name,
       );
     });
     const childrenCapped = createMemo(() =>
       children().length > OVERFLOW_APPS_COUNT
         ? children().slice(0, OVERFLOW_APPS_DISPLAY)
-        : children()
+        : children(),
     );
     const showOverflow = createMemo(() => {
       return showAccounts().includes(account.accountID);
@@ -652,7 +637,7 @@ type UserCardProps = {
 function UserCard(props: UserCardProps) {
   const rep = useReplicache();
   const user = UserStore.get.watch(rep, () => [props.id]);
-  const self = useCurrentUser();
+  const auth = useAuth2();
 
   return (
     <UserRoot>
@@ -670,7 +655,7 @@ function UserCard(props: UserCardProps) {
         <Show when={!user()?.timeSeen}>
           <Tag level="tip">Invited</Tag>
         </Show>
-        <Show when={self()?.id !== user()?.id}>
+        <Show when={auth.current.email !== user()?.email}>
           <Dropdown
             size="sm"
             icon={<IconEllipsisVertical width={18} height={18} />}
@@ -679,7 +664,7 @@ function UserCard(props: UserCardProps) {
               onSelect={() => {
                 if (
                   !confirm(
-                    "Are you sure you want to remove them from the workspace?"
+                    "Are you sure you want to remove them from the workspace?",
                   )
                 )
                   return;
