@@ -1,7 +1,6 @@
 export * as Resource from "./resource";
 
 import { InferModel } from "drizzle-orm";
-import { Metadata as SSTMetadata } from "sst/constructs/Metadata";
 import { resource } from "./app.sql";
 import { GetFunctionCommand, LambdaClient } from "@aws-sdk/client-lambda";
 import {
@@ -29,10 +28,41 @@ export const Events = {
 type Model = InferModel<typeof resource>;
 
 type Metadata =
-  | SSTMetadata
+  | {
+      type: "WebSocketApi";
+      data: any;
+    }
+  | {
+      type: "Api";
+      data: any;
+    }
+  | {
+      type: "Bucket";
+      data: any;
+    }
+  | {
+      type: "Cron";
+      data: any;
+    }
+  | {
+      type: "NextjsSite";
+      data: any;
+    }
+  | {
+      type: "RemixSite";
+      data: any;
+    }
+  | {
+      type: "AstroSite";
+      data: any;
+    }
   | {
       type: "Stack";
-      data: {};
+      data: any;
+    }
+  | {
+      type: "Function";
+      data: any;
     };
 
 export type Info = {
