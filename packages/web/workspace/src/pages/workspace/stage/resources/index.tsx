@@ -66,6 +66,7 @@ import { Dynamic } from "solid-js/web";
 import {} from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
+import { useFlags } from "$/providers/flags";
 
 const ION_ICON_MAP: { [key: string]: Component } = {
   "sst:aws:Auth": IconAuth,
@@ -886,6 +887,8 @@ export function Resources() {
     );
   }
 
+  const flag = useFlags()
+
   return (
     <Switch>
       <Match when={!resources().length && !stateResources().length}>
@@ -919,7 +922,7 @@ export function Resources() {
           </PageHeaderRoot>
         </Show>
         <Switch>
-          <Match when={stateResources().length}>
+          <Match when={stateResources().length && flag.ionState}>
             <Content>
               <Stack space="4">
                 {renderStateOutputs()}

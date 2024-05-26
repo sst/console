@@ -198,7 +198,7 @@ export function Inner() {
               <Link href="resources">
                 <TabTitle>Resources</TabTitle>
               </Link>
-              <Show when={flags.deploys && updates().length > 0}>
+              <Show when={flags.ionState && updates().length > 0}>
                 <Link href="updates">
                   <TabTitle>Updates</TabTitle>
                 </Link>

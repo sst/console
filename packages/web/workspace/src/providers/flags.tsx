@@ -16,7 +16,7 @@ export const { use: useFlags, provider: FlagsProvider } =
     const local = window.location.hostname.includes("localhost");
 
     return {
-      get deploys() {
+      get ionState() {
         return local || internal();
       },
       ready: true,
