@@ -716,7 +716,8 @@ export function List() {
             outputs.push({ key, value: r.outputs[key] });
           }
         });
-      } else if (r.type.startsWith("sst:")) {
+      }
+      else if (r.type.startsWith("sst:")) {
         Object.keys(r.outputs).forEach((key) => {
           if (key === "_hint") {
             outputs.push({ key: r.name, value: r.outputs[key] });
