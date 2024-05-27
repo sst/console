@@ -163,12 +163,6 @@ const HeaderTitle = styled("span", {
   },
 });
 
-const HeaderTitleLink = styled(Link, {
-  base: {
-    fontWeight: theme.font.weight.medium,
-  },
-});
-
 const HeaderTitleTagline = styled("span", {
   base: {
     color: theme.color.text.secondary.surface,
@@ -181,6 +175,13 @@ const HeaderTitleTagline = styled("span", {
         color: theme.color.text.secondary.base,
       },
     },
+  },
+});
+
+const HeaderTitleTaglineLink = styled(Link, {
+  base: {
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
   },
 });
 
@@ -340,6 +341,23 @@ const ChildValue = styled("span", {
   base: {
     ...utility.text.line,
     fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.surface,
+    lineHeight: "normal",
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.dimmed.base,
+      },
+    },
+  },
+});
+
+const ChildValueMono = styled("span", {
+  base: {
+    ...utility.text.line,
+    fontSize: theme.font.size.mono_sm,
+    fontFamily: theme.font.family.code,
     color: theme.color.text.dimmed.surface,
     lineHeight: "normal",
   },
@@ -756,7 +774,7 @@ export function List() {
                     <Child outline>
                       <ChildKey>{output.OutputKey}</ChildKey>
                       <Row space="3" vertical="center">
-                        <ChildValue>{output.OutputValue}</ChildValue>
+                        <ChildValueMono>{output.OutputValue}</ChildValueMono>
                         <ChildIconButton
                           copying={copying()}
                           onClick={() => {
@@ -797,7 +815,7 @@ export function List() {
                     <Child>
                       <ChildKey>{output.key}</ChildKey>
                       <Row space="3" vertical="center">
-                        <ChildValue>{output.value}</ChildValue>
+                        <ChildValueMono>{output.value}</ChildValueMono>
                         <ChildIconButton
                           copying={copying()}
                           onClick={() => {
@@ -839,11 +857,13 @@ export function List() {
                   <Dynamic component={ION_ICON_MAP[resource.type]} />
                 </Show>
               </HeaderIcon>
-              <HeaderTitleLink href={resource.urn}>
+              <HeaderTitle>
                 {resource.type}
-              </HeaderTitleLink>
+              </HeaderTitle>
             </Row>
-            <HeaderTitleTagline outline>{resource.name}</HeaderTitleTagline>
+            <HeaderTitleTaglineLink href={encodeURIComponent(resource.urn)}>
+              {resource.name}
+            </HeaderTitleTaglineLink>
           </Row>
           <Show when={hint}>
             <HeaderDescription outline>
@@ -865,7 +885,7 @@ export function List() {
               const [copying, setCopying] = createSignal(false);
               return (
                 <Child outline>
-                  <ChildKeyLink href={child.urn}>{child.name}</ChildKeyLink>
+                  <ChildKeyLink href={encodeURIComponent(child.urn)}>{child.name}</ChildKeyLink>
                   <Row space="3" vertical="center">
                     <ChildValue outline>{child.type}</ChildValue>
                     <Dropdown

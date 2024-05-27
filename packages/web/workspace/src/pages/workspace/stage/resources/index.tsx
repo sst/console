@@ -1,13 +1,15 @@
 import { Route, Routes } from "@solidjs/router";
+import { Detail as ResourceLogs } from "../logs/detail";
 import { NotFound } from "../../../not-found";
-import { Logs } from "../logs";
+import { Detail } from "./detail";
 import { List } from "./list";
 
 export function Resources() {
   return (
     <Routes>
       <Route path="" element={<List />} />
-      <Route path="logs/:resourceID/*" component={Logs} />
+      <Route path=":urn" component={Detail} />
+      <Route path="logs/:resourceID/*" component={ResourceLogs} />
       <Route path="*" element={<NotFound inset="stage" />} />
     </Routes>
   );

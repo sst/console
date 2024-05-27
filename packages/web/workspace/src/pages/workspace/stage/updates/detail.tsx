@@ -40,7 +40,7 @@ const Content = styled("div", {
   },
 });
 
-const PageTitle = styled("h1", {
+const PageTitle = styled("div", {
   base: {
     ...utility.row(3.5),
     alignItems: "center",
@@ -58,8 +58,8 @@ const PageTitlePrefix = styled("span", {
   base: {
     marginRight: 1,
     fontFamily: theme.font.family.code,
-    fontSize: theme.font.size.mono_xl,
-    fontWeight: theme.font.weight.regular,
+    fontSize: theme.font.size.mono_lg,
+    fontWeight: theme.font.weight.medium,
   },
 });
 

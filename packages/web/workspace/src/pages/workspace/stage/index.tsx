@@ -210,6 +210,13 @@ export function Inner() {
                   Issues
                 </TabTitle>
               </Link>
+              <Show when={flags.ionState && updates().length > 0}>
+                <Link href="logs">
+                  <TabTitle>
+                    Logs
+                  </TabTitle>
+                </Link>
+              </Show>
               <Show when={ctx.connected}>
                 <Link href="local">
                   <TabTitle>Local</TabTitle>
@@ -223,9 +230,10 @@ export function Inner() {
               <Route path="resources/*" component={Resources} />
               <Route path="updates/*" component={Updates} />
               <Route path="issues/*" component={Issues} />
+              <Route path="logs/*" component={Logs} />
               <Route path="local/*" component={Local} />
               <Route path="" element={<Navigate href="resources" />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<NotFound inset="stage" />} />
             </Routes>
           </div>
         </Match>

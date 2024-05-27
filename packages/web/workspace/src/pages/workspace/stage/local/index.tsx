@@ -4,7 +4,7 @@ import {
   LogLoadingIndicator,
   LogLoadingIndicatorIcon,
   LogLoadingIndicatorIconSvg,
-} from "../logs";
+} from "../logs/detail";
 import { theme, Text, utility, Row, TextButton } from "$/ui";
 import { InvocationRow } from "$/common/invocation";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
