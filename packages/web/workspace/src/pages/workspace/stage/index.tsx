@@ -220,8 +220,7 @@ export function Inner() {
           </PageHeader>
           <div>
             <Routes>
-              <Route path="resources" component={Resources} />
-              <Route path="resources/logs/:resourceID/*" component={Logs} />
+              <Route path="resources/*" component={Resources} />
               <Route path="updates/*" component={Updates} />
               <Route path="issues/*" component={Issues} />
               <Route path="local/*" component={Local} />

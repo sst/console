@@ -435,8 +435,8 @@ function Resource(props: State.ResourceEvent) {
           size="sm"
           disabled={copying()}
           icon={copying()
-            ? <IconCheck width={18} height={18} />
-            : <IconEllipsisVertical width={18} height={18} />
+            ? <IconCheck width={16} height={16} />
+            : <IconEllipsisVertical width={16} height={16} />
           }
         >
           <Dropdown.Item
