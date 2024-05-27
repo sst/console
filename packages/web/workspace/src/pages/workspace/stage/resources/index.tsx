@@ -63,7 +63,7 @@ import {
 } from "$/ui/icons";
 import { sortBy } from "remeda";
 import { Dynamic } from "solid-js/web";
-import {} from "@solid-primitives/keyboard";
+import { } from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
 import { useFlags } from "$/providers/flags";
@@ -1559,8 +1559,8 @@ function FunctionChild(props: {
                 fallback={
                   exists().metadata.handler
                     ? new URL(
-                        "https://example.com/" + exists().metadata.handler,
-                      ).pathname.replace(/\/+/g, "/")
+                      "https://example.com/" + exists().metadata.handler,
+                    ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >
