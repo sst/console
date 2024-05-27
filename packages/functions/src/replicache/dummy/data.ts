@@ -1501,8 +1501,9 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     id: ++UPDATE_ID,
     stage: STAGE,
     errors: [
-      { urn: "", message: "error 1" },
-      { urn: "", message: "error 2" },
+      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA", message: "Invalid component name \"FunctionA\". Component names must be unique." },
+      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$pulumi-nodejs:dynamic:Resource::FunctionACodeUpdater.sst.aws.FunctionCodeUpdater", message: "Resource already exists." },
+      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC", message: "Invalid component name \"FunctionC\". Component names must be unique." },
     ],
     deleted: 1,
     timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
@@ -1512,7 +1513,9 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield update({
     id: ++UPDATE_ID,
     stage: STAGE,
-    errors: [{ urn: "", message: "error 1" }],
+    errors: [
+      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC", message: "Invalid component name \"FunctionC\". Component names must be unique. This is a really really long error message that should overflow because it is really long." }
+    ],
     command: "edit",
     timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 4 }).toISO()!,
@@ -2532,18 +2535,18 @@ function invocation({
       duration === undefined
         ? duration
         : {
-            duration,
-            memory: 128,
-            size: 2048,
-            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
-          },
+          duration,
+          memory: 128,
+          size: 2048,
+          xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+        },
     start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
-          message,
-          id: `log-${INVOCATION_COUNT}-${i}`,
-          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-        }))
+        message,
+        id: `log-${INVOCATION_COUNT}-${i}`,
+        timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+      }))
       : [],
   };
 }

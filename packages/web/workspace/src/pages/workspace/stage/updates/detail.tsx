@@ -20,7 +20,7 @@ import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
 import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
-import { IconCheck, IconEllipsisVertical } from "$/ui/icons";
+import { IconCheck, IconXCircle, IconEllipsisVertical } from "$/ui/icons";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
 import { sortBy } from "remeda";
 
@@ -49,8 +49,7 @@ const PageTitle = styled("h1", {
 
 const PageTitleCopy = styled("h1", {
   base: {
-    fontFamily: theme.font.family.code,
-    fontSize: theme.font.size.mono_2xl,
+    fontSize: theme.font.size["xl"],
     fontWeight: theme.font.weight.medium,
   },
 });
@@ -72,14 +71,41 @@ const PageTitleStatus = styled("p", {
   },
 });
 
-const ErrorInfo = styled("div", {
+const Errors = styled("div", {
   base: {
+    ...utility.stack(4),
     padding: theme.space[4],
     borderRadius: theme.borderRadius,
     backgroundColor: theme.color.background.red,
+  },
+});
+
+const Error = styled("div", {
+  base: {
+    ...utility.row(2),
+    color: `hsla(${theme.color.red.l2}, 100%)`,
+  },
+});
+
+const ErrorIcon = styled("div", {
+  base: {
+    flex: 0,
+  },
+});
+
+const ErrorTitle = styled("div", {
+  base: {
+    fontSize: theme.font.size.mono_sm,
+    fontFamily: theme.font.family.code,
+    fontWeight: theme.font.weight.semibold,
+    lineHeight: "16px",
+  },
+});
+
+const ErrorMessage = styled("div", {
+  base: {
     fontSize: theme.font.size.sm,
     lineHeight: theme.font.lineHeight,
-    color: `hsla(${theme.color.red.l2}, 100%)`,
   },
 });
 
@@ -162,8 +188,7 @@ const ResourceKey = styled("span", {
 const ResourceValue = styled("span", {
   base: {
     ...utility.text.line,
-    fontFamily: theme.font.family.code,
-    fontSize: theme.font.size.mono_sm,
+    fontSize: theme.font.size.sm,
     color: theme.color.text.dimmed.base,
     lineHeight: "normal",
   },
@@ -229,21 +254,20 @@ export function Detail() {
   const resources = StateEventStore.forUpdate.watch(
     rep,
     () => [ctx.stage.id, params.updateID],
-    (resources) => sortBy(resources, [(r) => r.urn.split("::").at(-1)!, "asc"]),
+    (resources) => sortBy(resources, [(r) => getResourceName(r.urn)!, "asc"]),
   );
 
-  const errors = () => update()?.errors.length || 0;
   const status = createMemo(() => {
     if (!update()) return;
     return update().time.completed
-      ? errors()
+      ? update().errors.length
         ? "error"
         : "updated"
       : // : update().time.canceled
-        //   ? "canceled"
-        //   : update().time.queued
-        //     ? "queued"
-        "updating";
+      //   ? "canceled"
+      //   : update().time.queued
+      //     ? "queued"
+      "updating";
   });
   const deleted = createMemo(() =>
     resources().filter((r) => r.action === "deleted"),
@@ -287,15 +311,26 @@ export function Detail() {
                   </PageTitle>
                   <PageTitleStatus>
                     {status() === "error"
-                      ? errorCountCopy(errors())
+                      ? errorCountCopy(update().errors.length)
                       : STATUS_MAP[status()!]}
                   </PageTitleStatus>
                 </Stack>
-                <Show when={errors()}>
-                  <ErrorInfo>
-                    Invalid component name "FunctionA". Component names must be
-                    unique.
-                  </ErrorInfo>
+                <Show when={update().errors.length}>
+                  <Errors>
+                    <For each={update().errors}>
+                      {(err) => (
+                        <Error>
+                          <ErrorIcon>
+                            <IconXCircle width={16} height={16} />
+                          </ErrorIcon>
+                          <Stack space="1">
+                            <ErrorTitle>{getResourceName(err.urn)}</ErrorTitle>
+                            <ErrorMessage>{err.message}</ErrorMessage>
+                          </Stack>
+                        </Error>
+                      )}
+                    </For>
+                  </Errors>
                 </Show>
               </Stack>
               <Stack space="5">
@@ -350,16 +385,16 @@ export function Detail() {
                   title={
                     update().time.started
                       ? DateTime.fromISO(update().time.started!).toLocaleString(
-                          DateTime.DATETIME_FULL,
-                        )
+                        DateTime.DATETIME_FULL,
+                      )
                       : undefined
                   }
                 >
                   {update().time.started
                     ? formatSinceTime(
-                        DateTime.fromISO(update().time.started!).toSQL()!,
-                        true,
-                      )
+                      DateTime.fromISO(update().time.started!).toSQL()!,
+                      true,
+                    )
                     : "—"}
                 </Text>
               </Stack>
@@ -368,11 +403,11 @@ export function Detail() {
                 <Text color="secondary">
                   {update().time.started && update().time.completed
                     ? formatDuration(
-                        DateTime.fromISO(update().time.completed!)
-                          .diff(DateTime.fromISO(update().time.started!))
-                          .as("milliseconds"),
-                        true,
-                      )
+                      DateTime.fromISO(update().time.completed!)
+                        .diff(DateTime.fromISO(update().time.started!))
+                        .as("milliseconds"),
+                      true,
+                    )
                     : "—"}
                 </Text>
               </Stack>
@@ -390,7 +425,7 @@ export function Detail() {
 
 function Resource(props: State.ResourceEvent) {
   const [copying, setCopying] = createSignal(false);
-  const name = createMemo(() => props.urn.split("::").at(-1));
+  const name = createMemo(() => getResourceName(props.urn));
   return (
     <ResourceChild>
       <ResourceKey>{name()}</ResourceKey>
@@ -420,4 +455,8 @@ function Resource(props: State.ResourceEvent) {
 
 function countCopy(count?: number) {
   return count! > 1 ? `${count} resources` : "1 resource";
+}
+
+function getResourceName(urn: string) {
+  return urn.split("::").at(-1);
 }

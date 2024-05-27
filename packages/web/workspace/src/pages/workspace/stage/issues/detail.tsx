@@ -285,11 +285,11 @@ export function Detail() {
           <Content>
             <Stack space="7">
               <Stack space="2">
-                <Text break code size="mono_2xl" weight="medium">
+                <Text break size="xl" weight="medium">
                   {issue().error}
                 </Text>
                 <Stack space="0" horizontal="start">
-                  <Text break code leading="loose" size="mono_base">
+                  <Text break leading="loose">
                     {issue().message}
                   </Text>
                   <FunctionLink href={`../../resources/logs/${logInfo()?.uri}`}>

@@ -14,7 +14,7 @@ import { useStageContext } from "../context";
 import { sortBy } from "remeda";
 
 const LEGEND_RES = 2;
-const LEGEND_WIDTH = 100;
+const LEGEND_WIDTH = 200;
 
 export const CMD_MAP = {
   deploy: "sst deploy",
@@ -146,7 +146,7 @@ const UpdateStatusCopy = styled("p", {
 const UpdateRightCol = styled(UpdateCol, {
   base: {
     ...utility.row(3),
-    width: 280,
+    width: 380,
     alignItems: "center",
     justifyContent: "space-between",
   },
@@ -160,7 +160,7 @@ const ChangeLegendRoot = styled("div", {
     empty: {
       true: {
         height: 16,
-        width: 100,
+        width: LEGEND_WIDTH,
         borderRadius: 2,
         backgroundSize: "4px 4px",
         backgroundColor: "transparent",
