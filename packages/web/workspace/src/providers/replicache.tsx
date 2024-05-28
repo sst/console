@@ -143,7 +143,8 @@ const mutators = new Client<ServerType>()
     await AppRepoStore.put(tx, [input.id!], {
       id: input.id,
       appID: input.appID,
-      source: input.source,
+      type: input.type,
+      repoID: input.repoID,
       timeCreated: new Date().toISOString(),
     });
   })

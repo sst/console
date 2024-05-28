@@ -7,7 +7,6 @@ import {
   Wait,
   WaitTime,
 } from "aws-cdk-lib/aws-stepfunctions";
-import { Function as CDKFunction } from "aws-cdk-lib/aws-lambda";
 import * as events from "aws-cdk-lib/aws-events";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { StackContext, Api, use, Function, EventBus } from "sst/constructs";
@@ -17,7 +16,7 @@ import { Events } from "./events";
 import { DNS } from "./dns";
 import { Duration } from "aws-cdk-lib/core";
 import { Storage } from "./storage";
-import { SsrSite } from "sst/constructs/SsrSite";
+import { Run } from "./run";
 
 export function API({ stack, app }: StackContext) {
   const auth = use(Auth);
@@ -25,6 +24,7 @@ export function API({ stack, app }: StackContext) {
   const bus = use(Events);
   const dns = use(DNS);
   const storage = use(Storage);
+  const run = use(Run);
 
   const pollerFetchStep = new LambdaInvoke(stack, "pollerFetchStep", {
     lambdaFunction: Function.fromDefinition(stack, "log-poller-fetch", {
@@ -87,7 +87,6 @@ export function API({ stack, app }: StackContext) {
           auth,
           ...Object.values(secrets.database),
           ...secrets.stripe,
-          ...secrets.github,
           bus,
         ],
         timeout: "30 seconds",
@@ -145,13 +144,32 @@ export function API({ stack, app }: StackContext) {
         type: "url",
         url: "https://perfalytics.com/{proxy}",
       },
-      "GET /github/installed":
-        "packages/functions/src/github/installed.handler",
-      "GET /github/connect": "packages/functions/src/github/connect.handler",
+      "GET /github/installed": {
+        function: {
+          handler: "packages/functions/src/github/installed.handler",
+          bind: [...secrets.github],
+        },
+      },
+      "GET /github/connect": {
+        function: {
+          handler: "packages/functions/src/github/connect.handler",
+          bind: [...secrets.github],
+        },
+      },
       "POST /github/webhook": {
         function: {
           handler: "packages/functions/src/github/webhook.handler",
           timeout: "120 seconds",
+          bind: [...secrets.github],
+          environment: {
+            SCHEDULE_GROUP_NAME: run.scheduleGroupName,
+            SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
+            TIMEOUT_MONITOR_FUNCTION_ARN: run.timeoutMonitorArn,
+          },
+          permissions: ["scheduler:CreateSchedule", "iam:PassRole"],
+          nodejs: {
+            install: ["esbuild"],
+          },
         },
       },
       "GET /": "packages/functions/src/index.handler",

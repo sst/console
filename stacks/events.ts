@@ -1,6 +1,7 @@
 import { EventBus, StackContext, use } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Storage } from "./storage";
+import { Run } from "./run";
 import { DNS } from "./dns";
 
 export function Events({ stack }: StackContext) {
@@ -12,6 +13,7 @@ export function Events({ stack }: StackContext) {
 
   const secrets = use(Secrets);
   const storage = use(Storage);
+  const run = use(Run);
 
   bus.addRules(stack, {
     "cross-account": {
@@ -23,6 +25,34 @@ export function Events({ stack }: StackContext) {
           function: {
             handler:
               "packages/functions/src/events/stack-updated-external.handler",
+            bind: [bus, ...Object.values(secrets.database)],
+          },
+        },
+      },
+    },
+    "run.started": {
+      pattern: {
+        source: ["sst.external"],
+        detailType: ["run.started"],
+      },
+      targets: {
+        handler: {
+          function: {
+            handler: "packages/functions/src/events/run-started.handler",
+            bind: [bus, ...Object.values(secrets.database)],
+          },
+        },
+      },
+    },
+    "run.completed": {
+      pattern: {
+        source: ["sst.external"],
+        detailType: ["run.completed"],
+      },
+      targets: {
+        handler: {
+          function: {
+            handler: "packages/functions/src/events/run-completed.handler",
             bind: [bus, ...Object.values(secrets.database)],
           },
         },
@@ -91,6 +121,23 @@ export function Events({ stack }: StackContext) {
     bind: [...Object.values(secrets.database)],
     environment: {
       EMAIL_DOMAIN: use(DNS).domain,
+    },
+  });
+
+  bus.subscribe("run.created", {
+    handler: "packages/functions/src/events/run-created.handler",
+    timeout: "15 minute",
+    bind: [
+      ...Object.values(secrets.database),
+      bus,
+      ...secrets.github,
+      run.buildspecBucket,
+      run.buildspecVersion,
+      run.image,
+    ],
+    permissions: ["sts", "iot"],
+    environment: {
+      EVENT_BUS_ARN: bus.eventBusArn,
     },
   });
 

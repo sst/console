@@ -218,7 +218,7 @@ function RepoInfo() {
     (all) => all.at(0)
   );
   const connectedRepo = createMemo(() =>
-    githubRepos().find((repo) => repo.repoID === appRepo()?.source.repoID)
+    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID)
   );
   const connectedRepoOrg = GithubOrgStore.all.watch(
     rep,
@@ -244,10 +244,8 @@ function RepoInfo() {
                         rep().mutate.app_repo_connect({
                           id: createId(),
                           appID: app.app.id,
-                          source: {
-                            type: "github",
-                            repoID: repo.repoID,
-                          },
+                          type: "github",
+                          repoID: repo.repoID,
                         });
                       }}
                     >

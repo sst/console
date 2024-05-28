@@ -26,13 +26,12 @@ export type OrgInfo = z.infer<typeof OrgInfo>;
 export const RepoInfo = createSelectSchema(githubRepo);
 export type RepoInfo = z.infer<typeof RepoInfo>;
 
-const app = new App({
-  appId: Config.GITHUB_APP_ID,
-  privateKey: Config.GITHUB_PRIVATE_KEY,
-});
-
 export const connect = zod(z.number(), async (installationID) => {
   // Get installation detail
+  const app = new App({
+    appId: Config.GITHUB_APP_ID,
+    privateKey: Config.GITHUB_PRIVATE_KEY,
+  });
   const octokit = await app.getInstallationOctokit(installationID);
   const installation = await octokit.rest.apps.getInstallation({
     installation_id: installationID,
@@ -98,6 +97,10 @@ export const syncRepos = zod(
     if (orgs.length === 0) return;
 
     // fetch repos from GitHub
+    const app = new App({
+      appId: Config.GITHUB_APP_ID,
+      privateKey: Config.GITHUB_PRIVATE_KEY,
+    });
     const octokit = await app.getInstallationOctokit(input.installationID);
     const repos: { id: number; name: string }[] = [];
     for (let page = 1; ; page++) {
