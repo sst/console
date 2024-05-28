@@ -5,23 +5,40 @@ import { env } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 export * as Env from "./env";
 
 export const Info = createSelectSchema(env);
 export type Info = z.infer<typeof Info>;
 
-export const list = zod(Info.pick({ appID: true, stageID: true }), (input) =>
-  useTransaction((tx) =>
-    tx
-      .select()
-      .from(env)
-      .where(
-        and(eq(env.workspaceID, useWorkspace()), eq(env.appID, input.appID))
-      )
-      .execute()
-  )
+export const listByStage = zod(
+  Info.pick({
+    appID: true,
+    stageName: true,
+  }),
+  async (input) => {
+    const ret = await useTransaction((tx) =>
+      tx
+        .select()
+        .from(env)
+        .where(
+          and(
+            eq(env.workspaceID, useWorkspace()),
+            eq(env.appID, input.appID),
+            inArray(env.stageName, ["", input.stageName])
+          )
+        )
+        .execute()
+        .then((rows) => rows)
+    );
+    const envs: Record<string, string> = {};
+    for (const row of ret) {
+      if (row.stageName === "" && row.key in envs) continue;
+      envs[row.key] = row.value;
+    }
+    return envs;
+  }
 );
 
 export const create = zod(

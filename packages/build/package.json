@@ -1,0 +1,11 @@
+{
+  "name": "@console/build",
+  "version": "0.0.0",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.114"
+  },
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "3.433.0"
+  }
+}

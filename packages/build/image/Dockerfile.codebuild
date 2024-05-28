@@ -1,0 +1,58 @@
+ARG FUNCTION_DIR="/function"
+
+FROM public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:5.0-24.05.15 as build-image
+ARG FUNCTION_DIR
+#RUN apt-get update && \
+#    apt-get install -y \
+#    g++ \
+#    make \
+#    cmake \
+#    unzip \
+#    libcurl4-openssl-dev
+# Download, build and install cmake
+WORKDIR /tmp
+RUN wget https://cmake.org/files/v3.18/cmake-3.18.0.tar.gz
+RUN tar -xvzf cmake-3.18.0.tar.gz
+WORKDIR /tmp/cmake-3.18.0
+RUN ./bootstrap
+RUN make
+RUN make install
+WORKDIR ${FUNCTION_DIR}
+RUN mkdir -p ${FUNCTION_DIR}
+COPY package.json ${FUNCTION_DIR}
+RUN npm install
+
+FROM public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:5.0-24.05.15
+ARG FUNCTION_DIR
+WORKDIR ${FUNCTION_DIR}
+# install AWS Lambda RIC
+COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
+#COPY package.json ${FUNCTION_DIR}
+COPY index.mjs ${FUNCTION_DIR}
+#RUN npm install
+# configure npm
+ENV NPM_CONFIG_CACHE=/tmp/.npm
+# configure pnpm
+RUN npm install -g pnpm@9.1.2
+RUN pnpm config set store-dir /tmp/pnpm
+# install SST Ion
+RUN touch /root/.bashrc
+RUN curl -fsSL https://ion.sst.dev/install | bash
+ENV PATH="/root/.sst/bin/:$PATH"
+# install Node.js 20
+RUN n 20.11.1
+
+ENTRYPOINT ["/usr/local/bin/npx", "aws-lambda-ric"]
+CMD ["index.handler"]
+
+# how to build
+# $ docker logout public.ecr.aws
+# $ docker build --platform linux/amd64 --tag 917397401067.dkr.ecr.us-east-1.amazonaws.com/images:x86_64 .
+# $ AWS_PROFILE=sst-dev aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 917397401067.dkr.ecr.us-east-1.amazonaws.com
+# $ AWS_PROFILE=sst-dev docker push public.ecr.aws/w4j3p5y3/images:x86_64
+
+# $ docker build --platform linux/arm64 -t sst-ci .
+# $ docker run -v ~/Sites/fwang/aws-lambda-rie:/aws-lambda -p 9000:8080 --rm --entrypoint /aws-lambda/aws-lambda-rie sst-ci /usr/local/bin/npx aws-lambda-ric index.handler
+# $ curl "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"payload":"hello world!"}'
+# or manually login
+# $ docker run --rm --entrypoint bash sst-ci
