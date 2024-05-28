@@ -520,7 +520,7 @@ function sortStateResources(
 ): SortedStateResource[] {
   // Initialize an array to store root objects
   const roots: SortedStateResource[] = [];
-  // Create a map to store each object by its id
+  // Create a map to store each object by its urn
   const idMap: { [key: string]: SortedStateResource } = {};
 
   resources.forEach((r) => {

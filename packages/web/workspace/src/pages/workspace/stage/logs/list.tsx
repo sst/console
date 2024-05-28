@@ -7,14 +7,31 @@ import {
   createEffect,
   createSignal,
 } from "solid-js";
-import { Link } from "@solidjs/router";
+import {
+  IconCheck,
+  IconEllipsisVertical,
+} from "$/ui/icons";
+import {
+  IconFunction,
+  IconGoRuntime,
+  IconJavaRuntime,
+  IconNodeRuntime,
+  IconRustRuntime,
+  IconPythonRuntime,
+  IconDotNetRuntime,
+  IconContainerRuntime,
+} from "$/ui/icons/custom";
+import { sortBy } from "remeda";
 import { theme } from "$/ui/theme";
-import { Row, Stack, Fullscreen } from "$/ui/layout";
 import { utility } from "$/ui/utility";
+import { Dropdown } from "$/ui/dropdown";
 import { styled } from "@macaron-css/solid";
 import { useStageContext } from "../context";
+import { formatBytes } from "$/common/format";
 import { StateResourceStore } from "$/data/app";
 import type { State } from "@console/core/state";
+import { Link, useNavigate } from "@solidjs/router";
+import { Row, Stack, Fullscreen } from "$/ui/layout";
 import { useReplicache } from "$/providers/replicache";
 
 const Content = styled("div", {
@@ -66,7 +83,7 @@ const HeaderTitle = styled("span", {
 const Children = styled("div", {
   base: {
     ...utility.stack(0),
-    padding: `0 ${theme.space[3]}`,
+    padding: `0 ${theme.space[3]} 0 ${theme.space[4]}`,
     borderTop: `1px solid ${theme.color.divider.surface}`,
     ":empty": {
       display: "none",
@@ -81,6 +98,141 @@ const Children = styled("div", {
   },
 });
 
+const Child = styled("div", {
+  base: {
+    ...utility.row(4),
+    padding: `${theme.space[4]} 0`,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottom: `1px solid ${theme.color.divider.surface}`,
+    selectors: {
+      "&:last-child": {
+        border: "none",
+      },
+    },
+  },
+  variants: {
+    outline: {
+      true: {
+        borderColor: theme.color.divider.base,
+      },
+    },
+  },
+});
+
+const ChildColLeft = styled("div", {
+  base: {
+    ...utility.stack(1.5),
+    minWidth: 0,
+  },
+});
+
+const ChildColRight = styled("div", {
+  base: {
+    ...utility.row(6),
+    flex: "0 0 auto",
+    alignItems: "center",
+  },
+});
+
+const ChildTitleLink = styled(Link, {
+  base: {
+    ...utility.text.line,
+    lineHeight: "normal",
+  },
+});
+
+const ChildDesc = styled("p", {
+  base: {
+    ...utility.text.line,
+    lineHeight: "normal",
+    fontSize: theme.font.size.mono_sm,
+    fontFamily: theme.font.family.code,
+    color: theme.color.text.secondary.surface,
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.secondary.base,
+      },
+    },
+  },
+});
+
+const ChildTagline = styled("p", {
+  base: {
+    ...utility.text.line,
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.surface,
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.dimmed.base,
+      },
+    },
+  },
+});
+
+const ChildDetail = styled("div", {
+  base: {
+    ...utility.stack(1.5),
+    width: 100,
+  },
+});
+
+const ChildDetailLabel = styled("div", {
+  base: {
+    ...utility.text.label,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.surface,
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.dimmed.base,
+      },
+    },
+  },
+});
+
+const ChildDetailValue = styled("div", {
+  base: {
+    ...utility.text.line,
+    display: "flex",
+    alignItems: "baseline",
+    color: theme.color.text.secondary.surface,
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    textAlign: "right",
+    lineHeight: "normal",
+  },
+  variants: {
+    outline: {
+      true: {
+        color: theme.color.text.dimmed.base,
+      },
+    },
+  },
+});
+
+const ChildDetailValueUnit = styled("span", {
+  base: {
+    padding: 3,
+    fontSize: theme.font.size.xs,
+  },
+});
+
+const ChildIcon = styled("div", {
+  base: {
+    flexShrink: 0,
+    height: 20,
+    width: 20,
+    color: theme.color.icon.dimmed,
+  },
+});
+
 const EmptyResourcesCopy = styled("span", {
   base: {
     fontSize: theme.font.size.lg,
@@ -89,6 +241,7 @@ const EmptyResourcesCopy = styled("span", {
 });
 
 export function List() {
+  const nav = useNavigate();
   const rep = useReplicache();
   const ctx = useStageContext();
   const resources = StateResourceStore.forStage.watch(rep, () => [
@@ -96,13 +249,128 @@ export function List() {
   ]);
 
   const sorted = createMemo(() => sortFunctions(resources()));
-  const functions = createMemo(() => sorted()[0]);
-  const internals = createMemo(() => sorted()[1]);
+  const functions = createMemo(() => sortBy(sorted()[0], fn => fn.outputs.handler));
+  const internals = createMemo(() => sortBy(sorted()[1], fn => fn.name));
 
   createEffect(() => {
     console.log("Functions", functions());
     console.log("Internal", internals());
   });
+
+  function renderRuntime(runtime: string) {
+    return (
+      <ChildIcon title={runtime}>
+        <Switch>
+          <Match when={runtime.startsWith("dotnet")}>
+            <IconDotNetRuntime />
+          </Match>
+          <Match when={runtime.startsWith("dotnet")}>
+            <IconDotNetRuntime />
+          </Match>
+          <Match when={runtime.startsWith("python")}>
+            <IconPythonRuntime />
+          </Match>
+          <Match when={runtime.startsWith("java")}>
+            <IconJavaRuntime />
+          </Match>
+          <Match when={runtime.startsWith("go")}>
+            <IconGoRuntime />
+          </Match>
+          <Match when={runtime.startsWith("nodejs")}>
+            <IconNodeRuntime />
+          </Match>
+          <Match when={runtime.startsWith("rust")}>
+            <IconRustRuntime />
+          </Match>
+          <Match when={runtime.startsWith("container")}>
+            <IconContainerRuntime />
+          </Match>
+          <Match when={true}>
+            <IconFunction />
+          </Match>
+        </Switch>
+      </ChildIcon>
+    );
+  }
+
+  function renderBytes(size: number) {
+    const formattedSize = formatBytes(size);
+    return (
+      <>
+        {formattedSize.value}
+        <ChildDetailValueUnit>{formattedSize.unit}</ChildDetailValueUnit>
+      </>
+    );
+  }
+
+  function renderFunction(fn: SortedResource, isInernal: boolean) {
+    const [copying, setCopying] = createSignal(false);
+    return (
+      <Child outline={isInernal}>
+        <ChildColLeft>
+          <ChildTitleLink
+            href={`${fn.id}?logGroup=${getLogGroup(fn)}`}
+          >
+            {isInernal ? fn.name : fn.outputs.handler}
+          </ChildTitleLink>
+          <Show when={fn.root} fallback={
+            <ChildTagline outline={isInernal}>{fn.type}</ChildTagline>
+          }>
+            <Row space="2">
+              <ChildDesc outline={isInernal}>{fn.root!.name}</ChildDesc>
+              <ChildTagline outline={isInernal}>{fn.root!.type}</ChildTagline>
+            </Row>
+          </Show>
+        </ChildColLeft>
+        <ChildColRight>
+          <ChildDetail>
+            <ChildDetailLabel outline={isInernal}>Bundle</ChildDetailLabel>
+            <ChildDetailValue outline={isInernal}>
+              <Show when={fn.outputs && fn.outputs.sourceCodeSize} fallback="—">
+                {renderBytes(fn.outputs.sourceCodeSize)}
+              </Show>
+            </ChildDetailValue>
+          </ChildDetail>
+          <Row space="3" vertical="center">
+            <ChildDetail style={{ width: "75px" }}>
+              <ChildDetailLabel outline={isInernal}>Memory</ChildDetailLabel>
+              <ChildDetailValue outline={isInernal}>
+                <Show when={fn.outputs && fn.outputs.memorySize} fallback="—">
+                  {renderBytes(fn.outputs.memorySize * 1024 * 1024)}
+                </Show>
+              </ChildDetailValue>
+            </ChildDetail>
+            {renderRuntime(fn.outputs.runtime)}
+            <Dropdown
+              size="sm"
+              disabled={copying()}
+              icon={
+                copying() ? (
+                  <IconCheck width={18} height={18} />
+                ) : (
+                  <IconEllipsisVertical width={18} height={18} />
+                )
+              }
+            >
+              <Dropdown.Item onSelect={() => nav(`../resources/${encodeURIComponent(fn.urn)}`)}>
+                View Resource
+              </Dropdown.Item>
+              <Dropdown.Seperator />
+              <Dropdown.Item
+                onSelect={() => {
+                  setCopying(true);
+                  navigator.clipboard.writeText(fn.urn);
+                  setTimeout(() => setCopying(false), 2000);
+                }}
+              >
+                Copy URN
+              </Dropdown.Item>
+            </Dropdown>
+          </Row>
+        </ChildColRight>
+      </Child>
+    );
+  }
 
   return (
     <Switch>
@@ -114,20 +382,7 @@ export function List() {
                 <HeaderTitle>Functions</HeaderTitle>
               </HeaderRoot>
               <Children>
-                <For each={functions()}>
-                  {(fn) =>
-                    <Row>
-                      <Link
-                        href={`${fn.id}?logGroup=${getLogGroup(fn)}`}
-                      >
-                        {fn.outputs.handler}
-                      </Link>
-                      {fn.name}
-                      {fn.outputs.runtime}
-                      {fn.outputs.memorySize}
-                    </Row>
-                  }
-                </For>
+                <For each={functions()}>{fn => renderFunction(fn, false)}</For>
               </Children>
             </Card>
             <Card outline>
@@ -135,19 +390,7 @@ export function List() {
                 <HeaderTitle outline>Internals</HeaderTitle>
               </HeaderRoot>
               <Children>
-                <For each={internals()}>
-                  {(fn) =>
-                    <Row>
-                      <Link
-                        href={`${fn.id}?logGroup=${getLogGroup(fn)}`}
-                      >
-                        {fn.name}
-                      </Link>
-                      {fn.outputs.runtime}
-                      {fn.outputs.memorySize}
-                    </Row>
-                  }
-                </For>
+                <For each={internals()}>{fn => renderFunction(fn, true)}</For>
               </Children>
             </Card>
           </Stack>
@@ -167,10 +410,18 @@ export function List() {
 type SortedResource = State.Resource & {
   name: string;
   sst?: State.Resource;
+  root?: SortedResource;
 };
 function sortFunctions(
   resources: State.Resource[],
 ): [SortedResource[], SortedResource[]] {
+  // Create a map to store each object by its urn
+  const idMap: { [key: string]: SortedResource } = {};
+
+  resources.forEach((r) => {
+    idMap[r.urn] = { ...r, name: getResourceName(r.urn)! };
+  });
+
   const functions: SortedResource[] = [];
   const internals: SortedResource[] = [];
 
@@ -181,7 +432,14 @@ function sortFunctions(
 
     if (!logGroup) { return; }
 
-    const fn: SortedResource = { ...r, name: getResourceName(r.urn)!, sst: undefined };
+    const root = getRoot(idMap[r.urn]);
+
+    const fn: SortedResource = {
+      ...r,
+      sst: undefined,
+      name: getResourceName(r.urn)!,
+      root: root.urn === r.urn ? undefined : root,
+    };
 
     if (r.parent) {
       const parent = resources.find((f) => f.urn === r.parent && f.type === "sst:aws:Function");
@@ -199,6 +457,16 @@ function sortFunctions(
 
     internals.push(fn);
   });
+
+  function getRoot(fn: SortedResource): SortedResource {
+    if (!fn.parent) { return fn; }
+
+    const parent = idMap[fn.parent];
+
+    if (!parent || parent.type === "pulumi:pulumi:Stack") { return fn; }
+
+    return getRoot(parent);
+  }
 
   return [functions, internals];
 }
