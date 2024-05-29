@@ -108,10 +108,14 @@ export const handler = ApiHandler(
   withApiAuth(async () => {
     NotPublic();
     const actor = useActor();
-    console.log("actor", actor);
+    function log(...args: any[]) {
+      if (process.env.IS_LOCAL) return;
+      console.log(...args);
+    }
+    log("actor", actor);
 
     const req: PullRequest = useJsonBody();
-    console.log("request", req);
+    log("request", req);
     if (req.pullVersion !== 1) {
       throw new Response({
         statusCode: 307,
@@ -145,7 +149,7 @@ export const handler = ApiHandler(
           .then((rows) => rows.at(0)!);
 
         if (!equals(group.actor, actor)) {
-          console.log("compare failed", group.actor, actor);
+          log("compare failed", group.actor, actor);
           return;
         }
 
@@ -191,7 +195,7 @@ export const handler = ApiHandler(
         ][] = [];
 
         if (actor.type === "user") {
-          console.log("syncing user");
+          log("syncing user");
 
           const tableFilters = {
             log_search: eq(log_search.userID, actor.properties.userID),
@@ -239,14 +243,14 @@ export const handler = ApiHandler(
                     : [])
                 )
               );
-            console.log("getting updated from", name);
+            log("getting updated from", name);
             const rows = await query.execute();
             results.push([name, rows as any]);
           }
         }
 
         if (actor.type === "account") {
-          console.log("syncing account");
+          log("syncing account");
 
           const [users] = await Promise.all([
             await tx
@@ -300,16 +304,16 @@ export const handler = ApiHandler(
           toPut[name] = arr;
         }
 
-        console.log(
+        log(
           "toPut",
           mapValues(toPut, (value) => value.length)
         );
 
-        console.log("toDel", cvr.data);
+        log("toDel", cvr.data);
 
         // new data
         for (const [name, items] of Object.entries(toPut)) {
-          console.log(name);
+          log(name);
           const ids = items.map((item) => item.id);
           const keys = Object.fromEntries(
             items.map((item) => [item.id, item.key])
@@ -320,7 +324,7 @@ export const handler = ApiHandler(
           let offset = 0;
           const page = 10_000;
           while (true) {
-            console.log("fetching", name, "offset", offset);
+            log("fetching", name, "offset", offset);
             const rows = await tx
               .select()
               .from(table)
@@ -378,7 +382,7 @@ export const handler = ApiHandler(
           clients.map((c) => [c.id, c.mutationID] as const)
         );
         if (patch.length > 0 || Object.keys(lastMutationIDChanges).length > 0) {
-          console.log("inserting", req.clientGroupID);
+          log("inserting", req.clientGroupID);
           await tx
             .update(replicache_client_group)
             .set({
@@ -436,12 +440,12 @@ export const handler = ApiHandler(
 
     const isGzip = useHeader("accept-encoding");
     if (isGzip) {
-      console.log("gzipping");
+      log("gzipping");
       response.headers!["content-encoding"] = "gzip";
       const buff = gzipSync(response.body || "");
       response.body = buff.toString("base64");
       response.isBase64Encoded = true;
-      console.log("done gzip");
+      log("done gzip");
     }
 
     return response;

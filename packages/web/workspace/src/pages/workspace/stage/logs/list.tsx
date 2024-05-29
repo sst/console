@@ -7,10 +7,7 @@ import {
   createEffect,
   createSignal,
 } from "solid-js";
-import {
-  IconCheck,
-  IconEllipsisVertical,
-} from "$/ui/icons";
+import { IconCheck, IconEllipsisVertical } from "$/ui/icons";
 import {
   IconFunction,
   IconGoRuntime,
@@ -256,8 +253,10 @@ export function List() {
   ]);
 
   const sorted = createMemo(() => sortFunctions(resources()));
-  const functions = createMemo(() => sortBy(sorted()[0], fn => fn.outputs.handler));
-  const internals = createMemo(() => sortBy(sorted()[1], fn => fn.name));
+  const functions = createMemo(() =>
+    sortBy(sorted()[0], (fn) => fn.outputs.handler),
+  );
+  const internals = createMemo(() => sortBy(sorted()[1], (fn) => fn.name));
 
   createEffect(() => {
     console.log("Functions", functions());
@@ -317,15 +316,16 @@ export function List() {
       <Child outline={isInternal}>
         <ChildColLeft>
           <Row space="3" vertical="center">
-            <ChildTitleLink
-              href={`${fn.id}?logGroup=${getLogGroup(fn)}`}
-            >
+            <ChildTitleLink href={`${fn.id}?logGroup=${getLogGroup(fn)}`}>
               {isInternal ? fn.name : live ? live.handler : fn.outputs.handler}
             </ChildTitleLink>
           </Row>
-          <Show when={fn.root} fallback={
-            <ChildTagline outline={isInternal}>{fn.type}</ChildTagline>
-          }>
+          <Show
+            when={fn.root}
+            fallback={
+              <ChildTagline outline={isInternal}>{fn.type}</ChildTagline>
+            }
+          >
             <Row space="2">
               <ChildDesc outline={isInternal}>{fn.root!.name}</ChildDesc>
               <ChildTagline outline={isInternal}>{fn.root!.type}</ChildTagline>
@@ -335,13 +335,18 @@ export function List() {
         <ChildColRight>
           <Show when={live}>
             <ChildDetailLive>
-              <Tag style="outline" level="tip" size="small">Live</Tag>
+              <Tag style="outline" level="tip" size="small">
+                Live
+              </Tag>
             </ChildDetailLive>
           </Show>
           <ChildDetail>
             <ChildDetailLabel outline={isInternal}>Bundle</ChildDetailLabel>
             <ChildDetailValue outline={isInternal}>
-              <Show when={fn.outputs && fn.outputs.sourceCodeSize && !live} fallback="—">
+              <Show
+                when={fn.outputs && fn.outputs.sourceCodeSize && !live}
+                fallback="—"
+              >
                 {renderBytes(fn.outputs.sourceCodeSize)}
               </Show>
             </ChildDetailValue>
@@ -367,7 +372,11 @@ export function List() {
                 )
               }
             >
-              <Dropdown.Item onSelect={() => nav(`../resources/${encodeURIComponent(fn.urn)}`)}>
+              <Dropdown.Item
+                onSelect={() =>
+                  nav(`../resources/${encodeURIComponent(fn.urn)}`)
+                }
+              >
                 View Resource
               </Dropdown.Item>
               <Dropdown.Seperator />
@@ -389,7 +398,9 @@ export function List() {
 
   return (
     <Switch>
-      <Match when={resources().length && (functions().length || internals().length)}>
+      <Match
+        when={resources().length && (functions().length || internals().length)}
+      >
         <Content>
           <Stack space="4">
             <Show when={functions().length}>
@@ -398,7 +409,9 @@ export function List() {
                   <HeaderTitle>Functions</HeaderTitle>
                 </HeaderRoot>
                 <Children>
-                  <For each={functions()}>{fn => renderFunction(fn, false)}</For>
+                  <For each={functions()}>
+                    {(fn) => renderFunction(fn, false)}
+                  </For>
                 </Children>
               </Card>
             </Show>
@@ -408,7 +421,9 @@ export function List() {
                   <HeaderTitle outline>Internals</HeaderTitle>
                 </HeaderRoot>
                 <Children>
-                  <For each={internals()}>{fn => renderFunction(fn, true)}</For>
+                  <For each={internals()}>
+                    {(fn) => renderFunction(fn, true)}
+                  </For>
                 </Children>
               </Card>
             </Show>
@@ -445,11 +460,15 @@ function sortFunctions(
   const internals: SortedResource[] = [];
 
   resources.forEach((r) => {
-    if (r.type !== "aws:lambda/function:Function") { return; }
+    if (r.type !== "aws:lambda/function:Function") {
+      return;
+    }
 
     const logGroup = getLogGroup(r);
 
-    if (!logGroup) { return; }
+    if (!logGroup) {
+      return;
+    }
 
     const root = getRoot(idMap[r.urn]);
 
@@ -461,7 +480,9 @@ function sortFunctions(
     };
 
     if (r.parent) {
-      const parent = resources.find((f) => f.urn === r.parent && f.type === "sst:aws:Function");
+      const parent = resources.find(
+        (f) => f.urn === r.parent && f.type === "sst:aws:Function",
+      );
 
       if (parent) {
         fn.name = getResourceName(parent.urn)!;
@@ -478,11 +499,15 @@ function sortFunctions(
   });
 
   function getRoot(fn: SortedResource): SortedResource {
-    if (!fn.parent) { return fn; }
+    if (!fn.parent) {
+      return fn;
+    }
 
     const parent = idMap[fn.parent];
 
-    if (!parent || parent.type === "pulumi:pulumi:Stack") { return fn; }
+    if (!parent || parent.type === "pulumi:pulumi:Stack") {
+      return fn;
+    }
 
     return getRoot(parent);
   }
@@ -495,26 +520,25 @@ function getResourceName(urn: string) {
 }
 
 function getLogGroup(fn: State.Resource) {
-  return (fn.outputs
-    && fn.outputs.loggingConfig
-    && fn.outputs.loggingConfig.logGroup
-  )
+  return fn.outputs &&
+    fn.outputs.loggingConfig &&
+    fn.outputs.loggingConfig.logGroup
     ? fn.outputs.loggingConfig.logGroup
     : undefined;
 }
 
 function isInternalFunction(fn: State.Resource, root?: SortedResource) {
-  return (root && (
-    root!.type === "sst:aws:Nuxt"
-    || root.type === "sst:aws:Astro"
-    || root!.type === "sst:aws:Nextjs"
-    || root!.type === "sst:aws:Remix"
-    || root.type === "sst:aws:SolidStart"
-    || root.type === "sst:aws:SvelteKit")
-  )
-    || (fn.outputs
-      && fn.outputs["_metadata"]
-      && fn.outputs["_metadata"].internal
-      && fn.outputs["_metadata"].internal === true
-    );
+  return (
+    (root &&
+      (root!.type === "sst:aws:Nuxt" ||
+        root.type === "sst:aws:Astro" ||
+        root!.type === "sst:aws:Nextjs" ||
+        root!.type === "sst:aws:Remix" ||
+        root.type === "sst:aws:SolidStart" ||
+        root.type === "sst:aws:SvelteKit")) ||
+    (fn.outputs &&
+      fn.outputs["_metadata"] &&
+      fn.outputs["_metadata"].internal &&
+      fn.outputs["_metadata"].internal === true)
+  );
 }
