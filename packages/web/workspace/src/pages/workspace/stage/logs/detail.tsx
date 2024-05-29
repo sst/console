@@ -421,9 +421,11 @@ export function Detail() {
   let rangeControl!: DialogRangeControl;
 
   const title = createMemo(() =>
-    query.logGroup
-      ? getLogInfo(resources(), query.logGroup)?.name
-      : resource()?.metadata.handler,
+    stateResource()
+      ? stateResource()?.urn.split("::").at(-1)
+      : query.logGroup
+        ? getLogInfo(resources(), query.logGroup)?.name
+        : resource()?.metadata.handler,
   );
 
   const navigator = createKeyboardNavigator({
