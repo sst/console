@@ -273,7 +273,7 @@ export module State {
         delete resource.outputs["__provider"];
         const action = (() => {
           if (!previous) return "created";
-          if (previous.action === "deleted") return "created";
+          if (previous.created !== resource.created) return "created";
           if (previous.modified !== resource.modified) return "updated";
           return "same";
         })();
@@ -350,6 +350,7 @@ export module State {
             .onDuplicateKeyUpdate({
               set: {
                 updateModifiedID: sql`COALESCE(VALUES(update_modified_id), update_modified_id)`,
+                updateCreatedID: sql`COALESCE(VALUES(update_created_id), update_created_id)`,
                 timeStateCreated: sql`VALUES(time_state_created)`,
                 timeStateModified: sql`VALUES(time_state_modified)`,
                 type: sql`VALUES(type)`,
