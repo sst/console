@@ -20,13 +20,17 @@ export const { use: useDummy, provider: DummyProvider } =
 
 export const { use: useDummyConfig, provider: DummyConfigProvider } =
   createInitializedContext("dummyConfig", () => {
-    const result = () => ({
-      user: "me@example.com",
-      local: {
-        app: "my-sst-app",
-        stage: "local",
-      },
-    });
+    const dummy = useDummy();
+    const result = () =>
+      dummy()
+        ? {
+            user: "me@example.com",
+            local: {
+              app: "my-sst-app",
+              stage: "local",
+            },
+          }
+        : undefined;
     result.ready = true;
     return result;
   });
