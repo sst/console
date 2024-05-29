@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
-import { AppStore } from "$/data/app";
+import { AppStore, StateResourceStore } from "$/data/app";
 import { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../command-bar";
 import { IconApi, IconFunction, IconNextjsSite } from "$/ui/icons/custom";
@@ -20,6 +20,7 @@ import { IssueStore } from "$/data/issue";
 import { ResourceStore } from "$/data/resource";
 import { UsageStore } from "$/data/usage";
 import { sumBy } from "remeda";
+import type { State } from "@console/core/state";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -347,4 +348,14 @@ export const { use: useIssuesContext, provider: IssuesProvider } =
     const ctx = useStageContext();
     const issues = IssueStore.forStage.watch(rep, () => [ctx.stage.id]);
     return issues;
+  });
+
+export const { use: useStateResources, provider: StateResourcesProvider } =
+  createInitializedContext("Issues", () => {
+    const rep = useReplicache();
+    const ctx = useStageContext();
+    const resources = StateResourceStore.forStage.watch(rep, () => [
+      ctx.stage.id,
+    ]);
+    return resources;
   });

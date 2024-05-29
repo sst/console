@@ -13,6 +13,7 @@ import {
   useIssuesContext,
   ResourcesProvider,
   createStageContext,
+  StateResourcesProvider,
 } from "./context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
@@ -37,13 +38,15 @@ export function Stage() {
   return (
     <Show when={stageContext.app && stageContext.stage}>
       <StageContext.Provider value={stageContext}>
-        <ResourcesProvider>
-          <IssuesProvider>
-            <HeaderProvider>
-              <Inner />
-            </HeaderProvider>
-          </IssuesProvider>
-        </ResourcesProvider>
+        <StateResourcesProvider>
+          <ResourcesProvider>
+            <IssuesProvider>
+              <HeaderProvider>
+                <Inner />
+              </HeaderProvider>
+            </IssuesProvider>
+          </ResourcesProvider>
+        </StateResourcesProvider>
       </StageContext.Provider>
     </Show>
   );
@@ -212,9 +215,7 @@ export function Inner() {
               </Link>
               <Show when={flags.ionState && updates().length > 0}>
                 <Link href="logs">
-                  <TabTitle>
-                    Logs
-                  </TabTitle>
+                  <TabTitle>Logs</TabTitle>
                 </Link>
               </Show>
               <Show when={ctx.connected}>

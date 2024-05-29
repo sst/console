@@ -1,9 +1,6 @@
 import { useReplicache } from "$/providers/replicache";
 import { Tag, Text } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
-import { Route, Routes } from "@solidjs/router";
-import { NotFound } from "../../../not-found";
-import { List } from "./list";
 import {
   IconBolt,
   IconClock,
@@ -27,20 +24,11 @@ import { utility } from "$/ui/utility";
 import { globalKeyframes, style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { Link, useParams, useSearchParams } from "@solidjs/router";
+import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import {
-  For,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-  onMount,
-} from "solid-js";
-import {
-  useFunctionsContext,
   useResourcesContext,
   useStageContext,
+  useStateResources,
 } from "../context";
 import type { Resource } from "@console/core/app/resource";
 import { useCommandBar } from "../../command-bar";
@@ -55,11 +43,10 @@ import { useInvocations } from "$/providers/invocation";
 import { DateTime } from "luxon";
 import { useWorkspace } from "../../context";
 import { useDummy } from "$/providers/dummy";
-import { createScan, createScan2 } from "$/data/store";
+import { createScan } from "$/data/store";
 import type { Invocation } from "@console/core/log";
 import { sortBy } from "remeda";
 import { getLogInfo } from "../issues/common";
-import { createEventListener } from "@solid-primitives/event-listener";
 import {
   KeyboardNavigator,
   createKeyboardNavigator,
@@ -236,8 +223,13 @@ export function Detail() {
   const resource = createMemo(
     () =>
       resources().find((x) => x.id === params.resourceID) as
-      | Resource.InfoByType<"Function">
-      | undefined,
+        | Resource.InfoByType<"Function">
+        | undefined,
+  );
+
+  const stateResources = useStateResources();
+  const stateResource = createMemo(() =>
+    stateResources().find((x) => x.id === params.resourceID),
   );
 
   const logGroup = createMemo(() => {
@@ -302,9 +294,11 @@ export function Detail() {
         category: "logs",
         disabled: true,
         run: () => {
-          const url = `https://${stage.stage.region
-            }.console.aws.amazon.com/cloudwatch/home?region=${stage.stage.region
-            }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`;
+          const url = `https://${
+            stage.stage.region
+          }.console.aws.amazon.com/cloudwatch/home?region=${
+            stage.stage.region
+          }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`;
           window.open(url, "_blank");
           bar.hide();
         },
@@ -339,8 +333,10 @@ export function Detail() {
     if (!lg) return;
     console.log(
       view,
-      `https://${stage.stage.region
-      }.console.aws.amazon.com/cloudwatch/home?region=${stage.stage.region
+      `https://${
+        stage.stage.region
+      }.console.aws.amazon.com/cloudwatch/home?region=${
+        stage.stage.region
       }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`,
     );
 

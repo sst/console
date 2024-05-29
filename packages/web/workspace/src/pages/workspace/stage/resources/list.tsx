@@ -13,6 +13,7 @@ import {
   useStageContext,
   useFunctionsContext,
   useResourcesContext,
+  useStateResources,
 } from "../context";
 import { useReplicache } from "$/providers/replicache";
 import { styled } from "@macaron-css/solid";
@@ -54,7 +55,6 @@ import {
 import { Resource } from "@console/core/app/resource";
 import type { State } from "@console/core/state";
 import { Link, Route, Routes } from "@solidjs/router";
-import { StateResourceStore } from "$/data/app";
 import { Syncing } from "$/ui/loader";
 import {
   IconCheck,
@@ -63,7 +63,7 @@ import {
 } from "$/ui/icons";
 import { sortBy } from "remeda";
 import { Dynamic } from "solid-js/web";
-import { } from "@solid-primitives/keyboard";
+import {} from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
 import { useFlags } from "$/providers/flags";
@@ -673,8 +673,6 @@ export function Header(props: HeaderProps) {
 }
 
 export function List() {
-  const rep = useReplicache();
-  const ctx = useStageContext();
   const functions = useFunctionsContext();
   const resources = useResourcesContext();
 
@@ -697,10 +695,7 @@ export function List() {
       .filter((o) => (o?.OutputValue?.trim() ?? "") !== ""),
   );
 
-  // State resources
-  const stateResources = StateResourceStore.forStage.watch(rep, () => [
-    ctx.stage.id,
-  ]);
+  const stateResources = useStateResources();
   const SortedStateResource = createMemo(() =>
     sortStateResources([...stateResources()]),
   );
@@ -716,8 +711,7 @@ export function List() {
             outputs.push({ key, value: r.outputs[key] });
           }
         });
-      }
-      else if (r.type.startsWith("sst:")) {
+      } else if (r.type.startsWith("sst:")) {
         Object.keys(r.outputs).forEach((key) => {
           if (key === "_hint") {
             outputs.push({ key: r.name, value: r.outputs[key] });
@@ -858,9 +852,7 @@ export function List() {
                   <Dynamic component={ION_ICON_MAP[resource.type]} />
                 </Show>
               </HeaderIcon>
-              <HeaderTitle>
-                {resource.type}
-              </HeaderTitle>
+              <HeaderTitle>{resource.type}</HeaderTitle>
             </Row>
             <HeaderTitleTaglineLink href={encodeURIComponent(resource.urn)}>
               {resource.name}
@@ -886,7 +878,9 @@ export function List() {
               const [copying, setCopying] = createSignal(false);
               return (
                 <Child outline>
-                  <ChildKeyLink href={encodeURIComponent(child.urn)}>{child.name}</ChildKeyLink>
+                  <ChildKeyLink href={encodeURIComponent(child.urn)}>
+                    {child.name}
+                  </ChildKeyLink>
                   <Row space="3" vertical="center">
                     <ChildValue outline>{child.type}</ChildValue>
                     <Dropdown
@@ -1592,8 +1586,8 @@ function FunctionChild(props: {
                 fallback={
                   exists().metadata.handler
                     ? new URL(
-                      "https://example.com/" + exists().metadata.handler,
-                    ).pathname.replace(/\/+/g, "/")
+                        "https://example.com/" + exists().metadata.handler,
+                      ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >
