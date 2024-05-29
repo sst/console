@@ -1,0 +1,1 @@
+CREATE INDEX `repo` ON `app_repo` (`type`,`repo_id`);
