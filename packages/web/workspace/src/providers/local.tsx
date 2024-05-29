@@ -22,7 +22,7 @@ export function LocalProvider(props: ParentProps) {
   const dummy = useDummyConfig();
   if (dummy())
     return (
-      <localContext.Provider value={() => dummy().local}>
+      <localContext.Provider value={() => dummy()!.local}>
         {props.children}
       </localContext.Provider>
     );

@@ -221,6 +221,7 @@ export module State {
         )
         .catch(() => {});
       if (!state) return;
+      if (!state.resources) return;
       let continueToken: string | undefined;
       const previousKey = await s3
         .send(
