@@ -448,7 +448,7 @@ function sortFunctions(
         fn.name = getResourceName(parent.urn)!;
         fn.sst = { ...parent };
 
-        if (!isInternalFunction(parent)) {
+        if (!isInternalFunction(parent, root)) {
           functions.push(fn);
           return;
         }
@@ -484,10 +484,18 @@ function getLogGroup(fn: State.Resource) {
     : undefined;
 }
 
-function isInternalFunction(fn: State.Resource) {
-  return (fn.outputs
-    && fn.outputs["_metadata"]
-    && fn.outputs["_metadata"].internal
-    && fn.outputs["_metadata"].internal === true
-  );
+function isInternalFunction(fn: State.Resource, root?: SortedResource) {
+  return (root && (
+    root!.type === "sst:aws:Nextjs"
+    || root!.type === "sst:aws:Remix"
+    || root.type === "sst:aws:Astro"
+    || root.type === "sst:aws:SolidStart"
+    || root.type === "sst:aws:SvelteKit"
+    || root.type === "sst:aws:Nuxt")
+  )
+    || (fn.outputs
+      && fn.outputs["_metadata"]
+      && fn.outputs["_metadata"].internal
+      && fn.outputs["_metadata"].internal === true
+    );
 }
