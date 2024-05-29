@@ -1,1 +1,0 @@
-ALTER TABLE `run` MODIFY COLUMN `error` text;
