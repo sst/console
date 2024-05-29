@@ -24,6 +24,7 @@ import {
 import { RETRY_STRATEGY } from "../util/aws";
 import { AWS } from "../aws";
 import { Replicache } from "../replicache";
+import { groupBy, pipe } from "remeda";
 
 export module State {
   export const Event = {
@@ -262,6 +263,7 @@ export module State {
       const eventInserts = [] as (typeof stateEventTable.$inferInsert)[];
       const resourceInserts = [] as (typeof stateResourceTable.$inferInsert)[];
       const resourceDeletes = [] as string[];
+      const counts = {} as Record<string, number>;
       for (const [urn, resource] of Object.entries(resources)) {
         const previous = previousResources[urn];
         delete previousResources[urn];
@@ -275,6 +277,7 @@ export module State {
           if (previous.modified !== resource.modified) return "updated";
           return "same";
         })();
+        counts[action] = (counts[action] || 0) + 1;
         resourceInserts.push({
           stageID: input.config.stageID,
           updateID: updateID,
@@ -306,6 +309,7 @@ export module State {
 
       for (const urn of Object.keys(previousResources)) {
         const resource = previousResources[urn];
+        counts["deleted"] = (counts["deleted"] || 0) + 1;
         eventInserts.push({
           stageID: input.config.stageID,
           updateID,
@@ -323,6 +327,20 @@ export module State {
       }
       await useTransaction(async (tx) => {
         await createTransactionEffect(() => Replicache.poke());
+        await tx
+          .update(stateUpdateTable)
+          .set({
+            resourceSame: counts.same || 0,
+            resourceCreated: counts.created || 0,
+            resourceUpdated: counts.updated || 0,
+            resourceDeleted: counts.deleted || 0,
+          })
+          .where(
+            and(
+              eq(stateUpdateTable.workspaceID, useWorkspace()),
+              eq(stateUpdateTable.id, updateID)
+            )
+          );
         if (eventInserts.length)
           await tx.insert(stateEventTable).ignore().values(eventInserts);
         if (resourceInserts.length)
@@ -468,10 +486,10 @@ export module State {
         await tx
           .update(stateUpdateTable)
           .set({
-            resourceUpdated: summary.resourceUpdated,
-            resourceCreated: summary.resourceCreated,
-            resourceDeleted: summary.resourceDeleted,
-            resourceSame: summary.resourceSame,
+            // resourceUpdated: summary.resourceUpdated,
+            // resourceCreated: summary.resourceCreated,
+            // resourceDeleted: summary.resourceDeleted,
+            // resourceSame: summary.resourceSame,
             errors: summary.errors,
             timeCompleted: new Date(summary.timeCompleted),
           })
