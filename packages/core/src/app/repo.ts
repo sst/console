@@ -6,41 +6,64 @@ import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
 import { and, eq } from "drizzle-orm";
+import { event } from "../event";
 
 export * as AppRepo from "./repo";
 
-export const RepoSource = z.object({
-  type: z.literal("github"),
-  repoID: z.number().int(),
-});
-export type RepoSource = z.infer<typeof RepoSource>;
+export const Events = {
+  Connected: event(
+    "app.repo.connected",
+    z.object({
+      appID: z.string(),
+    })
+  ),
+};
 
-export const Info = createSelectSchema(appRepo).extend({
-  source: RepoSource,
-});
+export const Info = createSelectSchema(appRepo);
 export type Info = z.infer<typeof Info>;
 
-export const connect = zod(
-  Info.pick({ id: true, appID: true, source: true }).partial({
-    id: true,
+export const listByRepo = zod(
+  Info.pick({
+    type: true,
+    repoID: true,
   }),
   (input) =>
-    useTransaction(async (tx) =>
+    useTransaction((tx) =>
+      tx
+        .select()
+        .from(appRepo)
+        .where(
+          and(eq(appRepo.type, "github"), eq(appRepo.repoID, input.repoID))
+        )
+        .execute()
+    )
+);
+
+export const connect = zod(
+  Info.pick({ id: true, appID: true, type: true, repoID: true }).partial({
+    id: true,
+  }),
+  async (input) => {
+    await useTransaction(async (tx) =>
       tx
         .insert(appRepo)
         .values({
           id: input.id ?? createId(),
           workspaceID: useWorkspace(),
           appID: input.appID,
-          source: input.source,
+          type: input.type,
+          repoID: input.repoID,
         })
         .onDuplicateKeyUpdate({
           set: {
-            source: input.source,
+            type: input.type,
+            repoID: input.repoID,
           },
         })
         .execute()
-    )
+    );
+    await Events.Connected.publish({ appID: input.appID });
+  }
 );
 
 export const disconnect = zod(Info.shape.id, (input) =>

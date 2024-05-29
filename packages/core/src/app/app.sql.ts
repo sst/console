@@ -8,9 +8,10 @@ import {
   varchar,
   foreignKey,
   text,
+  mysqlEnum,
+  bigint,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid } from "../util/sql";
-import { RepoSource } from "./repo";
 
 export const app = mysqlTable(
   "app",
@@ -75,7 +76,8 @@ export const appRepo = mysqlTable(
     ...workspaceID,
     ...timestamps,
     appID: cuid("app_id").notNull(),
-    source: json("source").$type<RepoSource>().notNull(),
+    type: mysqlEnum("type", ["github"]),
+    repoID: bigint("repo_id", { mode: "number" }).notNull(),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),
@@ -83,6 +85,7 @@ export const appRepo = mysqlTable(
       columns: [table.workspaceID, table.appID],
       foreignColumns: [app.workspaceID, app.id],
     }).onDelete("cascade"),
+    repo: index("repo").on(table.type, table.repoID),
   })
 );
 
