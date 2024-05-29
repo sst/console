@@ -269,35 +269,37 @@ export module State {
         resource.outputs = resource.outputs || {};
         delete resource.inputs["__provider"];
         delete resource.outputs["__provider"];
-        if (!previous || previous.modified !== resource.modified) {
-          resourceInserts.push({
-            stageID: input.config.stageID,
-            updateID: updateID,
-            updateCreatedID: updateID,
-            updateModifiedID: updateID,
-            id: createId(),
-            timeStateModified: resource.modified
-              ? new Date(resource.modified)
-              : null,
-            timeStateCreated: resource.created
-              ? new Date(resource.created)
-              : null,
-            workspaceID: useWorkspace(),
-            type: resource.type,
-            urn: resource.urn,
-            custom: resource.custom,
-            inputs: resource.inputs,
-            outputs: resource.outputs,
-            parent: resource.parent,
-          });
+        const action = (() => {
+          if (!previous) return "created";
+          if (previous.action === "deleted") return "created";
+          if (previous.modified !== resource.modified) return "updated";
+          return "same";
+        })();
+        resourceInserts.push({
+          stageID: input.config.stageID,
+          updateID: updateID,
+          updateCreatedID: action === "created" ? updateID : undefined,
+          updateModifiedID: action === "updated" ? updateID : undefined,
+          id: createId(),
+          timeStateModified: resource.modified
+            ? new Date(resource.modified)
+            : null,
+          timeStateCreated: resource.created
+            ? new Date(resource.created)
+            : null,
+          workspaceID: useWorkspace(),
+          type: resource.type,
+          urn: resource.urn,
+          custom: resource.custom,
+          inputs: resource.inputs,
+          outputs: resource.outputs,
+          parent: resource.parent,
+        });
+        if (action !== "same") {
           eventInserts.push({
             ...resourceInserts.at(-1)!,
             updateID: updateID,
-            action: (() => {
-              if (!previous) return "created";
-              if (previous.action === "deleted") return "created";
-              return "updated";
-            })(),
+            action: action,
           });
         }
       }
@@ -329,7 +331,7 @@ export module State {
             .values(resourceInserts)
             .onDuplicateKeyUpdate({
               set: {
-                updateModifiedID: sql`VALUES(update_modified_id)`,
+                updateModifiedID: sql`COALESCE(VALUES(update_modified_id), update_modified_id)`,
                 timeStateCreated: sql`VALUES(time_state_created)`,
                 timeStateModified: sql`VALUES(time_state_modified)`,
                 type: sql`VALUES(type)`,
