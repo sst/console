@@ -201,7 +201,7 @@ export function Inner() {
               <Link href="resources">
                 <TabTitle>Resources</TabTitle>
               </Link>
-              <Show when={flags.ionState && updates().length > 0}>
+              <Show when={updates().length > 0}>
                 <Link href="updates">
                   <TabTitle>Updates</TabTitle>
                 </Link>
@@ -213,7 +213,7 @@ export function Inner() {
                   Issues
                 </TabTitle>
               </Link>
-              <Show when={flags.ionState && updates().length > 0}>
+              <Show when={updates().length > 0}>
                 <Link href="logs">
                   <TabTitle>Logs</TabTitle>
                 </Link>

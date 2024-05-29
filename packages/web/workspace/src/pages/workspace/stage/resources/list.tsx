@@ -949,7 +949,7 @@ export function List() {
           </PageHeaderRoot>
         </Show>
         <Switch>
-          <Match when={stateResources().length && flag.ionState}>
+          <Match when={stateResources().length}>
             <Content>
               <Stack space="4">
                 {renderStateOutputs()}
