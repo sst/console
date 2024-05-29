@@ -21,6 +21,7 @@ import {
   IconDotNetRuntime,
   IconContainerRuntime,
 } from "$/ui/icons/custom";
+import { Tag } from "$/ui";
 import { sortBy } from "remeda";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
@@ -224,6 +225,12 @@ const ChildDetailValueUnit = styled("span", {
   },
 });
 
+const ChildDetailLive = styled("div", {
+  base: {
+    width: 100,
+  },
+});
+
 const ChildIcon = styled("div", {
   base: {
     flexShrink: 0,
@@ -303,44 +310,52 @@ export function List() {
     );
   }
 
-  function renderFunction(fn: SortedResource, isInernal: boolean) {
+  function renderFunction(fn: SortedResource, isInternal: boolean) {
+    const live = fn.sst && fn.sst.outputs["_live"];
     const [copying, setCopying] = createSignal(false);
     return (
-      <Child outline={isInernal}>
+      <Child outline={isInternal}>
         <ChildColLeft>
-          <ChildTitleLink
-            href={`${fn.id}?logGroup=${getLogGroup(fn)}`}
-          >
-            {isInernal ? fn.name : fn.outputs.handler}
-          </ChildTitleLink>
+          <Row space="3" vertical="center">
+            <ChildTitleLink
+              href={`${fn.id}?logGroup=${getLogGroup(fn)}`}
+            >
+              {isInternal ? fn.name : live ? live.handler : fn.outputs.handler}
+            </ChildTitleLink>
+          </Row>
           <Show when={fn.root} fallback={
-            <ChildTagline outline={isInernal}>{fn.type}</ChildTagline>
+            <ChildTagline outline={isInternal}>{fn.type}</ChildTagline>
           }>
             <Row space="2">
-              <ChildDesc outline={isInernal}>{fn.root!.name}</ChildDesc>
-              <ChildTagline outline={isInernal}>{fn.root!.type}</ChildTagline>
+              <ChildDesc outline={isInternal}>{fn.root!.name}</ChildDesc>
+              <ChildTagline outline={isInternal}>{fn.root!.type}</ChildTagline>
             </Row>
           </Show>
         </ChildColLeft>
         <ChildColRight>
+          <Show when={live}>
+            <ChildDetailLive>
+              <Tag style="outline" level="tip" size="small">Live</Tag>
+            </ChildDetailLive>
+          </Show>
           <ChildDetail>
-            <ChildDetailLabel outline={isInernal}>Bundle</ChildDetailLabel>
-            <ChildDetailValue outline={isInernal}>
-              <Show when={fn.outputs && fn.outputs.sourceCodeSize} fallback="—">
+            <ChildDetailLabel outline={isInternal}>Bundle</ChildDetailLabel>
+            <ChildDetailValue outline={isInternal}>
+              <Show when={fn.outputs && fn.outputs.sourceCodeSize && !live} fallback="—">
                 {renderBytes(fn.outputs.sourceCodeSize)}
               </Show>
             </ChildDetailValue>
           </ChildDetail>
           <Row space="3" vertical="center">
             <ChildDetail style={{ width: "75px" }}>
-              <ChildDetailLabel outline={isInernal}>Memory</ChildDetailLabel>
-              <ChildDetailValue outline={isInernal}>
+              <ChildDetailLabel outline={isInternal}>Memory</ChildDetailLabel>
+              <ChildDetailValue outline={isInternal}>
                 <Show when={fn.outputs && fn.outputs.memorySize} fallback="—">
                   {renderBytes(fn.outputs.memorySize * 1024 * 1024)}
                 </Show>
               </ChildDetailValue>
             </ChildDetail>
-            {renderRuntime(fn.outputs.runtime)}
+            {renderRuntime(live ? live.runtime : fn.outputs.runtime)}
             <Dropdown
               size="sm"
               disabled={copying()}

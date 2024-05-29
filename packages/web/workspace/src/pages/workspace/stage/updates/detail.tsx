@@ -406,7 +406,11 @@ export function Detail() {
               </Stack>
               <Stack space="2">
                 <PanelTitle>Duration</PanelTitle>
-                <Text color="secondary">
+                <Text color="secondary" title={
+                  DateTime.fromISO(update().time.completed!)
+                    .diff(DateTime.fromISO(update().time.started!))
+                    .as("seconds") + " seconds"
+                }>
                   {update().time.started && update().time.completed
                     ? formatDuration(
                       DateTime.fromISO(update().time.completed!)
