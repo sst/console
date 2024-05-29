@@ -1501,9 +1501,14 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     id: ++UPDATE_ID,
     stage: STAGE,
     errors: [
-      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA", message: "Invalid component name \"FunctionA\". Component names must be unique." },
-      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$pulumi-nodejs:dynamic:Resource::FunctionACodeUpdater.sst.aws.FunctionCodeUpdater", message: "Resource already exists." },
-      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC", message: "Invalid component name \"FunctionC\". Component names must be unique." },
+      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA", message: `Invalid component name "FunctionA".\nComponent names must be unique.` },
+      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$pulumi-nodejs:dynamic:Resource::FunctionACodeUpdater.sst.aws.FunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdater", message: "Resource already exists." },
+      {
+        urn: "", message: `Running program '/Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/eval/eval-1717000722399.mjs' failed with an unhandled exception:
+<ref *1> Error: Failed to build function: Could not find file for handler "index1.handler"
+    at file:///Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/src/components/aws/function.ts:1134:21 {
+  promise: Promise { <rejected> [Circular *1] }
+}` },
     ],
     deleted: 1,
     timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
@@ -1514,7 +1519,12 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     id: ++UPDATE_ID,
     stage: STAGE,
     errors: [
-      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC", message: "Invalid component name \"FunctionC\". Component names must be unique. This is a really really long error message that should overflow because it is really long." }
+      {
+        urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC", message: `Running program '/Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/eval/eval-1717000722399.mjs' failed with an unhandled exception:
+<ref *1> Error: Failed to build function: Could not find file for handler "index1.handler"
+    at file:///Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/src/components/aws/function.ts:1134:21 {
+  promise: Promise { <rejected> [Circular *1] }
+}` },
     ],
     command: "edit",
     timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,

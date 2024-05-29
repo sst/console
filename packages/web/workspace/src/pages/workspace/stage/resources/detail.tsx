@@ -278,39 +278,75 @@ export function Detail() {
               <Stack space="2">
                 <PanelTitle>Created</PanelTitle>
                 <PanelValue>
-                  <Link
-                    href={`../../updates/${resource()!.update.createdID!}`}
-                    title={DateTime.fromISO(resource()!.time.stateCreated!).toLocaleString(
-                      DateTime.DATETIME_FULL,
-                    )}
+                  <Show
+                    when={resource()!.time.stateCreated}
+                    fallback={<PanelValueEmpty>—</PanelValueEmpty>}
                   >
-                    {formatSinceTime(
-                      DateTime.fromISO(resource()!.time.stateCreated!).toSQL()!,
-                      true,
-                    )}
+                    <Show
+                      when={resource()!.update.createdID}
+                      fallback={
+                        <span
+                          title={DateTime.fromISO(resource()!.time.stateCreated!).toLocaleString(
+                            DateTime.DATETIME_FULL,
+                          )}
+                        >
+                          {formatSinceTime(
+                            DateTime.fromISO(resource()!.time.stateCreated!).toSQL()!,
+                            true,
+                          )}
+                        </span>
+                      }>
+                      <Link
+                        href={`../../updates/${resource()!.update.createdID}`}
+                        title={DateTime.fromISO(resource()!.time.stateCreated!).toLocaleString(
+                          DateTime.DATETIME_FULL,
+                        )}
+                      >
+                        {formatSinceTime(
+                          DateTime.fromISO(resource()!.time.stateCreated!).toSQL()!,
+                          true,
+                        )}
 
-                  </Link>
+                      </Link>
+                    </Show>
+                  </Show>
                 </PanelValue>
               </Stack>
               <Stack space="2">
                 <PanelTitle>Modified</PanelTitle>
                 <PanelValue>
                   <Show
-                    when={resource()!.time.stateModified}
+                    when={
+                      resource()!.time.stateModified
+                    }
                     fallback={<PanelValueEmpty>—</PanelValueEmpty>}
                   >
-                    <Link
-                      href={`../../updates/${resource()!.update.modifiedID!}`}
-                      title={DateTime.fromISO(resource()!.time.stateModified!).toLocaleString(
-                        DateTime.DATETIME_FULL,
-                      )}
-                    >
-                      {formatSinceTime(
-                        DateTime.fromISO(resource()!.time.stateModified!).toSQL()!,
-                        true,
-                      )}
-
-                    </Link>
+                    <Show
+                      when={resource()!.update.modifiedID}
+                      fallback={
+                        <span
+                          title={DateTime.fromISO(resource()!.time.stateModified!).toLocaleString(
+                            DateTime.DATETIME_FULL,
+                          )}
+                        >
+                          {formatSinceTime(
+                            DateTime.fromISO(resource()!.time.stateModified!).toSQL()!,
+                            true,
+                          )}
+                        </span>
+                      }>
+                      <Link
+                        href={`../../updates/${resource()!.update.modifiedID!}`}
+                        title={DateTime.fromISO(resource()!.time.stateModified!).toLocaleString(
+                          DateTime.DATETIME_FULL,
+                        )}
+                      >
+                        {formatSinceTime(
+                          DateTime.fromISO(resource()!.time.stateModified!).toSQL()!,
+                          true,
+                        )}
+                      </Link>
+                    </Show>
                   </Show>
                 </PanelValue>
               </Stack>

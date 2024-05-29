@@ -90,6 +90,7 @@ const Error = styled("div", {
 const ErrorIcon = styled("div", {
   base: {
     flex: 0,
+    marginTop: 2,
   },
 });
 
@@ -97,8 +98,9 @@ const ErrorTitle = styled("div", {
   base: {
     fontSize: theme.font.size.mono_sm,
     fontFamily: theme.font.family.code,
-    fontWeight: theme.font.weight.semibold,
-    lineHeight: "16px",
+    fontWeight: theme.font.weight.bold,
+    lineHeight: theme.font.lineHeight,
+    wordBreak: "break-all",
   },
 });
 
@@ -106,6 +108,8 @@ const ErrorMessage = styled("div", {
   base: {
     fontSize: theme.font.size.sm,
     lineHeight: theme.font.lineHeight,
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
   },
 });
 
@@ -323,8 +327,10 @@ export function Detail() {
                           <ErrorIcon>
                             <IconXCircle width={16} height={16} />
                           </ErrorIcon>
-                          <Stack space="1">
-                            <ErrorTitle>{getResourceName(err.urn)}</ErrorTitle>
+                          <Stack space="0.5">
+                            <Show when={err.urn}>
+                              <ErrorTitle>{getResourceName(err.urn)}</ErrorTitle>
+                            </Show>
                             <ErrorMessage>{err.message}</ErrorMessage>
                           </Stack>
                         </Error>

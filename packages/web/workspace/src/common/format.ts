@@ -71,8 +71,10 @@ export function formatDuration(ms: number, useFullFormat?: boolean): string {
     return (milliseconds === 0
       ? seconds
       : (seconds + milliseconds / 1000).toFixed(2)) + (useFullFormat ? " seconds" : "s");
-  } else if (ms < 1000 * 60 * 60) {
+  } else if (ms < 1000 * 60 * 3) {
     return totalSeconds + (useFullFormat ? " seconds" : "s");
+  } else if (ms < 1000 * 60 * 60) {
+    return minutes + ":" + seconds + (useFullFormat ? " minutes" : "m");
   } else {
     return hours + ":" + (minutes < 10 ? "0" : "") + minutes + (useFullFormat ? " hours" : "h");
   }

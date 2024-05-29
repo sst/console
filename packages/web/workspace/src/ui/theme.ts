@@ -11,6 +11,7 @@ const font = {
     regular: "400",
     medium: "500",
     semibold: "600",
+    bold: "700",
   },
   size: {
     mono_xs: "0.6875rem",

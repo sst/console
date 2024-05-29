@@ -348,7 +348,7 @@ function Update(props: UpdateProps) {
                   DateTime.DATETIME_FULL,
                 )}
               >
-                {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
+                {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!, true)}
               </UpdateTime>
             </Show>
           </UpdateSource>

@@ -377,22 +377,26 @@ export function List() {
       <Match when={resources().length && (functions().length || internals().length)}>
         <Content>
           <Stack space="4">
-            <Card>
-              <HeaderRoot>
-                <HeaderTitle>Functions</HeaderTitle>
-              </HeaderRoot>
-              <Children>
-                <For each={functions()}>{fn => renderFunction(fn, false)}</For>
-              </Children>
-            </Card>
-            <Card outline>
-              <HeaderRoot>
-                <HeaderTitle outline>Internals</HeaderTitle>
-              </HeaderRoot>
-              <Children>
-                <For each={internals()}>{fn => renderFunction(fn, true)}</For>
-              </Children>
-            </Card>
+            <Show when={functions().length}>
+              <Card>
+                <HeaderRoot>
+                  <HeaderTitle>Functions</HeaderTitle>
+                </HeaderRoot>
+                <Children>
+                  <For each={functions()}>{fn => renderFunction(fn, false)}</For>
+                </Children>
+              </Card>
+            </Show>
+            <Show when={internals().length}>
+              <Card outline>
+                <HeaderRoot>
+                  <HeaderTitle outline>Internals</HeaderTitle>
+                </HeaderRoot>
+                <Children>
+                  <For each={internals()}>{fn => renderFunction(fn, true)}</For>
+                </Children>
+              </Card>
+            </Show>
           </Stack>
         </Content>
       </Match>
@@ -486,12 +490,12 @@ function getLogGroup(fn: State.Resource) {
 
 function isInternalFunction(fn: State.Resource, root?: SortedResource) {
   return (root && (
-    root!.type === "sst:aws:Nextjs"
-    || root!.type === "sst:aws:Remix"
+    root!.type === "sst:aws:Nuxt"
     || root.type === "sst:aws:Astro"
+    || root!.type === "sst:aws:Nextjs"
+    || root!.type === "sst:aws:Remix"
     || root.type === "sst:aws:SolidStart"
-    || root.type === "sst:aws:SvelteKit"
-    || root.type === "sst:aws:Nuxt")
+    || root.type === "sst:aws:SvelteKit")
   )
     || (fn.outputs
       && fn.outputs["_metadata"]
