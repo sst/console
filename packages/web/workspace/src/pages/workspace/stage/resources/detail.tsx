@@ -318,6 +318,7 @@ export function Detail() {
                   <Show
                     when={
                       resource()!.time.stateModified
+                      && resource()!.time.stateCreated !== resource()!.time.stateModified
                     }
                     fallback={<PanelValueEmpty>—</PanelValueEmpty>}
                   >
