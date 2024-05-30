@@ -34,7 +34,7 @@ export * as Runner from "./runner";
 export type RunnerPayload = {
   runID: string;
   workspaceID: string;
-  updateID: string;
+  stateUpdateID: string;
   stage: string;
   cloneUrl: string;
   buildspec: {
@@ -107,6 +107,7 @@ export const invoke = zod(
     resource: true,
   }).extend({
     runID: z.string().cuid2(),
+    stateUpdateID: z.string().cuid2(),
     config: z.custom<StageCredentials>(),
     stage: z.string().nonempty(),
     cloneUrl: z.string().nonempty(),
@@ -121,7 +122,6 @@ export const invoke = zod(
       region,
       retryStrategy: RETRY_STRATEGY,
     });
-    const updateID = createId();
     await lambda.send(
       new InvokeCommand({
         FunctionName: input.resource.properties.function,
@@ -132,7 +132,7 @@ export const invoke = zod(
             bucket: Bucket.Buildspec.bucketName,
           },
           runID: input.runID,
-          updateID,
+          stateUpdateID: input.stateUpdateID,
           workspaceID: useWorkspace(),
           stage: input.stage,
           cloneUrl: input.cloneUrl,

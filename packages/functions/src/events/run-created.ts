@@ -11,6 +11,7 @@ export const handler = EventHandler(Run.Events.Created, (evt) =>
       region,
       stageID,
       runID,
+      stateUpdateID,
       cloneUrl,
       trigger,
       deployConfig,
@@ -45,6 +46,7 @@ export const handler = EventHandler(Run.Events.Created, (evt) =>
       context = "start runner";
       await Runner.invoke({
         runID,
+        stateUpdateID,
         region,
         config: awsConfig,
         resource,
@@ -53,7 +55,11 @@ export const handler = EventHandler(Run.Events.Created, (evt) =>
         trigger,
       });
     } catch (e) {
-      await Run.completed({ runID, error: `Failed to ${context}` });
+      await Run.completed({
+        runID,
+        stateUpdateID,
+        error: `Failed to ${context}`,
+      });
       throw e;
     }
   })

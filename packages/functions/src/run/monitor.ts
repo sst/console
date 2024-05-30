@@ -8,7 +8,7 @@ import { RETRY_STRATEGY } from "@console/core/util/aws";
 const scheduler = new SchedulerClient({ retryStrategy: RETRY_STRATEGY });
 
 export async function handler(evt: MonitorEvent) {
-  const { workspaceID, runID, groupName, scheduleName } = evt;
+  const { workspaceID, runID, stateUpdateID, groupName, scheduleName } = evt;
   await withActor(
     {
       type: "system",
@@ -17,7 +17,7 @@ export async function handler(evt: MonitorEvent) {
       },
     },
     async () => {
-      await Run.completed({ runID, error: "Build timed out" });
+      await Run.completed({ runID, stateUpdateID, error: "Build timed out" });
 
       try {
         await scheduler.send(

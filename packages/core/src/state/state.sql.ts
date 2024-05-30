@@ -22,7 +22,9 @@ export const Source = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("ci"),
-    properties: z.object({}),
+    properties: z.object({
+      runID: z.string().cuid2(),
+    }),
   }),
 ]);
 export type Source = z.infer<typeof Source>;

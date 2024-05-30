@@ -76,7 +76,7 @@ export async function handler(event, context) {
   }
 
   function deploy() {
-    const { stage, credentials, updateID } = event;
+    const { stage, credentials, stateUpdateID } = event;
 
     shell(`sst deploy --stage ${stage}`, {
       env: {
@@ -84,7 +84,7 @@ export async function handler(event, context) {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
         AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
         AWS_SESSION_TOKEN: credentials.sessionToken,
-        SST_UPDATE_ID: updateID,
+        SST_UPDATE_ID: stateUpdateID,
       },
     });
   }
@@ -122,6 +122,7 @@ export async function handler(event, context) {
                 ...payload,
                 workspaceID: event.workspaceID,
                 runID: event.runID,
+                stateUpdateID: event.stateUpdateID,
               },
             }),
           },

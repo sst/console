@@ -13,7 +13,7 @@ import {
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
-import { and, count, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { event } from "../event";
 import { StageCredentials } from "../app/stage";
 import {
@@ -424,18 +424,21 @@ export module State {
             )
           )
           .then((result) => result[0]?.count || 0);
-        await tx.insert(stateUpdateTable).values({
-          workspaceID: useWorkspace(),
-          command: command.data,
-          id: lock.updateID,
-          index: result + 1,
-          stageID: input.config.stageID,
-          source: {
-            type: "cli",
-            properties: {},
-          },
-          timeStarted: new Date(lock.created),
-        });
+        await tx
+          .insert(stateUpdateTable)
+          .ignore()
+          .values({
+            workspaceID: useWorkspace(),
+            command: command.data,
+            id: lock.updateID,
+            index: result + 1,
+            stageID: input.config.stageID,
+            source: {
+              type: "cli",
+              properties: {},
+            },
+            timeStarted: new Date(lock.created),
+          });
 
         await createTransactionEffect(() => Replicache.poke());
       });
@@ -512,6 +515,8 @@ export module State {
       stageID: true,
       source: true,
       command: true,
+    }).extend({
+      time: z.date(),
     }),
     (input) =>
       useTransaction(async (tx) => {
@@ -528,13 +533,46 @@ export module State {
           )
           .then((result) => result[0]?.count || 0);
         await createTransactionEffect(() => Replicache.poke());
-        return tx.insert(stateUpdateTable).ignore().values({
-          id: input.id,
-          stageID: input.stageID,
-          workspaceID: useWorkspace(),
-          source: input.source,
-          command: input.command,
-        });
+        return tx
+          .insert(stateUpdateTable)
+          .ignore()
+          .values({
+            id: input.id,
+            index: result + 1,
+            stageID: input.stageID,
+            workspaceID: useWorkspace(),
+            source: input.source,
+            command: input.command,
+            timeStarted: input.time,
+          });
+      })
+  );
+
+  export const completeUpdate = zod(
+    z.object({
+      updateID: z.string().cuid2(),
+      error: z.string().nonempty().optional(),
+      time: z.date(),
+    }),
+    (input) =>
+      useTransaction(async (tx) => {
+        await tx
+          .update(stateUpdateTable)
+          .set({
+            errors:
+              input.error === undefined
+                ? undefined
+                : [{ urn: "", message: input.error }],
+            timeCompleted: input.time,
+          })
+          .where(
+            and(
+              eq(stateUpdateTable.workspaceID, useWorkspace()),
+              eq(stateUpdateTable.id, input.updateID),
+              isNull(stateUpdateTable.timeCompleted)
+            )
+          );
+        await createTransactionEffect(() => Replicache.poke());
       })
   );
 }

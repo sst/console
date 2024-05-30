@@ -3,7 +3,7 @@ import { Run } from "@console/core/run/run";
 import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(Run.Events.Completed, async (evt) => {
-  const { workspaceID, runID, error } = evt.properties;
+  const { workspaceID, runID, stateUpdateID, error } = evt.properties;
   await withActor(
     {
       type: "system",
@@ -11,6 +11,6 @@ export const handler = EventHandler(Run.Events.Completed, async (evt) => {
         workspaceID,
       },
     },
-    () => Run.completed({ runID, error })
+    () => Run.completed({ runID, stateUpdateID, error })
   );
 });

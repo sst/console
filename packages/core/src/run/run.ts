@@ -17,6 +17,7 @@ import {
   SchedulerClient,
 } from "@aws-sdk/client-scheduler";
 import { RETRY_STRATEGY } from "../util/aws";
+import { State } from "../state";
 
 export * as Run from "./run";
 
@@ -27,6 +28,7 @@ export interface MonitorEvent {
   scheduleName: string;
   workspaceID: string;
   runID: string;
+  stateUpdateID: string;
 }
 
 export const AppConfig = z.object({
@@ -47,6 +49,7 @@ export const Events = {
     "run.created",
     z.object({
       runID: z.string().nonempty(),
+      stateUpdateID: z.string().nonempty(),
       appID: z.string().nonempty(),
       stageID: z.string().nonempty(),
       awsAccountID: z.string().nonempty(),
@@ -71,6 +74,7 @@ export const Events = {
     "run.completed",
     z.object({
       workspaceID: z.string().nonempty(),
+      stateUpdateID: z.string().nonempty(),
       runID: z.string().nonempty(),
       error: z.string().nonempty().optional(),
     })
@@ -102,7 +106,7 @@ export const create = zod(
         name: stageName,
         region,
         awsAccountID,
-      }).then((s) => s?.id);
+      }).then((s) => s?.id!);
 
       if (!stageID) {
         console.log("creating stage", { appID, stageID });
@@ -121,10 +125,23 @@ export const create = zod(
         .values({
           id: runID,
           workspaceID: useWorkspace(),
-          stageID: stageID!,
+          stageID,
           trigger: input.trigger,
         })
         .execute();
+
+      // Create State Update
+      const stateUpdateID = createId();
+      await State.createUpdate({
+        id: stateUpdateID,
+        stageID,
+        command: "deploy",
+        source: {
+          type: "ci",
+          properties: { runID },
+        },
+        time: new Date(),
+      });
 
       // Schedule timeout monitor
       const scheduler = new SchedulerClient({ retryStrategy: RETRY_STRATEGY });
@@ -134,7 +151,8 @@ export const create = zod(
         Promise.allSettled([
           Events.Created.publish({
             runID,
-            stageID: stageID!,
+            stateUpdateID,
+            stageID,
             awsAccountID,
             region,
             ...input,
@@ -155,6 +173,7 @@ export const create = zod(
                 Input: JSON.stringify({
                   workspaceID: useWorkspace(),
                   runID,
+                  stateUpdateID,
                   scheduleName,
                   groupName: process.env.SCHEDULE_GROUP_NAME!,
                 } satisfies MonitorEvent),
@@ -203,15 +222,17 @@ export const started = zod(
 
 export const completed = zod(
   z.object({
-    runID: z.string().nonempty(),
+    runID: z.string().cuid2(),
+    stateUpdateID: z.string().cuid2(),
     error: z.string().nonempty().optional(),
   }),
   async (input) =>
-    useTransaction((tx) =>
-      tx
+    useTransaction(async (tx) => {
+      const timeCompleted = new Date();
+      await tx
         .update(run)
         .set({
-          timeCompleted: new Date(),
+          timeCompleted,
           error: input.error,
         })
         .where(
@@ -221,6 +242,11 @@ export const completed = zod(
             isNull(run.timeCompleted)
           )
         )
-        .execute()
-    )
+        .execute();
+      await State.completeUpdate({
+        updateID: input.stateUpdateID,
+        time: timeCompleted,
+        error: input.error,
+      });
+    })
 );
