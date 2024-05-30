@@ -259,7 +259,7 @@ export const create = zod(
             FunctionName: functionName,
             Role: roleArn,
             Code: {
-              ImageUri: `${Config.IMAGE_URI}:${imageTag}-18`,
+              ImageUri: `${Config.IMAGE_URI}:${imageTag}-1`,
             },
             Timeout: 900,
             MemorySize: 10240,

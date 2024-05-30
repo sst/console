@@ -26,5 +26,5 @@ CMD ["index.handler"]
 # how to build
 # $ docker logout public.ecr.aws
 # $ AWS_PROFILE=sst-dev aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 917397401067.dkr.ecr.us-east-1.amazonaws.com
-# $ docker build --platform linux/amd64 --tag 917397401067.dkr.ecr.us-east-1.amazonaws.com/images:x86_64-1 .
-# $ docker push 917397401067.dkr.ecr.us-east-1.amazonaws.com/images:x86_64-1
+# $ docker build --platform linux/amd64 --tag 917397401067.dkr.ecr.us-east-1.amazonaws.com/console-images:x86_64-1 .
+# $ docker push 917397401067.dkr.ecr.us-east-1.amazonaws.com/console-images:x86_64-1

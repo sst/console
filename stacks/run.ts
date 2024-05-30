@@ -1,7 +1,11 @@
 import fs from "fs";
 import { createHash } from "crypto";
 import { Bucket, Config, Function, StackContext, use } from "sst/constructs";
-import { Repository, CfnReplicationConfiguration } from "aws-cdk-lib/aws-ecr";
+import {
+  Repository,
+  CfnReplicationConfiguration,
+  IRepository,
+} from "aws-cdk-lib/aws-ecr";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { CfnScheduleGroup } from "aws-cdk-lib/aws-scheduler";
 import { allRegions } from "./util/regions";
@@ -13,7 +17,6 @@ import {
   ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
 import { Secrets } from "./secrets";
-import { time } from "drizzle-orm/pg-core";
 
 export function Run({ stack, app }: StackContext) {
   const secrets = use(Secrets);
@@ -39,48 +42,57 @@ export function Run({ stack, app }: StackContext) {
     ],
   });
 
-  const repo = new Repository(stack, "Repository", {
-    repositoryName: "images",
-  });
-  repo.addToResourcePolicy(
-    new PolicyStatement({
-      actions: ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
-      principals: [new ServicePrincipal("lambda.amazonaws.com")],
-    })
-  );
-  repo.addToResourcePolicy(
-    new PolicyStatement({
-      actions: ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
-      principals: [new AnyPrincipal()],
-      conditions: {
-        StringEquals: {
-          "aws:RequestedRegion": stack.region,
+  // We are going to create only 1 ECR repository per region b/c
+  // the Replication is a region-level resource. It cannot be created
+  // on a per user bases.
+  const repoName = `${app.name}-images`;
+  let repo: IRepository;
+  if (app.stage !== "jayair" && app.stage !== "thdxr") {
+    repo = new Repository(stack, "Repository", {
+      repositoryName: repoName,
+    });
+    repo.addToResourcePolicy(
+      new PolicyStatement({
+        actions: ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
+        principals: [new ServicePrincipal("lambda.amazonaws.com")],
+      })
+    );
+    repo.addToResourcePolicy(
+      new PolicyStatement({
+        actions: ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
+        principals: [new AnyPrincipal()],
+        conditions: {
+          StringEquals: {
+            "aws:RequestedRegion": stack.region,
+          },
         },
-      },
-    })
-  );
+      })
+    );
 
-  new CfnReplicationConfiguration(stack, "Replication", {
-    replicationConfiguration: {
-      rules: [
-        {
-          destinations: allRegions
-            .filter((region) => region !== stack.region)
-            .filter((region) => !region.startsWith("ap-"))
-            .map((region) => ({
-              region,
-              registryId: stack.account,
-            })),
-          repositoryFilters: [
-            {
-              filterType: "PREFIX_MATCH",
-              filter: "images",
-            },
-          ],
-        },
-      ],
-    },
-  });
+    new CfnReplicationConfiguration(stack, "Replication", {
+      replicationConfiguration: {
+        rules: [
+          {
+            destinations: allRegions
+              .filter((region) => region !== stack.region)
+              .filter((region) => !region.startsWith("ap-"))
+              .map((region) => ({
+                region,
+                registryId: stack.account,
+              })),
+            repositoryFilters: [
+              {
+                filterType: "PREFIX_MATCH",
+                filter: repoName,
+              },
+            ],
+          },
+        ],
+      },
+    });
+  } else {
+    repo = Repository.fromRepositoryName(stack, "Repository", repoName);
+  }
 
   const scheduleGroup = new CfnScheduleGroup(stack, "RunTimeoutMonitor", {
     name: app.logicalPrefixedName("RunTimeoutMonitor"),
