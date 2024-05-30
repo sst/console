@@ -135,6 +135,11 @@ export function* generateData(
   }
 
   if (modeMap["logs"]) {
+    yield* stageIonLogsBase();
+    yield* stageIonLogsEmpty();
+    yield* stageIonLogsEmptySSTFns();
+    yield* stageIonLogsEmptyInternals();
+
     yield* stageHasFunction();
 
     yield* invocationBase();
@@ -209,9 +214,6 @@ const STACK_WORKING = "stack-working";
 
 const STAGE = "stage-base";
 const STAGE_LOCAL = "local";
-const STAGE_ION = { id: "1111", name: "ion-base" };
-const STAGE_ION_EMPTY = { id: "1112", name: "ion-empty" };
-const STAGE_ION_NO_OUTPUTS = { id: "1113", name: "ion-no-outputs" };
 const STAGE_EMPTY = "stage-empty";
 const STAGE_NOT_SUPPORTED = "stage-not-supported";
 const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
@@ -222,6 +224,14 @@ const STAGE_HAS_FUNCTION = "stage-has-function";
 const STAGE_ISSUES_WARN_MIXED = "stage-issues-warning-mixed";
 const STAGE_ISSUES_WARN_RATE = "stage-issues-warning-rate-limit";
 const STAGE_ISSUES_WARN_SUB = "stage-issues-warning-subscription";
+
+const STAGE_ION = { id: "1111", name: "ion-base" };
+const STAGE_ION_EMPTY = { id: "1112", name: "ion-empty" };
+const STAGE_ION_NO_OUTPUTS = { id: "1113", name: "ion-no-outputs" };
+const STAGE_ION_EMPTY_INTERNALS = { id: "1114", name: "ion-no-internal-fns" };
+const STAGE_ION_EMPTY_SST_FNS = { id: "1115", name: "ion-no-sst-fns" };
+
+const STACK_URN = "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair";
 
 const ACCOUNT_ID = "connected";
 const ACCOUNT_ID_FULL = "full";
@@ -552,8 +562,6 @@ function* stageLocal(): Generator<DummyData, void, unknown> {
 }
 
 function* stageIonBase(): Generator<DummyData, void, unknown> {
-  const STACK_URN = "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair";
-
   yield stage({
     id: STAGE_ION.id,
     name: STAGE_ION.name,
@@ -933,6 +941,270 @@ function* stageIonEmpty(): Generator<DummyData, void, unknown> {
     name: STAGE_ION_EMPTY.name,
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
+  });
+}
+
+function* stageIonLogsBase(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ION.id,
+    name: STAGE_ION.name,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+
+  yield update({
+    id: 1,
+    stageID: STAGE_ION.id,
+    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    created: 20,
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "pulumi:pulumi:Stack",
+    urn: STACK_URN,
+  });
+
+  const FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefault";
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: FN_URN,
+    name: "MyWebDefaultFunction",
+    sourceCodeSize: 256 * 1024 * 1024 * 1024,
+    memorySize: 512 * 1024,
+    handler: "index.handler",
+    runtime: "nodejs20.x",
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Function",
+    parent: STACK_URN,
+    urn: FN_URN,
+    outputs: {
+      _live: {
+        handler: "some/other/live/index.handler",
+        runtime: "go1.x",
+      },
+    },
+  });
+
+  const LONG_FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefaultIsAReallyLongFunctionNameThatShouldOverflowBecauseItJustKeepsKeepsGoingAndWeNeedToMakeItEvenLongerBecauseThatWasntEnough";
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: LONG_FN_URN,
+    name: "MyWebDefaultFunctionLong",
+    handler: "a/really/really/really/long/path/to/the/handler/that/also/needs/to/overflow/because/its/way/too/long/for/the/label/index.handler",
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Function",
+    parent: STACK_URN,
+    urn: LONG_FN_URN,
+  });
+
+  // Runtime icon cases
+  yield* stageIonLogsRuntimes();
+}
+
+
+function* stageIonLogsRuntimes(): Generator<DummyData, void, unknown> {
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: STACK_URN,
+    name: "RootFunction1",
+    runtime: "go1.x",
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: STACK_URN,
+    name: "RootFunction2",
+    runtime: "dotnetcore3.1",
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: STACK_URN,
+    name: "RootFunction3",
+    runtime: "python3.8",
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: STACK_URN,
+    name: "RootFunction4",
+    runtime: "java11",
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: STACK_URN,
+    name: "RootFunction5",
+    runtime: "rust1.5",
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: STACK_URN,
+    name: "RootFunction6",
+    runtime: "container",
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: STACK_URN,
+    name: "RootFunction7",
+    runtime: "provided",
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: STACK_URN,
+    name: "RootFunction8",
+    runtime: "nodejs18.x",
+  });
+}
+
+function* stageIonLogsEmpty(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ION_EMPTY.id,
+    name: STAGE_ION_EMPTY.name,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+
+  yield update({
+    id: 1,
+    stageID: STAGE_ION_EMPTY.id,
+    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    created: 20,
+  });
+}
+
+function* stageIonLogsEmptySSTFns(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ION_EMPTY_SST_FNS.id,
+    name: STAGE_ION_EMPTY_SST_FNS.name,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+
+  yield update({
+    id: 1,
+    stageID: STAGE_ION_EMPTY_SST_FNS.id,
+    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    created: 20,
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_SST_FNS.id,
+    type: "pulumi:pulumi:Stack",
+    urn: STACK_URN,
+  });
+
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_SST_FNS.id,
+    parent: STACK_URN,
+    name: "RootFunction",
+  });
+
+  const ASTRO_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroA";
+  const ASTRO_FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro$sst:aws:Function::SiteFunction";
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_SST_FNS.id,
+    parent: STACK_URN,
+    type: "sst:aws:Astro",
+    urn: ASTRO_URN,
+    outputs: {
+      _hint: "https://d12gqwmd27xa5j.cloudfront.net",
+    },
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_SST_FNS.id,
+    parent: ASTRO_URN,
+    type: "sst:aws:Function",
+    urn: ASTRO_FN_URN,
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_SST_FNS.id,
+    parent: ASTRO_FN_URN,
+    name: "MyAstroADefaultFunction",
+  });
+
+  const INTERNAL_FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MarkedAsInternal";
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_SST_FNS.id,
+    parent: STACK_URN,
+    type: "sst:aws:Function",
+    urn: INTERNAL_FN_URN,
+    outputs: {
+      _metadata: {
+        internal: true,
+      },
+    },
+  });
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_SST_FNS.id,
+    parent: INTERNAL_FN_URN,
+    name: "MyInternalDefaultFunction",
+  });
+}
+
+function* stageIonLogsEmptyInternals(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ION_EMPTY_INTERNALS.id,
+    name: STAGE_ION_EMPTY_INTERNALS.name,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+
+  yield update({
+    id: 1,
+    stageID: STAGE_ION_EMPTY_INTERNALS.id,
+    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    created: 20,
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_INTERNALS.id,
+    type: "pulumi:pulumi:Stack",
+    urn: STACK_URN,
+  });
+
+  const FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefault";
+  yield stateFunction({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_INTERNALS.id,
+    parent: FN_URN,
+    name: "MyWebDefaultFunction",
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION_EMPTY_INTERNALS.id,
+    type: "sst:aws:Function",
+    parent: STACK_URN,
+    urn: FN_URN,
   });
 }
 
@@ -3173,4 +3445,43 @@ function stateResource({
       updated: DateTime.now().startOf("day").toISO()!,
     },
   };
+}
+
+interface StateFunctionProps {
+  id: number;
+  stageID: string;
+  parent: string;
+  name: string;
+  outputs?: any;
+  memorySize?: number;
+  sourceCodeSize?: number;
+  runtime?: string;
+  handler?: string;
+}
+function stateFunction({
+  id,
+  stageID,
+  parent,
+  name,
+  outputs,
+  memorySize,
+  sourceCodeSize,
+  runtime,
+  handler,
+}: StateFunctionProps): DummyData {
+  return stateResource({
+    id,
+    stageID,
+    parent,
+    type: "aws:lambda/function:Function",
+    urn: `urn:pulumi:jayair::ion-sandbox::sst:aws:Astro$sst:aws:Function$aws:lambda/function:Function::${name}`,
+    outputs: {
+      handler: handler || "index.handler",
+      memorySize: memorySize || 1024,
+      sourceCodeSize: sourceCodeSize || 196,
+      runtime: runtime || "nodejs20.x",
+      loggingConfig: { logGroup: `/aws/lambda/ion-sandbox-jayair-${name}` },
+      ...outputs,
+    }
+  });
 }

@@ -7,7 +7,6 @@ import {
   createEffect,
   createSignal,
 } from "solid-js";
-import { IconCheck, IconEllipsisVertical } from "$/ui/icons";
 import {
   IconFunction,
   IconGoRuntime,
@@ -31,6 +30,7 @@ import type { State } from "@console/core/state";
 import { Link, useNavigate } from "@solidjs/router";
 import { Row, Stack, Fullscreen } from "$/ui/layout";
 import { useReplicache } from "$/providers/replicache";
+import { IconCheck, IconEllipsisVertical } from "$/ui/icons";
 
 const Content = styled("div", {
   base: {
@@ -258,18 +258,10 @@ export function List() {
   );
   const internals = createMemo(() => sortBy(sorted()[1], (fn) => fn.name));
 
-  createEffect(() => {
-    console.log("Functions", functions());
-    console.log("Internal", internals());
-  });
-
   function renderRuntime(runtime: string) {
     return (
       <ChildIcon title={runtime}>
         <Switch>
-          <Match when={runtime.startsWith("dotnet")}>
-            <IconDotNetRuntime />
-          </Match>
           <Match when={runtime.startsWith("dotnet")}>
             <IconDotNetRuntime />
           </Match>
@@ -321,7 +313,7 @@ export function List() {
             </ChildTitleLink>
           </Row>
           <Show
-            when={fn.root}
+            when={fn.root && (!isInternal || fn.root!.name !== fn.name)}
             fallback={
               <ChildTagline outline={isInternal}>{fn.type}</ChildTagline>
             }
@@ -335,9 +327,7 @@ export function List() {
         <ChildColRight>
           <Show when={live}>
             <ChildDetailLive>
-              <Tag style="outline" level="tip" size="small">
-                Live
-              </Tag>
+              <Tag style="outline" level="tip" size="small">Live</Tag>
             </ChildDetailLive>
           </Show>
           <ChildDetail>
@@ -459,6 +449,7 @@ function sortFunctions(
   const functions: SortedResource[] = [];
   const internals: SortedResource[] = [];
 
+  // Look for lambda functions with log groups
   resources.forEach((r) => {
     if (r.type !== "aws:lambda/function:Function") {
       return;
@@ -470,6 +461,7 @@ function sortFunctions(
       return;
     }
 
+    // Find the root component
     const root = getRoot(idMap[r.urn]);
 
     const fn: SortedResource = {
@@ -479,19 +471,17 @@ function sortFunctions(
       root: root.urn === r.urn ? undefined : root,
     };
 
-    if (r.parent) {
-      const parent = resources.find(
-        (f) => f.urn === r.parent && f.type === "sst:aws:Function",
-      );
+    const parent = r.parent && idMap[r.parent];
 
-      if (parent) {
-        fn.name = getResourceName(parent.urn)!;
-        fn.sst = { ...parent };
+    // If the parent is an SST function
+    if (parent && parent.type === "sst:aws:Function") {
+      fn.name = getResourceName(parent.urn)!;
+      fn.sst = { ...parent };
 
-        if (!isInternalFunction(parent, root)) {
-          functions.push(fn);
-          return;
-        }
+      // Check if the parent is not an internal function
+      if (!isInternalFunction(parent, root)) {
+        functions.push(fn);
+        return;
       }
     }
 
