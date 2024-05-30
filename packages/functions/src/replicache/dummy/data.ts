@@ -43,6 +43,7 @@ export function* generateData(
   // Reset auto-incrementing IDs
   UPDATE_ID = 0;
   STATE_RES_ID = 0;
+  STATE_RES_EV_ID = 0;
   WARNING_COUNT = 0;
   INVOCATION_COUNT = 0;
   ISSUE_ALERT_COUNT = 0;
@@ -96,10 +97,12 @@ export function* generateData(
 
   if (modeMap["resources"]) {
     yield* stageBase();
-    yield* stageIonBase();
     yield* stageEmpty();
-    yield* stageIonEmpty();
     yield* stageNotSupported();
+
+    yield* stageIonBase();
+    yield* stageIonEmpty();
+    yield* stageIonNoOutputs();
   }
 
   if (modeMap["issues"]) {
@@ -158,6 +161,7 @@ type DummyData =
   | (DummyConfig & { _type: "dummyConfig" })
   | (Workspace.Info & { _type: "workspace" })
   | (State.Update & { _type: "stateUpdate" })
+  | (State.Resource & { _type: "stateResource" })
   | (State.ResourceEvent & { _type: "stateEvent" })
   | (Omit<Usage, "workspaceID"> & { _type: "usage" })
   | (Omit<App.Info, "workspaceID"> & { _type: "app" })
@@ -205,9 +209,10 @@ const STACK_WORKING = "stack-working";
 
 const STAGE = "stage-base";
 const STAGE_LOCAL = "local";
-const STAGE_ION = "ion";
+const STAGE_ION = { id: "1111", name: "ion-base" };
+const STAGE_ION_EMPTY = { id: "1112", name: "ion-empty" };
+const STAGE_ION_NO_OUTPUTS = { id: "1113", name: "ion-no-outputs" };
 const STAGE_EMPTY = "stage-empty";
-const STAGE_ION_EMPTY = "ion-empty";
 const STAGE_NOT_SUPPORTED = "stage-not-supported";
 const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
 const STAGE_NO_ISSUES = "stage-no-issues";
@@ -370,6 +375,7 @@ const LOGS_FN = "my-logs-func";
 // Auto-incrementing IDs
 let UPDATE_ID = 0;
 let STATE_RES_ID = 0;
+let STATE_RES_EV_ID = 0;
 let WARNING_COUNT = 0;
 let INVOCATION_COUNT = 0;
 let ISSUE_ALERT_COUNT = 0;
@@ -546,16 +552,385 @@ function* stageLocal(): Generator<DummyData, void, unknown> {
 }
 
 function* stageIonBase(): Generator<DummyData, void, unknown> {
+  const STACK_URN = "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair";
+
   yield stage({
-    id: STAGE_ION,
+    id: STAGE_ION.id,
+    name: STAGE_ION.name,
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
+  });
+
+  yield update({
+    id: 0,
+    stageID: STAGE_ION.id,
+    timeStarted: DateTime.now().minus({ minutes: 20 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 19 }).toISO()!,
+    created: 20,
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "pulumi:pulumi:Stack",
+    urn: STACK_URN,
+    outputs: {
+      AReallyReallyLongOutputNameThatIsGoingToOverFlowBecauseItsTooLong: "https://ty3jv62ykpmwwuqz4u3g7fxak40frlaf.lambda-url.us-east-1.on.aws/",
+    },
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "pulumi:providers:aws",
+    urn: "urn:pulumi:jayair::ion-sandbox::pulumi:providers:aws::default_6_37_1",
+    outputs: {
+      grants: [
+        {
+          "id": "72aa549316ea5f938bb13dc4e5908a4d3cd4f43918e5d0654daf077680b4570f",
+          "permissions": [
+            "FULL_CONTROL"
+          ],
+          "type": "CanonicalUser",
+          "uri": ""
+        }
+      ],
+      defaultTags: "{\"tags\":{\"sst:app\":\"ion-sandbox\",\"sst:stage\":\"jayair\"}}",
+      profile: "sst-dev",
+      region: "us-east-1",
+      skipCredentialsValidation: "false",
+      skipRegionValidation: "true",
+      version: "6.37.1"
+    },
+  });
+
+  const OVERFLOW_TYPE = "sst:reallyreallylongcloudprovider:AReallyReallyLongComponentNameThatIsGoingToOverFlowBecauseItsTooLongAndItKeepsGoingAndGoingForALongTime";
+  const OVERFLOW_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::AReallyReallyLongFunctionNameThatIsGoingToOverFlowBecauseItsTooLongAndKeepsGoingAndGoing";
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: OVERFLOW_TYPE,
+    urn: OVERFLOW_URN,
+    parent: STACK_URN,
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: `${OVERFLOW_TYPE}$sst:aws:Function`,
+    urn: `${OVERFLOW_URN}A`,
+    parent: OVERFLOW_URN,
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: OVERFLOW_TYPE,
+    urn: `${OVERFLOW_URN}B`,
+    parent: STACK_URN,
+    outputs: {
+      _hint: "https://d12gqwmd27xa5j.cloudfront.net",
+    },
+  });
+
+  // Create/modified link cases
+  yield* stageIonUpdateLinks(STACK_URN);
+
+  // Icon cases
+  yield* stageIonBaseIconCase(STACK_URN);
+}
+
+function* stageIonUpdateLinks(parent: string): Generator<DummyData, void, unknown> {
+  const UPDATE_1 = 1;
+  const UPDATE_2 = 2;
+  const UPDATE_1_TIME = DateTime.now().minus({ minutes: 13 }).toISO()!;
+  const UPDATE_2_TIME = DateTime.now().minus({ minutes: 11 }).toISO()!;
+
+  const ASTRO_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroA";
+  const ASTRO_FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro$sst:aws:Function::MyAstroADefault";
+
+  yield update({
+    id: UPDATE_1,
+    stageID: STAGE_ION.id,
+    timeStarted: UPDATE_1_TIME,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    created: 20,
+  });
+  yield update({
+    id: UPDATE_2,
+    stageID: STAGE_ION.id,
+    timeStarted: UPDATE_2_TIME,
+    timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
+    created: 20,
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent,
+    type: "sst:aws:Astro",
+    urn: ASTRO_URN,
+    outputs: {
+      _hint: "https://d12gqwmd27xa5j.cloudfront.net",
+    },
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: ASTRO_URN,
+    type: "sst:aws:Function",
+    urn: ASTRO_FN_URN,
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent: ASTRO_FN_URN,
+    type: "aws:lambda/function:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro$sst:aws:Function$aws:lambda/function:Function::MyAstroADefaultFunction",
+  });
+
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent,
+    type: "sst:aws:Astro",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroBWithCreatedTime",
+    stateCreated: UPDATE_1_TIME,
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent,
+    type: "sst:aws:Astro",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroBWithCreatedID",
+    updateCreatedID: UPDATE_1,
+    stateCreated: UPDATE_1_TIME,
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent,
+    type: "sst:aws:Astro",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroBWithModifiedTime",
+    updateCreatedID: UPDATE_1,
+    stateCreated: UPDATE_1_TIME,
+    stateModified: UPDATE_2_TIME,
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent,
+    type: "sst:aws:Astro",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroBWithModifiedID",
+    updateCreatedID: UPDATE_1,
+    updateModifiedID: UPDATE_2,
+    stateCreated: UPDATE_1_TIME,
+    stateModified: UPDATE_2_TIME,
+  });
+  yield stateResource({
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    parent,
+    type: "sst:aws:Astro",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroBReplaced",
+    updateCreatedID: UPDATE_2,
+    updateModifiedID: UPDATE_2,
+    stateCreated: UPDATE_2_TIME,
+    stateModified: UPDATE_2_TIME,
+  });
+}
+
+function* stageIonBaseIconCase(parent: string): Generator<DummyData, void, unknown> {
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Auth",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Auth::MyAuth",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Cron",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Cron::MyCron",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Router",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Router::MyRouter",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Queue",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Queue::MyQueue",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Postgres",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Postgres::MyPostgres",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Dynamo",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Dynamo::MyDynamo",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Bus",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Bus::MyBus",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Bucket",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Bucket::MyBucket",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:SnsTopic",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:SnsTopic::MySnsTopic",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Astro",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroD",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Nuxt",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Nuxt::MyNuxt",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Remix",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Remix::MyRemix",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:AppSync",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:AppSync::MyAppSync",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:ApiGatewayV2",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:ApiGatewayV2::MyApiGatewayV2",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Nextjs",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Nextjs::MyNextjs",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Function",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyFunction",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:Realtime",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Realtime::MyRealtime",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:StaticSite",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:StaticSite::MyStaticSite",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:SvelteKit",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:SvelteKit::MySvelteKit",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:CognitoUserPool",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:CognitoUserPool::MyCognitoUserPool",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:SolidStart",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:SolidStart::MySolidStart",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:CognitoIdentityPool",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:CognitoIdentityPool::MyCognitoIdentityPool",
+  });
+  yield stateResource({
+    parent,
+    id: ++STATE_RES_ID,
+    stageID: STAGE_ION.id,
+    type: "sst:aws:ApiGatewayWebSocket",
+    urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:ApiGatewayWebSocket::MyApiGatewayWebSocket",
+  });
+}
+
+function* stageIonNoOutputs(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ION_NO_OUTPUTS.id,
+    name: STAGE_ION_NO_OUTPUTS.name,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+
+  yield update({
+    id: 1,
+    stageID: STAGE_ION_NO_OUTPUTS.id,
+    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    created: 20,
+  });
+
+  yield stateResource({
+    id: 1,
+    stageID: STAGE_ION_NO_OUTPUTS.id,
+    type: "pulumi:pulumi:Stack",
+    urn: "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair",
+    updateCreatedID: 1,
   });
 }
 
 function* stageIonEmpty(): Generator<DummyData, void, unknown> {
   yield stage({
-    id: STAGE_ION_EMPTY,
+    id: STAGE_ION_EMPTY.id,
+    name: STAGE_ION_EMPTY.name,
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
   });
@@ -1470,14 +1845,14 @@ function* stageHasFunction(): Generator<DummyData, void, unknown> {
 function* updatesBase(): Generator<DummyData, void, unknown> {
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     timeStarted: DateTime.now().minus({ minutes: 13 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
     created: 20,
   });
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 10 }).toISO()!,
     created: 2,
@@ -1486,14 +1861,14 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     timeStarted: DateTime.now().minus({ minutes: 11 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
     updated: 20,
   });
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     timeStarted: DateTime.now().minus({ minutes: 10 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 8 }).toISO()!,
     deleted: 4,
@@ -1501,14 +1876,14 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     timeStarted: DateTime.now().minus({ minutes: 9 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 7 }).toISO()!,
     same: 20,
   });
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     command: "remove",
     timeStarted: DateTime.now().minus({ minutes: 8 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 6 }).toISO()!,
@@ -1519,7 +1894,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     errors: [
       {
         urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
@@ -1545,7 +1920,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield* stateEventError();
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     errors: [
       {
         urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC",
@@ -1562,7 +1937,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     command: "refresh",
     same: 15,
     created: 2,
@@ -1574,96 +1949,96 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield* stateEventBase();
   yield update({
     id: ++UPDATE_ID,
-    stage: STAGE,
+    stageID: STAGE,
     timeStarted: DateTime.now().minus({ minutes: 2 }).toISO()!,
   });
 }
 
 function* stateEventBase(): Generator<DummyData, void, unknown> {
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "pulumi-nodejs:dynamic:Resource",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$pulumi-nodejs:dynamic:Resource::FunctionACodeUpdater.sst.aws.FunctionCodeUpdater",
     action: "deleted",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "aws:lambda/function:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:lambda/function:Function::FunctionAFunction",
     action: "deleted",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "sst:aws:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC",
     action: "deleted",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "sst:aws:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionD",
     action: "deleted",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "sst:aws:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionE",
     action: "deleted",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "aws:cloudwatch/logGroup:LogGroup",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:cloudwatch/logGroup:LogGroup::FunctionALogGroup",
     action: "created",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "aws:cloudwatch/logGroup:LogGroup",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:cloudwatch/logGroup:LogGroup::FunctionBLogGroup",
     action: "created",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "pulumi:pulumi:Stack",
     urn: "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair",
     action: "updated",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "aws:route53/record:Record",
     urn: "urn:pulumi:production::www::sst:aws:Astro$sst:aws:CDN$sst:aws:Certificate$aws:route53/record:Record::AstroCdnSslCNAMERecord65b719819635197c400ab3714200afd1ionsstdev",
     action: "updated",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "aws:iam/role:Role",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionBRole",
     action: "updated",
   });
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "aws:iam/role:Role",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionCRole",
     action: "updated",
@@ -1672,9 +2047,9 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
 
 function* stateEventError(): Generator<DummyData, void, unknown> {
   yield stateEvent({
-    id: ++STATE_RES_ID,
+    id: ++STATE_RES_EV_ID,
     stageID: STAGE,
-    update: UPDATE_ID,
+    updateID: UPDATE_ID,
     type: "sst:aws:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
     action: "deleted",
@@ -2353,12 +2728,14 @@ function account({ id, accountID, failed, syncing }: AccountProps): DummyData {
 interface StageProps {
   id: string;
   appID: string;
+  name?: string;
   region?: string;
   awsAccountID: string;
   unsupported?: boolean;
 }
 function stage({
   id,
+  name,
   appID,
   region,
   unsupported,
@@ -2368,7 +2745,7 @@ function stage({
     _type: "stage",
     id,
     appID,
-    name: id,
+    name: name || id,
     awsAccountID,
     timeDeleted: null,
     region: region || "us-east-1",
@@ -2575,18 +2952,18 @@ function invocation({
       duration === undefined
         ? duration
         : {
-            duration,
-            memory: 128,
-            size: 2048,
-            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
-          },
+          duration,
+          memory: 128,
+          size: 2048,
+          xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+        },
     start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
-          message,
-          id: `log-${INVOCATION_COUNT}-${i}`,
-          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-        }))
+        message,
+        id: `log-${INVOCATION_COUNT}-${i}`,
+        timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+      }))
       : [],
   };
 }
@@ -2664,7 +3041,7 @@ function issueAlert({
 
 interface UpdateProps {
   id: number;
-  stage: string;
+  stageID: string;
   errors?: State.Update["errors"];
   source?: "cli" | "ci";
   timeCreated?: string;
@@ -2678,7 +3055,7 @@ interface UpdateProps {
 }
 function update({
   id,
-  stage,
+  stageID,
   errors,
   command,
   source,
@@ -2694,7 +3071,7 @@ function update({
     _type: "stateUpdate",
     id: `${id}`,
     index: id,
-    stageID: stage,
+    stageID,
     command: command || "deploy",
     source:
       source === "ci"
@@ -2716,33 +3093,41 @@ function update({
   };
 }
 
-interface ResourceProps {
+type BaseResourceProps = {
   id: number;
   stageID: State.ResourceEvent["stageID"];
-  update: number;
   type: State.ResourceEvent["type"];
   urn: State.ResourceEvent["urn"];
-  action: State.ResourceEvent["action"];
   outputs?: State.ResourceEvent["outputs"];
   inputs?: State.ResourceEvent["inputs"];
   parent?: State.ResourceEvent["parent"];
+  stateCreated?: State.ResourceEvent["time"]["stateCreated"];
+  stateModified?: State.ResourceEvent["time"]["stateModified"];
+}
+type ResourceEventProps = BaseResourceProps & {
+  action: State.ResourceEvent["action"];
+  updateID: number;
+}
+type ResourceProps = BaseResourceProps & {
+  updateCreatedID?: number;
+  updateModifiedID?: number;
 }
 function stateEvent({
   id,
   stageID,
-  update,
+  updateID,
   type,
   urn,
   action,
   outputs,
   inputs,
   parent,
-}: ResourceProps): DummyData {
+}: ResourceEventProps): DummyData {
   return {
     _type: "stateEvent",
     id: `${id}`,
     stageID,
-    updateID: `${update}`,
+    updateID: `${updateID}`,
     type,
     urn,
     action,
@@ -2750,6 +3135,40 @@ function stateEvent({
     inputs: inputs || {},
     parent,
     time: {
+      created: DateTime.now().startOf("day").toISO()!,
+      updated: DateTime.now().startOf("day").toISO()!,
+    },
+  };
+}
+function stateResource({
+  id,
+  stageID,
+  type,
+  urn,
+  outputs,
+  inputs,
+  parent,
+  stateCreated,
+  stateModified,
+  updateCreatedID,
+  updateModifiedID,
+}: ResourceProps): DummyData {
+  return {
+    _type: "stateResource",
+    id: `${id}`,
+    stageID,
+    type,
+    urn,
+    outputs: outputs || {},
+    inputs: inputs || {},
+    parent,
+    update: {
+      createdID: updateCreatedID ? `${updateCreatedID}` : "",
+      modifiedID: updateModifiedID ? `${updateModifiedID}` : undefined,
+    },
+    time: {
+      stateCreated,
+      stateModified,
       created: DateTime.now().startOf("day").toISO()!,
       updated: DateTime.now().startOf("day").toISO()!,
     },

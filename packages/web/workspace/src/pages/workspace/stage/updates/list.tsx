@@ -302,7 +302,6 @@ type UpdateProps = {
   command: "deploy" | "refresh" | "remove" | "edit";
 };
 function Update(props: UpdateProps) {
-  createEffect(() => console.log({ ...props }));
   const errors = () => props.errors?.length || 0;
   const status = createMemo(() =>
     props.timeCompleted
@@ -474,10 +473,8 @@ export function List() {
   return (
     <Content>
       <div>
-        <For
-          each={sortBy(updates(), [(item) => item.time.started || "", "desc"])}
-        >
-          {(item, index) => (
+        <For each={sortBy(updates(), [(item) => item.time.started || "", "desc"])}>
+          {(item) => (
             <Update
               index={item.index}
               id={item.id}

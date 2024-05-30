@@ -149,10 +149,29 @@ const HeaderRoot = styled("div", {
   },
 });
 
+const HeaderIcon = styled("div", {
+  base: {
+    flexShrink: 0,
+    width: 18,
+    height: 18,
+    color: theme.color.icon.secondary,
+  },
+  variants: {
+    outline: {
+      true: {
+        opacity: theme.iconOpacity,
+      },
+    },
+  },
+});
+
 const HeaderTitle = styled("span", {
   base: {
+    ...utility.text.line,
+    minWidth: 0,
     color: theme.color.text.primary.surface,
     fontWeight: theme.font.weight.medium,
+    lineHeight: "normal",
   },
   variants: {
     outline: {
@@ -180,30 +199,18 @@ const HeaderTitleTagline = styled("span", {
 
 const HeaderTitleTaglineLink = styled(Link, {
   base: {
+    ...utility.text.line,
+    minWidth: 0,
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_base,
-  },
-});
-
-const HeaderIcon = styled("div", {
-  base: {
-    flexShrink: 0,
-    width: 18,
-    height: 18,
-    color: theme.color.icon.secondary,
-  },
-  variants: {
-    outline: {
-      true: {
-        opacity: theme.iconOpacity,
-      },
-    },
+    lineHeight: "normal",
   },
 });
 
 const HeaderDescription = styled("span", {
   base: {
     ...utility.text.line,
+    minWidth: 0,
     maxWidth: 500,
     lineHeight: "normal",
     color: theme.color.text.dimmed.surface,
@@ -219,6 +226,10 @@ const HeaderDescription = styled("span", {
 
 const HeaderDescriptionLink = styled("a", {
   base: {
+    ...utility.text.line,
+    minWidth: 0,
+    maxWidth: 500,
+    lineHeight: "normal",
     color: theme.color.text.dimmed.surface,
   },
   variants: {
@@ -245,6 +256,18 @@ const Children = styled("div", {
         borderColor: theme.color.divider.base,
       },
     },
+  },
+});
+
+const OutputsEmpty = styled("div", {
+  base: {
+    height: 140,
+    backgroundColor: theme.color.background.surface,
+    borderRadius: theme.borderRadius,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: theme.color.text.dimmed.surface,
   },
 });
 
@@ -478,24 +501,25 @@ function stateResourcePriority(resource: SortedStateResource) {
       return 2;
     case "sst:aws:Auth":
     case "sst:aws:Router":
+    case "sst:aws:Realtime":
     case "sst:aws:ApiGatewayV2":
       return 3;
     case "sst:aws:Function":
       return 4;
-    case "sst:aws:AppSync":
-    case "sst:aws:ApiGatewayWebSocket":
-      return 5;
     case "sst:aws:Bucket":
-      return 6;
+      return 5;
     case "sst:aws:Dynamo":
     case "sst:aws:Postgres":
-      return 7;
+      return 6;
     case "sst:aws:Cron":
-      return 8;
+      return 7;
     case "sst:aws:Bus":
-      return 9;
+      return 8;
     case "sst:aws:Queue":
     case "sst:aws:SnsTopic":
+      return 9;
+    case "sst:aws:AppSync":
+    case "sst:aws:ApiGatewayWebSocket":
       return 10;
     case "sst:aws:CognitoUserPool":
     case "sst:aws:CognitoIdentityPool":
@@ -703,8 +727,6 @@ export function List() {
     const outputs: { key: string; value: string }[] = [];
 
     SortedStateResource().forEach((r) => {
-      r.type === "pulumi:pulumi:Stack" && console.log(r.outputs);
-
       if (r.type === "pulumi:pulumi:Stack") {
         Object.keys(r.outputs).forEach((key) => {
           if (typeof r.outputs[key] === "string") {
@@ -796,7 +818,9 @@ export function List() {
 
   function renderStateOutputs() {
     return (
-      <Show when={stateOutputs().length}>
+      <Show when={stateOutputs().length} fallback={
+        <OutputsEmpty>No outputs</OutputsEmpty>
+      }>
         <Card>
           <HeaderRoot>
             <HeaderTitle>Outputs</HeaderTitle>
@@ -843,33 +867,31 @@ export function List() {
       <Card outline>
         <HeaderRoot>
           <Row space="2" vertical="center">
-            <Row space="2" vertical="center">
-              <HeaderIcon outline>
-                <Show
-                  fallback={<IconConstruct />}
-                  when={ION_ICON_MAP.hasOwnProperty(resource.type)}
-                >
-                  <Dynamic component={ION_ICON_MAP[resource.type]} />
-                </Show>
-              </HeaderIcon>
-              <HeaderTitle>{resource.type}</HeaderTitle>
-            </Row>
+            <HeaderIcon outline>
+              <Show
+                fallback={<IconConstruct />}
+                when={ION_ICON_MAP.hasOwnProperty(resource.type)}
+              >
+                <Dynamic component={ION_ICON_MAP[resource.type]} />
+              </Show>
+            </HeaderIcon>
+            <HeaderTitle>{resource.type}</HeaderTitle>
             <HeaderTitleTaglineLink href={encodeURIComponent(resource.urn)}>
               {resource.name}
             </HeaderTitleTaglineLink>
           </Row>
           <Show when={hint}>
-            <HeaderDescription outline>
-              <Show when={isValidHttpUrl(hint!)} fallback={hint}>
-                <HeaderDescriptionLink
-                  href={hint}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {hint}
-                </HeaderDescriptionLink>
-              </Show>
-            </HeaderDescription>
+            <Show when={isValidHttpUrl(hint!)} fallback={
+              <HeaderDescription outline>{hint}</HeaderDescription>
+            }>
+              <HeaderDescriptionLink
+                href={hint}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {hint}
+              </HeaderDescriptionLink>
+            </Show>
           </Show>
         </HeaderRoot>
         <Children outline>
@@ -917,7 +939,7 @@ export function List() {
   return (
     <Switch>
       <Match when={!resources().length && !stateResources().length}>
-        <Fullscreen>
+        <Fullscreen inset="stage">
           <Syncing>Waiting for resources&hellip;</Syncing>
         </Fullscreen>
       </Match>
