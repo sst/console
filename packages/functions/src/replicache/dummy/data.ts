@@ -96,7 +96,9 @@ export function* generateData(
 
   if (modeMap["resources"]) {
     yield* stageBase();
+    yield* stageIonBase();
     yield* stageEmpty();
+    yield* stageIonEmpty();
     yield* stageNotSupported();
   }
 
@@ -203,7 +205,9 @@ const STACK_WORKING = "stack-working";
 
 const STAGE = "stage-base";
 const STAGE_LOCAL = "local";
+const STAGE_ION = "ion";
 const STAGE_EMPTY = "stage-empty";
+const STAGE_ION_EMPTY = "ion-empty";
 const STAGE_NOT_SUPPORTED = "stage-not-supported";
 const STAGE_PARTLY_SUPPORTED = "stage-partly-supported";
 const STAGE_NO_ISSUES = "stage-no-issues";
@@ -538,6 +542,22 @@ function* stageLocal(): Generator<DummyData, void, unknown> {
       consumers: [],
       tableName: "jayair-console-dummy-notes-table",
     },
+  });
+}
+
+function* stageIonBase(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ION,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
+  });
+}
+
+function* stageIonEmpty(): Generator<DummyData, void, unknown> {
+  yield stage({
+    id: STAGE_ION_EMPTY,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
   });
 }
 

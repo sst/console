@@ -74,7 +74,7 @@ export function formatDuration(ms: number, useFullFormat?: boolean): string {
   } else if (ms < 1000 * 60 * 3) {
     return totalSeconds + (useFullFormat ? " seconds" : "s");
   } else if (ms < 1000 * 60 * 60) {
-    return minutes + (seconds === 0 ? "" : `:${seconds}`) + (useFullFormat ? " minutes" : "m");
+    return minutes + (seconds === 0 ? "" : ":" + (seconds < 10 ? "0" : "") + seconds) + (useFullFormat ? " minutes" : "m");
   } else {
     return hours + ":" + (minutes < 10 ? "0" : "") + minutes + (useFullFormat ? " hours" : "h");
   }

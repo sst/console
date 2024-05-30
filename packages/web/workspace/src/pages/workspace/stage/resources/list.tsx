@@ -63,7 +63,7 @@ import {
 } from "$/ui/icons";
 import { sortBy } from "remeda";
 import { Dynamic } from "solid-js/web";
-import {} from "@solid-primitives/keyboard";
+import { } from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
 import { useFlags } from "$/providers/flags";
@@ -914,8 +914,6 @@ export function List() {
     );
   }
 
-  const flag = useFlags();
-
   return (
     <Switch>
       <Match when={!resources().length && !stateResources().length}>
@@ -971,7 +969,7 @@ export function List() {
                   fallback={
                     <Fullscreen inset="stage">
                       <EmptyResourcesCopy>
-                        Deploy a function to get started!
+                        Deploy some resources to get started!
                       </EmptyResourcesCopy>
                     </Fullscreen>
                   }
@@ -1586,8 +1584,8 @@ function FunctionChild(props: {
                 fallback={
                   exists().metadata.handler
                     ? new URL(
-                        "https://example.com/" + exists().metadata.handler,
-                      ).pathname.replace(/\/+/g, "/")
+                      "https://example.com/" + exists().metadata.handler,
+                    ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >
