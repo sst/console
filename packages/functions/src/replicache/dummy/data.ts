@@ -36,7 +36,7 @@ export type DummyMode =
   | "overview:base;usage:overage;resources:base;workspace:gated;subscription:overdue";
 
 export function* generateData(
-  mode: DummyMode,
+  mode: DummyMode
 ): Generator<DummyData, void, unknown> {
   console.log("generating for", mode);
 
@@ -1501,14 +1501,22 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     id: ++UPDATE_ID,
     stage: STAGE,
     errors: [
-      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA", message: `Invalid component name "FunctionA".\nComponent names must be unique.` },
-      { urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$pulumi-nodejs:dynamic:Resource::FunctionACodeUpdater.sst.aws.FunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdater", message: "Resource already exists." },
       {
-        urn: "", message: `Running program '/Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/eval/eval-1717000722399.mjs' failed with an unhandled exception:
+        urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
+        message: `Invalid component name "FunctionA".\nComponent names must be unique.`,
+      },
+      {
+        urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$pulumi-nodejs:dynamic:Resource::FunctionACodeUpdater.sst.aws.FunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdaterFunctionCodeUpdater",
+        message: "Resource already exists.",
+      },
+      {
+        urn: "",
+        message: `Running program '/Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/eval/eval-1717000722399.mjs' failed with an unhandled exception:
 <ref *1> Error: Failed to build function: Could not find file for handler "index1.handler"
     at file:///Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/src/components/aws/function.ts:1134:21 {
   promise: Promise { <rejected> [Circular *1] }
-}` },
+}`,
+      },
     ],
     deleted: 1,
     timeStarted: DateTime.now().minus({ minutes: 7 }).toISO()!,
@@ -1520,11 +1528,13 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     stage: STAGE,
     errors: [
       {
-        urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC", message: `Running program '/Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/eval/eval-1717000722399.mjs' failed with an unhandled exception:
+        urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC",
+        message: `Running program '/Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/eval/eval-1717000722399.mjs' failed with an unhandled exception:
 <ref *1> Error: Failed to build function: Could not find file for handler "index1.handler"
     at file:///Users/jayair/Desktop/Sandbox/ion-sandbox/.sst/platform/src/components/aws/function.ts:1134:21 {
   promise: Promise { <rejected> [Circular *1] }
-}` },
+}`,
+      },
     ],
     command: "edit",
     timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
@@ -2545,18 +2555,18 @@ function invocation({
       duration === undefined
         ? duration
         : {
-          duration,
-          memory: 128,
-          size: 2048,
-          xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
-        },
+            duration,
+            memory: 128,
+            size: 2048,
+            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+          },
     start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
-        message,
-        id: `log-${INVOCATION_COUNT}-${i}`,
-        timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-      }))
+          message,
+          id: `log-${INVOCATION_COUNT}-${i}`,
+          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+        }))
       : [],
   };
 }
@@ -2666,7 +2676,10 @@ function update({
     index: id,
     stageID: stage,
     command: command || "deploy",
-    source: { type: source || "cli", properties: {} },
+    source:
+      source === "ci"
+        ? { type: "ci", properties: { runID: "run_123" } }
+        : { type: "cli", properties: {} },
     time: {
       updated: DateTime.now().startOf("day").toISO()!,
       created: timeCreated || DateTime.now().startOf("day").toISO()!,
