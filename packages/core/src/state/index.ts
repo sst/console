@@ -10,7 +10,11 @@ import {
   Error,
   stateResourceTable,
 } from "./state.sql";
-import { createTransactionEffect, useTransaction } from "../util/transaction";
+import {
+  createTransaction,
+  createTransactionEffect,
+  useTransaction,
+} from "../util/transaction";
 import { createId } from "@paralleldrive/cuid2";
 import { useWorkspace } from "../actor";
 import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
@@ -487,7 +491,7 @@ export module State {
           message: string;
         }[];
       };
-      await useTransaction(async (tx) => {
+      await createTransaction(async (tx) => {
         await tx
           .update(stateUpdateTable)
           .set({
