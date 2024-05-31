@@ -1,6 +1,6 @@
 import { build } from "esbuild";
 import { Github } from "@console/core/git/github";
-import { Run } from "@console/core/run/run";
+import { Run } from "@console/core/run";
 import { App } from "octokit";
 import { ApiHandler, useBody, useHeader } from "sst/node/api";
 import { Config } from "sst/node/config";

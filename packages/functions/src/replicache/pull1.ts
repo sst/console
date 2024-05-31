@@ -49,7 +49,7 @@ import {
 } from "@console/core/state/state.sql";
 import { State } from "@console/core/state";
 import { runTable } from "@console/core/run/run.sql";
-import { Run } from "@console/core/run/run";
+import { Run } from "@console/core/run";
 
 export const TABLES = {
   workspace,
@@ -104,7 +104,7 @@ const TABLE_PROJECTION = {
   stateUpdate: (input) => State.serializeUpdate(input),
   stateEvent: (input) => State.serializeEvent(input),
   stateResource: (input) => State.serializeResource(input),
-  run: (input) => Run.serializeUpdate(input),
+  run: (input) => Run.serializeRun(input),
 } as {
   [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
 };

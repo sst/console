@@ -1,5 +1,5 @@
 import { withActor } from "@console/core/actor";
-import { MonitorEvent, Run } from "@console/core/run/run";
+import { Run } from "@console/core/run";
 import {
   SchedulerClient,
   DeleteScheduleCommand,
@@ -7,7 +7,7 @@ import {
 import { RETRY_STRATEGY } from "@console/core/util/aws";
 const scheduler = new SchedulerClient({ retryStrategy: RETRY_STRATEGY });
 
-export async function handler(evt: MonitorEvent) {
+export async function handler(evt: Run.MonitorEvent) {
   const { workspaceID, runID, stateUpdateID, groupName, scheduleName } = evt;
   await withActor(
     {
