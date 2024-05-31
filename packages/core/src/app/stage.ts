@@ -205,9 +205,11 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
     };
   }[Resource.Info["type"]][];
   let missing = true;
+  let foundNormal = false;
   const s3 = new S3Client(input);
   for (const b of bootstrap) {
     if (b.version === "normal") {
+      foundNormal = true;
       const key = `stackMetadata/app.${input.app}/stage.${input.stage}/`;
       console.log("listing", key, "for", b.bucket);
       const list = await s3
@@ -281,6 +283,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
     if (b.version === "ion") missing = false;
   }
   s3.destroy();
+  if (!foundNormal) return;
   console.log("resources", JSON.stringify(resources, null, 4));
   if (missing) {
     await remove(input.stageID);
