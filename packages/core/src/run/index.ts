@@ -536,9 +536,7 @@ export module Run {
           region,
           retryStrategy: RETRY_STRATEGY,
         });
-        const ruleName =
-          "SSTConsoleExternal" +
-          (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
+        const ruleName = "SSTConsoleExternal" + suffix;
         try {
           await eb.send(
             new PutRuleCommand({
@@ -551,7 +549,9 @@ export module Run {
           );
 
           const iam = new IAMClient(config);
-          const roleName = "SSTConsolePublisher" + suffix;
+          const roleName =
+            "SSTConsolePublisher" +
+            (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
           const roleRet = await iam.send(
             new GetRoleCommand({
               RoleName: roleName,
