@@ -510,10 +510,9 @@ export module Run {
         } catch (e: any) {
           if (e.name === "InvalidParameterValueException")
             return createFunction();
-          if (e.name === "ResourceConflictException") {
-            // ignore
-          }
-          throw e;
+          else if (e.name === "ResourceConflictException") {
+            /* ignore */
+          } else throw e;
         }
 
         // Wait or function state is ACTIVE
@@ -537,7 +536,9 @@ export module Run {
           region,
           retryStrategy: RETRY_STRATEGY,
         });
-        const ruleName = "SSTConsoleExternal" + suffix;
+        const ruleName =
+          "SSTConsoleExternal" +
+          (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
         try {
           await eb.send(
             new PutRuleCommand({
