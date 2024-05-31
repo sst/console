@@ -278,6 +278,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
       resources.push(...results);
       missing = false;
     }
+    if (b.version === "ion") missing = false;
   }
   s3.destroy();
   console.log("resources", JSON.stringify(resources, null, 4));
