@@ -24,7 +24,7 @@ export const Resource = z.discriminatedUnion("type", [
   }),
 ]);
 export type Resource = z.infer<typeof Resource>;
-export const RunnerNames = ["lambda/x86_64", "lambda/arm64"] as const;
+export const Architecture = ["x86_64", "arm64"] as const;
 
 export const Log = z.discriminatedUnion("type", [
   z.object({
@@ -63,7 +63,8 @@ export const runRunner = mysqlTable(
     ...timestampsNext,
     awsAccountID: cuid("aws_account_id").notNull(),
     region: varchar("region", { length: 255 }).notNull(),
-    name: mysqlEnum("name", RunnerNames).notNull(),
+    architecture: mysqlEnum("architecture", Architecture).notNull(),
+    image: varchar("image", { length: 255 }).notNull(),
     resource: json("resource").$type<Resource>().notNull(),
   },
   (table) => ({
@@ -73,12 +74,6 @@ export const runRunner = mysqlTable(
       columns: [table.workspaceID, table.awsAccountID],
       foreignColumns: [awsAccount.workspaceID, awsAccount.id],
     }).onDelete("cascade"),
-    name: unique("name").on(
-      table.workspaceID,
-      table.awsAccountID,
-      table.region,
-      table.name
-    ),
   })
 );
 

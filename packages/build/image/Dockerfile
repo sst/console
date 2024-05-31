@@ -1,4 +1,6 @@
-FROM public.ecr.aws/codebuild/amazonlinux-x86_64-lambda-standard:nodejs20
+ARG ARC
+
+FROM public.ecr.aws/codebuild/amazonlinux-${ARC}-lambda-standard:nodejs20
 
 # configure npm
 ENV NPM_CONFIG_CACHE=/tmp/.npm
@@ -26,5 +28,7 @@ CMD ["index.handler"]
 # how to build
 # $ docker logout public.ecr.aws
 # $ AWS_PROFILE=sst-dev aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 917397401067.dkr.ecr.us-east-1.amazonaws.com
-# $ docker build --platform linux/amd64 --tag 917397401067.dkr.ecr.us-east-1.amazonaws.com/console-images:x86_64-1 .
+# $ docker build --build-arg="ARC=x86_64" --platform linux/amd64 --tag 917397401067.dkr.ecr.us-east-1.amazonaws.com/console-images:x86_64-1 .
+# $ docker build --build-arg="ARC=aarch64" --platform linux/arm64 --tag 917397401067.dkr.ecr.us-east-1.amazonaws.com/console-images:arm64-1 .
 # $ docker push 917397401067.dkr.ecr.us-east-1.amazonaws.com/console-images:x86_64-1
+# $ docker push 917397401067.dkr.ecr.us-east-1.amazonaws.com/console-images:arm64-1

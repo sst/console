@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zod } from "../util/zod";
-import { useTransaction } from "../util/transaction";
+import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { appRepo } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
@@ -15,6 +15,7 @@ export const Events = {
     "app.repo.connected",
     z.object({
       appID: z.string(),
+      repoID: z.number().int(),
     })
   ),
 };
@@ -62,7 +63,9 @@ export const connect = zod(
         })
         .execute()
     );
-    await Events.Connected.publish({ appID: input.appID });
+    await createTransactionEffect(() =>
+      Events.Connected.publish({ appID: input.appID, repoID: input.repoID })
+    );
   }
 );
 

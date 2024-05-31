@@ -18,6 +18,7 @@ import {
 } from "@aws-sdk/client-scheduler";
 import { RETRY_STRATEGY } from "../util/aws";
 import { State } from "../state";
+import { Architecture } from "@aws-sdk/client-lambda";
 
 export * as Run from "./run";
 
@@ -40,6 +41,11 @@ export type AppConfig = z.infer<typeof AppConfig>;
 
 export const DeployConfig = z.object({
   stage: z.string().nonempty(),
+  runner: z
+    .object({
+      architecture: z.enum(["x86_64", "arm64"]).default("x86_64"),
+    })
+    .default({}),
   env: z.record(z.string().nonempty()),
 });
 export type DeployConfig = z.infer<typeof DeployConfig>;

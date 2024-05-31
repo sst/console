@@ -2,6 +2,7 @@ import { withActor } from "@console/core/actor";
 import { Stage } from "@console/core/app/stage";
 import { Run } from "@console/core/run/run";
 import { Runner } from "@console/core/run/runner";
+import { Config } from "sst/node/config";
 import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(Run.Events.Created, (evt) =>
@@ -16,7 +17,8 @@ export const handler = EventHandler(Run.Events.Created, (evt) =>
       trigger,
       deployConfig,
     } = evt.properties;
-    const name = "lambda/x86_64";
+    const architecture = deployConfig.runner.architecture;
+    const image = `${Config.IMAGE_URI}:${architecture}-1`;
     let context;
 
     try {
@@ -26,15 +28,19 @@ export const handler = EventHandler(Run.Events.Created, (evt) =>
 
       // Get runner (create if not exist)
       context = "lookup existing runner";
-      let resource = await Runner.get({ awsAccountID, region, name }).then(
-        (x) => x?.resource
-      );
+      let resource = await Runner.get({
+        awsAccountID,
+        region,
+        architecture,
+        image,
+      }).then((x) => x?.resource);
       context = "create runner";
       if (!resource) {
         resource = await Runner.create({
           awsAccountID,
           region,
-          name,
+          architecture,
+          image,
           config: awsConfig,
         });
       }

@@ -9,6 +9,7 @@ import { and, db, eq, notInArray, or, sql } from "../drizzle";
 import { createSelectSchema } from "drizzle-zod";
 import { Config } from "sst/node/config";
 import { event } from "../event";
+import { useCallback } from "react";
 
 export * as Github from "./github";
 
@@ -26,14 +27,31 @@ export type OrgInfo = z.infer<typeof OrgInfo>;
 export const RepoInfo = createSelectSchema(githubRepo);
 export type RepoInfo = z.infer<typeof RepoInfo>;
 
-export const connect = zod(z.number(), async (installationID) => {
-  // Get installation detail
+let client: {
+  octokit: Awaited<ReturnType<typeof createClient>>;
+  installationID: number;
+};
+async function useClient(installationID: number) {
+  if (client?.installationID !== installationID) {
+    client = {
+      octokit: await createClient(installationID),
+      installationID,
+    };
+  }
+  return client.octokit.rest;
+}
+function createClient(installationID: number) {
   const app = new App({
     appId: Config.GITHUB_APP_ID,
     privateKey: Config.GITHUB_PRIVATE_KEY,
   });
-  const octokit = await app.getInstallationOctokit(installationID);
-  const installation = await octokit.rest.apps.getInstallation({
+  return app.getInstallationOctokit(installationID);
+}
+
+export const connect = zod(z.number(), async (installationID) => {
+  // Get installation detail
+  const client = await useClient(installationID);
+  const installation = await client.apps.getInstallation({
     installation_id: installationID,
   });
   const orgID = installation.data.account?.id!;
@@ -81,6 +99,27 @@ export const disconnectAll = zod(z.number().int(), (input) =>
   })
 );
 
+export const getByRepoID = zod(z.number(), (repoID) =>
+  useTransaction(async (tx) =>
+    tx
+      .select({
+        installationID: githubOrg.installationID,
+        owner: githubOrg.login,
+        repo: githubRepo.name,
+      })
+      .from(githubRepo)
+      .innerJoin(githubOrg, eq(githubRepo.orgID, githubOrg.orgID))
+      .where(
+        and(
+          eq(githubRepo.repoID, repoID),
+          eq(githubRepo.workspaceID, useWorkspace())
+        )
+      )
+      .execute()
+      .then((x) => x[0])
+  )
+);
+
 export const syncRepos = zod(
   z.object({
     installationID: z.number().int(),
@@ -97,14 +136,10 @@ export const syncRepos = zod(
     if (orgs.length === 0) return;
 
     // fetch repos from GitHub
-    const app = new App({
-      appId: Config.GITHUB_APP_ID,
-      privateKey: Config.GITHUB_PRIVATE_KEY,
-    });
-    const octokit = await app.getInstallationOctokit(input.installationID);
+    const client = await useClient(input.installationID);
     const repos: { id: number; name: string }[] = [];
     for (let page = 1; ; page++) {
-      const ret = await octokit.rest.apps.listReposAccessibleToInstallation({
+      const ret = await client.apps.listReposAccessibleToInstallation({
         per_page: 100,
         page,
       });
@@ -157,5 +192,27 @@ export const syncRepos = zod(
         })
         .execute();
     });
+  }
+);
+
+export const getFile = zod(
+  z.object({
+    installationID: z.number().int(),
+    owner: z.string().nonempty(),
+    repo: z.string().nonempty(),
+    ref: z.string().nonempty().optional(),
+  }),
+  async (input) => {
+    const client = await useClient(input.installationID);
+    const file = await client.repos.getContent({
+      owner: input.owner,
+      repo: input.repo,
+      ref: input.ref,
+      path: "sst.config.ts",
+    });
+    if (!("content" in file.data)) {
+      throw new Error("sst.config.ts not found");
+    }
+    return Buffer.from(file.data.content, "base64").toString("utf-8");
   }
 );

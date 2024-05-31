@@ -1,3 +1,5 @@
+import fs from "fs";
+import { createHash } from "crypto";
 import {
   CreateFunctionCommand,
   GetFunctionCommand,
@@ -24,7 +26,7 @@ import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { and, db, eq, notInArray, or, sql } from "../drizzle";
 import { Config } from "sst/node/config";
-import { Resource, RunnerNames, Trigger, runRunner } from "./run.sql";
+import { Architecture, Resource, Trigger, runRunner } from "./run.sql";
 import { StageCredentials } from "../app/stage";
 import { Bucket } from "sst/node/bucket";
 import { RETRY_STRATEGY } from "../util/aws";
@@ -53,7 +55,8 @@ export const RunnerInfo = z.object({
   id: z.string().cuid2(),
   awsAccountID: z.string().cuid2(),
   region: z.string().nonempty(),
-  name: z.enum(RunnerNames),
+  architecture: z.enum(Architecture),
+  image: z.string().nonempty(),
   time: z.object({
     created: z.string(),
     deleted: z.string().optional(),
@@ -75,13 +78,19 @@ export function serializeUpdate(
     },
     awsAccountID: input.awsAccountID,
     region: input.region,
-    name: input.name,
+    architecture: input.architecture,
+    image: input.image,
     resource: input.resource,
   };
 }
 
 export const get = zod(
-  RunnerInfo.pick({ awsAccountID: true, region: true, name: true }),
+  RunnerInfo.pick({
+    awsAccountID: true,
+    region: true,
+    architecture: true,
+    image: true,
+  }),
   async (input) => {
     return await useTransaction((tx) =>
       tx
@@ -92,7 +101,8 @@ export const get = zod(
             eq(runRunner.workspaceID, useWorkspace()),
             eq(runRunner.awsAccountID, input.awsAccountID),
             eq(runRunner.region, input.region),
-            eq(runRunner.name, input.name)
+            eq(runRunner.architecture, input.architecture),
+            eq(runRunner.image, input.image)
           )
         )
         .execute()
@@ -101,62 +111,25 @@ export const get = zod(
   }
 );
 
-export const invoke = zod(
-  RunnerInfo.pick({
-    region: true,
-    resource: true,
-  }).extend({
-    runID: z.string().cuid2(),
-    stateUpdateID: z.string().cuid2(),
-    config: z.custom<StageCredentials>(),
-    stage: z.string().nonempty(),
-    cloneUrl: z.string().nonempty(),
-    trigger: Trigger,
-  }),
-  async (input) => {
-    const region = input.region;
-    const config = input.config;
-
-    const lambda = new LambdaClient({
-      ...config,
-      region,
-      retryStrategy: RETRY_STRATEGY,
-    });
-    await lambda.send(
-      new InvokeCommand({
-        FunctionName: input.resource.properties.function,
-        InvocationType: "Event",
-        Payload: JSON.stringify({
-          buildspec: {
-            version: Config.BUILDSPEC_VERSION,
-            bucket: Bucket.Buildspec.bucketName,
-          },
-          runID: input.runID,
-          stateUpdateID: input.stateUpdateID,
-          workspaceID: useWorkspace(),
-          stage: input.stage,
-          cloneUrl: input.cloneUrl,
-          credentials: config.credentials,
-          trigger: input.trigger,
-        } satisfies RunnerPayload),
-      })
-    );
-  }
-);
-
 export const create = zod(
   RunnerInfo.pick({
     awsAccountID: true,
     region: true,
-    name: true,
+    architecture: true,
+    image: true,
   }).extend({
     config: z.custom<StageCredentials>(),
   }),
   async (input) => {
-    const region = input.region;
-    const config = input.config;
-    const suffix = Config.STAGE !== "production" ? "-" + Config.STAGE : "";
-    const imageTag = input.name.split("/")[1];
+    const { region, config, architecture, image } = input;
+    const suffix =
+      architecture +
+      "-" +
+      createHash("sha256")
+        .update(`lambda${architecture}${image}`)
+        .digest("hex")
+        .substring(0, 8) +
+      (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
 
     const roleArn = await createIamRole();
     const functionArn = await createFunction();
@@ -178,7 +151,8 @@ export const create = zod(
           workspaceID: useWorkspace(),
           awsAccountID: input.awsAccountID,
           region,
-          name: input.name,
+          architecture: input.architecture,
+          image: input.image,
           resource,
         })
         .execute()
@@ -188,7 +162,7 @@ export const create = zod(
 
     async function createIamRole() {
       const iam = new IAMClient({ ...config, retryStrategy: RETRY_STRATEGY });
-      const roleName = `sst-runner-${imageTag}-${region}${suffix}`;
+      const roleName = `sst-runner-${region}-${suffix}`;
       try {
         const ret = await iam.send(
           new CreateRoleCommand({
@@ -252,15 +226,13 @@ export const create = zod(
         region,
         retryStrategy: RETRY_STRATEGY,
       });
-      const functionName = `sst-runner-${imageTag}${suffix}`;
+      const functionName = `sst-runner-${suffix}`;
       try {
         const ret = await lambda.send(
           new CreateFunctionCommand({
             FunctionName: functionName,
             Role: roleArn,
-            Code: {
-              ImageUri: `${Config.IMAGE_URI}:${imageTag}-1`,
-            },
+            Code: { ImageUri: input.image },
             Timeout: 900,
             MemorySize: 10240,
             EphemeralStorage: {
@@ -346,5 +318,48 @@ export const create = zod(
         }
       }
     }
+  }
+);
+
+export const invoke = zod(
+  RunnerInfo.pick({
+    region: true,
+    resource: true,
+  }).extend({
+    runID: z.string().cuid2(),
+    stateUpdateID: z.string().cuid2(),
+    config: z.custom<StageCredentials>(),
+    stage: z.string().nonempty(),
+    cloneUrl: z.string().nonempty(),
+    trigger: Trigger,
+  }),
+  async (input) => {
+    const region = input.region;
+    const config = input.config;
+
+    const lambda = new LambdaClient({
+      ...config,
+      region,
+      retryStrategy: RETRY_STRATEGY,
+    });
+    await lambda.send(
+      new InvokeCommand({
+        FunctionName: input.resource.properties.function,
+        InvocationType: "Event",
+        Payload: JSON.stringify({
+          buildspec: {
+            version: Config.BUILDSPEC_VERSION,
+            bucket: Bucket.Buildspec.bucketName,
+          },
+          runID: input.runID,
+          stateUpdateID: input.stateUpdateID,
+          workspaceID: useWorkspace(),
+          stage: input.stage,
+          cloneUrl: input.cloneUrl,
+          credentials: config.credentials,
+          trigger: input.trigger,
+        } satisfies RunnerPayload),
+      })
+    );
   }
 );

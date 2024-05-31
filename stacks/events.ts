@@ -88,6 +88,13 @@ export function Events({ stack }: StackContext) {
     permissions: ["sts", "iot"],
   });
 
+  bus.subscribe("app.repo.connected", {
+    handler: "packages/functions/src/events/app-repo-connected.handler",
+    timeout: "15 minute",
+    bind: [...Object.values(secrets.database), bus, ...secrets.github],
+    permissions: ["sts", "iot"],
+  });
+
   bus.subscribe("aws.account.created", {
     handler: "packages/functions/src/events/aws-account-created.handler",
     bind: [...Object.values(secrets.database), bus],
