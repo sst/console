@@ -2224,6 +2224,10 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     stageID: STAGE,
     timeStarted: DateTime.now().minus({ minutes: 2 }).toISO()!,
   });
+  yield update({
+    id: ++UPDATE_ID,
+    stageID: STAGE,
+  });
 }
 
 function* stateEventBase(): Generator<DummyData, void, unknown> {
@@ -3352,7 +3356,7 @@ function update({
     time: {
       updated: DateTime.now().startOf("day").toISO()!,
       created: timeCreated || DateTime.now().startOf("day").toISO()!,
-      started: timeStarted || DateTime.now().startOf("day").toISO()!,
+      started: timeStarted,
       completed: timeCompleted,
     },
     resource: {
