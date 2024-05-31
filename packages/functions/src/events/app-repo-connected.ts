@@ -2,8 +2,7 @@ import { withActor } from "@console/core/actor";
 import { AppRepo } from "@console/core/app/repo";
 import { Stage } from "@console/core/app/stage";
 import { Github } from "@console/core/git/github";
-import { Run } from "@console/core/run/run";
-import { Runner } from "@console/core/run/runner";
+import { Run } from "@console/core/run";
 import { Config } from "sst/node/config";
 import { EventHandler } from "sst/node/event-bus";
 

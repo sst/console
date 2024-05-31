@@ -7,6 +7,7 @@ import type { Issue } from "@console/core/issue";
 import type { Billing } from "@console/core/billing";
 import type { AppRepo } from "@console/core/app/repo";
 import type { State } from "@console/core/state";
+import type { Run } from "@console/core/run";
 
 export const AppStore = new Store()
   .type<App.Info>()
@@ -81,4 +82,10 @@ export const StateEventStore = new Store()
     updateID,
     resourceID,
   ])
+  .build();
+
+export const RunStore = new Store()
+  .type<Run.Update>()
+  .scan("forStage", (stageID: string) => ["stateUpdate", stageID])
+  .get((stageID: string, issueID: string) => ["stateUpdate", stageID, issueID])
   .build();

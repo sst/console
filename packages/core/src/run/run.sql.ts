@@ -56,7 +56,7 @@ export const Trigger = z.object({
 });
 export type Trigger = z.infer<typeof Trigger>;
 
-export const runRunner = mysqlTable(
+export const runRunnerTable = mysqlTable(
   "run_runner",
   {
     ...workspaceID,
@@ -77,7 +77,7 @@ export const runRunner = mysqlTable(
   })
 );
 
-export const run = mysqlTable(
+export const runTable = mysqlTable(
   "run",
   {
     ...workspaceID,

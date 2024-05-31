@@ -1,11 +1,10 @@
 import { withActor } from "@console/core/actor";
 import { Stage } from "@console/core/app/stage";
-import { Run } from "@console/core/run/run";
-import { Runner } from "@console/core/run/runner";
+import { Run } from "@console/core/run";
 import { Config } from "sst/node/config";
 import { EventHandler } from "sst/node/event-bus";
 
-export const handler = EventHandler(Run.Events.Created, (evt) =>
+export const handler = EventHandler(Run.Event.Created, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const {
       awsAccountID,
@@ -28,7 +27,7 @@ export const handler = EventHandler(Run.Events.Created, (evt) =>
 
       // Get runner (create if not exist)
       context = "lookup existing runner";
-      let resource = await Runner.get({
+      let resource = await Run.getRunner({
         awsAccountID,
         region,
         architecture,
@@ -36,7 +35,7 @@ export const handler = EventHandler(Run.Events.Created, (evt) =>
       }).then((x) => x?.resource);
       context = "create runner";
       if (!resource) {
-        resource = await Runner.create({
+        resource = await Run.createRunner({
           awsAccountID,
           region,
           architecture,
@@ -50,7 +49,7 @@ export const handler = EventHandler(Run.Events.Created, (evt) =>
 
       // Run runner
       context = "start runner";
-      await Runner.invoke({
+      await Run.invokeRunner({
         runID,
         stateUpdateID,
         region,

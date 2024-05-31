@@ -1,4 +1,4 @@
-/** @typedef {import("../../core/src/run/runner").RunnerPayload} RunnerPayload */
+/** @typedef {import("../../core/src/run").RunnerEvent} RunnerEvent */
 /** @typedef {import("aws-lambda").Context} Context */
 import fs from "fs";
 import path from "path";
@@ -11,7 +11,7 @@ let currentVersion;
 let buildspec;
 
 /**
- * @param {RunnerPayload} event
+ * @param {RunnerEvent} event
  * @param {Context} context
  */
 export async function handler(event, context) {

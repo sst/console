@@ -48,6 +48,8 @@ import {
   stateUpdateTable,
 } from "@console/core/state/state.sql";
 import { State } from "@console/core/state";
+import { runTable } from "@console/core/run/run.sql";
+import { Run } from "@console/core/run/run";
 
 export const TABLES = {
   workspace,
@@ -74,6 +76,7 @@ export const TABLES = {
   stateUpdate: stateUpdateTable,
   stateEvent: stateEventTable,
   stateResource: stateResourceTable,
+  run: runTable,
 };
 
 type TableName = keyof typeof TABLES;
@@ -91,6 +94,7 @@ const TABLE_KEY = {
     stateEventTable.updateID,
     stateEventTable.id,
   ],
+  run: [runTable.stageID, runTable.id],
   stripe: [],
 } as {
   [key in TableName]?: MySqlColumn[];
@@ -100,6 +104,7 @@ const TABLE_PROJECTION = {
   stateUpdate: (input) => State.serializeUpdate(input),
   stateEvent: (input) => State.serializeEvent(input),
   stateResource: (input) => State.serializeResource(input),
+  run: (input) => Run.serializeUpdate(input),
 } as {
   [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
 };

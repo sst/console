@@ -94,6 +94,9 @@ export function Run({ stack, app }: StackContext) {
     repo = Repository.fromRepositoryName(stack, "Repository", repoName);
   }
 
+  /***************************************/
+  /* Resources for build timeout monitor */
+  /***************************************/
   const scheduleGroup = new CfnScheduleGroup(stack, "RunTimeoutMonitor", {
     name: app.logicalPrefixedName("RunTimeoutMonitor"),
   });

@@ -1,4 +1,4 @@
-/** @typedef {import("../../core/src/run/runner").RunnerPayload} RunnerPayload */
+/** @typedef {import("../../core/src/run").RunnerEvent} RunnerEvent */
 /** @typedef {import("aws-lambda").Context} Context */
 import { spawnSync } from "child_process";
 import fs from "fs";
@@ -15,7 +15,7 @@ const eb = new EventBridgeClient({});
 let isWarm = false;
 
 /**
- * @param {RunnerPayload} event
+ * @param {RunnerEvent} event
  * @param {Context} context
  */
 export async function handler(event, context) {
