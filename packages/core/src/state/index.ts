@@ -330,7 +330,7 @@ export module State {
         });
         resourceDeletes.push(resource.urn);
       }
-      await useTransaction(async (tx) => {
+      await createTransaction(async (tx) => {
         await createTransactionEffect(() => Replicache.poke());
         await tx
           .update(stateUpdateTable)
@@ -415,7 +415,7 @@ export module State {
       const command = UpdateCommand.safeParse(lock.command);
       if (!command.success) return;
       console.log(lock);
-      await useTransaction(async (tx) => {
+      await createTransaction(async (tx) => {
         const result = await tx
           .select({
             count: count(),
@@ -523,8 +523,8 @@ export module State {
       time: z.date(),
     }),
     (input) =>
-      useTransaction(async (tx) => {
-        const result = await tx
+      createTransaction(async (tx) => {
+        await tx
           .select({
             count: count(),
           })
