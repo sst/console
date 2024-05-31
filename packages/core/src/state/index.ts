@@ -524,7 +524,7 @@ export module State {
     }),
     (input) =>
       createTransaction(async (tx) => {
-        await tx
+        const result = await tx
           .select({
             count: count(),
           })
