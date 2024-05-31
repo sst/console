@@ -366,6 +366,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
               child.parent === res.urn &&
               child.type === "aws:apigatewayv2/api:Api"
           );
+          if (!api) continue;
 
           resources.push({
             ...base,
