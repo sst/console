@@ -213,6 +213,6 @@ export const getFile = zod(
     if (!("content" in file.data)) {
       throw new Error("sst.config.ts not found");
     }
-    return Buffer.from(file.data.content, "base64").toString("utf-8");
+    return file.data.content;
   }
 );

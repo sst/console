@@ -88,11 +88,20 @@ export function Events({ stack }: StackContext) {
     permissions: ["sts", "iot"],
   });
 
-  bus.subscribe("app.repo.connected", {
-    handler: "packages/functions/src/events/app-repo-connected.handler",
+  bus.subscribe("app.env.updated", {
+    handler: "packages/functions/src/events/app-env-updated.handler",
     timeout: "15 minute",
-    bind: [...Object.values(secrets.database), bus, ...secrets.github],
+    bind: [
+      ...Object.values(secrets.database),
+      bus,
+      ...secrets.github,
+      run.configParser,
+      run.image,
+    ],
     permissions: ["sts", "iot"],
+    environment: {
+      EVENT_BUS_ARN: bus.eventBusArn,
+    },
   });
 
   bus.subscribe("aws.account.created", {

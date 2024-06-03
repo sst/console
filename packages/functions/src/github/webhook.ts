@@ -1,4 +1,3 @@
-import { build } from "esbuild";
 import { Github } from "@console/core/git/github";
 import { Run } from "@console/core/run";
 import { App } from "octokit";
@@ -27,6 +26,10 @@ app.webhooks.on("push", async (event) => {
   const branch = event.payload.ref.replace("refs/heads/", "");
   const commitID = event.payload.head_commit?.id!;
 
+  // Get all apps connected to the repo
+  const apps = await AppRepo.listByRepo({ type: "github", repoID });
+  if (apps.length === 0) return;
+
   // Get `sst.config.ts` file
   const file = await event.octokit.rest.repos.getContent({
     owner: event.payload.repository.owner!.login,
@@ -37,28 +40,6 @@ app.webhooks.on("push", async (event) => {
   if (!("content" in file.data)) {
     throw new Error("sst.config.ts not found");
   }
-  const contents = Buffer.from(file.data.content, "base64").toString("utf-8");
-
-  // Run esbuild
-  await fs.rm("/tmp/sst.config.mjs", { force: true });
-  const ret = await build({
-    mainFields: ["module", "main"],
-    format: "esm",
-    platform: "node",
-    sourcemap: "inline",
-    stdin: {
-      contents,
-      sourcefile: "sst.config.ts",
-      loader: "ts",
-    },
-    outfile: "/tmp/sst.config.mjs",
-    write: true,
-    bundle: true,
-    banner: {
-      js: ["const $config = (input) => input;"].join("\n"),
-    },
-  });
-  console.log("errors", ret.errors);
 
   // Build git context
   const trigger: Trigger = {
@@ -80,41 +61,19 @@ app.webhooks.on("push", async (event) => {
     },
   };
 
-  // Run the deploy() function
-  await fs.rm("/tmp/eval.mjs", { force: true });
-  await fs.rm("/tmp/eval-output.mjs", { force: true });
-  await fs.writeFile(
-    "/tmp/eval.mjs",
-    [
-      `import fs from "fs";`,
-      `import mod from "./sst.config.mjs";`,
-      `if (mod.stacks || mod.config) {`,
-      `  console.log({error:"v2"});`,
-      `}`,
-      `if (!mod.deploy) {`,
-      `  console.log({error:"no_deploy"});`,
-      `}`,
-      `const deployConfig = mod.deploy(${JSON.stringify(trigger)});`,
-      `const appConfig = mod.app({stage: deployConfig.stage});`,
-      `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app: appConfig, deploy: deployConfig}));`,
-    ].join("\n")
-  );
-  execSync("node /tmp/eval.mjs", { stdio: "inherit" });
-  const output = await fs.readFile("/tmp/eval-output.mjs", "utf-8");
-  console.log("deploy config", output);
-
-  // Parse deploy config
-  const config = JSON.parse(output);
-  if (config.error) throw new Error(config.error);
+  // Parse CI config
+  const config = await Run.parseSstConfig({
+    content: file.data.content,
+    trigger,
+  });
 
   // Do not trigger build
-  if (!config.deploy?.stage) return;
+  if (!config.ci.config.stage) return;
 
   // Loop through all apps connected to the repo
   const oauthToken = await event.octokit
     .auth({ type: "installation" })
     .then((x: any) => x.token);
-  const apps = await AppRepo.listByRepo({ type: "github", repoID });
   for (const app of apps) {
     await withActor(
       {
@@ -126,8 +85,9 @@ app.webhooks.on("push", async (event) => {
           appID: app.appID,
           cloneUrl: `https://oauth2:${oauthToken}@github.com/${trigger.repo.owner}/${trigger.repo.repo}.git`,
           trigger,
+          region: config.region,
           appConfig: config.app,
-          deployConfig: config.deploy,
+          ciConfig: config.ci,
         })
     );
   }

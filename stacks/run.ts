@@ -21,6 +21,9 @@ import { Secrets } from "./secrets";
 export function Run({ stack, app }: StackContext) {
   const secrets = use(Secrets);
 
+  /****************/
+  /* Build script */
+  /****************/
   const bucket = new Bucket(stack, "Buildspec", {
     cdk: {
       bucket: {
@@ -42,9 +45,11 @@ export function Run({ stack, app }: StackContext) {
     ],
   });
 
-  // We are going to create only 1 ECR repository per region b/c
-  // the Replication is a region-level resource. It cannot be created
-  // on a per user bases.
+  /***************/
+  /* Build image */
+  /***************/
+  // Create only 1 ECR repository per region b/c the Replication is a region-level
+  // resource. It cannot be created on a per user bases.
   const repoName = `${app.name}-images`;
   let repo: IRepository;
   if (app.stage !== "jayair" && app.stage !== "thdxr") {
@@ -94,9 +99,9 @@ export function Run({ stack, app }: StackContext) {
     repo = Repository.fromRepositoryName(stack, "Repository", repoName);
   }
 
-  /***************************************/
-  /* Resources for build timeout monitor */
-  /***************************************/
+  /********************/
+  /* Timeout monitor */
+  /********************/
   const scheduleGroup = new CfnScheduleGroup(stack, "RunTimeoutMonitor", {
     name: app.logicalPrefixedName("RunTimeoutMonitor"),
   });
@@ -119,7 +124,19 @@ export function Run({ stack, app }: StackContext) {
     },
   });
 
+  /*********************/
+  /* SST config parser */
+  /*********************/
+  const configParser = new Function(stack, "ConfigParser", {
+    handler: "packages/functions/src/run/config-parser.handler",
+    timeout: "1 minute",
+    nodejs: {
+      install: ["esbuild"],
+    },
+  });
+
   return {
+    configParser,
     scheduleGroupName: scheduleGroup.name!,
     scheduleRoleArn: scheduleRole.roleArn,
     timeoutMonitorArn: timeoutMonitor.functionArn,

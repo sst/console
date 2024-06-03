@@ -14,10 +14,10 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
       stateUpdateID,
       cloneUrl,
       trigger,
-      deployConfig,
+      ciConfig,
     } = evt.properties;
-    const architecture = deployConfig.runner.architecture;
-    const image = `${Config.IMAGE_URI}:${architecture}-1`;
+    const architecture = ciConfig.runner.architecture;
+    const image = ciConfig.runner.image;
     let context;
 
     try {
@@ -40,7 +40,7 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
           region,
           architecture,
           image,
-          config: awsConfig,
+          credentials: awsConfig.credentials,
         });
       }
       if (!resource) {
@@ -53,9 +53,9 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
         runID,
         stateUpdateID,
         region,
-        config: awsConfig,
+        credentials: awsConfig.credentials,
         resource,
-        stage: deployConfig.stage,
+        stage: ciConfig.config.stage,
         cloneUrl,
         trigger,
       });

@@ -163,16 +163,13 @@ export function API({ stack, app }: StackContext) {
         function: {
           handler: "packages/functions/src/github/webhook.handler",
           timeout: "120 seconds",
-          bind: [...secrets.github],
+          bind: [...secrets.github, run.configParser],
           environment: {
             SCHEDULE_GROUP_NAME: run.scheduleGroupName,
             SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
             TIMEOUT_MONITOR_FUNCTION_ARN: run.timeoutMonitorArn,
           },
           permissions: ["scheduler:CreateSchedule", "iam:PassRole"],
-          nodejs: {
-            install: ["esbuild"],
-          },
         },
       },
       "GET /": "packages/functions/src/index.handler",

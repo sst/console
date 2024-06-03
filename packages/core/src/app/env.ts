@@ -1,13 +1,26 @@
 import { z } from "zod";
 import { zod } from "../util/zod";
-import { useTransaction } from "../util/transaction";
+import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { env } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
 import { and, eq, inArray } from "drizzle-orm";
+import { event } from "../event";
 
 export * as Env from "./env";
+
+export const Events = {
+  Updated: event(
+    "app.env.updated",
+    z.object({
+      appID: z.string(),
+      stageName: z.string(),
+      key: z.string(),
+      value: z.string(),
+    })
+  ),
+};
 
 export const Info = createSelectSchema(env);
 export type Info = z.infer<typeof Info>;
@@ -51,8 +64,8 @@ export const create = zod(
   }).partial({
     id: true,
   }),
-  (input) =>
-    useTransaction(async (tx) =>
+  async (input) => {
+    await useTransaction(async (tx) =>
       tx
         .insert(env)
         .values({
@@ -69,7 +82,16 @@ export const create = zod(
           },
         })
         .execute()
-    )
+    );
+    await createTransactionEffect(() =>
+      Events.Updated.publish({
+        appID: input.appID,
+        stageName: input.stageName,
+        key: input.key,
+        value: input.value,
+      })
+    );
+  }
 );
 
 export const remove = zod(Info.shape.id, (input) =>

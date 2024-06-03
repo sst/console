@@ -48,17 +48,19 @@ import { Env } from "../app/env";
 import { RETRY_STRATEGY } from "../util/aws";
 import { State } from "../state";
 import { StageCredentials } from "../app/stage";
+import { Function } from "sst/node/function";
+import { Credentials } from "../aws";
 
 export module Run {
   const BUILD_TIMEOUT = 960000; // 16 minutes
 
-  export interface MonitorEvent {
+  export type MonitorEvent = {
     groupName: string;
     scheduleName: string;
     workspaceID: string;
     runID: string;
     stateUpdateID: string;
-  }
+  };
 
   export type RunnerEvent = {
     runID: string;
@@ -78,21 +80,30 @@ export module Run {
     trigger: Trigger;
   };
 
+  export type ConfigParserEvent = {
+    content: string;
+    trigger?: Trigger;
+    stage?: string;
+  };
+
   export const AppConfig = z.object({
     version: z.string().nonempty().optional(),
     name: z.string().nonempty(),
     providers: z.record(z.any()).optional(),
   });
+  export type AppConfig = z.infer<typeof AppConfig>;
 
-  export const DeployConfig = z.object({
-    stage: z.string().nonempty(),
-    runner: z
-      .object({
-        architecture: z.enum(["x86_64", "arm64"]).default("x86_64"),
-      })
-      .default({}),
-    env: z.record(z.string().nonempty()),
+  export const CiConfig = z.object({
+    runner: z.object({
+      architecture: z.enum(["x86_64", "arm64"]),
+      image: z.string().nonempty(),
+    }),
+    config: z.object({
+      stage: z.string().nonempty(),
+      env: z.record(z.string().nonempty()),
+    }),
   });
+  export type CiConfig = z.infer<typeof CiConfig>;
 
   export const Event = {
     Created: event(
@@ -107,7 +118,7 @@ export module Run {
         cloneUrl: z.string().nonempty(),
         trigger: Trigger,
         appConfig: AppConfig,
-        deployConfig: DeployConfig,
+        ciConfig: CiConfig,
       })
     ),
     Started: event(
@@ -164,18 +175,63 @@ export module Run {
     };
   }
 
+  export const parseSstConfig = zod(
+    z.object({
+      content: z.string().nonempty(),
+      trigger: Trigger.optional(),
+      stage: z.string().optional(),
+    }),
+    async (input) => {
+      const lambda = new LambdaClient({ retryStrategy: RETRY_STRATEGY });
+      const ret = await lambda.send(
+        new InvokeCommand({
+          FunctionName: Function.ConfigParser.functionName,
+          InvocationType: "RequestResponse",
+          Payload: JSON.stringify({
+            content: input.content,
+            trigger: input.trigger,
+            stage: input.stage,
+          } satisfies ConfigParserEvent),
+        })
+      );
+      if (ret.FunctionError) throw new Error("Failed to parse config");
+
+      const payload = JSON.parse(Buffer.from(ret.Payload!).toString());
+      if (payload.error) throw new Error(payload.error);
+
+      payload.ci = payload.ci ?? {};
+      payload.ci.runner = payload.ci.runner ?? {};
+      payload.ci.runner.architecture =
+        payload.ci.runner.architecture ?? "x86_64";
+      payload.ci.runner.image =
+        payload.ci.runner.image ??
+        `${Config.IMAGE_URI}:${payload.ci.runner.architecture}-1`;
+      payload.region =
+        typeof payload.app.providers?.aws === "object"
+          ? payload.app.providers.aws.region ?? "us-east-1"
+          : "us-east-1";
+
+      return payload as {
+        region: string;
+        app: AppConfig;
+        ci: CiConfig;
+      };
+    }
+  );
+
   export const create = zod(
     z.object({
       appID: z.string().nonempty(),
       cloneUrl: z.string().nonempty(),
+      region: z.string().nonempty(),
       trigger: Trigger,
       appConfig: AppConfig,
-      deployConfig: DeployConfig,
+      ciConfig: CiConfig,
     }),
     async (input) => {
       const appID = input.appID;
-      const stageName = input.deployConfig.stage;
-      const region = input.appConfig.providers?.aws?.region ?? "us-east-1";
+      const stageName = input.ciConfig.config.stage;
+      const region = input.region;
 
       // Get AWS Account ID from Run Env
       const envs = await Env.listByStage({ appID, stageName });
@@ -240,7 +296,6 @@ export module Run {
               stateUpdateID,
               stageID,
               awsAccountID,
-              region,
               ...input,
             }),
             scheduler.send(
@@ -375,10 +430,10 @@ export module Run {
       awsAccountID: z.string().cuid2(),
       architecture: z.enum(Architecture),
       image: z.string().nonempty(),
-      config: z.custom<StageCredentials>(),
+      credentials: z.custom<Credentials>(),
     }),
     async (input) => {
-      const { region, config, architecture, image } = input;
+      const { region, credentials, architecture, image } = input;
       const suffix =
         architecture +
         "-" +
@@ -418,7 +473,10 @@ export module Run {
       return resource;
 
       async function createIamRole() {
-        const iam = new IAMClient({ ...config, retryStrategy: RETRY_STRATEGY });
+        const iam = new IAMClient({
+          credentials,
+          retryStrategy: RETRY_STRATEGY,
+        });
         const roleName = `sst-runner-${region}-${suffix}`;
         try {
           const ret = await iam.send(
@@ -479,7 +537,7 @@ export module Run {
 
       async function createFunction() {
         const lambda = new LambdaClient({
-          ...config,
+          credentials,
           region,
           retryStrategy: RETRY_STRATEGY,
         });
@@ -532,7 +590,7 @@ export module Run {
 
       async function createEventTarget() {
         const eb = new EventBridgeClient({
-          ...config,
+          credentials,
           region,
           retryStrategy: RETRY_STRATEGY,
         });
@@ -548,7 +606,7 @@ export module Run {
             })
           );
 
-          const iam = new IAMClient(config);
+          const iam = new IAMClient({ credentials });
           const roleName =
             "SSTConsolePublisher" +
             (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
@@ -585,17 +643,17 @@ export module Run {
       resource: Resource,
       runID: z.string().cuid2(),
       stateUpdateID: z.string().cuid2(),
-      config: z.custom<StageCredentials>(),
+      credentials: z.custom<Credentials>(),
       stage: z.string().nonempty(),
       cloneUrl: z.string().nonempty(),
       trigger: Trigger,
     }),
     async (input) => {
       const region = input.region;
-      const config = input.config;
+      const credentials = input.credentials;
 
       const lambda = new LambdaClient({
-        ...config,
+        credentials,
         region,
         retryStrategy: RETRY_STRATEGY,
       });
@@ -613,7 +671,7 @@ export module Run {
             workspaceID: useWorkspace(),
             stage: input.stage,
             cloneUrl: input.cloneUrl,
-            credentials: config.credentials,
+            credentials,
             trigger: input.trigger,
           } satisfies RunnerEvent),
         })

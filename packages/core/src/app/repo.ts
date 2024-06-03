@@ -40,6 +40,19 @@ export const listByRepo = zod(
     )
 );
 
+export const getByAppID = zod(Info.shape.appID, (appID) =>
+  useTransaction((tx) =>
+    tx
+      .select()
+      .from(appRepo)
+      .where(
+        and(eq(appRepo.workspaceID, useWorkspace()), eq(appRepo.appID, appID))
+      )
+      .execute()
+      .then((rows) => rows[0])
+  )
+);
+
 export const connect = zod(
   Info.pick({ id: true, appID: true, type: true, repoID: true }).partial({
     id: true,
