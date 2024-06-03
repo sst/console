@@ -86,6 +86,6 @@ export const StateEventStore = new Store()
 
 export const RunStore = new Store()
   .type<Run.Run>()
-  .scan("forStage", (stageID: string) => ["stateUpdate", stageID])
-  .get((stageID: string, issueID: string) => ["stateUpdate", stageID, issueID])
+  .scan("forStage", (stageID: string) => ["run", stageID])
+  .get((stageID: string, runID: string) => ["run", stageID, runID])
   .build();

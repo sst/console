@@ -3,15 +3,16 @@ import { DateTime } from "luxon";
 import { Row } from "$/ui/layout";
 import { Link } from "@solidjs/router";
 import { styled } from "@macaron-css/solid";
+import { State } from "@console/core/state";
 import { useStageContext } from "../context";
 import { Stack, theme, utility } from "$/ui";
 import { IconCommandLine } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
-import { StateUpdateStore } from "$/data/app";
 import { formatSinceTime } from "$/common/format";
 import { globalKeyframes } from "@macaron-css/core";
 import { useReplicache } from "$/providers/replicache";
 import { IconGit, IconCommit } from "$/ui/icons/custom";
+import { RunStore, StateUpdateStore } from "$/data/app";
 import { For, Show, Match, Switch, createEffect, createMemo } from "solid-js";
 
 const LEGEND_RES = 2;
@@ -344,7 +345,7 @@ type UpdateProps = {
   errors?: any[];
   timeStarted?: string;
   timeQueued?: string;
-  source: "ci" | "cli";
+  source: State.Update["source"];
   resourceSame?: number;
   timeCanceled?: string;
   timeCompleted?: string;
@@ -355,7 +356,18 @@ type UpdateProps = {
   command: "deploy" | "refresh" | "remove" | "edit";
 };
 function Update(props: UpdateProps) {
+  const rep = useReplicache();
+  const ctx = useStageContext();
   const errors = () => props.errors?.length || 0;
+  const runID = props.source.type === "ci" && props.source.properties.runID;
+
+  const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID || ""]);
+
+  const repoURL = createMemo(() => (
+    run() && run().trigger.source === "github"
+      ? `https://github.com/${run().trigger.repo.owner}/${run().trigger.repo.repo}`
+      : ""
+  ));
   const status = createMemo(() =>
     props.timeCompleted
       ? errors()
@@ -385,20 +397,30 @@ function Update(props: UpdateProps) {
             </UpdateStatusCopy>
           </Stack>
         </UpdateStatus>
-        <Show when={props.source === "ci"}>
+        <Show when={run()}>
           <UpdateGit>
             <Row space="3">
-              <UpdateGitLink href="https://github.com" target="_blank" rel="noreferrer">
+              <UpdateGitLink
+                target="_blank"
+                rel="noreferrer"
+                href={`${repoURL()}/commit/${run().trigger.commit.id}`}
+              >
                 <UpdateGitIcon size="md"><IconCommit /></UpdateGitIcon>
-                <UpdateGitCommit>a0318f9</UpdateGitCommit>
+                <UpdateGitCommit>{shortenCommit(run().trigger.commit.id)}</UpdateGitCommit>
               </UpdateGitLink>
-              <UpdateGitLink href="https://github.com" target="_blank" rel="noreferrer">
-                <UpdateGitIcon size="sm"><IconGit /></UpdateGitIcon>
-                <UpdateGitBranch>production</UpdateGitBranch>
-              </UpdateGitLink>
+              <Show when={run().trigger.branch}>
+                <UpdateGitLink
+                  target="_blank"
+                  rel="noreferrer"
+                  href={`${repoURL()}/tree/${run().trigger.branch}`}
+                >
+                  <UpdateGitIcon size="sm"><IconGit /></UpdateGitIcon>
+                  <UpdateGitBranch>{run().trigger.branch}</UpdateGitBranch>
+                </UpdateGitLink>
+              </Show>
             </Row>
             <UpdateGitMessage>
-              Handle errors when the user is not authenticated
+              {run().trigger.commit.message ? run().trigger.commit.message : "—"}
             </UpdateGitMessage>
           </UpdateGit>
         </Show>
@@ -415,7 +437,7 @@ function Update(props: UpdateProps) {
         </Stack>
         <UpdateInfo>
           <UpdateSource>
-            <UpdateSourceType>{props.source === "cli" ? "CLI" : "Git"}</UpdateSourceType>
+            <UpdateSourceType>{run() ? "GIT" : "CLI"}</UpdateSourceType>
             <Show when={props.timeStarted} fallback={<UpdateTime>—</UpdateTime>}>
               <UpdateTime
                 title={DateTime.fromISO(props.timeStarted!).toLocaleString(
@@ -427,16 +449,16 @@ function Update(props: UpdateProps) {
             </Show>
           </UpdateSource>
           <Switch>
-            <Match when={true}>
-              <UpdateSenderAvatar title="jayair">
+            <Match when={run()}>
+              <UpdateSenderAvatar title={run().trigger.sender.username}>
                 <img
                   width="24"
                   height="24"
-                  src={`https://avatars.githubusercontent.com/${"jayair"}?s=48`}
+                  src={`https://avatars.githubusercontent.com/u/${run().trigger.sender.id}?s=48&v=4`}
                 />
               </UpdateSenderAvatar>
             </Match>
-            <Match when={props.source === "cli"}>
+            <Match when={props.source.type === "cli"}>
               <UpdateSenderIcon title="SST CLI">
                 <IconCommandLine />
               </UpdateSenderIcon>
@@ -559,7 +581,7 @@ export function List() {
               index={item.index}
               errors={item.errors}
               command={item.command}
-              source={item.source.type}
+              source={item.source}
               same={item.resource.same}
               created={item.resource.created}
               updated={item.resource.updated}
@@ -580,4 +602,8 @@ export function countCopy(count?: number) {
 
 export function errorCountCopy(count?: number) {
   return count! > 1 ? `${count} errors` : "Error";
+}
+
+function shortenCommit(commit: string) {
+  return commit.slice(0, 7);
 }
