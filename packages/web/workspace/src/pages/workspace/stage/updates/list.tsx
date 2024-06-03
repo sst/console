@@ -196,6 +196,7 @@ const UpdateGitCommit = styled("span", {
     fontFamily: theme.font.family.code,
     fontSize: theme.font.size.mono_base,
     color: theme.color.text.secondary.base,
+    fontWeight: theme.font.weight.medium,
   },
 });
 
@@ -361,7 +362,7 @@ function Update(props: UpdateProps) {
   const errors = () => props.errors?.length || 0;
   const runID = props.source.type === "ci" && props.source.properties.runID;
 
-  const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID || ""]);
+  const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID || "unknown"]);
 
   const repoURL = createMemo(() => (
     run() && run().trigger.source === "github"
@@ -399,7 +400,7 @@ function Update(props: UpdateProps) {
         </UpdateStatus>
         <Show when={run()}>
           <UpdateGit>
-            <Row space="3">
+            <Row space="2">
               <UpdateGitLink
                 target="_blank"
                 rel="noreferrer"
@@ -437,7 +438,6 @@ function Update(props: UpdateProps) {
         </Stack>
         <UpdateInfo>
           <UpdateSource>
-            <UpdateSourceType>{run() ? "GIT" : "CLI"}</UpdateSourceType>
             <Show when={props.timeStarted} fallback={<UpdateTime>—</UpdateTime>}>
               <UpdateTime
                 title={DateTime.fromISO(props.timeStarted!).toLocaleString(
@@ -459,7 +459,7 @@ function Update(props: UpdateProps) {
               </UpdateSenderAvatar>
             </Match>
             <Match when={props.source.type === "cli"}>
-              <UpdateSenderIcon title="SST CLI">
+              <UpdateSenderIcon title="From the CLI">
                 <IconCommandLine />
               </UpdateSenderIcon>
             </Match>
