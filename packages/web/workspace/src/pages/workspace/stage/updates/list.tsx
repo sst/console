@@ -164,6 +164,7 @@ const UpdateGitLink = styled("a", {
 
 const UpdateGitIcon = styled("span", {
   base: {
+    lineHeight: 0,
     color: theme.color.icon.secondary,
   },
   variants: {

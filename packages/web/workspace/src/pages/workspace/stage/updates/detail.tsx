@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { useReplicache } from "$/providers/replicache";
 import { Link, useParams } from "@solidjs/router";
-import { StateUpdateStore, StateEventStore } from "$/data/app";
+import { RunStore, StateUpdateStore, StateEventStore } from "$/data/app";
 import { State } from "@console/core/state";
 import { DateTime } from "luxon";
 import { Dropdown } from "$/ui/dropdown";
@@ -18,6 +18,7 @@ import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
+import { IconGit, IconCommit } from "$/ui/icons/custom";
 import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
 import { IconCheck, IconXCircle, IconEllipsisVertical } from "$/ui/icons";
@@ -225,7 +226,78 @@ const Sidebar = styled("div", {
   base: {
     flex: "0 0 auto",
     width: 300,
-    paddingTop: theme.space[1.5],
+  },
+});
+
+const SidebarSpacer = styled("div", {
+  base: {
+    height: theme.space[1.5],
+  },
+});
+
+const GitInfo = styled("div", {
+  base: {
+    ...utility.stack(2),
+    justifyContent: "center",
+    height: 44,
+  },
+});
+
+const GitAvatar = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 36,
+    height: 36,
+    overflow: "hidden",
+    borderRadius: theme.borderRadius,
+  },
+});
+
+const GitLink = styled("a", {
+  base: {
+    ...utility.row(1),
+    alignItems: "center",
+  },
+});
+
+const GitIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    lineHeight: 0,
+    color: theme.color.icon.secondary,
+  },
+  variants: {
+    size: {
+      sm: {
+        marginInline: 1,
+        width: 12,
+        height: 12,
+      },
+      md: {
+        width: 14,
+        height: 14,
+      },
+    },
+  },
+});
+
+const GitCommit = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.secondary.base,
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const GitBranch = styled("span", {
+  base: {
+    ...utility.text.line,
+    maxWidth: 140,
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -260,6 +332,16 @@ export function Detail() {
     () => [ctx.stage.id, params.updateID],
     (resources) => sortBy(resources, [(r) => getResourceName(r.urn)!, "asc"]),
   );
+
+  const runID = createMemo(
+    () => update() && update().source.type === "ci" && update().source.properties.runID
+  );
+  const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID() || "unknown"]);
+  const repoURL = createMemo(() => (
+    run() && run().trigger.source === "github"
+      ? `https://github.com/${run().trigger.repo.owner}/${run().trigger.repo.repo}`
+      : ""
+  ));
 
   const status = createMemo(() => {
     if (!update()) return;
@@ -383,47 +465,82 @@ export function Detail() {
             </Stack>
           </Content>
           <Sidebar>
-            <Stack space="7">
-              <Stack space="2">
-                <PanelTitle>Started</PanelTitle>
-                <Text
-                  color="secondary"
-                  title={
-                    update().time.started
-                      ? DateTime.fromISO(update().time.started!).toLocaleString(
-                        DateTime.DATETIME_FULL,
+            <Stack space={run() ? "7" : "0"}>
+              <Show when={run()} fallback={<SidebarSpacer />}>
+                <GitInfo>
+                  <Row space="1.5" vertical="center">
+                    <GitAvatar title={run().trigger.sender.username}>
+                      <img
+                        width="36"
+                        height="36"
+                        src={`https://avatars.githubusercontent.com/u/${run().trigger.sender.id}?s=72&v=4`}
+                      />
+                    </GitAvatar>
+                    <Stack space="0.5">
+                      <GitLink
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`${repoURL()}/commit/${run().trigger.commit.id}`}
+                      >
+                        <GitIcon size="md"><IconCommit /></GitIcon>
+                        <GitCommit>{shortenCommit(run().trigger.commit.id)}</GitCommit>
+                      </GitLink>
+                      <Show when={run().trigger.branch}>
+                        <GitLink
+                          target="_blank"
+                          rel="noreferrer"
+                          href={`${repoURL()}/tree/${run().trigger.branch}`}
+                        >
+                          <GitIcon size="sm"><IconGit /></GitIcon>
+                          <GitBranch>{run().trigger.branch}</GitBranch>
+                        </GitLink>
+                      </Show>
+                    </Stack>
+                  </Row>
+                </GitInfo>
+              </Show>
+              <Stack space="7">
+                <Stack space="2">
+                  <PanelTitle>Started</PanelTitle>
+                  <Text
+                    color="secondary"
+                    title={
+                      update().time.started
+                        ? DateTime.fromISO(update().time.started!).toLocaleString(
+                          DateTime.DATETIME_FULL,
+                        )
+                        : undefined
+                    }
+                  >
+                    {update().time.started
+                      ? formatSinceTime(
+                        DateTime.fromISO(update().time.started!).toSQL()!,
+                        true,
                       )
-                      : undefined
-                  }
-                >
-                  {update().time.started
-                    ? formatSinceTime(
-                      DateTime.fromISO(update().time.started!).toSQL()!,
-                      true,
-                    )
-                    : "—"}
-                </Text>
-              </Stack>
-              <Stack space="2">
-                <PanelTitle>Duration</PanelTitle>
-                <Text color="secondary" title={
-                  DateTime.fromISO(update().time.completed!)
-                    .diff(DateTime.fromISO(update().time.started!))
-                    .as("seconds") + " seconds"
-                }>
-                  {update().time.started && update().time.completed
-                    ? formatDuration(
-                      DateTime.fromISO(update().time.completed!)
-                        .diff(DateTime.fromISO(update().time.started!))
-                        .as("milliseconds"),
-                      true,
-                    )
-                    : "—"}
-                </Text>
-              </Stack>
-              <Stack space="2">
-                <PanelTitle>Command</PanelTitle>
-                <PanelValueMono>{CMD_MAP[update().command]}</PanelValueMono>
+                      : "—"}
+                  </Text>
+                </Stack>
+                <Stack space="2">
+                  <PanelTitle>Duration</PanelTitle>
+                  <Text color="secondary" title={
+                    DateTime.fromISO(update().time.completed!)
+                      .diff(DateTime.fromISO(update().time.started!))
+                      .as("seconds") + " seconds"
+                  }>
+                    {update().time.started && update().time.completed
+                      ? formatDuration(
+                        DateTime.fromISO(update().time.completed!)
+                          .diff(DateTime.fromISO(update().time.started!))
+                          .as("milliseconds"),
+                        true,
+                      )
+                      : "—"}
+                  </Text>
+                </Stack>
+                <Stack space="2">
+                  <PanelTitle>Command</PanelTitle>
+                  <PanelValueMono>{CMD_MAP[update().command]}</PanelValueMono>
+                </Stack>
               </Stack>
             </Stack>
           </Sidebar>
@@ -469,4 +586,8 @@ function countCopy(count?: number) {
 
 function getResourceName(urn: string) {
   return urn.split("::").at(-1);
+}
+
+function shortenCommit(commit: string) {
+  return commit.slice(0, 7);
 }
