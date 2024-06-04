@@ -411,7 +411,7 @@ export const assumeRole = zod(Info.shape.id, async (stageID) => {
 });
 
 export const remove = zod(Info.shape.id, (stageID) =>
-  useTransaction(async (tx) => {
+  createTransaction(async (tx) => {
     console.log("removing stage", stageID);
     await tx
       .delete(stage)
@@ -426,7 +426,6 @@ export const remove = zod(Info.shape.id, (stageID) =>
         )
       )
       .execute();
-
     await tx
       .delete(issueSubscriber)
       .where(
