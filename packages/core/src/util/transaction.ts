@@ -1,4 +1,7 @@
-import { MySqlTransaction } from "drizzle-orm/mysql-core";
+import {
+  MySqlTransaction,
+  MySqlTransactionConfig,
+} from "drizzle-orm/mysql-core";
 import {
   PlanetScalePreparedQueryHKT,
   PlanetscaleQueryResultHKT,
@@ -42,7 +45,8 @@ export async function createTransactionEffect(
 }
 
 export async function createTransaction<T>(
-  callback: (tx: TxOrDb) => Promise<T>
+  callback: (tx: TxOrDb) => Promise<T>,
+  config?: MySqlTransactionConfig
 ) {
   try {
     const { tx } = TransactionContext.use();
@@ -61,6 +65,7 @@ export async function createTransaction<T>(
       },
       {
         isolationLevel: "serializable",
+        ...config,
       }
     );
     await Promise.all(effects.map((x) => x()));
