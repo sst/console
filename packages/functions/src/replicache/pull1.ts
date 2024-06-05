@@ -344,6 +344,7 @@ export const handler = ApiHandler(
               .offset(offset)
               .limit(page)
               .execute();
+            console.log("got rows", rows.length);
             const projection =
               TABLE_PROJECTION[name as keyof typeof TABLE_PROJECTION];
 
