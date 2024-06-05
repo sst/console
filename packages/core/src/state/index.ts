@@ -28,6 +28,7 @@ import {
 import { RETRY_STRATEGY } from "../util/aws";
 import { AWS } from "../aws";
 import { Replicache } from "../replicache";
+import { useTransition } from "react";
 
 export module State {
   export const Event = {
@@ -204,6 +205,21 @@ export module State {
         .split(".")[0]!
         .split("-")[1]!;
       console.log("receiveHistory", { updateID });
+      const existing = await useTransaction((tx) =>
+        tx
+          .select()
+          .from(stateUpdateTable)
+          .where(
+            and(
+              eq(stateUpdateTable.workspaceID, useWorkspace()),
+              eq(stateUpdateTable.id, updateID)
+            )
+          )
+      );
+      if (!existing.length) {
+        console.log("update not found", { updateID });
+        return;
+      }
       const s3 = new S3Client({
         ...input.config,
         retryStrategy: RETRY_STRATEGY,
