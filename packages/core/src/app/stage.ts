@@ -188,12 +188,8 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
     return;
   }
   console.log(input.app, input.stage, input.region);
-  const bootstrap = await Promise.all([
-    AWS.Account.bootstrap(input),
-    AWS.Account.bootstrapIon(input),
-  ]).then((x) => x.flatMap((x) => (x ? [x] : [])));
-  console.log("bootstrap", bootstrap);
-  if (!bootstrap.length) return;
+  const bootstrap = await AWS.Account.bootstrap(input);
+  if (!bootstrap) return;
   const resources = [] as {
     [key in Resource.Info["type"]]: {
       type: key;
@@ -204,89 +200,78 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
       enrichment: Resource.InfoByType<key>["enrichment"];
     };
   }[Resource.Info["type"]][];
-  let missing = true;
-  let foundNormal = false;
   const s3 = new S3Client(input);
-  for (const b of bootstrap) {
-    if (b.version === "normal") {
-      foundNormal = true;
-      const key = `stackMetadata/app.${input.app}/stage.${input.stage}/`;
-      console.log("listing", key, "for", b.bucket);
-      const list = await s3
-        .send(
-          new ListObjectsV2Command({
-            Prefix: key,
-            Bucket: b.bucket,
-          })
-        )
-        .catch((err) => {
-          if (err.name === "AccessDenied") return;
-          if (err.name === "NoSuchBucket") return;
-          throw err;
-        });
-      if (!list) {
-        console.log("could not list from bucket");
-        continue;
-      }
-      if (!list.Contents?.length) {
-        continue;
-      }
-      console.log("found", list.Contents?.length, "stacks");
-      const results: any[] = [];
-      for (const obj of list.Contents) {
-        const stackID = obj.Key?.split("/").pop()!.split(".")[1];
-        const result = await s3
-          .send(
-            new GetObjectCommand({
-              Key: obj.Key!,
-              Bucket: b.bucket,
-            })
-          )
-          .catch((err) => {
-            if (err.name === "AccessDenied") return;
-            if (err.name === "NoSuchBucket") return;
-            if (err.name === "NoSuchKey") return;
-            throw err;
-          });
-        if (!result) continue;
-        const body = await result
-          .Body!.transformToString()
-          .then((x) => JSON.parse(x));
-        const r = [];
-        body.push({
-          type: "Stack",
-          id: stackID,
-          addr: stackID,
-          data: {},
-        });
-        for (let res of body) {
-          const { type } = res;
-          const enrichment =
-            type in Enrichers
-              ? await Enrichers[type as keyof typeof Enrichers](
-                  res,
-                  input.credentials,
-                  input.region
-                ).catch(() => ({}))
-              : {};
-          r.push({
-            ...res,
-            stackID,
-            enrichment,
-          });
-        }
-        results.push(...r);
-      }
-      resources.push(...results);
-      missing = false;
-    }
-    if (b.version === "ion") missing = false;
+  const key = `stackMetadata/app.${input.app}/stage.${input.stage}/`;
+  console.log("listing", key, "for", bootstrap.bucket);
+  const list = await s3
+    .send(
+      new ListObjectsV2Command({
+        Prefix: key,
+        Bucket: bootstrap.bucket,
+      })
+    )
+    .catch((err) => {
+      if (err.name === "AccessDenied") return;
+      if (err.name === "NoSuchBucket") return;
+      throw err;
+    });
+  if (!list) {
+    console.log("could not list from bucket");
+    return;
   }
-  s3.destroy();
-  if (!foundNormal) return;
-  console.log("resources", JSON.stringify(resources, null, 4));
-  if (missing) {
+  if (!list.Contents?.length) {
     await remove(input.stageID);
+    return;
+  }
+  console.log("found", list.Contents?.length, "stacks");
+  const results: any[] = [];
+  for (const obj of list.Contents) {
+    const stackID = obj.Key?.split("/").pop()!.split(".")[1];
+    const result = await s3
+      .send(
+        new GetObjectCommand({
+          Key: obj.Key!,
+          Bucket: bootstrap.bucket,
+        })
+      )
+      .catch((err) => {
+        if (err.name === "AccessDenied") return;
+        if (err.name === "NoSuchBucket") return;
+        if (err.name === "NoSuchKey") return;
+        throw err;
+      });
+    if (!result) continue;
+    const body = await result
+      .Body!.transformToString()
+      .then((x) => JSON.parse(x));
+    const r = [];
+    body.push({
+      type: "Stack",
+      id: stackID,
+      addr: stackID,
+      data: {},
+    });
+    for (let res of body) {
+      const { type } = res;
+      const enrichment =
+        type in Enrichers
+          ? await Enrichers[type as keyof typeof Enrichers](
+              res,
+              input.credentials,
+              input.region
+            ).catch(() => ({}))
+          : {};
+      r.push({
+        ...res,
+        stackID,
+        enrichment,
+      });
+    }
+    results.push(...r);
+  }
+  resources.push(...results);
+  s3.destroy();
+  if (!resources.length) {
     return;
   }
 

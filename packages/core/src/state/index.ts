@@ -28,7 +28,6 @@ import {
 import { RETRY_STRATEGY } from "../util/aws";
 import { AWS } from "../aws";
 import { Replicache } from "../replicache";
-import { groupBy, pipe } from "remeda";
 
 export module State {
   export const Event = {
