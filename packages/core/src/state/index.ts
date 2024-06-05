@@ -268,6 +268,10 @@ export module State {
       const resourceInserts = [] as (typeof stateResourceTable.$inferInsert)[];
       const resourceDeletes = [] as string[];
       const counts = {} as Record<string, number>;
+      console.log({
+        stage: input.config.stageID,
+        update: updateID,
+      });
       for (const [urn, resource] of Object.entries(resources)) {
         const previous = previousResources[urn];
         delete previousResources[urn];
