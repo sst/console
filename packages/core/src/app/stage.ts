@@ -220,6 +220,18 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
     return;
   }
   if (!list.Contents?.length) {
+    const ion = await AWS.Account.bootstrapIon(input);
+    if (ion) {
+      const state = await s3
+        .send(
+          new GetObjectCommand({
+            Key: `app/${input.app}/${input.stage}.json`,
+            Bucket: ion.bucket,
+          })
+        )
+        .catch(() => {});
+      if (state) return;
+    }
     await remove(input.stageID);
     return;
   }
