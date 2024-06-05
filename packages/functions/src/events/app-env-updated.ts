@@ -35,21 +35,21 @@ export const handler = EventHandler(Env.Events.Updated, (evt) =>
     } satisfies Run.ConfigParserEvent);
     console.log(config);
 
-    // Assume into AWS account and region
+    // Get runner (create if not exist)
     const awsAccount = await AWS.Account.fromID(value);
     if (!awsAccount) return;
-    const credentials = await AWS.assumeRole(awsAccount?.accountID!);
-    if (!credentials) return;
-
-    // Get runner (create if not exist)
-    const resource = await Run.getRunner({
+    const runner = await Run.lookupRunner({
       awsAccountID: awsAccount.id,
       region: config.region,
       architecture: config.ci.runner.architecture,
       image: config.ci.runner.image,
     });
 
-    if (!resource) {
+    // Assume into AWS account and region
+    const credentials = await AWS.assumeRole(awsAccount?.accountID!);
+    if (!credentials) return;
+
+    if (!runner) {
       await Run.createRunner({
         awsAccountID: awsAccount.id,
         region: config.region,

@@ -1,7 +1,7 @@
 import { withActor } from "@console/core/actor";
 import { Stage } from "@console/core/app/stage";
 import { Run } from "@console/core/run";
-import { Config } from "sst/node/config";
+import { Resource } from "@console/core/run/run.sql";
 import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(Run.Event.Created, (evt) =>
@@ -27,15 +27,21 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
 
       // Get runner (create if not exist)
       context = "lookup existing runner";
-      let resource = await Run.getRunner({
-        awsAccountID,
-        region,
-        architecture,
-        image,
-      }).then((x) => x?.resource);
+      let runner;
+      while (true) {
+        runner = await Run.lookupRunner({
+          awsAccountID,
+          region,
+          architecture,
+          image,
+        });
+        if (!runner || runner.resource) break;
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        console.log("waiting for runner being created");
+      }
       context = "create runner";
-      if (!resource) {
-        resource = await Run.createRunner({
+      if (!runner) {
+        runner = await Run.createRunner({
           awsAccountID,
           region,
           architecture,
@@ -43,7 +49,7 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
           credentials: awsConfig.credentials,
         });
       }
-      if (!resource) {
+      if (!runner.resource) {
         throw new Error("Failed");
       }
 
@@ -51,10 +57,11 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
       context = "start runner";
       await Run.invokeRunner({
         runID,
+        runnerID: runner.id,
         stateUpdateID,
         region,
         credentials: awsConfig.credentials,
-        resource,
+        resource: runner.resource,
         stage: ciConfig.config.stage,
         cloneUrl,
         trigger,

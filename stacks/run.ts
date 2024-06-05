@@ -1,6 +1,13 @@
 import fs from "fs";
 import { createHash } from "crypto";
-import { Bucket, Config, Function, StackContext, use } from "sst/constructs";
+import {
+  Bucket,
+  Config,
+  Cron,
+  Function,
+  StackContext,
+  use,
+} from "sst/constructs";
 import {
   Repository,
   CfnReplicationConfiguration,
@@ -99,29 +106,54 @@ export function Run({ stack, app }: StackContext) {
     repo = Repository.fromRepositoryName(stack, "Repository", repoName);
   }
 
-  /********************/
-  /* Timeout monitor */
-  /********************/
-  const scheduleGroup = new CfnScheduleGroup(stack, "RunTimeoutMonitor", {
-    name: app.logicalPrefixedName("RunTimeoutMonitor"),
-  });
-  const timeoutMonitor = new Function(stack, "RunTimeoutHandler", {
+  /*************************/
+  /* Build timeout monitor */
+  /*************************/
+  const runTimeoutMonitorScheduleGroup = new CfnScheduleGroup(
+    stack,
+    "RunTimeoutMonitor",
+    {
+      name: app.logicalPrefixedName("RunTimeoutMonitor"),
+    }
+  );
+  const runTimeoutMonitor = new Function(stack, "RunTimeoutHandler", {
     bind: [...Object.values(secrets.database)],
-    permissions: ["scheduler:DeleteSchedule"],
     handler: "packages/functions/src/run/monitor.handler",
+    permissions: ["sts", "iot"],
   });
-  const scheduleRole = new Role(stack, "RunTimeoutMonitorRole", {
+  const scheduleRole = new Role(stack, "ScheduleRole", {
     assumedBy: new ServicePrincipal("scheduler.amazonaws.com"),
     inlinePolicies: {
       InvokeLambda: new PolicyDocument({
         statements: [
           new PolicyStatement({
             actions: ["lambda:InvokeFunction"],
-            resources: [timeoutMonitor.functionArn],
+            resources: ["*"],
           }),
         ],
       }),
     },
+  });
+
+  /******************/
+  /* Runner remover */
+  /******************/
+  const runnerRemoverScheduleGroup = new CfnScheduleGroup(
+    stack,
+    "RunnerRemover",
+    {
+      name: app.logicalPrefixedName("RunnerRemover"),
+    }
+  );
+  const runnerRemover = new Function(stack, "RunnerRemoverHandler", {
+    bind: [...Object.values(secrets.database)],
+    handler: "packages/functions/src/run/runner-remover.handler",
+    environment: {
+      RUNNER_REMOVER_SCHEDULE_GROUP_NAME: runnerRemoverScheduleGroup.name!,
+      RUNNER_REMOVER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      //RUNNER_REMOVER_FUNCTION_ARN: this will be set in the handler
+    },
+    permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
   });
 
   /*********************/
@@ -137,9 +169,11 @@ export function Run({ stack, app }: StackContext) {
 
   return {
     configParser,
-    scheduleGroupName: scheduleGroup.name!,
+    runTimeoutMonitorScheduleGroupName: runTimeoutMonitorScheduleGroup.name!,
+    runTimeoutMonitorArn: runTimeoutMonitor.functionArn,
+    runnerRemoverScheduleGroupName: runnerRemoverScheduleGroup.name!,
+    runnerRemoverArn: runnerRemover.functionArn,
     scheduleRoleArn: scheduleRole.roleArn,
-    timeoutMonitorArn: timeoutMonitor.functionArn,
     buildspecBucket: bucket,
     buildspecVersion: new Config.Parameter(stack, "BUILDSPEC_VERSION", {
       value: version,

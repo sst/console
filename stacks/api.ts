@@ -163,11 +163,12 @@ export function API({ stack, app }: StackContext) {
         function: {
           handler: "packages/functions/src/github/webhook.handler",
           timeout: "120 seconds",
-          bind: [...secrets.github, run.configParser],
+          bind: [...secrets.github, run.configParser, run.image],
           environment: {
-            SCHEDULE_GROUP_NAME: run.scheduleGroupName,
-            SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
-            TIMEOUT_MONITOR_FUNCTION_ARN: run.timeoutMonitorArn,
+            TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME:
+              run.runTimeoutMonitorScheduleGroupName,
+            TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
+            TIMEOUT_MONITOR_FUNCTION_ARN: run.runTimeoutMonitorArn,
           },
           permissions: ["scheduler:CreateSchedule", "iam:PassRole"],
         },

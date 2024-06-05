@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-scheduler";
 import {
   CreateFunctionCommand,
+  DeleteFunctionCommand,
   GetFunctionCommand,
   InvokeCommand,
   LambdaClient,
@@ -17,6 +18,9 @@ import {
   CreateRoleCommand,
   GetRoleCommand,
   IAMClient,
+  DeleteRoleCommand,
+  DetachRolePolicyCommand,
+  DeleteRolePolicyCommand,
 } from "@aws-sdk/client-iam";
 import {
   EventBridgeClient,
@@ -47,19 +51,24 @@ import { App } from "../app";
 import { Env } from "../app/env";
 import { RETRY_STRATEGY } from "../util/aws";
 import { State } from "../state";
-import { StageCredentials } from "../app/stage";
 import { Function } from "sst/node/function";
 import { Credentials } from "../aws";
+import { DetachPolicyCommand } from "@aws-sdk/client-iot";
 
 export module Run {
   const BUILD_TIMEOUT = 960000; // 16 minutes
+  const RUNNER_INACTIVE_TIME = 604800000; // 1 week
 
-  export type MonitorEvent = {
-    groupName: string;
-    scheduleName: string;
+  export type RunTimeoutMonitorEvent = {
     workspaceID: string;
     runID: string;
     stateUpdateID: string;
+  };
+
+  export type RunnerRemoverEvent = {
+    workspaceID: string;
+    runnerID: string;
+    removeIfNotUsedAfter: number;
   };
 
   export type RunnerEvent = {
@@ -287,7 +296,6 @@ export module Run {
         const scheduler = new SchedulerClient({
           retryStrategy: RETRY_STRATEGY,
         });
-        const scheduleName = `run-timeout-${runID}`;
 
         await createTransactionEffect(() =>
           Promise.allSettled([
@@ -300,8 +308,8 @@ export module Run {
             }),
             scheduler.send(
               new CreateScheduleCommand({
-                Name: scheduleName,
-                GroupName: process.env.SCHEDULE_GROUP_NAME!,
+                Name: `run-timeout-${runID}`,
+                GroupName: process.env.TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME!,
                 FlexibleTimeWindow: {
                   Mode: "OFF",
                 },
@@ -312,15 +320,14 @@ export module Run {
                 })`,
                 Target: {
                   Arn: process.env.TIMEOUT_MONITOR_FUNCTION_ARN,
-                  RoleArn: process.env.SCHEDULE_ROLE_ARN,
+                  RoleArn: process.env.TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN,
                   Input: JSON.stringify({
                     workspaceID: useWorkspace(),
                     runID,
                     stateUpdateID,
-                    scheduleName,
-                    groupName: process.env.SCHEDULE_GROUP_NAME!,
-                  } satisfies MonitorEvent),
+                  } satisfies RunTimeoutMonitorEvent),
                 },
+                ActionAfterCompletion: "DELETE",
               })
             ),
           ]).then((results) => {
@@ -397,7 +404,23 @@ export module Run {
       })
   );
 
-  export const getRunner = zod(
+  export const getRunnerByID = zod(z.string().cuid2(), async (runnerID) => {
+    return await useTransaction((tx) =>
+      tx
+        .select()
+        .from(runRunnerTable)
+        .where(
+          and(
+            eq(runRunnerTable.workspaceID, useWorkspace()),
+            eq(runRunnerTable.id, runnerID)
+          )
+        )
+        .execute()
+        .then((x) => x[0])
+    );
+  });
+
+  export const lookupRunner = zod(
     z.object({
       region: z.string().nonempty(),
       awsAccountID: z.string().cuid2(),
@@ -443,9 +466,12 @@ export module Run {
           .substring(0, 8) +
         (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
 
-      const roleArn = await createIamRole();
-      const functionArn = await createFunction();
-      await createEventTarget();
+      const runnerID = createId();
+      await scheduleRunnerRemover(runnerID);
+      await createRunnerRecordWithoutResource();
+      const roleArn = await createIamRoleInUserAccount();
+      const functionArn = await createFunctionInUserAccount();
+      await createEventTargetInUserAccount();
 
       const resource = {
         type: "lambda" as const,
@@ -455,24 +481,27 @@ export module Run {
         },
       };
 
-      await useTransaction(async (tx) =>
-        tx
-          .insert(runRunnerTable)
-          .values({
-            id: createId(),
-            workspaceID: useWorkspace(),
-            awsAccountID: input.awsAccountID,
-            region,
-            architecture: input.architecture,
-            image: input.image,
-            resource,
-          })
-          .execute()
-      );
+      await updateRunnerRecordWithResource();
 
-      return resource;
+      return { id: runnerID, resource };
 
-      async function createIamRole() {
+      function createRunnerRecordWithoutResource() {
+        return useTransaction((tx) =>
+          tx
+            .insert(runRunnerTable)
+            .values({
+              id: runnerID,
+              workspaceID: useWorkspace(),
+              awsAccountID: input.awsAccountID,
+              region,
+              architecture: input.architecture,
+              image: input.image,
+            })
+            .execute()
+        );
+      }
+
+      async function createIamRoleInUserAccount() {
         const iam = new IAMClient({
           credentials,
           retryStrategy: RETRY_STRATEGY,
@@ -535,7 +564,7 @@ export module Run {
         }
       }
 
-      async function createFunction() {
+      async function createFunctionInUserAccount() {
         const lambda = new LambdaClient({
           credentials,
           region,
@@ -567,7 +596,7 @@ export module Run {
           );
         } catch (e: any) {
           if (e.name === "InvalidParameterValueException")
-            return createFunction();
+            return createFunctionInUserAccount();
           else if (e.name === "ResourceConflictException") {
             /* ignore */
           } else throw e;
@@ -588,7 +617,7 @@ export module Run {
         }
       }
 
-      async function createEventTarget() {
+      async function createEventTargetInUserAccount() {
         const eb = new EventBridgeClient({
           credentials,
           region,
@@ -634,6 +663,116 @@ export module Run {
           }
         }
       }
+
+      function updateRunnerRecordWithResource() {
+        return useTransaction((tx) =>
+          tx
+            .update(runRunnerTable)
+            .set({
+              resource,
+            })
+            .where(
+              and(
+                eq(runRunnerTable.id, runnerID),
+                eq(runRunnerTable.workspaceID, useWorkspace())
+              )
+            )
+            .execute()
+        );
+      }
+    }
+  );
+
+  export const removeRunner = zod(
+    z.object({
+      runner: z.custom<typeof runRunnerTable.$inferSelect>(),
+      credentials: z.custom<Credentials>(),
+    }),
+    async (input) => {
+      const { runner, credentials } = input;
+
+      await removeIamRoleInUserAccount();
+      await removeFunctionInUserAccount();
+      await removeRunnerRecord();
+
+      async function removeIamRoleInUserAccount() {
+        const roleArn = runner.resource?.properties.role;
+        if (!roleArn) return;
+        const roleName = roleArn.split("/").pop()!;
+
+        const iam = new IAMClient({
+          credentials,
+          retryStrategy: RETRY_STRATEGY,
+        });
+        try {
+          await iam.send(
+            new DeleteRolePolicyCommand({
+              RoleName: roleName,
+              PolicyName: "eventbridge",
+            })
+          );
+        } catch (e: any) {
+          console.error(e);
+        }
+
+        try {
+          await iam.send(
+            new DetachRolePolicyCommand({
+              RoleName: roleName,
+              PolicyArn:
+                "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            })
+          );
+        } catch (e: any) {
+          if (e.name !== "NoSuchEntityException") {
+            console.error(e);
+          }
+        }
+
+        try {
+          await iam.send(
+            new DeleteRoleCommand({
+              RoleName: roleName,
+            })
+          );
+        } catch (e: any) {
+          console.error(e);
+        }
+      }
+
+      async function removeFunctionInUserAccount() {
+        const functionName = runner.resource?.properties.function;
+        if (!functionName) return;
+
+        const lambda = new LambdaClient({
+          credentials,
+          region: runner.region,
+          retryStrategy: RETRY_STRATEGY,
+        });
+        try {
+          const ret = await lambda.send(
+            new DeleteFunctionCommand({
+              FunctionName: functionName,
+            })
+          );
+        } catch (e: any) {
+          console.error(e);
+        }
+      }
+
+      function removeRunnerRecord() {
+        return useTransaction((tx) =>
+          tx
+            .delete(runRunnerTable)
+            .where(
+              and(
+                eq(runRunnerTable.id, runner.id),
+                eq(runRunnerTable.workspaceID, useWorkspace())
+              )
+            )
+            .execute()
+        );
+      }
     }
   );
 
@@ -642,6 +781,7 @@ export module Run {
       region: z.string().nonempty(),
       resource: Resource,
       runID: z.string().cuid2(),
+      runnerID: z.string().cuid2(),
       stateUpdateID: z.string().cuid2(),
       credentials: z.custom<Credentials>(),
       stage: z.string().nonempty(),
@@ -674,6 +814,59 @@ export module Run {
             credentials,
             trigger: input.trigger,
           } satisfies RunnerEvent),
+        })
+      );
+
+      // Update run's last run time
+      await useTransaction((tx) =>
+        tx
+          .update(runRunnerTable)
+          .set({
+            timeRun: new Date(),
+          })
+          .where(
+            and(
+              eq(runRunnerTable.id, input.runnerID),
+              eq(runRunnerTable.workspaceID, useWorkspace())
+            )
+          )
+          .execute()
+      );
+    }
+  );
+
+  export const scheduleRunnerRemover = zod(
+    z.string().cuid2(),
+    async (runnerID) => {
+      const scheduler = new SchedulerClient({
+        retryStrategy: RETRY_STRATEGY,
+      });
+
+      // Check 1 day after the "RUNNER_INACTIVE_TIME" period. Remove the runner if
+      // it has not been used during the "RUNNER_INACTIVE_TIME" period.
+      const now = Date.now();
+      return scheduler.send(
+        new CreateScheduleCommand({
+          Name: `runner-remover-${runnerID}-${now}`,
+          GroupName: process.env.RUNNER_REMOVER_SCHEDULE_GROUP_NAME!,
+          FlexibleTimeWindow: {
+            Mode: "OFF",
+          },
+          ScheduleExpression: `at(${
+            new Date(now + RUNNER_INACTIVE_TIME + 86400000)
+              .toISOString()
+              .split(".")[0]
+          })`,
+          Target: {
+            Arn: process.env.RUNNER_REMOVER_FUNCTION_ARN,
+            RoleArn: process.env.RUNNER_REMOVER_SCHEDULE_ROLE_ARN,
+            Input: JSON.stringify({
+              workspaceID: useWorkspace(),
+              runnerID,
+              removeIfNotUsedAfter: now + 86400000,
+            } satisfies RunnerRemoverEvent),
+          },
+          ActionAfterCompletion: "DELETE",
         })
       );
     }

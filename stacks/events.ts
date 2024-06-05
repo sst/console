@@ -98,9 +98,12 @@ export function Events({ stack }: StackContext) {
       run.configParser,
       run.image,
     ],
-    permissions: ["sts", "iot"],
+    permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
     environment: {
       EVENT_BUS_ARN: bus.eventBusArn,
+      RUNNER_REMOVER_SCHEDULE_GROUP_NAME: run.runnerRemoverScheduleGroupName,
+      RUNNER_REMOVER_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
+      RUNNER_REMOVER_FUNCTION_ARN: run.runnerRemoverArn,
     },
   });
 
@@ -151,9 +154,12 @@ export function Events({ stack }: StackContext) {
       run.buildspecVersion,
       run.image,
     ],
-    permissions: ["sts", "iot"],
+    permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
     environment: {
       EVENT_BUS_ARN: bus.eventBusArn,
+      RUNNER_REMOVER_SCHEDULE_GROUP_NAME: run.runnerRemoverScheduleGroupName,
+      RUNNER_REMOVER_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
+      RUNNER_REMOVER_FUNCTION_ARN: run.runnerRemoverArn,
     },
   });
 

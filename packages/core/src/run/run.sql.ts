@@ -5,8 +5,8 @@ import {
   foreignKey,
   text,
   mysqlEnum,
-  unique,
   timestamp,
+  index,
 } from "drizzle-orm/mysql-core";
 import { workspaceID, cuid, timestampsNext } from "../util/sql";
 import { z } from "zod";
@@ -61,11 +61,12 @@ export const runRunnerTable = mysqlTable(
   {
     ...workspaceID,
     ...timestampsNext,
+    timeRun: timestamp("time_run"),
     awsAccountID: cuid("aws_account_id").notNull(),
     region: varchar("region", { length: 255 }).notNull(),
     architecture: mysqlEnum("architecture", Architecture).notNull(),
     image: varchar("image", { length: 255 }).notNull(),
-    resource: json("resource").$type<Resource>().notNull(),
+    resource: json("resource").$type<Resource>(),
   },
   (table) => ({
     ...workspaceIndexes(table),
