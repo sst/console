@@ -24,7 +24,7 @@ export const extract = zod(
     // do not process self
     if (
       input.logGroup.startsWith(
-        "/aws/lambda/production-console-Issues-issuesConsumer"
+        "/aws/lambda/production-console-Issues-issuesConsumer",
       )
     )
       return;
@@ -53,18 +53,24 @@ export const extract = zod(
       .from(awsAccount)
       .leftJoin(
         app,
-        and(eq(app.workspaceID, awsAccount.workspaceID), eq(app.name, appName!))
+        and(
+          eq(app.workspaceID, awsAccount.workspaceID),
+          eq(app.name, appName!),
+        ),
       )
       .innerJoin(
         stage,
         and(
           eq(stage.workspaceID, app.workspaceID),
           eq(stage.appID, app.id),
-          eq(stage.name, stageName!)
-        )
+          eq(stage.name, stageName!),
+        ),
       )
       .where(
-        and(eq(awsAccount.accountID, accountID!), isNull(awsAccount.timeFailed))
+        and(
+          eq(awsAccount.accountID, accountID!),
+          isNull(awsAccount.timeFailed),
+        ),
       )
       .execute();
 
@@ -83,8 +89,8 @@ export const extract = zod(
           eq(issueCount.workspaceID, workspaces[0]!.workspaceID),
           eq(issueCount.stageID, workspaces[0]!.stageID),
           eq(issueCount.logGroup, input.logGroup),
-          eq(issueCount.hour, hour)
-        )
+          eq(issueCount.hour, hour),
+        ),
       )
       .execute()
       .then((rows) => rows.at(0)?.total || 0);
@@ -105,9 +111,9 @@ export const extract = zod(
               Events.RateLimited.publish({
                 stageID: workspace.stageID,
                 logGroup: input.logGroup,
-              })
-          )
-        )
+              }),
+          ),
+        ),
       );
 
       return;
@@ -152,9 +158,8 @@ export const extract = zod(
             const err = await Log.applySourcemap(
               sourcemapCache,
               event.timestamp,
-              extracted
+              extracted,
             );
-            console.log("applied sourcemap");
             if (
               err.error !== "Runtime.HandlerNotFound" &&
               err.stack.length &&
@@ -166,7 +171,7 @@ export const extract = zod(
                 extracted,
                 err,
                 event.timestamp,
-                await sourcemapCache.meta()
+                await sourcemapCache.meta(),
               );
             }
 
@@ -211,7 +216,7 @@ export const extract = zod(
               timestamp: event.timestamp,
               err,
             };
-          })
+          }),
         ).then(
           createPipe(
             flatMap((item) => {
@@ -220,12 +225,12 @@ export const extract = zod(
                 : [];
             }),
             groupBy((item) => item.group),
-            values
-          )
+            values,
+          ),
         );
         sourcemapCache.destroy();
         return errors;
-      }
+      },
     );
 
     console.log("found", errors?.length || 0, "errors");
@@ -242,7 +247,7 @@ export const extract = zod(
             workspaceID: row.workspaceID,
             group: "failed-to-process",
             logGroup: input.logGroup,
-          }))
+          })),
         )
         .onDuplicateKeyUpdate({
           set: {
@@ -254,98 +259,113 @@ export const extract = zod(
       return;
     }
 
-    await createTransaction(async (tx) => {
-      await tx
-        .insert(issue)
-        .values(
-          errors.flatMap((items) =>
-            workspaces.map((row) => ({
-              group: items[0].group,
-              stack: items[0].err.stack,
-              id: createId(),
-              errorID: "none",
-              pointer: {
-                timestamp: items[0].timestamp,
-                logGroup: input.logGroup,
-                logStream: logStream,
-              },
-              workspaceID: row.workspaceID,
-              error: items[0].err.error,
-              message: items[0].err.message?.substring?.(0, 32_768) || "",
-              count: items.length,
-              stageID: row.stageID,
-              timeSeen: sql`now()`,
-              timeResolved: null,
-              resolver: null,
-            }))
-          )
-        )
-        .onDuplicateKeyUpdate({
-          set: {
-            error: sql`VALUES(error)`,
-            count: sql`count + VALUES(count)`,
-            errorID: sql`VALUES(error_id)`,
-            message: sql`VALUES(message)`,
-            stack: sql`VALUES(stack)`,
-            timeUpdated: sql`CURRENT_TIMESTAMP()`,
-            pointer: sql`VALUES(pointer)`,
-            timeSeen: sql`VALUES(time_seen)`,
-            invocation: null,
-            timeResolved: null,
-            resolver: null,
-          },
-        })
-        .execute();
-
-      await tx
-        .insert(issueCount)
-        .values(
-          errors.flatMap((items) =>
-            workspaces.map((row) => ({
-              id: createId(),
-              hour,
-              stageID: row.stageID,
-              count: items.length,
-              workspaceID: row.workspaceID,
-              group: items[0].group,
-              logGroup: input.logGroup,
-            }))
-          )
-        )
-        .onDuplicateKeyUpdate({
-          set: {
-            count: sql`count + VALUES(count)`,
-            logGroup: input.logGroup,
-          },
-        })
-        .execute();
-
-      await createTransactionEffect(() =>
-        Promise.all(
-          errors
-            .flatMap((items) =>
-              workspaces.map((workspace) => ({
-                group: items[0].group,
-                workspace,
-              }))
-            )
-            .map((item) =>
-              withActor(
-                {
-                  type: "system",
-                  properties: {
-                    workspaceID: item.workspace.workspaceID,
-                  },
-                },
-                () =>
-                  Events.IssueDetected.publish({
-                    stageID: item.workspace.stageID,
-                    group: item.group,
-                  })
+    let retries = 0;
+    while (true) {
+      try {
+        await createTransaction(
+          async (tx) => {
+            await tx
+              .insert(issue)
+              .values(
+                errors.flatMap((items) =>
+                  workspaces.map((row) => ({
+                    group: items[0].group,
+                    stack: items[0].err.stack,
+                    id: createId(),
+                    errorID: "none",
+                    pointer: {
+                      timestamp: items[0].timestamp,
+                      logGroup: input.logGroup,
+                      logStream: logStream,
+                    },
+                    workspaceID: row.workspaceID,
+                    error: items[0].err.error,
+                    message: items[0].err.message?.substring?.(0, 32_768) || "",
+                    count: items.length,
+                    stageID: row.stageID,
+                    timeSeen: sql`now()`,
+                    timeResolved: null,
+                    resolver: null,
+                  })),
+                ),
               )
-            )
-        )
-      );
-    });
-  }
+              .onDuplicateKeyUpdate({
+                set: {
+                  error: sql`VALUES(error)`,
+                  count: sql`count + VALUES(count)`,
+                  errorID: sql`VALUES(error_id)`,
+                  message: sql`VALUES(message)`,
+                  stack: sql`VALUES(stack)`,
+                  timeUpdated: sql`CURRENT_TIMESTAMP()`,
+                  pointer: sql`VALUES(pointer)`,
+                  timeSeen: sql`VALUES(time_seen)`,
+                  invocation: null,
+                  timeResolved: null,
+                  resolver: null,
+                },
+              })
+              .execute();
+
+            await tx
+              .insert(issueCount)
+              .values(
+                errors.flatMap((items) =>
+                  workspaces.map((row) => ({
+                    id: createId(),
+                    hour,
+                    stageID: row.stageID,
+                    count: items.length,
+                    workspaceID: row.workspaceID,
+                    group: items[0].group,
+                    logGroup: input.logGroup,
+                  })),
+                ),
+              )
+              .onDuplicateKeyUpdate({
+                set: {
+                  count: sql`count + VALUES(count)`,
+                  logGroup: input.logGroup,
+                },
+              })
+              .execute();
+
+            await createTransactionEffect(() =>
+              Promise.all(
+                errors
+                  .flatMap((items) =>
+                    workspaces.map((workspace) => ({
+                      group: items[0].group,
+                      workspace,
+                    })),
+                  )
+                  .map((item) =>
+                    withActor(
+                      {
+                        type: "system",
+                        properties: {
+                          workspaceID: item.workspace.workspaceID,
+                        },
+                      },
+                      () =>
+                        Events.IssueDetected.publish({
+                          stageID: item.workspace.stageID,
+                          group: item.group,
+                        }),
+                    ),
+                  ),
+              ),
+            );
+          },
+          {
+            isolationLevel: "read uncommitted",
+          },
+        );
+      } catch (ex) {
+        if (retries++ > 5) {
+          throw ex;
+        }
+        continue;
+      }
+    }
+  },
 );
