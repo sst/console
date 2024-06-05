@@ -6,11 +6,11 @@ import {
   text,
   mysqlEnum,
   timestamp,
-  index,
+  unique,
 } from "drizzle-orm/mysql-core";
 import { workspaceID, cuid, timestampsNext } from "../util/sql";
 import { z } from "zod";
-import { stage } from "../app/app.sql";
+import { app, stage } from "../app/app.sql";
 import { workspaceIndexes } from "../workspace/workspace.sql";
 import { awsAccount } from "../aws/aws.sql";
 
@@ -96,6 +96,31 @@ export const runTable = mysqlTable(
       name: "workspace_id_stage_id_fk",
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
+    }).onDelete("cascade"),
+  })
+);
+
+export const runEnvTable = mysqlTable(
+  "run_env",
+  {
+    ...workspaceID,
+    ...timestampsNext,
+    appID: cuid("app_id").notNull(),
+    stageName: varchar("stage_name", { length: 255 }).notNull(),
+    key: varchar("key", { length: 255 }).notNull(),
+    value: text("value").notNull(),
+  },
+  (table) => ({
+    ...workspaceIndexes(table),
+    key: unique("key").on(
+      table.workspaceID,
+      table.appID,
+      table.stageName,
+      table.key
+    ),
+    appID: foreignKey({
+      columns: [table.workspaceID, table.appID],
+      foreignColumns: [app.workspaceID, app.id],
     }).onDelete("cascade"),
   })
 );

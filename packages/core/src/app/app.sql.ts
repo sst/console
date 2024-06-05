@@ -7,7 +7,6 @@ import {
   boolean,
   varchar,
   foreignKey,
-  text,
   mysqlEnum,
   bigint,
 } from "drizzle-orm/mysql-core";
@@ -86,30 +85,5 @@ export const appRepo = mysqlTable(
       foreignColumns: [app.workspaceID, app.id],
     }).onDelete("cascade"),
     repo: index("repo").on(table.type, table.repoID),
-  })
-);
-
-export const env = mysqlTable(
-  "run_env",
-  {
-    ...workspaceID,
-    ...timestamps,
-    appID: cuid("app_id").notNull(),
-    stageName: varchar("stage_name", { length: 255 }).notNull(),
-    key: varchar("key", { length: 255 }).notNull(),
-    value: text("value").notNull(),
-  },
-  (table) => ({
-    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
-    key: uniqueIndex("key").on(
-      table.workspaceID,
-      table.appID,
-      table.stageName,
-      table.key
-    ),
-    appID: foreignKey({
-      columns: [table.workspaceID, table.appID],
-      foreignColumns: [app.workspaceID, app.id],
-    }).onDelete("cascade"),
   })
 );

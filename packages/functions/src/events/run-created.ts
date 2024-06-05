@@ -1,7 +1,6 @@
 import { withActor } from "@console/core/actor";
 import { Stage } from "@console/core/app/stage";
 import { Run } from "@console/core/run";
-import { Resource } from "@console/core/run/run.sql";
 import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(Run.Event.Created, (evt) =>

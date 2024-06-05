@@ -48,12 +48,11 @@ import {
   runTable,
 } from "./run.sql";
 import { App } from "../app";
-import { Env } from "../app/env";
+import { RunEnv } from "./env";
 import { RETRY_STRATEGY } from "../util/aws";
 import { State } from "../state";
 import { Function } from "sst/node/function";
 import { Credentials } from "../aws";
-import { DetachPolicyCommand } from "@aws-sdk/client-iot";
 
 export module Run {
   const BUILD_TIMEOUT = 960000; // 16 minutes
@@ -144,8 +143,8 @@ export module Run {
       "run.completed",
       z.object({
         workspaceID: z.string().nonempty(),
-        stateUpdateID: z.string().nonempty(),
         runID: z.string().nonempty(),
+        stateUpdateID: z.string().nonempty(),
         error: z.string().nonempty().optional(),
       })
     ),
@@ -243,7 +242,7 @@ export module Run {
       const region = input.region;
 
       // Get AWS Account ID from Run Env
-      const envs = await Env.listByStage({ appID, stageName });
+      const envs = await RunEnv.listByStage({ appID, stageName });
       const awsAccountID = envs["__AWS_ACCOUNT_ID"];
       if (!awsAccountID)
         throw new Error("AWS Account ID is not set in Run Env");

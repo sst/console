@@ -1,13 +1,6 @@
 import fs from "fs";
 import { createHash } from "crypto";
-import {
-  Bucket,
-  Config,
-  Cron,
-  Function,
-  StackContext,
-  use,
-} from "sst/constructs";
+import { Bucket, Config, Function, StackContext, use } from "sst/constructs";
 import {
   Repository,
   CfnReplicationConfiguration,

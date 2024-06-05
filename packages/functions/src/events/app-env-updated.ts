@@ -1,15 +1,12 @@
-import { Account } from "@console/core/account";
 import { withActor } from "@console/core/actor";
-import { Env } from "@console/core/app/env";
+import { RunEnv } from "@console/core/run/env";
 import { AppRepo } from "@console/core/app/repo";
-import { Stage } from "@console/core/app/stage";
 import { AWS } from "@console/core/aws";
 import { Github } from "@console/core/git/github";
 import { Run } from "@console/core/run";
-import { Config } from "sst/node/config";
 import { EventHandler } from "sst/node/event-bus";
 
-export const handler = EventHandler(Env.Events.Updated, (evt) =>
+export const handler = EventHandler(RunEnv.Events.Updated, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const { appID, stageName, key, value } = evt.properties;
 

@@ -1,0 +1,1 @@
+ALTER TABLE `run_env` ADD CONSTRAINT `run_env_workspace_id_workspace_id_fk` FOREIGN KEY (`workspace_id`) REFERENCES `workspace`(`id`) ON DELETE no action ON UPDATE no action;

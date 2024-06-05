@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
-import { env } from "./app.sql";
+import { runEnvTable } from "./run.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
 import { and, eq, inArray } from "drizzle-orm";
 import { event } from "../event";
 
-export * as Env from "./env";
+export * as RunEnv from "./env";
 
 export const Events = {
   Updated: event(
@@ -22,7 +22,7 @@ export const Events = {
   ),
 };
 
-export const Info = createSelectSchema(env);
+export const Info = createSelectSchema(runEnvTable);
 export type Info = z.infer<typeof Info>;
 
 export const listByStage = zod(
@@ -34,12 +34,12 @@ export const listByStage = zod(
     const ret = await useTransaction((tx) =>
       tx
         .select()
-        .from(env)
+        .from(runEnvTable)
         .where(
           and(
-            eq(env.workspaceID, useWorkspace()),
-            eq(env.appID, input.appID),
-            inArray(env.stageName, ["", input.stageName])
+            eq(runEnvTable.workspaceID, useWorkspace()),
+            eq(runEnvTable.appID, input.appID),
+            inArray(runEnvTable.stageName, ["", input.stageName])
           )
         )
         .execute()
@@ -67,7 +67,7 @@ export const create = zod(
   async (input) => {
     await useTransaction(async (tx) =>
       tx
-        .insert(env)
+        .insert(runEnvTable)
         .values({
           id: input.id ?? createId(),
           workspaceID: useWorkspace(),
@@ -97,8 +97,13 @@ export const create = zod(
 export const remove = zod(Info.shape.id, (input) =>
   useTransaction(async (tx) => {
     await tx
-      .delete(env)
-      .where(and(eq(env.id, input), eq(env.workspaceID, useWorkspace())))
+      .delete(runEnvTable)
+      .where(
+        and(
+          eq(runEnvTable.id, input),
+          eq(runEnvTable.workspaceID, useWorkspace())
+        )
+      )
       .execute();
   })
 );

@@ -18,7 +18,7 @@ import {
 } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
 import { stripe, usage } from "@console/core/billing/billing.sql";
-import { app, appRepo, env, resource, stage } from "@console/core/app/app.sql";
+import { app, appRepo, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 import {
   replicache_client,
@@ -48,7 +48,7 @@ import {
   stateUpdateTable,
 } from "@console/core/state/state.sql";
 import { State } from "@console/core/state";
-import { runTable } from "@console/core/run/run.sql";
+import { runEnvTable, runTable } from "@console/core/run/run.sql";
 import { Run } from "@console/core/run";
 
 export const TABLES = {
@@ -58,7 +58,6 @@ export const TABLES = {
   awsAccount,
   app,
   appRepo,
-  env,
   stage,
   resource,
   log_poller,
@@ -77,6 +76,7 @@ export const TABLES = {
   stateEvent: stateEventTable,
   stateResource: stateResourceTable,
   run: runTable,
+  runEnv: runEnvTable,
 };
 
 type TableName = keyof typeof TABLES;

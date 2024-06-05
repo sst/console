@@ -127,6 +127,13 @@
       "when": 1717454423476,
       "tag": "0017_quick_silvermane",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1717616582733,
+      "tag": "0018_curly_zaladane",
+      "breakpoints": true
     }
   ]
 }
