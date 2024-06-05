@@ -158,7 +158,7 @@ const mutators = new Client<ServerType>()
       stageName: input.stageName,
       key: input.key,
       value: input.value,
-      timeCreated: new Date().toISOString(),
+      timeCreated: new Date(),
     });
   })
   .mutation("env_remove", async (tx, input) => {
