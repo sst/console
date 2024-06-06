@@ -336,7 +336,10 @@ export function Detail() {
   );
 
   const runID = createMemo(
-    () => update() && update().source.type === "ci" && update().source.properties.runID
+    () =>
+      update()
+      && update().source.type === "ci"
+      && (update().source.properties as { runID: string }).runID
   );
   const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID() || "unknown"]);
   const repoURL = createMemo(() => (
