@@ -7,6 +7,7 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
   withActor(evt.metadata.actor, async () => {
     const {
       awsAccountID,
+      appRepoID,
       region,
       stageID,
       runID,
@@ -30,6 +31,7 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
       while (true) {
         runner = await Run.lookupRunner({
           awsAccountID,
+          appRepoID,
           region,
           architecture,
           image,
@@ -42,6 +44,7 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
       if (!runner) {
         runner = await Run.createRunner({
           awsAccountID,
+          appRepoID,
           region,
           architecture,
           image,
@@ -55,6 +58,7 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
       // Run runner
       context = "start runner";
       await Run.invokeRunner({
+        stageID,
         runID,
         runnerID: runner.id,
         stateUpdateID,
@@ -65,6 +69,9 @@ export const handler = EventHandler(Run.Event.Created, (evt) =>
         cloneUrl,
         trigger,
       });
+
+      // Schedule warmer if not scheduled
+      if (!runner.warmer) await Run.scheduleRunnerWarmer(runner.id);
     } catch (e) {
       await Run.completed({
         runID,

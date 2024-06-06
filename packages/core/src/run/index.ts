@@ -37,15 +37,16 @@ import {
 } from "../util/transaction";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
-import { and, eq, isNull } from "../drizzle";
+import { and, eq, gt, isNull } from "../drizzle";
 import { event } from "../event";
 import {
   Architecture,
   Log,
   Resource,
   Trigger,
-  runRunnerTable,
+  runnerTable,
   runTable,
+  runnerUsageTable,
 } from "./run.sql";
 import { App } from "../app";
 import { RunEnv } from "./env";
@@ -57,6 +58,8 @@ import { Credentials } from "../aws";
 export module Run {
   const BUILD_TIMEOUT = 960000; // 16 minutes
   const RUNNER_INACTIVE_TIME = 604800000; // 1 week
+  const RUNNER_WARMING_INTERVAL = 300000; // 5 minutes
+  const RUNNER_WARMING_INACTIVE_TIME = 86400000; // 1 day
 
   export type RunTimeoutMonitorEvent = {
     workspaceID: string;
@@ -70,23 +73,43 @@ export module Run {
     removeIfNotUsedAfter: number;
   };
 
-  export type RunnerEvent = {
-    runID: string;
+  export type RunnerWarmerEvent = {
     workspaceID: string;
-    stateUpdateID: string;
-    stage: string;
-    cloneUrl: string;
-    buildspec: {
-      version: string;
-      bucket: string;
-    };
-    credentials: {
-      accessKeyId: string;
-      secretAccessKey: string;
-      sessionToken: string;
-    };
-    trigger: Trigger;
+    runnerID: string;
   };
+
+  export type RunnerEvent =
+    | {
+        warm: true;
+        cloneUrl: string;
+        buildspec: {
+          version: string;
+          bucket: string;
+        };
+        credentials: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken: string;
+        };
+      }
+    | {
+        warm: false;
+        runID: string;
+        workspaceID: string;
+        stateUpdateID: string;
+        stage: string;
+        cloneUrl: string;
+        buildspec: {
+          version: string;
+          bucket: string;
+        };
+        credentials: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken: string;
+        };
+        trigger: Trigger;
+      };
 
   export type ConfigParserEvent = {
     content: string;
@@ -120,6 +143,7 @@ export module Run {
         runID: z.string().nonempty(),
         stateUpdateID: z.string().nonempty(),
         appID: z.string().nonempty(),
+        appRepoID: z.string().nonempty(),
         stageID: z.string().nonempty(),
         awsAccountID: z.string().nonempty(),
         region: z.string().nonempty(),
@@ -229,7 +253,8 @@ export module Run {
 
   export const create = zod(
     z.object({
-      appID: z.string().nonempty(),
+      appID: z.string().cuid2(),
+      appRepoID: z.string().cuid2(),
       cloneUrl: z.string().nonempty(),
       region: z.string().nonempty(),
       trigger: Trigger,
@@ -407,11 +432,11 @@ export module Run {
     return await useTransaction((tx) =>
       tx
         .select()
-        .from(runRunnerTable)
+        .from(runnerTable)
         .where(
           and(
-            eq(runRunnerTable.workspaceID, useWorkspace()),
-            eq(runRunnerTable.id, runnerID)
+            eq(runnerTable.workspaceID, useWorkspace()),
+            eq(runnerTable.id, runnerID)
           )
         )
         .execute()
@@ -419,10 +444,73 @@ export module Run {
     );
   });
 
+  export const getRunnerActiveUsage = zod(
+    z.string().cuid2(),
+    async (runnerID) => {
+      return await useTransaction((tx) =>
+        tx
+          .select()
+          .from(runnerUsageTable)
+          .where(
+            and(
+              eq(runnerUsageTable.workspaceID, useWorkspace()),
+              eq(runnerUsageTable.id, runnerID),
+              gt(
+                runnerUsageTable.timeRun,
+                new Date(Date.now() - RUNNER_WARMING_INACTIVE_TIME)
+              )
+            )
+          )
+          .execute()
+      );
+    }
+  );
+
+  export const setRunnerWarmer = zod(
+    z.object({
+      runnerID: z.string().cuid2(),
+      warmer: z.string().nonempty(),
+    }),
+    async (input) => {
+      return await useTransaction((tx) =>
+        tx
+          .update(runnerTable)
+          .set({
+            warmer: input.warmer,
+          })
+          .where(
+            and(
+              eq(runnerTable.workspaceID, useWorkspace()),
+              eq(runnerTable.id, input.runnerID)
+            )
+          )
+          .execute()
+      );
+    }
+  );
+
+  export const unsetRunnerWarmer = zod(z.string().cuid2(), async (runnerID) => {
+    return await useTransaction((tx) =>
+      tx
+        .update(runnerTable)
+        .set({
+          warmer: null,
+        })
+        .where(
+          and(
+            eq(runnerTable.workspaceID, useWorkspace()),
+            eq(runnerTable.id, runnerID)
+          )
+        )
+        .execute()
+    );
+  });
+
   export const lookupRunner = zod(
     z.object({
       region: z.string().nonempty(),
       awsAccountID: z.string().cuid2(),
+      appRepoID: z.string().cuid2(),
       architecture: z.enum(Architecture),
       image: z.string().nonempty(),
     }),
@@ -430,14 +518,15 @@ export module Run {
       return await useTransaction((tx) =>
         tx
           .select()
-          .from(runRunnerTable)
+          .from(runnerTable)
           .where(
             and(
-              eq(runRunnerTable.workspaceID, useWorkspace()),
-              eq(runRunnerTable.awsAccountID, input.awsAccountID),
-              eq(runRunnerTable.region, input.region),
-              eq(runRunnerTable.architecture, input.architecture),
-              eq(runRunnerTable.image, input.image)
+              eq(runnerTable.workspaceID, useWorkspace()),
+              eq(runnerTable.awsAccountID, input.awsAccountID),
+              eq(runnerTable.appRepoID, input.appRepoID),
+              eq(runnerTable.region, input.region),
+              eq(runnerTable.architecture, input.architecture),
+              eq(runnerTable.image, input.image)
             )
           )
           .execute()
@@ -450,6 +539,7 @@ export module Run {
     z.object({
       region: z.string().nonempty(),
       awsAccountID: z.string().cuid2(),
+      appRepoID: z.string().cuid2(),
       architecture: z.enum(Architecture),
       image: z.string().nonempty(),
       credentials: z.custom<Credentials>(),
@@ -482,16 +572,17 @@ export module Run {
 
       await updateRunnerRecordWithResource();
 
-      return { id: runnerID, resource };
+      return { id: runnerID, resource, warmer: null };
 
       function createRunnerRecordWithoutResource() {
         return useTransaction((tx) =>
           tx
-            .insert(runRunnerTable)
+            .insert(runnerTable)
             .values({
               id: runnerID,
               workspaceID: useWorkspace(),
               awsAccountID: input.awsAccountID,
+              appRepoID: input.appRepoID,
               region,
               architecture: input.architecture,
               image: input.image,
@@ -666,14 +757,14 @@ export module Run {
       function updateRunnerRecordWithResource() {
         return useTransaction((tx) =>
           tx
-            .update(runRunnerTable)
+            .update(runnerTable)
             .set({
               resource,
             })
             .where(
               and(
-                eq(runRunnerTable.id, runnerID),
-                eq(runRunnerTable.workspaceID, useWorkspace())
+                eq(runnerTable.id, runnerID),
+                eq(runnerTable.workspaceID, useWorkspace())
               )
             )
             .execute()
@@ -684,7 +775,7 @@ export module Run {
 
   export const removeRunner = zod(
     z.object({
-      runner: z.custom<typeof runRunnerTable.$inferSelect>(),
+      runner: z.custom<typeof runnerTable.$inferSelect>(),
       credentials: z.custom<Credentials>(),
     }),
     async (input) => {
@@ -762,11 +853,11 @@ export module Run {
       function removeRunnerRecord() {
         return useTransaction((tx) =>
           tx
-            .delete(runRunnerTable)
+            .delete(runnerTable)
             .where(
               and(
-                eq(runRunnerTable.id, runner.id),
-                eq(runRunnerTable.workspaceID, useWorkspace())
+                eq(runnerTable.id, runner.id),
+                eq(runnerTable.workspaceID, useWorkspace())
               )
             )
             .execute()
@@ -779,6 +870,7 @@ export module Run {
     z.object({
       region: z.string().nonempty(),
       resource: Resource,
+      stageID: z.string().cuid2(),
       runID: z.string().cuid2(),
       runnerID: z.string().cuid2(),
       stateUpdateID: z.string().cuid2(),
@@ -801,6 +893,7 @@ export module Run {
           FunctionName: input.resource.properties.function,
           InvocationType: "Event",
           Payload: JSON.stringify({
+            warm: false,
             buildspec: {
               version: Config.BUILDSPEC_VERSION,
               bucket: Bucket.Buildspec.bucketName,
@@ -816,21 +909,110 @@ export module Run {
         })
       );
 
-      // Update run's last run time
-      await useTransaction((tx) =>
-        tx
-          .update(runRunnerTable)
-          .set({
-            timeRun: new Date(),
-          })
+      // Update runner's last run time
+      const now = new Date();
+      await useTransaction(async (tx) => {
+        await tx
+          .update(runnerTable)
+          .set({ timeRun: now })
           .where(
             and(
-              eq(runRunnerTable.id, input.runnerID),
-              eq(runRunnerTable.workspaceID, useWorkspace())
+              eq(runnerTable.id, input.runnerID),
+              eq(runnerTable.workspaceID, useWorkspace())
             )
           )
-          .execute()
+          .execute();
+
+        await tx
+          .insert(runnerUsageTable)
+          .values({
+            workspaceID: useWorkspace(),
+            id: createId(),
+            runnerID: input.runnerID,
+            stageID: input.stageID,
+            timeRun: now,
+          })
+          .onDuplicateKeyUpdate({
+            set: {
+              timeRun: now,
+            },
+          })
+          .execute();
+      });
+    }
+  );
+
+  export const warmRunner = zod(
+    z.object({
+      region: z.string().nonempty(),
+      resource: Resource,
+      credentials: z.custom<Credentials>(),
+      cloneUrl: z.string().nonempty(),
+      instances: z.number().int(),
+    }),
+    async (input) => {
+      const { region, resource, credentials, cloneUrl, instances } = input;
+
+      const lambda = new LambdaClient({
+        credentials,
+        region,
+        retryStrategy: RETRY_STRATEGY,
+      });
+      await Promise.all(
+        Array(instances)
+          .fill(0)
+          .map((_) =>
+            lambda.send(
+              new InvokeCommand({
+                FunctionName: resource.properties.function,
+                InvocationType: "Event",
+                Payload: JSON.stringify({
+                  warm: true,
+                  buildspec: {
+                    version: Config.BUILDSPEC_VERSION,
+                    bucket: Bucket.Buildspec.bucketName,
+                  },
+                  cloneUrl,
+                  credentials,
+                } satisfies RunnerEvent),
+              })
+            )
+          )
       );
+    }
+  );
+
+  export const scheduleRunnerWarmer = zod(
+    z.string().cuid2(),
+    async (runnerID) => {
+      const now = Date.now();
+      const scheduler = new SchedulerClient({
+        retryStrategy: RETRY_STRATEGY,
+      });
+      const name = `runner-warmer-${runnerID}-${now}`;
+      await scheduler.send(
+        new CreateScheduleCommand({
+          Name: name,
+          GroupName: process.env.RUNNER_WARMER_SCHEDULE_GROUP_NAME!,
+          FlexibleTimeWindow: {
+            Mode: "OFF",
+          },
+          ScheduleExpression: `at(${
+            new Date(now + RUNNER_WARMING_INTERVAL).toISOString().split(".")[0]
+          })`,
+          Target: {
+            Arn: process.env.RUNNER_WARMER_FUNCTION_ARN,
+            RoleArn: process.env.RUNNER_WARMER_SCHEDULE_ROLE_ARN,
+            Input: JSON.stringify({
+              workspaceID: useWorkspace(),
+              runnerID,
+            } satisfies Run.RunnerWarmerEvent),
+          },
+          ActionAfterCompletion: "DELETE",
+        })
+      );
+
+      await setRunnerWarmer({ runnerID, warmer: name });
     }
   );
 

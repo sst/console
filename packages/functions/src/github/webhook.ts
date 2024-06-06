@@ -27,8 +27,8 @@ app.webhooks.on("push", async (event) => {
   const commitID = event.payload.head_commit?.id!;
 
   // Get all apps connected to the repo
-  const apps = await AppRepo.listByRepo({ type: "github", repoID });
-  if (apps.length === 0) return;
+  const appRepos = await AppRepo.listByRepo({ type: "github", repoID });
+  if (appRepos.length === 0) return;
 
   // Get `sst.config.ts` file
   const file = await event.octokit.rest.repos.getContent({
@@ -74,15 +74,16 @@ app.webhooks.on("push", async (event) => {
   const oauthToken = await event.octokit
     .auth({ type: "installation" })
     .then((x: any) => x.token);
-  for (const app of apps) {
+  for (const appRepo of appRepos) {
     await withActor(
       {
         type: "system",
-        properties: { workspaceID: app.workspaceID },
+        properties: { workspaceID: appRepo.workspaceID },
       },
       () =>
         Run.create({
-          appID: app.appID,
+          appID: appRepo.appID,
+          appRepoID: appRepo.id,
           cloneUrl: `https://oauth2:${oauthToken}@github.com/${trigger.repo.owner}/${trigger.repo.repo}.git`,
           trigger,
           region: config.region,

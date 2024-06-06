@@ -24,7 +24,7 @@ export function Run({ stack, app }: StackContext) {
   /****************/
   /* Build script */
   /****************/
-  const bucket = new Bucket(stack, "Buildspec", {
+  const buildspecBucket = new Bucket(stack, "Buildspec", {
     cdk: {
       bucket: {
         publicReadAccess: true,
@@ -36,13 +36,16 @@ export function Run({ stack, app }: StackContext) {
   const content = fs.readFileSync(filePath);
   const version = createHash("sha256").update(content).digest("hex");
   new BucketDeployment(stack, "BuildspecDeployment", {
-    destinationBucket: bucket.cdk.bucket,
+    destinationBucket: buildspecBucket.cdk.bucket,
     destinationKeyPrefix: `buildspec/${version}`,
     sources: [
       Source.asset("packages/build/buildspec", {
         assetHash: version,
       }),
     ],
+  });
+  const buildspecVersion = new Config.Parameter(stack, "BUILDSPEC_VERSION", {
+    value: version,
   });
 
   /***************/
@@ -98,6 +101,9 @@ export function Run({ stack, app }: StackContext) {
   } else {
     repo = Repository.fromRepositoryName(stack, "Repository", repoName);
   }
+  const buildImage = new Config.Parameter(stack, "IMAGE_URI", {
+    value: repo.repositoryUri,
+  });
 
   /*************************/
   /* Build timeout monitor */
@@ -149,6 +155,33 @@ export function Run({ stack, app }: StackContext) {
     permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
   });
 
+  /******************/
+  /* Runner warmer */
+  /******************/
+  const runnerWarmerScheduleGroup = new CfnScheduleGroup(
+    stack,
+    "RunnerWarmer",
+    {
+      name: app.logicalPrefixedName("RunnerWarmer"),
+    }
+  );
+  const runnerWarmer = new Function(stack, "RunnerWarmerHandler", {
+    bind: [
+      ...Object.values(secrets.database),
+      ...secrets.github,
+      buildspecBucket,
+      buildspecVersion,
+      buildImage,
+    ],
+    handler: "packages/functions/src/run/runner-warmer.handler",
+    environment: {
+      RUNNER_WARMER_SCHEDULE_GROUP_NAME: runnerWarmerScheduleGroup.name!,
+      RUNNER_WARMER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      //RUNNER_WARMER_FUNCTION_ARN: this will be set in the handler
+    },
+    permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
+  });
+
   /*********************/
   /* SST config parser */
   /*********************/
@@ -166,13 +199,11 @@ export function Run({ stack, app }: StackContext) {
     runTimeoutMonitorArn: runTimeoutMonitor.functionArn,
     runnerRemoverScheduleGroupName: runnerRemoverScheduleGroup.name!,
     runnerRemoverArn: runnerRemover.functionArn,
+    runnerWarmerScheduleGroupName: runnerWarmerScheduleGroup.name!,
+    runnerWarmerArn: runnerWarmer.functionArn,
     scheduleRoleArn: scheduleRole.roleArn,
-    buildspecBucket: bucket,
-    buildspecVersion: new Config.Parameter(stack, "BUILDSPEC_VERSION", {
-      value: version,
-    }),
-    image: new Config.Parameter(stack, "IMAGE_URI", {
-      value: repo.repositoryUri,
-    }),
+    buildspecBucket,
+    buildspecVersion,
+    buildImage,
   };
 }

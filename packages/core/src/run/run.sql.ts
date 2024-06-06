@@ -10,7 +10,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { workspaceID, cuid, timestampsNext } from "../util/sql";
 import { z } from "zod";
-import { app, stage } from "../app/app.sql";
+import { app, appRepo, stage } from "../app/app.sql";
 import { workspaceIndexes } from "../workspace/workspace.sql";
 import { awsAccount } from "../aws/aws.sql";
 
@@ -56,17 +56,19 @@ export const Trigger = z.object({
 });
 export type Trigger = z.infer<typeof Trigger>;
 
-export const runRunnerTable = mysqlTable(
-  "run_runner",
+export const runnerTable = mysqlTable(
+  "runner",
   {
     ...workspaceID,
     ...timestampsNext,
     timeRun: timestamp("time_run"),
     awsAccountID: cuid("aws_account_id").notNull(),
     region: varchar("region", { length: 255 }).notNull(),
+    appRepoID: cuid("app_repo_id").notNull(),
     architecture: mysqlEnum("architecture", Architecture).notNull(),
     image: varchar("image", { length: 255 }).notNull(),
     resource: json("resource").$type<Resource>(),
+    warmer: varchar("warmer", { length: 255 }),
   },
   (table) => ({
     ...workspaceIndexes(table),
@@ -75,6 +77,40 @@ export const runRunnerTable = mysqlTable(
       columns: [table.workspaceID, table.awsAccountID],
       foreignColumns: [awsAccount.workspaceID, awsAccount.id],
     }).onDelete("cascade"),
+    repoID: foreignKey({
+      name: "repo_id_fk",
+      columns: [table.workspaceID, table.appRepoID],
+      foreignColumns: [appRepo.workspaceID, appRepo.id],
+    }).onDelete("cascade"),
+  })
+);
+
+export const runnerUsageTable = mysqlTable(
+  "runner_usage",
+  {
+    ...workspaceID,
+    ...timestampsNext,
+    runnerID: cuid("runner_id").notNull(),
+    stageID: cuid("stage_id").notNull(),
+    timeRun: timestamp("time_run"),
+  },
+  (table) => ({
+    ...workspaceIndexes(table),
+    fkRunnerID: foreignKey({
+      name: "runner_id_fk",
+      columns: [table.workspaceID, table.runnerID],
+      foreignColumns: [runnerTable.workspaceID, runnerTable.id],
+    }).onDelete("cascade"),
+    fkStageID: foreignKey({
+      name: "stage_id_fk",
+      columns: [table.workspaceID, table.stageID],
+      foreignColumns: [stage.workspaceID, stage.id],
+    }).onDelete("cascade"),
+    uniqueStageID: unique("runner_id_stage_id_unique").on(
+      table.workspaceID,
+      table.runnerID,
+      table.stageID
+    ),
   })
 );
 

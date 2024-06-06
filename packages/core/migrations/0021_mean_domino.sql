@@ -1,0 +1,1 @@
+ALTER TABLE `runner` ADD `warmer` varchar(255);

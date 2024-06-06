@@ -96,7 +96,9 @@ export function Events({ stack }: StackContext) {
       bus,
       ...secrets.github,
       run.configParser,
-      run.image,
+      run.buildspecBucket,
+      run.buildspecVersion,
+      run.buildImage,
     ],
     permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
     environment: {
@@ -104,6 +106,9 @@ export function Events({ stack }: StackContext) {
       RUNNER_REMOVER_SCHEDULE_GROUP_NAME: run.runnerRemoverScheduleGroupName,
       RUNNER_REMOVER_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
       RUNNER_REMOVER_FUNCTION_ARN: run.runnerRemoverArn,
+      RUNNER_WARMER_SCHEDULE_GROUP_NAME: run.runnerWarmerScheduleGroupName,
+      RUNNER_WARMER_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
+      RUNNER_WARMER_FUNCTION_ARN: run.runnerWarmerArn,
     },
   });
 
@@ -152,7 +157,7 @@ export function Events({ stack }: StackContext) {
       ...secrets.github,
       run.buildspecBucket,
       run.buildspecVersion,
-      run.image,
+      run.buildImage,
     ],
     permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
     environment: {
@@ -160,6 +165,9 @@ export function Events({ stack }: StackContext) {
       RUNNER_REMOVER_SCHEDULE_GROUP_NAME: run.runnerRemoverScheduleGroupName,
       RUNNER_REMOVER_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
       RUNNER_REMOVER_FUNCTION_ARN: run.runnerRemoverArn,
+      RUNNER_WARMER_SCHEDULE_GROUP_NAME: run.runnerWarmerScheduleGroupName,
+      RUNNER_WARMER_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
+      RUNNER_WARMER_FUNCTION_ARN: run.runnerWarmerArn,
     },
   });
 

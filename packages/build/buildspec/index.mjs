@@ -1,4 +1,4 @@
-/** @typedef {import("../../core/src/run").RunnerEvent} RunnerEvent */
+/** @typedef {import("../../core/src/run").Run.RunnerEvent} RunnerEvent */
 /** @typedef {import("aws-lambda").Context} Context */
 import { spawnSync } from "child_process";
 import fs from "fs";
@@ -19,6 +19,10 @@ let isWarm = false;
  * @param {Context} context
  */
 export async function handler(event, context) {
+  console.log("isWarm:", isWarm);
+  if (event.warm && isWarm) return "warmed";
+  isWarm = true;
+
   let error;
 
   try {
@@ -29,30 +33,20 @@ export async function handler(event, context) {
     });
 
     const invokedAt = Date.now();
-    console.log("isWarm:", isWarm);
 
-    //  if (event.warm && isWarm) return "warmed";
-
-    // Set working directory
-    process.chdir(ROOT_PATH);
     checkout();
     const checkedOutAt = Date.now();
     console.log("checkoutDuration:", checkedOutAt - invokedAt + "ms");
 
-    // Pnpm install
-    process.chdir(REPO_PATH);
-    shell("pnpm install");
-    const pnpmInstalledAt = Date.now();
-    console.log("pnpmDuration:", pnpmInstalledAt - checkedOutAt + "ms");
+    installDependencies();
+    const depsInstalledAt = Date.now();
+    console.log("depsInstallDuration:", depsInstalledAt - checkedOutAt + "ms");
 
-    isWarm = true;
-    //if (event.warm) return "warmed";
+    if (event.warm) return "warmed";
 
-    // Deploy
-    process.chdir(REPO_PATH);
     deploy();
     const deployedAt = Date.now();
-    console.log("deployDuration:", deployedAt - pnpmInstalledAt + "ms");
+    console.log("deployDuration:", deployedAt - depsInstalledAt + "ms");
   } catch (e) {
     error = e.message;
   } finally {
@@ -60,24 +54,39 @@ export async function handler(event, context) {
   }
 
   function checkout() {
-    const { cloneUrl, trigger } = event;
+    const { warm, cloneUrl, trigger } = event;
 
+    // Clone or fetch the repo
     if (fs.existsSync(REPO_PATH)) {
       process.chdir(REPO_PATH);
       shell("git reset --hard");
       shell(`git remote set-url origin ${cloneUrl}`);
       shell("git fetch");
     } else {
+      process.chdir(ROOT_PATH);
       shell(`git clone ${cloneUrl} ${REPO_DIR_NAME}`);
     }
 
+    // Checkout commit
+    if (!warm) {
+      process.chdir(REPO_PATH);
+      shell(`git -c advice.detachedHead=false checkout ${trigger.commit.id}`);
+    }
+  }
+
+  function installDependencies() {
     process.chdir(REPO_PATH);
-    shell(`git -c advice.detachedHead=false checkout ${trigger.commit.id}`);
+
+    if (fs.existsSync("yarn.lock")) shell("yarn install");
+    else if (fs.existsSync("pnpm-lock.yaml")) shell("pnpm install");
+    else if (fs.existsSync("bun.lockb")) shell("bun install");
+    else if (fs.existsSync("package.json")) shell("npm install");
   }
 
   function deploy() {
     const { stage, credentials, stateUpdateID } = event;
 
+    process.chdir(REPO_PATH);
     shell(`sst deploy --stage ${stage}`, {
       env: {
         ...process.env,
@@ -111,6 +120,9 @@ export async function handler(event, context) {
    * @param {any} payload
    */
   async function publish(type, payload) {
+    const { warm, workspaceID, runID, stateUpdateID } = event;
+    if (warm) return;
+
     await eb.send(
       new PutEventsCommand({
         Entries: [
@@ -118,12 +130,7 @@ export async function handler(event, context) {
             Source: "sst.external",
             DetailType: type,
             Detail: JSON.stringify({
-              properties: {
-                ...payload,
-                workspaceID: event.workspaceID,
-                runID: event.runID,
-                stateUpdateID: event.stateUpdateID,
-              },
+              properties: { ...payload, workspaceID, runID, stateUpdateID },
             }),
           },
         ],

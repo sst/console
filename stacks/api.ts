@@ -163,7 +163,7 @@ export function API({ stack, app }: StackContext) {
         function: {
           handler: "packages/functions/src/github/webhook.handler",
           timeout: "120 seconds",
-          bind: [...secrets.github, run.configParser, run.image],
+          bind: [...secrets.github, run.configParser, run.buildImage],
           environment: {
             TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME:
               run.runTimeoutMonitorScheduleGroupName,

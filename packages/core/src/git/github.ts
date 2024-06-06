@@ -5,7 +5,7 @@ import { createTransaction, useTransaction } from "../util/transaction";
 import { githubOrg, githubRepo } from "./git.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
-import { and, db, eq, notInArray, or, sql } from "../drizzle";
+import { and, eq, notInArray, or, inArray, sql } from "../drizzle";
 import { createSelectSchema } from "drizzle-zod";
 import { Config } from "sst/node/config";
 import { event } from "../event";
@@ -38,7 +38,7 @@ async function useClient(installationID: number) {
       installationID,
     };
   }
-  return client.octokit.rest;
+  return client.octokit;
 }
 function createClient(installationID: number) {
   const app = new App({
@@ -51,7 +51,7 @@ function createClient(installationID: number) {
 export const connect = zod(z.number(), async (installationID) => {
   // Get installation detail
   const client = await useClient(installationID);
-  const installation = await client.apps.getInstallation({
+  const installation = await client.rest.apps.getInstallation({
     installation_id: installationID,
   });
   const orgID = installation.data.account?.id!;
@@ -139,7 +139,7 @@ export const syncRepos = zod(
     const client = await useClient(input.installationID);
     const repos: { id: number; name: string }[] = [];
     for (let page = 1; ; page++) {
-      const ret = await client.apps.listReposAccessibleToInstallation({
+      const ret = await client.rest.apps.listReposAccessibleToInstallation({
         per_page: 100,
         page,
       });
@@ -204,7 +204,7 @@ export const getFile = zod(
   }),
   async (input) => {
     const client = await useClient(input.installationID);
-    const file = await client.repos.getContent({
+    const file = await client.rest.repos.getContent({
       owner: input.owner,
       repo: input.repo,
       ref: input.ref,
@@ -214,5 +214,20 @@ export const getFile = zod(
       throw new Error("sst.config.ts not found");
     }
     return file.data.content;
+  }
+);
+
+export const getCloneUrl = zod(
+  z.object({
+    installationID: z.number().int(),
+    owner: z.string().nonempty(),
+    repo: z.string().nonempty(),
+  }),
+  async (input) => {
+    const client = await useClient(input.installationID);
+    const oauthToken = await client
+      .auth({ type: "installation" })
+      .then((x: any) => x.token);
+    return `https://oauth2:${oauthToken}@github.com/${input.owner}/${input.repo}.git`;
   }
 );

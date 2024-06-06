@@ -5,7 +5,7 @@ import { appRepo } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { event } from "../event";
 
 export * as AppRepo from "./repo";
@@ -38,6 +38,17 @@ export const listByRepo = zod(
         )
         .execute()
     )
+);
+
+export const getByID = zod(Info.shape.id, (id) =>
+  useTransaction((tx) =>
+    tx
+      .select()
+      .from(appRepo)
+      .where(and(eq(appRepo.workspaceID, useWorkspace()), eq(appRepo.id, id)))
+      .execute()
+      .then((rows) => rows[0])
+  )
 );
 
 export const getByAppID = zod(Info.shape.appID, (appID) =>
