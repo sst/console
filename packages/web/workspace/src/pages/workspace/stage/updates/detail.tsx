@@ -25,6 +25,8 @@ import { IconCheck, IconXCircle, IconEllipsisVertical } from "$/ui/icons";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
 import { sortBy } from "remeda";
 
+const AVATAR_SIZE = 36;
+const SIDEBAR_WIDTH = 300;
 const RES_LEFT_BORDER = "4px";
 
 const Container = styled("div", {
@@ -225,7 +227,7 @@ const ResourceCopyButton = styled("button", {
 const Sidebar = styled("div", {
   base: {
     flex: "0 0 auto",
-    width: 300,
+    width: SIDEBAR_WIDTH,
   },
 });
 
@@ -246,8 +248,8 @@ const GitInfo = styled("div", {
 const GitAvatar = styled("div", {
   base: {
     flex: "0 0 auto",
-    width: 36,
-    height: 36,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
     overflow: "hidden",
     borderRadius: theme.borderRadius,
   },
@@ -294,7 +296,7 @@ const GitCommit = styled("span", {
 const GitBranch = styled("span", {
   base: {
     ...utility.text.line,
-    maxWidth: 140,
+    maxWidth: SIDEBAR_WIDTH - AVATAR_SIZE - 24,
     lineHeight: "normal",
     fontSize: theme.font.size.sm,
     color: theme.color.text.dimmed.base,
@@ -471,9 +473,9 @@ export function Detail() {
                   <Row space="1.5" vertical="center">
                     <GitAvatar title={run().trigger.sender.username}>
                       <img
-                        width="36"
-                        height="36"
-                        src={`https://avatars.githubusercontent.com/u/${run().trigger.sender.id}?s=72&v=4`}
+                        width={AVATAR_SIZE}
+                        height={AVATAR_SIZE}
+                        src={`https://avatars.githubusercontent.com/u/${run().trigger.sender.id}?s=${2 * AVATAR_SIZE}&v=4`}
                       />
                     </GitAvatar>
                     <Stack space="0.5">
