@@ -151,7 +151,7 @@ const UpdateStatusCopy = styled("p", {
 
 const UpdateGit = styled("div", {
   base: {
-    ...utility.stack(2),
+    ...utility.stack(1.5),
   },
 });
 
@@ -204,6 +204,7 @@ const UpdateGitCommit = styled("span", {
 const UpdateGitMessage = styled("span", {
   base: {
     ...utility.text.line,
+    lineHeight: "normal",
     maxWidth: 260,
     fontSize: theme.font.size.xs,
     color: theme.color.text.dimmed.base,
@@ -421,9 +422,11 @@ function Update(props: UpdateProps) {
                 </UpdateGitLink>
               </Show>
             </Row>
-            <UpdateGitMessage>
-              {run().trigger.commit.message ? run().trigger.commit.message : "—"}
-            </UpdateGitMessage>
+            <Show when={run().trigger.commit.message}>
+              <UpdateGitMessage>
+                {run().trigger.commit.message ? run().trigger.commit.message : "—"}
+              </UpdateGitMessage>
+            </Show>
           </UpdateGit>
         </Show>
       </UpdateLeftCol>

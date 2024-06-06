@@ -20,12 +20,12 @@ export const handler = ApiHandler(async () => {
     !workspaceID
       ? session
       : {
-          type: "user",
-          properties: {
-            workspaceID,
-            userID: "dummy-user",
-          },
+        type: "user",
+        properties: {
+          workspaceID,
+          userID: "dummy-user",
         },
+      },
     () => {
       const actor = useActor();
       NotPublic();
@@ -58,6 +58,7 @@ export const handler = ApiHandler(async () => {
 
       const data = generateData(useQueryParam("dummy") || "empty");
       const keys = {
+        run: (item: any) => [item._type, item.stageID, item.id],
         resource: (item: any) => [item._type, item.stageID, item.id],
         stateUpdate: (item: any) => [item._type, item.stageID, item.id],
         stateResource: (item: any) => [item._type, item.stageID, item.id],
