@@ -31,7 +31,12 @@ import {
 import { Header } from "../../header";
 import { styled } from "@macaron-css/solid";
 import { IconGitHub } from "$/ui/icons/custom";
-import { PANEL_HEADER_SPACE, PANEL_CONTENT_SPACE, SettingsRoot, Divider } from "../../settings";
+import {
+  PANEL_HEADER_SPACE,
+  PANEL_CONTENT_SPACE,
+  SettingsRoot,
+  Divider,
+} from "../../settings";
 import { useAppContext } from "../context";
 import { createId } from "@paralleldrive/cuid2";
 import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
@@ -100,12 +105,12 @@ export function Settings() {
   const ghRepo = GithubRepoStore.all.watch(
     rep,
     () => [],
-    repos => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID)
+    (repos) => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID)
   );
   const ghRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.orgID === ghRepo()?.orgID)
+    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID)
   );
 
   return (
@@ -141,7 +146,9 @@ export function Settings() {
                     <Stack space="1">
                       <GitRepoLink
                         target="_blank"
-                        href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name}`}
+                        href={`https://github.com/${ghRepoOrg()?.login}/${
+                          ghRepo()?.name
+                        }`}
                       >
                         {ghRepoOrg()?.login}
                         <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
@@ -328,7 +335,7 @@ function RepoInfo() {
   const connectedRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.orgID === connectedRepo()?.orgID)
+    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID)
   );
 
   return (

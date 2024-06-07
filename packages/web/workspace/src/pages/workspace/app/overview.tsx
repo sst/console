@@ -8,19 +8,8 @@ import {
   ButtonIcon,
   TextButton,
 } from "$/ui";
-import {
-  For,
-  Show,
-  Match,
-  Switch,
-  createMemo,
-  createEffect,
-} from "solid-js";
-import {
-  AppRepoStore,
-  GithubOrgStore,
-  GithubRepoStore,
-} from "$/data/app";
+import { For, Show, Match, Switch, createMemo, createEffect } from "solid-js";
+import { AppRepoStore, GithubOrgStore, GithubRepoStore } from "$/data/app";
 import { Header } from "../header";
 import { Link } from "@solidjs/router";
 import { useAppContext } from "./context";
@@ -111,12 +100,12 @@ export function Overview() {
   const ghRepo = GithubRepoStore.all.watch(
     rep,
     () => [],
-    repos => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID)
+    (repos) => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID)
   );
   const ghRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.orgID === ghRepo()?.orgID)
+    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID)
   );
 
   return (
@@ -157,7 +146,9 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name}`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${
+                    ghRepo()?.name
+                  }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />
