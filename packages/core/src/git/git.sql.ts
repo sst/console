@@ -2,26 +2,29 @@ import {
   bigint,
   foreignKey,
   index,
+  json,
   mysqlEnum,
   mysqlTable,
   primaryKey,
+  timestamp,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { timestamps, workspaceID } from "../util/sql";
+import { z } from "zod";
+import { cuid, timestamps, workspaceID } from "../util/sql";
 
-const org = {
-  get orgID() {
-    return bigint("org_id", { mode: "number" }).notNull();
-  },
-};
+export const LastEvent = z.object({
+  branch: z.string().nonempty(),
+  commit: z.string().nonempty(),
+});
+export type LastEvent = z.infer<typeof LastEvent>;
 
 export const githubOrg = mysqlTable(
   "github_org",
   {
     ...workspaceID,
     ...timestamps,
-    ...org,
+    orgID: bigint("org_id", { mode: "number" }).notNull(),
     login: varchar("login", { length: 255 }).notNull(),
     installationID: bigint("installation_id", { mode: "number" }).notNull(),
   },
@@ -37,17 +40,23 @@ export const githubRepo = mysqlTable(
   {
     ...workspaceID,
     ...timestamps,
-    ...org,
+    githubOrgID: cuid("github_org_id").notNull(),
     repoID: bigint("repo_id", { mode: "number" }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
+    lastEvent: json("last_event").$type<LastEvent>(),
+    timeLastEvent: timestamp("time_last_event"),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),
-    org: foreignKey({
-      name: "github_repo_workspace_id_org_id",
-      columns: [table.workspaceID, table.orgID],
-      foreignColumns: [githubOrg.workspaceID, githubOrg.orgID],
+    githubOrgID: foreignKey({
+      name: "fk_github_org_id",
+      columns: [table.workspaceID, table.githubOrgID],
+      foreignColumns: [githubOrg.workspaceID, githubOrg.id],
     }).onDelete("cascade"),
-    repo: uniqueIndex("repo").on(table.workspaceID, table.orgID, table.repoID),
+    repoID: uniqueIndex("unique_repo_id").on(
+      table.workspaceID,
+      table.githubOrgID,
+      table.repoID
+    ),
   })
 );

@@ -9,7 +9,6 @@ import { and, eq, notInArray, or, inArray, sql } from "../drizzle";
 import { createSelectSchema } from "drizzle-zod";
 import { Config } from "sst/node/config";
 import { event } from "../event";
-import { useCallback } from "react";
 
 export * as Github from "./github";
 
@@ -108,7 +107,7 @@ export const getByRepoID = zod(z.number(), (repoID) =>
         repo: githubRepo.name,
       })
       .from(githubRepo)
-      .innerJoin(githubOrg, eq(githubRepo.orgID, githubOrg.orgID))
+      .innerJoin(githubOrg, eq(githubRepo.githubOrgID, githubOrg.id))
       .where(
         and(
           eq(githubRepo.repoID, repoID),
@@ -161,7 +160,7 @@ export const syncRepos = zod(
             ...orgs.map((org) =>
               and(
                 eq(githubRepo.workspaceID, org.workspaceID),
-                eq(githubRepo.orgID, org.orgID),
+                eq(githubRepo.githubOrgID, org.id),
                 notInArray(
                   githubRepo.repoID,
                   repos.map(({ id }) => id)
@@ -179,7 +178,7 @@ export const syncRepos = zod(
             repos.map((repo) => ({
               id: createId(),
               workspaceID: org.workspaceID,
-              orgID: org.orgID,
+              githubOrgID: org.id,
               repoID: repo.id,
               name: repo.name,
             }))

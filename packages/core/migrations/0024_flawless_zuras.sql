@@ -1,0 +1,1 @@
+ALTER TABLE `github_repo` DROP INDEX `repo`;
