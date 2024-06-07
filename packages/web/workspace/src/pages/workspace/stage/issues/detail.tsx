@@ -92,7 +92,7 @@ export const PanelEmptyCopy = styled("span", {
   },
 });
 
-const LogsBackground = styled("div", {
+export const LogsBackground = styled("div", {
   base: {
     backgroundColor: theme.color.background.surface,
     borderRadius: theme.borderRadius,
