@@ -34,26 +34,26 @@ export const Events = {
     "app.stage.connected",
     z.object({
       stageID: z.string().nonempty(),
-    })
+    }),
   ),
   Updated: event(
     "app.stage.updated",
     z.object({
       stageID: z.string().nonempty(),
-    })
+    }),
   ),
   ResourcesUpdated: event(
     "app.stage.resources_updated",
     z.object({
       stageID: z.string().nonempty(),
-    })
+    }),
   ),
   UsageRequested: event(
     "app.stage.usage_requested",
     z.object({
       stageID: z.string().nonempty(),
       daysOffset: z.number().int().min(1),
-    })
+    }),
   ),
 };
 
@@ -74,8 +74,8 @@ export const fromID = zod(Info.shape.id, (stageID) =>
       .from(stage)
       .where(and(eq(stage.workspaceID, useWorkspace()), eq(stage.id, stageID)))
       .execute()
-      .then((x) => x[0])
-  )
+      .then((x) => x[0]),
+  ),
 );
 
 export const fromName = zod(
@@ -96,12 +96,12 @@ export const fromName = zod(
             eq(stage.name, input.name),
             eq(stage.region, input.region),
             eq(stage.appID, input.appID),
-            eq(stage.awsAccountID, input.awsAccountID)
-          )
+            eq(stage.awsAccountID, input.awsAccountID),
+          ),
         )
         .execute()
-        .then((x) => x[0])
-    )
+        .then((x) => x[0]),
+    ),
 );
 
 export const list = zod(z.void(), () =>
@@ -110,8 +110,8 @@ export const list = zod(z.void(), () =>
       .select()
       .from(stage)
       .execute()
-      .then((rows) => rows)
-  )
+      .then((rows) => rows),
+  ),
 );
 
 export const connect = zod(
@@ -155,18 +155,18 @@ export const connect = zod(
             eq(stage.appID, input.appID),
             eq(stage.name, input.name),
             eq(stage.region, input.region),
-            eq(stage.awsAccountID, input.awsAccountID)
-          )
+            eq(stage.awsAccountID, input.awsAccountID),
+          ),
         )
         .execute()
         .then((x) => x[0]!);
       await createTransactionEffect(() =>
         Events.Connected.publish({
           stageID: insertID,
-        })
+        }),
       );
       return insertID;
-    })
+    }),
 );
 
 export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
@@ -180,7 +180,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
     .from(stage)
     .innerJoin(app, eq(stage.appID, app.id))
     .where(
-      and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace()))
+      and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace())),
     )
     .execute()
     .then((x) => x[0]);
@@ -208,7 +208,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
       new ListObjectsV2Command({
         Prefix: key,
         Bucket: bootstrap.bucket,
-      })
+      }),
     )
     .catch((err) => {
       if (err.name === "AccessDenied") return;
@@ -227,7 +227,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           new GetObjectCommand({
             Key: `app/${input.app}/${input.stage}.json`,
             Bucket: ion.bucket,
-          })
+          }),
         )
         .catch(() => {});
       if (state) return;
@@ -244,7 +244,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         new GetObjectCommand({
           Key: obj.Key!,
           Bucket: bootstrap.bucket,
-        })
+        }),
       )
       .catch((err) => {
         if (err.name === "AccessDenied") return;
@@ -270,7 +270,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           ? await Enrichers[type as keyof typeof Enrichers](
               res,
               input.credentials,
-              input.region
+              input.region,
             ).catch(() => ({}))
           : {};
       r.push({
@@ -297,8 +297,8 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
       .where(
         and(
           eq(resource.stageID, input.stageID),
-          eq(resource.workspaceID, useWorkspace())
-        )
+          eq(resource.workspaceID, useWorkspace()),
+        ),
       )
       .execute()
       .then((x) => new Map(x.map((x) => [x.addr, x.id] as const)));
@@ -321,7 +321,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
               metadata: res.data,
               enrichment: res.enrichment,
             };
-          })
+          }),
         )
         .onDuplicateKeyUpdate({
           set: {
@@ -342,14 +342,14 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           // @ts-ignore
           !x.enrichment.version ||
           // @ts-ignore
-          parseVersion(x.enrichment.version) < MINIMUM_VERSION
+          parseVersion(x.enrichment.version) < MINIMUM_VERSION,
       ).length;
 
     await tx
       .update(stage)
       .set({ unsupported })
       .where(
-        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace()))
+        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace())),
       );
 
     const toDelete = [...existing.values()];
@@ -361,14 +361,14 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
           and(
             eq(resource.stageID, input.stageID),
             eq(resource.workspaceID, useWorkspace()),
-            inArray(resource.id, toDelete)
-          )
+            inArray(resource.id, toDelete),
+          ),
         );
     await createTransactionEffect(() => Replicache.poke());
     await createTransactionEffect(() =>
       Events.ResourcesUpdated.publish({
         stageID: input.stageID,
-      })
+      }),
     );
   });
 });
@@ -392,7 +392,7 @@ export const assumeRole = zod(Info.shape.id, async (stageID) => {
       .innerJoin(app, eq(stage.appID, app.id))
       .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
       .execute()
-      .then((rows) => rows.at(0))
+      .then((rows) => rows.at(0)),
   );
   if (!result) return;
   const credentials = await AWS.assumeRole(result.accountID);
@@ -408,39 +408,32 @@ export const assumeRole = zod(Info.shape.id, async (stageID) => {
 });
 
 export const remove = zod(Info.shape.id, (stageID) =>
-  createTransaction(
-    async (tx) => {
-      console.log("removing stage", stageID);
-      await tx
-        .delete(stage)
-        .where(
-          and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace()))
-        )
-        .execute();
-      await tx
-        .delete(resource)
-        .where(
-          and(
-            eq(resource.stageID, stageID),
-            eq(resource.workspaceID, useWorkspace())
-          )
-        )
-        .execute();
-      await tx
-        .delete(issueSubscriber)
-        .where(
-          and(
-            eq(issueSubscriber.stageID, stageID),
-            eq(issueSubscriber.workspaceID, useWorkspace())
-          )
-        )
-        .execute();
-      await createTransactionEffect(() => Replicache.poke());
-    },
-    {
-      isolationLevel: "read uncommitted",
-    }
-  )
+  createTransaction(async (tx) => {
+    console.log("removing stage", stageID);
+    await tx
+      .delete(stage)
+      .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
+      .execute();
+    await tx
+      .delete(resource)
+      .where(
+        and(
+          eq(resource.stageID, stageID),
+          eq(resource.workspaceID, useWorkspace()),
+        ),
+      )
+      .execute();
+    await tx
+      .delete(issueSubscriber)
+      .where(
+        and(
+          eq(issueSubscriber.stageID, stageID),
+          eq(issueSubscriber.workspaceID, useWorkspace()),
+        ),
+      )
+      .execute();
+    await createTransactionEffect(() => Replicache.poke());
+  }),
 );
 
 function parseVersion(input: string) {

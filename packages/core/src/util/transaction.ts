@@ -34,7 +34,7 @@ export async function useTransaction<T>(callback: (trx: TxOrDb) => Promise<T>) {
 }
 
 export async function createTransactionEffect(
-  effect: () => any | Promise<any>
+  effect: () => any | Promise<any>,
 ) {
   try {
     const { effects } = TransactionContext.use();
@@ -46,7 +46,7 @@ export async function createTransactionEffect(
 
 export async function createTransaction<T>(
   callback: (tx: TxOrDb) => Promise<T>,
-  config?: MySqlTransactionConfig
+  config?: MySqlTransactionConfig,
 ) {
   try {
     const { tx } = TransactionContext.use();
@@ -59,14 +59,14 @@ export async function createTransaction<T>(
           { tx, effects },
           async () => {
             return callback(tx);
-          }
+          },
         );
         return result;
       },
       {
-        isolationLevel: "serializable",
+        isolationLevel: "repeatable read",
         ...config,
-      }
+      },
     );
     await Promise.all(effects.map((x) => x()));
     return result;
