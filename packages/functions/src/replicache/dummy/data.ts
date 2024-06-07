@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 import { createHash } from "crypto";
 import { AWS } from "@console/core/aws";
+import { Run } from "@console/core/run";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
 import { State } from "@console/core/state";
@@ -41,6 +42,7 @@ export function* generateData(
   console.log("generating for", mode);
 
   // Reset auto-incrementing IDs
+  RUN_ID = 0;
   UPDATE_ID = 0;
   STATE_RES_ID = 0;
   STATE_RES_EV_ID = 0;
@@ -91,7 +93,7 @@ export function* generateData(
     yield usage({ day: "2021-01-01", invocations: 12300099000 });
 
   if (modeMap["updates"]) {
-    yield* stageBase();
+    yield* stageIonBase();
     yield* updatesBase();
   }
 
@@ -163,6 +165,7 @@ export function* generateData(
 }
 
 type DummyData =
+  | (Run.Run & { _type: "run" })
   | (DummyConfig & { _type: "dummyConfig" })
   | (Workspace.Info & { _type: "workspace" })
   | (State.Update & { _type: "stateUpdate" })
@@ -383,6 +386,7 @@ const STACK_TRACE_FULL = [
 const LOGS_FN = "my-logs-func";
 
 // Auto-incrementing IDs
+let RUN_ID = 0;
 let UPDATE_ID = 0;
 let STATE_RES_ID = 0;
 let STATE_RES_EV_ID = 0;
@@ -2117,56 +2121,69 @@ function* stageHasFunction(): Generator<DummyData, void, unknown> {
 function* updatesBase(): Generator<DummyData, void, unknown> {
   yield update({
     id: ++UPDATE_ID,
-    stageID: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 13 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    stageID: STAGE_ION.id,
+    timeStarted: DateTime.now().minus({ minutes: 15 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 13 }).toISO()!,
     created: 20,
   });
   yield update({
     id: ++UPDATE_ID,
-    stageID: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 10 }).toISO()!,
-    created: 2,
-    updated: 4,
-    same: 14,
-  });
-  yield update({
-    id: ++UPDATE_ID,
-    stageID: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 11 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
+    command: "edit",
+    stageID: STAGE_ION.id,
+    timeStarted: DateTime.now().minus({ minutes: 13 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 11 }).toISO()!,
     updated: 20,
   });
   yield update({
     id: ++UPDATE_ID,
-    stageID: STAGE,
+    command: "remove",
+    stageID: STAGE_ION.id,
+    timeStarted: DateTime.now().minus({ minutes: 12 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 10 }).toISO()!,
+    deleted: 14,
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    command: "refresh",
+    stageID: STAGE_ION.id,
+    timeStarted: DateTime.now().minus({ minutes: 11 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
+    same: 20,
+    source: "ci",
+    runID: ++RUN_ID,
+  });
+  yield run({
+    id: RUN_ID,
+    stageID: STAGE_ION.id,
+    branch: "main",
+    commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
+    commitMessage: "",
+    ...dummyRepo(),
+  });
+  yield update({
+    id: ++UPDATE_ID,
+    stageID: STAGE_ION.id,
     timeStarted: DateTime.now().minus({ minutes: 10 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 8 }).toISO()!,
+    updated: 4,
+    created: 4,
     deleted: 4,
     same: 16,
+    source: "ci",
+    runID: ++RUN_ID,
   });
+  yield run({
+    id: RUN_ID,
+    stageID: STAGE_ION.id,
+    branch: "",
+    commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
+    commitMessage: "working on it",
+    ...dummyRepo(),
+  });
+  yield* stateEventBase();
   yield update({
     id: ++UPDATE_ID,
-    stageID: STAGE,
-    timeStarted: DateTime.now().minus({ minutes: 9 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 7 }).toISO()!,
-    same: 20,
-  });
-  yield update({
-    id: ++UPDATE_ID,
-    stageID: STAGE,
-    command: "remove",
-    timeStarted: DateTime.now().minus({ minutes: 8 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 6 }).toISO()!,
-    same: 20,
-    created: 1,
-    updated: 2,
-    deleted: 3,
-  });
-  yield update({
-    id: ++UPDATE_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     errors: [
       {
         urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
@@ -2192,7 +2209,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield* stateEventError();
   yield update({
     id: ++UPDATE_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     errors: [
       {
         urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC",
@@ -2206,30 +2223,38 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     command: "edit",
     timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 4 }).toISO()!,
+    source: "ci",
+    runID: ++RUN_ID,
+  });
+  yield run({
+    id: RUN_ID,
+    stageID: STAGE_ION.id,
+    branch: "a-really-long-branch-name-that-should-overflow-because-its-too-long",
+    commitID: "99a2721dab38cb264be29b7d1b552802bcca32ce",
+    commitMessage: "chore: this is a long commit message that should overflow the 100 characters",
+    ...dummyRepo(-1),
   });
   yield update({
     id: ++UPDATE_ID,
-    stageID: STAGE,
-    command: "refresh",
-    same: 15,
-    created: 2,
-    updated: 4,
-    deleted: 5,
-    timeStarted: DateTime.now().minus({ minutes: 4 }).toISO()!,
-    timeCompleted: DateTime.now().minus({ minutes: 3 }).toISO()!,
-  });
-  yield* stateEventBase();
-  yield update({
-    id: ++UPDATE_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     timeStarted: DateTime.now().minus({ minutes: 2 }).toISO()!,
+    source: "ci",
+    runID: ++RUN_ID,
+  });
+  yield run({
+    id: RUN_ID,
+    stageID: STAGE_ION.id,
+    branch: "main",
+    commitID: "3492661dab38cb264be29b7d1b552802bcca32ce",
+    commitMessage: "feat: Add new function",
+    ...dummyRepo(),
   });
 }
 
 function* stateEventBase(): Generator<DummyData, void, unknown> {
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "pulumi-nodejs:dynamic:Resource",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$pulumi-nodejs:dynamic:Resource::FunctionACodeUpdater.sst.aws.FunctionCodeUpdater",
@@ -2237,7 +2262,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "aws:lambda/function:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:lambda/function:Function::FunctionAFunction",
@@ -2245,7 +2270,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "sst:aws:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionC",
@@ -2253,7 +2278,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "sst:aws:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionD",
@@ -2261,7 +2286,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "sst:aws:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionE",
@@ -2269,7 +2294,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "aws:cloudwatch/logGroup:LogGroup",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:cloudwatch/logGroup:LogGroup::FunctionALogGroup",
@@ -2277,7 +2302,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "aws:cloudwatch/logGroup:LogGroup",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:cloudwatch/logGroup:LogGroup::FunctionBLogGroup",
@@ -2285,7 +2310,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "pulumi:pulumi:Stack",
     urn: "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair",
@@ -2293,7 +2318,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "aws:route53/record:Record",
     urn: "urn:pulumi:production::www::sst:aws:Astro$sst:aws:CDN$sst:aws:Certificate$aws:route53/record:Record::AstroCdnSslCNAMERecord65b719819635197c400ab3714200afd1ionsstdev",
@@ -2301,7 +2326,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "aws:iam/role:Role",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionBRole",
@@ -2309,7 +2334,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
   });
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "aws:iam/role:Role",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function$aws:iam/role:Role::FunctionCRole",
@@ -2320,7 +2345,7 @@ function* stateEventBase(): Generator<DummyData, void, unknown> {
 function* stateEventError(): Generator<DummyData, void, unknown> {
   yield stateEvent({
     id: ++STATE_RES_EV_ID,
-    stageID: STAGE,
+    stageID: STAGE_ION.id,
     updateID: UPDATE_ID,
     type: "sst:aws:Function",
     urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
@@ -3316,6 +3341,7 @@ interface UpdateProps {
   stageID: string;
   errors?: State.Update["errors"];
   source?: "cli" | "ci";
+  runID?: number;
   timeCreated?: string;
   timeStarted?: string;
   timeCompleted?: string;
@@ -3330,6 +3356,7 @@ function update({
   stageID,
   errors,
   command,
+  runID,
   source,
   timeCreated,
   timeStarted,
@@ -3347,12 +3374,12 @@ function update({
     command: command || "deploy",
     source:
       source === "ci"
-        ? { type: "ci", properties: { runID: "run_123" } }
+        ? { type: "ci", properties: { runID: `${runID}` || "123" } }
         : { type: "cli", properties: {} },
     time: {
       updated: DateTime.now().startOf("day").toISO()!,
       created: timeCreated || DateTime.now().startOf("day").toISO()!,
-      started: timeStarted || DateTime.now().startOf("day").toISO()!,
+      started: timeStarted,
       completed: timeCompleted,
     },
     resource: {
@@ -3484,4 +3511,73 @@ function stateFunction({
       ...outputs,
     }
   });
+}
+
+interface RunProps {
+  id: number;
+  stageID: string;
+  timeStarted?: string;
+  timeCompleted?: string;
+  branch?: string;
+  commitID: string;
+  commitMessage?: string;
+  senderID: number;
+  senderUsername: string;
+  repoID: number;
+  repoOwner: string;
+  repoName: string;
+}
+function run({
+  id,
+  stageID,
+  timeStarted,
+  timeCompleted,
+  branch,
+  commitID,
+  commitMessage,
+  senderID,
+  senderUsername,
+  repoID,
+  repoOwner,
+  repoName,
+}: RunProps): DummyData {
+  return {
+    _type: "run",
+    id: `${id}`,
+    stageID,
+    time: {
+      created: DateTime.now().startOf("day").toISO()!,
+      updated: DateTime.now().startOf("day").toISO()!,
+      started: timeStarted,
+      completed: timeCompleted,
+    },
+    trigger: {
+      source: "github",
+      type: "push",
+      branch: branch || "",
+      commit: {
+        id: commitID,
+        message: commitMessage || "",
+      },
+      sender: {
+        id: senderID,
+        username: senderUsername,
+      },
+      repo: {
+        id: repoID,
+        owner: repoOwner,
+        repo: repoName,
+      },
+    },
+  };
+}
+
+function dummyRepo(senderID?: number) {
+  return {
+    repoID: 808789985,
+    repoOwner: "jayair",
+    repoName: "ion-sandbox",
+    senderID: senderID || 53023,
+    senderUsername: "jayair",
+  };
 }

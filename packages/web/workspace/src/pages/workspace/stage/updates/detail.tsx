@@ -9,21 +9,32 @@ import {
 } from "solid-js";
 import { useReplicache } from "$/providers/replicache";
 import { Link, useParams } from "@solidjs/router";
-import { StateUpdateStore, StateEventStore } from "$/data/app";
+import { RunStore, StateUpdateStore, StateEventStore } from "$/data/app";
 import { State } from "@console/core/state";
 import { DateTime } from "luxon";
 import { Dropdown } from "$/ui/dropdown";
 import { useStageContext } from "../context";
 import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
+import { LogsLoading, LogsLoadingIcon, PanelEmptyCopy, LogsBackground } from "../issues/detail";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
+import { IconGit, IconCommit, IconArrowPathSpin } from "$/ui/icons/custom";
+import { Log, LogTime, LogMessage } from "$/common/invocation";
 import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
 import { IconCheck, IconXCircle, IconEllipsisVertical } from "$/ui/icons";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
 import { sortBy } from "remeda";
 
+const DATETIME_NO_TIME = {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+} as const;
+
+const AVATAR_SIZE = 36;
+const SIDEBAR_WIDTH = 300;
 const RES_LEFT_BORDER = "4px";
 
 const Container = styled("div", {
@@ -224,8 +235,79 @@ const ResourceCopyButton = styled("button", {
 const Sidebar = styled("div", {
   base: {
     flex: "0 0 auto",
-    width: 300,
-    paddingTop: theme.space[1.5],
+    width: SIDEBAR_WIDTH,
+  },
+});
+
+const SidebarSpacer = styled("div", {
+  base: {
+    height: theme.space[1.5],
+  },
+});
+
+const GitInfo = styled("div", {
+  base: {
+    ...utility.stack(2),
+    justifyContent: "center",
+    height: 44,
+  },
+});
+
+const GitAvatar = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    overflow: "hidden",
+    borderRadius: theme.borderRadius,
+  },
+});
+
+const GitLink = styled("a", {
+  base: {
+    ...utility.row(1),
+    alignItems: "center",
+  },
+});
+
+const GitIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    lineHeight: 0,
+    color: theme.color.icon.secondary,
+  },
+  variants: {
+    size: {
+      sm: {
+        marginInline: 1,
+        width: 12,
+        height: 12,
+      },
+      md: {
+        width: 14,
+        height: 14,
+      },
+    },
+  },
+});
+
+const GitCommit = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.secondary.base,
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const GitBranch = styled("span", {
+  base: {
+    ...utility.text.line,
+    maxWidth: SIDEBAR_WIDTH - AVATAR_SIZE - 24,
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -261,6 +343,19 @@ export function Detail() {
     (resources) => sortBy(resources, [(r) => getResourceName(r.urn)!, "asc"]),
   );
 
+  const runID = createMemo(
+    () =>
+      update()
+      && update().source.type === "ci"
+      && (update().source.properties as { runID: string }).runID
+  );
+  const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID() || "unknown"]);
+  const repoURL = createMemo(() => (
+    run() && run().trigger.source === "github"
+      ? `https://github.com/${run().trigger.repo.owner}/${run().trigger.repo.repo}`
+      : ""
+  ));
+
   const status = createMemo(() => {
     if (!update()) return;
     return update().time.completed
@@ -291,6 +386,266 @@ export function Detail() {
       !update().resource.same,
   );
 
+  function renderSidebar() {
+    return (
+      <Sidebar>
+        <Stack space={run() ? "7" : "0"}>
+          <Show when={run()} fallback={<SidebarSpacer />}>
+            <GitInfo>
+              <Row space="1.5" vertical="center">
+                <GitAvatar title={run().trigger.sender.username}>
+                  <img
+                    width={AVATAR_SIZE}
+                    height={AVATAR_SIZE}
+                    src={`https://avatars.githubusercontent.com/u/${run().trigger.sender.id}?s=${2 * AVATAR_SIZE}&v=4`}
+                  />
+                </GitAvatar>
+                <Stack space="0.5">
+                  <GitLink
+                    target="_blank"
+                    rel="noreferrer"
+                    href={`${repoURL()}/commit/${run().trigger.commit.id}`}
+                  >
+                    <GitIcon size="md"><IconCommit /></GitIcon>
+                    <GitCommit>{shortenCommit(run().trigger.commit.id)}</GitCommit>
+                  </GitLink>
+                  <Show when={run().trigger.branch}>
+                    <GitLink
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`${repoURL()}/tree/${run().trigger.branch}`}
+                    >
+                      <GitIcon size="sm"><IconGit /></GitIcon>
+                      <GitBranch>{run().trigger.branch}</GitBranch>
+                    </GitLink>
+                  </Show>
+                </Stack>
+              </Row>
+            </GitInfo>
+          </Show>
+          <Stack space="7">
+            <Stack space="2">
+              <PanelTitle>Started</PanelTitle>
+              <Text
+                color="secondary"
+                title={
+                  update().time.started
+                    ? DateTime.fromISO(update().time.started!).toLocaleString(
+                      DateTime.DATETIME_FULL,
+                    )
+                    : undefined
+                }
+              >
+                {update().time.started
+                  ? formatSinceTime(
+                    DateTime.fromISO(update().time.started!).toSQL()!,
+                    true,
+                  )
+                  : "—"}
+              </Text>
+            </Stack>
+            <Stack space="2">
+              <PanelTitle>Duration</PanelTitle>
+              <Text color="secondary" title={
+                DateTime.fromISO(update().time.completed!)
+                  .diff(DateTime.fromISO(update().time.started!))
+                  .as("seconds") + " seconds"
+              }>
+                {update().time.started && update().time.completed
+                  ? formatDuration(
+                    DateTime.fromISO(update().time.completed!)
+                      .diff(DateTime.fromISO(update().time.started!))
+                      .as("milliseconds"),
+                    true,
+                  )
+                  : "—"}
+              </Text>
+            </Stack>
+            <Stack space="2">
+              <PanelTitle>Command</PanelTitle>
+              <PanelValueMono>{CMD_MAP[update().command]}</PanelValueMono>
+            </Stack>
+          </Stack>
+        </Stack>
+      </Sidebar>
+    );
+  }
+
+  function renderResources() {
+    return (
+      <>
+        <Show when={deleted().length}>
+          <Stack space="2">
+            <PanelTitle>Removed</PanelTitle>
+            <ResourceRoot action="deleted">
+              <For each={deleted()}>{(r) => <Resource {...r} />}</For>
+            </ResourceRoot>
+          </Stack>
+        </Show>
+        <Show when={created().length}>
+          <Stack space="2">
+            <PanelTitle>Added</PanelTitle>
+            <ResourceRoot action="created">
+              <For each={created()}>{(r) => <Resource {...r} />}</For>
+            </ResourceRoot>
+          </Stack>
+        </Show>
+        <Show when={updated().length}>
+          <Stack space="2">
+            <PanelTitle>Updated</PanelTitle>
+            <ResourceRoot action="updated">
+              <For each={updated()}>{(r) => <Resource {...r} />}</For>
+            </ResourceRoot>
+          </Stack>
+        </Show>
+        <Show when={update().resource.same! > 0}>
+          <Stack space="2">
+            <PanelTitle>Unchanged</PanelTitle>
+            <ResourceRoot action="same">
+              <ResourceChildEmpty>
+                {countCopy(update().resource.same!)} were not changed
+              </ResourceChildEmpty>
+            </ResourceRoot>
+          </Stack>
+        </Show>
+      </>
+    );
+  }
+
+  function renderHeader() {
+    return (
+      <Stack space="2.5">
+        <PageTitle>
+          <UpdateStatusIcon status={status()} />
+          <PageTitleCopy>
+            Update <PageTitlePrefix>#</PageTitlePrefix>
+            {update().index}
+          </PageTitleCopy>
+        </PageTitle>
+        <PageTitleStatus>
+          {status() === "error"
+            ? errorCountCopy(update().errors.length)
+            : STATUS_MAP[status()!]}
+        </PageTitleStatus>
+      </Stack>
+
+    );
+  }
+
+  function renderErrors() {
+    return (
+      <Errors>
+        <For each={update().errors}>
+          {(err) => (
+            <Error>
+              <ErrorIcon>
+                <IconXCircle width={16} height={16} />
+              </ErrorIcon>
+              <Stack space="0.5">
+                <Show when={err.urn}>
+                  <ErrorTitle>{getResourceName(err.urn)}</ErrorTitle>
+                </Show>
+                <ErrorMessage>{err.message}</ErrorMessage>
+              </Stack>
+            </Error>
+          )}
+        </For>
+      </Errors>
+
+    );
+  }
+
+  function renderLogs() {
+    const INVOCATION_COUNT = 1;
+    const startTime = DateTime.now().startOf("day");
+    const logs = [
+      `areallyreallylonglinethatshouldoverflowandwordwrapbutitdoesntbecauseitshouldntbeabletofitallthewaythroughthewidthofthepage`,
+      `scanning logs {
+  id: 'abcde12vgws358nwyjbb0n7m',
+  workspaceID: 'ab1mmlwfjisrf38lxyjitj3a',
+  timeCreated: '2023-11-02 13:36:22',
+  timeUpdated: '2023-11-02 17:42:00',
+  timeDeleted: null,
+  userID: 'zxc94z5o4m2yenuii7y77jcl',
+  profileID: 'qw5266007421c4ca08c3a9805d26d3081',
+  stageID: 'ertyw9srjl3x3llq9f4iurmn',
+  logGroup: '/aws/lambda/production-notes-app-busTargetbusdevOrderUpd-O5r7A2kRuBqp',
+  timeStart: '2023-11-02 17:00:00',
+  timeEnd: null
+}`,
+      `start 11/2/2023, 11:00 AM`,
+      `sending poke`,
+      `scanning from 11/2/2023, 11:00 AM to 11/2/2023, 5:57 PM`,
+      `poke sent`,
+      `created query 50a15af7-8263-4c2f-be80-6be2585973ab`,
+      `bootstrap [
+  {
+    OutputKey: 'BucketName',
+    OutputValue: 'sstbootstrap-euwest123op64b9-1ej2jgqb9j7yv'
+  },
+  { OutputKey: 'Version', OutputValue: '7.2' }
+]`,
+      `flushing invocations 1 flushed so far 0`,
+      `2023-11-02T18:02:42.819Z ed9967cb-9637-432b-9b54-e80b006b1af6 Task timed out after 300.02 seconds`,
+    ].map((message, i) => ({
+      message,
+      id: `log-${INVOCATION_COUNT}-${i}`,
+      timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+    }));
+
+    return (
+      <Stack space="2">
+        <Show
+          when={logs.length}
+          fallback={<PanelTitle>Logs</PanelTitle>}
+        >
+          <PanelTitle
+            title={DateTime.fromMillis(logs[0].timestamp!)
+              .toUTC()
+              .toLocaleString(DateTime.DATETIME_FULL)}
+          >
+            Logs —{" "}
+            {DateTime.fromMillis(
+              logs[0].timestamp!
+            ).toLocaleString(DATETIME_NO_TIME)}
+          </PanelTitle>
+        </Show>
+        <LogsBackground>
+          <Show
+            when={logs.length}
+            fallback={
+              <LogsLoading>
+                <LogsLoadingIcon>
+                  <IconArrowPathSpin />
+                </LogsLoadingIcon>
+                <PanelEmptyCopy>Running &hellip;</PanelEmptyCopy>
+              </LogsLoading>
+            }
+          >
+            <For each={logs || []}>
+              {(entry) => (
+                <Log>
+                  <LogTime
+                    title={DateTime.fromMillis(entry.timestamp)
+                      .toUTC()
+                      .toLocaleString(
+                        DateTime.DATETIME_FULL_WITH_SECONDS
+                      )}
+                  >
+                    {DateTime.fromMillis(entry.timestamp).toFormat(
+                      "HH:mm:ss.SSS"
+                    )}
+                  </LogTime>
+                  <LogMessage>{entry.message}</LogMessage>
+                </Log>
+              )}
+            </For>
+          </Show>
+        </LogsBackground>
+      </Stack>
+    );
+  }
+
   return (
     <Switch>
       <Match
@@ -305,128 +660,25 @@ export function Detail() {
           <Content>
             <Stack space="6">
               <Stack space="4">
-                <Stack space="2.5">
-                  <PageTitle>
-                    <UpdateStatusIcon status={status()} />
-                    <PageTitleCopy>
-                      Update <PageTitlePrefix>#</PageTitlePrefix>
-                      {update().index}
-                    </PageTitleCopy>
-                  </PageTitle>
-                  <PageTitleStatus>
-                    {status() === "error"
-                      ? errorCountCopy(update().errors.length)
-                      : STATUS_MAP[status()!]}
-                  </PageTitleStatus>
-                </Stack>
+                {renderHeader()}
                 <Show when={update().errors.length}>
-                  <Errors>
-                    <For each={update().errors}>
-                      {(err) => (
-                        <Error>
-                          <ErrorIcon>
-                            <IconXCircle width={16} height={16} />
-                          </ErrorIcon>
-                          <Stack space="0.5">
-                            <Show when={err.urn}>
-                              <ErrorTitle>{getResourceName(err.urn)}</ErrorTitle>
-                            </Show>
-                            <ErrorMessage>{err.message}</ErrorMessage>
-                          </Stack>
-                        </Error>
-                      )}
-                    </For>
-                  </Errors>
+                  {renderErrors()}
                 </Show>
               </Stack>
+              <Show when={run()}>
+                {renderLogs()}
+              </Show>
               <Stack space="5">
                 <Show
                   when={!isEmpty()}
                   fallback={<ResourceEmpty>No changes</ResourceEmpty>}
                 >
-                  <Show when={deleted().length}>
-                    <Stack space="2">
-                      <PanelTitle>Removed</PanelTitle>
-                      <ResourceRoot action="deleted">
-                        <For each={deleted()}>{(r) => <Resource {...r} />}</For>
-                      </ResourceRoot>
-                    </Stack>
-                  </Show>
-                  <Show when={created().length}>
-                    <Stack space="2">
-                      <PanelTitle>Added</PanelTitle>
-                      <ResourceRoot action="created">
-                        <For each={created()}>{(r) => <Resource {...r} />}</For>
-                      </ResourceRoot>
-                    </Stack>
-                  </Show>
-                  <Show when={updated().length}>
-                    <Stack space="2">
-                      <PanelTitle>Updated</PanelTitle>
-                      <ResourceRoot action="updated">
-                        <For each={updated()}>{(r) => <Resource {...r} />}</For>
-                      </ResourceRoot>
-                    </Stack>
-                  </Show>
-                  <Show when={update().resource.same! > 0}>
-                    <Stack space="2">
-                      <PanelTitle>Unchanged</PanelTitle>
-                      <ResourceRoot action="same">
-                        <ResourceChildEmpty>
-                          {countCopy(update().resource.same!)} were not changed
-                        </ResourceChildEmpty>
-                      </ResourceRoot>
-                    </Stack>
-                  </Show>
+                  {renderResources()}
                 </Show>
               </Stack>
             </Stack>
           </Content>
-          <Sidebar>
-            <Stack space="7">
-              <Stack space="2">
-                <PanelTitle>Started</PanelTitle>
-                <Text
-                  color="secondary"
-                  title={
-                    update().time.started
-                      ? DateTime.fromISO(update().time.started!).toLocaleString(
-                        DateTime.DATETIME_FULL,
-                      )
-                      : undefined
-                  }
-                >
-                  {update().time.started
-                    ? formatSinceTime(
-                      DateTime.fromISO(update().time.started!).toSQL()!,
-                      true,
-                    )
-                    : "—"}
-                </Text>
-              </Stack>
-              <Stack space="2">
-                <PanelTitle>Duration</PanelTitle>
-                <Text color="secondary" title={
-                  DateTime.fromISO(update().time.completed!)
-                    .diff(DateTime.fromISO(update().time.started!))
-                    .as("seconds") + " seconds"
-                }>
-                  {update().time.started && update().time.completed
-                    ? formatDuration(
-                      DateTime.fromISO(update().time.completed!)
-                        .diff(DateTime.fromISO(update().time.started!))
-                        .as("milliseconds"),
-                      true,
-                    )
-                    : "—"}
-                </Text>
-              </Stack>
-              <Stack space="2">
-                <PanelTitle>Command</PanelTitle>
-                <PanelValueMono>{CMD_MAP[update().command]}</PanelValueMono>
-              </Stack>
-            </Stack>
-          </Sidebar>
+          {renderSidebar()}
         </Container>
       </Match>
     </Switch>
@@ -469,4 +721,8 @@ function countCopy(count?: number) {
 
 function getResourceName(urn: string) {
   return urn.split("::").at(-1);
+}
+
+function shortenCommit(commit: string) {
+  return commit.slice(0, 7);
 }

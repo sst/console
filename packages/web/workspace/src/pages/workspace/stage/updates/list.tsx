@@ -1,20 +1,22 @@
-import { For, Show, createEffect, createMemo } from "solid-js";
-import { Link } from "@solidjs/router";
-import { DateTime } from "luxon";
-import { styled } from "@macaron-css/solid";
-import { Stack, theme, utility } from "$/ui";
-import { Dropdown } from "$/ui/dropdown";
-import { IconEllipsisVertical } from "$/ui/icons";
-import { inputFocusStyles } from "$/ui/form";
-import { globalKeyframes } from "@macaron-css/core";
-import { formatSinceTime } from "$/common/format";
-import { StateUpdateStore } from "$/data/app";
-import { useReplicache } from "$/providers/replicache";
-import { useStageContext } from "../context";
 import { sortBy } from "remeda";
+import { DateTime } from "luxon";
+import { Row } from "$/ui/layout";
+import { Link } from "@solidjs/router";
+import { styled } from "@macaron-css/solid";
+import { State } from "@console/core/state";
+import { useStageContext } from "../context";
+import { Stack, theme, utility } from "$/ui";
+import { IconCommandLine } from "$/ui/icons";
+import { inputFocusStyles } from "$/ui/form";
+import { formatSinceTime } from "$/common/format";
+import { globalKeyframes } from "@macaron-css/core";
+import { useReplicache } from "$/providers/replicache";
+import { IconGit, IconCommit } from "$/ui/icons/custom";
+import { RunStore, StateUpdateStore } from "$/data/app";
+import { For, Show, Match, Switch, createEffect, createMemo } from "solid-js";
 
 const LEGEND_RES = 2;
-const LEGEND_WIDTH = 200;
+const LEGEND_WIDTH = 160;
 
 export const CMD_MAP = {
   deploy: "sst deploy",
@@ -65,16 +67,20 @@ const UpdateRoot = styled("div", {
   },
 });
 
-const UpdateCol = styled("div", {
+const UpdateLeftCol = styled("div", {
   base: {
+    ...utility.row(10),
     minWidth: 0,
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 });
 
-const UpdateStatus = styled(UpdateCol, {
+const UpdateStatus = styled("div", {
   base: {
     ...utility.row(4),
-    width: 320,
+    minWidth: 0,
+    width: 120,
     alignItems: "center",
   },
 });
@@ -143,12 +149,83 @@ const UpdateStatusCopy = styled("p", {
   },
 });
 
-const UpdateRightCol = styled(UpdateCol, {
+const UpdateGit = styled("div", {
   base: {
-    ...utility.row(3),
-    width: 380,
+    ...utility.stack(1.5),
+  },
+});
+
+const UpdateGitLink = styled("a", {
+  base: {
+    ...utility.row(1),
+    alignItems: "center",
+  },
+});
+
+const UpdateGitIcon = styled("span", {
+  base: {
+    lineHeight: 0,
+    color: theme.color.icon.secondary,
+  },
+  variants: {
+    size: {
+      sm: {
+        width: 12,
+        height: 12,
+      },
+      md: {
+        width: 14,
+        height: 14,
+      },
+    },
+  },
+});
+
+const UpdateGitBranch = styled("span", {
+  base: {
+    ...utility.text.line,
+    maxWidth: 140,
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const UpdateGitCommit = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.secondary.base,
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const UpdateGitMessage = styled("span", {
+  base: {
+    ...utility.text.line,
+    lineHeight: "normal",
+    maxWidth: 260,
+    fontSize: theme.font.size.xs,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const UpdateRightCol = styled("div", {
+  base: {
+    ...utility.row(20),
+    minWidth: 0,
     alignItems: "center",
     justifyContent: "space-between",
+  },
+});
+
+const UpdateCmd = styled("span", {
+  base: {
+    fontSize: theme.font.size.mono_sm,
+    fontWeight: theme.font.weight.medium,
+    fontFamily: theme.font.family.code,
+    color: theme.color.text.secondary.base,
   },
 });
 
@@ -216,27 +293,26 @@ const ChangeLegendTag = styled("div", {
   },
 });
 
-const UpdateActions = styled(UpdateCol, {
+const UpdateInfo = styled("div", {
   base: {
-    ...utility.row(3),
+    ...utility.row(1),
+    minWidth: 0,
     alignItems: "center",
-    justifyContent: "flex-end",
   },
 });
 
-const UpdateSource = styled(UpdateCol, {
+const UpdateSource = styled("div", {
   base: {
-    ...utility.stack(3),
-    alignItems: "flex-end",
+    ...utility.stack(2.5),
+    width: 120,
   },
 });
 
-const UpdateCmd = styled("span", {
+const UpdateSourceType = styled("span", {
   base: {
+    ...utility.text.label,
     fontSize: theme.font.size.mono_sm,
-    fontWeight: theme.font.weight.medium,
-    fontFamily: theme.font.family.code,
-    color: theme.color.text.primary.base,
+    color: theme.color.text.secondary.base,
   },
 });
 
@@ -247,51 +323,32 @@ const UpdateTime = styled("span", {
   },
 });
 
-// ...workspaceID,
-// stageID: cuid("state_id").notNull(),
-// command: mysqlEnum("command", [
-//   "deploy",
-//   "refresh",
-//   "remove",
-//   "edit",
-// ]).notNull(),
-// source: json("source").notNull(),
-// ...timestamps,
-// timeStarted: timestamp("time_started"),
-// timeCompleted: timestamp("time_completed"),
-// resourceDeleted: int("resource_deleted"),
-// resourceCreated: int("resource_created"),
-// resourceUpdated: int("resource_updated"),
-// resourceSame: int("resource_same"),
-// errors: int("errors"),
+const UpdateSenderAvatar = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 24,
+    height: 24,
+    overflow: "hidden",
+    borderRadius: theme.borderRadius,
+  },
+});
 
-/**
- * CLI
- * - Date
- * - Link to view state
- * - Duration
- * - Status: started, finished,
- * - Source: CLI
- * - Command: Update, Refresh, Remove, Edit
- *
- * CI
- * - Date
- * - Link to commit
- * - Link to branch
- * - Commit message
- * - Github user
- * - Github avatar
- * - Success/Failure/In Progress/Queued/Cancelled
- * - Link to view state
- * - Link to view workflow logs
- */
+const UpdateSenderIcon = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 24,
+    height: 24,
+    color: theme.color.icon.dimmed,
+  },
+});
+
 type UpdateProps = {
   id: string;
   index: string;
   errors?: any[];
   timeStarted?: string;
   timeQueued?: string;
-  source: "ci" | "cli";
+  source: State.Update["source"];
   resourceSame?: number;
   timeCanceled?: string;
   timeCompleted?: string;
@@ -302,7 +359,18 @@ type UpdateProps = {
   command: "deploy" | "refresh" | "remove" | "edit";
 };
 function Update(props: UpdateProps) {
+  const rep = useReplicache();
+  const ctx = useStageContext();
   const errors = () => props.errors?.length || 0;
+  const runID = props.source.type === "ci" && props.source.properties.runID;
+
+  const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID || "unknown"]);
+
+  const repoURL = createMemo(() => (
+    run() && run().trigger.source === "github"
+      ? `https://github.com/${run().trigger.repo.owner}/${run().trigger.repo.repo}`
+      : ""
+  ));
   const status = createMemo(() =>
     props.timeCompleted
       ? errors()
@@ -317,53 +385,90 @@ function Update(props: UpdateProps) {
 
   return (
     <UpdateRoot>
-      <UpdateStatus>
-        <UpdateStatusIcon status={status()} />
-        <Stack space="2">
-          <UpdateLink href={props.id}>
-            <UpdateLinkPrefix>#</UpdateLinkPrefix>
-            {props.index}
-          </UpdateLink>
-          <UpdateStatusCopy>
-            {status() === "error"
-              ? errorCountCopy(errors())
-              : STATUS_MAP[status()]}
-          </UpdateStatusCopy>
-        </Stack>
-      </UpdateStatus>
+      <UpdateLeftCol>
+        <UpdateStatus>
+          <UpdateStatusIcon status={status()} />
+          <Stack space="2.5">
+            <UpdateLink href={props.id}>
+              <UpdateLinkPrefix>#</UpdateLinkPrefix>
+              {props.index}
+            </UpdateLink>
+            <UpdateStatusCopy>
+              {status() === "error"
+                ? errorCountCopy(errors())
+                : STATUS_MAP[status()]}
+            </UpdateStatusCopy>
+          </Stack>
+        </UpdateStatus>
+        <Show when={run()}>
+          <UpdateGit>
+            <Row space="2">
+              <UpdateGitLink
+                target="_blank"
+                rel="noreferrer"
+                href={`${repoURL()}/commit/${run().trigger.commit.id}`}
+              >
+                <UpdateGitIcon size="md"><IconCommit /></UpdateGitIcon>
+                <UpdateGitCommit>{shortenCommit(run().trigger.commit.id)}</UpdateGitCommit>
+              </UpdateGitLink>
+              <Show when={run().trigger.branch}>
+                <UpdateGitLink
+                  target="_blank"
+                  rel="noreferrer"
+                  href={`${repoURL()}/tree/${run().trigger.branch}`}
+                >
+                  <UpdateGitIcon size="sm"><IconGit /></UpdateGitIcon>
+                  <UpdateGitBranch>{run().trigger.branch}</UpdateGitBranch>
+                </UpdateGitLink>
+              </Show>
+            </Row>
+            <Show when={run().trigger.commit.message}>
+              <UpdateGitMessage>
+                {run().trigger.commit.message ? run().trigger.commit.message : "—"}
+              </UpdateGitMessage>
+            </Show>
+          </UpdateGit>
+        </Show>
+      </UpdateLeftCol>
       <UpdateRightCol>
-        <ChangeLegend
-          same={props.same}
-          created={props.created}
-          updated={props.updated}
-          deleted={props.deleted}
-        />
-        <UpdateActions>
+        <Stack space="2.5">
+          <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
+          <ChangeLegend
+            same={props.same}
+            created={props.created}
+            updated={props.updated}
+            deleted={props.deleted}
+          />
+        </Stack>
+        <UpdateInfo>
           <UpdateSource>
-            <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
-            <Show when={props.timeStarted}>
+            <Show when={props.timeStarted} fallback={<UpdateTime>—</UpdateTime>}>
               <UpdateTime
                 title={DateTime.fromISO(props.timeStarted!).toLocaleString(
                   DateTime.DATETIME_FULL,
                 )}
               >
-                {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!, true)}
+                {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
               </UpdateTime>
             </Show>
           </UpdateSource>
-          <Show when={props.source === "ci"}>
-            <Dropdown
-              size="sm"
-              icon={<IconEllipsisVertical width={18} height={18} />}
-            >
-              <Dropdown.Item disabled={status() !== "updated"}>
-                View State
-              </Dropdown.Item>
-              <Dropdown.Seperator />
-              <Dropdown.Item>View Logs</Dropdown.Item>
-            </Dropdown>
-          </Show>
-        </UpdateActions>
+          <Switch>
+            <Match when={run()}>
+              <UpdateSenderAvatar title={run().trigger.sender.username}>
+                <img
+                  width="24"
+                  height="24"
+                  src={`https://avatars.githubusercontent.com/u/${run().trigger.sender.id}?s=48&v=4`}
+                />
+              </UpdateSenderAvatar>
+            </Match>
+            <Match when={props.source.type === "cli"}>
+              <UpdateSenderIcon title="From the CLI">
+                <IconCommandLine />
+              </UpdateSenderIcon>
+            </Match>
+          </Switch>
+        </UpdateInfo>
       </UpdateRightCol>
     </UpdateRoot>
   );
@@ -473,20 +578,20 @@ export function List() {
   return (
     <Content>
       <div>
-        <For each={sortBy(updates(), [(item) => item.time.started || "", "desc"])}>
+        <For each={sortBy(updates(), [(item) => item.index, "desc"])}>
           {(item) => (
             <Update
-              index={item.index}
               id={item.id}
+              index={item.index}
               errors={item.errors}
               command={item.command}
-              source={item.source.type}
-              timeStarted={item.time.started}
-              timeCompleted={item.time.completed}
+              source={item.source}
               same={item.resource.same}
               created={item.resource.created}
               updated={item.resource.updated}
               deleted={item.resource.deleted}
+              timeStarted={item.time.started}
+              timeCompleted={item.time.completed}
             />
           )}
         </For>
@@ -501,4 +606,8 @@ export function countCopy(count?: number) {
 
 export function errorCountCopy(count?: number) {
   return count! > 1 ? `${count} errors` : "Error";
+}
+
+function shortenCommit(commit: string) {
+  return commit.slice(0, 7);
 }

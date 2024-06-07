@@ -1,5 +1,5 @@
 import { Link, Navigate, Route, Routes, useNavigate } from "@solidjs/router";
-import { JSX, Match, Show, Switch, createMemo } from "solid-js";
+import { JSX, Match, Show, Switch, createMemo, createEffect } from "solid-js";
 import { StateUpdateStore } from "$/data/app";
 import { NavigationAction, useCommandBar } from "$/pages/workspace/command-bar";
 import { useFlags } from "$/providers/flags";

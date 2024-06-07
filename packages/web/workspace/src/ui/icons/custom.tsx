@@ -1095,3 +1095,19 @@ export function IconLogosSlackBW(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
     </svg>
   );
 }
+
+// https://api.iconify.design/ion:git-branch-outline.svg
+export function IconGit(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" {...props} viewBox="0 0 512 512">
+      <circle cx="160" cy="96" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" /><circle cx="160" cy="416" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" /><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M160 368V144" /><circle cx="352" cy="160" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" /><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M352 208c0 128-192 48-192 160" />
+    </svg>
+  );
+}
+
+//https://api.iconify.design/ion:git-commit-outline.svg
+export function IconCommit(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" {...props} viewBox="0 0 512 512"><circle cx="256" cy="256" r="96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" /><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M160 256H48m416 0H352" /></svg>
+  );
+}
