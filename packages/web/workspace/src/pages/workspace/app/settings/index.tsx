@@ -1,4 +1,3 @@
-import { DateTime } from "luxon";
 import {
   AppRepoStore,
   AppStore,
@@ -6,12 +5,6 @@ import {
   GithubOrgStore,
   GithubRepoStore,
 } from "$/data/app";
-import { UserStore } from "$/data/user";
-import { AccountStore } from "$/data/aws";
-import { StageStore } from "$/data/stage";
-import { PRICING_PLAN, UsageStore } from "$/data/usage";
-import { useAuth, useCurrentUser } from "$/providers/auth";
-import { useStorage } from "$/providers/account";
 import { useReplicache } from "$/providers/replicache";
 import {
   theme,
@@ -22,24 +15,10 @@ import {
   Stack,
   Button,
   TextButton,
+  ButtonIcon,
   FormField,
   Input,
 } from "$/ui";
-import { Fullscreen } from "$/ui/layout";
-import { Dropdown } from "$/ui/dropdown";
-import {
-  IconArrowPath,
-  IconChevronRight,
-  IconEllipsisVertical,
-  IconExclamationTriangle,
-} from "$/ui/icons";
-import { AvatarInitialsIcon } from "$/ui/avatar-icon";
-import { Syncing } from "$/ui/loader";
-import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
-import type { Stage } from "@console/core/app";
-import type { Account } from "@console/core/aws/account";
-import { styled } from "@macaron-css/solid";
-import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import {
   For,
   Match,
@@ -49,26 +28,151 @@ import {
   createEffect,
   createMemo,
 } from "solid-js";
-import { useLocalContext } from "$/providers/local";
-import { filter, flatMap, groupBy, map, pipe, sortBy, toPairs } from "remeda";
-import { useFlags } from "$/providers/flags";
-import { User } from "@console/core/user";
+import { Header } from "../../header";
+import { styled } from "@macaron-css/solid";
+import { IconGitHub } from "$/ui/icons/custom";
+import { PANEL_HEADER_SPACE, PANEL_CONTENT_SPACE, SettingsRoot, Divider } from "../../settings";
 import { useAppContext } from "../context";
 import { createId } from "@paralleldrive/cuid2";
 import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
 import { minLength, object, string } from "valibot";
 
+const GitRepoPanel = styled("div", {
+  base: {
+    width: "100%",
+    border: `1px solid ${theme.color.divider.base}`,
+    borderRadius: theme.borderRadius,
+  },
+});
+
+const GitRepoPanelRow = styled("div", {
+  base: {
+    ...utility.row(5),
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: `${theme.space[4]} ${theme.space[5]}`,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
+    selectors: {
+      "&:last-child": {
+        borderBottom: "none",
+      },
+    },
+  },
+});
+
+const GitRepoIcon = styled("div", {
+  base: {
+    marginTop: 1,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.secondary.base,
+  },
+});
+
+const GitRepoLink = styled("a", {
+  base: {
+    color: theme.color.text.primary.base,
+    lineHeight: 1.5,
+    ":hover": {
+      color: theme.color.link.primary.hover,
+    },
+  },
+});
+
+const GitRepoLinkSeparator = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.base,
+    paddingInline: 4,
+  },
+});
+
+const GitRepoStatus = styled("span", {
+  base: {
+    ...utility.text.label,
+    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.mono_sm,
+  },
+});
+
 export function Settings() {
   const rep = useReplicache();
   const app = useAppContext();
-  console.log("App Settings", app.app.name);
+  const appRepo = AppRepoStore.forApp.watch(rep, () => [app.app.id]);
+  const ghRepo = GithubRepoStore.all.watch(
+    rep,
+    () => [],
+    repos => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID)
+  );
+  const ghRepoOrg = GithubOrgStore.all.watch(
+    rep,
+    () => [],
+    (orgs) => orgs.find((org) => org.orgID === ghRepo()?.orgID)
+  );
+
   return (
     <>
-      <h1>App Settings: {app.app.name}</h1>
-      <hr />
-      <RepoInfo />
-      <hr />
-      <Env />
+      <Header app={app.app.name} />
+      <SettingsRoot>
+        <Stack space={PANEL_HEADER_SPACE}>
+          <Text size="xl" weight="medium">
+            {app.app.name}
+          </Text>
+          <Text size="base" color="dimmed">
+            View and manage your app's settings
+          </Text>
+        </Stack>
+        <Divider />
+        <Stack space={PANEL_CONTENT_SPACE} horizontal="start" id="billing">
+          <Stack space={PANEL_HEADER_SPACE}>
+            <Text size="lg" weight="medium">
+              Deploy
+            </Text>
+            <Text size="sm" color="dimmed">
+              Push to GitHub repo to deploy your app
+            </Text>
+          </Stack>
+          <Switch>
+            <Match when={ghRepoOrg()}>
+              <GitRepoPanel>
+                <GitRepoPanelRow>
+                  <Row space="2">
+                    <GitRepoIcon>
+                      <IconGitHub width="24" height="24" />
+                    </GitRepoIcon>
+                    <Stack space="1">
+                      <GitRepoLink
+                        target="_blank"
+                        href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name}`}
+                      >
+                        {ghRepoOrg()?.login}
+                        <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
+                        {ghRepo()?.name}
+                      </GitRepoLink>
+                      <GitRepoStatus>Connected</GitRepoStatus>
+                    </Stack>
+                  </Row>
+                  <Button
+                    color="danger"
+                    onClick={() => {
+                      rep().mutate.app_repo_disconnect(appRepo()[0]!.id);
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                </GitRepoPanelRow>
+              </GitRepoPanel>
+            </Match>
+            <Match when={true}>
+              <Button color="github">
+                <ButtonIcon>
+                  <IconGitHub />
+                </ButtonIcon>
+                Connect Repo
+              </Button>
+            </Match>
+          </Switch>
+        </Stack>
+        <Divider />
+      </SettingsRoot>
     </>
   );
 }

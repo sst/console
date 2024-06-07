@@ -52,6 +52,16 @@ const githubActive: CSSProperties = {
   backgroundColor: theme.color.button.github.active,
 };
 
+export const ButtonIcon = styled("span", {
+  base: {
+    width: 18,
+    height: 18,
+    marginRight: 6,
+    verticalAlign: -4,
+    display: "inline-block",
+  },
+});
+
 export const Button = styled("button", {
   base: {
     borderRadius: 4,

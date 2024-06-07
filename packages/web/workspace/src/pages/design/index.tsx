@@ -24,6 +24,7 @@ import {
   LinkButton,
   IconButton,
   TextButton,
+  ButtonIcon,
   ButtonGroup,
 } from "$/ui/button";
 import { utility } from "$/ui/utility";
@@ -131,16 +132,6 @@ const OverflowSpan = styled("span", {
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
-  },
-});
-
-const ButtonIcon = styled("span", {
-  base: {
-    width: 18,
-    height: 18,
-    marginRight: 6,
-    verticalAlign: -4,
-    display: "inline-block",
   },
 });
 

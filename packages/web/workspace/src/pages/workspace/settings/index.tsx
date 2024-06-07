@@ -16,8 +16,8 @@ import { Alerts } from "./alerts";
 import { useNavigate } from "@solidjs/router";
 import { useAuth2 } from "$/providers/auth2";
 
-const PANEL_CONTENT_SPACE = "10";
-const PANEL_HEADER_SPACE = "3";
+export const PANEL_CONTENT_SPACE = "10";
+export const PANEL_HEADER_SPACE = "3";
 const TIER_LABEL_SPACE = "2";
 
 function calculateCost(units: number, pricingPlan: PricingPlan) {
@@ -37,7 +37,7 @@ function calculateCost(units: number, pricingPlan: PricingPlan) {
   return cost === 0 ? "0" : cost.toFixed(2);
 }
 
-const SettingsRoot = styled("div", {
+export const SettingsRoot = styled("div", {
   base: {
     paddingTop: 50,
     paddingBottom: 50,
@@ -46,7 +46,7 @@ const SettingsRoot = styled("div", {
   },
 });
 
-const Divider = styled("div", {
+export const Divider = styled("div", {
   base: {
     margin: `${theme.space[12]} 0`,
     width: "100%",
