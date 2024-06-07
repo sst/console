@@ -76,9 +76,9 @@ export const handler = async (evt: Payload) => {
                     stageID: row.stageID!,
                     // @ts-expect-error
                     versionID: evt.detail.object["version-id"]!,
-                  })
+                  }),
                 );
-              })
+              }),
           );
         }
       });
@@ -102,7 +102,7 @@ export const handler = async (evt: Payload) => {
           State.Event.SummaryCreated.publish({
             stageID: row.stageID!,
             updateID: updateID!,
-          })
+          }),
       );
     }
     return;
@@ -127,7 +127,7 @@ export const handler = async (evt: Payload) => {
           State.Event.HistoryCreated.publish({
             stageID: row.stageID!,
             key: evt.detail.object.key,
-          })
+          }),
       );
     }
     return;
@@ -173,7 +173,7 @@ export const handler = async (evt: Payload) => {
               await createTransactionEffect(() =>
                 Stage.Events.Updated.publish({
                   stageID: row.stageID!,
-                })
+                }),
               );
               return;
             }
@@ -191,7 +191,7 @@ export const handler = async (evt: Payload) => {
               name: stageName!,
               awsAccountID: row.id,
             });
-          })
+          }),
       );
       console.log("done", row);
     }
@@ -210,7 +210,10 @@ async function findStages(stageName: string, appName: string, account: string) {
       .from(awsAccount)
       .leftJoin(
         app,
-        and(eq(app.name, appName!), eq(app.workspaceID, awsAccount.workspaceID))
+        and(
+          eq(app.name, appName!),
+          eq(app.workspaceID, awsAccount.workspaceID),
+        ),
       )
       .leftJoin(stage, and(eq(stage.name, stageName!), eq(stage.appID, app.id)))
       .where(and(eq(awsAccount.accountID, account)))

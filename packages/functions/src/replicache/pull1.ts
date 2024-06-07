@@ -329,7 +329,7 @@ export const handler = ApiHandler(
           let offset = 0;
           const page = 10_000;
           while (true) {
-            log("fetching", name, "offset", offset);
+            log("fetching", name, "offset", offset, ids.length);
             const rows = await tx
               .select()
               .from(table)
