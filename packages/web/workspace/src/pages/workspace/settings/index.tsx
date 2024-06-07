@@ -460,7 +460,7 @@ function Integrations() {
                 when={githubOrg()}
                 fallback={
                   <Text size="sm" color="dimmed">
-                    Connect to your GitHub repo
+                    Connect to your GitHub organization
                   </Text>
                 }
               >

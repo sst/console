@@ -179,6 +179,9 @@ export function Settings() {
           </Switch>
         </Stack>
         <Divider />
+        <RepoInfo />
+        <Divider />
+        <Env />
       </SettingsRoot>
     </>
   );
