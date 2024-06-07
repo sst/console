@@ -12,6 +12,8 @@ import { useCommandBar } from "./command-bar";
 import {
   JSX,
   Show,
+  Match,
+  Switch,
   onCleanup,
   useContext,
   ParentProps,
@@ -236,21 +238,26 @@ export function Header(props: { app?: string; stage?: string }) {
                 : bar.show("workspace-switcher")
             }
           >
-            <Show
-              when={props.stage}
-              fallback={
+            <Switch>
+              <Match when={props.stage}>
+                <StageSwitcherCopy>
+                  <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
+                  <StageSwitcherCopySub>{props.stage}</StageSwitcherCopySub>
+                </StageSwitcherCopy>
+              </Match>
+              <Match when={props.app}>
+                <StageSwitcherCopy>
+                  <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
+                </StageSwitcherCopy>
+              </Match>
+              <Match when={true}>
                 <StageSwitcherCopy>
                   <StageSwitcherCopyMain>
                     {workspace!().slug}
                   </StageSwitcherCopyMain>
                 </StageSwitcherCopy>
-              }
-            >
-              <StageSwitcherCopy>
-                <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
-                <StageSwitcherCopySub>{props.stage}</StageSwitcherCopySub>
-              </StageSwitcherCopy>
-            </Show>
+              </Match>
+            </Switch>
             <SwitcherIcon />
           </StageSwitcher>
         </Show>

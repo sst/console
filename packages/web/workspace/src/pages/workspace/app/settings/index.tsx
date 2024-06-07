@@ -61,6 +61,7 @@ import { minLength, object, string } from "valibot";
 export function Settings() {
   const rep = useReplicache();
   const app = useAppContext();
+  console.log("App Settings", app.app.name);
   return (
     <>
       <h1>App Settings: {app.app.name}</h1>

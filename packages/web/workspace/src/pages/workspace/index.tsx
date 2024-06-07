@@ -109,8 +109,7 @@ export function Content() {
       <Route path="account" component={Account} />
       <Route path="settings" component={Settings} />
       <Route path="debug" component={Debug} />
-      <Route path="new/:appName/*" component={App} />
-      <Route path=":appName/:stageName/*" component={Stage} />
+      <Route path=":appName/*" component={App} />
       <Route path="" component={Overview} />
       <Route path="*" element={<NotFound header />} />
     </Routes>

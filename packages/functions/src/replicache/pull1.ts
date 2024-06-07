@@ -82,6 +82,7 @@ export const TABLES = {
 type TableName = keyof typeof TABLES;
 
 const TABLE_KEY = {
+  appRepo: [appRepo.appID, appRepo.id],
   issue: [issue.stageID, issue.id],
   resource: [resource.stageID, resource.id],
   issueCount: [issueCount.group, issueCount.id],
@@ -97,8 +98,8 @@ const TABLE_KEY = {
   run: [runTable.stageID, runTable.id],
   stripe: [],
 } as {
-  [key in TableName]?: MySqlColumn[];
-};
+    [key in TableName]?: MySqlColumn[];
+  };
 
 const TABLE_PROJECTION = {
   stateUpdate: (input) => State.serializeUpdate(input),
@@ -106,8 +107,8 @@ const TABLE_PROJECTION = {
   stateResource: (input) => State.serializeResource(input),
   run: (input) => Run.serializeRun(input),
 } as {
-  [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
-};
+    [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
+  };
 
 export const handler = ApiHandler(
   withApiAuth(async () => {
@@ -218,8 +219,8 @@ export const handler = ApiHandler(
             ),
             issue: isNull(issue.timeDeleted),
           } satisfies {
-            [key in keyof typeof TABLES]?: SQLWrapper;
-          };
+              [key in keyof typeof TABLES]?: SQLWrapper;
+            };
 
           const workspaceID = useWorkspace();
 

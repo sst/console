@@ -79,7 +79,7 @@ const PageHeader = styled("div", {
   },
 });
 
-const ManageWorkspaceIcon = styled("div", {
+const ManageIcon = styled("div", {
   base: {
     top: 2,
     position: "relative",
@@ -267,7 +267,7 @@ export function Overview() {
         stages().filter((stage) => stage.awsAccountID === account.id),
         (c) =>
           apps().find((app) => app.id === c.appID)?.name === local().app &&
-          c.name === local().stage
+            c.name === local().stage
             ? 0
             : 1,
         (c) => (c.unsupported ? 1 : 0),
@@ -440,9 +440,9 @@ export function Overview() {
                       <TextButton>
                         <Row space="0.5" horizontal="center">
                           Manage workspace
-                          <ManageWorkspaceIcon>
+                          <ManageIcon>
                             <IconChevronRight width="13" height="13" />
-                          </ManageWorkspaceIcon>
+                          </ManageIcon>
                         </Row>
                       </TextButton>
                     </Link>
@@ -563,9 +563,8 @@ function StageCard(props: StageCardProps) {
   const local = useLocalContext();
   return (
     <StageRoot
-      href={`${app()?.name}/${
-        props.ambiguous ? props.stage.id : props.stage.name
-      }`}
+      href={`${app()?.name}/${props.ambiguous ? props.stage.id : props.stage.name
+        }`}
     >
       <Row space="2" vertical="center">
         <StageIcon dimmed={props.stage.unsupported || false}>
