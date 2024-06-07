@@ -37,23 +37,26 @@ import {
 } from "../util/transaction";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
-import { and, eq, gt, isNull } from "../drizzle";
+import { and, eq, gt, inArray, isNull } from "../drizzle";
 import { event } from "../event";
 import {
-  Architecture,
   Log,
   Resource,
   Trigger,
   runnerTable,
   runTable,
   runnerUsageTable,
+  CiConfig,
 } from "./run.sql";
-import { App } from "../app";
+import { App, Stage } from "../app";
 import { RunEnv } from "./env";
 import { RETRY_STRATEGY } from "../util/aws";
 import { State } from "../state";
 import { Function } from "sst/node/function";
 import { Credentials } from "../aws";
+import { AppRepo } from "../app/repo";
+import { Github } from "../git/github";
+import { stage } from "../app/app.sql";
 
 export module Run {
   const BUILD_TIMEOUT = 960000; // 16 minutes
@@ -64,7 +67,6 @@ export module Run {
   export type RunTimeoutMonitorEvent = {
     workspaceID: string;
     runID: string;
-    stateUpdateID: string;
   };
 
   export type RunnerRemoverEvent = {
@@ -117,40 +119,24 @@ export module Run {
     stage?: string;
   };
 
-  export const AppConfig = z.object({
-    version: z.string().nonempty().optional(),
-    name: z.string().nonempty(),
-    providers: z.record(z.any()).optional(),
-  });
-  export type AppConfig = z.infer<typeof AppConfig>;
-
-  export const CiConfig = z.object({
-    runner: z.object({
-      architecture: z.enum(["x86_64", "arm64"]),
-      image: z.string().nonempty(),
-    }),
-    config: z.object({
-      stage: z.string().nonempty(),
-      env: z.record(z.string().nonempty()),
+  export const SstConfig = z.object({
+    region: z.string().nonempty(),
+    ci: CiConfig,
+    app: z.object({
+      version: z.string().nonempty().optional(),
+      name: z.string().nonempty(),
+      providers: z.record(z.any()).optional(),
     }),
   });
-  export type CiConfig = z.infer<typeof CiConfig>;
+  export type SstConfig = z.infer<typeof SstConfig>;
 
   export const Event = {
     Created: event(
       "run.created",
       z.object({
-        runID: z.string().nonempty(),
-        stateUpdateID: z.string().nonempty(),
         appID: z.string().nonempty(),
-        appRepoID: z.string().nonempty(),
         stageID: z.string().nonempty(),
-        awsAccountID: z.string().nonempty(),
-        region: z.string().nonempty(),
-        cloneUrl: z.string().nonempty(),
-        trigger: Trigger,
-        appConfig: AppConfig,
-        ciConfig: CiConfig,
+        runID: z.string().nonempty(),
       })
     ),
     Started: event(
@@ -161,6 +147,7 @@ export module Run {
         logGroup: z.string().nonempty(),
         logStream: z.string().nonempty(),
         awsRequestId: z.string().nonempty(),
+        timestamp: z.number().int(),
       })
     ),
     Completed: event(
@@ -168,7 +155,6 @@ export module Run {
       z.object({
         workspaceID: z.string().nonempty(),
         runID: z.string().nonempty(),
-        stateUpdateID: z.string().nonempty(),
         error: z.string().nonempty().optional(),
       })
     ),
@@ -243,28 +229,50 @@ export module Run {
           ? payload.app.providers.aws.region ?? "us-east-1"
           : "us-east-1";
 
-      return payload as {
-        region: string;
-        app: AppConfig;
-        ci: CiConfig;
-      };
+      return payload as SstConfig;
     }
   );
+
+  export const fromID = zod(z.string().cuid2(), (runID) =>
+    useTransaction((tx) =>
+      tx
+        .select()
+        .from(runTable)
+        .where(
+          and(eq(runTable.workspaceID, useWorkspace()), eq(runTable.id, runID))
+        )
+        .execute()
+        .then((x) => x[0])
+    )
+  );
+
+  export const getIncompletedRuns = zod(z.string().cuid2(), async (stageID) => {
+    return await useTransaction((tx) =>
+      tx
+        .select()
+        .from(runTable)
+        .where(
+          and(
+            eq(runTable.workspaceID, useWorkspace()),
+            eq(runTable.stageID, stageID),
+            isNull(runTable.timeCompleted)
+          )
+        )
+        .orderBy(runTable.timeCreated)
+        .execute()
+    );
+  });
 
   export const create = zod(
     z.object({
       appID: z.string().cuid2(),
-      appRepoID: z.string().cuid2(),
-      cloneUrl: z.string().nonempty(),
-      region: z.string().nonempty(),
       trigger: Trigger,
-      appConfig: AppConfig,
-      ciConfig: CiConfig,
+      sstConfig: SstConfig,
     }),
     async (input) => {
       const appID = input.appID;
-      const stageName = input.ciConfig.config.stage;
-      const region = input.region;
+      const stageName = input.sstConfig.ci.target.stage;
+      const region = input.sstConfig.region;
 
       // Get AWS Account ID from Run Env
       const envs = await RunEnv.listByStage({ appID, stageName });
@@ -272,39 +280,41 @@ export module Run {
       if (!awsAccountID)
         throw new Error("AWS Account ID is not set in Run Env");
 
-      await createTransaction(async (tx) => {
-        // Create stage if stage not exist
-        let stageID = await App.Stage.fromName({
-          appID,
+      // Create stage if stage not exist
+      let stageID = await App.Stage.fromName({
+        appID,
+        name: stageName,
+        region,
+        awsAccountID,
+      }).then((s) => s?.id!);
+
+      if (!stageID) {
+        console.log("creating stage", { appID, stageID });
+        stageID = await App.Stage.connect({
           name: stageName,
+          appID,
           region,
           awsAccountID,
-        }).then((s) => s?.id!);
+        });
+      }
 
-        if (!stageID) {
-          console.log("creating stage", { appID, stageID });
-          stageID = await App.Stage.connect({
-            name: stageName,
-            appID,
-            region,
-            awsAccountID,
-          });
-        }
-
-        // Create Run
-        const runID = createId();
+      // Create Run
+      const runID = createId();
+      const stateUpdateID = createId();
+      await createTransaction(async (tx) => {
         await tx
           .insert(runTable)
           .values({
             id: runID,
             workspaceID: useWorkspace(),
             stageID,
+            stateUpdateID,
             trigger: input.trigger,
+            config: input.sstConfig.ci,
           })
           .execute();
 
         // Create State Update
-        const stateUpdateID = createId();
         await State.createUpdate({
           id: stateUpdateID,
           stageID,
@@ -316,63 +326,168 @@ export module Run {
           time: new Date(),
         });
 
-        // Schedule timeout monitor
-        const scheduler = new SchedulerClient({
-          retryStrategy: RETRY_STRATEGY,
-        });
-
         await createTransactionEffect(() =>
-          Promise.allSettled([
-            Event.Created.publish({
-              runID,
-              stateUpdateID,
-              stageID,
-              awsAccountID,
-              ...input,
-            }),
-            scheduler.send(
-              new CreateScheduleCommand({
-                Name: `run-timeout-${runID}`,
-                GroupName: process.env.TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME!,
-                FlexibleTimeWindow: {
-                  Mode: "OFF",
-                },
-                ScheduleExpression: `at(${
-                  new Date(Date.now() + BUILD_TIMEOUT)
-                    .toISOString()
-                    .split(".")[0]
-                })`,
-                Target: {
-                  Arn: process.env.TIMEOUT_MONITOR_FUNCTION_ARN,
-                  RoleArn: process.env.TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN,
-                  Input: JSON.stringify({
-                    workspaceID: useWorkspace(),
-                    runID,
-                    stateUpdateID,
-                  } satisfies RunTimeoutMonitorEvent),
-                },
-                ActionAfterCompletion: "DELETE",
-              })
-            ),
-          ]).then((results) => {
-            const failed = results.find((x) => x.status === "rejected");
-            if (failed) {
-              console.log("input", input);
-              console.log("results", results);
-              throw new Error("Failed to create run");
-            }
-          })
+          Event.Created.publish({ appID: input.appID, stageID, runID })
         );
       });
     }
   );
 
-  export const started = zod(
+  export const start = zod(
+    z.object({
+      appID: z.string().cuid2(),
+      runID: z.string().cuid2(),
+      stageID: z.string().cuid2(),
+    }),
+    async ({ appID, runID, stageID }) => {
+      let run;
+      let runner;
+      let context = "initialize runner";
+      try {
+        run = await fromID(runID);
+        if (!run) throw new Error("Run not found");
+
+        const stage = await Stage.fromID(run.stageID);
+        if (!stage) throw new Error("Stage not found");
+
+        const appRepo = await AppRepo.getByAppID(appID);
+        if (!appRepo) throw new Error("AppRepo not found");
+
+        const awsConfig = await Stage.assumeRole(stageID);
+        if (!awsConfig) return;
+
+        // Get runner (create if not exist)
+        context = "lookup existing runner";
+        while (true) {
+          runner = await lookupRunner({
+            awsAccountID: stage.awsAccountID,
+            appRepoID: appRepo.id,
+            region: stage.region,
+            runnerConfig: run.config.runner,
+          });
+          if (!runner || runner.resource) break;
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          console.log("waiting for runner being created");
+        }
+        context = "create runner";
+        if (!runner) {
+          runner = await createRunner({
+            appRepoID: appRepo.id,
+            awsAccountID: stage.awsAccountID,
+            region: stage.region,
+            runnerConfig: run.config.runner,
+            credentials: awsConfig.credentials,
+          });
+        }
+        if (!runner.resource) {
+          throw new Error("Failed to create runner");
+        }
+
+        // Build cloneUrl
+        context = "start runner";
+        const gitRepo = await Github.getByRepoID(appRepo.repoID);
+        if (!gitRepo) throw new Error("Github Repo not found");
+        const cloneUrl = await Github.getCloneUrl(gitRepo);
+
+        // Run runner
+        await invokeRunner({
+          run,
+          runner,
+          cloneUrl,
+          credentials: awsConfig.credentials,
+        });
+      } catch (e) {
+        await complete({ runID, error: `Failed to ${context}` });
+        throw e;
+      }
+
+      // Schedule timeout monitor
+      await scheduleRunTimeoutMonitor(run);
+
+      // Schedule warmer if not scheduled
+      if (!runner.warmer) await scheduleRunnerWarmer(runner.id);
+    }
+  );
+
+  export const complete = zod(
+    z.object({
+      runID: z.string().cuid2(),
+      error: z.string().nonempty().optional(),
+    }),
+    async ({ runID, error }) => {
+      const run = await fromID(runID);
+      if (!run) return;
+
+      // Mark current run completed
+      await markRunCompleted({
+        runID,
+        stateUpdateID: run.stateUpdateID,
+        error,
+      });
+
+      // Get queued runs
+      const runs = await getIncompletedRuns(run.stageID);
+      if (!runs.length) return;
+
+      // Skip all runs except the first one
+      const runsToSkip = runs.slice(1);
+      if (runsToSkip.length) {
+        await markRunsSkipped({
+          runIDs: runsToSkip.map((r) => r.id),
+          stateUpdateIDs: runsToSkip.map((r) => r.stateUpdateID),
+        });
+      }
+
+      // Start the most recent run
+      const nextRun = runs[0]!;
+      const stage = await Stage.fromID(nextRun.stageID);
+      if (!stage) return;
+      await start({
+        appID: stage.appID,
+        stageID: nextRun.stageID,
+        runID: nextRun.id,
+      });
+    }
+  );
+
+  export const scheduleRunTimeoutMonitor = zod(
+    z.custom<typeof runTable.$inferSelect>(),
+    async (run) => {
+      const scheduler = new SchedulerClient({
+        retryStrategy: RETRY_STRATEGY,
+      });
+
+      await scheduler.send(
+        new CreateScheduleCommand({
+          Name: `run-timeout-${run.id}`,
+          GroupName: process.env.RUN_TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME!,
+          FlexibleTimeWindow: {
+            Mode: "OFF",
+          },
+          ScheduleExpression: `at(${
+            new Date(Date.now() + BUILD_TIMEOUT).toISOString().split(".")[0]
+          })`,
+          Target: {
+            Arn: process.env.RUN_TIMEOUT_MONITOR_FUNCTION_ARN,
+            RoleArn: process.env.RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN,
+            Input: JSON.stringify({
+              workspaceID: useWorkspace(),
+              runID: run.id,
+            } satisfies RunTimeoutMonitorEvent),
+          },
+          ActionAfterCompletion: "DELETE",
+        })
+      );
+    }
+  );
+
+  export const markRunStarted = zod(
     z.object({
       runID: z.string().nonempty(),
       awsRequestId: z.string().nonempty(),
       logGroup: z.string().nonempty(),
       logStream: z.string().nonempty(),
+      timestamp: z.number().int(),
     }),
     async (input) =>
       useTransaction((tx) =>
@@ -385,6 +500,7 @@ export module Run {
               requestID: input.awsRequestId,
               logGroup: input.logGroup,
               logStream: input.logStream,
+              timestamp: input.timestamp,
             },
           })
           .where(
@@ -397,14 +513,43 @@ export module Run {
       )
   );
 
-  export const completed = zod(
+  export const markRunsSkipped = zod(
+    z.object({
+      runIDs: z.array(z.string().cuid2()),
+      stateUpdateIDs: z.array(z.string().cuid2()),
+    }),
+    async ({ runIDs, stateUpdateIDs }) =>
+      await createTransaction(async (tx) => {
+        const timeCompleted = new Date();
+        await tx
+          .update(runTable)
+          .set({
+            timeCompleted,
+          })
+          .where(
+            and(
+              eq(runTable.workspaceID, useWorkspace()),
+              inArray(runTable.id, runIDs),
+              isNull(runTable.timeCompleted)
+            )
+          )
+          .execute();
+
+        await State.completeUpdate({
+          updateIDs: stateUpdateIDs,
+          time: timeCompleted,
+        });
+      })
+  );
+
+  export const markRunCompleted = zod(
     z.object({
       runID: z.string().cuid2(),
       stateUpdateID: z.string().cuid2(),
       error: z.string().nonempty().optional(),
     }),
     async (input) =>
-      useTransaction(async (tx) => {
+      await createTransaction(async (tx) => {
         const timeCompleted = new Date();
         await tx
           .update(runTable)
@@ -421,9 +566,8 @@ export module Run {
           )
           .execute();
         await State.completeUpdate({
-          updateID: input.stateUpdateID,
+          updateIDs: [input.stateUpdateID],
           time: timeCompleted,
-          error: input.error,
         });
       })
   );
@@ -511,8 +655,7 @@ export module Run {
       region: z.string().nonempty(),
       awsAccountID: z.string().cuid2(),
       appRepoID: z.string().cuid2(),
-      architecture: z.enum(Architecture),
-      image: z.string().nonempty(),
+      runnerConfig: CiConfig.shape.runner,
     }),
     async (input) => {
       return await useTransaction((tx) =>
@@ -525,8 +668,8 @@ export module Run {
               eq(runnerTable.awsAccountID, input.awsAccountID),
               eq(runnerTable.appRepoID, input.appRepoID),
               eq(runnerTable.region, input.region),
-              eq(runnerTable.architecture, input.architecture),
-              eq(runnerTable.image, input.image)
+              eq(runnerTable.architecture, input.runnerConfig.architecture),
+              eq(runnerTable.image, input.runnerConfig.image)
             )
           )
           .execute()
@@ -537,15 +680,17 @@ export module Run {
 
   export const createRunner = zod(
     z.object({
-      region: z.string().nonempty(),
-      awsAccountID: z.string().cuid2(),
       appRepoID: z.string().cuid2(),
-      architecture: z.enum(Architecture),
-      image: z.string().nonempty(),
+      awsAccountID: z.string().cuid2(),
+      region: z.string().nonempty(),
+      runnerConfig: CiConfig.shape.runner,
       credentials: z.custom<Credentials>(),
     }),
     async (input) => {
-      const { region, credentials, architecture, image } = input;
+      const region = input.region;
+      const credentials = input.credentials;
+      const architecture = input.runnerConfig.architecture;
+      const image = input.runnerConfig.image;
       const suffix =
         architecture +
         "-" +
@@ -572,7 +717,7 @@ export module Run {
 
       await updateRunnerRecordWithResource();
 
-      return { id: runnerID, resource, warmer: null };
+      return { id: runnerID, region, resource, warmer: null };
 
       function createRunnerRecordWithoutResource() {
         return useTransaction((tx) =>
@@ -584,8 +729,8 @@ export module Run {
               awsAccountID: input.awsAccountID,
               appRepoID: input.appRepoID,
               region,
-              architecture: input.architecture,
-              image: input.image,
+              architecture,
+              image,
             })
             .execute()
         );
@@ -666,7 +811,7 @@ export module Run {
             new CreateFunctionCommand({
               FunctionName: functionName,
               Role: roleArn,
-              Code: { ImageUri: input.image },
+              Code: { ImageUri: image },
               Timeout: 900,
               MemorySize: 10240,
               EphemeralStorage: {
@@ -868,29 +1013,24 @@ export module Run {
 
   export const invokeRunner = zod(
     z.object({
-      region: z.string().nonempty(),
-      resource: Resource,
-      stageID: z.string().cuid2(),
-      runID: z.string().cuid2(),
-      runnerID: z.string().cuid2(),
-      stateUpdateID: z.string().cuid2(),
-      credentials: z.custom<Credentials>(),
-      stage: z.string().nonempty(),
+      run: z.custom<typeof runTable.$inferSelect>(),
+      runner: z.object({
+        id: z.string().cuid2(),
+        region: z.string().nonempty(),
+        resource: z.custom<(typeof runnerTable.$inferSelect)["resource"]>(),
+      }),
       cloneUrl: z.string().nonempty(),
-      trigger: Trigger,
+      credentials: z.custom<Credentials>(),
     }),
     async (input) => {
-      const region = input.region;
-      const credentials = input.credentials;
-
       const lambda = new LambdaClient({
-        credentials,
-        region,
+        credentials: input.credentials,
+        region: input.runner.region,
         retryStrategy: RETRY_STRATEGY,
       });
       await lambda.send(
         new InvokeCommand({
-          FunctionName: input.resource.properties.function,
+          FunctionName: input.runner.resource!.properties.function,
           InvocationType: "Event",
           Payload: JSON.stringify({
             warm: false,
@@ -898,13 +1038,13 @@ export module Run {
               version: Config.BUILDSPEC_VERSION,
               bucket: Bucket.Buildspec.bucketName,
             },
-            runID: input.runID,
-            stateUpdateID: input.stateUpdateID,
+            runID: input.run.id,
+            stateUpdateID: input.run.stateUpdateID,
             workspaceID: useWorkspace(),
-            stage: input.stage,
+            stage: input.run.config.target.stage,
             cloneUrl: input.cloneUrl,
-            credentials,
-            trigger: input.trigger,
+            credentials: input.credentials,
+            trigger: input.run.trigger,
           } satisfies RunnerEvent),
         })
       );
@@ -917,7 +1057,7 @@ export module Run {
           .set({ timeRun: now })
           .where(
             and(
-              eq(runnerTable.id, input.runnerID),
+              eq(runnerTable.id, input.runner.id),
               eq(runnerTable.workspaceID, useWorkspace())
             )
           )
@@ -928,8 +1068,8 @@ export module Run {
           .values({
             workspaceID: useWorkspace(),
             id: createId(),
-            runnerID: input.runnerID,
-            stageID: input.stageID,
+            runnerID: input.runner.id,
+            stageID: input.run.stageID,
             timeRun: now,
           })
           .onDuplicateKeyUpdate({

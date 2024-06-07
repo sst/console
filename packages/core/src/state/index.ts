@@ -573,7 +573,7 @@ export module State {
 
   export const completeUpdate = zod(
     z.object({
-      updateID: z.string().cuid2(),
+      updateIDs: z.array(z.string().cuid2()),
       error: z.string().nonempty().optional(),
       time: z.date(),
     }),
@@ -591,7 +591,7 @@ export module State {
           .where(
             and(
               eq(stateUpdateTable.workspaceID, useWorkspace()),
-              eq(stateUpdateTable.id, input.updateID),
+              inArray(stateUpdateTable.id, input.updateIDs),
               isNull(stateUpdateTable.timeCompleted)
             )
           );

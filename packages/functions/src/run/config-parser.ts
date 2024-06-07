@@ -51,14 +51,14 @@ export async function handler(evt: Run.ConfigParserEvent) {
       // - "evt.stage" defined, ie. called on repo connect to get JUST runner config
       ...(evt.trigger
         ? [
-            `const ciConfig = mod.ci.config?.(${JSON.stringify(evt.trigger)});`,
-            `if (!ciConfig?.stage) {`,
+            `const ciTarget = mod.ci.target?.(${JSON.stringify(evt.trigger)});`,
+            `if (!ciTarget?.stage) {`,
             `  console.log({error:"no_ci_stage"});`,
             `  process.exit(0);`,
             `}`,
-            `const ciRunner = mod.ci.runner({stage: ciConfig.stage});`,
-            `const app = mod.app({stage: ciConfig.stage});`,
-            `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, ci: { runner: ciRunner, config: ciConfig }}));`,
+            `const ciRunner = mod.ci.runner({stage: ciTarget.stage});`,
+            `const app = mod.app({stage: ciTarget.stage});`,
+            `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, ci: { runner: ciRunner, target: ciTarget }}));`,
           ]
         : [
             `const ciRunner = mod.ci.runner({stage: "${evt.stage}"});`,

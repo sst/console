@@ -32,6 +32,7 @@ export const Log = z.discriminatedUnion("type", [
     requestID: z.string().nonempty(),
     logGroup: z.string().nonempty(),
     logStream: z.string().nonempty(),
+    timestamp: z.number().int(),
   }),
 ]);
 export type Log = z.infer<typeof Log>;
@@ -55,6 +56,18 @@ export const Trigger = z.object({
   }),
 });
 export type Trigger = z.infer<typeof Trigger>;
+
+export const CiConfig = z.object({
+  runner: z.object({
+    architecture: z.enum(["x86_64", "arm64"]),
+    image: z.string().nonempty(),
+  }),
+  target: z.object({
+    stage: z.string().nonempty(),
+    env: z.record(z.string().nonempty()),
+  }),
+});
+export type CiConfig = z.infer<typeof CiConfig>;
 
 export const runnerTable = mysqlTable(
   "runner",
@@ -122,8 +135,10 @@ export const runTable = mysqlTable(
     timeStarted: timestamp("time_started"),
     timeCompleted: timestamp("time_completed"),
     stageID: cuid("stage_id").notNull(),
+    stateUpdateID: cuid("state_update_id").notNull(),
     log: json("log").$type<Log>(),
     trigger: json("git_context").$type<Trigger>().notNull(),
+    config: json("config").$type<CiConfig>().notNull(),
     error: text("error"),
   },
   (table) => ({

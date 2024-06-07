@@ -30,6 +30,7 @@ export async function handler(event, context) {
       logGroup: context.logGroupName,
       logStream: context.logStreamName,
       awsRequestId: context.awsRequestId,
+      timestamp: Date.now(),
     });
 
     const invokedAt = Date.now();
@@ -120,7 +121,7 @@ export async function handler(event, context) {
    * @param {any} payload
    */
   async function publish(type, payload) {
-    const { warm, workspaceID, runID, stateUpdateID } = event;
+    const { warm, workspaceID, runID } = event;
     if (warm) return;
 
     await eb.send(
@@ -130,7 +131,11 @@ export async function handler(event, context) {
             Source: "sst.external",
             DetailType: type,
             Detail: JSON.stringify({
-              properties: { ...payload, workspaceID, runID, stateUpdateID },
+              properties: {
+                ...payload,
+                workspaceID,
+                runID,
+              },
             }),
           },
         ],

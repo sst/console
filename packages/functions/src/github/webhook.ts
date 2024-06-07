@@ -68,12 +68,9 @@ app.webhooks.on("push", async (event) => {
   });
 
   // Do not trigger build
-  if (!config.ci.config.stage) return;
+  if (!config.ci.target.stage) return;
 
   // Loop through all apps connected to the repo
-  const oauthToken = await event.octokit
-    .auth({ type: "installation" })
-    .then((x: any) => x.token);
   for (const appRepo of appRepos) {
     await withActor(
       {
@@ -83,12 +80,8 @@ app.webhooks.on("push", async (event) => {
       () =>
         Run.create({
           appID: appRepo.appID,
-          appRepoID: appRepo.id,
-          cloneUrl: `https://oauth2:${oauthToken}@github.com/${trigger.repo.owner}/${trigger.repo.repo}.git`,
           trigger,
-          region: config.region,
-          appConfig: config.app,
-          ciConfig: config.ci,
+          sstConfig: config,
         })
     );
   }

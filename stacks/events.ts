@@ -168,6 +168,10 @@ export function Events({ stack }: StackContext) {
       RUNNER_WARMER_SCHEDULE_GROUP_NAME: run.runnerWarmerScheduleGroupName,
       RUNNER_WARMER_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
       RUNNER_WARMER_FUNCTION_ARN: run.runnerWarmerArn,
+      RUN_TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME:
+        run.runTimeoutMonitorScheduleGroupName,
+      RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN: run.scheduleRoleArn,
+      RUN_TIMEOUT_MONITOR_FUNCTION_ARN: run.runTimeoutMonitorArn,
     },
   });
 

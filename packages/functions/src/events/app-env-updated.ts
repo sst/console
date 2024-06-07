@@ -35,12 +35,12 @@ export const handler = EventHandler(RunEnv.Events.Updated, (evt) =>
     // Get runner (create if not exist)
     const awsAccount = await AWS.Account.fromID(value);
     if (!awsAccount) return;
+    console.log(config.ci);
     const runner = await Run.lookupRunner({
       awsAccountID: awsAccount.id,
       appRepoID: appRepo.id,
       region: config.region,
-      architecture: config.ci.runner.architecture,
-      image: config.ci.runner.image,
+      runnerConfig: config.ci.runner,
     });
 
     // Assume into AWS account and region
@@ -49,11 +49,10 @@ export const handler = EventHandler(RunEnv.Events.Updated, (evt) =>
 
     if (!runner) {
       const runner = await Run.createRunner({
-        awsAccountID: awsAccount.id,
         appRepoID: appRepo.id,
+        awsAccountID: awsAccount.id,
         region: config.region,
-        architecture: config.ci.runner.architecture,
-        image: config.ci.runner.image,
+        runnerConfig: config.ci.runner,
         credentials,
       });
       await Run.warmRunner({
