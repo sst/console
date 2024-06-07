@@ -107,11 +107,7 @@ export function Settings() {
     () => [],
     (repos) => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID)
   );
-  const ghRepoOrg = GithubOrgStore.all.watch(
-    rep,
-    () => [],
-    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID)
-  );
+  const ghRepoOrg = GithubOrgStore.get.watch(rep, () => [ghRepo()?.githubOrgID!]);
 
   return (
     <>
@@ -146,9 +142,8 @@ export function Settings() {
                     <Stack space="1">
                       <GitRepoLink
                         target="_blank"
-                        href={`https://github.com/${ghRepoOrg()?.login}/${
-                          ghRepo()?.name
-                        }`}
+                        href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
+                          }`}
                       >
                         {ghRepoOrg()?.login}
                         <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
