@@ -288,6 +288,19 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
   }
 
   return createTransaction(async (tx) => {
+    const stageID = await tx
+      .select({ id: stage.id })
+      .from(stage)
+      .for("update")
+      .where(
+        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace())),
+      )
+      .execute()
+      .then((x) => x[0]?.id);
+    if (!stageID) {
+      console.log("stage was deleted");
+      return;
+    }
     const existing = await tx
       .select({
         id: resource.id,
