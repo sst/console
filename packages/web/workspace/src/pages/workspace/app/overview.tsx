@@ -5,6 +5,7 @@ import {
   Stack,
   Button,
   utility,
+  ButtonIcon,
   TextButton,
 } from "$/ui";
 import {
@@ -47,16 +48,6 @@ const ManageIcon = styled("div", {
     top: 2,
     position: "relative",
     opacity: theme.iconOpacity,
-  },
-});
-
-const ButtonIcon = styled("span", {
-  base: {
-    width: 18,
-    height: 18,
-    marginRight: 6,
-    verticalAlign: -4,
-    display: "inline-block",
   },
 });
 
@@ -116,13 +107,7 @@ const RepoLinkSeparator = styled("span", {
 export function Overview() {
   const rep = useReplicache();
   const app = useAppContext();
-  const appRepo = AppRepoStore.forApp.watch(
-    rep,
-    () => [app.app.id],
-  );
-  createEffect(() => {
-    console.log("appRepo", app.app.id, appRepo());
-  });
+  const appRepo = AppRepoStore.forApp.watch(rep, () => [app.app.id]);
   const ghRepo = GithubRepoStore.all.watch(
     rep,
     () => [],
@@ -133,27 +118,6 @@ export function Overview() {
     () => [],
     (orgs) => orgs.find((org) => org.orgID === ghRepo()?.orgID)
   );
-
-  function renderRepoLink() {
-    return (
-      <Stack space="1.5" horizontal="end">
-        <RepoLabel>Connected</RepoLabel>
-        <RepoLink
-          target="_blank"
-          href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name}`}
-        >
-          <RepoLinkIcon>
-            <IconGitHub width="16" height="16" />
-          </RepoLinkIcon>
-          <RepoLinkCopy>
-            {ghRepoOrg()?.login}
-            <RepoLinkSeparator>/</RepoLinkSeparator>
-            {ghRepo()?.name}
-          </RepoLinkCopy>
-        </RepoLink>
-      </Stack>
-    );
-  }
 
   return (
     <>
@@ -177,17 +141,34 @@ export function Overview() {
               </Link>
             </PageHeader>
             <Show
-              when={!appRepo()}
-              fallback={renderRepoLink()}
+              when={ghRepoOrg()}
+              fallback={
+                <Link href="settings">
+                  <Button color="github">
+                    <ButtonIcon>
+                      <IconGitHub />
+                    </ButtonIcon>
+                    Connect Repo
+                  </Button>
+                </Link>
+              }
             >
-              <Link href="settings">
-                <Button color="github">
-                  <ButtonIcon>
-                    <IconGitHub />
-                  </ButtonIcon>
-                  Connect Repo
-                </Button>
-              </Link>
+              <Stack space="1.5" horizontal="end">
+                <RepoLabel>Connected</RepoLabel>
+                <RepoLink
+                  target="_blank"
+                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name}`}
+                >
+                  <RepoLinkIcon>
+                    <IconGitHub width="16" height="16" />
+                  </RepoLinkIcon>
+                  <RepoLinkCopy>
+                    {ghRepoOrg()?.login}
+                    <RepoLinkSeparator>/</RepoLinkSeparator>
+                    {ghRepo()?.name}
+                  </RepoLinkCopy>
+                </RepoLink>
+              </Stack>
             </Show>
           </Row>
         </Stack>
