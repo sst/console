@@ -20,12 +20,12 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
               event.properties.group,
               event.properties.stageID,
             ].join("-"),
-          })
+          }),
         ),
         // Issue.expand(event.properties),
-      ])
+      ]),
     );
-  })
+  }),
 );
 
 export const queue = Handler("sqs", async (event) => {

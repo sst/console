@@ -28,7 +28,7 @@ import {
   IconExclamationTriangle,
 } from "$/ui/icons";
 import { IconLogosSlackBW } from "$/ui/icons/custom";
-import { useReplicache } from "$/providers/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import { AppStore, IssueAlertStore, SlackTeamStore } from "$/data/app";
 import { Issue } from "@console/core/issue";
 import { createStore, unwrap } from "solid-js/store";
@@ -299,12 +299,11 @@ const PutForm = object({
 
 export function Alerts() {
   const rep = useReplicache();
-  const users = UserStore.list.watch(
-    rep,
-    () => [],
-    (users) => users.filter((u) => !u.timeDeleted)
+  const users = createSubscription(
+    async (tx) => UserStore.list(tx).then(filter((u) => !u.timeDeleted)),
+    [],
   );
-  const alerts = IssueAlertStore.all.watch(rep, () => []);
+  const alerts = createSubscription(async (tx) => IssueAlertStore.all(tx), []);
 
   const [putForm, { Form, Field }] = createForm({
     validate: valiForm(PutForm),
@@ -327,7 +326,7 @@ export function Alerts() {
           formData.source?.app?.includes(app.name)
         );
       })
-      .map((app) => app.id)
+      .map((app) => app.id),
   );
 
   const availableStages = createMemo(() => {
@@ -335,7 +334,7 @@ export function Alerts() {
       stages(),
       filter((s) => selectedApps().includes(s.appID)),
       map((s) => s.name),
-      uniq()
+      uniq(),
     );
   });
 
@@ -426,7 +425,7 @@ export function Alerts() {
           <MatchingStagesPanelExpanded>
             <MatchingStagesCopy>
               {joinWithAnd(
-                matchingStages().map(({ app, stage }) => `${app}/${stage}`)
+                matchingStages().map(({ app, stage }) => `${app}/${stage}`),
               )}
             </MatchingStagesCopy>
           </MatchingStagesPanelExpanded>
@@ -513,7 +512,7 @@ export function Alerts() {
                     }, []);
 
                     createComputed(() =>
-                      setValue(putForm, "source.app", value())
+                      setValue(putForm, "source.app", value()),
                     );
 
                     return (
@@ -610,7 +609,7 @@ export function Alerts() {
                       }, []);
 
                       createComputed(() =>
-                        setValue(putForm, "destination.email.users", value())
+                        setValue(putForm, "destination.email.users", value()),
                       );
                       return (
                         <FormField
@@ -627,7 +626,7 @@ export function Alerts() {
                                 label: "All users",
                                 seperator: true,
                               },
-                              ...users().map((user) => ({
+                              ...users.map((user) => ({
                                 value: user.id,
                                 label: user.email,
                               })),
@@ -652,7 +651,7 @@ export function Alerts() {
                       },
                       {
                         on: "blur",
-                      }
+                      },
                     )}
                   >
                     {(field, props) => (
@@ -739,13 +738,13 @@ export function Alerts() {
       Object.fromEntries(
         warnings
           .filter((w) => w.type === "issue_alert_slack")
-          .map((w) => [w.target, w] as const)
-      )
+          .map((w) => [w.target, w] as const),
+      ),
   );
   const slackTeam = SlackTeamStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0)
+    (all) => all.at(0),
   );
 
   return (
@@ -760,7 +759,7 @@ export function Alerts() {
           </Text>
         </Stack>
         <Show
-          when={alerts().length !== 0 || editing.active}
+          when={alerts.length !== 0 || editing.active}
           fallback={
             <Row>
               <Button color="secondary" onClick={() => createAlert()}>
@@ -770,10 +769,10 @@ export function Alerts() {
           }
         >
           <AlertsPanel>
-            <For each={alerts()}>
+            <For each={alerts}>
               {(alert) => {
                 const isEditingRow = createMemo(
-                  () => editing.active && editing.id === alert.id
+                  () => editing.active && editing.id === alert.id,
                 );
 
                 return (
@@ -863,8 +862,8 @@ export function Alerts() {
                                           )
                                             .map(
                                               (id) =>
-                                                users().find((u) => u.id === id)
-                                                  ?.email
+                                                users.find((u) => u.id === id)
+                                                  ?.email,
                                             )
                                             .join(", ")}
                                     </AlertsPanelToLabel>
@@ -954,7 +953,7 @@ export function Alerts() {
             </For>
             <Show when={editing.active && !editing.id}>
               <>
-                <Show when={alerts().length !== 0}>
+                <Show when={alerts.length !== 0}>
                   <AlertsPanelRow new>
                     <AlertsPanelRowIcon dimmed>
                       <IconEllipsisHorizontal width={18} height={18} />
@@ -967,9 +966,7 @@ export function Alerts() {
                 <AlertsEditor />
               </>
             </Show>
-            <Show
-              when={alerts().length !== 0 && (!editing.active || editing.id)}
-            >
+            <Show when={alerts.length !== 0 && (!editing.active || editing.id)}>
               <AlertsPanelRow new>
                 <AlertsPanelRowIcon>
                   <IconEllipsisHorizontal width={18} height={18} />
