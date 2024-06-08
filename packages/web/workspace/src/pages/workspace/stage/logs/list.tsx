@@ -25,7 +25,7 @@ import { Dropdown } from "$/ui/dropdown";
 import { styled } from "@macaron-css/solid";
 import { useStageContext } from "../context";
 import { formatBytes } from "$/common/format";
-import { AppRepoStore, StateResourceStore } from "$/data/app";
+import { StateResourceStore } from "$/data/app";
 import type { State } from "@console/core/state";
 import { Link, useNavigate } from "@solidjs/router";
 import { Row, Stack, Fullscreen } from "$/ui/layout";
@@ -258,33 +258,29 @@ export function List() {
   );
   const internals = createMemo(() => sortBy(sorted()[1], (fn) => fn.name));
 
-  createEffect(() => {
-    console.log(functions(), internals());
-  });
-
-  function renderRuntime(runtime: string) {
+  function Runtime(props: { runtime?: string }) {
     return (
-      <ChildIcon title={runtime}>
+      <ChildIcon title={props.runtime}>
         <Switch>
-          <Match when={runtime.startsWith("dotnet")}>
+          <Match when={props.runtime?.startsWith("dotnet")}>
             <IconDotNetRuntime />
           </Match>
-          <Match when={runtime.startsWith("python")}>
+          <Match when={props.runtime?.startsWith("python")}>
             <IconPythonRuntime />
           </Match>
-          <Match when={runtime.startsWith("java")}>
+          <Match when={props.runtime?.startsWith("java")}>
             <IconJavaRuntime />
           </Match>
-          <Match when={runtime.startsWith("go")}>
+          <Match when={props.runtime?.startsWith("go")}>
             <IconGoRuntime />
           </Match>
-          <Match when={runtime.startsWith("nodejs")}>
+          <Match when={props.runtime?.startsWith("nodejs")}>
             <IconNodeRuntime />
           </Match>
-          <Match when={runtime.startsWith("rust")}>
+          <Match when={props.runtime?.startsWith("rust")}>
             <IconRustRuntime />
           </Match>
-          <Match when={runtime.startsWith("container")}>
+          <Match when={props.runtime?.startsWith("container")}>
             <IconContainerRuntime />
           </Match>
           <Match when={true}>
@@ -356,9 +352,7 @@ export function List() {
                 </Show>
               </ChildDetailValue>
             </ChildDetail>
-            <Show when={live ? live.runtime : fn.outputs.runtime}>
-              {renderRuntime(live ? live.runtime : fn.outputs.runtime)}
-            </Show>
+            <Runtime runtime={live ? live.runtime : fn.outputs.runtime} />
             <Dropdown
               size="sm"
               disabled={copying()}
