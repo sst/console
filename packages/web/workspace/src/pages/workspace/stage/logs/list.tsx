@@ -1,12 +1,4 @@
-import {
-  For,
-  Show,
-  Match,
-  Switch,
-  createMemo,
-  createEffect,
-  createSignal,
-} from "solid-js";
+import { For, Show, Match, Switch, createMemo, createSignal } from "solid-js";
 import {
   IconFunction,
   IconGoRuntime,
@@ -302,14 +294,18 @@ export function List() {
   }
 
   function renderFunction(fn: SortedResource, isInternal: boolean) {
-    const live = fn.sst && fn.sst.outputs["_live"];
+    const live = () => fn.sst?.outputs["_live"];
     const [copying, setCopying] = createSignal(false);
     return (
       <Child outline={isInternal}>
         <ChildColLeft>
           <Row space="3" vertical="center">
             <ChildTitleLink href={`${fn.id}?logGroup=${getLogGroup(fn)}`}>
-              {isInternal ? fn.name : live ? live.handler : fn.outputs.handler}
+              {isInternal
+                ? fn.name
+                : live()
+                  ? live().handler
+                  : fn.outputs.handler}
             </ChildTitleLink>
           </Row>
           <Show
@@ -352,7 +348,7 @@ export function List() {
                 </Show>
               </ChildDetailValue>
             </ChildDetail>
-            <Runtime runtime={live ? live.runtime : fn.outputs.runtime} />
+            <Runtime runtime={live ? live().runtime : fn.outputs.runtime} />
             <Dropdown
               size="sm"
               disabled={copying()}

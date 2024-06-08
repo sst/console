@@ -1,6 +1,5 @@
 import {
   AppRepoStore,
-  AppStore,
   EnvStore,
   GithubOrgStore,
   GithubRepoStore,
@@ -10,24 +9,14 @@ import {
   theme,
   utility,
   Row,
-  Tag,
   Text,
   Stack,
   Button,
-  TextButton,
   ButtonIcon,
   FormField,
   Input,
 } from "$/ui";
-import {
-  For,
-  Match,
-  Show,
-  Switch,
-  createSignal,
-  createEffect,
-  createMemo,
-} from "solid-js";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { Header } from "../../header";
 import { styled } from "@macaron-css/solid";
 import { IconGitHub } from "$/ui/icons/custom";
@@ -87,10 +76,11 @@ const GitRepoStatus = styled("span", {
 export function Settings() {
   const rep = useReplicache();
   const app = useAppContext();
-  const repoInfo = createSubscription(async tx => {
+  const repoInfo = createSubscription(async (tx) => {
     const appRepo = await AppRepoStore.forApp(tx, app.app.id);
-    const ghRepo = (await GithubRepoStore.all(tx))
-      .find((repo) => repo.repoID === appRepo[0]?.repoID);
+    const ghRepo = (await GithubRepoStore.all(tx)).find(
+      (repo) => repo.repoID === appRepo[0]?.repoID,
+    );
     const ghRepoOrg = await GithubOrgStore.get(tx, ghRepo?.githubOrgID!);
 
     return { appRepo, ghRepo, ghRepoOrg };
@@ -119,7 +109,7 @@ export function Settings() {
             </Text>
           </Stack>
           <Switch>
-            <Match when={repoInfo!.ghRepoOrg}>
+            <Match when={repoInfo()!.ghRepoOrg}>
               <GitRepoPanel>
                 <GitRepoPanelRow>
                   <Row space="2">
@@ -129,22 +119,26 @@ export function Settings() {
                     <Stack space="1">
                       <GitRepoLink
                         target="_blank"
-                        href={
-                          `https://github.com/${repoInfo!.ghRepoOrg?.login}/${repoInfo!.ghRepo?.name}`
-                        }
+                        href={`https://github.com/${repoInfo()!.ghRepoOrg?.login}/${repoInfo()!.ghRepo?.name}`}
                       >
-                        {repoInfo!.ghRepoOrg?.login}
+                        {repoInfo()!.ghRepoOrg?.login}
                         <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
-                        {repoInfo!.ghRepo?.name}
+                        {repoInfo()!.ghRepo?.name}
                       </GitRepoLink>
                     </Stack>
                   </Row>
                   <Button
                     color="danger"
                     onClick={() => {
-                      if (!confirm("Are you sure you want to disconnect from this repo?"))
+                      if (
+                        !confirm(
+                          "Are you sure you want to disconnect from this repo?",
+                        )
+                      )
                         return;
-                      rep().mutate.app_repo_disconnect(repoInfo!.appRepo[0]!.id);
+                      rep().mutate.app_repo_disconnect(
+                        repoInfo()!.appRepo[0]!.id,
+                      );
                     }}
                   >
                     Disconnect
@@ -243,7 +237,7 @@ function Env() {
             },
             {
               on: "blur",
-            }
+            },
           )}
         >
           {(field, props) => (
@@ -261,7 +255,7 @@ function Env() {
             },
             {
               on: "blur",
-            }
+            },
           )}
         >
           {(field, props) => (
@@ -279,7 +273,7 @@ function Env() {
             },
             {
               on: "blur",
-            }
+            },
           )}
         >
           {(field, props) => (
@@ -314,15 +308,15 @@ function RepoInfo() {
   const appRepo = AppRepoStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0)
+    (all) => all.at(0),
   );
   const connectedRepo = createMemo(() =>
-    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID)
+    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID),
   );
   const connectedRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID)
+    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID),
   );
 
   return (
