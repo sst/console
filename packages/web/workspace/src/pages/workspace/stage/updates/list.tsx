@@ -166,12 +166,24 @@ const UpdateGitIcon = styled("span", {
   base: {
     lineHeight: 0,
     color: theme.color.icon.secondary,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${UpdateGitLink}:hover &`]: {
+        color: theme.color.text.primary.base,
+      },
+    },
   },
   variants: {
     size: {
       sm: {
         width: 12,
         height: 12,
+        color: theme.color.icon.dimmed,
+        selectors: {
+          [`${UpdateGitLink}:hover &`]: {
+            color: theme.color.icon.secondary,
+          },
+        },
       },
       md: {
         width: 14,
@@ -188,6 +200,12 @@ const UpdateGitBranch = styled("span", {
     lineHeight: "normal",
     fontSize: theme.font.size.sm,
     color: theme.color.text.dimmed.base,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${UpdateGitLink}:hover &`]: {
+        color: theme.color.text.secondary.base,
+      },
+    },
   },
 });
 
@@ -198,6 +216,12 @@ const UpdateGitCommit = styled("span", {
     fontSize: theme.font.size.mono_base,
     color: theme.color.text.secondary.base,
     fontWeight: theme.font.weight.medium,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${UpdateGitLink}:hover &`]: {
+        color: theme.color.text.primary.base,
+      },
+    },
   },
 });
 

@@ -275,6 +275,12 @@ const GitIcon = styled("div", {
     flex: "0 0 auto",
     lineHeight: 0,
     color: theme.color.icon.secondary,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${GitLink}:hover &`]: {
+        color: theme.color.text.primary.base,
+      },
+    },
   },
   variants: {
     size: {
@@ -282,6 +288,12 @@ const GitIcon = styled("div", {
         marginInline: 1,
         width: 12,
         height: 12,
+        color: theme.color.icon.dimmed,
+        selectors: {
+          [`${GitLink}:hover &`]: {
+            color: theme.color.icon.secondary,
+          },
+        },
       },
       md: {
         width: 14,
@@ -298,6 +310,12 @@ const GitCommit = styled("span", {
     fontSize: theme.font.size.mono_base,
     color: theme.color.text.secondary.base,
     fontWeight: theme.font.weight.medium,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${GitLink}:hover &`]: {
+        color: theme.color.text.primary.base,
+      },
+    },
   },
 });
 
@@ -308,6 +326,12 @@ const GitBranch = styled("span", {
     lineHeight: "normal",
     fontSize: theme.font.size.sm,
     color: theme.color.text.dimmed.base,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${GitLink}:hover &`]: {
+        color: theme.color.text.secondary.base,
+      },
+    },
   },
 });
 

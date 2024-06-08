@@ -28,12 +28,13 @@ import {
 } from "../../settings";
 import { useAppContext } from "../context";
 import { createId } from "@paralleldrive/cuid2";
+import { IconGit, IconCommit } from "$/ui/icons/custom";
 import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
 import { minLength, object, string } from "valibot";
 
 const GitRepoPanel = styled("div", {
   base: {
-    ...utility.stack(4),
+    ...utility.stack(5),
     width: "100%",
   },
 });
@@ -74,33 +75,81 @@ const GitRepoStatus = styled("span", {
     justifyContent: "space-between",
     borderRadius: theme.borderRadius,
     padding: `${theme.space[4]} ${theme.space[5]}`,
-    border: `1px solid ${theme.color.divider.base}`,
+    background: theme.color.background.surface,
   },
 });
 
-const GitStatusIcon = styled("div", {
+const GitStatusCopy = styled("span", {
   base: {
-    width: 10,
-    height: 10,
-    borderRadius: "50%",
+    ...utility.text.label,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.surface,
   },
-  variants: {
-    status: {
-      processed: {
-        backgroundColor: theme.color.divider.base,
+});
+
+const GitStatusTime = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.surface,
+    fontSize: theme.font.size.sm,
+  },
+});
+
+const GitStatusCommit = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+  },
+});
+
+const GitStatusCommitLink = styled("a", {
+  base: {
+    lineHeight: "normal",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.secondary.surface,
+    fontWeight: theme.font.weight.medium,
+    ":hover": {
+      color: theme.color.text.primary.surface,
+    },
+  },
+});
+
+const GitStatusCommitIcon = styled("span", {
+  base: {
+    paddingRight: 3,
+    verticalAlign: "middle",
+    opacity: theme.iconOpacity,
+    color: theme.color.text.secondary.surface,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${GitStatusCommitLink}:hover &`]: {
+        color: theme.color.text.primary.surface,
       },
-      canceled: {
-        backgroundColor: theme.color.divider.base,
-      },
-      updated: {
-        backgroundColor: `hsla(${theme.color.base.blue}, 100%)`,
-      },
-      error: {
-        backgroundColor: `hsla(${theme.color.base.red}, 100%)`,
-      },
-      updating: {
-        backgroundColor: `hsla(${theme.color.base.brand}, 100%)`,
-        animation: "glow-pulse-status 1.7s linear infinite alternate",
+    },
+  },
+});
+
+const GitStatusBranchLink = styled("a", {
+  base: {
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.surface,
+    ":hover": {
+      color: theme.color.text.secondary.surface,
+    },
+  },
+});
+
+const GitStatusBranchIcon = styled("span", {
+  base: {
+    paddingRight: 2,
+    verticalAlign: -2,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.dimmed.surface,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${GitStatusCommitLink}:hover &`]: {
+        color: theme.color.text.secondary.surface,
       },
     },
   },
@@ -120,7 +169,7 @@ export function Settings() {
   });
 
   return (
-    <Show when={repoInfo}>
+    <Show when={repoInfo()}>
       <Header app={app.app.name} />
       <SettingsRoot>
         <Stack space={PANEL_HEADER_SPACE}>
@@ -178,9 +227,30 @@ export function Settings() {
                   </Button>
                 </GitRepoPanelRow>
                 <GitRepoStatus>
-                  <Text size="sm" color="dimmed">
-                    Connected
-                  </Text>
+                  <Stack space="3">
+                    <GitStatusCopy>Last Commit</GitStatusCopy>
+                    <GitStatusCommit>
+                      <GitStatusCommitLink
+                        target="_blank"
+                        href={`/asd`}
+                      >
+                        <GitStatusCommitIcon>
+                          <IconCommit width="14" height="14" />
+                        </GitStatusCommitIcon>
+                        3492661
+                      </GitStatusCommitLink>
+                      <GitStatusBranchLink
+                        target="_blank"
+                        href={`/asd`}
+                      >
+                        <GitStatusBranchIcon>
+                          <IconGit width="12" height="12" />
+                        </GitStatusBranchIcon>
+                        production
+                      </GitStatusBranchLink>
+                    </GitStatusCommit>
+                  </Stack>
+                  <GitStatusTime>3 hours ago</GitStatusTime>
                 </GitRepoStatus>
               </GitRepoPanel>
             </Match>
