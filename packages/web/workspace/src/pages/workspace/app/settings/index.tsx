@@ -181,7 +181,6 @@ export function Settings() {
                   <Text size="sm" color="dimmed">
                     Connected
                   </Text>
-                  <Tag color="success">Active</Tag>
                 </GitRepoStatus>
               </GitRepoPanel>
             </Match>

@@ -16,13 +16,13 @@ import { utility } from "$/ui/utility";
 import { Dropdown } from "$/ui/dropdown";
 import { styled } from "@macaron-css/solid";
 import { useStageContext } from "../context";
-import { formatBytes } from "$/common/format";
 import { StateResourceStore } from "$/data/app";
 import type { State } from "@console/core/state";
 import { Link, useNavigate } from "@solidjs/router";
 import { Row, Stack, Fullscreen } from "$/ui/layout";
 import { useReplicache } from "$/providers/replicache";
 import { IconCheck, IconEllipsisVertical } from "$/ui/icons";
+import { formatBytes, formatDuration } from "$/common/format";
 
 const Content = styled("div", {
   base: {
@@ -209,7 +209,6 @@ const ChildDetailValue = styled("div", {
 
 const ChildDetailValueUnit = styled("span", {
   base: {
-    padding: 3,
     fontSize: theme.font.size.xs,
   },
 });
@@ -328,6 +327,24 @@ export function List() {
               </Tag>
             </ChildDetailLive>
           </Show>
+          <ChildDetail>
+            <ChildDetailLabel outline={isInternal}>Timeout</ChildDetailLabel>
+            <ChildDetailValue
+              outline={isInternal}
+              title={
+                (fn.outputs && fn.outputs.timeout && !live())
+                  ? `${fn.outputs.timeout} seconds`
+                  : undefined
+              }
+            >
+              <Show
+                when={fn.outputs && fn.outputs.timeout && !live()}
+                fallback="—"
+              >
+                {formatDuration(fn.outputs.timeout * 1000)}
+              </Show>
+            </ChildDetailValue>
+          </ChildDetail>
           <ChildDetail>
             <ChildDetailLabel outline={isInternal}>Bundle</ChildDetailLabel>
             <ChildDetailValue outline={isInternal}>
