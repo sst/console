@@ -4,3 +4,5 @@ node_modules
 *.DS_Store
 *.tsbuildinfo
 .turbo
+packages/core/src/workflow/
+packages/scripts/src/workflow.ts

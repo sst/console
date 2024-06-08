@@ -626,7 +626,7 @@ export function Alerts() {
                                 label: "All users",
                                 seperator: true,
                               },
-                              ...users.map((user) => ({
+                              ...users().map((user) => ({
                                 value: user.id,
                                 label: user.email,
                               })),
@@ -769,7 +769,7 @@ export function Alerts() {
           }
         >
           <AlertsPanel>
-            <For each={alerts}>
+            <For each={alerts()}>
               {(alert) => {
                 const isEditingRow = createMemo(
                   () => editing.active && editing.id === alert.id,
@@ -862,7 +862,7 @@ export function Alerts() {
                                           )
                                             .map(
                                               (id) =>
-                                                users.find((u) => u.id === id)
+                                                users().find((u) => u.id === id)
                                                   ?.email,
                                             )
                                             .join(", ")}

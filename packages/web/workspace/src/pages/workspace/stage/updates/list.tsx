@@ -592,7 +592,7 @@ export function List() {
   return (
     <Content>
       <div>
-        <For each={sortBy(updates, [(item) => item.index, "desc"])}>
+        <For each={sortBy(updates(), [(item) => item.index, "desc"])}>
           {(item) => (
             <Update
               id={item.id}
