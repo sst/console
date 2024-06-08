@@ -583,10 +583,12 @@ function ChangeLegend(props: ChangeLegendProps) {
 }
 
 export function List() {
+  const ctx = useStageContext();
   const updates = createSubscription(
     (tx) => StateUpdateStore.forStage(tx, ctx.stage.id),
     [],
   );
+
   return (
     <Content>
       <div>
