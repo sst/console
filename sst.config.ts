@@ -29,6 +29,9 @@ export default {
     app.setDefaultFunctionProps({
       tracing: "disabled",
       architecture: "arm_64",
+      nodejs: {
+        sourcemap: false,
+      },
     });
     app
       .stack(DNS)
