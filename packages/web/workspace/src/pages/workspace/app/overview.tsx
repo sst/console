@@ -132,13 +132,8 @@ export function Overview() {
             <Show
               when={ghRepoOrg()}
               fallback={
-                <Link href="settings">
-                  <Button color="github">
-                    <ButtonIcon>
-                      <IconGitHub />
-                    </ButtonIcon>
-                    Connect Repo
-                  </Button>
+                <Link href="settings#repo">
+                  <Button color="primary">Connect Repo</Button>
                 </Link>
               }
             >
@@ -146,9 +141,8 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${
-                    ghRepo()?.name
-                  }`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
+                    }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />
