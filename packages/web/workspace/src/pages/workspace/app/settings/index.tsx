@@ -33,6 +33,7 @@ import { minLength, object, string } from "valibot";
 
 const GitRepoPanel = styled("div", {
   base: {
+    ...utility.stack(4),
     width: "100%",
   },
 });
@@ -68,8 +69,40 @@ const GitRepoLinkSeparator = styled("span", {
 
 const GitRepoStatus = styled("span", {
   base: {
-    color: theme.color.text.dimmed.base,
-    fontSize: theme.font.size.sm,
+    ...utility.row(3),
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: theme.borderRadius,
+    padding: `${theme.space[4]} ${theme.space[5]}`,
+    border: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const GitStatusIcon = styled("div", {
+  base: {
+    width: 10,
+    height: 10,
+    borderRadius: "50%",
+  },
+  variants: {
+    status: {
+      processed: {
+        backgroundColor: theme.color.divider.base,
+      },
+      canceled: {
+        backgroundColor: theme.color.divider.base,
+      },
+      updated: {
+        backgroundColor: `hsla(${theme.color.base.blue}, 100%)`,
+      },
+      error: {
+        backgroundColor: `hsla(${theme.color.base.red}, 100%)`,
+      },
+      updating: {
+        backgroundColor: `hsla(${theme.color.base.brand}, 100%)`,
+        animation: "glow-pulse-status 1.7s linear infinite alternate",
+      },
+    },
   },
 });
 
@@ -144,6 +177,12 @@ export function Settings() {
                     Disconnect
                   </Button>
                 </GitRepoPanelRow>
+                <GitRepoStatus>
+                  <Text size="sm" color="dimmed">
+                    Connected
+                  </Text>
+                  <Tag color="success">Active</Tag>
+                </GitRepoStatus>
               </GitRepoPanel>
             </Match>
             <Match when={true}>
