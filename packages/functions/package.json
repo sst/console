@@ -33,7 +33,7 @@
     "luxon": "^3.3.0",
     "octokit": "^4.0.2",
     "remeda": "^1.17.1",
-    "replicache": "^13.0.0",
+    "replicache": "^14.2.2",
     "source-map": "^0.7.4",
     "undici": "^5.22.0",
     "zod": "^3.21.4"

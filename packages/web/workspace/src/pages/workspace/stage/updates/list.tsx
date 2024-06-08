@@ -10,9 +10,9 @@ import { IconCommandLine } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
 import { formatSinceTime } from "$/common/format";
 import { globalKeyframes } from "@macaron-css/core";
-import { useReplicache } from "$/providers/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import { IconGit, IconCommit } from "$/ui/icons/custom";
-import { RunStore, StateUpdateStore } from "$/data/app";
+import { RunStore, StateEventStore, StateUpdateStore } from "$/data/app";
 import { For, Show, Match, Switch, createEffect, createMemo } from "solid-js";
 
 const LEGEND_RES = 2;
@@ -366,11 +366,11 @@ function Update(props: UpdateProps) {
 
   const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID || "unknown"]);
 
-  const repoURL = createMemo(() => (
+  const repoURL = createMemo(() =>
     run() && run().trigger.source === "github"
       ? `https://github.com/${run().trigger.repo.owner}/${run().trigger.repo.repo}`
-      : ""
-  ));
+      : "",
+  );
   const status = createMemo(() =>
     props.timeCompleted
       ? errors()
@@ -408,8 +408,12 @@ function Update(props: UpdateProps) {
                 rel="noreferrer"
                 href={`${repoURL()}/commit/${run().trigger.commit.id}`}
               >
-                <UpdateGitIcon size="md"><IconCommit /></UpdateGitIcon>
-                <UpdateGitCommit>{shortenCommit(run().trigger.commit.id)}</UpdateGitCommit>
+                <UpdateGitIcon size="md">
+                  <IconCommit />
+                </UpdateGitIcon>
+                <UpdateGitCommit>
+                  {shortenCommit(run().trigger.commit.id)}
+                </UpdateGitCommit>
               </UpdateGitLink>
               <Show when={run().trigger.branch}>
                 <UpdateGitLink
@@ -417,14 +421,18 @@ function Update(props: UpdateProps) {
                   rel="noreferrer"
                   href={`${repoURL()}/tree/${run().trigger.branch}`}
                 >
-                  <UpdateGitIcon size="sm"><IconGit /></UpdateGitIcon>
+                  <UpdateGitIcon size="sm">
+                    <IconGit />
+                  </UpdateGitIcon>
                   <UpdateGitBranch>{run().trigger.branch}</UpdateGitBranch>
                 </UpdateGitLink>
               </Show>
             </Row>
             <Show when={run().trigger.commit.message}>
               <UpdateGitMessage>
-                {run().trigger.commit.message ? run().trigger.commit.message : "—"}
+                {run().trigger.commit.message
+                  ? run().trigger.commit.message
+                  : "—"}
               </UpdateGitMessage>
             </Show>
           </UpdateGit>
@@ -442,7 +450,10 @@ function Update(props: UpdateProps) {
         </Stack>
         <UpdateInfo>
           <UpdateSource>
-            <Show when={props.timeStarted} fallback={<UpdateTime>—</UpdateTime>}>
+            <Show
+              when={props.timeStarted}
+              fallback={<UpdateTime>—</UpdateTime>}
+            >
               <UpdateTime
                 title={DateTime.fromISO(props.timeStarted!).toLocaleString(
                   DateTime.DATETIME_FULL,
@@ -572,13 +583,14 @@ function ChangeLegend(props: ChangeLegendProps) {
 }
 
 export function List() {
-  const rep = useReplicache();
-  const ctx = useStageContext();
-  const updates = StateUpdateStore.forStage.watch(rep, () => [ctx.stage.id]);
+  const updates = createSubscription(
+    (tx) => StateUpdateStore.forStage(tx, ctx.stage.id),
+    [],
+  );
   return (
     <Content>
       <div>
-        <For each={sortBy(updates(), [(item) => item.index, "desc"])}>
+        <For each={sortBy(updates, [(item) => item.index, "desc"])}>
           {(item) => (
             <Update
               id={item.id}

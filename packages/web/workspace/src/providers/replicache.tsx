@@ -1,4 +1,4 @@
-import { Replicache } from "replicache";
+import { ReadTransaction, ReadonlyJSONValue, Replicache } from "replicache";
 import {
   ParentProps,
   Show,
@@ -30,6 +30,7 @@ import {
 } from "$/data/app";
 import { useReplicacheStatus } from "./replicache-status";
 import { useAuth2 } from "./auth2";
+import { createStore, reconcile } from "solid-js/store";
 
 const mutators = new Client<ServerType>()
   .mutation("app_stage_sync", async () => {})
@@ -237,7 +238,7 @@ function createReplicache(workspaceID: string, token: string) {
 }
 
 export function ReplicacheProvider(
-  props: ParentProps<{ workspaceID: string }>
+  props: ParentProps<{ workspaceID: string }>,
 ) {
   const auth = useAuth2();
   const rep = createMemo(() => {
@@ -271,4 +272,22 @@ export function useReplicache() {
   }
 
   return result;
+}
+
+export function createSubscription<
+  R extends object,
+  Initial extends R | undefined,
+>(cb: (tx: ReadTransaction) => Promise<R>, initial?: Initial): R | Initial {
+  const [store, setStore] = createStore(initial);
+  const rep = useReplicache();
+  rep().subscribe((tx) => cb(tx), {
+    onData(result) {
+      setStore(
+        reconcile(result, {
+          merge: true,
+        }),
+      );
+    },
+  });
+  return store as any;
 }

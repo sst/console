@@ -25,7 +25,7 @@ import { Dropdown } from "$/ui/dropdown";
 import { styled } from "@macaron-css/solid";
 import { useStageContext } from "../context";
 import { formatBytes } from "$/common/format";
-import { StateResourceStore } from "$/data/app";
+import { AppRepoStore, StateResourceStore } from "$/data/app";
 import type { State } from "@console/core/state";
 import { Link, useNavigate } from "@solidjs/router";
 import { Row, Stack, Fullscreen } from "$/ui/layout";
@@ -327,7 +327,9 @@ export function List() {
         <ChildColRight>
           <Show when={live}>
             <ChildDetailLive>
-              <Tag style="outline" level="tip" size="small">Live</Tag>
+              <Tag style="outline" level="tip" size="small">
+                Live
+              </Tag>
             </ChildDetailLive>
           </Show>
           <ChildDetail>

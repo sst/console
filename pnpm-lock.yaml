@@ -228,8 +228,8 @@ importers:
         specifier: ^1.17.1
         version: 1.26.0
       replicache:
-        specifier: ^13.0.0
-        version: 13.0.1
+        specifier: ^14.2.2
+        version: 14.2.2
       source-map:
         specifier: ^0.7.4
         version: 0.7.4
@@ -324,7 +324,7 @@ importers:
         version: 1.2.0
       '@macaron-css/solid':
         specifier: 1.0.1
-        version: 1.0.1(@vanilla-extract/recipes@0.2.5)(solid-js@1.8.3)
+        version: 1.0.1(@vanilla-extract/recipes@0.5.3)(solid-js@1.8.3)
       '@modular-forms/solid':
         specifier: ^0.20.0
         version: 0.20.0(solid-js@1.8.3)
@@ -374,8 +374,8 @@ importers:
         specifier: ^1.17.1
         version: 1.26.0
       replicache:
-        specifier: ^13.0.0
-        version: 13.0.1
+        specifier: ^14.2.2
+        version: 14.2.2
       solid-js:
         specifier: ^1.8.3
         version: 1.8.3
@@ -4031,6 +4031,11 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
 
+  /@badrap/valita@0.3.8:
+    resolution: {integrity: sha512-aqzw+V8XSOkYlu7Aq1QhXqfxz5V6Vm6e0p6XZYZDEaGwSc6ac9OJ4B7U4BOo3mm7FzzRRHJ5yizeGKnj+REjBQ==}
+    engines: {node: '>= 16'}
+    dev: false
+
   /@botpoison/browser@0.1.30:
     resolution: {integrity: sha512-hl+YoByBwBrNE0Hv/mwse9kAV6hAlq5qnwSlFhjnI/LkwOxNo1hOQ+x2UlopQ5QEIgxhxjndz9PwcMhFojEKfQ==}
     engines: {node: '>=10'}
@@ -5639,13 +5644,13 @@ packages:
       - terser
     dev: true
 
-  /@macaron-css/solid@1.0.1(@vanilla-extract/recipes@0.2.5)(solid-js@1.8.3):
+  /@macaron-css/solid@1.0.1(@vanilla-extract/recipes@0.5.3)(solid-js@1.8.3):
     resolution: {integrity: sha512-M/NOsagaNFYbYASMVRNRe+vpSzv1UAT1c601cE7BqnTyUZ8NyWTXVTzZlbThPTfNNRuvTcoirk0fF/iUshzGNw==}
     peerDependencies:
       '@vanilla-extract/recipes': ^0.2.5
       solid-js: ^1.4.3
     dependencies:
-      '@vanilla-extract/recipes': 0.2.5(@vanilla-extract/css@1.13.0)
+      '@vanilla-extract/recipes': 0.5.3(@vanilla-extract/css@1.13.0)
       solid-js: 1.8.3
     dev: false
 
@@ -6595,19 +6600,19 @@ packages:
   /@repeaterjs/repeater@3.0.4:
     resolution: {integrity: sha512-AW8PKd6iX3vAZ0vA43nOUOnbq/X5ihgU+mSXXqunMkeQADGiqw/PY0JNeYtD5sr0PAy51YPgAPbDoeapv9r8WA==}
 
-  /@rocicorp/lock@1.0.1:
-    resolution: {integrity: sha512-sYbcbiyEf61guk2DfcA6zzgDrW6ncJJW11JIFNSbByqYx80olhyp0IyXUMA3xmNK0YQSkAuufWvLExaWQXuzUQ==}
+  /@rocicorp/lock@1.0.4:
+    resolution: {integrity: sha512-FavTiO8ETXFXDVfA87IThGduTTTR8iqzBnr/c60gUUmbk7knGEXPmf2B+yiNuluJD0ku0fL2V2r62UXnsLXl6w==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
-      '@rocicorp/resolver': 1.0.0
+      '@rocicorp/resolver': 1.0.2
     dev: false
 
-  /@rocicorp/logger@5.2.0:
-    resolution: {integrity: sha512-PhnXnTxq8EdD/5e+eI/BQv1aSMG7bjVDI7Ngkje9rbo7RepsppdbwYW1CYfMXr2ZYmA46yhQbFz8bceTyRwRfA==}
+  /@rocicorp/logger@5.2.2:
+    resolution: {integrity: sha512-lqS/SUUBdiGzsIPD2awMiOzwo0DpAjMriPtqpALausplVHDjyJjUyScrB0Y7QcvxDfSPFkJzT5FncgIU3uBF2g==}
     dev: false
 
-  /@rocicorp/resolver@1.0.0:
-    resolution: {integrity: sha512-iK0QW74BKR0ogY4QwBEAMoevqypi5S/jjKqL6mc7KH7z2PFuOinOebsD1Ol8VIxrh23IPrMNwDNSrnfhKga9Vw==}
+  /@rocicorp/resolver@1.0.2:
+    resolution: {integrity: sha512-TfjMTQp9cNNqNtHFfa+XHEGdA7NnmDRu+ZJH4YF3dso0Xk/b9DMhg/sl+b6CR4ThFZArXXDsG1j8Mwl34wcOZQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: false
 
@@ -7638,6 +7643,14 @@ packages:
 
   /@vanilla-extract/recipes@0.2.5(@vanilla-extract/css@1.13.0):
     resolution: {integrity: sha512-OWXUUiFJdswD3+Xg8f8avuw/vAHZRFS4oHqFeoV1TcO8cfbDQ0zmkreBHvyspoJU+qsyWK48yPHKSptqNRPy9Q==}
+    peerDependencies:
+      '@vanilla-extract/css': ^1.0.0
+    dependencies:
+      '@vanilla-extract/css': 1.13.0
+    dev: false
+
+  /@vanilla-extract/recipes@0.5.3(@vanilla-extract/css@1.13.0):
+    resolution: {integrity: sha512-SPREq1NmaoKuvJeOV0pppOkwy3pWZUoDufsyQ6iHrbkHhAU7XQqG9o0iZSmg5JoVgDLIiOr9djQb0x9wuxig7A==}
     peerDependencies:
       '@vanilla-extract/css': ^1.0.0
     dependencies:
@@ -12151,14 +12164,15 @@ packages:
   /remeda@1.26.0:
     resolution: {integrity: sha512-v+Qbi2krvXknCvG60gviLUSBJQPxXUVBAvi64m3Awoua3X+ygAmPYPrbFgqwPpiM1tBHNBVrHPBKtza7if+HyQ==}
 
-  /replicache@13.0.1:
-    resolution: {integrity: sha512-dgGHxpCubx2woDyXsh6AeqZ3KwU0IEqyXU6IZ13f6YAH+Ik5P969CxsnTmxZmPdX7WQseZ4jQotCkWLeJlEeJg==}
+  /replicache@14.2.2:
+    resolution: {integrity: sha512-PBlt6C2X7wSPVUUVBKumHPTXXmPZYO/rqoTQXYLgvzPabYkKBdJbCEHjh9hXNUU5vpkzDeEmOPQqlVus9zCiBg==}
     engines: {node: '>=14.8.0'}
     hasBin: true
     dependencies:
-      '@rocicorp/lock': 1.0.1
-      '@rocicorp/logger': 5.2.0
-      '@rocicorp/resolver': 1.0.0
+      '@badrap/valita': 0.3.8
+      '@rocicorp/lock': 1.0.4
+      '@rocicorp/logger': 5.2.2
+      '@rocicorp/resolver': 1.0.2
     dev: false
 
   /require-directory@2.1.1:
