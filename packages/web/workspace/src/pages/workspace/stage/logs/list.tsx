@@ -356,7 +356,9 @@ export function List() {
                 </Show>
               </ChildDetailValue>
             </ChildDetail>
-            {renderRuntime(live ? live.runtime : fn.outputs.runtime)}
+            <Show when={live ? live.runtime : fn.outputs.runtime}>
+              {renderRuntime(live ? live.runtime : fn.outputs.runtime)}
+            </Show>
             <Dropdown
               size="sm"
               disabled={copying()}
