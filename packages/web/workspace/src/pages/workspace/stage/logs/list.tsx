@@ -258,6 +258,10 @@ export function List() {
   );
   const internals = createMemo(() => sortBy(sorted()[1], (fn) => fn.name));
 
+  createEffect(() => {
+    console.log(functions(), internals());
+  });
+
   function renderRuntime(runtime: string) {
     return (
       <ChildIcon title={runtime}>
