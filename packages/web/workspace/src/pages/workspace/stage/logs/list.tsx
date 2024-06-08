@@ -321,7 +321,7 @@ export function List() {
           </Show>
         </ChildColLeft>
         <ChildColRight>
-          <Show when={live}>
+          <Show when={live()}>
             <ChildDetailLive>
               <Tag style="outline" level="tip" size="small">
                 Live
@@ -332,7 +332,7 @@ export function List() {
             <ChildDetailLabel outline={isInternal}>Bundle</ChildDetailLabel>
             <ChildDetailValue outline={isInternal}>
               <Show
-                when={fn.outputs && fn.outputs.sourceCodeSize && !live}
+                when={fn.outputs && fn.outputs.sourceCodeSize && !live()}
                 fallback="—"
               >
                 {renderBytes(fn.outputs.sourceCodeSize)}
@@ -348,7 +348,7 @@ export function List() {
                 </Show>
               </ChildDetailValue>
             </ChildDetail>
-            <Runtime runtime={live ? live().runtime : fn.outputs.runtime} />
+            <Runtime runtime={live() ? live().runtime : fn.outputs.runtime} />
             <Dropdown
               size="sm"
               disabled={copying()}
