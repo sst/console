@@ -83,7 +83,11 @@ app.webhooks.on("push", async (event) => {
       },
       async () => {
         try {
-          await Run.create({ appID: appRepo.appID, trigger, sstConfig });
+          await Run.create({
+            appID: appRepo.appID,
+            trigger,
+            sstConfig: sstConfig!,
+          });
         } catch (e: any) {
           await AppRepo.setLastEventError({
             appID: appRepo.appID,
