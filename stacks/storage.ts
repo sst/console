@@ -10,11 +10,18 @@ export function Storage(ctx: StackContext) {
             prefix: "temporary/",
             expiration: Duration.days(1),
           },
+          {
+            prefix: "temporary/weekly/",
+            expiration: Duration.days(7),
+          },
+          {
+            prefix: "temporary/monthly/",
+            expiration: Duration.days(30),
+          },
         ],
       },
     },
   });
-  storage.addNotifications(ctx.stack, {
-  })
+  storage.addNotifications(ctx.stack, {});
   return storage;
 }

@@ -23,7 +23,6 @@ import { awsAccount } from "@console/core/aws/aws.sql";
 import {
   replicache_client,
   replicache_client_group,
-  replicache_cvr,
 } from "@console/core/replicache/replicache.sql";
 import { lambdaPayload } from "@console/core/lambda/lambda.sql";
 import { equals, mapValues } from "remeda";
@@ -50,6 +49,8 @@ import {
 import { State } from "@console/core/state";
 import { runEnvTable, runTable } from "@console/core/run/run.sql";
 import { Run } from "@console/core/run";
+import { Bucket } from "sst/node/bucket";
+import { Replicache } from "@console/core/replicache";
 
 export const TABLES = {
   workspace,
@@ -98,8 +99,8 @@ const TABLE_KEY = {
   run: [runTable.stageID, runTable.id],
   stripe: [],
 } as {
-    [key in TableName]?: MySqlColumn[];
-  };
+  [key in TableName]?: MySqlColumn[];
+};
 
 const TABLE_PROJECTION = {
   stateUpdate: (input) => State.serializeUpdate(input),
@@ -107,8 +108,8 @@ const TABLE_PROJECTION = {
   stateResource: (input) => State.serializeResource(input),
   run: (input) => Run.serializeRun(input),
 } as {
-    [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
-  };
+  [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
+};
 
 export const handler = ApiHandler(
   withApiAuth(async () => {
@@ -159,20 +160,11 @@ export const handler = ApiHandler(
           return;
         }
 
-        const oldCvr = await tx
-          .select({
-            data: replicache_cvr.data,
-            clientVersion: replicache_cvr.clientVersion,
-          })
-          .from(replicache_cvr)
-          .where(
-            and(
-              eq(replicache_cvr.clientGroupID, req.clientGroupID),
-              eq(replicache_cvr.id, req.cookie as number),
-            ),
-          )
-          .execute()
-          .then((rows) => rows.at(0));
+        const oldCvr = await Replicache.CVR.get(
+          req.clientGroupID,
+          req.cookie as number,
+        );
+
         const cvr = oldCvr ?? {
           data: {},
           clientVersion: 0,
@@ -219,8 +211,8 @@ export const handler = ApiHandler(
             ),
             issue: isNull(issue.timeDeleted),
           } satisfies {
-              [key in keyof typeof TABLES]?: SQLWrapper;
-            };
+            [key in keyof typeof TABLES]?: SQLWrapper;
+          };
 
           const workspaceID = useWorkspace();
 
@@ -398,29 +390,10 @@ export const handler = ApiHandler(
             .where(eq(replicache_client_group.id, req.clientGroupID))
             .execute();
 
-          await tx
-            .insert(replicache_cvr)
-            .values({
-              id: nextCvr.version,
-              data: nextCvr.data,
-              clientGroupID: req.clientGroupID,
-              clientVersion: group.clientVersion,
-            })
-            .onDuplicateKeyUpdate({
-              set: {
-                data: nextCvr.data,
-              },
-            })
-            .execute();
-
-          await tx
-            .delete(replicache_cvr)
-            .where(
-              and(
-                eq(replicache_cvr.clientGroupID, req.clientGroupID),
-                lt(replicache_cvr.id, nextCvr.version - 10),
-              ),
-            );
+          await Replicache.CVR.put(req.clientGroupID, nextCvr.version, {
+            data: nextCvr.data,
+            clientVersion: group.clientVersion,
+          });
 
           return {
             patch,
