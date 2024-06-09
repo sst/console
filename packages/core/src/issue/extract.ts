@@ -328,32 +328,32 @@ export const extract = zod(
             })
             .execute();
 
-          await createTransactionEffect(() =>
-            Promise.all(
-              errors
-                .flatMap((items) =>
-                  workspaces.map((workspace) => ({
-                    group: items[0].group,
-                    workspace,
-                  })),
-                )
-                .map((item) =>
-                  withActor(
-                    {
-                      type: "system",
-                      properties: {
-                        workspaceID: item.workspace.workspaceID,
-                      },
-                    },
-                    () =>
-                      Events.IssueDetected.publish({
-                        stageID: item.workspace.stageID,
-                        group: item.group,
-                      }),
-                  ),
-                ),
-            ),
-          );
+          // await createTransactionEffect(() =>
+          //   Promise.all(
+          //     errors
+          //       .flatMap((items) =>
+          //         workspaces.map((workspace) => ({
+          //           group: items[0].group,
+          //           workspace,
+          //         })),
+          //       )
+          //       .map((item) =>
+          //         withActor(
+          //           {
+          //             type: "system",
+          //             properties: {
+          //               workspaceID: item.workspace.workspaceID,
+          //             },
+          //           },
+          //           () =>
+          //             Events.IssueDetected.publish({
+          //               stageID: item.workspace.stageID,
+          //               group: item.group,
+          //             }),
+          //         ),
+          //       ),
+          //   ),
+          // );
         });
       } catch (ex) {
         if (retries++ > 5) {
