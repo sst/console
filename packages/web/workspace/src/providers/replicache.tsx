@@ -240,7 +240,7 @@ function createReplicache(workspaceID: string, token: string) {
 }
 
 export function ReplicacheProvider(
-  props: ParentProps<{ workspaceID: string }>,
+  props: ParentProps<{ workspaceID: string }>
 ) {
   const auth = useAuth2();
   const rep = createMemo(() => {
@@ -278,10 +278,10 @@ export function useReplicache() {
 
 export function createSubscription<
   R extends object,
-  Initial extends R | undefined,
+  Initial extends R | undefined
 >(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial?: Initial,
+  initial?: Initial
 ): Accessor<R | Initial> {
   const [store, setStore] = createStore({
     value: initial,
@@ -294,6 +294,7 @@ export function createSubscription<
       subscription();
     }
     console.log("setting up subscription");
+    // @ts-ignore
     subscription = rep().subscribe((tx) => cb(tx), {
       onData(result) {
         setStore(
@@ -303,8 +304,8 @@ export function createSubscription<
             },
             {
               merge: true,
-            },
-          ),
+            }
+          )
         );
       },
     });
