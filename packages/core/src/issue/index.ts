@@ -493,7 +493,7 @@ export const disableLogGroup = zod(
           eq(issueSubscriber.logGroup, input.logGroup),
         ),
       );
-    if (!existing.length) {
+    if (!existing.length && false) {
       console.log("no existing");
       return;
     }
