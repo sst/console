@@ -1,6 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { createHash } from "crypto";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { DateTime } from "luxon";
 import { createPipe, flatMap, groupBy, values } from "remeda";
 import { z } from "zod";
@@ -86,8 +86,10 @@ export const extract = zod(
       .from(issueCount)
       .where(
         and(
-          eq(issueCount.workspaceID, workspaces[0]!.workspaceID),
-          eq(issueCount.stageID, workspaces[0]!.stageID),
+          inArray(
+            sql`(${issueCount.workspaceID}, ${issueCount.stageID})`,
+            workspaces.map((w) => [w.workspaceID, w.stageID]),
+          ),
           eq(issueCount.logGroup, input.logGroup),
           eq(issueCount.hour, hour),
         ),
