@@ -183,6 +183,13 @@
       "when": 1717801040292,
       "tag": "0025_early_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1717880011507,
+      "tag": "0026_ancient_wrecker",
+      "breakpoints": true
     }
   ]
 }

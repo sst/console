@@ -9,8 +9,11 @@ import {
   foreignKey,
   mysqlEnum,
   bigint,
+  timestamp,
+  text,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid } from "../util/sql";
+import { Trigger } from "../run/run.sql";
 
 export const app = mysqlTable(
   "app",
@@ -77,6 +80,9 @@ export const appRepo = mysqlTable(
     appID: cuid("app_id").notNull(),
     type: mysqlEnum("type", ["github"]),
     repoID: bigint("repo_id", { mode: "number" }).notNull(),
+    lastEvent: json("last_event").$type<Trigger>(),
+    lastEventError: text("last_event_error"),
+    timeLastEvent: timestamp("time_last_event"),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),

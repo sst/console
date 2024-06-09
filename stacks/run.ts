@@ -63,7 +63,7 @@ export function Run({ stack, app }: StackContext) {
       new PolicyStatement({
         actions: ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
         principals: [new ServicePrincipal("lambda.amazonaws.com")],
-      }),
+      })
     );
     repo.addToResourcePolicy(
       new PolicyStatement({
@@ -74,7 +74,7 @@ export function Run({ stack, app }: StackContext) {
             "aws:RequestedRegion": stack.region,
           },
         },
-      }),
+      })
     );
 
     new CfnReplicationConfiguration(stack, "Replication", {
@@ -113,15 +113,12 @@ export function Run({ stack, app }: StackContext) {
     "RunTimeoutMonitor",
     {
       name: app.logicalPrefixedName("RunTimeoutMonitor"),
-    },
+    }
   );
   const runTimeoutMonitor = new Function(stack, "RunTimeoutHandler", {
-    bind: [...Object.values(secrets.database)],
+    bind: [...Object.values(secrets.database), ...secrets.github],
     handler: "packages/functions/src/run/monitor.handler",
     permissions: ["sts", "iot"],
-    nodejs: {
-      sourcemap: false,
-    },
   });
   const scheduleRole = new Role(stack, "ScheduleRole", {
     assumedBy: new ServicePrincipal("scheduler.amazonaws.com"),
@@ -145,14 +142,11 @@ export function Run({ stack, app }: StackContext) {
     "RunnerRemover",
     {
       name: app.logicalPrefixedName("RunnerRemover"),
-    },
+    }
   );
   const runnerRemover = new Function(stack, "RunnerRemoverHandler", {
     bind: [...Object.values(secrets.database)],
     handler: "packages/functions/src/run/runner-remover.handler",
-    nodejs: {
-      sourcemap: false,
-    },
     environment: {
       RUNNER_REMOVER_SCHEDULE_GROUP_NAME: runnerRemoverScheduleGroup.name!,
       RUNNER_REMOVER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
@@ -169,7 +163,7 @@ export function Run({ stack, app }: StackContext) {
     "RunnerWarmer",
     {
       name: app.logicalPrefixedName("RunnerWarmer"),
-    },
+    }
   );
   const runnerWarmer = new Function(stack, "RunnerWarmerHandler", {
     bind: [
@@ -179,9 +173,6 @@ export function Run({ stack, app }: StackContext) {
       buildspecVersion,
       buildImage,
     ],
-    nodejs: {
-      sourcemap: false,
-    },
     handler: "packages/functions/src/run/runner-warmer.handler",
     environment: {
       RUNNER_WARMER_SCHEDULE_GROUP_NAME: runnerWarmerScheduleGroup.name!,

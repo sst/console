@@ -215,7 +215,16 @@ export module Run {
       if (ret.FunctionError) throw new Error("Failed to parse config");
 
       const payload = JSON.parse(Buffer.from(ret.Payload!).toString());
-      if (payload.error) throw new Error(payload.error);
+      if (payload.error === "parse_config")
+        throw new Error("Failed to parse config");
+      if (payload.error === "evaluate_config")
+        throw new Error("Failed to evaluate config");
+      if (payload.error === "v2_app")
+        throw new Error("SST v2 apps are not supported");
+      if (payload.error === "missing_ci") return;
+      if (payload.error === "missing_ci_target") return;
+      if (payload.error === "missing_ci_stage")
+        throw new Error("Missing stage in CI target");
 
       payload.ci = payload.ci ?? {};
       payload.ci.runner = payload.ci.runner ?? {};
@@ -273,6 +282,11 @@ export module Run {
       const appID = input.appID;
       const stageName = input.sstConfig.ci.target.stage;
       const region = input.sstConfig.region;
+
+      // Validate app name
+      const app = await App.fromID(appID);
+      if (app?.name !== input.sstConfig.app.name)
+        throw new Error("App name does not match sst.config.ts");
 
       // Get AWS Account ID from Run Env
       const envs = await RunEnv.listByStage({ appID, stageName });

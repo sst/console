@@ -30,6 +30,7 @@ export const handler = EventHandler(RunEnv.Events.Updated, (evt) =>
       content,
       stage: stageName,
     } satisfies Run.ConfigParserEvent);
+    if (!config) return;
     console.log(config);
 
     // Get runner (create if not exist)

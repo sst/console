@@ -5,8 +5,9 @@ import { appRepo } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { event } from "../event";
+import { Trigger } from "../run/run.sql";
 
 export * as AppRepo from "./repo";
 
@@ -102,4 +103,49 @@ export const disconnect = zod(Info.shape.id, (input) =>
       )
       .execute();
   })
+);
+
+export const setLastEvent = zod(
+  z.object({
+    repoID: z.number().int(),
+    gitContext: Trigger,
+  }),
+  async ({ repoID, gitContext }) => {
+    await useTransaction((tx) =>
+      tx
+        .update(appRepo)
+        .set({
+          lastEvent: gitContext,
+          lastEventError: null,
+          timeLastEvent: new Date(),
+        })
+        .where(eq(appRepo.repoID, repoID))
+    );
+  }
+);
+
+export const setLastEventError = zod(
+  z.object({
+    appID: z.string().cuid2().optional(),
+    repoID: z.number().int(),
+    error: z.string().nonempty(),
+  }),
+  async ({ appID, repoID, error }) => {
+    await useTransaction((tx) =>
+      tx
+        .update(appRepo)
+        .set({
+          lastEventError: error,
+        })
+        .where(
+          appID
+            ? and(
+                eq(appRepo.workspaceID, useWorkspace()),
+                eq(appRepo.repoID, repoID),
+                eq(appRepo.appID, appID)
+              )
+            : eq(appRepo.repoID, repoID)
+        )
+    );
+  }
 );

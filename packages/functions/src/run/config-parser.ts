@@ -26,7 +26,10 @@ export async function handler(evt: Run.ConfigParserEvent) {
       js: ["const $config = (input) => input;"].join("\n"),
     },
   });
-  console.log("errors", buildRet.errors);
+  if (buildRet.errors.length) {
+    console.log("errors", buildRet.errors);
+    return { error: "parse_config" };
+  }
 
   // Import the config
   await fs.rm("/tmp/eval.mjs", { force: true });
@@ -38,12 +41,12 @@ export async function handler(evt: Run.ConfigParserEvent) {
       `import mod from "./sst.config.mjs";`,
       // Ensure SST v3 app
       `if (mod.stacks || mod.config) {`,
-      `  console.log({error:"v2"});`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"v2_app"}));`,
       `  process.exit(0);`,
       `}`,
       // Ensure CI is defined in the config
       `if (!mod.ci) {`,
-      `  console.log({error:"no_ci"});`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_ci"}));`,
       `  process.exit(0);`,
       `}`,
       // Two use cases:
@@ -52,8 +55,12 @@ export async function handler(evt: Run.ConfigParserEvent) {
       ...(evt.trigger
         ? [
             `const ciTarget = mod.ci.target?.(${JSON.stringify(evt.trigger)});`,
-            `if (!ciTarget?.stage) {`,
-            `  console.log({error:"no_ci_stage"});`,
+            `if (!ciTarget) {`,
+            `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_ci_target"}));`,
+            `  process.exit(0);`,
+            `}`,
+            `if (!ciTarget.stage) {`,
+            `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_ci_stage"}));`,
             `  process.exit(0);`,
             `}`,
             `const ciRunner = mod.ci.runner({stage: ciTarget.stage});`,
@@ -74,7 +81,7 @@ export async function handler(evt: Run.ConfigParserEvent) {
   if (evalRet.status !== 0) {
     console.log(evalRet.stdout?.toString());
     console.log(evalRet.stderr?.toString());
-    throw new Error("Failed to evaluate config");
+    return { error: "evaluate_config" };
   }
   const output = await fs.readFile("/tmp/eval-output.mjs", "utf-8");
   console.log("deploy config", output);

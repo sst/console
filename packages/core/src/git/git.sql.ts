@@ -2,22 +2,12 @@ import {
   bigint,
   foreignKey,
   index,
-  json,
-  mysqlEnum,
   mysqlTable,
   primaryKey,
-  timestamp,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { z } from "zod";
 import { cuid, timestamps, workspaceID } from "../util/sql";
-
-export const LastEvent = z.object({
-  branch: z.string().nonempty(),
-  commit: z.string().nonempty(),
-});
-export type LastEvent = z.infer<typeof LastEvent>;
 
 export const githubOrg = mysqlTable(
   "github_org",
@@ -43,8 +33,6 @@ export const githubRepo = mysqlTable(
     githubOrgID: cuid("github_org_id").notNull(),
     repoID: bigint("repo_id", { mode: "number" }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
-    lastEvent: json("last_event").$type<LastEvent>(),
-    timeLastEvent: timestamp("time_last_event"),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),

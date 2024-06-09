@@ -3,8 +3,6 @@ import { Run } from "@console/core/run";
 import { App } from "octokit";
 import { ApiHandler, useBody, useHeader } from "sst/node/api";
 import { Config } from "sst/node/config";
-import * as fs from "fs/promises";
-import { execSync } from "child_process";
 import { AppRepo } from "@console/core/app/repo";
 import { withActor } from "@console/core/actor";
 import { Trigger } from "@console/core/run/run.sql";
@@ -25,23 +23,6 @@ app.webhooks.on("push", async (event) => {
   const repoID = event.payload.repository.id;
   const branch = event.payload.ref.replace("refs/heads/", "");
   const commitID = event.payload.head_commit?.id!;
-
-  // Get all apps connected to the repo
-  const appRepos = await AppRepo.listByRepo({ type: "github", repoID });
-  if (appRepos.length === 0) return;
-
-  // Get `sst.config.ts` file
-  const file = await event.octokit.rest.repos.getContent({
-    owner: event.payload.repository.owner!.login,
-    repo: event.payload.repository.name,
-    ref: commitID,
-    path: "sst.config.ts",
-  });
-  if (!("content" in file.data)) {
-    throw new Error("sst.config.ts not found");
-  }
-
-  // Build git context
   const trigger: Trigger = {
     source: "github",
     type: "push",
@@ -61,14 +42,37 @@ app.webhooks.on("push", async (event) => {
     },
   };
 
-  // Parse CI config
-  const config = await Run.parseSstConfig({
-    content: file.data.content,
-    trigger,
-  });
+  // Get all apps connected to the repo
+  const appRepos = await AppRepo.listByRepo({ type: "github", repoID });
+  if (appRepos.length === 0) return;
+
+  await AppRepo.setLastEvent({ repoID, gitContext: trigger });
+
+  let sstConfig: Run.SstConfig | undefined;
+  try {
+    // Get `sst.config.ts` file
+    const file = await event.octokit.rest.repos.getContent({
+      owner: event.payload.repository.owner!.login,
+      repo: event.payload.repository.name,
+      ref: commitID,
+      path: "sst.config.ts",
+    });
+    if (!("content" in file.data)) {
+      throw new Error("sst.config.ts not found");
+    }
+
+    // Parse CI config
+    sstConfig = await Run.parseSstConfig({
+      content: file.data.content,
+      trigger,
+    });
+  } catch (e: any) {
+    await AppRepo.setLastEventError({ repoID, error: e.message });
+    throw e;
+  }
 
   // Do not trigger build
-  if (!config.ci.target.stage) return;
+  if (!sstConfig) return;
 
   // Loop through all apps connected to the repo
   for (const appRepo of appRepos) {
@@ -77,12 +81,18 @@ app.webhooks.on("push", async (event) => {
         type: "system",
         properties: { workspaceID: appRepo.workspaceID },
       },
-      () =>
-        Run.create({
-          appID: appRepo.appID,
-          trigger,
-          sstConfig: config,
-        })
+      async () => {
+        try {
+          await Run.create({ appID: appRepo.appID, trigger, sstConfig });
+        } catch (e: any) {
+          await AppRepo.setLastEventError({
+            appID: appRepo.appID,
+            repoID,
+            error: e.message,
+          });
+          throw e;
+        }
+      }
     );
   }
 });

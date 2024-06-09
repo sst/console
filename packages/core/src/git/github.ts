@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zod } from "../util/zod";
 import { App } from "octokit";
 import { createTransaction, useTransaction } from "../util/transaction";
-import { githubOrg, githubRepo } from "./git.sql";
+import { LastEvent, githubOrg, githubRepo } from "./git.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { and, eq, notInArray, or, inArray, sql } from "../drizzle";
