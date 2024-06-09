@@ -21,7 +21,6 @@ export const handler = Handler("kinesis_stream", (event) =>
       properties: {},
     },
     async () => {
-      return;
       console.log("got", event.Records.length, "records");
       const incomplete: string[] = event.Records.map(
         (r) => r.eventID,
