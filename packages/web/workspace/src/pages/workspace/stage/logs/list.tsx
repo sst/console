@@ -1,12 +1,4 @@
-import {
-  For,
-  Show,
-  Match,
-  Switch,
-  createMemo,
-  createEffect,
-  createSignal,
-} from "solid-js";
+import { For, Show, Match, Switch, createMemo, createSignal } from "solid-js";
 import {
   IconFunction,
   IconGoRuntime,
@@ -24,13 +16,13 @@ import { utility } from "$/ui/utility";
 import { Dropdown } from "$/ui/dropdown";
 import { styled } from "@macaron-css/solid";
 import { useStageContext } from "../context";
-import { formatBytes } from "$/common/format";
 import { StateResourceStore } from "$/data/app";
 import type { State } from "@console/core/state";
 import { Link, useNavigate } from "@solidjs/router";
 import { Row, Stack, Fullscreen } from "$/ui/layout";
 import { useReplicache } from "$/providers/replicache";
 import { IconCheck, IconEllipsisVertical } from "$/ui/icons";
+import { formatBytes, formatDuration } from "$/common/format";
 
 const Content = styled("div", {
   base: {
@@ -217,7 +209,6 @@ const ChildDetailValue = styled("div", {
 
 const ChildDetailValueUnit = styled("span", {
   base: {
-    padding: 3,
     fontSize: theme.font.size.xs,
   },
 });
@@ -302,14 +293,18 @@ export function List() {
   }
 
   function renderFunction(fn: SortedResource, isInternal: boolean) {
-    const live = fn.sst && fn.sst.outputs["_live"];
+    const live = () => fn.sst?.outputs["_live"];
     const [copying, setCopying] = createSignal(false);
     return (
       <Child outline={isInternal}>
         <ChildColLeft>
           <Row space="3" vertical="center">
             <ChildTitleLink href={`${fn.id}?logGroup=${getLogGroup(fn)}`}>
-              {isInternal ? fn.name : live ? live.handler : fn.outputs.handler}
+              {isInternal
+                ? fn.name
+                : live()
+                  ? live().handler
+                  : fn.outputs.handler}
             </ChildTitleLink>
           </Row>
           <Show
@@ -325,7 +320,7 @@ export function List() {
           </Show>
         </ChildColLeft>
         <ChildColRight>
-          <Show when={live}>
+          <Show when={live()}>
             <ChildDetailLive>
               <Tag style="outline" level="tip" size="small">
                 Live
@@ -333,10 +328,28 @@ export function List() {
             </ChildDetailLive>
           </Show>
           <ChildDetail>
+            <ChildDetailLabel outline={isInternal}>Timeout</ChildDetailLabel>
+            <ChildDetailValue
+              outline={isInternal}
+              title={
+                (fn.outputs && fn.outputs.timeout && !live())
+                  ? `${fn.outputs.timeout} seconds`
+                  : undefined
+              }
+            >
+              <Show
+                when={fn.outputs && fn.outputs.timeout && !live()}
+                fallback="—"
+              >
+                {formatDuration(fn.outputs.timeout * 1000)}
+              </Show>
+            </ChildDetailValue>
+          </ChildDetail>
+          <ChildDetail>
             <ChildDetailLabel outline={isInternal}>Bundle</ChildDetailLabel>
             <ChildDetailValue outline={isInternal}>
               <Show
-                when={fn.outputs && fn.outputs.sourceCodeSize && !live}
+                when={fn.outputs && fn.outputs.sourceCodeSize && !live()}
                 fallback="—"
               >
                 {renderBytes(fn.outputs.sourceCodeSize)}
@@ -352,7 +365,7 @@ export function List() {
                 </Show>
               </ChildDetailValue>
             </ChildDetail>
-            <Runtime runtime={live ? live.runtime : fn.outputs.runtime} />
+            <Runtime runtime={live() ? live().runtime : fn.outputs.runtime} />
             <Dropdown
               size="sm"
               disabled={copying()}

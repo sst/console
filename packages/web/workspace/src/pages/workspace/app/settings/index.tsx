@@ -1,33 +1,22 @@
 import {
   AppRepoStore,
-  AppStore,
   EnvStore,
   GithubOrgStore,
   GithubRepoStore,
 } from "$/data/app";
-import { useReplicache } from "$/providers/replicache";
+import { useReplicache, createSubscription } from "$/providers/replicache";
 import {
   theme,
   utility,
   Row,
-  Tag,
   Text,
   Stack,
   Button,
-  TextButton,
   ButtonIcon,
   FormField,
   Input,
 } from "$/ui";
-import {
-  For,
-  Match,
-  Show,
-  Switch,
-  createSignal,
-  createEffect,
-  createMemo,
-} from "solid-js";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { Header } from "../../header";
 import { styled } from "@macaron-css/solid";
 import { IconGitHub } from "$/ui/icons/custom";
@@ -39,14 +28,14 @@ import {
 } from "../../settings";
 import { useAppContext } from "../context";
 import { createId } from "@paralleldrive/cuid2";
+import { IconGit, IconCommit } from "$/ui/icons/custom";
 import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
 import { minLength, object, string } from "valibot";
 
 const GitRepoPanel = styled("div", {
   base: {
+    ...utility.stack(5),
     width: "100%",
-    border: `1px solid ${theme.color.divider.base}`,
-    borderRadius: theme.borderRadius,
   },
 });
 
@@ -55,62 +44,132 @@ const GitRepoPanelRow = styled("div", {
     ...utility.row(5),
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `${theme.space[4]} ${theme.space[5]}`,
-    borderBottom: `1px solid ${theme.color.divider.base}`,
-    selectors: {
-      "&:last-child": {
-        borderBottom: "none",
-      },
-    },
   },
 });
 
 const GitRepoIcon = styled("div", {
   base: {
-    marginTop: 1,
     opacity: theme.iconOpacity,
-    color: theme.color.text.secondary.base,
+    color: theme.color.text.primary.base,
   },
 });
 
 const GitRepoLink = styled("a", {
   base: {
-    color: theme.color.text.primary.base,
-    lineHeight: 1.5,
-    ":hover": {
-      color: theme.color.link.primary.hover,
-    },
+    fontWeight: theme.font.weight.medium,
+    lineHeight: 2,
   },
 });
 
 const GitRepoLinkSeparator = styled("span", {
   base: {
-    color: theme.color.text.dimmed.base,
+    fontWeight: theme.font.weight.regular,
     paddingInline: 4,
   },
 });
 
 const GitRepoStatus = styled("span", {
   base: {
+    ...utility.row(3),
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: theme.borderRadius,
+    padding: `${theme.space[4]} ${theme.space[5]}`,
+    background: theme.color.background.surface,
+  },
+});
+
+const GitStatusCopy = styled("span", {
+  base: {
     ...utility.text.label,
-    color: theme.color.text.dimmed.base,
     fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.surface,
+  },
+});
+
+const GitStatusTime = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.surface,
+    fontSize: theme.font.size.sm,
+  },
+});
+
+const GitStatusCommit = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+  },
+});
+
+const GitStatusCommitLink = styled("a", {
+  base: {
+    lineHeight: "normal",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.secondary.surface,
+    fontWeight: theme.font.weight.medium,
+    ":hover": {
+      color: theme.color.text.primary.surface,
+    },
+  },
+});
+
+const GitStatusCommitIcon = styled("span", {
+  base: {
+    paddingRight: 3,
+    verticalAlign: "middle",
+    opacity: theme.iconOpacity,
+    color: theme.color.text.secondary.surface,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${GitStatusCommitLink}:hover &`]: {
+        color: theme.color.text.primary.surface,
+      },
+    },
+  },
+});
+
+const GitStatusBranchLink = styled("a", {
+  base: {
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.surface,
+    ":hover": {
+      color: theme.color.text.secondary.surface,
+    },
+  },
+});
+
+const GitStatusBranchIcon = styled("span", {
+  base: {
+    paddingRight: 2,
+    verticalAlign: -2,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.dimmed.surface,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${GitStatusCommitLink}:hover &`]: {
+        color: theme.color.text.secondary.surface,
+      },
+    },
   },
 });
 
 export function Settings() {
   const rep = useReplicache();
   const app = useAppContext();
-  const appRepo = AppRepoStore.forApp.watch(rep, () => [app.app.id]);
-  const ghRepo = GithubRepoStore.all.watch(
-    rep,
-    () => [],
-    (repos) => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID)
-  );
-  const ghRepoOrg = GithubOrgStore.get.watch(rep, () => [ghRepo()?.githubOrgID!]);
+  const repoInfo = createSubscription(async (tx) => {
+    const appRepo = await AppRepoStore.forApp(tx, app.app.id);
+    const ghRepo = (await GithubRepoStore.all(tx)).find(
+      (repo) => repo.repoID === appRepo[0]?.repoID,
+    );
+    const ghRepoOrg = await GithubOrgStore.get(tx, ghRepo?.githubOrgID!);
+
+    return { appRepo, ghRepo, ghRepoOrg };
+  });
 
   return (
-    <>
+    <Show when={repoInfo()}>
       <Header app={app.app.name} />
       <SettingsRoot>
         <Stack space={PANEL_HEADER_SPACE}>
@@ -122,7 +181,7 @@ export function Settings() {
           </Text>
         </Stack>
         <Divider />
-        <Stack space={PANEL_CONTENT_SPACE} horizontal="start" id="billing">
+        <Stack space={PANEL_CONTENT_SPACE} horizontal="start" id="repo">
           <Stack space={PANEL_HEADER_SPACE}>
             <Text size="lg" weight="medium">
               Deploy
@@ -132,35 +191,67 @@ export function Settings() {
             </Text>
           </Stack>
           <Switch>
-            <Match when={ghRepoOrg()}>
+            <Match when={repoInfo()!.ghRepoOrg}>
               <GitRepoPanel>
                 <GitRepoPanelRow>
                   <Row space="2">
                     <GitRepoIcon>
-                      <IconGitHub width="24" height="24" />
+                      <IconGitHub width="32" height="32" />
                     </GitRepoIcon>
                     <Stack space="1">
                       <GitRepoLink
                         target="_blank"
-                        href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
-                          }`}
+                        href={`https://github.com/${repoInfo()!.ghRepoOrg?.login}/${repoInfo()!.ghRepo?.name}`}
                       >
-                        {ghRepoOrg()?.login}
+                        {repoInfo()!.ghRepoOrg?.login}
                         <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
-                        {ghRepo()?.name}
+                        {repoInfo()!.ghRepo?.name}
                       </GitRepoLink>
-                      <GitRepoStatus>Connected</GitRepoStatus>
                     </Stack>
                   </Row>
                   <Button
                     color="danger"
                     onClick={() => {
-                      rep().mutate.app_repo_disconnect(appRepo()[0]!.id);
+                      if (
+                        !confirm(
+                          "Are you sure you want to disconnect from this repo?",
+                        )
+                      )
+                        return;
+                      rep().mutate.app_repo_disconnect(
+                        repoInfo()!.appRepo[0]!.id,
+                      );
                     }}
                   >
                     Disconnect
                   </Button>
                 </GitRepoPanelRow>
+                <GitRepoStatus>
+                  <Stack space="3">
+                    <GitStatusCopy>Last Commit</GitStatusCopy>
+                    <GitStatusCommit>
+                      <GitStatusCommitLink
+                        target="_blank"
+                        href={`/asd`}
+                      >
+                        <GitStatusCommitIcon>
+                          <IconCommit width="14" height="14" />
+                        </GitStatusCommitIcon>
+                        3492661
+                      </GitStatusCommitLink>
+                      <GitStatusBranchLink
+                        target="_blank"
+                        href={`/asd`}
+                      >
+                        <GitStatusBranchIcon>
+                          <IconGit width="12" height="12" />
+                        </GitStatusBranchIcon>
+                        production
+                      </GitStatusBranchLink>
+                    </GitStatusCommit>
+                  </Stack>
+                  <GitStatusTime>3 hours ago</GitStatusTime>
+                </GitRepoStatus>
               </GitRepoPanel>
             </Match>
             <Match when={true}>
@@ -178,7 +269,7 @@ export function Settings() {
         <Divider />
         <Env />
       </SettingsRoot>
-    </>
+    </Show>
   );
 }
 
@@ -254,7 +345,7 @@ function Env() {
             },
             {
               on: "blur",
-            }
+            },
           )}
         >
           {(field, props) => (
@@ -272,7 +363,7 @@ function Env() {
             },
             {
               on: "blur",
-            }
+            },
           )}
         >
           {(field, props) => (
@@ -290,7 +381,7 @@ function Env() {
             },
             {
               on: "blur",
-            }
+            },
           )}
         >
           {(field, props) => (
@@ -325,15 +416,15 @@ function RepoInfo() {
   const appRepo = AppRepoStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0)
+    (all) => all.at(0),
   );
   const connectedRepo = createMemo(() =>
-    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID)
+    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID),
   );
   const connectedRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID)
+    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID),
   );
 
   return (

@@ -1,9 +1,11 @@
 import { ReadTransaction, ReadonlyJSONValue, Replicache } from "replicache";
 import {
+  Accessor,
   ParentProps,
   Show,
   createContext,
   createMemo,
+  createResource,
   onCleanup,
   useContext,
 } from "solid-js";
@@ -277,17 +279,38 @@ export function useReplicache() {
 export function createSubscription<
   R extends object,
   Initial extends R | undefined,
->(cb: (tx: ReadTransaction) => Promise<R>, initial?: Initial): R | Initial {
-  const [store, setStore] = createStore(initial);
+>(
+  cb: (tx: ReadTransaction) => Promise<R>,
+  initial?: Initial,
+): Accessor<R | Initial> {
+  const [store, setStore] = createStore({
+    value: initial,
+  } as any);
   const rep = useReplicache();
-  rep().subscribe((tx) => cb(tx), {
-    onData(result) {
-      setStore(
-        reconcile(result, {
-          merge: true,
-        }),
-      );
-    },
+
+  let subscription: any;
+  const [r] = createResource(() => {
+    if (subscription) {
+      subscription();
+    }
+    console.log("setting up subscription");
+    subscription = rep().subscribe((tx) => cb(tx), {
+      onData(result) {
+        setStore(
+          reconcile(
+            {
+              value: result,
+            },
+            {
+              merge: true,
+            },
+          ),
+        );
+      },
+    });
   });
-  return store as any;
+  return () => {
+    r();
+    return store.value;
+  };
 }

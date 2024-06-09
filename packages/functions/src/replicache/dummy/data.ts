@@ -981,6 +981,7 @@ function* stageIonLogsBase(): Generator<DummyData, void, unknown> {
     memorySize: 512 * 1024,
     handler: "index.handler",
     runtime: "nodejs20.x",
+    timeout: 631,
   });
 
   yield stateResource({
@@ -1003,6 +1004,7 @@ function* stageIonLogsBase(): Generator<DummyData, void, unknown> {
     stageID: STAGE_ION.id,
     parent: LONG_FN_URN,
     name: "MyWebDefaultFunctionLong",
+    timeout: 631,
     handler: "a/really/really/really/long/path/to/the/handler/that/also/needs/to/overflow/because/its/way/too/long/for/the/label/index.handler",
   });
 
@@ -3484,6 +3486,7 @@ interface StateFunctionProps {
   sourceCodeSize?: number;
   runtime?: string;
   handler?: string;
+  timeout?: number;
 }
 function stateFunction({
   id,
@@ -3495,6 +3498,7 @@ function stateFunction({
   sourceCodeSize,
   runtime,
   handler,
+  timeout
 }: StateFunctionProps): DummyData {
   return stateResource({
     id,
@@ -3506,6 +3510,7 @@ function stateFunction({
       handler: handler || "index.handler",
       memorySize: memorySize || 1024,
       sourceCodeSize: sourceCodeSize || 196,
+      timeout: timeout || 20,
       runtime: runtime || "nodejs20.x",
       loggingConfig: { logGroup: `/aws/lambda/ion-sandbox-jayair-${name}` },
       ...outputs,
