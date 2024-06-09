@@ -9,6 +9,7 @@ import { Queue } from "sst/node/queue";
 const sqs = new SQSClient({});
 export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
   withActor(event.metadata.actor, async () => {
+    return;
     console.log(
       await Promise.all([
         sqs.send(
