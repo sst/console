@@ -85,14 +85,7 @@ export const extract = zod(
       })
       .from(issueCount)
       .where(
-        and(
-          inArray(
-            sql`(${issueCount.workspaceID}, ${issueCount.stageID})`,
-            workspaces.map((w) => [w.workspaceID, w.stageID]),
-          ),
-          eq(issueCount.logGroup, input.logGroup),
-          eq(issueCount.hour, hour),
-        ),
+        and(eq(issueCount.logGroup, input.logGroup), eq(issueCount.hour, hour)),
       )
       .execute()
       .then((rows) => rows.at(0)?.total || 0);
