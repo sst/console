@@ -5,7 +5,6 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { useWorkspace } from "../actor";
 import { Realtime } from "../realtime";
 import { Bucket } from "sst/node/bucket";
 import { compress, decompress } from "../util/compress";
@@ -25,13 +24,7 @@ export module CVR {
 
   export async function key(clientGroupID: string, cookie: number) {
     return (
-      [
-        "temporary",
-        "weekly",
-        useWorkspace(),
-        clientGroupID,
-        (cookie as number) || 0,
-      ]
+      ["temporary", "weekly", "cvr", clientGroupID, (cookie as number) || 0]
         .map((x) => x.toString())
         .join("/") + ".gz"
     );
