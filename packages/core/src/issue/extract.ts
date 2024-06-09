@@ -43,6 +43,19 @@ export const extract = zod(
       .toUTC()
       .toSQL({ includeOffset: false })!;
 
+    console.log("checking rate limit for", input.logGroup);
+    const count = await db
+      .select({
+        total: sql<number>`SUM(${issueCount.count})`,
+      })
+      .from(issueCount)
+      .where(
+        and(eq(issueCount.logGroup, input.logGroup), eq(issueCount.hour, hour)),
+      )
+      .execute()
+      .then((rows) => rows.at(0)?.total || 0);
+    console.log("rate limit for", input.logGroup, count, hour);
+
     const workspaces = await db
       .select({
         accountID: awsAccount.id,
@@ -78,19 +91,6 @@ export const extract = zod(
       console.log("no matching workspaces");
       return;
     }
-
-    const count = await db
-      .select({
-        total: sql<number>`SUM(${issueCount.count})`,
-      })
-      .from(issueCount)
-      .where(
-        and(eq(issueCount.logGroup, input.logGroup), eq(issueCount.hour, hour)),
-      )
-      .execute()
-      .then((rows) => rows.at(0)?.total || 0);
-
-    console.log("rate limit", count);
 
     if (count > 10_000) {
       await Promise.all(
@@ -254,108 +254,98 @@ export const extract = zod(
       return;
     }
 
-    let retries = 0;
-    while (true) {
-      try {
-        await createTransaction(async (tx) => {
-          await tx
-            .insert(issue)
-            .values(
-              errors.flatMap((items) =>
-                workspaces.map((row) => ({
-                  group: items[0].group,
-                  stack: items[0].err.stack,
-                  id: createId(),
-                  errorID: "none",
-                  pointer: {
-                    timestamp: items[0].timestamp,
-                    logGroup: input.logGroup,
-                    logStream: logStream,
-                  },
-                  workspaceID: row.workspaceID,
-                  error: items[0].err.error,
-                  message: items[0].err.message?.substring?.(0, 32_768) || "",
-                  count: items.length,
-                  stageID: row.stageID,
-                  timeSeen: sql`now()`,
-                  timeResolved: null,
-                  resolver: null,
-                })),
-              ),
-            )
-            .onDuplicateKeyUpdate({
-              set: {
-                error: sql`VALUES(error)`,
-                count: sql`count + VALUES(count)`,
-                errorID: sql`VALUES(error_id)`,
-                message: sql`VALUES(message)`,
-                stack: sql`VALUES(stack)`,
-                timeUpdated: sql`CURRENT_TIMESTAMP()`,
-                pointer: sql`VALUES(pointer)`,
-                timeSeen: sql`VALUES(time_seen)`,
-                invocation: null,
-                timeResolved: null,
-                resolver: null,
-              },
-            })
-            .execute();
-
-          await tx
-            .insert(issueCount)
-            .values(
-              errors.flatMap((items) =>
-                workspaces.map((row) => ({
-                  id: createId(),
-                  hour,
-                  stageID: row.stageID,
-                  count: items.length,
-                  workspaceID: row.workspaceID,
-                  group: items[0].group,
-                  logGroup: input.logGroup,
-                })),
-              ),
-            )
-            .onDuplicateKeyUpdate({
-              set: {
-                count: sql`count + VALUES(count)`,
+    await createTransaction(async (tx) => {
+      await tx
+        .insert(issue)
+        .values(
+          errors.flatMap((items) =>
+            workspaces.map((row) => ({
+              group: items[0].group,
+              stack: items[0].err.stack,
+              id: createId(),
+              errorID: "none",
+              pointer: {
+                timestamp: items[0].timestamp,
                 logGroup: input.logGroup,
+                logStream: logStream,
               },
-            })
-            .execute();
+              workspaceID: row.workspaceID,
+              error: items[0].err.error,
+              message: items[0].err.message?.substring?.(0, 32_768) || "",
+              count: items.length,
+              stageID: row.stageID,
+              timeSeen: sql`now()`,
+              timeResolved: null,
+              resolver: null,
+            })),
+          ),
+        )
+        .onDuplicateKeyUpdate({
+          set: {
+            error: sql`VALUES(error)`,
+            count: sql`count + VALUES(count)`,
+            errorID: sql`VALUES(error_id)`,
+            message: sql`VALUES(message)`,
+            stack: sql`VALUES(stack)`,
+            timeUpdated: sql`CURRENT_TIMESTAMP()`,
+            pointer: sql`VALUES(pointer)`,
+            timeSeen: sql`VALUES(time_seen)`,
+            invocation: null,
+            timeResolved: null,
+            resolver: null,
+          },
+        })
+        .execute();
 
-          await createTransactionEffect(() =>
-            Promise.all(
-              errors
-                .flatMap((items) =>
-                  workspaces.map((workspace) => ({
-                    group: items[0].group,
-                    workspace,
-                  })),
-                )
-                .map((item) =>
-                  withActor(
-                    {
-                      type: "system",
-                      properties: {
-                        workspaceID: item.workspace.workspaceID,
-                      },
-                    },
-                    () =>
-                      Events.IssueDetected.publish({
-                        stageID: item.workspace.stageID,
-                        group: item.group,
-                      }),
-                  ),
-                ),
+      await tx
+        .insert(issueCount)
+        .values(
+          errors.flatMap((items) =>
+            workspaces.map((row) => ({
+              id: createId(),
+              hour,
+              stageID: row.stageID,
+              count: items.length,
+              workspaceID: row.workspaceID,
+              group: items[0].group,
+              logGroup: input.logGroup,
+            })),
+          ),
+        )
+        .onDuplicateKeyUpdate({
+          set: {
+            count: sql`count + VALUES(count)`,
+            logGroup: input.logGroup,
+          },
+        })
+        .execute();
+
+      await createTransactionEffect(() =>
+        Promise.all(
+          errors
+            .flatMap((items) =>
+              workspaces.map((workspace) => ({
+                group: items[0].group,
+                workspace,
+              })),
+            )
+            .map((item) =>
+              withActor(
+                {
+                  type: "system",
+                  properties: {
+                    workspaceID: item.workspace.workspaceID,
+                  },
+                },
+                () =>
+                  Events.IssueDetected.publish({
+                    stageID: item.workspace.stageID,
+                    group: item.group,
+                  }),
+              ),
             ),
-          );
-        });
-      } catch (ex) {
-        if (retries++ > 5) {
-          throw ex;
-        }
-        continue;
-      }
-    }
+        ),
+      );
+    });
   },
 );
