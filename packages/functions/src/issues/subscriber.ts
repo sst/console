@@ -21,9 +21,10 @@ export const handler = Handler("kinesis_stream", (event) =>
       properties: {},
     },
     async () => {
+      return;
       console.log("got", event.Records.length, "records");
       const incomplete: string[] = event.Records.map(
-        (r) => r.eventID
+        (r) => r.eventID,
       ).reverse();
       let timeout = false;
       setTimeout(() => {
@@ -34,11 +35,11 @@ export const handler = Handler("kinesis_stream", (event) =>
         console.log(
           "arrival",
           new Date(
-            record.kinesis.approximateArrivalTimestamp * 1000
+            record.kinesis.approximateArrivalTimestamp * 1000,
           ).toISOString(),
           new Date().toISOString(),
           "diff",
-          Date.now() - record.kinesis.approximateArrivalTimestamp * 1000
+          Date.now() - record.kinesis.approximateArrivalTimestamp * 1000,
         );
         if (
           Date.now() - record.kinesis.approximateArrivalTimestamp * 1000 >
@@ -49,7 +50,7 @@ export const handler = Handler("kinesis_stream", (event) =>
           return;
         }
         const decoded = JSON.parse(
-          unzipSync(Buffer.from(record.kinesis.data, "base64")).toString()
+          unzipSync(Buffer.from(record.kinesis.data, "base64")).toString(),
         );
         if (decoded.messageType !== "DATA_MESSAGE") {
           incomplete.pop();
@@ -71,6 +72,6 @@ export const handler = Handler("kinesis_stream", (event) =>
       };
 
       return response;
-    }
-  )
+    },
+  ),
 );
