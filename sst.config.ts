@@ -33,6 +33,10 @@ export default {
       //   sourcemap: false,
       // },
     });
+
+    app.addDefaultFunctionEnv({
+      NODE_OPTIONS: "--stack-trace-limit=100",
+    });
     app
       .stack(DNS)
       .stack(Email)
