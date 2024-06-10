@@ -474,6 +474,8 @@ export const scan = zod(
         .catch(() => {});
       if (!response) break;
       for (const event of response.events || []) {
+        const tabs = event.message!.split("\t");
+        if (tabs[0]?.length === 24) event.message = tabs.slice(3).join("\t");
         events.push(event);
         if (
           input.requestID &&
