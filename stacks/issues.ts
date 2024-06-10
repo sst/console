@@ -84,7 +84,7 @@ export function Issues({ stack }: StackContext) {
   });
   (kinesisRole.node.defaultChild as CfnRole).addPropertyOverride(
     "AssumeRolePolicyDocument.Statement.0.Principal.Service",
-    allRegions.map((region) => `logs.${region}.amazonaws.com`)
+    allRegions.map((region) => `logs.${region}.amazonaws.com`),
   );
 
   const kinesisParams = Config.Parameter.create(stack, {
@@ -92,6 +92,13 @@ export function Issues({ stack }: StackContext) {
     ISSUES_STREAM_ARN: kinesisStream.streamArn,
   });
 
+  const issuesDestinationPrefix = new Config.Parameter(
+    stack,
+    "ISSUES_DESTINATION_PREFIX",
+    {
+      value: `arn:aws:logs:<region>:${stack.account}:destination:`,
+    },
+  );
   bus.subscribe(stack, "app.stage.resources_updated", {
     handler: "packages/functions/src/issues/resources-updated.handler",
     timeout: "15 minutes",
@@ -111,10 +118,14 @@ export function Issues({ stack }: StackContext) {
       ...Object.values(secrets.database),
       kinesisParams.ISSUES_ROLE_ARN,
       kinesisParams.ISSUES_STREAM_ARN,
-      new Config.Parameter(stack, "ISSUES_DESTINATION_PREFIX", {
-        value: `arn:aws:logs:<region>:${stack.account}:destination:`,
-      }),
+      issuesDestinationPrefix,
     ],
+  });
+
+  bus.subscribe(["state.history.synced"], {
+    handler: "packages/functions/src/events/state-history-synced.handler",
+    bind: [...Object.values(secrets.database), issuesDestinationPrefix],
+    permissions: ["sts", "iot"],
   });
 
   bus.subscribe(stack, "issue.rate_limited", {

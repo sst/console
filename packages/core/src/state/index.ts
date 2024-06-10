@@ -34,19 +34,23 @@ export module State {
   export const Event = {
     LockCreated: event(
       "state.lock.created",
-      z.object({ stageID: z.string(), versionID: z.string() })
+      z.object({ stageID: z.string(), versionID: z.string() }),
     ),
     LockRemoved: event(
       "state.lock.removed",
-      z.object({ stageID: z.string(), versionID: z.string() })
+      z.object({ stageID: z.string(), versionID: z.string() }),
     ),
     SummaryCreated: event(
       "state.summary.created",
-      z.object({ stageID: z.string(), updateID: z.string() })
+      z.object({ stageID: z.string(), updateID: z.string() }),
     ),
     HistoryCreated: event(
       "state.history.created",
-      z.object({ stageID: z.string(), key: z.string() })
+      z.object({ stageID: z.string(), key: z.string() }),
+    ),
+    HistorySynced: event(
+      "state.history.synced",
+      z.object({ stageID: z.string(), updateID: z.string() }),
     ),
   };
 
@@ -118,7 +122,7 @@ export module State {
   export type ResourceEvent = z.infer<typeof ResourceEvent>;
 
   export function serializeUpdate(
-    input: typeof stateUpdateTable.$inferSelect
+    input: typeof stateUpdateTable.$inferSelect,
   ): Update {
     return {
       id: input.id,
@@ -144,7 +148,7 @@ export module State {
   }
 
   export function serializeEvent(
-    input: typeof stateEventTable.$inferSelect
+    input: typeof stateEventTable.$inferSelect,
   ): ResourceEvent {
     return {
       id: input.id,
@@ -168,7 +172,7 @@ export module State {
   }
 
   export function serializeResource(
-    input: typeof stateResourceTable.$inferSelect
+    input: typeof stateResourceTable.$inferSelect,
   ): Resource {
     return {
       id: input.id,
@@ -212,9 +216,9 @@ export module State {
           .where(
             and(
               eq(stateUpdateTable.workspaceID, useWorkspace()),
-              eq(stateUpdateTable.id, updateID)
-            )
-          )
+              eq(stateUpdateTable.id, updateID),
+            ),
+          ),
       );
       if (!existing.length) {
         console.log("update not found", { updateID });
@@ -232,11 +236,12 @@ export module State {
           new GetObjectCommand({
             Bucket: bootstrap.bucket,
             Key: input.key,
-          })
+          }),
         )
         .then(
           async (result) =>
-            JSON.parse(await result.Body!.transformToString()).checkpoint.latest
+            JSON.parse(await result.Body!.transformToString()).checkpoint
+              .latest,
         )
         .catch(() => {});
       if (!state) return;
@@ -249,7 +254,7 @@ export module State {
             Prefix: `history/${input.config.app}/${input.config.stage}/`,
             StartAfter: input.key,
             ContinuationToken: continueToken,
-          })
+          }),
         )
         .then((result) => result.Contents?.[0]?.Key);
       let previousState = {
@@ -261,12 +266,12 @@ export module State {
             new GetObjectCommand({
               Bucket: bootstrap.bucket,
               Key: previousKey,
-            })
+            }),
           )
           .then(
             async (result) =>
               JSON.parse(await result.Body!.transformToString()).checkpoint
-                .latest
+                .latest,
           )
           .catch(() => ({}));
         console.log("found previous", previousKey);
@@ -274,10 +279,10 @@ export module State {
       if (!previousState.resources) previousState.resources = [];
 
       const resources = Object.fromEntries(
-        state.resources.map((r: any) => [r.urn, r])
+        state.resources.map((r: any) => [r.urn, r]),
       );
       const previousResources = Object.fromEntries(
-        previousState.resources.map((r: any) => [r.urn, r])
+        previousState.resources.map((r: any) => [r.urn, r]),
       );
 
       const eventInserts = [] as (typeof stateEventTable.$inferInsert)[];
@@ -362,8 +367,8 @@ export module State {
           .where(
             and(
               eq(stateUpdateTable.workspaceID, useWorkspace()),
-              eq(stateUpdateTable.id, updateID)
-            )
+              eq(stateUpdateTable.id, updateID),
+            ),
           );
         if (eventInserts.length)
           await tx.insert(stateEventTable).ignore().values(eventInserts);
@@ -391,11 +396,18 @@ export module State {
               and(
                 eq(stateResourceTable.workspaceID, useWorkspace()),
                 eq(stateResourceTable.stageID, input.config.stageID),
-                inArray(stateResourceTable.urn, resourceDeletes)
-              )
+                inArray(stateResourceTable.urn, resourceDeletes),
+              ),
             );
+
+        await createTransactionEffect(() =>
+          Event.HistorySynced.publish({
+            stageID: input.config.stageID,
+            updateID: updateID,
+          }),
+        );
       });
-    }
+    },
   );
 
   export const receiveLock = zod(
@@ -419,7 +431,7 @@ export module State {
               ["lock", input.config.app, input.config.stage].join("/") +
               ".json",
             VersionId: input.versionID,
-          })
+          }),
         )
         .catch(() => {});
       if (!obj) return;
@@ -443,8 +455,8 @@ export module State {
           .where(
             and(
               eq(stateUpdateTable.workspaceID, useWorkspace()),
-              eq(stateUpdateTable.stageID, input.config.stageID)
-            )
+              eq(stateUpdateTable.stageID, input.config.stageID),
+            ),
           )
           .then((result) => result[0]?.count || 0);
         await tx
@@ -465,7 +477,7 @@ export module State {
 
         await createTransactionEffect(() => Replicache.poke());
       });
-    }
+    },
   );
 
   export const receiveSummary = zod(
@@ -492,7 +504,7 @@ export module State {
                 input.config.stage,
                 input.updateID,
               ].join("/") + ".json",
-          })
+          }),
         )
         .catch(() => {});
       if (!obj) return;
@@ -524,12 +536,12 @@ export module State {
           .where(
             and(
               eq(stateUpdateTable.workspaceID, useWorkspace()),
-              eq(stateUpdateTable.id, input.updateID)
-            )
+              eq(stateUpdateTable.id, input.updateID),
+            ),
           );
         await createTransactionEffect(() => Replicache.poke());
       });
-    }
+    },
   );
 
   export const createUpdate = zod(
@@ -551,8 +563,8 @@ export module State {
           .where(
             and(
               eq(stateUpdateTable.workspaceID, useWorkspace()),
-              eq(stateUpdateTable.stageID, input.stageID)
-            )
+              eq(stateUpdateTable.stageID, input.stageID),
+            ),
           )
           .then((result) => result[0]?.count || 0);
         await createTransactionEffect(() => Replicache.poke());
@@ -568,7 +580,7 @@ export module State {
             command: input.command,
             timeStarted: input.time,
           });
-      })
+      }),
   );
 
   export const completeUpdate = zod(
@@ -592,10 +604,10 @@ export module State {
             and(
               eq(stateUpdateTable.workspaceID, useWorkspace()),
               inArray(stateUpdateTable.id, input.updateIDs),
-              isNull(stateUpdateTable.timeCompleted)
-            )
+              isNull(stateUpdateTable.timeCompleted),
+            ),
           );
         await createTransactionEffect(() => Replicache.poke());
-      })
+      }),
   );
 }

@@ -64,7 +64,7 @@ export const stateUpdateTable = mysqlTable(
       foreignColumns: [stage.workspaceID, stage.id],
     }).onDelete("cascade"),
     // index: unique("index").on(table.workspaceID, table.stageID, table.index),
-  })
+  }),
 );
 
 export const Action = ["created", "updated", "deleted"] as const;
@@ -102,14 +102,14 @@ export const stateEventTable = mysqlTable(
       table.workspaceID,
       table.stageID,
       table.updateID,
-      table.urn
+      table.urn,
     ),
     updateID: foreignKey({
       name: "state_event_update_id",
       columns: [table.workspaceID, table.updateID],
       foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
     }).onDelete("cascade"),
-  })
+  }),
 );
 
 export const stateResourceTable = mysqlTable(
@@ -122,7 +122,7 @@ export const stateResourceTable = mysqlTable(
     updateModifiedID: cuid("update_modified_id"),
     type: varchar("type", { length: 255 }).notNull(),
     urn: varchar("urn", { length: 512 }).notNull(),
-    outputs: json("outputs").notNull(),
+    outputs: json("outputs").$type<Record<string, any>>().notNull(),
     inputs: json("inputs").notNull(),
     parent: varchar("parent", { length: 512 }),
     custom: boolean("custom").notNull(),
@@ -148,5 +148,5 @@ export const stateResourceTable = mysqlTable(
       columns: [table.workspaceID, table.updateModifiedID],
       foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
     }).onDelete("cascade"),
-  })
+  }),
 );

@@ -1,4 +1,4 @@
-import { EventBus, StackContext, use } from "sst/constructs";
+import { Config, EventBus, StackContext, use } from "sst/constructs";
 import { Secrets } from "./secrets";
 import { Storage } from "./storage";
 import { Run } from "./run";
@@ -188,7 +188,7 @@ export function Events({ stack }: StackContext) {
     },
     {
       retries: 0,
-    }
+    },
   );
 
   bus.subscribe(["state.lock.created"], {
@@ -205,7 +205,7 @@ export function Events({ stack }: StackContext) {
 
   bus.subscribe(["state.history.created"], {
     handler: "packages/functions/src/events/state-history-created.handler",
-    bind: [...Object.values(secrets.database)],
+    bind: [...Object.values(secrets.database), bus],
     permissions: ["sts", "iot"],
   });
 

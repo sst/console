@@ -34,6 +34,7 @@ import { Warning } from "../warning";
 import { createTransaction, useTransaction } from "../util/transaction";
 import { Log } from "../log";
 import { Alert } from "./alert";
+import { stateResourceTable } from "../state/state.sql";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = typeof issue.$inferSelect;
@@ -475,6 +476,248 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
     cw.destroy();
   }
 });
+
+export const subscribeIon = zod(
+  z.custom<StageCredentials>(),
+  async (config) => {
+    const uniqueIdentifier = destinationIdentifier(config);
+    console.log("subscribing", uniqueIdentifier);
+    const destination =
+      Config.ISSUES_DESTINATION_PREFIX.replace("<region>", config.region) +
+      uniqueIdentifier;
+    const cw = new CloudWatchLogsClient({
+      region: config.region,
+      credentials: config.credentials,
+      retryStrategy: RETRY_STRATEGY,
+    });
+
+    try {
+      // Get all function resources
+      const resources = await db
+        .select()
+        .from(stateResourceTable)
+        .where(
+          and(
+            eq(stateResourceTable.type, "aws:lambda/function:Function"),
+            eq(stateResourceTable.workspaceID, useWorkspace()),
+            eq(stateResourceTable.stageID, config.stageID),
+          ),
+        );
+      const functions = resources.filter((r) =>
+        Boolean(r.outputs?.environment?.variables?.SST_FUNCTION_ID),
+      );
+      if (!functions.length) {
+        console.log("no functions");
+        return;
+      }
+
+      const toDelete = await db
+        .select({
+          id: issueSubscriber.id,
+          logGroup: issueSubscriber.logGroup,
+        })
+        .from(issueSubscriber)
+        .where(
+          and(
+            eq(issueSubscriber.workspaceID, useWorkspace()),
+            eq(issueSubscriber.stageID, config.stageID),
+            not(
+              inArray(
+                issueSubscriber.functionID,
+                functions.map((x) => x.id),
+              ),
+            ),
+          ),
+        );
+
+      for (const item of toDelete) {
+        console.log("deleting", item.logGroup);
+        await cw
+          .send(
+            new DeleteSubscriptionFilterCommand({
+              filterName:
+                uniqueIdentifier +
+                (Config.STAGE === "production" ? "" : `#dev`),
+              logGroupName: item.logGroup!,
+            }),
+          )
+          .catch((e) => {
+            if (e instanceof ResourceNotFoundException) return;
+            throw e;
+          });
+
+        await db
+          .delete(issueSubscriber)
+          .where(
+            and(
+              eq(issueSubscriber.workspaceID, useWorkspace()),
+              eq(issueSubscriber.id, item.id),
+            ),
+          );
+      }
+
+      await db.delete(issueSubscriber).where(
+        and(
+          eq(issueSubscriber.workspaceID, useWorkspace()),
+          eq(issueSubscriber.stageID, config.stageID),
+          not(
+            inArray(
+              issueSubscriber.functionID,
+              functions.map((x) => x.id),
+            ),
+          ),
+        ),
+      );
+
+      const exists = await db
+        .select({
+          functionID: issueSubscriber.functionID,
+          logGroup: issueSubscriber.logGroup,
+        })
+        .from(issueSubscriber)
+        .where(
+          and(
+            eq(issueSubscriber.stageID, config.stageID),
+            eq(issueSubscriber.workspaceID, useWorkspace()),
+          ),
+        )
+        .execute();
+
+      console.log("updating", resources.length, "functions");
+      async function subscribe(logGroup: string, functionID: string) {
+        if (
+          exists.find(
+            (item) =>
+              item.functionID === functionID && item.logGroup === logGroup,
+          )
+        )
+          return;
+        console.log("subscribing", logGroup);
+        while (true) {
+          try {
+            await cw.send(
+              new PutSubscriptionFilterCommand({
+                destinationArn: destination,
+                filterName:
+                  uniqueIdentifier +
+                  (Config.STAGE === "production" ? "" : `#dev`),
+                filterPattern: [
+                  `?"Invoke Error"`,
+                  // OOM and other runtime error
+                  `?"Error: Runtime exited"`,
+                  // Timeout
+                  `?"Task timed out after"`,
+                  // NodeJS Uncaught and console.error
+                  `?"\tERROR\t"`,
+                  `?"[ERROR]"`,
+                  // ...(fn.enrichment.runtime?.startsWith("nodejs")
+                  //   ? [`?"\tERROR\t"`]
+                  //   : []),
+                ].join(" "),
+                logGroupName: logGroup,
+              }),
+            );
+
+            if (functionID)
+              await db
+                .insert(issueSubscriber)
+                .ignore()
+                .values({
+                  stageID: config.stageID,
+                  workspaceID: useWorkspace(),
+                  functionID: functionID,
+                  id: createId(),
+                  logGroup,
+                })
+                .execute();
+
+            await Warning.remove({
+              target: logGroup,
+              type: "log_subscription",
+              stageID: config.stageID,
+            });
+
+            break;
+          } catch (e: any) {
+            // Create log group if the function has never been invoked
+            if (
+              e instanceof ResourceNotFoundException &&
+              e.message.startsWith("The specified log group does not exist")
+            ) {
+              console.log("creating log group");
+              await cw
+                .send(
+                  new CreateLogGroupCommand({
+                    logGroupName: logGroup,
+                  }),
+                )
+                .catch((e) => {
+                  if (e instanceof ResourceAlreadyExistsException) return;
+                  throw e;
+                });
+              continue;
+            }
+
+            // There are too many log subscribers
+            if (e instanceof LimitExceededException) {
+              await Warning.create({
+                stageID: config.stageID,
+                target: logGroup,
+                type: "log_subscription",
+                data: {
+                  error: "limited",
+                },
+              });
+              break;
+            }
+
+            // Permissions issue
+            if (e.name === "AccessDeniedException") {
+              await Warning.create({
+                stageID: config.stageID,
+                target: logGroup,
+                type: "log_subscription",
+                data: {
+                  error: "permissions",
+                },
+              });
+              break;
+            }
+
+            // The destination hasn't been created yet so try again
+            if (
+              e instanceof ResourceNotFoundException &&
+              e.message === "The specified destination does not exist."
+            ) {
+              await connectStage(config);
+              continue;
+            }
+
+            console.error(e);
+            await Warning.create({
+              stageID: config.stageID,
+              target: logGroup,
+              type: "log_subscription",
+              data: {
+                error: "unknown",
+                message: e.toString(),
+              },
+            });
+            break;
+          }
+        }
+      }
+
+      for (const fn of functions) {
+        const logGroup = fn.outputs?.loggingConfig?.logGroup;
+        if (!logGroup) continue;
+        await subscribe(logGroup, fn.id);
+      }
+    } finally {
+      cw.destroy();
+    }
+  },
+);
 
 export const disableLogGroup = zod(
   z.object({
