@@ -122,7 +122,7 @@ export function Issues({ stack }: StackContext) {
     ],
   });
 
-  bus.subscribe(["state.history.synced"], {
+  bus.subscribe(stack, ["state.history.synced"], {
     handler: "packages/functions/src/events/state-history-synced.handler",
     bind: [
       ...Object.values(secrets.database),
