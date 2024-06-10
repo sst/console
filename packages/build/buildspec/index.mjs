@@ -26,7 +26,7 @@ export async function handler(event, context) {
   let error;
 
   try {
-    await publish("run.started", {
+    await publish("runner.started", {
       logGroup: context.logGroupName,
       logStream: context.logStreamName,
       awsRequestId: context.awsRequestId,
@@ -51,7 +51,7 @@ export async function handler(event, context) {
   } catch (e) {
     error = e.message;
   } finally {
-    await publish("run.completed", { error });
+    await publish("runner.completed", { error });
   }
 
   function checkout() {

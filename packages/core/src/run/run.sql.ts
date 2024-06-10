@@ -7,6 +7,7 @@ import {
   mysqlEnum,
   timestamp,
   unique,
+  boolean,
 } from "drizzle-orm/mysql-core";
 import { workspaceID, cuid, timestampsNext } from "../util/sql";
 import { z } from "zod";
@@ -140,6 +141,7 @@ export const runTable = mysqlTable(
     trigger: json("git_context").$type<Trigger>().notNull(),
     config: json("config").$type<CiConfig>().notNull(),
     error: text("error"),
+    active: boolean("active"),
   },
   (table) => ({
     ...workspaceIndexes(table),
@@ -148,6 +150,11 @@ export const runTable = mysqlTable(
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
     }).onDelete("cascade"),
+    active: unique("unique_active").on(
+      table.workspaceID,
+      table.stageID,
+      table.active
+    ),
   })
 );
 

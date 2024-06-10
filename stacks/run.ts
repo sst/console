@@ -17,9 +17,11 @@ import {
   ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
 import { Secrets } from "./secrets";
+import { Events } from "./events";
 
 export function Run({ stack, app }: StackContext) {
   const secrets = use(Secrets);
+  const bus = use(Events);
 
   /****************/
   /* Build script */
@@ -63,7 +65,7 @@ export function Run({ stack, app }: StackContext) {
       new PolicyStatement({
         actions: ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
         principals: [new ServicePrincipal("lambda.amazonaws.com")],
-      }),
+      })
     );
     repo.addToResourcePolicy(
       new PolicyStatement({
@@ -74,7 +76,7 @@ export function Run({ stack, app }: StackContext) {
             "aws:RequestedRegion": stack.region,
           },
         },
-      }),
+      })
     );
 
     new CfnReplicationConfiguration(stack, "Replication", {
@@ -113,11 +115,11 @@ export function Run({ stack, app }: StackContext) {
     "RunTimeoutMonitor",
     {
       name: app.logicalPrefixedName("RunTimeoutMonitor"),
-    },
+    }
   );
   const runTimeoutMonitor = new Function(stack, "RunTimeoutHandler", {
-    bind: [...Object.values(secrets.database), ...secrets.github],
     handler: "packages/functions/src/run/monitor.handler",
+    bind: [...Object.values(secrets.database), bus, ...secrets.github],
     permissions: ["sts", "iot"],
   });
   const scheduleRole = new Role(stack, "ScheduleRole", {
@@ -142,7 +144,7 @@ export function Run({ stack, app }: StackContext) {
     "RunnerRemover",
     {
       name: app.logicalPrefixedName("RunnerRemover"),
-    },
+    }
   );
   const runnerRemover = new Function(stack, "RunnerRemoverHandler", {
     bind: [...Object.values(secrets.database)],
@@ -163,7 +165,7 @@ export function Run({ stack, app }: StackContext) {
     "RunnerWarmer",
     {
       name: app.logicalPrefixedName("RunnerWarmer"),
-    },
+    }
   );
   const runnerWarmer = new Function(stack, "RunnerWarmerHandler", {
     bind: [
@@ -194,17 +196,117 @@ export function Run({ stack, app }: StackContext) {
     },
   });
 
-  return {
-    configParser,
-    runTimeoutMonitorScheduleGroupName: runTimeoutMonitorScheduleGroup.name!,
-    runTimeoutMonitorArn: runTimeoutMonitor.functionArn,
-    runnerRemoverScheduleGroupName: runnerRemoverScheduleGroup.name!,
-    runnerRemoverArn: runnerRemover.functionArn,
-    runnerWarmerScheduleGroupName: runnerWarmerScheduleGroup.name!,
-    runnerWarmerArn: runnerWarmer.functionArn,
-    scheduleRoleArn: scheduleRole.roleArn,
-    buildspecBucket,
-    buildspecVersion,
-    buildImage,
-  };
+  /****************/
+  /* Build events */
+  /****************/
+  bus.addRules(stack, {
+    "runner.started": {
+      pattern: {
+        source: ["sst.external"],
+        detailType: ["runner.started"],
+      },
+      targets: {
+        handler: {
+          function: {
+            handler: "packages/functions/src/events/runner-started.handler",
+            bind: [bus, ...Object.values(secrets.database)],
+          },
+        },
+      },
+    },
+    "runner.completed": {
+      pattern: {
+        source: ["sst.external"],
+        detailType: ["runner.completed"],
+      },
+      targets: {
+        handler: {
+          function: {
+            handler: "packages/functions/src/events/runner-completed.handler",
+            bind: [bus, ...Object.values(secrets.database)],
+          },
+        },
+      },
+    },
+  });
+
+  bus.subscribe(stack, "app.env.updated", {
+    handler: "packages/functions/src/events/app-env-updated.handler",
+    timeout: "15 minute",
+    bind: [
+      ...Object.values(secrets.database),
+      bus,
+      ...secrets.github,
+      configParser,
+      buildspecBucket,
+      buildspecVersion,
+      buildImage,
+    ],
+    permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
+    environment: {
+      EVENT_BUS_ARN: bus.eventBusArn,
+      RUNNER_REMOVER_SCHEDULE_GROUP_NAME: runnerRemoverScheduleGroup.name!,
+      RUNNER_REMOVER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      RUNNER_REMOVER_FUNCTION_ARN: runnerRemover.functionArn,
+      RUNNER_WARMER_SCHEDULE_GROUP_NAME: runnerWarmerScheduleGroup.name!,
+      RUNNER_WARMER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      RUNNER_WARMER_FUNCTION_ARN: runnerWarmer.functionArn,
+    },
+  });
+
+  bus.subscribe(stack, "run.created", {
+    handler: "packages/functions/src/events/run-created.handler",
+    timeout: "15 minute",
+    bind: [
+      ...Object.values(secrets.database),
+      bus,
+      ...secrets.github,
+      buildspecBucket,
+      buildspecVersion,
+      buildImage,
+    ],
+    permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
+    environment: {
+      EVENT_BUS_ARN: bus.eventBusArn,
+      RUNNER_REMOVER_SCHEDULE_GROUP_NAME: runnerRemoverScheduleGroup.name!,
+      RUNNER_REMOVER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      RUNNER_REMOVER_FUNCTION_ARN: runnerRemover.functionArn,
+      RUNNER_WARMER_SCHEDULE_GROUP_NAME: runnerWarmerScheduleGroup.name!,
+      RUNNER_WARMER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      RUNNER_WARMER_FUNCTION_ARN: runnerWarmer.functionArn,
+      RUN_TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME:
+        runTimeoutMonitorScheduleGroup.name!,
+      RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      RUN_TIMEOUT_MONITOR_FUNCTION_ARN: runTimeoutMonitor.functionArn,
+    },
+  });
+
+  bus.subscribe(stack, "run.completed", {
+    handler: "packages/functions/src/events/run-completed.handler",
+    timeout: "15 minute",
+    bind: [
+      ...Object.values(secrets.database),
+      bus,
+      ...secrets.github,
+      buildspecBucket,
+      buildspecVersion,
+      buildImage,
+    ],
+    permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
+    environment: {
+      EVENT_BUS_ARN: bus.eventBusArn,
+      RUNNER_REMOVER_SCHEDULE_GROUP_NAME: runnerRemoverScheduleGroup.name!,
+      RUNNER_REMOVER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      RUNNER_REMOVER_FUNCTION_ARN: runnerRemover.functionArn,
+      RUNNER_WARMER_SCHEDULE_GROUP_NAME: runnerWarmerScheduleGroup.name!,
+      RUNNER_WARMER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      RUNNER_WARMER_FUNCTION_ARN: runnerWarmer.functionArn,
+      RUN_TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME:
+        runTimeoutMonitorScheduleGroup.name!,
+      RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
+      RUN_TIMEOUT_MONITOR_FUNCTION_ARN: runTimeoutMonitor.functionArn,
+    },
+  });
+
+  return { configParser, buildImage };
 }

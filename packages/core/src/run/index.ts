@@ -134,13 +134,17 @@ export module Run {
     Created: event(
       "run.created",
       z.object({
-        appID: z.string().nonempty(),
         stageID: z.string().nonempty(),
-        runID: z.string().nonempty(),
-      }),
+      })
     ),
-    Started: event(
-      "run.started",
+    Completed: event(
+      "run.completed",
+      z.object({
+        stageID: z.string().nonempty(),
+      })
+    ),
+    RunnerStarted: event(
+      "runner.started",
       z.object({
         workspaceID: z.string().nonempty(),
         runID: z.string().nonempty(),
@@ -148,15 +152,15 @@ export module Run {
         logStream: z.string().nonempty(),
         awsRequestId: z.string().nonempty(),
         timestamp: z.number().int(),
-      }),
+      })
     ),
-    Completed: event(
-      "run.completed",
+    RunnerCompleted: event(
+      "runner.completed",
       z.object({
         workspaceID: z.string().nonempty(),
         runID: z.string().nonempty(),
         error: z.string().nonempty().optional(),
-      }),
+      })
     ),
   };
 
@@ -210,7 +214,7 @@ export module Run {
             trigger: input.trigger,
             stage: input.stage,
           } satisfies ConfigParserEvent),
-        }),
+        })
       );
       if (ret.FunctionError) throw new Error("Failed to parse config");
 
@@ -239,38 +243,8 @@ export module Run {
           : "us-east-1";
 
       return payload as SstConfig;
-    },
+    }
   );
-
-  export const fromID = zod(z.string().cuid2(), (runID) =>
-    useTransaction((tx) =>
-      tx
-        .select()
-        .from(runTable)
-        .where(
-          and(eq(runTable.workspaceID, useWorkspace()), eq(runTable.id, runID)),
-        )
-        .execute()
-        .then((x) => x[0]),
-    ),
-  );
-
-  export const getIncompletedRuns = zod(z.string().cuid2(), async (stageID) => {
-    return await useTransaction((tx) =>
-      tx
-        .select()
-        .from(runTable)
-        .where(
-          and(
-            eq(runTable.workspaceID, useWorkspace()),
-            eq(runTable.stageID, stageID),
-            isNull(runTable.timeCompleted),
-          ),
-        )
-        .orderBy(runTable.timeCreated)
-        .execute(),
-    );
-  });
 
   export const create = zod(
     z.object({
@@ -341,88 +315,211 @@ export module Run {
           time: new Date(),
         });
 
-        await createTransactionEffect(() =>
-          Event.Created.publish({ appID: input.appID, stageID, runID }),
-        );
+        await createTransactionEffect(() => Event.Created.publish({ stageID }));
       });
-    },
+    }
   );
 
-  export const start = zod(
-    z.object({
-      appID: z.string().cuid2(),
-      runID: z.string().cuid2(),
-      stageID: z.string().cuid2(),
-    }),
-    async ({ appID, runID, stageID }) => {
-      let run;
-      let runner;
-      let context = "initialize runner";
-      try {
-        run = await fromID(runID);
-        if (!run) throw new Error("Run not found");
+  export const orchestrate = zod(z.string().cuid2(), async (stageID) => {
+    // Get queued runs
+    const runs = await useTransaction((tx) =>
+      tx
+        .select()
+        .from(runTable)
+        .where(
+          and(
+            eq(runTable.workspaceID, useWorkspace()),
+            eq(runTable.stageID, stageID),
+            isNull(runTable.timeCompleted)
+          )
+        )
+        .orderBy(runTable.timeCreated)
+        .execute()
+    );
+    if (!runs.length) return;
+    if (runs.some((r) => r.active)) return;
 
-        const stage = await Stage.fromID(run.stageID);
-        if (!stage) throw new Error("Stage not found");
+    const run = runs[0]!;
+    const runsToSkip = runs.slice(1);
 
-        const appRepo = await AppRepo.getByAppID(appID);
-        if (!appRepo) throw new Error("AppRepo not found");
+    // Mark the run as active
+    try {
+      await useTransaction((tx) =>
+        tx
+          .update(runTable)
+          .set({ active: true })
+          .where(
+            and(
+              eq(runTable.workspaceID, useWorkspace()),
+              eq(runTable.id, run.id)
+            )
+          )
+      );
+    } catch (e: any) {
+      // A run is already active
+      if (e.message.includes("errno 1062")) return;
+      throw e;
+    }
 
-        const awsConfig = await Stage.assumeRole(stageID);
-        if (!awsConfig) return;
+    // Skip all runs except the first one
+    if (runsToSkip.length) {
+      await createTransaction(async (tx) => {
+        const timeCompleted = new Date();
+        await tx
+          .update(runTable)
+          .set({ timeCompleted })
+          .where(
+            and(
+              eq(runTable.workspaceID, useWorkspace()),
+              inArray(
+                runTable.id,
+                runsToSkip.map((r) => r.id)
+              ),
+              isNull(runTable.timeCompleted)
+            )
+          )
+          .execute();
 
-        // Get runner (create if not exist)
-        context = "lookup existing runner";
-        while (true) {
-          runner = await lookupRunner({
-            awsAccountID: stage.awsAccountID,
-            appRepoID: appRepo.id,
-            region: stage.region,
-            runnerConfig: run.config.runner,
-          });
-          if (!runner || runner.resource) break;
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          console.log("waiting for runner being created");
-        }
-        context = "create runner";
-        if (!runner) {
-          runner = await createRunner({
-            appRepoID: appRepo.id,
-            awsAccountID: stage.awsAccountID,
-            region: stage.region,
-            runnerConfig: run.config.runner,
-            credentials: awsConfig.credentials,
-          });
-        }
-        if (!runner.resource) {
-          throw new Error("Failed to create runner");
-        }
+        await State.completeUpdate({
+          updateIDs: runsToSkip.map((r) => r.stateUpdateID),
+          time: timeCompleted,
+        });
+      });
+    }
 
-        // Build cloneUrl
-        context = "start runner";
-        const gitRepo = await Github.getByRepoID(appRepo.repoID);
-        if (!gitRepo) throw new Error("Github Repo not found");
-        const cloneUrl = await Github.getCloneUrl(gitRepo);
+    // Start the most recent run
+    let runner;
+    let context = "initialize runner";
+    try {
+      const stage = await Stage.fromID(run.stageID);
+      if (!stage) throw new Error("Stage not found");
 
-        // Run runner
-        await invokeRunner({
-          run,
-          runner,
-          cloneUrl,
+      const appRepo = await AppRepo.getByAppID(stage.appID);
+      if (!appRepo) throw new Error("AppRepo not found");
+
+      const awsConfig = await Stage.assumeRole(stageID);
+      if (!awsConfig) return;
+
+      // Get runner (create if not exist)
+      context = "lookup existing runner";
+      while (true) {
+        runner = await lookupRunner({
+          awsAccountID: stage.awsAccountID,
+          appRepoID: appRepo.id,
+          region: stage.region,
+          runnerConfig: run.config.runner,
+        });
+        if (!runner || runner.resource) break;
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        console.log("waiting for runner being created");
+      }
+      context = "create runner";
+      if (!runner) {
+        runner = await createRunner({
+          appRepoID: appRepo.id,
+          awsAccountID: stage.awsAccountID,
+          region: stage.region,
+          runnerConfig: run.config.runner,
           credentials: awsConfig.credentials,
         });
-      } catch (e) {
-        await complete({ runID, error: `Failed to ${context}` });
-        throw e;
+      }
+      if (!runner.resource) {
+        throw new Error("Failed to create runner");
       }
 
-      // Schedule timeout monitor
-      await scheduleRunTimeoutMonitor(run);
+      // Build cloneUrl
+      context = "start runner";
+      const gitRepo = await Github.getByRepoID(appRepo.repoID);
+      if (!gitRepo) throw new Error("Github Repo not found");
+      const cloneUrl = await Github.getCloneUrl(gitRepo);
 
-      // Schedule warmer if not scheduled
-      if (!runner.warmer) await scheduleRunnerWarmer(runner.id);
-    },
-  );
+      // Run runner
+      const lambda = new LambdaClient({
+        credentials: awsConfig.credentials,
+        region: runner.region,
+        retryStrategy: RETRY_STRATEGY,
+      });
+      await lambda.send(
+        new InvokeCommand({
+          FunctionName: runner.resource.properties.function,
+          InvocationType: "Event",
+          Payload: JSON.stringify({
+            warm: false,
+            buildspec: {
+              version: Config.BUILDSPEC_VERSION,
+              bucket: Bucket.Buildspec.bucketName,
+            },
+            runID: run.id,
+            stateUpdateID: run.stateUpdateID,
+            workspaceID: useWorkspace(),
+            stage: run.config.target.stage,
+            env: run.config.target.env ?? {},
+            cloneUrl,
+            credentials: awsConfig.credentials,
+            trigger: run.trigger,
+          } satisfies RunnerEvent),
+        })
+      );
+
+      // Update runner's last run time
+      const now = new Date();
+      const runnerID = runner.id;
+      await useTransaction(async (tx) => {
+        await tx
+          .update(runnerTable)
+          .set({ timeRun: now })
+          .where(
+            and(
+              eq(runnerTable.id, runnerID),
+              eq(runnerTable.workspaceID, useWorkspace())
+            )
+          )
+          .execute();
+
+        await tx
+          .insert(runnerUsageTable)
+          .values({
+            workspaceID: useWorkspace(),
+            id: createId(),
+            runnerID,
+            stageID: run.stageID,
+            timeRun: now,
+          })
+          .onDuplicateKeyUpdate({ set: { timeRun: now } })
+          .execute();
+      });
+    } catch (e) {
+      await complete({ runID: run.id, error: `Failed to ${context}` });
+      throw e;
+    }
+
+    // Schedule timeout monitor
+    const scheduler = new SchedulerClient({ retryStrategy: RETRY_STRATEGY });
+    await scheduler.send(
+      new CreateScheduleCommand({
+        Name: `run-timeout-${run.id}`,
+        GroupName: process.env.RUN_TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME!,
+        FlexibleTimeWindow: {
+          Mode: "OFF",
+        },
+        ScheduleExpression: `at(${
+          new Date(Date.now() + BUILD_TIMEOUT).toISOString().split(".")[0]
+        })`,
+        Target: {
+          Arn: process.env.RUN_TIMEOUT_MONITOR_FUNCTION_ARN,
+          RoleArn: process.env.RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN,
+          Input: JSON.stringify({
+            workspaceID: useWorkspace(),
+            runID: run.id,
+          } satisfies RunTimeoutMonitorEvent),
+        },
+        ActionAfterCompletion: "DELETE",
+      })
+    );
+
+    // Schedule warmer if not scheduled
+    if (!runner.warmer) await scheduleRunnerWarmer(runner.id);
+  });
 
   export const complete = zod(
     z.object({
@@ -430,70 +527,48 @@ export module Run {
       error: z.string().nonempty().optional(),
     }),
     async ({ runID, error }) => {
-      const run = await fromID(runID);
+      const run = await useTransaction((tx) =>
+        tx
+          .select()
+          .from(runTable)
+          .where(
+            and(
+              eq(runTable.workspaceID, useWorkspace()),
+              eq(runTable.id, runID)
+            )
+          )
+          .execute()
+          .then((x) => x[0])
+      );
       if (!run) return;
 
-      // Mark current run completed
-      await markRunCompleted({
-        runID,
-        stateUpdateID: run.stateUpdateID,
-        error,
-      });
-
-      // Get queued runs
-      const runs = await getIncompletedRuns(run.stageID);
-      if (!runs.length) return;
-
-      // Skip all runs except the first one
-      const runsToSkip = runs.slice(1);
-      if (runsToSkip.length) {
-        await markRunsSkipped({
-          runIDs: runsToSkip.map((r) => r.id),
-          stateUpdateIDs: runsToSkip.map((r) => r.stateUpdateID),
+      await createTransaction(async (tx) => {
+        const timeCompleted = new Date();
+        await tx
+          .update(runTable)
+          .set({
+            timeCompleted,
+            error,
+            active: null,
+          })
+          .where(
+            and(
+              eq(runTable.id, runID),
+              eq(runTable.workspaceID, useWorkspace()),
+              isNull(runTable.timeCompleted)
+            )
+          )
+          .execute();
+        await State.completeUpdate({
+          updateIDs: [run.stateUpdateID],
+          time: timeCompleted,
         });
-      }
 
-      // Start the most recent run
-      const nextRun = runs[0]!;
-      const stage = await Stage.fromID(nextRun.stageID);
-      if (!stage) return;
-      await start({
-        appID: stage.appID,
-        stageID: nextRun.stageID,
-        runID: nextRun.id,
+        await createTransactionEffect(() =>
+          Event.Completed.publish({ stageID: run.stageID })
+        );
       });
-    },
-  );
-
-  export const scheduleRunTimeoutMonitor = zod(
-    z.custom<typeof runTable.$inferSelect>(),
-    async (run) => {
-      const scheduler = new SchedulerClient({
-        retryStrategy: RETRY_STRATEGY,
-      });
-
-      await scheduler.send(
-        new CreateScheduleCommand({
-          Name: `run-timeout-${run.id}`,
-          GroupName: process.env.RUN_TIMEOUT_MONITOR_SCHEDULE_GROUP_NAME!,
-          FlexibleTimeWindow: {
-            Mode: "OFF",
-          },
-          ScheduleExpression: `at(${
-            new Date(Date.now() + BUILD_TIMEOUT).toISOString().split(".")[0]
-          })`,
-          Target: {
-            Arn: process.env.RUN_TIMEOUT_MONITOR_FUNCTION_ARN,
-            RoleArn: process.env.RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN,
-            Input: JSON.stringify({
-              workspaceID: useWorkspace(),
-              runID: run.id,
-            } satisfies RunTimeoutMonitorEvent),
-          },
-          ActionAfterCompletion: "DELETE",
-        }),
-      );
-    },
+    }
   );
 
   export const markRunStarted = zod(
@@ -521,70 +596,11 @@ export module Run {
           .where(
             and(
               eq(runTable.id, input.runID),
-              eq(runTable.workspaceID, useWorkspace()),
-            ),
+              eq(runTable.workspaceID, useWorkspace())
+            )
           )
-          .execute(),
-      ),
-  );
-
-  export const markRunsSkipped = zod(
-    z.object({
-      runIDs: z.array(z.string().cuid2()),
-      stateUpdateIDs: z.array(z.string().cuid2()),
-    }),
-    async ({ runIDs, stateUpdateIDs }) =>
-      await createTransaction(async (tx) => {
-        const timeCompleted = new Date();
-        await tx
-          .update(runTable)
-          .set({
-            timeCompleted,
-          })
-          .where(
-            and(
-              eq(runTable.workspaceID, useWorkspace()),
-              inArray(runTable.id, runIDs),
-              isNull(runTable.timeCompleted),
-            ),
-          )
-          .execute();
-
-        await State.completeUpdate({
-          updateIDs: stateUpdateIDs,
-          time: timeCompleted,
-        });
-      }),
-  );
-
-  export const markRunCompleted = zod(
-    z.object({
-      runID: z.string().cuid2(),
-      stateUpdateID: z.string().cuid2(),
-      error: z.string().nonempty().optional(),
-    }),
-    async (input) =>
-      await createTransaction(async (tx) => {
-        const timeCompleted = new Date();
-        await tx
-          .update(runTable)
-          .set({
-            timeCompleted,
-            error: input.error,
-          })
-          .where(
-            and(
-              eq(runTable.id, input.runID),
-              eq(runTable.workspaceID, useWorkspace()),
-              isNull(runTable.timeCompleted),
-            ),
-          )
-          .execute();
-        await State.completeUpdate({
-          updateIDs: [input.stateUpdateID],
-          time: timeCompleted,
-        });
-      }),
+          .execute()
+      )
   );
 
   export const getRunnerByID = zod(z.string().cuid2(), async (runnerID) => {
@@ -595,11 +611,11 @@ export module Run {
         .where(
           and(
             eq(runnerTable.workspaceID, useWorkspace()),
-            eq(runnerTable.id, runnerID),
-          ),
+            eq(runnerTable.id, runnerID)
+          )
         )
         .execute()
-        .then((x) => x[0]),
+        .then((x) => x[0])
     );
   });
 
@@ -616,13 +632,13 @@ export module Run {
               eq(runnerUsageTable.id, runnerID),
               gt(
                 runnerUsageTable.timeRun,
-                new Date(Date.now() - RUNNER_WARMING_INACTIVE_TIME),
-              ),
-            ),
+                new Date(Date.now() - RUNNER_WARMING_INACTIVE_TIME)
+              )
+            )
           )
-          .execute(),
+          .execute()
       );
-    },
+    }
   );
 
   export const setRunnerWarmer = zod(
@@ -640,12 +656,12 @@ export module Run {
           .where(
             and(
               eq(runnerTable.workspaceID, useWorkspace()),
-              eq(runnerTable.id, input.runnerID),
-            ),
+              eq(runnerTable.id, input.runnerID)
+            )
           )
-          .execute(),
+          .execute()
       );
-    },
+    }
   );
 
   export const unsetRunnerWarmer = zod(z.string().cuid2(), async (runnerID) => {
@@ -658,10 +674,10 @@ export module Run {
         .where(
           and(
             eq(runnerTable.workspaceID, useWorkspace()),
-            eq(runnerTable.id, runnerID),
-          ),
+            eq(runnerTable.id, runnerID)
+          )
         )
-        .execute(),
+        .execute()
     );
   });
 
@@ -684,13 +700,13 @@ export module Run {
               eq(runnerTable.appRepoID, input.appRepoID),
               eq(runnerTable.region, input.region),
               eq(runnerTable.architecture, input.runnerConfig.architecture),
-              eq(runnerTable.image, input.runnerConfig.image),
-            ),
+              eq(runnerTable.image, input.runnerConfig.image)
+            )
           )
           .execute()
-          .then((x) => x[0]),
+          .then((x) => x[0])
       );
-    },
+    }
   );
 
   export const createRunner = zod(
@@ -747,7 +763,7 @@ export module Run {
               architecture,
               image,
             })
-            .execute(),
+            .execute()
         );
       }
 
@@ -773,7 +789,7 @@ export module Run {
                   },
                 ],
               }),
-            }),
+            })
           );
           await iam.send(
             new PutRolePolicyCommand({
@@ -789,14 +805,14 @@ export module Run {
                   },
                 ],
               }),
-            }),
+            })
           );
           await iam.send(
             new AttachRolePolicyCommand({
               RoleName: roleName,
               PolicyArn:
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-            }),
+            })
           );
           return ret.Role?.Arn!;
         } catch (e: any) {
@@ -808,7 +824,7 @@ export module Run {
             .send(
               new GetRoleCommand({
                 RoleName: roleName,
-              }),
+              })
             )
             .then((ret) => ret.Role?.Arn!);
         }
@@ -834,7 +850,7 @@ export module Run {
               },
               PackageType: "Image",
               Architectures: ["x86_64"],
-            }),
+            })
           );
 
           await lambda.send(
@@ -842,7 +858,7 @@ export module Run {
               FunctionName: ret.FunctionArn!,
               MaximumRetryAttempts: 0,
               MaximumEventAgeInSeconds: 3600,
-            }),
+            })
           );
         } catch (e: any) {
           if (e.name === "InvalidParameterValueException")
@@ -857,7 +873,7 @@ export module Run {
           const ret = await lambda.send(
             new GetFunctionCommand({
               FunctionName: functionName,
-            }),
+            })
           );
 
           if (ret.Configuration?.State !== "Pending") {
@@ -882,7 +898,7 @@ export module Run {
               EventPattern: JSON.stringify({
                 source: ["sst.external"],
               }),
-            }),
+            })
           );
 
           const iam = new IAMClient({ credentials });
@@ -892,7 +908,7 @@ export module Run {
           const roleRet = await iam.send(
             new GetRoleCommand({
               RoleName: roleName,
-            }),
+            })
           );
 
           await eb.send(
@@ -905,7 +921,7 @@ export module Run {
                   RoleArn: roleRet.Role?.Arn!,
                 },
               ],
-            }),
+            })
           );
         } catch (e: any) {
           if (e.name !== "ResourceConflictException") {
@@ -924,13 +940,13 @@ export module Run {
             .where(
               and(
                 eq(runnerTable.id, runnerID),
-                eq(runnerTable.workspaceID, useWorkspace()),
-              ),
+                eq(runnerTable.workspaceID, useWorkspace())
+              )
             )
-            .execute(),
+            .execute()
         );
       }
-    },
+    }
   );
 
   export const removeRunner = zod(
@@ -959,7 +975,7 @@ export module Run {
             new DeleteRolePolicyCommand({
               RoleName: roleName,
               PolicyName: "eventbridge",
-            }),
+            })
           );
         } catch (e: any) {
           console.error(e);
@@ -971,7 +987,7 @@ export module Run {
               RoleName: roleName,
               PolicyArn:
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-            }),
+            })
           );
         } catch (e: any) {
           if (e.name !== "NoSuchEntityException") {
@@ -983,7 +999,7 @@ export module Run {
           await iam.send(
             new DeleteRoleCommand({
               RoleName: roleName,
-            }),
+            })
           );
         } catch (e: any) {
           console.error(e);
@@ -1003,7 +1019,7 @@ export module Run {
           const ret = await lambda.send(
             new DeleteFunctionCommand({
               FunctionName: functionName,
-            }),
+            })
           );
         } catch (e: any) {
           console.error(e);
@@ -1017,85 +1033,13 @@ export module Run {
             .where(
               and(
                 eq(runnerTable.id, runner.id),
-                eq(runnerTable.workspaceID, useWorkspace()),
-              ),
+                eq(runnerTable.workspaceID, useWorkspace())
+              )
             )
-            .execute(),
+            .execute()
         );
       }
-    },
-  );
-
-  export const invokeRunner = zod(
-    z.object({
-      run: z.custom<typeof runTable.$inferSelect>(),
-      runner: z.object({
-        id: z.string().cuid2(),
-        region: z.string().nonempty(),
-        resource: z.custom<(typeof runnerTable.$inferSelect)["resource"]>(),
-      }),
-      cloneUrl: z.string().nonempty(),
-      credentials: z.custom<Credentials>(),
-    }),
-    async (input) => {
-      const lambda = new LambdaClient({
-        credentials: input.credentials,
-        region: input.runner.region,
-        retryStrategy: RETRY_STRATEGY,
-      });
-      await lambda.send(
-        new InvokeCommand({
-          FunctionName: input.runner.resource!.properties.function,
-          InvocationType: "Event",
-          Payload: JSON.stringify({
-            warm: false,
-            buildspec: {
-              version: Config.BUILDSPEC_VERSION,
-              bucket: Bucket.Buildspec.bucketName,
-            },
-            runID: input.run.id,
-            stateUpdateID: input.run.stateUpdateID,
-            workspaceID: useWorkspace(),
-            stage: input.run.config.target.stage,
-            env: input.run.config.target.env ?? {},
-            cloneUrl: input.cloneUrl,
-            credentials: input.credentials,
-            trigger: input.run.trigger,
-          } satisfies RunnerEvent),
-        }),
-      );
-
-      // Update runner's last run time
-      const now = new Date();
-      await useTransaction(async (tx) => {
-        await tx
-          .update(runnerTable)
-          .set({ timeRun: now })
-          .where(
-            and(
-              eq(runnerTable.id, input.runner.id),
-              eq(runnerTable.workspaceID, useWorkspace()),
-            ),
-          )
-          .execute();
-
-        await tx
-          .insert(runnerUsageTable)
-          .values({
-            workspaceID: useWorkspace(),
-            id: createId(),
-            runnerID: input.runner.id,
-            stageID: input.run.stageID,
-            timeRun: now,
-          })
-          .onDuplicateKeyUpdate({
-            set: {
-              timeRun: now,
-            },
-          })
-          .execute();
-      });
-    },
+    }
   );
 
   export const warmRunner = zod(
@@ -1131,11 +1075,11 @@ export module Run {
                   cloneUrl,
                   credentials,
                 } satisfies RunnerEvent),
-              }),
-            ),
-          ),
+              })
+            )
+          )
       );
-    },
+    }
   );
 
   export const scheduleRunnerWarmer = zod(
@@ -1165,11 +1109,11 @@ export module Run {
             } satisfies Run.RunnerWarmerEvent),
           },
           ActionAfterCompletion: "DELETE",
-        }),
+        })
       );
 
       await setRunnerWarmer({ runnerID, warmer: name });
-    },
+    }
   );
 
   export const scheduleRunnerRemover = zod(
@@ -1204,8 +1148,8 @@ export module Run {
             } satisfies RunnerRemoverEvent),
           },
           ActionAfterCompletion: "DELETE",
-        }),
+        })
       );
-    },
+    }
   );
 }
