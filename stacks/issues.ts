@@ -124,7 +124,12 @@ export function Issues({ stack }: StackContext) {
 
   bus.subscribe(["state.history.synced"], {
     handler: "packages/functions/src/events/state-history-synced.handler",
-    bind: [...Object.values(secrets.database), issuesDestinationPrefix],
+    bind: [
+      ...Object.values(secrets.database),
+      kinesisParams.ISSUES_ROLE_ARN,
+      kinesisParams.ISSUES_STREAM_ARN,
+      issuesDestinationPrefix,
+    ],
     permissions: ["sts", "iot"],
   });
 

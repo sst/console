@@ -137,7 +137,7 @@ export module Run {
         appID: z.string().nonempty(),
         stageID: z.string().nonempty(),
         runID: z.string().nonempty(),
-      })
+      }),
     ),
     Started: event(
       "run.started",
@@ -148,7 +148,7 @@ export module Run {
         logStream: z.string().nonempty(),
         awsRequestId: z.string().nonempty(),
         timestamp: z.number().int(),
-      })
+      }),
     ),
     Completed: event(
       "run.completed",
@@ -156,7 +156,7 @@ export module Run {
         workspaceID: z.string().nonempty(),
         runID: z.string().nonempty(),
         error: z.string().nonempty().optional(),
-      })
+      }),
     ),
   };
 
@@ -210,7 +210,7 @@ export module Run {
             trigger: input.trigger,
             stage: input.stage,
           } satisfies ConfigParserEvent),
-        })
+        }),
       );
       if (ret.FunctionError) throw new Error("Failed to parse config");
 
@@ -239,7 +239,7 @@ export module Run {
           : "us-east-1";
 
       return payload as SstConfig;
-    }
+    },
   );
 
   export const fromID = zod(z.string().cuid2(), (runID) =>
@@ -248,11 +248,11 @@ export module Run {
         .select()
         .from(runTable)
         .where(
-          and(eq(runTable.workspaceID, useWorkspace()), eq(runTable.id, runID))
+          and(eq(runTable.workspaceID, useWorkspace()), eq(runTable.id, runID)),
         )
         .execute()
-        .then((x) => x[0])
-    )
+        .then((x) => x[0]),
+    ),
   );
 
   export const getIncompletedRuns = zod(z.string().cuid2(), async (stageID) => {
@@ -264,11 +264,11 @@ export module Run {
           and(
             eq(runTable.workspaceID, useWorkspace()),
             eq(runTable.stageID, stageID),
-            isNull(runTable.timeCompleted)
-          )
+            isNull(runTable.timeCompleted),
+          ),
         )
         .orderBy(runTable.timeCreated)
-        .execute()
+        .execute(),
     );
   });
 
@@ -290,6 +290,7 @@ export module Run {
 
       // Get AWS Account ID from Run Env
       const envs = await RunEnv.listByStage({ appID, stageName });
+      console.log(envs, stageName);
       const awsAccountID = envs["__AWS_ACCOUNT_ID"];
       if (!awsAccountID)
         throw new Error("AWS Account ID is not set in Run Env");
@@ -341,10 +342,10 @@ export module Run {
         });
 
         await createTransactionEffect(() =>
-          Event.Created.publish({ appID: input.appID, stageID, runID })
+          Event.Created.publish({ appID: input.appID, stageID, runID }),
         );
       });
-    }
+    },
   );
 
   export const start = zod(
@@ -420,7 +421,7 @@ export module Run {
 
       // Schedule warmer if not scheduled
       if (!runner.warmer) await scheduleRunnerWarmer(runner.id);
-    }
+    },
   );
 
   export const complete = zod(
@@ -461,7 +462,7 @@ export module Run {
         stageID: nextRun.stageID,
         runID: nextRun.id,
       });
-    }
+    },
   );
 
   export const scheduleRunTimeoutMonitor = zod(
@@ -490,9 +491,9 @@ export module Run {
             } satisfies RunTimeoutMonitorEvent),
           },
           ActionAfterCompletion: "DELETE",
-        })
+        }),
       );
-    }
+    },
   );
 
   export const markRunStarted = zod(
@@ -520,11 +521,11 @@ export module Run {
           .where(
             and(
               eq(runTable.id, input.runID),
-              eq(runTable.workspaceID, useWorkspace())
-            )
+              eq(runTable.workspaceID, useWorkspace()),
+            ),
           )
-          .execute()
-      )
+          .execute(),
+      ),
   );
 
   export const markRunsSkipped = zod(
@@ -544,8 +545,8 @@ export module Run {
             and(
               eq(runTable.workspaceID, useWorkspace()),
               inArray(runTable.id, runIDs),
-              isNull(runTable.timeCompleted)
-            )
+              isNull(runTable.timeCompleted),
+            ),
           )
           .execute();
 
@@ -553,7 +554,7 @@ export module Run {
           updateIDs: stateUpdateIDs,
           time: timeCompleted,
         });
-      })
+      }),
   );
 
   export const markRunCompleted = zod(
@@ -575,15 +576,15 @@ export module Run {
             and(
               eq(runTable.id, input.runID),
               eq(runTable.workspaceID, useWorkspace()),
-              isNull(runTable.timeCompleted)
-            )
+              isNull(runTable.timeCompleted),
+            ),
           )
           .execute();
         await State.completeUpdate({
           updateIDs: [input.stateUpdateID],
           time: timeCompleted,
         });
-      })
+      }),
   );
 
   export const getRunnerByID = zod(z.string().cuid2(), async (runnerID) => {
@@ -594,11 +595,11 @@ export module Run {
         .where(
           and(
             eq(runnerTable.workspaceID, useWorkspace()),
-            eq(runnerTable.id, runnerID)
-          )
+            eq(runnerTable.id, runnerID),
+          ),
         )
         .execute()
-        .then((x) => x[0])
+        .then((x) => x[0]),
     );
   });
 
@@ -615,13 +616,13 @@ export module Run {
               eq(runnerUsageTable.id, runnerID),
               gt(
                 runnerUsageTable.timeRun,
-                new Date(Date.now() - RUNNER_WARMING_INACTIVE_TIME)
-              )
-            )
+                new Date(Date.now() - RUNNER_WARMING_INACTIVE_TIME),
+              ),
+            ),
           )
-          .execute()
+          .execute(),
       );
-    }
+    },
   );
 
   export const setRunnerWarmer = zod(
@@ -639,12 +640,12 @@ export module Run {
           .where(
             and(
               eq(runnerTable.workspaceID, useWorkspace()),
-              eq(runnerTable.id, input.runnerID)
-            )
+              eq(runnerTable.id, input.runnerID),
+            ),
           )
-          .execute()
+          .execute(),
       );
-    }
+    },
   );
 
   export const unsetRunnerWarmer = zod(z.string().cuid2(), async (runnerID) => {
@@ -657,10 +658,10 @@ export module Run {
         .where(
           and(
             eq(runnerTable.workspaceID, useWorkspace()),
-            eq(runnerTable.id, runnerID)
-          )
+            eq(runnerTable.id, runnerID),
+          ),
         )
-        .execute()
+        .execute(),
     );
   });
 
@@ -683,13 +684,13 @@ export module Run {
               eq(runnerTable.appRepoID, input.appRepoID),
               eq(runnerTable.region, input.region),
               eq(runnerTable.architecture, input.runnerConfig.architecture),
-              eq(runnerTable.image, input.runnerConfig.image)
-            )
+              eq(runnerTable.image, input.runnerConfig.image),
+            ),
           )
           .execute()
-          .then((x) => x[0])
+          .then((x) => x[0]),
       );
-    }
+    },
   );
 
   export const createRunner = zod(
@@ -746,7 +747,7 @@ export module Run {
               architecture,
               image,
             })
-            .execute()
+            .execute(),
         );
       }
 
@@ -772,7 +773,7 @@ export module Run {
                   },
                 ],
               }),
-            })
+            }),
           );
           await iam.send(
             new PutRolePolicyCommand({
@@ -788,14 +789,14 @@ export module Run {
                   },
                 ],
               }),
-            })
+            }),
           );
           await iam.send(
             new AttachRolePolicyCommand({
               RoleName: roleName,
               PolicyArn:
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-            })
+            }),
           );
           return ret.Role?.Arn!;
         } catch (e: any) {
@@ -807,7 +808,7 @@ export module Run {
             .send(
               new GetRoleCommand({
                 RoleName: roleName,
-              })
+              }),
             )
             .then((ret) => ret.Role?.Arn!);
         }
@@ -833,7 +834,7 @@ export module Run {
               },
               PackageType: "Image",
               Architectures: ["x86_64"],
-            })
+            }),
           );
 
           await lambda.send(
@@ -841,7 +842,7 @@ export module Run {
               FunctionName: ret.FunctionArn!,
               MaximumRetryAttempts: 0,
               MaximumEventAgeInSeconds: 3600,
-            })
+            }),
           );
         } catch (e: any) {
           if (e.name === "InvalidParameterValueException")
@@ -856,7 +857,7 @@ export module Run {
           const ret = await lambda.send(
             new GetFunctionCommand({
               FunctionName: functionName,
-            })
+            }),
           );
 
           if (ret.Configuration?.State !== "Pending") {
@@ -881,7 +882,7 @@ export module Run {
               EventPattern: JSON.stringify({
                 source: ["sst.external"],
               }),
-            })
+            }),
           );
 
           const iam = new IAMClient({ credentials });
@@ -891,7 +892,7 @@ export module Run {
           const roleRet = await iam.send(
             new GetRoleCommand({
               RoleName: roleName,
-            })
+            }),
           );
 
           await eb.send(
@@ -904,7 +905,7 @@ export module Run {
                   RoleArn: roleRet.Role?.Arn!,
                 },
               ],
-            })
+            }),
           );
         } catch (e: any) {
           if (e.name !== "ResourceConflictException") {
@@ -923,13 +924,13 @@ export module Run {
             .where(
               and(
                 eq(runnerTable.id, runnerID),
-                eq(runnerTable.workspaceID, useWorkspace())
-              )
+                eq(runnerTable.workspaceID, useWorkspace()),
+              ),
             )
-            .execute()
+            .execute(),
         );
       }
-    }
+    },
   );
 
   export const removeRunner = zod(
@@ -958,7 +959,7 @@ export module Run {
             new DeleteRolePolicyCommand({
               RoleName: roleName,
               PolicyName: "eventbridge",
-            })
+            }),
           );
         } catch (e: any) {
           console.error(e);
@@ -970,7 +971,7 @@ export module Run {
               RoleName: roleName,
               PolicyArn:
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-            })
+            }),
           );
         } catch (e: any) {
           if (e.name !== "NoSuchEntityException") {
@@ -982,7 +983,7 @@ export module Run {
           await iam.send(
             new DeleteRoleCommand({
               RoleName: roleName,
-            })
+            }),
           );
         } catch (e: any) {
           console.error(e);
@@ -1002,7 +1003,7 @@ export module Run {
           const ret = await lambda.send(
             new DeleteFunctionCommand({
               FunctionName: functionName,
-            })
+            }),
           );
         } catch (e: any) {
           console.error(e);
@@ -1016,13 +1017,13 @@ export module Run {
             .where(
               and(
                 eq(runnerTable.id, runner.id),
-                eq(runnerTable.workspaceID, useWorkspace())
-              )
+                eq(runnerTable.workspaceID, useWorkspace()),
+              ),
             )
-            .execute()
+            .execute(),
         );
       }
-    }
+    },
   );
 
   export const invokeRunner = zod(
@@ -1061,7 +1062,7 @@ export module Run {
             credentials: input.credentials,
             trigger: input.run.trigger,
           } satisfies RunnerEvent),
-        })
+        }),
       );
 
       // Update runner's last run time
@@ -1073,8 +1074,8 @@ export module Run {
           .where(
             and(
               eq(runnerTable.id, input.runner.id),
-              eq(runnerTable.workspaceID, useWorkspace())
-            )
+              eq(runnerTable.workspaceID, useWorkspace()),
+            ),
           )
           .execute();
 
@@ -1094,7 +1095,7 @@ export module Run {
           })
           .execute();
       });
-    }
+    },
   );
 
   export const warmRunner = zod(
@@ -1130,11 +1131,11 @@ export module Run {
                   cloneUrl,
                   credentials,
                 } satisfies RunnerEvent),
-              })
-            )
-          )
+              }),
+            ),
+          ),
       );
-    }
+    },
   );
 
   export const scheduleRunnerWarmer = zod(
@@ -1164,11 +1165,11 @@ export module Run {
             } satisfies Run.RunnerWarmerEvent),
           },
           ActionAfterCompletion: "DELETE",
-        })
+        }),
       );
 
       await setRunnerWarmer({ runnerID, warmer: name });
-    }
+    },
   );
 
   export const scheduleRunnerRemover = zod(
@@ -1203,8 +1204,8 @@ export module Run {
             } satisfies RunnerRemoverEvent),
           },
           ActionAfterCompletion: "DELETE",
-        })
+        }),
       );
-    }
+    },
   );
 }

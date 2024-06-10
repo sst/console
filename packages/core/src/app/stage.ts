@@ -232,7 +232,7 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
         .catch(() => {});
       if (state) return;
     }
-    await remove(input.stageID);
+    // await remove(input.stageID);
     return;
   }
   console.log("found", list.Contents?.length, "stacks");
