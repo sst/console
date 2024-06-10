@@ -110,7 +110,7 @@ export function createSourcemapCache(input: {
         new ListObjectsV2Command({
           Bucket: bootstrap.bucket,
           Prefix: `sourcemap/${input.config.app}/${input.config.stage}/${input.key}`,
-        })
+        }),
       )
       .catch(() => {});
     if (!result) return [];
@@ -129,7 +129,7 @@ export function createSourcemapCache(input: {
       const match = pipe(
         await sourcemapsMeta(),
         filter((x) => x.created < number),
-        maxBy((x) => x.created)
+        maxBy((x) => x.created),
       );
       if (!match) return;
       if (sourcemapCache.has(match.key)) {
@@ -140,14 +140,14 @@ export function createSourcemapCache(input: {
         new GetObjectCommand({
           Bucket: bootstrap!.bucket,
           Key: match.key,
-        })
+        }),
       );
       try {
         const raw = JSON.parse(
-          zlib.unzipSync(await content.Body!.transformToByteArray()).toString()
+          zlib.unzipSync(await content.Body!.transformToByteArray()).toString(),
         );
         raw.sources = raw.sources.map((item: string) =>
-          item.replaceAll("../", "").replaceAll("webpack://", "")
+          item.replaceAll("../", "").replaceAll("webpack://", ""),
         );
         sourcemapCache.set(match.key, raw);
         const consumer = await new SourceMapConsumer(raw);
@@ -312,7 +312,7 @@ export function createProcessor(input: {
           const mapped = await applySourcemap(
             sourcemapCache,
             input.timestamp,
-            err
+            err,
           );
           target.errors.push({
             id: message.id,
@@ -329,7 +329,7 @@ export function createProcessor(input: {
     flush(order = 1) {
       const sorted = sortBy(
         [...finalized, ...pending.values()],
-        (invocation) => order * invocation.start
+        (invocation) => order * invocation.start,
       );
       finalized = [];
       return sorted;
@@ -389,7 +389,7 @@ export const expand = zod(
               endTime: end,
               startFromHead: !backwards,
               nextToken,
-            })
+            }),
           )
           .catch(() => {});
         if (!response) break;
@@ -398,8 +398,8 @@ export const expand = zod(
           sortBy(
             (evt) => (backwards ? -1 : 1) * evt.timestamp!,
             // @ts-ignore - eventId is not in the types
-            (evt) => (backwards ? -1 : 1) * evt.eventId!
-          )
+            (evt) => (backwards ? -1 : 1) * evt.eventId!,
+          ),
         );
 
         for (const event of events) {
@@ -440,7 +440,57 @@ export const expand = zod(
 
     cw.destroy();
     return processor.flush();
-  }
+  },
+);
+
+export const scan = zod(
+  z.object({
+    timestamp: z.number(),
+    logGroup: z.string(),
+    logStream: z.string(),
+    requestID: z.string().optional(),
+    config: z.custom<StageCredentials>(),
+  }),
+  async (input) => {
+    console.log("scanning", input);
+    const cw = new CloudWatchLogsClient({
+      ...input.config,
+      // retryStrategy: RETRY_STRATEGY,
+    });
+    const events = [];
+    let limit = true;
+    let nextToken: string | undefined;
+    while (limit) {
+      const response = await cw
+        .send(
+          new GetLogEventsCommand({
+            logGroupName: input.logGroup,
+            logStreamName: input.logStream,
+            startTime: input.timestamp,
+            startFromHead: true,
+            nextToken,
+          }),
+        )
+        .catch(() => {});
+      if (!response) break;
+      for (const event of response.events || []) {
+        events.push(event);
+        if (
+          input.requestID &&
+          event.message!.includes(input.requestID) &&
+          event.message!.includes("REPORT")
+        ) {
+          limit = false;
+          break;
+        }
+      }
+      if (!response.nextForwardToken || response.nextForwardToken === nextToken)
+        break;
+      nextToken = response.nextForwardToken;
+    }
+    cw.destroy();
+    return events;
+  },
 );
 
 export type ParsedError = {
@@ -596,7 +646,7 @@ export function extractError(tabs: string[]): ParsedError | undefined {
 export async function applySourcemap(
   sourcemapCache: SourcemapCache,
   timestamp: number,
-  error: ParsedError
+  error: ParsedError,
 ): Promise<ParsedError> {
   if (!error.stack.length) return error;
   const consumer = await sourcemapCache.get(timestamp);
@@ -627,7 +677,7 @@ export async function applySourcemap(
     const min = Math.max(0, original.line! - 4);
     const ctx = lines.slice(
       min,
-      Math.min(original.line! + 3, lines.length - 1)
+      Math.min(original.line! + 3, lines.length - 1),
     );
 
     return [

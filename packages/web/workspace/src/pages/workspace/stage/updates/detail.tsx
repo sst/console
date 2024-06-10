@@ -6,6 +6,9 @@ import {
   createMemo,
   createEffect,
   createSignal,
+  onMount,
+  createResource,
+  onCleanup,
 } from "solid-js";
 import { useReplicache } from "$/providers/replicache";
 import { Link, useParams } from "@solidjs/router";
@@ -15,7 +18,12 @@ import { DateTime } from "luxon";
 import { Dropdown } from "$/ui/dropdown";
 import { useStageContext } from "../context";
 import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
-import { LogsLoading, LogsLoadingIcon, PanelEmptyCopy, LogsBackground } from "../issues/detail";
+import {
+  LogsLoading,
+  LogsLoadingIcon,
+  PanelEmptyCopy,
+  LogsBackground,
+} from "../issues/detail";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
@@ -26,6 +34,8 @@ import { useReplicacheStatus } from "$/providers/replicache-status";
 import { IconCheck, IconXCircle, IconEllipsisVertical } from "$/ui/icons";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
 import { sortBy } from "remeda";
+import { useWorkspace } from "../../context";
+import { useAuth2 } from "$/providers/auth2";
 
 const DATETIME_NO_TIME = {
   month: "short",
@@ -369,16 +379,60 @@ export function Detail() {
 
   const runID = createMemo(
     () =>
-      update()
-      && update().source.type === "ci"
-      && (update().source.properties as { runID: string }).runID
+      update() &&
+      update().source.type === "ci" &&
+      (update().source.properties as { runID: string }).runID,
   );
-  const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID() || "unknown"]);
-  const repoURL = createMemo(() => (
+  const run = RunStore.get.watch(rep, () => [
+    ctx.stage.id,
+    runID() || "unknown",
+  ]);
+  const repoURL = createMemo(() =>
     run() && run().trigger.source === "github"
       ? `https://github.com/${run().trigger.repo.owner}/${run().trigger.repo.repo}`
-      : ""
-  ));
+      : "",
+  );
+  const workspace = useWorkspace();
+  const auth = useAuth2();
+  const [logs, logsAction] = createResource(
+    () => run()?.log,
+    async (log) => {
+      if (!log) return [];
+      const results = await fetch(
+        import.meta.env.VITE_API_URL +
+          "/rest/log/scan?" +
+          new URLSearchParams({
+            stageID: ctx.stage.id,
+            timestamp: log.timestamp.toString(),
+            logStream: log.logStream,
+            logGroup: log.logGroup,
+            requestID: log.requestID,
+          }).toString(),
+        {
+          headers: {
+            "x-sst-workspace": workspace().id,
+            Authorization: "Bearer " + auth.current.token,
+          },
+        },
+      ).then(
+        (res) =>
+          res.json() as Promise<
+            {
+              message: string;
+              timestamp: number;
+            }[]
+          >,
+      );
+      return results;
+    },
+  );
+
+  const logsPoller = setInterval(() => {
+    if (!run()) return;
+    if (logs()?.at(-1)?.message.includes("REPORT")) return;
+    logsAction.refetch();
+  }, 3000);
+  onCleanup(() => clearInterval(logsPoller));
 
   const status = createMemo(() => {
     if (!update()) return;
@@ -387,10 +441,10 @@ export function Detail() {
         ? "error"
         : "updated"
       : // : update().time.canceled
-      //   ? "canceled"
-      //   : update().time.queued
-      //     ? "queued"
-      "updating";
+        //   ? "canceled"
+        //   : update().time.queued
+        //     ? "queued"
+        "updating";
   });
   const deleted = createMemo(() =>
     resources().filter((r) => r.action === "deleted"),
@@ -430,8 +484,12 @@ export function Detail() {
                     rel="noreferrer"
                     href={`${repoURL()}/commit/${run().trigger.commit.id}`}
                   >
-                    <GitIcon size="md"><IconCommit /></GitIcon>
-                    <GitCommit>{shortenCommit(run().trigger.commit.id)}</GitCommit>
+                    <GitIcon size="md">
+                      <IconCommit />
+                    </GitIcon>
+                    <GitCommit>
+                      {shortenCommit(run().trigger.commit.id)}
+                    </GitCommit>
                   </GitLink>
                   <Show when={run().trigger.branch}>
                     <GitLink
@@ -439,7 +497,9 @@ export function Detail() {
                       rel="noreferrer"
                       href={`${repoURL()}/tree/${run().trigger.branch}`}
                     >
-                      <GitIcon size="sm"><IconGit /></GitIcon>
+                      <GitIcon size="sm">
+                        <IconGit />
+                      </GitIcon>
                       <GitBranch>{run().trigger.branch}</GitBranch>
                     </GitLink>
                   </Show>
@@ -455,33 +515,36 @@ export function Detail() {
                 title={
                   update().time.started
                     ? DateTime.fromISO(update().time.started!).toLocaleString(
-                      DateTime.DATETIME_FULL,
-                    )
+                        DateTime.DATETIME_FULL,
+                      )
                     : undefined
                 }
               >
                 {update().time.started
                   ? formatSinceTime(
-                    DateTime.fromISO(update().time.started!).toSQL()!,
-                    true,
-                  )
+                      DateTime.fromISO(update().time.started!).toSQL()!,
+                      true,
+                    )
                   : "—"}
               </Text>
             </Stack>
             <Stack space="2">
               <PanelTitle>Duration</PanelTitle>
-              <Text color="secondary" title={
-                DateTime.fromISO(update().time.completed!)
-                  .diff(DateTime.fromISO(update().time.started!))
-                  .as("seconds") + " seconds"
-              }>
+              <Text
+                color="secondary"
+                title={
+                  DateTime.fromISO(update().time.completed!)
+                    .diff(DateTime.fromISO(update().time.started!))
+                    .as("seconds") + " seconds"
+                }
+              >
                 {update().time.started && update().time.completed
                   ? formatDuration(
-                    DateTime.fromISO(update().time.completed!)
-                      .diff(DateTime.fromISO(update().time.started!))
-                      .as("milliseconds"),
-                    true,
-                  )
+                      DateTime.fromISO(update().time.completed!)
+                        .diff(DateTime.fromISO(update().time.started!))
+                        .as("milliseconds"),
+                      true,
+                    )
                   : "—"}
               </Text>
             </Stack>
@@ -552,7 +615,6 @@ export function Detail() {
             : STATUS_MAP[status()!]}
         </PageTitleStatus>
       </Stack>
-
     );
   }
 
@@ -575,98 +637,6 @@ export function Detail() {
           )}
         </For>
       </Errors>
-
-    );
-  }
-
-  function renderLogs() {
-    const INVOCATION_COUNT = 1;
-    const startTime = DateTime.now().startOf("day");
-    const logs = [
-      `areallyreallylonglinethatshouldoverflowandwordwrapbutitdoesntbecauseitshouldntbeabletofitallthewaythroughthewidthofthepage`,
-      `scanning logs {
-  id: 'abcde12vgws358nwyjbb0n7m',
-  workspaceID: 'ab1mmlwfjisrf38lxyjitj3a',
-  timeCreated: '2023-11-02 13:36:22',
-  timeUpdated: '2023-11-02 17:42:00',
-  timeDeleted: null,
-  userID: 'zxc94z5o4m2yenuii7y77jcl',
-  profileID: 'qw5266007421c4ca08c3a9805d26d3081',
-  stageID: 'ertyw9srjl3x3llq9f4iurmn',
-  logGroup: '/aws/lambda/production-notes-app-busTargetbusdevOrderUpd-O5r7A2kRuBqp',
-  timeStart: '2023-11-02 17:00:00',
-  timeEnd: null
-}`,
-      `start 11/2/2023, 11:00 AM`,
-      `sending poke`,
-      `scanning from 11/2/2023, 11:00 AM to 11/2/2023, 5:57 PM`,
-      `poke sent`,
-      `created query 50a15af7-8263-4c2f-be80-6be2585973ab`,
-      `bootstrap [
-  {
-    OutputKey: 'BucketName',
-    OutputValue: 'sstbootstrap-euwest123op64b9-1ej2jgqb9j7yv'
-  },
-  { OutputKey: 'Version', OutputValue: '7.2' }
-]`,
-      `flushing invocations 1 flushed so far 0`,
-      `2023-11-02T18:02:42.819Z ed9967cb-9637-432b-9b54-e80b006b1af6 Task timed out after 300.02 seconds`,
-    ].map((message, i) => ({
-      message,
-      id: `log-${INVOCATION_COUNT}-${i}`,
-      timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-    }));
-
-    return (
-      <Stack space="2">
-        <Show
-          when={logs.length}
-          fallback={<PanelTitle>Logs</PanelTitle>}
-        >
-          <PanelTitle
-            title={DateTime.fromMillis(logs[0].timestamp!)
-              .toUTC()
-              .toLocaleString(DateTime.DATETIME_FULL)}
-          >
-            Logs —{" "}
-            {DateTime.fromMillis(
-              logs[0].timestamp!
-            ).toLocaleString(DATETIME_NO_TIME)}
-          </PanelTitle>
-        </Show>
-        <LogsBackground>
-          <Show
-            when={logs.length}
-            fallback={
-              <LogsLoading>
-                <LogsLoadingIcon>
-                  <IconArrowPathSpin />
-                </LogsLoadingIcon>
-                <PanelEmptyCopy>Running &hellip;</PanelEmptyCopy>
-              </LogsLoading>
-            }
-          >
-            <For each={logs || []}>
-              {(entry) => (
-                <Log>
-                  <LogTime
-                    title={DateTime.fromMillis(entry.timestamp)
-                      .toUTC()
-                      .toLocaleString(
-                        DateTime.DATETIME_FULL_WITH_SECONDS
-                      )}
-                  >
-                    {DateTime.fromMillis(entry.timestamp).toFormat(
-                      "HH:mm:ss.SSS"
-                    )}
-                  </LogTime>
-                  <LogMessage>{entry.message}</LogMessage>
-                </Log>
-              )}
-            </For>
-          </Show>
-        </LogsBackground>
-      </Stack>
     );
   }
 
@@ -685,12 +655,58 @@ export function Detail() {
             <Stack space="6">
               <Stack space="4">
                 {renderHeader()}
-                <Show when={update().errors.length}>
-                  {renderErrors()}
-                </Show>
+                <Show when={update().errors.length}>{renderErrors()}</Show>
               </Stack>
               <Show when={run()}>
-                {renderLogs()}
+                <Stack space="2">
+                  <Show
+                    when={logs.length}
+                    fallback={<PanelTitle>Logs</PanelTitle>}
+                  >
+                    <PanelTitle
+                      title={DateTime.fromMillis(logs()![0].timestamp!)
+                        .toUTC()
+                        .toLocaleString(DateTime.DATETIME_FULL)}
+                    >
+                      Logs —{" "}
+                      {DateTime.fromMillis(
+                        logs()![0].timestamp!,
+                      ).toLocaleString(DATETIME_NO_TIME)}
+                    </PanelTitle>
+                  </Show>
+                  <LogsBackground>
+                    <Show
+                      when={logs()?.length}
+                      fallback={
+                        <LogsLoading>
+                          <LogsLoadingIcon>
+                            <IconArrowPathSpin />
+                          </LogsLoadingIcon>
+                          <PanelEmptyCopy>Running &hellip;</PanelEmptyCopy>
+                        </LogsLoading>
+                      }
+                    >
+                      <For each={logs()!}>
+                        {(entry) => (
+                          <Log>
+                            <LogTime
+                              title={DateTime.fromMillis(entry.timestamp)
+                                .toUTC()
+                                .toLocaleString(
+                                  DateTime.DATETIME_FULL_WITH_SECONDS,
+                                )}
+                            >
+                              {DateTime.fromMillis(entry.timestamp).toFormat(
+                                "HH:mm:ss.SSS",
+                              )}
+                            </LogTime>
+                            <LogMessage>{entry.message}</LogMessage>
+                          </Log>
+                        )}
+                      </For>
+                    </Show>
+                  </LogsBackground>
+                </Stack>
               </Show>
               <Stack space="5">
                 <Show
@@ -720,9 +736,12 @@ function Resource(props: State.ResourceEvent) {
         <Dropdown
           size="sm"
           disabled={copying()}
-          icon={copying()
-            ? <IconCheck width={16} height={16} />
-            : <IconEllipsisVertical width={16} height={16} />
+          icon={
+            copying() ? (
+              <IconCheck width={16} height={16} />
+            ) : (
+              <IconEllipsisVertical width={16} height={16} />
+            )
           }
         >
           <Dropdown.Item
@@ -730,7 +749,8 @@ function Resource(props: State.ResourceEvent) {
               setCopying(true);
               navigator.clipboard.writeText(props.urn);
               setTimeout(() => setCopying(false), 2000);
-            }}>
+            }}
+          >
             Copy URN
           </Dropdown.Item>
         </Dropdown>

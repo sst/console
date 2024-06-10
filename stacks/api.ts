@@ -130,6 +130,7 @@ export function API({ stack, app }: StackContext) {
           },
         },
       },
+      "GET /rest/log/scan": "packages/functions/src/rest/log/scan.handler",
       "GET /rest/local": "packages/functions/src/rest/local.handler",
       "GET /rest/account": "packages/functions/src/rest/account.handler",
       "POST /rest/workspace": "packages/functions/src/rest/workspace.create",
