@@ -64,7 +64,7 @@ export const CiConfig = z.object({
   }),
   target: z.object({
     stage: z.string().nonempty(),
-    env: z.record(z.string().nonempty()),
+    env: z.record(z.string().nonempty()).optional(),
   }),
 });
 export type CiConfig = z.infer<typeof CiConfig>;

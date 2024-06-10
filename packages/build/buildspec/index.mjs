@@ -90,7 +90,6 @@ export async function handler(event, context) {
     process.chdir(REPO_PATH);
     shell(`sst deploy --stage ${stage}`, {
       env: {
-        ...process.env,
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
         AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
         AWS_SESSION_TOKEN: credentials.sessionToken,
@@ -105,11 +104,18 @@ export async function handler(event, context) {
    * @param {any} options
    */
   function shell(command, options = {}) {
+    const { env } = event;
+
     console.log(`Running: ${command}`);
     const ret = spawnSync(command, {
       stdio: "inherit",
       shell: true,
       ...options,
+      env: {
+        ...process.env,
+        ...env,
+        ...options.env,
+      },
     });
 
     if (ret.status !== 0) {

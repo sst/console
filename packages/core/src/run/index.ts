@@ -56,7 +56,6 @@ import { Function } from "sst/node/function";
 import { Credentials } from "../aws";
 import { AppRepo } from "../app/repo";
 import { Github } from "../git/github";
-import { stage } from "../app/app.sql";
 
 export module Run {
   const BUILD_TIMEOUT = 960000; // 16 minutes
@@ -100,6 +99,7 @@ export module Run {
         workspaceID: string;
         stateUpdateID: string;
         stage: string;
+        env: Record<string, string>;
         cloneUrl: string;
         buildspec: {
           version: string;
@@ -1056,6 +1056,7 @@ export module Run {
             stateUpdateID: input.run.stateUpdateID,
             workspaceID: useWorkspace(),
             stage: input.run.config.target.stage,
+            env: input.run.config.target.env ?? {},
             cloneUrl: input.cloneUrl,
             credentials: input.credentials,
             trigger: input.run.trigger,
