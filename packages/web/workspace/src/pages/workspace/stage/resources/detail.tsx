@@ -8,20 +8,18 @@ import {
   createSignal,
 } from "solid-js";
 import { sortBy } from "remeda";
-import {
-  IconCheck,
-  IconDocumentDuplicate,
-} from "$/ui/icons";
+import { IconCheck, IconClipboard, IconDocumentDuplicate } from "$/ui/icons";
 import { DateTime } from "luxon";
 import { formatSinceTime } from "$/common/format";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
 import { styled } from "@macaron-css/solid";
 import { NotFound } from "$/pages/not-found";
-import { Link, useParams } from "@solidjs/router";
+import { Link, useNavigate, useParams } from "@solidjs/router";
 import { useReplicache } from "$/providers/replicache";
 import { useReplicacheStatus } from "$/providers/replicache-status";
 import { useStageContext } from "../context";
 import { StateResourceStore } from "$/data/app";
+import { NavigationAction, useCommandBar } from "../../command-bar";
 
 const Container = styled("div", {
   base: {
@@ -191,16 +189,46 @@ export function Detail() {
   const rep = useReplicache();
   const ctx = useStageContext();
   const replicacheStatus = useReplicacheStatus();
+  const bar = useCommandBar();
+  const nav = useNavigate();
 
   const resource = StateResourceStore.forStage.watch(
     rep,
-    () => [ctx.stage.id,],
-    (res) => res.find((res) => res.urn === decodeURIComponent(params.urn))
+    () => [ctx.stage.id],
+    (res) => res.find((res) => res.urn === decodeURIComponent(params.urn)),
   );
-  const outputs = createMemo(() => resource() && Object.keys(resource()!.outputs).length
-    ? Object.keys(resource()!.outputs).map((key) => ({ key, value: resource()!.outputs[key] }))
-    : []
+  const outputs = createMemo(() =>
+    resource() && Object.keys(resource()!.outputs).length
+      ? Object.keys(resource()!.outputs).map((key) => ({
+          key,
+          value: resource()!.outputs[key],
+        }))
+      : [],
   );
+
+  bar.register("resource-detail", async () => {
+    return [
+      ...(resource()?.parent
+        ? [
+            NavigationAction({
+              category: "Resource",
+              title: "Go to parent",
+              nav,
+              path: "../" + encodeURIComponent(resource()!.parent!),
+            }),
+          ]
+        : []),
+      {
+        icon: IconClipboard,
+        category: "Resource",
+        title: "Copy URN",
+        run: (control) => {
+          control.hide();
+          navigator.clipboard.writeText(resource()!.urn);
+        },
+      },
+    ];
+  });
 
   createEffect(() => {
     console.log("Resource", resource());
@@ -213,9 +241,7 @@ export function Detail() {
         <OutputKey>{key}</OutputKey>
         <Row space="3" vertical="center">
           <OutputValue>
-            {typeof value === "string"
-              ? value
-              : JSON.stringify(value)}
+            {typeof value === "string" ? value : JSON.stringify(value)}
           </OutputValue>
           <Show when={value !== ""}>
             <OutputIconButton
@@ -223,7 +249,7 @@ export function Detail() {
               onClick={() => {
                 setCopying(true);
                 navigator.clipboard.writeText(
-                  typeof value === "string" ? value : JSON.stringify(value)
+                  typeof value === "string" ? value : JSON.stringify(value),
                 );
                 setTimeout(() => setCopying(false), 2000);
               }}
@@ -286,27 +312,31 @@ export function Detail() {
                       when={resource()!.update.createdID}
                       fallback={
                         <span
-                          title={DateTime.fromISO(resource()!.time.stateCreated!).toLocaleString(
-                            DateTime.DATETIME_FULL,
-                          )}
+                          title={DateTime.fromISO(
+                            resource()!.time.stateCreated!,
+                          ).toLocaleString(DateTime.DATETIME_FULL)}
                         >
                           {formatSinceTime(
-                            DateTime.fromISO(resource()!.time.stateCreated!).toSQL()!,
+                            DateTime.fromISO(
+                              resource()!.time.stateCreated!,
+                            ).toSQL()!,
                             true,
                           )}
                         </span>
-                      }>
+                      }
+                    >
                       <Link
                         href={`../../updates/${resource()!.update.createdID}`}
-                        title={DateTime.fromISO(resource()!.time.stateCreated!).toLocaleString(
-                          DateTime.DATETIME_FULL,
-                        )}
+                        title={DateTime.fromISO(
+                          resource()!.time.stateCreated!,
+                        ).toLocaleString(DateTime.DATETIME_FULL)}
                       >
                         {formatSinceTime(
-                          DateTime.fromISO(resource()!.time.stateCreated!).toSQL()!,
+                          DateTime.fromISO(
+                            resource()!.time.stateCreated!,
+                          ).toSQL()!,
                           true,
                         )}
-
                       </Link>
                     </Show>
                   </Show>
@@ -317,8 +347,9 @@ export function Detail() {
                 <PanelValue>
                   <Show
                     when={
-                      resource()!.time.stateModified
-                      && resource()!.time.stateCreated !== resource()!.time.stateModified
+                      resource()!.time.stateModified &&
+                      resource()!.time.stateCreated !==
+                        resource()!.time.stateModified
                     }
                     fallback={<PanelValueEmpty>—</PanelValueEmpty>}
                   >
@@ -326,24 +357,29 @@ export function Detail() {
                       when={resource()!.update.modifiedID}
                       fallback={
                         <span
-                          title={DateTime.fromISO(resource()!.time.stateModified!).toLocaleString(
-                            DateTime.DATETIME_FULL,
-                          )}
+                          title={DateTime.fromISO(
+                            resource()!.time.stateModified!,
+                          ).toLocaleString(DateTime.DATETIME_FULL)}
                         >
                           {formatSinceTime(
-                            DateTime.fromISO(resource()!.time.stateModified!).toSQL()!,
+                            DateTime.fromISO(
+                              resource()!.time.stateModified!,
+                            ).toSQL()!,
                             true,
                           )}
                         </span>
-                      }>
+                      }
+                    >
                       <Link
                         href={`../../updates/${resource()!.update.modifiedID!}`}
-                        title={DateTime.fromISO(resource()!.time.stateModified!).toLocaleString(
-                          DateTime.DATETIME_FULL,
-                        )}
+                        title={DateTime.fromISO(
+                          resource()!.time.stateModified!,
+                        ).toLocaleString(DateTime.DATETIME_FULL)}
                       >
                         {formatSinceTime(
-                          DateTime.fromISO(resource()!.time.stateModified!).toSQL()!,
+                          DateTime.fromISO(
+                            resource()!.time.stateModified!,
+                          ).toSQL()!,
                           true,
                         )}
                       </Link>
@@ -353,8 +389,13 @@ export function Detail() {
               </Stack>
               <Stack space="2">
                 <PanelTitle>Parent</PanelTitle>
-                <Show when={resource()!.parent} fallback={<PanelValueEmpty>—</PanelValueEmpty>}>
-                  <PanelValueMonoLink href={`../${encodeURIComponent(resource()!.parent!)}`}>
+                <Show
+                  when={resource()!.parent}
+                  fallback={<PanelValueEmpty>—</PanelValueEmpty>}
+                >
+                  <PanelValueMonoLink
+                    href={`../${encodeURIComponent(resource()!.parent!)}`}
+                  >
                     {getResourceName(resource()!.parent!)}
                   </PanelValueMonoLink>
                 </Show>

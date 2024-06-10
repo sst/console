@@ -11,7 +11,7 @@ import { useNavigate, useParams } from "@solidjs/router";
 import { StageStore } from "$/data/stage";
 import { AppStore, StateResourceStore } from "$/data/app";
 import { Resource } from "@console/core/app/resource";
-import { useCommandBar } from "../command-bar";
+import { NavigationAction, useCommandBar } from "../command-bar";
 import { IconApi, IconFunction, IconNextjsSite } from "$/ui/icons/custom";
 import { useLocalContext } from "$/providers/local";
 import { ResourceIcon } from "$/common/resource-icon";
@@ -354,8 +354,22 @@ export const { use: useStateResources, provider: StateResourcesProvider } =
   createInitializedContext("Issues", () => {
     const rep = useReplicache();
     const ctx = useStageContext();
+    const bar = useCommandBar();
+    const nav = useNavigate();
     const resources = StateResourceStore.forStage.watch(rep, () => [
       ctx.stage.id,
     ]);
+    bar.register("state-resources-switcher", async (input, global) => {
+      if (!input) return [];
+
+      return resources().map((resource) =>
+        NavigationAction({
+          nav,
+          path: `resources/${resource.urn}`,
+          title: resource.urn.split("::").at(-1)! + " (" + resource.type + ")",
+          category: "resource",
+        }),
+      );
+    });
     return resources;
   });

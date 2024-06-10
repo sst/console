@@ -194,7 +194,7 @@ globalStyle(`${ActionRow}.active ${ActionRowIcon} svg`, {
 });
 
 function createControl() {
-  const providers = new Map<string, ActionProvider>();
+  const providers = [] as { name: string; provider: ActionProvider }[];
   const [activeProviders, setActiveProviders] = createSignal<string[]>([]);
   const [visible, setVisible] = createSignal(false);
   const [actions, setActions] = createSignal<Action[]>([]);
@@ -238,12 +238,15 @@ function createControl() {
     if (!visible()) return;
     const p = activeProviders().length
       ? activeProviders()
-          .map((p) => providers.get(p)!)
+          .map((p) => providers.find((e) => e.name === p)!)
           .filter(Boolean)
       : [...providers.values()].reverse();
     const actions = await Promise.all(
-      p.map(async (provider) => {
-        const actions = await provider(input(), activeProviders().length === 0);
+      p.map(async (entry) => {
+        const actions = await entry.provider(
+          input(),
+          activeProviders().length === 0,
+        );
         return actions;
       }),
     ).then((x) => x.flat());
@@ -371,9 +374,13 @@ function createControl() {
       return visible();
     },
     register(name: string, provider: ActionProvider) {
-      providers.set(name, provider);
+      providers.push({ name, provider });
+      console.log("setting", name);
       onCleanup(() => {
-        providers.delete(name);
+        providers.splice(
+          providers.findIndex((e) => e.name === name),
+          1,
+        );
       });
     },
     show,
