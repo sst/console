@@ -689,7 +689,21 @@ export const subscribeIon = zod(
               e instanceof ResourceNotFoundException &&
               e.message === "The specified destination does not exist."
             ) {
-              await connectStage(config);
+              try {
+                await connectStage(config);
+              } catch (e: any) {
+                if (e.name === "AccessDeniedException") {
+                  await Warning.create({
+                    stageID: config.stageID,
+                    target: logGroup,
+                    type: "log_subscription",
+                    data: {
+                      error: "permissions",
+                    },
+                  });
+                  break;
+                }
+              }
               continue;
             }
 
