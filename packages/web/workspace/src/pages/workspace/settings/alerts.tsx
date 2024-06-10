@@ -759,7 +759,7 @@ export function Alerts() {
           </Text>
         </Stack>
         <Show
-          when={alerts.length !== 0 || editing.active}
+          when={alerts().length !== 0 || editing.active}
           fallback={
             <Row>
               <Button color="secondary" onClick={() => createAlert()}>
@@ -953,7 +953,7 @@ export function Alerts() {
             </For>
             <Show when={editing.active && !editing.id}>
               <>
-                <Show when={alerts.length !== 0}>
+                <Show when={alerts().length !== 0}>
                   <AlertsPanelRow new>
                     <AlertsPanelRowIcon dimmed>
                       <IconEllipsisHorizontal width={18} height={18} />
@@ -966,7 +966,9 @@ export function Alerts() {
                 <AlertsEditor />
               </>
             </Show>
-            <Show when={alerts.length !== 0 && (!editing.active || editing.id)}>
+            <Show
+              when={alerts().length !== 0 && (!editing.active || editing.id)}
+            >
               <AlertsPanelRow new>
                 <AlertsPanelRowIcon>
                   <IconEllipsisHorizontal width={18} height={18} />
