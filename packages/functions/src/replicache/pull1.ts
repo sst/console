@@ -74,8 +74,8 @@ export const TABLES = {
   slackTeam,
   usage,
   stateUpdate: stateUpdateTable,
-  stateEvent: stateEventTable,
   stateResource: stateResourceTable,
+  stateEvent: stateEventTable,
   run: runTable,
   runEnv: runEnvTable,
 };
@@ -321,6 +321,7 @@ export const handler = ApiHandler(
           const table = TABLES[name as keyof typeof TABLES];
           let offset = 0;
           const page = 10_000;
+
           while (true) {
             log("fetching", name, "offset", offset, ids.length);
             const rows = await tx
