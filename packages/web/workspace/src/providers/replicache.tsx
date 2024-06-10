@@ -294,7 +294,6 @@ export function createSubscription<
       subscription();
     }
     console.log("setting up subscription");
-    // @ts-ignore
     subscription = rep().subscribe((tx) => cb(tx), {
       onData(result) {
         setStore(
