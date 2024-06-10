@@ -16,7 +16,12 @@ import { Debug } from "./pages/debug";
 import { Design } from "./pages/design";
 import { Workspace } from "./pages/workspace";
 import { WorkspaceCreate } from "./pages/workspace-create";
-import { IconLogout, IconAddCircle, IconWorkspace } from "./ui/icons/custom";
+import {
+  IconLogout,
+  IconAddCircle,
+  IconWorkspace,
+  IconApp,
+} from "./ui/icons/custom";
 import { LocalProvider } from "./providers/local";
 import { useStorage } from "./providers/account";
 import { DummyConfigProvider, DummyProvider } from "./providers/dummy";
@@ -26,6 +31,8 @@ import { NotFound } from "./pages/not-found";
 import { Local } from "./pages/local";
 import { ReplicacheStatusProvider } from "./providers/replicache-status";
 import { AuthProvider2, useAuth2 } from "./providers/auth2";
+import { createSubscription } from "./providers/replicache";
+import { AppStore } from "./data/app";
 
 const Root = styled("div", {
   base: {
