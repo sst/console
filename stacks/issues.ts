@@ -130,7 +130,13 @@ export function Issues({ stack }: StackContext) {
       kinesisParams.ISSUES_STREAM_ARN,
       issuesDestinationPrefix,
     ],
-    permissions: ["sts", "iot"],
+    permissions: [
+      "sts",
+      "logs:DescribeDestinations",
+      "logs:PutDestination",
+      "logs:PutDestinationPolicy",
+      "logs:PutSubscriptionFilter",
+    ],
   });
 
   bus.subscribe(stack, "issue.rate_limited", {
