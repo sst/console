@@ -22,10 +22,11 @@ export const AppRepoStore = new Store()
   .scan("forApp", (appID: string) => ["appRepo", appID])
   .build();
 
-export const EnvStore = new Store()
+export const RunEnvStore = new Store()
   .type<RunEnv.Info>()
   .scan("all", () => ["runEnv"])
   .get((id: string) => ["runEnv", id])
+  .scan("forApp", (appID: string) => ["appRepo", appID])
   .build();
 
 export const GithubOrgStore = new Store()

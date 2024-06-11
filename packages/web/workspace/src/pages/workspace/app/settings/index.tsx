@@ -1,36 +1,46 @@
 import {
+  RunEnvStore,
   AppRepoStore,
-  EnvStore,
   GithubOrgStore,
   GithubRepoStore,
 } from "$/data/app";
-import { useReplicache, createSubscription } from "$/providers/replicache";
 import {
   theme,
   utility,
   Row,
   Text,
   Stack,
-  Button,
-  ButtonIcon,
-  FormField,
   Input,
+  Grower,
+  Button,
+  FormField,
+  ButtonIcon,
+  LinkButton,
 } from "$/ui";
-import { For, Match, Show, Switch, createMemo } from "solid-js";
-import { Header } from "../../header";
-import { styled } from "@macaron-css/solid";
-import { IconGitHub } from "$/ui/icons/custom";
+import { Select } from "$/ui/select";
+import { Dropdown } from "$/ui/dropdown";
 import {
   PANEL_HEADER_SPACE,
   PANEL_CONTENT_SPACE,
   SettingsRoot,
   Divider,
 } from "../../settings";
+import { DateTime } from "luxon";
+import { Header } from "../../header";
+import { Link } from "@solidjs/router";
 import { useAppContext } from "../context";
+import { style } from "@macaron-css/core";
+import { styled } from "@macaron-css/solid";
 import { createId } from "@paralleldrive/cuid2";
-import { IconGit, IconCommit } from "$/ui/icons/custom";
-import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
+import { Trigger } from "@console/core/run/run.sql";
 import { minLength, object, string } from "valibot";
+import { formatCommit, formatSinceTime } from "$/common/format";
+import { For, Match, Show, Switch, createMemo, createEffect } from "solid-js";
+import { IconEllipsisVertical } from "$/ui/icons";
+import { useReplicache, createSubscription } from "$/providers/replicache";
+import { githubRepo, githubBranch, githubCommit } from "$/common/url-builder";
+import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
+import { IconAdd, IconGit, IconCommit, IconGitHub, IconSubRight } from "$/ui/icons/custom";
 
 const GitRepoPanel = styled("div", {
   base: {
@@ -68,7 +78,7 @@ const GitRepoLinkSeparator = styled("span", {
   },
 });
 
-const GitRepoStatus = styled("span", {
+const EventRoot = styled("div", {
   base: {
     ...utility.row(3),
     alignItems: "center",
@@ -79,29 +89,98 @@ const GitRepoStatus = styled("span", {
   },
 });
 
-const GitStatusCopy = styled("span", {
+const EventResult = styled("div", {
+  base: {
+    ...utility.row(0),
+    paddingLeft: 5,
+    gap: 3,
+    alignItems: "center",
+  },
+});
+
+const EventResultIcon = styled("div", {
+  base: {
+    width: 14,
+    height: 14,
+    lineHeight: 1,
+    opacity: theme.iconOpacity,
+  },
+  variants: {
+    status: {
+      success: {
+        color: theme.color.text.dimmed.surface,
+      },
+      skipped: {
+        color: theme.color.text.secondary.surface,
+      },
+      error: {
+        color: `hsla(${theme.color.base.red}, 100%)`,
+      },
+    },
+  },
+});
+
+const EventResultLink = styled(Link, {
+  base: {
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.surface,
+    ":hover": {
+      color: theme.color.text.secondary.surface,
+    },
+  },
+});
+
+const EventResultCopy = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontSize: theme.font.size.sm,
+  },
+  variants: {
+    status: {
+      success: {
+        color: theme.color.text.dimmed.surface,
+      },
+      skipped: {
+        color: theme.color.text.secondary.surface,
+      },
+      error: {
+        color: `hsla(${theme.color.base.red}, 100%)`,
+      },
+    },
+  },
+});
+
+const EventRight = styled("div", {
+  base: {
+    ...utility.stack(2.5),
+    alignItems: "flex-end",
+  },
+});
+
+const EventLabel = styled("span", {
   base: {
     ...utility.text.label,
-    fontSize: theme.font.size.mono_sm,
+    fontSize: theme.font.size.mono_xs,
     color: theme.color.text.dimmed.surface,
   },
 });
 
-const GitStatusTime = styled("span", {
+const EventTime = styled("span", {
   base: {
     color: theme.color.text.dimmed.surface,
     fontSize: theme.font.size.sm,
   },
 });
 
-const GitStatusCommit = styled("div", {
+const EventCommit = styled("div", {
   base: {
     ...utility.row(2),
     alignItems: "center",
   },
 });
 
-const GitStatusCommitLink = styled("a", {
+const EventCommitLink = styled("a", {
   base: {
     lineHeight: "normal",
     fontFamily: theme.font.family.code,
@@ -114,22 +193,23 @@ const GitStatusCommitLink = styled("a", {
   },
 });
 
-const GitStatusCommitIcon = styled("span", {
+const EventCommitIcon = styled("span", {
   base: {
-    paddingRight: 3,
-    verticalAlign: "middle",
+    paddingRight: 4,
+    lineHeight: 0,
+    verticalAlign: -3,
     opacity: theme.iconOpacity,
     color: theme.color.text.secondary.surface,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     selectors: {
-      [`${GitStatusCommitLink}:hover &`]: {
+      [`${EventCommitLink}:hover &`]: {
         color: theme.color.text.primary.surface,
       },
     },
   },
 });
 
-const GitStatusBranchLink = styled("a", {
+const EventBranchLink = styled("a", {
   base: {
     lineHeight: "normal",
     fontSize: theme.font.size.sm,
@@ -140,7 +220,7 @@ const GitStatusBranchLink = styled("a", {
   },
 });
 
-const GitStatusBranchIcon = styled("span", {
+const EventBranchIcon = styled("span", {
   base: {
     paddingRight: 2,
     verticalAlign: -2,
@@ -148,11 +228,115 @@ const GitStatusBranchIcon = styled("span", {
     color: theme.color.text.dimmed.surface,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     selectors: {
-      [`${GitStatusCommitLink}:hover &`]: {
+      [`${EventBranchLink}:hover &`]: {
         color: theme.color.text.secondary.surface,
       },
     },
   },
+});
+
+const TargetsRoot = styled("div", {
+  base: {
+  },
+});
+
+const TargetsEmpty = styled("div", {
+  base: {
+    height: 180,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: theme.borderRadius,
+    border: `2px dashed ${theme.color.divider.base}`,
+  },
+});
+
+const TargetsEmptyIcon = styled("span", {
+  base: {
+    lineHeight: 0,
+    paddingRight: 6,
+    opacity: theme.iconOpacity,
+  },
+});
+
+const TargetFormRoot = styled("div", {
+  base: {
+    borderRadius: theme.borderRadius,
+    border: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const TargetFormHeader = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: `${theme.space[2]} ${theme.space[3]} ${theme.space[2]} ${theme.space[5]}`,
+    backgroundColor: theme.color.background.surface,
+    borderBottom: `1px solid ${theme.color.divider.surface}`,
+  },
+});
+
+const TargetFormHeaderCopy = styled("div", {
+  base: {
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const TargetFormRow = styled("div", {
+  base: {
+    ...utility.row(4),
+    alignItems: "flex-start",
+    justifyContent: "center",
+    padding: `${theme.space[6]} ${theme.space[5]}`,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
+    ":last-child": {
+      borderBottom: "none",
+    },
+  },
+});
+
+const TargetFormRowControls = styled(TargetFormRow, {
+  base: {
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+});
+
+const TargetFormFieldLabel = styled("div", {
+  base: {
+    ...utility.stack(1.5),
+    flex: "0 0 auto",
+    width: 240,
+  },
+});
+
+const TargetFormFieldLabelCopy = styled("span", {
+  base: {
+    ...utility.text.label,
+    color: theme.color.text.primary.base,
+    fontSize: theme.font.size.mono_sm,
+  },
+});
+
+const TargetFormFieldLabelDesc = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
+  },
+});
+
+const TargetFormField = styled("div", {
+  base: {
+    ...utility.row(4),
+    flex: "1 1 auto",
+    alignItems: "flex-start",
+  },
+});
+
+const targetFormFieldFlex = style({
+  flex: 1,
 });
 
 export function Settings() {
@@ -164,9 +348,162 @@ export function Settings() {
       (repo) => repo.repoID === appRepo[0]?.repoID,
     );
     const ghRepoOrg = await GithubOrgStore.get(tx, ghRepo?.githubOrgID!);
+    const runEnvs = await RunEnvStore.forApp(tx, app.app.id);
+    console.log(runEnvs);
 
-    return { appRepo, ghRepo, ghRepoOrg };
+    return { appRepo, ghRepo, ghRepoOrg, runEnvs };
   });
+
+  const appRepo = () => repoInfo() && repoInfo()?.appRepo[0];
+
+  // TODO: Remove temp cast
+  const lastEvent = () => appRepo() && appRepo()!.lastEvent as Trigger;
+  const repoURL = createMemo(
+    () => lastEvent() && githubRepo(lastEvent()!.repo.owner, lastEvent()!.repo.repo)
+  );
+
+  function LastEvent() {
+    return (
+      <EventRoot>
+        <Stack space="2.5">
+          <EventCommit>
+            <EventCommitLink
+              target="_blank"
+              href={githubCommit(repoURL()!, lastEvent()!.commit.id)}
+            >
+              <EventCommitIcon>
+                <IconCommit width="16" height="16" />
+              </EventCommitIcon>
+              {formatCommit(lastEvent()!.commit.id)}
+            </EventCommitLink>
+            <EventBranchLink
+              target="_blank"
+              href={githubBranch(repoURL()!, lastEvent()!.branch)}
+            >
+              <EventBranchIcon>
+                <IconGit width="12" height="12" />
+              </EventBranchIcon>
+              {lastEvent()!.branch}
+            </EventBranchLink>
+          </EventCommit>
+          <EventResult>
+            <Switch>
+              <Match when={appRepo()?.lastEventError}>
+                <EventResultIcon status="error"><IconSubRight /></EventResultIcon>
+                <EventResultCopy status="error">{appRepo()?.lastEventError}</EventResultCopy>
+              </Match>
+              <Match when={true}>
+                <EventResultIcon status="skipped"><IconSubRight /></EventResultIcon>
+                <EventResultCopy status="skipped">Skipped: No stage specified in the sst config.</EventResultCopy>
+              </Match>
+              <Match when={true}>
+                <EventResultIcon status="success"><IconSubRight /></EventResultIcon>
+                <EventResultLink href="/">Deployed</EventResultLink>
+              </Match>
+            </Switch>
+          </EventResult>
+        </Stack>
+        <EventRight>
+          <EventLabel>Last Commit</EventLabel>
+          <EventTime
+            title={DateTime.fromISO(appRepo()!.timeLastEvent! as string).toLocaleString(
+              DateTime.DATETIME_FULL,
+            )}
+          >
+            {formatSinceTime(DateTime.fromISO(appRepo()!.timeLastEvent! as string).toSQL()!)}
+          </EventTime>
+        </EventRight>
+      </EventRoot >
+    );
+  }
+
+  function Targets() {
+    return (
+      <TargetsRoot>
+        <TargetsEmpty>
+          <LinkButton>
+            <TargetsEmptyIcon><IconAdd width="10" height="10" /></TargetsEmptyIcon>
+            Add a deployment target
+          </LinkButton>
+        </TargetsEmpty>
+      </TargetsRoot>
+    );
+  }
+
+  function TargetForm() {
+    return (
+      <TargetFormRoot>
+        <TargetFormHeader>
+          <TargetFormHeaderCopy>Add a new target</TargetFormHeaderCopy>
+          <Dropdown
+            size="sm"
+            icon={
+              <IconEllipsisVertical width={18} height={18} />
+            }
+          >
+            <Dropdown.Item
+            >
+              Duplicate target
+            </Dropdown.Item>
+            <Dropdown.Seperator />
+            <Dropdown.Item
+            >
+              Remove target
+            </Dropdown.Item>
+          </Dropdown>
+        </TargetFormHeader>
+        <TargetFormRow>
+          <TargetFormFieldLabel>
+            <TargetFormFieldLabelCopy>Stage</TargetFormFieldLabelCopy>
+            <TargetFormFieldLabelDesc>The stage that's being deployed.</TargetFormFieldLabelDesc>
+          </TargetFormFieldLabel>
+          <TargetFormField>
+            <FormField class={targetFormFieldFlex}>
+              <Input placeholder="production" type="text" />
+            </FormField>
+            <Grower />
+          </TargetFormField>
+        </TargetFormRow>
+        <TargetFormRow>
+          <TargetFormFieldLabel>
+            <TargetFormFieldLabelCopy>AWS Account</TargetFormFieldLabelCopy>
+            <TargetFormFieldLabelDesc>The account this stage is being deployed to.</TargetFormFieldLabelDesc>
+          </TargetFormFieldLabel>
+          <TargetFormField>
+            <FormField class={targetFormFieldFlex}>
+              <Select
+                options={[
+                  {
+                    value: "917397401067",
+                    label: "917397401067",
+                  },
+                ]}
+              />
+            </FormField>
+            <Grower />
+          </TargetFormField>
+        </TargetFormRow>
+        <TargetFormRow>
+          <TargetFormFieldLabel>
+            <TargetFormFieldLabelCopy>Environment Variables</TargetFormFieldLabelCopy>
+            <TargetFormFieldLabelDesc>A list of environment variables for the runner.</TargetFormFieldLabelDesc>
+          </TargetFormFieldLabel>
+          <TargetFormField>
+            <FormField label="Key" class={targetFormFieldFlex}>
+              <Input type="text" />
+            </FormField>
+            <FormField label="Value" class={targetFormFieldFlex}>
+              <Input type="text" />
+            </FormField>
+          </TargetFormField>
+        </TargetFormRow>
+        <TargetFormRowControls>
+          <LinkButton>Cancel</LinkButton>
+          <Button color="primary">Add Target</Button>
+        </TargetFormRowControls>
+      </TargetFormRoot>
+    );
+  }
 
   return (
     <Show when={repoInfo()}>
@@ -201,7 +538,9 @@ export function Settings() {
                     <Stack space="1">
                       <GitRepoLink
                         target="_blank"
-                        href={`https://github.com/${repoInfo()!.ghRepoOrg?.login}/${repoInfo()!.ghRepo?.name}`}
+                        href={
+                          githubRepo(repoInfo()!.ghRepoOrg?.login, repoInfo()!.ghRepo?.name!)
+                        }
                       >
                         {repoInfo()!.ghRepoOrg?.login}
                         <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
@@ -226,32 +565,13 @@ export function Settings() {
                     Disconnect
                   </Button>
                 </GitRepoPanelRow>
-                <GitRepoStatus>
-                  <Stack space="3">
-                    <GitStatusCopy>Last Commit</GitStatusCopy>
-                    <GitStatusCommit>
-                      <GitStatusCommitLink
-                        target="_blank"
-                        href={`/asd`}
-                      >
-                        <GitStatusCommitIcon>
-                          <IconCommit width="14" height="14" />
-                        </GitStatusCommitIcon>
-                        3492661
-                      </GitStatusCommitLink>
-                      <GitStatusBranchLink
-                        target="_blank"
-                        href={`/asd`}
-                      >
-                        <GitStatusBranchIcon>
-                          <IconGit width="12" height="12" />
-                        </GitStatusBranchIcon>
-                        production
-                      </GitStatusBranchLink>
-                    </GitStatusCommit>
-                  </Stack>
-                  <GitStatusTime>3 hours ago</GitStatusTime>
-                </GitRepoStatus>
+                <Show when={lastEvent()}>
+                  <LastEvent />
+                </Show>
+                <Show when={false}>
+                  <Targets />
+                </Show>
+                <TargetForm />
               </GitRepoPanel>
             </Match>
             <Match when={true}>
@@ -269,7 +589,7 @@ export function Settings() {
         <Divider />
         <Env />
       </SettingsRoot>
-    </Show>
+    </Show >
   );
 }
 
@@ -282,7 +602,7 @@ const PutForm = object({
 function Env() {
   const rep = useReplicache();
   const app = useAppContext();
-  const envs = EnvStore.all.watch(rep, () => []);
+  const envs = RunEnvStore.all.watch(rep, () => []);
   const stageNames = createMemo(() => {
     const names = new Set<string>();
     envs()

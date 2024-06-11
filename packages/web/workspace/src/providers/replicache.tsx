@@ -28,15 +28,15 @@ import {
   SlackTeamStore,
   GithubOrgStore,
   AppRepoStore,
-  EnvStore,
+  RunEnvStore,
 } from "$/data/app";
 import { useReplicacheStatus } from "./replicache-status";
 import { useAuth2 } from "./auth2";
 import { createStore, reconcile } from "solid-js/store";
 
 const mutators = new Client<ServerType>()
-  .mutation("app_stage_sync", async () => {})
-  .mutation("log_poller_subscribe", async () => {})
+  .mutation("app_stage_sync", async () => { })
+  .mutation("log_poller_subscribe", async () => { })
   .mutation("log_search", async (tx, input) => {
     console.log(input);
     await LogSearchStore.put(tx, [input.id], input);
@@ -53,7 +53,7 @@ const mutators = new Client<ServerType>()
       item.timeDeleted = DateTime.now().toUTC().toSQL({ includeOffset: false });
     });
   })
-  .mutation("function_invoke", async () => {})
+  .mutation("function_invoke", async () => { })
   .mutation("function_payload_save", async (tx, input) => {
     await LambdaPayloadStore.put(tx, [input.id!], {
       id: input.id!,
@@ -155,7 +155,7 @@ const mutators = new Client<ServerType>()
     await AppRepoStore.remove(tx, input);
   })
   .mutation("env_create", async (tx, input) => {
-    await EnvStore.put(tx, [input.id!], {
+    await RunEnvStore.put(tx, [input.id!], {
       id: input.id,
       appID: input.appID,
       stageName: input.stageName,
@@ -165,7 +165,7 @@ const mutators = new Client<ServerType>()
     });
   })
   .mutation("env_remove", async (tx, input) => {
-    await EnvStore.remove(tx, input);
+    await RunEnvStore.remove(tx, input);
   })
   .build();
 

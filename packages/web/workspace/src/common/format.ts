@@ -161,3 +161,7 @@ export function formatSinceTime(
       ? "1yr ago"
       : `${diffInYears}yrs ago`;
 }
+
+export function formatCommit(commit: string) {
+  return commit.slice(0, 7);
+}

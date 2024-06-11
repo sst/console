@@ -8,10 +8,11 @@ import { useStageContext } from "../context";
 import { Stack, theme, utility } from "$/ui";
 import { IconCommandLine } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
-import { formatSinceTime } from "$/common/format";
 import { globalKeyframes } from "@macaron-css/core";
-import { createSubscription, useReplicache } from "$/providers/replicache";
 import { IconGit, IconCommit } from "$/ui/icons/custom";
+import { formatCommit, formatSinceTime } from "$/common/format";
+import { createSubscription, useReplicache } from "$/providers/replicache";
+import { githubPr, githubRepo, githubBranch, githubCommit } from "$/common/url-builder";
 import { RunStore, StateEventStore, StateUpdateStore } from "$/data/app";
 import { For, Show, Match, Switch, createEffect, createMemo } from "solid-js";
 
@@ -393,15 +394,15 @@ function Update(props: UpdateProps) {
   const trigger = run()?.trigger;
   const repoURL = createMemo(() =>
     trigger?.source === "github"
-      ? `https://github.com/${trigger.repo.owner}/${trigger.repo.repo}`
+      ? githubRepo(trigger.repo.owner, trigger.repo.repo)
       : ""
   );
   const branch = () =>
     trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
   const uri = () =>
     trigger.type === "push"
-      ? `tree/${trigger.branch}`
-      : `pull/${trigger.number}`;
+      ? githubBranch(repoURL, trigger.branch)
+      : githubPr(repoURL, trigger.number);
   const status = createMemo(() =>
     props.timeCompleted
       ? errors()
@@ -437,19 +438,19 @@ function Update(props: UpdateProps) {
               <UpdateGitLink
                 target="_blank"
                 rel="noreferrer"
-                href={`${repoURL()}/commit/${run().trigger.commit.id}`}
+                href={githubCommit(repoURL(), run().trigger.commit.id)}
               >
                 <UpdateGitIcon size="md">
                   <IconCommit />
                 </UpdateGitIcon>
                 <UpdateGitCommit>
-                  {shortenCommit(run().trigger.commit.id)}
+                  {formatCommit(run().trigger.commit.id)}
                 </UpdateGitCommit>
               </UpdateGitLink>
               <UpdateGitLink
                 target="_blank"
                 rel="noreferrer"
-                href={`${repoURL()}/${uri()}`}
+                href={uri()}
               >
                 <UpdateGitIcon size="sm">
                   <IconGit />
@@ -651,8 +652,4 @@ export function countCopy(count?: number) {
 
 export function errorCountCopy(count?: number) {
   return count! > 1 ? `${count} errors` : "Error";
-}
-
-function shortenCommit(commit: string) {
-  return commit.slice(0, 7);
 }

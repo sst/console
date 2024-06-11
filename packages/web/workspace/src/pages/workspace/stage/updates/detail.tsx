@@ -32,6 +32,7 @@ import { Log, LogTime, LogMessage } from "$/common/invocation";
 import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
 import { IconCheck, IconXCircle, IconEllipsisVertical } from "$/ui/icons";
+import { githubPr, githubRepo, githubBranch, githubCommit } from "$/common/url-builder";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
 import { sortBy } from "remeda";
 import { useWorkspace } from "../../context";
@@ -389,10 +390,8 @@ export function Detail() {
   ]);
   const repoURL = createMemo(() =>
     run() && run().trigger.source === "github"
-      ? `https://github.com/${run().trigger.repo.owner}/${
-          run().trigger.repo.repo
-        }`
-      : ""
+      ? githubRepo(run().trigger.repo.owner, run().trigger.repo.repo)
+      : "",
   );
   const workspace = useWorkspace();
   const auth = useAuth2();
@@ -402,14 +401,14 @@ export function Detail() {
       if (!log) return [];
       const results = await fetch(
         import.meta.env.VITE_API_URL +
-          "/rest/log/scan?" +
-          new URLSearchParams({
-            stageID: ctx.stage.id,
-            timestamp: log.timestamp.toString(),
-            logStream: log.logStream,
-            logGroup: log.logGroup,
-            requestID: log.requestID,
-          }).toString(),
+        "/rest/log/scan?" +
+        new URLSearchParams({
+          stageID: ctx.stage.id,
+          timestamp: log.timestamp.toString(),
+          logStream: log.logStream,
+          logGroup: log.logGroup,
+          requestID: log.requestID,
+        }).toString(),
         {
           headers: {
             "x-sst-workspace": workspace().id,
@@ -443,10 +442,10 @@ export function Detail() {
         ? "error"
         : "updated"
       : // : update().time.canceled
-        //   ? "canceled"
-        //   : update().time.queued
-        //     ? "queued"
-        "updating";
+      //   ? "canceled"
+      //   : update().time.queued
+      //     ? "queued"
+      "updating";
   });
   const deleted = createMemo(() =>
     resources().filter((r) => r.action === "deleted")
@@ -472,8 +471,8 @@ export function Detail() {
       trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
     const uri = () =>
       trigger.type === "push"
-        ? `tree/${trigger.branch}`
-        : `pull/${trigger.number}`;
+        ? githubBranch(repoURL(), trigger.branch)
+        : githubPr(repoURL(), trigger.number);
     return (
       <Sidebar>
         <Stack space={run() ? "7" : "0"}>
@@ -484,16 +483,15 @@ export function Detail() {
                   <img
                     width={AVATAR_SIZE}
                     height={AVATAR_SIZE}
-                    src={`https://avatars.githubusercontent.com/u/${
-                      trigger.sender.id
-                    }?s=${2 * AVATAR_SIZE}&v=4`}
+                    src={`https://avatars.githubusercontent.com/u/${trigger.sender.id
+                      }?s=${2 * AVATAR_SIZE}&v=4`}
                   />
                 </GitAvatar>
                 <Stack space="0.5">
                   <GitLink
                     target="_blank"
                     rel="noreferrer"
-                    href={`${repoURL()}/commit/${trigger.commit.id}`}
+                    href={githubCommit(repoURL(), trigger.commit.id)}
                   >
                     <GitIcon size="md">
                       <IconCommit />
@@ -503,7 +501,7 @@ export function Detail() {
                   <GitLink
                     target="_blank"
                     rel="noreferrer"
-                    href={`${repoURL()}/${uri()}`}
+                    href={uri()}
                   >
                     <GitIcon size="sm">
                       <IconGit />
@@ -522,16 +520,16 @@ export function Detail() {
                 title={
                   update().time.started
                     ? DateTime.fromISO(update().time.started!).toLocaleString(
-                        DateTime.DATETIME_FULL
-                      )
+                      DateTime.DATETIME_FULL
+                    )
                     : undefined
                 }
               >
                 {update().time.started
                   ? formatSinceTime(
-                      DateTime.fromISO(update().time.started!).toSQL()!,
-                      true
-                    )
+                    DateTime.fromISO(update().time.started!).toSQL()!,
+                    true
+                  )
                   : "—"}
               </Text>
             </Stack>
@@ -547,11 +545,11 @@ export function Detail() {
               >
                 {update().time.started && update().time.completed
                   ? formatDuration(
-                      DateTime.fromISO(update().time.completed!)
-                        .diff(DateTime.fromISO(update().time.started!))
-                        .as("milliseconds"),
-                      true
-                    )
+                    DateTime.fromISO(update().time.completed!)
+                      .diff(DateTime.fromISO(update().time.started!))
+                      .as("milliseconds"),
+                    true,
+                  )
                   : "—"}
               </Text>
             </Stack>
