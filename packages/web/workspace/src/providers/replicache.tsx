@@ -278,14 +278,18 @@ export function useReplicache() {
 
 export function createSubscription<R extends object>(
   cb: (tx: ReadTransaction) => Promise<R>,
-): Accessor<R | undefined>;
-export function createSubscription<R extends object, Initial extends R>(
+): {
+  value: R | undefined;
+};
+export function createSubscription<R extends object>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial: Initial,
-): Accessor<R>;
-export function createSubscription<R extends object, Initial>(
+  initial: R,
+): {
+  value: R;
+};
+export function createSubscription<R extends object>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial?: Initial,
+  initial?: R | undefined,
 ) {
   const [store, setStore] = createStore({
     value: initial,
@@ -313,8 +317,10 @@ export function createSubscription<R extends object, Initial>(
       },
     });
   });
-  return () => {
-    r();
-    return store.value;
+  return {
+    value: () => {
+      r();
+      return store.value;
+    },
   };
 }

@@ -9,12 +9,19 @@ import { Stack, theme, utility } from "$/ui";
 import { IconCommandLine } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
 import { globalKeyframes } from "@macaron-css/core";
+<<<<<<< Updated upstream
 import { IconGit, IconCommit } from "$/ui/icons/custom";
 import { formatCommit, formatSinceTime } from "$/common/format";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { githubPr, githubRepo, githubBranch, githubCommit } from "$/common/url-builder";
 import { RunStore, StateEventStore, StateUpdateStore } from "$/data/app";
 import { For, Show, Match, Switch, createEffect, createMemo } from "solid-js";
+=======
+import { createSubscription } from "$/providers/replicache";
+import { IconGit, IconCommit } from "$/ui/icons/custom";
+import { RunStore, StateUpdateStore } from "$/data/app";
+import { For, Show, Match, Switch, createMemo } from "solid-js";
+>>>>>>> Stashed changes
 
 const LEGEND_RES = 2;
 const LEGEND_WIDTH = 160;
@@ -384,17 +391,17 @@ type UpdateProps = {
   command: "deploy" | "refresh" | "remove" | "edit";
 };
 function Update(props: UpdateProps) {
-  const rep = useReplicache();
   const ctx = useStageContext();
   const errors = () => props.errors?.length || 0;
   const runID = props.source.type === "ci" && props.source.properties.runID;
 
-  const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID || "unknown"]);
+  const run = createSubscription((tx) =>
+    RunStore.get(tx, ctx.stage.id, runID || "unknown"),
+  );
 
-  const trigger = run()?.trigger;
   const repoURL = createMemo(() =>
-    trigger?.source === "github"
-      ? githubRepo(trigger.repo.owner, trigger.repo.repo)
+    run.value?.trigger.source === "github"
+      ? githubRepo(run.value.trigger.repo.owner, run.value.trigger.repo.repo)
       : ""
   );
   const branch = () =>
@@ -432,13 +439,17 @@ function Update(props: UpdateProps) {
             </UpdateStatusCopy>
           </Stack>
         </UpdateStatus>
-        <Show when={run()}>
+        <Show when={run.value}>
           <UpdateGit>
             <Row space="2">
               <UpdateGitLink
                 target="_blank"
                 rel="noreferrer"
+<<<<<<< Updated upstream
                 href={githubCommit(repoURL(), run().trigger.commit.id)}
+=======
+                href={`${repoURL()}/commit/${run.value!.trigger.commit.id}`}
+>>>>>>> Stashed changes
               >
                 <UpdateGitIcon size="md">
                   <IconCommit />
