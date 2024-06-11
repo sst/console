@@ -9,7 +9,7 @@ import { Stack, theme, utility } from "$/ui";
 import { IconCommandLine } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
 import { globalKeyframes } from "@macaron-css/core";
-import { IconGit, IconCommit } from "$/ui/icons/custom";
+import { IconPr, IconGit, IconCommit } from "$/ui/icons/custom";
 import { formatCommit, formatSinceTime } from "$/common/format";
 import { createSubscription } from "$/providers/replicache";
 import {
@@ -398,17 +398,22 @@ function Update(props: UpdateProps) {
     return RunStore.get(tx, ctx.stage.id, runID);
   });
 
-  const repoURL = createMemo(() =>
-    run.value?.trigger.source === "github"
-      ? githubRepo(run.value.trigger.repo.owner, run.value.trigger.repo.repo)
-      : "",
-  );
-  const branch = () => {
+  const runInfo = createMemo(() => {
     if (!run.value) return;
-    return run.value.trigger.type === "push"
-      ? run.value.trigger.branch
-      : `pr#${run.value.trigger.number}`;
-  };
+
+    const trigger = run.value.trigger;
+    const repoURL = trigger.source === "github"
+      ? githubRepo(trigger.repo.owner, trigger.repo.repo)
+      : "";
+    const branch = trigger.type === "push"
+      ? trigger.branch
+      : `pr#${trigger.number}`;
+    const uri = trigger.type === "push"
+      ? githubBranch(repoURL, trigger.branch)
+      : githubPr(repoURL, trigger.number);
+
+    return { trigger, repoURL, branch, uri };
+  });
 
   const status = createMemo(() =>
     props.timeCompleted
@@ -439,41 +444,39 @@ function Update(props: UpdateProps) {
             </UpdateStatusCopy>
           </Stack>
         </UpdateStatus>
-        <Show when={run.value}>
+        <Show when={runInfo()}>
           <UpdateGit>
             <Row space="2">
               <UpdateGitLink
                 target="_blank"
-                rel="noreferrer"
-                href={githubCommit(repoURL(), run.value!.trigger.commit.id)}
+                href={githubCommit(runInfo()!.repoURL, runInfo()!.trigger.commit.id)}
               >
                 <UpdateGitIcon size="md">
                   <IconCommit />
                 </UpdateGitIcon>
                 <UpdateGitCommit>
-                  {formatCommit(run.value!.trigger.commit.id)}
+                  {formatCommit(runInfo()!.trigger.commit.id)}
                 </UpdateGitCommit>
               </UpdateGitLink>
-              <UpdateGitLink
-                target="_blank"
-                rel="noreferrer"
-                href={
-                  run.value!.trigger.type === "push"
-                    ? githubBranch(repoURL(), run.value!.trigger.branch)
-                    : githubPr(repoURL(), run.value!.trigger.number)
-                }
-              >
+              <UpdateGitLink target="_blank" href={runInfo()!.uri}>
                 <UpdateGitIcon size="sm">
-                  <IconGit />
+                  <Switch>
+                    <Match when={runInfo()!.trigger.type === "pull_request"}>
+                      <IconPr />
+                    </Match>
+                    <Match when={true}>
+                      <IconGit />
+                    </Match>
+                  </Switch>
                 </UpdateGitIcon>
-                <UpdateGitBranch>{branch()}</UpdateGitBranch>
+                <UpdateGitBranch>{runInfo()!.branch}</UpdateGitBranch>
               </UpdateGitLink>
             </Row>
-            <Show when={run.value!.trigger.commit.message}>
+            <Show when={runInfo()!.trigger.commit.message}>
               <UpdateGitMessage>
-                {run.value!.trigger.commit.message
-                  ? run.value!.trigger.commit.message
-                  : "—"}
+                <Show when={runInfo()!.trigger.commit.message} fallback="—">
+                  {runInfo()!.trigger.commit.message}
+                </Show>
               </UpdateGitMessage>
             </Show>
           </UpdateGit>
@@ -506,13 +509,12 @@ function Update(props: UpdateProps) {
           </UpdateSource>
           <Switch>
             <Match when={run.value!}>
-              <UpdateSenderAvatar title={run.value!.trigger.sender.username}>
+              <UpdateSenderAvatar title={runInfo()!.trigger.sender.username}>
                 <img
                   width="24"
                   height="24"
-                  src={`https://avatars.githubusercontent.com/u/${
-                    run.value!.trigger.sender.id
-                  }?s=48&v=4`}
+                  src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                    }?s=48&v=4`}
                 />
               </UpdateSenderAvatar>
             </Match>

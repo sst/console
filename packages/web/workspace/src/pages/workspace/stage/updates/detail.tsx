@@ -27,7 +27,7 @@ import {
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
-import { IconGit, IconCommit, IconArrowPathSpin } from "$/ui/icons/custom";
+import { IconPr, IconGit, IconCommit, IconArrowPathSpin } from "$/ui/icons/custom";
 import { Log, LogTime, LogMessage } from "$/common/invocation";
 import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
@@ -470,12 +470,10 @@ export function Detail() {
       if (!run()) return;
 
       const trigger = run().trigger;
-      const branch = () =>
-        trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
-      const uri = () =>
-        trigger.type === "push"
-          ? githubBranch(repoURL(), trigger.branch)
-          : githubPr(repoURL(), trigger.number);
+      const branch = trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
+      const uri = trigger.type === "push"
+        ? githubBranch(repoURL(), trigger.branch)
+        : githubPr(repoURL(), trigger.number);
 
       return { trigger, branch, uri };
     });
@@ -507,12 +505,19 @@ export function Detail() {
                   <GitLink
                     target="_blank"
                     rel="noreferrer"
-                    href={runInfo()!.uri()}
+                    href={runInfo()!.uri}
                   >
                     <GitIcon size="sm">
-                      <IconGit />
+                      <Switch>
+                        <Match when={runInfo()!.trigger.type === "pull_request"}>
+                          <IconPr />
+                        </Match>
+                        <Match when={true}>
+                          <IconGit />
+                        </Match>
+                      </Switch>
                     </GitIcon>
-                    <GitBranch>{runInfo()!.branch()}</GitBranch>
+                    <GitBranch>{runInfo()!.branch}</GitBranch>
                   </GitLink>
                 </Stack>
               </Row>
