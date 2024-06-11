@@ -35,8 +35,8 @@ import { useAuth2 } from "./auth2";
 import { createStore, reconcile } from "solid-js/store";
 
 const mutators = new Client<ServerType>()
-  .mutation("app_stage_sync", async () => { })
-  .mutation("log_poller_subscribe", async () => { })
+  .mutation("app_stage_sync", async () => {})
+  .mutation("log_poller_subscribe", async () => {})
   .mutation("log_search", async (tx, input) => {
     console.log(input);
     await LogSearchStore.put(tx, [input.id], input);
@@ -53,7 +53,7 @@ const mutators = new Client<ServerType>()
       item.timeDeleted = DateTime.now().toUTC().toSQL({ includeOffset: false });
     });
   })
-  .mutation("function_invoke", async () => { })
+  .mutation("function_invoke", async () => {})
   .mutation("function_payload_save", async (tx, input) => {
     await LambdaPayloadStore.put(tx, [input.id!], {
       id: input.id!,
@@ -148,7 +148,10 @@ const mutators = new Client<ServerType>()
       appID: input.appID,
       type: input.type,
       repoID: input.repoID,
-      timeCreated: new Date().toISOString(),
+      time: {
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+      },
     });
   })
   .mutation("app_repo_disconnect", async (tx, input) => {
@@ -240,7 +243,7 @@ function createReplicache(workspaceID: string, token: string) {
 }
 
 export function ReplicacheProvider(
-  props: ParentProps<{ workspaceID: string }>,
+  props: ParentProps<{ workspaceID: string }>
 ) {
   const auth = useAuth2();
   const rep = createMemo(() => {
@@ -277,15 +280,15 @@ export function useReplicache() {
 }
 
 export function createSubscription<R extends object>(
-  cb: (tx: ReadTransaction) => Promise<R>,
+  cb: (tx: ReadTransaction) => Promise<R>
 ): Accessor<R | undefined>;
 export function createSubscription<R extends object, Initial extends R>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial: Initial,
+  initial: Initial
 ): Accessor<R>;
 export function createSubscription<R extends object, Initial>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial?: Initial,
+  initial?: Initial
 ) {
   const [store, setStore] = createStore({
     value: initial,
@@ -307,8 +310,8 @@ export function createSubscription<R extends object, Initial>(
             },
             {
               merge: true,
-            },
-          ),
+            }
+          )
         );
       },
     });
