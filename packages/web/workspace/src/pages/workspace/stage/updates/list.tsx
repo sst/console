@@ -401,8 +401,8 @@ function Update(props: UpdateProps) {
     trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
   const uri = () =>
     trigger.type === "push"
-      ? githubBranch(repoURL, trigger.branch)
-      : githubPr(repoURL, trigger.number);
+      ? githubBranch(repoURL(), trigger.branch)
+      : githubPr(repoURL(), trigger.number);
   const status = createMemo(() =>
     props.timeCompleted
       ? errors()

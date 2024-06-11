@@ -38,7 +38,7 @@ import { formatCommit, formatSinceTime } from "$/common/format";
 import { For, Match, Show, Switch, createMemo, createEffect } from "solid-js";
 import { IconEllipsisVertical } from "$/ui/icons";
 import { useReplicache, createSubscription } from "$/providers/replicache";
-import { githubRepo, githubBranch, githubCommit } from "$/common/url-builder";
+import { githubPr, githubRepo, githubBranch, githubCommit } from "$/common/url-builder";
 import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
 import { IconAdd, IconGit, IconCommit, IconGitHub, IconSubRight } from "$/ui/icons/custom";
 
@@ -120,17 +120,6 @@ const EventResultIcon = styled("div", {
   },
 });
 
-const EventResultLink = styled(Link, {
-  base: {
-    lineHeight: "normal",
-    fontSize: theme.font.size.sm,
-    color: theme.color.text.dimmed.surface,
-    ":hover": {
-      color: theme.color.text.secondary.surface,
-    },
-  },
-});
-
 const EventResultCopy = styled("span", {
   base: {
     lineHeight: "normal",
@@ -140,9 +129,6 @@ const EventResultCopy = styled("span", {
     status: {
       success: {
         color: theme.color.text.dimmed.surface,
-      },
-      skipped: {
-        color: theme.color.text.secondary.surface,
       },
       error: {
         color: `hsla(${theme.color.base.red}, 100%)`,
@@ -381,11 +367,38 @@ export function Settings() {
 
   const appRepo = () => repoInfo() && repoInfo()?.appRepo[0];
 
-  // TODO: Remove temp cast
-  const lastEvent = () => appRepo() && appRepo()!.lastEvent as Trigger;
-  const repoURL = createMemo(
-    () => lastEvent() && githubRepo(lastEvent()!.repo.owner, lastEvent()!.repo.repo)
-  );
+  const lastEvent = createMemo(() => {
+    // TODO: Remove temp cast
+    const ev = appRepo()?.lastEvent as Trigger;
+
+    if (!appRepo() || !ev) {
+      return;
+    }
+
+    const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
+    const uri = ev.type === "push"
+      ? githubBranch(repoURL, ev.branch)
+      : githubPr(repoURL, ev.number);
+    const branch = ev.type === "push" ? ev.branch : `pr#${ev.number}`;
+    const commit = ev.commit.id;
+
+    return { repoURL, uri, branch, commit };
+  });
+
+  // const repoURL = () => 
+  // let branch: () => string;
+  // let commit: () => string;
+  // let uri: () => string;
+  //
+  // if (appRepo() && lastEvent()) {
+  //   repoURL = () => githubRepo(lastEvent().repo.owner, lastEvent().repo.repo);
+  //   uri = () => lastEvent().type === "push"
+  //     ? githubBranch(repoURL(), lastEvent().branch)
+  //     : githubPr(repoURL(), lastEvent().number);
+  //   branch = () =>
+  //     lastEvent().type === "push" ? lastEvent().branch : `pr#${lastEvent().number}`;
+  //   commit = () => lastEvent().commit.id;
+  // }
 
   function LastEvent() {
     return (
@@ -394,16 +407,16 @@ export function Settings() {
           <EventCommit>
             <EventCommitLink
               target="_blank"
-              href={githubCommit(repoURL()!, lastEvent()!.commit.id)}
+              href={githubCommit(lastEvent()!.repoURL, lastEvent()!.commit)}
             >
               <EventCommitIcon>
                 <IconCommit width="16" height="16" />
               </EventCommitIcon>
-              {formatCommit(lastEvent()!.commit.id)}
+              {formatCommit(lastEvent()!.commit)}
             </EventCommitLink>
             <EventBranchLink
               target="_blank"
-              href={githubBranch(repoURL()!, lastEvent()!.branch)}
+              href={lastEvent()!.uri}
             >
               <EventBranchIcon>
                 <IconGit width="12" height="12" />
@@ -413,28 +426,25 @@ export function Settings() {
           </EventCommit>
           <EventResult>
             <Switch>
-              <Match when={appRepo()?.lastEventError}>
+              <Match when={appRepo()?.lastEventStatus}>
                 <EventResultIcon status="error"><IconSubRight /></EventResultIcon>
-                <EventResultCopy status="error">{appRepo()?.lastEventError}</EventResultCopy>
-              </Match>
-              <Match when={true}>
-                <EventResultIcon status="skipped"><IconSubRight /></EventResultIcon>
-                <EventResultCopy status="skipped">Skipped: No stage specified in the sst config.</EventResultCopy>
+                <EventResultCopy status="error">{appRepo()?.lastEventStatus}</EventResultCopy>
               </Match>
               <Match when={true}>
                 <EventResultIcon status="success"><IconSubRight /></EventResultIcon>
-                <EventResultLink href="/">Deployed</EventResultLink>
+                <EventResultCopy status="success">Deployed</EventResultCopy>
               </Match>
             </Switch>
           </EventResult>
         </Stack>
         <EventRight>
           <EventLabel>Last Commit</EventLabel>
-          <EventTime
-            title={DateTime.fromISO(appRepo()!.timeLastEvent! as string).toLocaleString(
-              DateTime.DATETIME_FULL,
-            )}
+          {/* @ts-ignore */}
+          <EventTime title={DateTime.fromISO(appRepo()!.timeLastEvent! as string).toLocaleString(
+            DateTime.DATETIME_FULL,
+          )}
           >
+            {/* @ts-ignore */}
             {formatSinceTime(DateTime.fromISO(appRepo()!.timeLastEvent! as string).toSQL()!)}
           </EventTime>
         </EventRight>
