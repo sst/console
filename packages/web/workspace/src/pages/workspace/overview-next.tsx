@@ -220,6 +220,7 @@ export function OverviewNext() {
   const nav = useNavigate();
   const selfEmail = createMemo(() => auth.current.email);
   const ambiguous = createMemo(() => {
+    console.log(apps.value);
     const result = pipe(
       stages(),
       groupBy(

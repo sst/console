@@ -318,7 +318,7 @@ export function createSubscription<R>(
     });
   });
   return {
-    value: () => {
+    get value() {
       r();
       return store.value;
     },

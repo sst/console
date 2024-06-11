@@ -136,7 +136,6 @@ export const { use: useAuth2, provider: AuthProvider2 } =
     const result = {
       get current() {
         const result = store.accounts[store.current!]!;
-        console.log(result, unwrap(store.accounts), unwrap(store.current));
         return result;
       },
       switch(accountID: string) {
