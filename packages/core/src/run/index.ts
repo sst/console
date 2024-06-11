@@ -849,7 +849,7 @@ export module Run {
                 Size: 10240,
               },
               PackageType: "Image",
-              Architectures: ["x86_64"],
+              Architectures: [architecture],
             })
           );
 
