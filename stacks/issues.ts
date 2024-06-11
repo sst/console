@@ -130,6 +130,7 @@ export function Issues({ stack }: StackContext) {
       kinesisParams.ISSUES_STREAM_ARN,
       issuesDestinationPrefix,
     ],
+    timeout: "15 minutes",
     permissions: [
       "sts",
       "logs:DescribeDestinations",
