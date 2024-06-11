@@ -1,14 +1,36 @@
 import { Show } from "solid-js";
 import { AppContext, createAppContext, useAppContext } from "./context";
 import { Header, HeaderProvider, useHeaderContext } from "../header";
-import { Route, Routes } from "@solidjs/router";
+import { Route, Routes, useNavigate } from "@solidjs/router";
 import { NotFound } from "$/pages/not-found";
 import { Stage } from "../stage";
 import { Settings } from "./settings";
 import { Overview } from "./overview";
+import { NavigationAction, useCommandBar } from "../command-bar";
+import { useWorkspace } from "../context";
 
 export function App() {
   const appContext = createAppContext();
+  const bar = useCommandBar();
+  const workspace = useWorkspace();
+  const nav = useNavigate();
+
+  bar.register("app", async () => {
+    return [
+      NavigationAction({
+        title: "Settings",
+        category: "App",
+        nav,
+        path: ["", workspace().slug, appContext.app.name, "settings"].join("/"),
+      }),
+      NavigationAction({
+        title: "Overview",
+        category: "App",
+        nav,
+        path: ["", workspace().slug, appContext.app.name].join("/"),
+      }),
+    ];
+  });
 
   return (
     <Show when={appContext.app}>

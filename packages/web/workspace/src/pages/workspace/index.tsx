@@ -21,6 +21,8 @@ import { useStorage } from "$/providers/account";
 import { NotFound, NotAllowed } from "../not-found";
 import { Debug } from "../debug";
 import { useAuth2 } from "$/providers/auth2";
+import { useFlags } from "$/providers/flags";
+import { OverviewNext } from "./overview-next";
 
 export function Workspace() {
   const params = useParams();
@@ -93,20 +95,6 @@ export function Content() {
   const apps = createSubscription(AppStore.all, []);
   const stages = StageStore.list.watch(useReplicache(), () => []);
 
-  bar.register("app-switcher", async (_, global) => {
-    if (global) return [];
-    return apps().map((app) =>
-      NavigationAction({
-        icon: IconApp,
-        category: "App",
-        title: `Go to "${app.name}"`,
-        path: `/${params.workspaceSlug}/${app.name}`,
-        prefix: true,
-        nav,
-      }),
-    );
-  });
-
   bar.register("stage-switcher", async (input, global) => {
     if (!input && global) return [];
     return stages().map((stage) => {
@@ -121,6 +109,23 @@ export function Content() {
       });
     });
   });
+
+  bar.register("app-switcher", async (input, global) => {
+    if (!input && global) return [];
+    return apps().map((app) =>
+      NavigationAction({
+        icon: IconApp,
+        category: "App",
+        title: `Go to "${app.name}"`,
+        path: `/${params.workspaceSlug}/${app.name}`,
+        prefix: true,
+        nav,
+      }),
+    );
+  });
+
+  const flags = useFlags();
+
   return (
     <Routes>
       <Route path="user" component={User} />
@@ -128,7 +133,7 @@ export function Content() {
       <Route path="settings" component={Settings} />
       <Route path="debug" component={Debug} />
       <Route path=":appName/*" component={App} />
-      <Route path="" component={Overview} />
+      <Route path="" component={flags.nextOverview ? OverviewNext : Overview} />
       <Route path="*" element={<NotFound header />} />
     </Routes>
   );
