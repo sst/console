@@ -9,11 +9,14 @@ export const { use: useFlags, provider: FlagsProvider } =
     const email = createMemo(() => auth.current.email);
     const [search] = useSearchParams();
     const internal = createMemo(
-      () => email().endsWith("@sst.dev") || search.internal === "true"
+      () => email().endsWith("@sst.dev") || search.internal === "true",
     );
     const local = window.location.hostname.includes("localhost");
 
     return {
+      get nextOverview() {
+        return internal() || local;
+      },
       ready: true,
     };
   });

@@ -21,6 +21,8 @@ import { useStorage } from "$/providers/account";
 import { NotFound, NotAllowed } from "../not-found";
 import { Debug } from "../debug";
 import { useAuth2 } from "$/providers/auth2";
+import { useFlags } from "$/providers/flags";
+import { OverviewNext } from "./overview-next";
 
 export function Workspace() {
   const params = useParams();
@@ -121,6 +123,9 @@ export function Content() {
       });
     });
   });
+
+  const flags = useFlags();
+
   return (
     <Routes>
       <Route path="user" component={User} />
@@ -128,7 +133,7 @@ export function Content() {
       <Route path="settings" component={Settings} />
       <Route path="debug" component={Debug} />
       <Route path=":appName/*" component={App} />
-      <Route path="" component={Overview} />
+      <Route path="" component={flags.nextOverview ? OverviewNext : Overview} />
       <Route path="*" element={<NotFound header />} />
     </Routes>
   );

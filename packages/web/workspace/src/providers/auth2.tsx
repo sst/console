@@ -1,6 +1,6 @@
 import { makePersisted } from "@solid-primitives/storage";
 import { createInitializedContext } from "$/common/context";
-import { createStore, produce, reconcile } from "solid-js/store";
+import { createStore, produce, reconcile, unwrap } from "solid-js/store";
 import { createEffect, createMemo } from "solid-js";
 import { useLocation, useNavigate } from "@solidjs/router";
 import { IconUserMinus, IconUserPlus, IconUsers } from "../ui/icons";
@@ -31,11 +31,11 @@ export const { use: useAuth2, provider: AuthProvider2 } =
       }),
       {
         name: "sst.auth",
-      }
+      },
     );
     const location = useLocation();
     const accessToken = createMemo(() =>
-      new URLSearchParams(location.hash.substring(1)).get("access_token")
+      new URLSearchParams(location.hash.substring(1)).get("access_token"),
     );
 
     createEffect(() => {
@@ -73,7 +73,7 @@ export const { use: useAuth2, provider: AuthProvider2 } =
                 reconcile({
                   ...info,
                   token,
-                })
+                }),
               );
           }
 
@@ -81,7 +81,7 @@ export const { use: useAuth2, provider: AuthProvider2 } =
             setStore(
               produce((state) => {
                 delete state.accounts[token];
-              })
+              }),
             );
 
           if (accessToken() === token) {
@@ -110,7 +110,7 @@ export const { use: useAuth2, provider: AuthProvider2 } =
               navigate("/");
               control.hide();
             },
-          })
+          }),
         ),
         {
           title: "Add account",
@@ -135,7 +135,9 @@ export const { use: useAuth2, provider: AuthProvider2 } =
 
     const result = {
       get current() {
-        return store.accounts[store.current!]!;
+        const result = store.accounts[store.current!]!;
+        console.log(result, unwrap(store.accounts), unwrap(store.current));
+        return result;
       },
       switch(accountID: string) {
         setStore("current", accountID);
@@ -150,7 +152,7 @@ export const { use: useAuth2, provider: AuthProvider2 } =
             if (!state.current) return;
             delete state.accounts[state.current];
             state.current = Object.keys(state.accounts)[0];
-          })
+          }),
         );
       },
       get ready() {
