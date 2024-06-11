@@ -365,7 +365,7 @@ export const { use: useStateResources, provider: StateResourcesProvider } =
       return resources().map((resource) =>
         NavigationAction({
           nav,
-          path: `resources/${resource.urn}`,
+          path: `resources/${encodeURIComponent(resource.urn)}`,
           title: resource.urn.split("::").at(-1)! + " (" + resource.type + ")",
           category: "resource",
         }),

@@ -538,6 +538,18 @@ function StageCard(props: StageCardProps) {
             leading="normal"
             color={props.stage.unsupported ? "dimmed" : "primary"}
           >
+            {app()?.name}
+          </Text>
+          <Text size="base" color="dimmed">
+            /
+          </Text>
+          <Text
+            line
+            size="base"
+            weight="medium"
+            leading="normal"
+            color={props.stage.unsupported ? "dimmed" : "primary"}
+          >
             {props.stage.name}
           </Text>
         </Row>

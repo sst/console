@@ -16,7 +16,9 @@ import { useAppContext } from "./context";
 import { styled } from "@macaron-css/solid";
 import { IconChevronRight } from "$/ui/icons";
 import { IconGitHub } from "$/ui/icons/custom";
-import { useReplicache } from "$/providers/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
+import { StageStore } from "$/data/stage";
+import { App } from "@console/core/app";
 
 const Root = styled("div", {
   base: {
@@ -93,6 +95,32 @@ const RepoLinkSeparator = styled("span", {
   },
 });
 
+const StageGrid = styled("div", {
+  base: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: theme.space[4],
+  },
+});
+
+const Card = styled("div", {
+  base: {
+    borderRadius: theme.borderRadius,
+    border: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const CardHeader = styled("div", {
+  base: {
+    ...utility.row(0.5),
+    height: 46,
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: `0 ${theme.space[2]} 0 ${theme.space[4]}`,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
 export function Overview() {
   const rep = useReplicache();
   const app = useAppContext();
@@ -100,13 +128,18 @@ export function Overview() {
   const ghRepo = GithubRepoStore.all.watch(
     rep,
     () => [],
-    (repos) => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID)
+    (repos) => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID),
   );
   const ghRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID)
+    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID),
   );
+
+  const stages = createSubscription(async (tx) => {
+    const all = await StageStore.list(tx);
+    return all.filter((stage) => stage.appID === app.app.id);
+  }, []);
 
   return (
     <>
@@ -141,8 +174,9 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
-                    }`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${
+                    ghRepo()?.name
+                  }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />
@@ -156,6 +190,15 @@ export function Overview() {
               </Stack>
             </Show>
           </Row>
+          <StageGrid>
+            <For each={stages()}>
+              {(stage) => (
+                <Card>
+                  <CardHeader>{stage.name}</CardHeader>
+                </Card>
+              )}
+            </For>
+          </StageGrid>
         </Stack>
       </Root>
     </>
