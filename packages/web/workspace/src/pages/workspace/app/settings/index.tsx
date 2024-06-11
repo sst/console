@@ -35,7 +35,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { Trigger } from "@console/core/run/run.sql";
 import { minLength, object, string } from "valibot";
 import { formatCommit, formatSinceTime } from "$/common/format";
-import { For, Match, Show, Switch, createMemo, createEffect } from "solid-js";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { IconEllipsisVertical } from "$/ui/icons";
 import { useReplicache, createSubscription } from "$/providers/replicache";
 import {
@@ -370,12 +370,10 @@ export function Settings() {
     );
     const ghRepoOrg = await GithubOrgStore.get(tx, ghRepo?.githubOrgID!);
     const runEnvs = await RunEnvStore.forApp(tx, app.app.id);
-    console.log(runEnvs);
-
     return { appRepo, ghRepo, ghRepoOrg, runEnvs };
   });
 
-  const appRepo = () => repoInfo() && repoInfo()?.appRepo[0];
+  const appRepo = () => repoInfo.value?.appRepo[0];
 
   const lastEvent = createMemo(() => {
     const ev = appRepo()?.lastEvent;
@@ -596,7 +594,7 @@ export function Settings() {
   }
 
   return (
-    <Show when={repoInfo()}>
+    <Show when={repoInfo.value}>
       <Header app={app.app.name} />
       <SettingsRoot>
         <Stack space={PANEL_HEADER_SPACE}>
@@ -618,7 +616,7 @@ export function Settings() {
             </Text>
           </Stack>
           <Switch>
-            <Match when={repoInfo()!.ghRepoOrg}>
+            <Match when={repoInfo.value?.ghRepoOrg}>
               <GitRepoPanel>
                 <GitRepoPanelRow>
                   <Row space="2">
@@ -629,13 +627,13 @@ export function Settings() {
                       <GitRepoLink
                         target="_blank"
                         href={githubRepo(
-                          repoInfo()!.ghRepoOrg?.login,
-                          repoInfo()!.ghRepo?.name!
+                          repoInfo.value!.ghRepoOrg!.login,
+                          repoInfo.value!.ghRepo!.name!
                         )}
                       >
-                        {repoInfo()!.ghRepoOrg?.login}
+                        {repoInfo.value!.ghRepoOrg!.login}
                         <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
-                        {repoInfo()!.ghRepo?.name}
+                        {repoInfo.value!.ghRepo!.name}
                       </GitRepoLink>
                     </Stack>
                   </Row>
@@ -649,7 +647,7 @@ export function Settings() {
                       )
                         return;
                       rep().mutate.app_repo_disconnect(
-                        repoInfo()!.appRepo[0]!.id
+                        repoInfo.value!.appRepo[0]!.id
                       );
                     }}
                   >

@@ -9,8 +9,8 @@ import {
   foreignKey,
   mysqlEnum,
   bigint,
-  timestamp,
   text,
+  timestamp,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid, timestampsNext } from "../util/sql";
 import { Trigger } from "../run/run.sql";

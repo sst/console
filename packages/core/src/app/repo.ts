@@ -5,7 +5,7 @@ import { appRepoTable } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { event } from "../event";
 import { Trigger } from "../run/run.sql";
 

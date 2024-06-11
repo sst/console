@@ -191,7 +191,7 @@ export function Overview() {
             </Show>
           </Row>
           <StageGrid>
-            <For each={stages()}>
+            <For each={stages.value}>
               {(stage) => (
                 <Card>
                   <CardHeader>{stage.name}</CardHeader>

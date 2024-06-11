@@ -6,7 +6,6 @@ import {
 } from "$/providers/replicache";
 import { NavigationAction, useCommandBar } from "./command-bar";
 import { App } from "./app";
-import { Stage } from "./stage";
 import { Match, Switch, createEffect, createMemo } from "solid-js";
 import { IconWrenchScrewdriver } from "$/ui/icons";
 import { User } from "./user";
@@ -98,7 +97,8 @@ export function Content() {
   bar.register("stage-switcher", async (input, global) => {
     if (!input && global) return [];
     return stages().map((stage) => {
-      const app = apps().find((item) => item.id === stage.appID)!;
+      console.log(apps.value);
+      const app = apps.value.find((item) => item.id === stage.appID)!;
       return NavigationAction({
         icon: IconApp,
         category: "Stage",
@@ -112,7 +112,7 @@ export function Content() {
 
   bar.register("app-switcher", async (input, global) => {
     if (!input && global) return [];
-    return apps().map((app) =>
+    return apps.value.map((app) =>
       NavigationAction({
         icon: IconApp,
         category: "App",
