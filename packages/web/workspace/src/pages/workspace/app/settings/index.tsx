@@ -335,6 +335,31 @@ const TargetFormField = styled("div", {
   },
 });
 
+const TargetAddAccountLink = styled(Link, {
+  base: {
+    fontSize: theme.font.size.sm
+  },
+});
+
+const TargetFormFieldStack = styled("div", {
+  base: {
+    ...utility.stack(5),
+    flex: "1 1 auto",
+  },
+});
+
+const TargetFormFieldCol = styled("div", {
+  base: {
+    ...utility.row(2),
+    flex: 1,
+    alignItems: "flex-end",
+  },
+});
+
+const targetFormFieldDropdown = style({
+  marginBlock: 4,
+});
+
 const targetFormFieldFlex = style({
   flex: 1,
 });
@@ -470,7 +495,12 @@ export function Settings() {
             <TargetFormFieldLabelDesc>The account this stage is being deployed to.</TargetFormFieldLabelDesc>
           </TargetFormFieldLabel>
           <TargetFormField>
-            <FormField class={targetFormFieldFlex}>
+            <FormField
+              class={targetFormFieldFlex}
+              hint={
+                <TargetAddAccountLink href="/">Connect another AWS account</TargetAddAccountLink>
+              }
+            >
               <Select
                 options={[
                   {
@@ -488,14 +518,58 @@ export function Settings() {
             <TargetFormFieldLabelCopy>Environment Variables</TargetFormFieldLabelCopy>
             <TargetFormFieldLabelDesc>A list of environment variables for the runner.</TargetFormFieldLabelDesc>
           </TargetFormFieldLabel>
-          <TargetFormField>
-            <FormField label="Key" class={targetFormFieldFlex}>
-              <Input type="text" />
-            </FormField>
-            <FormField label="Value" class={targetFormFieldFlex}>
-              <Input type="text" />
-            </FormField>
-          </TargetFormField>
+          <TargetFormFieldStack>
+            <TargetFormField>
+              <FormField label="Key" class={targetFormFieldFlex}>
+                <Input type="text" />
+              </FormField>
+              <TargetFormFieldCol>
+                <FormField label="Value" class={targetFormFieldFlex}>
+                  <Input type="text" />
+                </FormField>
+                <Dropdown
+                  size="sm"
+                  triggerClass={targetFormFieldDropdown}
+                  icon={<IconEllipsisVertical width={18} height={18} />}
+                >
+                  <Dropdown.Item
+                  >
+                    Copy value
+                  </Dropdown.Item>
+                  <Dropdown.Seperator />
+                  <Dropdown.Item
+                  >
+                    Remove
+                  </Dropdown.Item>
+                </Dropdown>
+              </TargetFormFieldCol>
+            </TargetFormField>
+            <TargetFormField>
+              <FormField class={targetFormFieldFlex}>
+                <Input type="text" />
+              </FormField>
+              <TargetFormFieldCol>
+                <FormField class={targetFormFieldFlex}>
+                  <Input type="text" />
+                </FormField>
+                <Dropdown
+                  size="sm"
+                  triggerClass={targetFormFieldDropdown}
+                  icon={<IconEllipsisVertical width={18} height={18} />}
+                >
+                  <Dropdown.Item
+                  >
+                    Copy value
+                  </Dropdown.Item>
+                  <Dropdown.Seperator />
+                  <Dropdown.Item
+                  >
+                    Remove
+                  </Dropdown.Item>
+                </Dropdown>
+              </TargetFormFieldCol>
+            </TargetFormField>
+          </TargetFormFieldStack>
         </TargetFormRow>
         <TargetFormRowControls>
           <LinkButton>Cancel</LinkButton>
