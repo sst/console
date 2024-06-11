@@ -46,6 +46,7 @@ import {
 } from "$/common/url-builder";
 import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
 import {
+  IconPr,
   IconAdd,
   IconGit,
   IconStage,
@@ -443,10 +444,9 @@ export function Settings() {
     }
 
     const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
-    const uri =
-      ev.type === "push"
-        ? githubBranch(repoURL, ev.branch)
-        : githubPr(repoURL, ev.number);
+    const uri = ev.type === "push"
+      ? githubBranch(repoURL, ev.branch)
+      : githubPr(repoURL, ev.number);
     const branch = ev.type === "push" ? ev.branch : `pr#${ev.number}`;
     const commit = ev.commit.id;
 
@@ -469,7 +469,14 @@ export function Settings() {
             </EventCommitLink>
             <EventBranchLink target="_blank" href={lastEvent()!.uri}>
               <EventBranchIcon>
-                <IconGit width="12" height="12" />
+                <Switch>
+                  <Match when={appRepo()!.lastEvent!.type === "pull_request"}>
+                    <IconPr width="12" height="12" />
+                  </Match>
+                  <Match when={true}>
+                    <IconGit width="12" height="12" />
+                  </Match>
+                </Switch>
               </EventBranchIcon>
               {lastEvent()!.branch}
             </EventBranchLink>

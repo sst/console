@@ -1105,6 +1105,15 @@ export function IconGit(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   );
 }
 
+// https://api.iconify.design/ion:git-pull-request-outline.svg
+export function IconPr(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" {...props} viewBox="0 0 512 512">
+      <circle cx="128" cy="416" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" /><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M128 144v224m160-208l-64-64l64-64" /><circle cx="128" cy="96" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" /><circle cx="384" cy="416" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" /><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M240 96h84a60 60 0 0 1 60 60v212" />
+    </svg>
+  );
+}
+
 //https://api.iconify.design/ion:git-commit-outline.svg
 export function IconCommit(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   return (
