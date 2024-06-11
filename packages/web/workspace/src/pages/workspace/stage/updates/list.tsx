@@ -390,21 +390,28 @@ function Update(props: UpdateProps) {
 
   const run = RunStore.get.watch(rep, () => [ctx.stage.id, runID || "unknown"]);
 
+  const trigger = run()?.trigger;
   const repoURL = createMemo(() =>
-    run() && run().trigger.source === "github"
-      ? `https://github.com/${run().trigger.repo.owner}/${run().trigger.repo.repo}`
-      : "",
+    trigger?.source === "github"
+      ? `https://github.com/${trigger.repo.owner}/${trigger.repo.repo}`
+      : ""
   );
+  const branch = () =>
+    trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
+  const uri = () =>
+    trigger.type === "push"
+      ? `tree/${trigger.branch}`
+      : `pull/${trigger.number}`;
   const status = createMemo(() =>
     props.timeCompleted
       ? errors()
         ? "error"
         : "updated"
       : props.timeCanceled
-        ? "canceled"
-        : props.timeQueued
-          ? "queued"
-          : "updating",
+      ? "canceled"
+      : props.timeQueued
+      ? "queued"
+      : "updating"
   );
 
   return (
@@ -439,18 +446,16 @@ function Update(props: UpdateProps) {
                   {shortenCommit(run().trigger.commit.id)}
                 </UpdateGitCommit>
               </UpdateGitLink>
-              <Show when={run().trigger.branch}>
-                <UpdateGitLink
-                  target="_blank"
-                  rel="noreferrer"
-                  href={`${repoURL()}/tree/${run().trigger.branch}`}
-                >
-                  <UpdateGitIcon size="sm">
-                    <IconGit />
-                  </UpdateGitIcon>
-                  <UpdateGitBranch>{run().trigger.branch}</UpdateGitBranch>
-                </UpdateGitLink>
-              </Show>
+              <UpdateGitLink
+                target="_blank"
+                rel="noreferrer"
+                href={`${repoURL()}/${uri()}`}
+              >
+                <UpdateGitIcon size="sm">
+                  <IconGit />
+                </UpdateGitIcon>
+                <UpdateGitBranch>{branch()}</UpdateGitBranch>
+              </UpdateGitLink>
             </Row>
             <Show when={run().trigger.commit.message}>
               <UpdateGitMessage>
@@ -480,7 +485,7 @@ function Update(props: UpdateProps) {
             >
               <UpdateTime
                 title={DateTime.fromISO(props.timeStarted!).toLocaleString(
-                  DateTime.DATETIME_FULL,
+                  DateTime.DATETIME_FULL
                 )}
               >
                 {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
@@ -493,7 +498,9 @@ function Update(props: UpdateProps) {
                 <img
                   width="24"
                   height="24"
-                  src={`https://avatars.githubusercontent.com/u/${run().trigger.sender.id}?s=48&v=4`}
+                  src={`https://avatars.githubusercontent.com/u/${
+                    run().trigger.sender.id
+                  }?s=48&v=4`}
                 />
               </UpdateSenderAvatar>
             </Match>
@@ -525,7 +532,7 @@ function ChangeLegend(props: ChangeLegendProps) {
 
   const widths = createMemo(() => {
     const nonZero = [same(), created(), updated(), deleted()].filter(
-      (n) => n !== 0,
+      (n) => n !== 0
     ).length;
 
     let sameWidth =
@@ -549,7 +556,7 @@ function ChangeLegend(props: ChangeLegendProps) {
         sameWidth,
         createdWidth,
         updatedWidth,
-        deletedWidth,
+        deletedWidth
       );
       if (maxWidth === sameWidth) {
         sameWidth += widthDifference;
@@ -610,7 +617,7 @@ export function List() {
   const ctx = useStageContext();
   const updates = createSubscription(
     (tx) => StateUpdateStore.forStage(tx, ctx.stage.id),
-    [],
+    []
   );
 
   return (

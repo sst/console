@@ -374,14 +374,14 @@ export function Detail() {
   const resources = StateEventStore.forUpdate.watch(
     rep,
     () => [ctx.stage.id, params.updateID],
-    (resources) => sortBy(resources, [(r) => getResourceName(r.urn)!, "asc"]),
+    (resources) => sortBy(resources, [(r) => getResourceName(r.urn)!, "asc"])
   );
 
   const runID = createMemo(
     () =>
       update() &&
       update().source.type === "ci" &&
-      (update().source.properties as { runID: string }).runID,
+      (update().source.properties as { runID: string }).runID
   );
   const run = RunStore.get.watch(rep, () => [
     ctx.stage.id,
@@ -389,8 +389,10 @@ export function Detail() {
   ]);
   const repoURL = createMemo(() =>
     run() && run().trigger.source === "github"
-      ? `https://github.com/${run().trigger.repo.owner}/${run().trigger.repo.repo}`
-      : "",
+      ? `https://github.com/${run().trigger.repo.owner}/${
+          run().trigger.repo.repo
+        }`
+      : ""
   );
   const workspace = useWorkspace();
   const auth = useAuth2();
@@ -413,7 +415,7 @@ export function Detail() {
             "x-sst-workspace": workspace().id,
             Authorization: "Bearer " + auth.current.token,
           },
-        },
+        }
       ).then(
         (res) =>
           res.json() as Promise<
@@ -421,10 +423,10 @@ export function Detail() {
               message: string;
               timestamp: number;
             }[]
-          >,
+          >
       );
       return results;
-    },
+    }
   );
 
   const logsPoller = setInterval(() => {
@@ -447,13 +449,13 @@ export function Detail() {
         "updating";
   });
   const deleted = createMemo(() =>
-    resources().filter((r) => r.action === "deleted"),
+    resources().filter((r) => r.action === "deleted")
   );
   const created = createMemo(() =>
-    resources().filter((r) => r.action === "created"),
+    resources().filter((r) => r.action === "created")
   );
   const updated = createMemo(() =>
-    resources().filter((r) => r.action === "updated"),
+    resources().filter((r) => r.action === "updated")
   );
   const isEmpty = createMemo(
     () =>
@@ -461,48 +463,53 @@ export function Detail() {
       !deleted().length &&
       !created().length &&
       !updated().length &&
-      !update().resource.same,
+      !update().resource.same
   );
 
   function renderSidebar() {
+    const trigger = run().trigger;
+    const branch = () =>
+      trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
+    const uri = () =>
+      trigger.type === "push"
+        ? `tree/${trigger.branch}`
+        : `pull/${trigger.number}`;
     return (
       <Sidebar>
         <Stack space={run() ? "7" : "0"}>
           <Show when={run()} fallback={<SidebarSpacer />}>
             <GitInfo>
               <Row space="1.5" vertical="center">
-                <GitAvatar title={run().trigger.sender.username}>
+                <GitAvatar title={trigger.sender.username}>
                   <img
                     width={AVATAR_SIZE}
                     height={AVATAR_SIZE}
-                    src={`https://avatars.githubusercontent.com/u/${run().trigger.sender.id}?s=${2 * AVATAR_SIZE}&v=4`}
+                    src={`https://avatars.githubusercontent.com/u/${
+                      trigger.sender.id
+                    }?s=${2 * AVATAR_SIZE}&v=4`}
                   />
                 </GitAvatar>
                 <Stack space="0.5">
                   <GitLink
                     target="_blank"
                     rel="noreferrer"
-                    href={`${repoURL()}/commit/${run().trigger.commit.id}`}
+                    href={`${repoURL()}/commit/${trigger.commit.id}`}
                   >
                     <GitIcon size="md">
                       <IconCommit />
                     </GitIcon>
-                    <GitCommit>
-                      {shortenCommit(run().trigger.commit.id)}
-                    </GitCommit>
+                    <GitCommit>{shortenCommit(trigger.commit.id)}</GitCommit>
                   </GitLink>
-                  <Show when={run().trigger.branch}>
-                    <GitLink
-                      target="_blank"
-                      rel="noreferrer"
-                      href={`${repoURL()}/tree/${run().trigger.branch}`}
-                    >
-                      <GitIcon size="sm">
-                        <IconGit />
-                      </GitIcon>
-                      <GitBranch>{run().trigger.branch}</GitBranch>
-                    </GitLink>
-                  </Show>
+                  <GitLink
+                    target="_blank"
+                    rel="noreferrer"
+                    href={`${repoURL()}/${uri()}`}
+                  >
+                    <GitIcon size="sm">
+                      <IconGit />
+                    </GitIcon>
+                    <GitBranch>{branch()}</GitBranch>
+                  </GitLink>
                 </Stack>
               </Row>
             </GitInfo>
@@ -515,7 +522,7 @@ export function Detail() {
                 title={
                   update().time.started
                     ? DateTime.fromISO(update().time.started!).toLocaleString(
-                        DateTime.DATETIME_FULL,
+                        DateTime.DATETIME_FULL
                       )
                     : undefined
                 }
@@ -523,7 +530,7 @@ export function Detail() {
                 {update().time.started
                   ? formatSinceTime(
                       DateTime.fromISO(update().time.started!).toSQL()!,
-                      true,
+                      true
                     )
                   : "—"}
               </Text>
@@ -543,7 +550,7 @@ export function Detail() {
                       DateTime.fromISO(update().time.completed!)
                         .diff(DateTime.fromISO(update().time.started!))
                         .as("milliseconds"),
-                      true,
+                      true
                     )
                   : "—"}
               </Text>
@@ -670,7 +677,7 @@ export function Detail() {
                     >
                       Logs —{" "}
                       {DateTime.fromMillis(
-                        logs()![0].timestamp!,
+                        logs()![0].timestamp!
                       ).toLocaleString(DATETIME_NO_TIME)}
                     </PanelTitle>
                   </Show>
@@ -693,11 +700,11 @@ export function Detail() {
                               title={DateTime.fromMillis(entry.timestamp)
                                 .toUTC()
                                 .toLocaleString(
-                                  DateTime.DATETIME_FULL_WITH_SECONDS,
+                                  DateTime.DATETIME_FULL_WITH_SECONDS
                                 )}
                             >
                               {DateTime.fromMillis(entry.timestamp).toFormat(
-                                "HH:mm:ss.SSS",
+                                "HH:mm:ss.SSS"
                               )}
                             </LogTime>
                             <LogMessage>{entry.message}</LogMessage>
