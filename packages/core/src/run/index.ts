@@ -304,8 +304,6 @@ export module Run {
 
         await createTransactionEffect(() => Event.Created.publish({ stageID }));
       });
-
-      return { runID, stateUpdateID };
     }
   );
 
@@ -416,6 +414,12 @@ export module Run {
         throw new Error("Failed to create runner");
       }
 
+      // Get run env
+      const consoleEnv = await RunEnv.listByStage({
+        appID: stage.appID,
+        stageName: run.config.target.stage,
+      });
+
       // Build cloneUrl
       context = "start runner";
       const gitRepo = await Github.getByRepoID(appRepo.repoID);
@@ -442,7 +446,10 @@ export module Run {
             stateUpdateID: run.stateUpdateID,
             workspaceID: useWorkspace(),
             stage: run.config.target.stage,
-            env: run.config.target.env ?? {},
+            env: {
+              ...run.config.target.env,
+              ...consoleEnv,
+            },
             cloneUrl,
             credentials: awsConfig.credentials,
             trigger: run.trigger,

@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { minimatch } from "minimatch";
 import { zod } from "../util/zod";
 import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { runEnvTable } from "./run.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { event } from "../event";
 
 export * as RunEnv from "./env";
@@ -14,10 +15,10 @@ export const Events = {
   Updated: event(
     "app.env.updated",
     z.object({
-      appID: z.string(),
-      stageName: z.string(),
-      key: z.string(),
-      value: z.string(),
+      appID: z.string().cuid2(),
+      stageName: z.string().nonempty(),
+      key: z.string().nonempty(),
+      value: z.string().nonempty(),
     })
   ),
 };
@@ -31,6 +32,30 @@ export const listByStage = zod(
     stageName: true,
   }),
   async (input) => {
+    // Get all stage patterns
+    const stages = await useTransaction((tx) =>
+      tx
+        .selectDistinct({
+          stageName: runEnvTable.stageName,
+        })
+        .from(runEnvTable)
+        .where(
+          and(
+            eq(runEnvTable.workspaceID, useWorkspace()),
+            eq(runEnvTable.appID, input.appID)
+          )
+        )
+        .execute()
+        .then((rows) => rows)
+    );
+
+    // Find matching stage pattern
+    const found = stages.find((row) =>
+      minimatch(input.stageName, row.stageName)
+    );
+    if (!found) return {};
+
+    // Get all envs
     const ret = await useTransaction((tx) =>
       tx
         .select()
@@ -39,12 +64,13 @@ export const listByStage = zod(
           and(
             eq(runEnvTable.workspaceID, useWorkspace()),
             eq(runEnvTable.appID, input.appID),
-            inArray(runEnvTable.stageName, ["", input.stageName])
+            eq(runEnvTable.stageName, found.stageName)
           )
         )
         .execute()
         .then((rows) => rows)
     );
+
     const envs: Record<string, string> = {};
     for (const row of ret) {
       if (row.stageName === "" && row.key in envs) continue;

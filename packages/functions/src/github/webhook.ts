@@ -136,16 +136,10 @@ async function process(octokit: Octokit, trigger: Trigger) {
       },
       async () => {
         try {
-          const { stateUpdateID } = await Run.create({
+          await Run.create({
             appID: appRepo.appID,
             trigger,
             sstConfig: sstConfig!,
-          });
-          await AppRepo.setLastEventStateUpdateID({
-            appID: appRepo.appID,
-            repoID,
-            lastEventID,
-            stateUpdateID,
           });
         } catch (e: any) {
           await AppRepo.setLastEventStatus({

@@ -12,7 +12,7 @@ import {
   timestamp,
   text,
 } from "drizzle-orm/mysql-core";
-import { timestamps, workspaceID, cuid } from "../util/sql";
+import { timestamps, workspaceID, cuid, timestampsNext } from "../util/sql";
 import { Trigger } from "../run/run.sql";
 
 export const app = mysqlTable(
@@ -72,18 +72,17 @@ export const resource = mysqlTable(
   })
 );
 
-export const appRepo = mysqlTable(
+export const appRepoTable = mysqlTable(
   "app_repo",
   {
     ...workspaceID,
-    ...timestamps,
+    ...timestampsNext,
     appID: cuid("app_id").notNull(),
-    type: mysqlEnum("type", ["github"]),
+    type: mysqlEnum("type", ["github"]).notNull(),
     repoID: bigint("repo_id", { mode: "number" }).notNull(),
     lastEvent: json("last_event").$type<Trigger>(),
     lastEventID: cuid("last_event_id"),
     lastEventStatus: text("last_event_status"),
-    lastEventStateUpdateID: cuid("last_event_state_update_id"),
     timeLastEvent: timestamp("time_last_event"),
   },
   (table) => ({

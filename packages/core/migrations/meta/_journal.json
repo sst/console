@@ -204,6 +204,13 @@
       "when": 1718120420284,
       "tag": "0028_lowly_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1718127424814,
+      "tag": "0029_fast_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

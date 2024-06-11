@@ -38,9 +38,20 @@ import { formatCommit, formatSinceTime } from "$/common/format";
 import { For, Match, Show, Switch, createMemo, createEffect } from "solid-js";
 import { IconEllipsisVertical } from "$/ui/icons";
 import { useReplicache, createSubscription } from "$/providers/replicache";
-import { githubPr, githubRepo, githubBranch, githubCommit } from "$/common/url-builder";
+import {
+  githubPr,
+  githubRepo,
+  githubBranch,
+  githubCommit,
+} from "$/common/url-builder";
 import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
-import { IconAdd, IconGit, IconCommit, IconGitHub, IconSubRight } from "$/ui/icons/custom";
+import {
+  IconAdd,
+  IconGit,
+  IconCommit,
+  IconGitHub,
+  IconSubRight,
+} from "$/ui/icons/custom";
 
 const GitRepoPanel = styled("div", {
   base: {
@@ -222,8 +233,7 @@ const EventBranchIcon = styled("span", {
 });
 
 const TargetsRoot = styled("div", {
-  base: {
-  },
+  base: {},
 });
 
 const TargetsEmpty = styled("div", {
@@ -323,7 +333,7 @@ const TargetFormField = styled("div", {
 
 const TargetAddAccountLink = styled(Link, {
   base: {
-    fontSize: theme.font.size.sm
+    fontSize: theme.font.size.sm,
   },
 });
 
@@ -356,7 +366,7 @@ export function Settings() {
   const repoInfo = createSubscription(async (tx) => {
     const appRepo = await AppRepoStore.forApp(tx, app.app.id);
     const ghRepo = (await GithubRepoStore.all(tx)).find(
-      (repo) => repo.repoID === appRepo[0]?.repoID,
+      (repo) => repo.repoID === appRepo[0]?.repoID
     );
     const ghRepoOrg = await GithubOrgStore.get(tx, ghRepo?.githubOrgID!);
     const runEnvs = await RunEnvStore.forApp(tx, app.app.id);
@@ -368,24 +378,24 @@ export function Settings() {
   const appRepo = () => repoInfo() && repoInfo()?.appRepo[0];
 
   const lastEvent = createMemo(() => {
-    // TODO: Remove temp cast
-    const ev = appRepo()?.lastEvent as Trigger;
+    const ev = appRepo()?.lastEvent;
 
     if (!appRepo() || !ev) {
       return;
     }
 
     const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
-    const uri = ev.type === "push"
-      ? githubBranch(repoURL, ev.branch)
-      : githubPr(repoURL, ev.number);
+    const uri =
+      ev.type === "push"
+        ? githubBranch(repoURL, ev.branch)
+        : githubPr(repoURL, ev.number);
     const branch = ev.type === "push" ? ev.branch : `pr#${ev.number}`;
     const commit = ev.commit.id;
 
     return { repoURL, uri, branch, commit };
   });
 
-  // const repoURL = () => 
+  // const repoURL = () =>
   // let branch: () => string;
   // let commit: () => string;
   // let uri: () => string;
@@ -414,10 +424,7 @@ export function Settings() {
               </EventCommitIcon>
               {formatCommit(lastEvent()!.commit)}
             </EventCommitLink>
-            <EventBranchLink
-              target="_blank"
-              href={lastEvent()!.uri}
-            >
+            <EventBranchLink target="_blank" href={lastEvent()!.uri}>
               <EventBranchIcon>
                 <IconGit width="12" height="12" />
               </EventBranchIcon>
@@ -427,11 +434,17 @@ export function Settings() {
           <EventResult>
             <Switch>
               <Match when={appRepo()?.lastEventStatus}>
-                <EventResultIcon status="error"><IconSubRight /></EventResultIcon>
-                <EventResultCopy status="error">{appRepo()?.lastEventStatus}</EventResultCopy>
+                <EventResultIcon status="error">
+                  <IconSubRight />
+                </EventResultIcon>
+                <EventResultCopy status="error">
+                  {appRepo()?.lastEventStatus}
+                </EventResultCopy>
               </Match>
               <Match when={true}>
-                <EventResultIcon status="success"><IconSubRight /></EventResultIcon>
+                <EventResultIcon status="success">
+                  <IconSubRight />
+                </EventResultIcon>
                 <EventResultCopy status="success">Deployed</EventResultCopy>
               </Match>
             </Switch>
@@ -439,16 +452,17 @@ export function Settings() {
         </Stack>
         <EventRight>
           <EventLabel>Last Commit</EventLabel>
-          {/* @ts-ignore */}
-          <EventTime title={DateTime.fromISO(appRepo()!.timeLastEvent! as string).toLocaleString(
-            DateTime.DATETIME_FULL,
-          )}
+          <EventTime
+            title={DateTime.fromISO(appRepo()!.time.lastEvent!).toLocaleString(
+              DateTime.DATETIME_FULL
+            )}
           >
-            {/* @ts-ignore */}
-            {formatSinceTime(DateTime.fromISO(appRepo()!.timeLastEvent! as string).toSQL()!)}
+            {formatSinceTime(
+              DateTime.fromISO(appRepo()!.time.lastEvent!).toSQL()!
+            )}
           </EventTime>
         </EventRight>
-      </EventRoot >
+      </EventRoot>
     );
   }
 
@@ -457,7 +471,9 @@ export function Settings() {
       <TargetsRoot>
         <TargetsEmpty>
           <LinkButton>
-            <TargetsEmptyIcon><IconAdd width="10" height="10" /></TargetsEmptyIcon>
+            <TargetsEmptyIcon>
+              <IconAdd width="10" height="10" />
+            </TargetsEmptyIcon>
             Add a deployment target
           </LinkButton>
         </TargetsEmpty>
@@ -472,25 +488,19 @@ export function Settings() {
           <TargetFormHeaderCopy>Add a new target</TargetFormHeaderCopy>
           <Dropdown
             size="sm"
-            icon={
-              <IconEllipsisVertical width={18} height={18} />
-            }
+            icon={<IconEllipsisVertical width={18} height={18} />}
           >
-            <Dropdown.Item
-            >
-              Duplicate target
-            </Dropdown.Item>
+            <Dropdown.Item>Duplicate target</Dropdown.Item>
             <Dropdown.Seperator />
-            <Dropdown.Item
-            >
-              Remove target
-            </Dropdown.Item>
+            <Dropdown.Item>Remove target</Dropdown.Item>
           </Dropdown>
         </TargetFormHeader>
         <TargetFormRow>
           <TargetFormFieldLabel>
             <TargetFormFieldLabelCopy>Stage</TargetFormFieldLabelCopy>
-            <TargetFormFieldLabelDesc>The stage that's being deployed.</TargetFormFieldLabelDesc>
+            <TargetFormFieldLabelDesc>
+              The stage that's being deployed.
+            </TargetFormFieldLabelDesc>
           </TargetFormFieldLabel>
           <TargetFormField>
             <FormField class={targetFormFieldFlex}>
@@ -502,13 +512,17 @@ export function Settings() {
         <TargetFormRow>
           <TargetFormFieldLabel>
             <TargetFormFieldLabelCopy>AWS Account</TargetFormFieldLabelCopy>
-            <TargetFormFieldLabelDesc>The account this stage is being deployed to.</TargetFormFieldLabelDesc>
+            <TargetFormFieldLabelDesc>
+              The account this stage is being deployed to.
+            </TargetFormFieldLabelDesc>
           </TargetFormFieldLabel>
           <TargetFormField>
             <FormField
               class={targetFormFieldFlex}
               hint={
-                <TargetAddAccountLink href="/">Connect another AWS account</TargetAddAccountLink>
+                <TargetAddAccountLink href="/">
+                  Connect another AWS account
+                </TargetAddAccountLink>
               }
             >
               <Select
@@ -525,8 +539,12 @@ export function Settings() {
         </TargetFormRow>
         <TargetFormRow>
           <TargetFormFieldLabel>
-            <TargetFormFieldLabelCopy>Environment Variables</TargetFormFieldLabelCopy>
-            <TargetFormFieldLabelDesc>A list of environment variables for the runner.</TargetFormFieldLabelDesc>
+            <TargetFormFieldLabelCopy>
+              Environment Variables
+            </TargetFormFieldLabelCopy>
+            <TargetFormFieldLabelDesc>
+              A list of environment variables for the runner.
+            </TargetFormFieldLabelDesc>
           </TargetFormFieldLabel>
           <TargetFormFieldStack>
             <TargetFormField>
@@ -542,15 +560,9 @@ export function Settings() {
                   triggerClass={targetFormFieldDropdown}
                   icon={<IconEllipsisVertical width={18} height={18} />}
                 >
-                  <Dropdown.Item
-                  >
-                    Copy value
-                  </Dropdown.Item>
+                  <Dropdown.Item>Copy value</Dropdown.Item>
                   <Dropdown.Seperator />
-                  <Dropdown.Item
-                  >
-                    Remove
-                  </Dropdown.Item>
+                  <Dropdown.Item>Remove</Dropdown.Item>
                 </Dropdown>
               </TargetFormFieldCol>
             </TargetFormField>
@@ -567,15 +579,9 @@ export function Settings() {
                   triggerClass={targetFormFieldDropdown}
                   icon={<IconEllipsisVertical width={18} height={18} />}
                 >
-                  <Dropdown.Item
-                  >
-                    Copy value
-                  </Dropdown.Item>
+                  <Dropdown.Item>Copy value</Dropdown.Item>
                   <Dropdown.Seperator />
-                  <Dropdown.Item
-                  >
-                    Remove
-                  </Dropdown.Item>
+                  <Dropdown.Item>Remove</Dropdown.Item>
                 </Dropdown>
               </TargetFormFieldCol>
             </TargetFormField>
@@ -622,9 +628,10 @@ export function Settings() {
                     <Stack space="1">
                       <GitRepoLink
                         target="_blank"
-                        href={
-                          githubRepo(repoInfo()!.ghRepoOrg?.login, repoInfo()!.ghRepo?.name!)
-                        }
+                        href={githubRepo(
+                          repoInfo()!.ghRepoOrg?.login,
+                          repoInfo()!.ghRepo?.name!
+                        )}
                       >
                         {repoInfo()!.ghRepoOrg?.login}
                         <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
@@ -637,12 +644,12 @@ export function Settings() {
                     onClick={() => {
                       if (
                         !confirm(
-                          "Are you sure you want to disconnect from this repo?",
+                          "Are you sure you want to disconnect from this repo?"
                         )
                       )
                         return;
                       rep().mutate.app_repo_disconnect(
-                        repoInfo()!.appRepo[0]!.id,
+                        repoInfo()!.appRepo[0]!.id
                       );
                     }}
                   >
@@ -673,7 +680,7 @@ export function Settings() {
         <Divider />
         <Env />
       </SettingsRoot>
-    </Show >
+    </Show>
   );
 }
 
@@ -749,7 +756,7 @@ function Env() {
             },
             {
               on: "blur",
-            },
+            }
           )}
         >
           {(field, props) => (
@@ -767,7 +774,7 @@ function Env() {
             },
             {
               on: "blur",
-            },
+            }
           )}
         >
           {(field, props) => (
@@ -785,7 +792,7 @@ function Env() {
             },
             {
               on: "blur",
-            },
+            }
           )}
         >
           {(field, props) => (
@@ -820,15 +827,15 @@ function RepoInfo() {
   const appRepo = AppRepoStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0),
+    (all) => all.at(0)
   );
   const connectedRepo = createMemo(() =>
-    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID),
+    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID)
   );
   const connectedRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID),
+    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID)
   );
 
   return (

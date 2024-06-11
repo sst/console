@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { workspaceID, cuid, timestampsNext } from "../util/sql";
 import { z } from "zod";
-import { app, appRepo, stage } from "../app/app.sql";
+import { app, appRepoTable, stage } from "../app/app.sql";
 import { workspaceIndexes } from "../workspace/workspace.sql";
 import { awsAccount } from "../aws/aws.sql";
 
@@ -118,7 +118,7 @@ export const runnerTable = mysqlTable(
     repoID: foreignKey({
       name: "repo_id_fk",
       columns: [table.workspaceID, table.appRepoID],
-      foreignColumns: [appRepo.workspaceID, appRepo.id],
+      foreignColumns: [appRepoTable.workspaceID, appRepoTable.id],
     }).onDelete("cascade"),
   })
 );

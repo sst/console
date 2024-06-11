@@ -43,6 +43,7 @@
     "drizzle-orm": "0.30.10",
     "drizzle-zod": "0.5.1",
     "luxon": "^3.3.0",
+    "minimatch": "^9.0.4",
     "octokit": "^4.0.2",
     "react": "18.2.0",
     "relaxed-json": "^1.0.3",

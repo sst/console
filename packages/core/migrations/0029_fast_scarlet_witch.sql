@@ -1,0 +1,1 @@
+ALTER TABLE `app_repo` DROP COLUMN `last_event_state_update_id`;
