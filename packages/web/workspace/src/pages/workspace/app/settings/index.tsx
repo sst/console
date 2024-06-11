@@ -36,7 +36,7 @@ import { Trigger } from "@console/core/run/run.sql";
 import { minLength, object, string } from "valibot";
 import { formatCommit, formatSinceTime } from "$/common/format";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
-import { IconEllipsisVertical } from "$/ui/icons";
+import { IconEllipsisHorizontal, IconEllipsisVertical } from "$/ui/icons";
 import { useReplicache, createSubscription } from "$/providers/replicache";
 import {
   githubPr,
@@ -48,10 +48,13 @@ import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
 import {
   IconAdd,
   IconGit,
+  IconStage,
   IconCommit,
   IconGitHub,
   IconSubRight,
 } from "$/ui/icons/custom";
+
+const HEADER_HEIGHT = 50;
 
 const GitRepoPanel = styled("div", {
   base: {
@@ -233,7 +236,26 @@ const EventBranchIcon = styled("span", {
 });
 
 const TargetsRoot = styled("div", {
-  base: {},
+  base: {
+    ...utility.stack(4),
+    width: "100%",
+  },
+});
+
+const TargetHeader = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+});
+
+const TargetHeaderCopy = styled("span", {
+  base: {
+    ...utility.text.label,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.secondary.base,
+  },
 });
 
 const TargetsEmpty = styled("div", {
@@ -257,19 +279,41 @@ const TargetsEmptyIcon = styled("span", {
 
 const TargetFormRoot = styled("div", {
   base: {
-    borderRadius: theme.borderRadius,
-    border: `1px solid ${theme.color.divider.base}`,
+    borderWidth: "1px 1px 0 1px",
+    borderStyle: "solid",
+    borderColor: theme.color.divider.base,
+    selectors: {
+      "&:first-child": {
+        borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
+      },
+      "&:last-child": {
+        borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+        borderBottomWidth: 1,
+      },
+    },
   },
 });
 
 const TargetFormHeader = styled("div", {
   base: {
     ...utility.row(2),
+    height: HEADER_HEIGHT,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `${theme.space[2]} ${theme.space[3]} ${theme.space[2]} ${theme.space[5]}`,
+    padding: `0 ${theme.space[3]} 0 ${theme.space[5]}`,
     backgroundColor: theme.color.background.surface,
     borderBottom: `1px solid ${theme.color.divider.surface}`,
+    selectors: {
+      "&:last-child": {
+        borderBottomWidth: 0,
+      },
+    },
+  },
+});
+
+const TargetAddIcon = styled("span", {
+  base: {
+    paddingRight: 6,
   },
 });
 
@@ -339,7 +383,7 @@ const TargetAddAccountLink = styled(Link, {
 
 const TargetFormFieldStack = styled("div", {
   base: {
-    ...utility.stack(5),
+    ...utility.stack(4),
     flex: "1 1 auto",
   },
 });
@@ -349,6 +393,22 @@ const TargetFormFieldCol = styled("div", {
     ...utility.row(2),
     flex: 1,
     alignItems: "flex-end",
+  },
+});
+
+const TargetAddVarLink = styled(LinkButton, {
+  base: {
+    fontSize: theme.font.size.sm,
+    fontFamily: theme.font.family.body,
+    fontWeight: theme.font.weight.regular,
+  },
+});
+
+const TargetAddVarIcon = styled("span", {
+  base: {
+    lineHeight: 0,
+    paddingRight: 6,
+    opacity: theme.iconOpacity,
   },
 });
 
@@ -392,21 +452,6 @@ export function Settings() {
 
     return { repoURL, uri, branch, commit };
   });
-
-  // const repoURL = () =>
-  // let branch: () => string;
-  // let commit: () => string;
-  // let uri: () => string;
-  //
-  // if (appRepo() && lastEvent()) {
-  //   repoURL = () => githubRepo(lastEvent().repo.owner, lastEvent().repo.repo);
-  //   uri = () => lastEvent().type === "push"
-  //     ? githubBranch(repoURL(), lastEvent().branch)
-  //     : githubPr(repoURL(), lastEvent().number);
-  //   branch = () =>
-  //     lastEvent().type === "push" ? lastEvent().branch : `pr#${lastEvent().number}`;
-  //   commit = () => lastEvent().commit.id;
-  // }
 
   function LastEvent() {
     return (
@@ -465,33 +510,81 @@ export function Settings() {
   }
 
   function Targets() {
+    const empty = false;
     return (
       <TargetsRoot>
-        <TargetsEmpty>
+        <TargetHeader>
+          <TargetHeaderCopy>
+            Deployment Targets
+          </TargetHeaderCopy>
           <LinkButton>
-            <TargetsEmptyIcon>
+            <TargetAddIcon>
               <IconAdd width="10" height="10" />
-            </TargetsEmptyIcon>
-            Add a deployment target
+            </TargetAddIcon>
+            Add a new target
           </LinkButton>
-        </TargetsEmpty>
+        </TargetHeader>
+        <div>
+          <Target />
+          <TargetForm />
+          <TargetForm new />
+          <Show when={empty}>
+            <TargetsEmpty>
+              <LinkButton>
+                <TargetsEmptyIcon>
+                  <IconAdd width="10" height="10" />
+                </TargetsEmptyIcon>
+                Add a deployment target
+              </LinkButton>
+            </TargetsEmpty>
+          </Show>
+        </div>
       </TargetsRoot>
     );
   }
 
-  function TargetForm() {
+  function Target() {
     return (
       <TargetFormRoot>
         <TargetFormHeader>
-          <TargetFormHeaderCopy>Add a new target</TargetFormHeaderCopy>
+          <TargetFormHeaderCopy>staging</TargetFormHeaderCopy>
           <Dropdown
             size="sm"
             icon={<IconEllipsisVertical width={18} height={18} />}
           >
+            <Dropdown.Item>Edit target</Dropdown.Item>
             <Dropdown.Item>Duplicate target</Dropdown.Item>
             <Dropdown.Seperator />
             <Dropdown.Item>Remove target</Dropdown.Item>
           </Dropdown>
+        </TargetFormHeader>
+      </TargetFormRoot>
+    );
+  }
+
+  interface TargetProps {
+    new?: boolean;
+  }
+  function TargetForm(props: TargetProps) {
+    return (
+      <TargetFormRoot>
+        <TargetFormHeader>
+          <Switch>
+            <Match when={props.new}>
+              <TargetFormHeaderCopy>Add a new target</TargetFormHeaderCopy>
+            </Match>
+            <Match when={true}>
+              <TargetFormHeaderCopy>production</TargetFormHeaderCopy>
+              <Dropdown
+                size="sm"
+                icon={<IconEllipsisVertical width={18} height={18} />}
+              >
+                <Dropdown.Item>Duplicate target</Dropdown.Item>
+                <Dropdown.Seperator />
+                <Dropdown.Item>Remove target</Dropdown.Item>
+              </Dropdown>
+            </Match>
+          </Switch>
         </TargetFormHeader>
         <TargetFormRow>
           <TargetFormFieldLabel>
@@ -501,7 +594,7 @@ export function Settings() {
             </TargetFormFieldLabelDesc>
           </TargetFormFieldLabel>
           <TargetFormField>
-            <FormField class={targetFormFieldFlex}>
+            <FormField hint="Accepts glob patterns." class={targetFormFieldFlex}>
               <Input placeholder="production" type="text" />
             </FormField>
             <Grower />
@@ -545,61 +638,67 @@ export function Settings() {
             </TargetFormFieldLabelDesc>
           </TargetFormFieldLabel>
           <TargetFormFieldStack>
-            <TargetFormField>
-              <FormField label="Key" class={targetFormFieldFlex}>
-                <Input type="text" />
-              </FormField>
-              <TargetFormFieldCol>
-                <FormField label="Value" class={targetFormFieldFlex}>
-                  <Input type="text" />
-                </FormField>
-                <Dropdown
-                  size="sm"
-                  triggerClass={targetFormFieldDropdown}
-                  icon={<IconEllipsisVertical width={18} height={18} />}
-                >
-                  <Dropdown.Item>Copy value</Dropdown.Item>
-                  <Dropdown.Seperator />
-                  <Dropdown.Item
-                  >
-                    Remove variable
-                  </Dropdown.Item>
-                </Dropdown>
-              </TargetFormFieldCol>
-            </TargetFormField>
-            <TargetFormField>
-              <FormField class={targetFormFieldFlex}>
-                <Input type="text" />
-              </FormField>
-              <TargetFormFieldCol>
-                <FormField class={targetFormFieldFlex}>
-                  <Input type="text" />
-                </FormField>
-                <Dropdown
-                  size="sm"
-                  triggerClass={targetFormFieldDropdown}
-                  icon={<IconEllipsisVertical width={18} height={18} />}
-                >
-                  <Dropdown.Item>Copy value</Dropdown.Item>
-                  <Dropdown.Seperator />
-                  <Dropdown.Item
-                  >
-                    Remove variable
-                  </Dropdown.Item>
-                </Dropdown>
-              </TargetFormFieldCol>
-            </TargetFormField>
-            <LinkButton>
-              <IconAdd width="10" height="10" />
+            <Switch>
+              <Match when={props.new}>
+                <TargetEnvVar first />
+              </Match>
+              <Match when={true}>
+                <TargetEnvVar first key="key1" value="value1" />
+                <TargetEnvVar key="key2" value="value2" />
+              </Match>
+            </Switch>
+            <TargetAddVarLink>
+              <TargetAddVarIcon>
+                <IconAdd width="10" height="10" />
+              </TargetAddVarIcon>
               Add another variable
-            </LinkButton>
+            </TargetAddVarLink>
           </TargetFormFieldStack>
         </TargetFormRow>
         <TargetFormRowControls>
           <LinkButton>Cancel</LinkButton>
-          <Button color="primary">Add Target</Button>
+          <Switch>
+            <Match when={props.new}>
+              <Button color="primary">Add Target</Button>
+            </Match>
+            <Match when={true}>
+              <Button color="success">Update Target</Button>
+            </Match>
+          </Switch>
         </TargetFormRowControls>
       </TargetFormRoot>
+    );
+  }
+
+  interface TargetEnvVarProps {
+    key?: string;
+    value?: string;
+    first?: boolean;
+  }
+  function TargetEnvVar(props: TargetEnvVarProps) {
+    return (
+      <TargetFormField>
+        <FormField label={props.first ? "Key" : undefined} class={targetFormFieldFlex}>
+          <Input type="text" value={props.key} />
+        </FormField>
+        <TargetFormFieldCol>
+          <FormField label={props.first ? "Value" : undefined} class={targetFormFieldFlex}>
+            <Input type="text" value={props.value} />
+          </FormField>
+          <Dropdown
+            size="sm"
+            triggerClass={targetFormFieldDropdown}
+            icon={<IconEllipsisVertical width={18} height={18} />}
+          >
+            <Dropdown.Item>Copy value</Dropdown.Item>
+            <Dropdown.Seperator />
+            <Dropdown.Item
+            >
+              Remove variable
+            </Dropdown.Item>
+          </Dropdown>
+        </TargetFormFieldCol>
+      </TargetFormField>
     );
   }
 
@@ -667,11 +766,8 @@ export function Settings() {
                 <Show when={lastEvent()}>
                   <LastEvent />
                 </Show>
-                <Show when={false}>
-                  <Targets />
-                </Show>
-                <TargetForm />
               </GitRepoPanel>
+              <Targets />
             </Match>
             <Match when={true}>
               <Button color="github">

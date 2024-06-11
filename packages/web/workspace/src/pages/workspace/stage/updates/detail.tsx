@@ -466,24 +466,30 @@ export function Detail() {
   );
 
   function renderSidebar() {
-    const trigger = run().trigger;
-    const branch = () =>
-      trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
-    const uri = () =>
-      trigger.type === "push"
-        ? githubBranch(repoURL(), trigger.branch)
-        : githubPr(repoURL(), trigger.number);
+    const runInfo = createMemo(() => {
+      if (!run()) return;
+
+      const trigger = run().trigger;
+      const branch = () =>
+        trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
+      const uri = () =>
+        trigger.type === "push"
+          ? githubBranch(repoURL(), trigger.branch)
+          : githubPr(repoURL(), trigger.number);
+
+      return { trigger, branch, uri };
+    });
     return (
       <Sidebar>
-        <Stack space={run() ? "7" : "0"}>
-          <Show when={run()} fallback={<SidebarSpacer />}>
+        <Stack space={runInfo() ? "7" : "0"}>
+          <Show when={runInfo()} fallback={<SidebarSpacer />}>
             <GitInfo>
               <Row space="1.5" vertical="center">
-                <GitAvatar title={trigger.sender.username}>
+                <GitAvatar title={runInfo()!.trigger.sender.username}>
                   <img
                     width={AVATAR_SIZE}
                     height={AVATAR_SIZE}
-                    src={`https://avatars.githubusercontent.com/u/${trigger.sender.id
+                    src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
                       }?s=${2 * AVATAR_SIZE}&v=4`}
                   />
                 </GitAvatar>
@@ -491,22 +497,22 @@ export function Detail() {
                   <GitLink
                     target="_blank"
                     rel="noreferrer"
-                    href={githubCommit(repoURL(), trigger.commit.id)}
+                    href={githubCommit(repoURL(), runInfo()!.trigger.commit.id)}
                   >
                     <GitIcon size="md">
                       <IconCommit />
                     </GitIcon>
-                    <GitCommit>{shortenCommit(trigger.commit.id)}</GitCommit>
+                    <GitCommit>{shortenCommit(runInfo()!.trigger.commit.id)}</GitCommit>
                   </GitLink>
                   <GitLink
                     target="_blank"
                     rel="noreferrer"
-                    href={uri()}
+                    href={runInfo()!.uri()}
                   >
                     <GitIcon size="sm">
                       <IconGit />
                     </GitIcon>
-                    <GitBranch>{branch()}</GitBranch>
+                    <GitBranch>{runInfo()!.branch()}</GitBranch>
                   </GitLink>
                 </Stack>
               </Row>
