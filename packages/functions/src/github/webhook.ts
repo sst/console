@@ -1,6 +1,6 @@
 import { Github } from "@console/core/git/github";
 import { Run } from "@console/core/run";
-import { App } from "octokit";
+import { App, Octokit } from "octokit";
 import { ApiHandler, useBody, useHeader } from "sst/node/api";
 import { Config } from "sst/node/config";
 import { AppRepo } from "@console/core/app/repo";
@@ -19,28 +19,64 @@ app.webhooks.on("installation.deleted", async (event) => {
   await Github.disconnectAll(installationID);
 });
 
+app.webhooks.on(
+  ["pull_request.opened", "pull_request.synchronize"],
+  async (event) => {
+    const commitID = event.payload.pull_request.head.sha;
+    const owner = event.payload.repository.owner!.login;
+    const repo = event.payload.repository.name;
+    const commit = await event.octokit.rest.repos.getCommit({
+      owner,
+      repo,
+      ref: commitID,
+    });
+    await process(event.octokit, {
+      source: "github",
+      type: "pull_request",
+      repo: {
+        id: event.payload.repository.id,
+        owner,
+        repo,
+      },
+      number: event.payload.number,
+      base: event.payload.pull_request.base.ref.replace("refs/heads/", ""),
+      head: event.payload.pull_request.head.ref.replace("refs/heads/", ""),
+      commit: {
+        id: commitID,
+        message: commit.data.commit.message?.substring(0, 100)!,
+      },
+      sender: {
+        id: event.payload.sender?.id!,
+        username: event.payload.sender?.login!,
+      },
+    });
+  }
+);
+
 app.webhooks.on("push", async (event) => {
-  const repoID = event.payload.repository.id;
-  const branch = event.payload.ref.replace("refs/heads/", "");
-  const commitID = event.payload.head_commit?.id!;
-  const trigger: Trigger = {
+  await process(event.octokit, {
     source: "github",
     type: "push",
     repo: {
-      id: repoID,
+      id: event.payload.repository.id,
       owner: event.payload.repository.owner!.login,
       repo: event.payload.repository.name,
     },
-    branch,
+    branch: event.payload.ref.replace("refs/heads/", ""),
     commit: {
-      id: commitID,
+      id: event.payload.head_commit?.id!,
       message: event.payload.head_commit?.message?.substring(0, 100)!,
     },
     sender: {
       id: event.payload.sender?.id!,
       username: event.payload.sender?.login!,
     },
-  };
+  });
+});
+
+async function process(octokit: Octokit, trigger: Trigger) {
+  const repoID = trigger.repo.id;
+  const commitID = trigger.commit.id;
 
   // Get all apps connected to the repo
   const appRepos = await AppRepo.listByRepo({ type: "github", repoID });
@@ -51,9 +87,9 @@ app.webhooks.on("push", async (event) => {
   let sstConfig: Run.SstConfig | undefined;
   try {
     // Get `sst.config.ts` file
-    const file = await event.octokit.rest.repos.getContent({
-      owner: event.payload.repository.owner!.login,
-      repo: event.payload.repository.name,
+    const file = await octokit.rest.repos.getContent({
+      owner: trigger.repo.owner,
+      repo: trigger.repo.repo,
       ref: commitID,
       path: "sst.config.ts",
     });
@@ -99,7 +135,7 @@ app.webhooks.on("push", async (event) => {
       }
     );
   }
-});
+}
 
 export const handler = ApiHandler(async (event) => {
   const ret = await app.webhooks.verifyAndReceive({
@@ -109,7 +145,7 @@ export const handler = ApiHandler(async (event) => {
     payload: useBody()!,
   });
 
-  console.log(event);
+  console.log(useHeader("x-github-event"), event);
   return {
     statusCode: 200,
     body: "ok",

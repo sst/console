@@ -38,24 +38,46 @@ export const Log = z.discriminatedUnion("type", [
 ]);
 export type Log = z.infer<typeof Log>;
 
-export const Trigger = z.object({
-  source: z.enum(["github"]),
-  type: z.enum(["push"]),
-  repo: z.object({
-    id: z.number(),
-    owner: z.string().nonempty(),
-    repo: z.string().nonempty(),
+export const Trigger = z.discriminatedUnion("type", [
+  z.object({
+    type: z.enum(["push"]),
+    source: z.enum(["github"]),
+    repo: z.object({
+      id: z.number(),
+      owner: z.string().nonempty(),
+      repo: z.string().nonempty(),
+    }),
+    branch: z.string().nonempty(),
+    commit: z.object({
+      id: z.string().nonempty(),
+      message: z.string().max(100).nonempty(),
+    }),
+    sender: z.object({
+      id: z.number(),
+      username: z.string().nonempty(),
+    }),
   }),
-  branch: z.string().nonempty(),
-  commit: z.object({
-    id: z.string().nonempty(),
-    message: z.string().max(100).nonempty(),
+  z.object({
+    type: z.enum(["pull_request"]),
+    source: z.enum(["github"]),
+    repo: z.object({
+      id: z.number(),
+      owner: z.string().nonempty(),
+      repo: z.string().nonempty(),
+    }),
+    number: z.number(),
+    base: z.string().nonempty(),
+    head: z.string().nonempty(),
+    commit: z.object({
+      id: z.string().nonempty(),
+      message: z.string().max(100).nonempty(),
+    }),
+    sender: z.object({
+      id: z.number(),
+      username: z.string().nonempty(),
+    }),
   }),
-  sender: z.object({
-    id: z.number(),
-    username: z.string().nonempty(),
-  }),
-});
+]);
 export type Trigger = z.infer<typeof Trigger>;
 
 export const CiConfig = z.object({
