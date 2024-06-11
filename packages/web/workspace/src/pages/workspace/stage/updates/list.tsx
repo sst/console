@@ -9,19 +9,17 @@ import { Stack, theme, utility } from "$/ui";
 import { IconCommandLine } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
 import { globalKeyframes } from "@macaron-css/core";
-<<<<<<< Updated upstream
 import { IconGit, IconCommit } from "$/ui/icons/custom";
 import { formatCommit, formatSinceTime } from "$/common/format";
-import { createSubscription, useReplicache } from "$/providers/replicache";
-import { githubPr, githubRepo, githubBranch, githubCommit } from "$/common/url-builder";
-import { RunStore, StateEventStore, StateUpdateStore } from "$/data/app";
-import { For, Show, Match, Switch, createEffect, createMemo } from "solid-js";
-=======
 import { createSubscription } from "$/providers/replicache";
-import { IconGit, IconCommit } from "$/ui/icons/custom";
+import {
+  githubPr,
+  githubRepo,
+  githubBranch,
+  githubCommit,
+} from "$/common/url-builder";
 import { RunStore, StateUpdateStore } from "$/data/app";
 import { For, Show, Match, Switch, createMemo } from "solid-js";
->>>>>>> Stashed changes
 
 const LEGEND_RES = 2;
 const LEGEND_WIDTH = 160;
@@ -395,31 +393,33 @@ function Update(props: UpdateProps) {
   const errors = () => props.errors?.length || 0;
   const runID = props.source.type === "ci" && props.source.properties.runID;
 
-  const run = createSubscription((tx) =>
-    RunStore.get(tx, ctx.stage.id, runID || "unknown"),
-  );
+  const run = createSubscription(async (tx) => {
+    if (!runID) return;
+    return RunStore.get(tx, ctx.stage.id, runID);
+  });
 
   const repoURL = createMemo(() =>
     run.value?.trigger.source === "github"
       ? githubRepo(run.value.trigger.repo.owner, run.value.trigger.repo.repo)
-      : ""
+      : "",
   );
-  const branch = () =>
-    trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
-  const uri = () =>
-    trigger.type === "push"
-      ? githubBranch(repoURL(), trigger.branch)
-      : githubPr(repoURL(), trigger.number);
+  const branch = () => {
+    if (!run.value) return;
+    return run.value.trigger.type === "push"
+      ? run.value.trigger.branch
+      : `pr#${run.value.trigger.number}`;
+  };
+
   const status = createMemo(() =>
     props.timeCompleted
       ? errors()
         ? "error"
         : "updated"
       : props.timeCanceled
-      ? "canceled"
-      : props.timeQueued
-      ? "queued"
-      : "updating"
+        ? "canceled"
+        : props.timeQueued
+          ? "queued"
+          : "updating",
   );
 
   return (
@@ -445,23 +445,23 @@ function Update(props: UpdateProps) {
               <UpdateGitLink
                 target="_blank"
                 rel="noreferrer"
-<<<<<<< Updated upstream
-                href={githubCommit(repoURL(), run().trigger.commit.id)}
-=======
-                href={`${repoURL()}/commit/${run.value!.trigger.commit.id}`}
->>>>>>> Stashed changes
+                href={githubCommit(repoURL(), run.value!.trigger.commit.id)}
               >
                 <UpdateGitIcon size="md">
                   <IconCommit />
                 </UpdateGitIcon>
                 <UpdateGitCommit>
-                  {formatCommit(run().trigger.commit.id)}
+                  {formatCommit(run.value!.trigger.commit.id)}
                 </UpdateGitCommit>
               </UpdateGitLink>
               <UpdateGitLink
                 target="_blank"
                 rel="noreferrer"
-                href={uri()}
+                href={
+                  run.value!.trigger.type === "push"
+                    ? githubBranch(repoURL(), run.value!.trigger.branch)
+                    : githubPr(repoURL(), run.value!.trigger.number)
+                }
               >
                 <UpdateGitIcon size="sm">
                   <IconGit />
@@ -469,10 +469,10 @@ function Update(props: UpdateProps) {
                 <UpdateGitBranch>{branch()}</UpdateGitBranch>
               </UpdateGitLink>
             </Row>
-            <Show when={run().trigger.commit.message}>
+            <Show when={run.value!.trigger.commit.message}>
               <UpdateGitMessage>
-                {run().trigger.commit.message
-                  ? run().trigger.commit.message
+                {run.value!.trigger.commit.message
+                  ? run.value!.trigger.commit.message
                   : "—"}
               </UpdateGitMessage>
             </Show>
@@ -497,7 +497,7 @@ function Update(props: UpdateProps) {
             >
               <UpdateTime
                 title={DateTime.fromISO(props.timeStarted!).toLocaleString(
-                  DateTime.DATETIME_FULL
+                  DateTime.DATETIME_FULL,
                 )}
               >
                 {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
@@ -505,13 +505,13 @@ function Update(props: UpdateProps) {
             </Show>
           </UpdateSource>
           <Switch>
-            <Match when={run()}>
-              <UpdateSenderAvatar title={run().trigger.sender.username}>
+            <Match when={run.value!}>
+              <UpdateSenderAvatar title={run.value!.trigger.sender.username}>
                 <img
                   width="24"
                   height="24"
                   src={`https://avatars.githubusercontent.com/u/${
-                    run().trigger.sender.id
+                    run.value!.trigger.sender.id
                   }?s=48&v=4`}
                 />
               </UpdateSenderAvatar>
@@ -544,7 +544,7 @@ function ChangeLegend(props: ChangeLegendProps) {
 
   const widths = createMemo(() => {
     const nonZero = [same(), created(), updated(), deleted()].filter(
-      (n) => n !== 0
+      (n) => n !== 0,
     ).length;
 
     let sameWidth =
@@ -568,7 +568,7 @@ function ChangeLegend(props: ChangeLegendProps) {
         sameWidth,
         createdWidth,
         updatedWidth,
-        deletedWidth
+        deletedWidth,
       );
       if (maxWidth === sameWidth) {
         sameWidth += widthDifference;
@@ -629,13 +629,13 @@ export function List() {
   const ctx = useStageContext();
   const updates = createSubscription(
     (tx) => StateUpdateStore.forStage(tx, ctx.stage.id),
-    []
+    [],
   );
 
   return (
     <Content>
       <div>
-        <For each={sortBy(updates(), [(item) => item.index, "desc"])}>
+        <For each={sortBy(updates.value, [(item) => item.index, "desc"])}>
           {(item) => (
             <Update
               id={item.id}

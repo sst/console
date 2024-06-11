@@ -5,7 +5,7 @@ import { appRepo } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { event } from "../event";
 import { Trigger } from "../run/run.sql";
 
@@ -17,7 +17,7 @@ export const Events = {
     z.object({
       appID: z.string(),
       repoID: z.number().int(),
-    })
+    }),
   ),
 };
 
@@ -35,10 +35,10 @@ export const listByRepo = zod(
         .select()
         .from(appRepo)
         .where(
-          and(eq(appRepo.type, "github"), eq(appRepo.repoID, input.repoID))
+          and(eq(appRepo.type, "github"), eq(appRepo.repoID, input.repoID)),
         )
-        .execute()
-    )
+        .execute(),
+    ),
 );
 
 export const getByID = zod(Info.shape.id, (id) =>
@@ -48,8 +48,8 @@ export const getByID = zod(Info.shape.id, (id) =>
       .from(appRepo)
       .where(and(eq(appRepo.workspaceID, useWorkspace()), eq(appRepo.id, id)))
       .execute()
-      .then((rows) => rows[0])
-  )
+      .then((rows) => rows[0]),
+  ),
 );
 
 export const getByAppID = zod(Info.shape.appID, (appID) =>
@@ -58,11 +58,11 @@ export const getByAppID = zod(Info.shape.appID, (appID) =>
       .select()
       .from(appRepo)
       .where(
-        and(eq(appRepo.workspaceID, useWorkspace()), eq(appRepo.appID, appID))
+        and(eq(appRepo.workspaceID, useWorkspace()), eq(appRepo.appID, appID)),
       )
       .execute()
-      .then((rows) => rows[0])
-  )
+      .then((rows) => rows[0]),
+  ),
 );
 
 export const connect = zod(
@@ -86,12 +86,12 @@ export const connect = zod(
             repoID: input.repoID,
           },
         })
-        .execute()
+        .execute(),
     );
     await createTransactionEffect(() =>
-      Events.Connected.publish({ appID: input.appID, repoID: input.repoID })
+      Events.Connected.publish({ appID: input.appID, repoID: input.repoID }),
     );
-  }
+  },
 );
 
 export const disconnect = zod(Info.shape.id, (input) =>
@@ -99,10 +99,10 @@ export const disconnect = zod(Info.shape.id, (input) =>
     return tx
       .delete(appRepo)
       .where(
-        and(eq(appRepo.id, input), eq(appRepo.workspaceID, useWorkspace()))
+        and(eq(appRepo.id, input), eq(appRepo.workspaceID, useWorkspace())),
       )
       .execute();
-  })
+  }),
 );
 
 export const setLastEvent = zod(
@@ -120,12 +120,12 @@ export const setLastEvent = zod(
           lastEventID,
           lastEventStateUpdateID: null,
           lastEventStatus: null,
-          timeLastEvent: new Date(),
+          timeLastEvent: sql`now()`,
         })
-        .where(eq(appRepo.repoID, repoID))
+        .where(eq(appRepo.repoID, repoID)),
     );
     return lastEventID;
-  }
+  },
 );
 
 export const setLastEventStatus = zod(
@@ -146,15 +146,15 @@ export const setLastEventStatus = zod(
                 eq(appRepo.workspaceID, useWorkspace()),
                 eq(appRepo.repoID, repoID),
                 eq(appRepo.appID, appID),
-                eq(appRepo.lastEventID, lastEventID)
+                eq(appRepo.lastEventID, lastEventID),
               )
             : and(
                 eq(appRepo.repoID, repoID),
-                eq(appRepo.lastEventID, lastEventID)
-              )
-        )
+                eq(appRepo.lastEventID, lastEventID),
+              ),
+        ),
     );
-  }
+  },
 );
 
 export const setLastEventStateUpdateID = zod(
@@ -174,9 +174,9 @@ export const setLastEventStateUpdateID = zod(
             eq(appRepo.workspaceID, useWorkspace()),
             eq(appRepo.repoID, repoID),
             eq(appRepo.appID, appID),
-            eq(appRepo.lastEventID, lastEventID)
-          )
-        )
+            eq(appRepo.lastEventID, lastEventID),
+          ),
+        ),
     );
-  }
+  },
 );

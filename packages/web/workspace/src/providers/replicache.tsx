@@ -35,8 +35,8 @@ import { useAuth2 } from "./auth2";
 import { createStore, reconcile } from "solid-js/store";
 
 const mutators = new Client<ServerType>()
-  .mutation("app_stage_sync", async () => { })
-  .mutation("log_poller_subscribe", async () => { })
+  .mutation("app_stage_sync", async () => {})
+  .mutation("log_poller_subscribe", async () => {})
   .mutation("log_search", async (tx, input) => {
     console.log(input);
     await LogSearchStore.put(tx, [input.id], input);
@@ -53,7 +53,7 @@ const mutators = new Client<ServerType>()
       item.timeDeleted = DateTime.now().toUTC().toSQL({ includeOffset: false });
     });
   })
-  .mutation("function_invoke", async () => { })
+  .mutation("function_invoke", async () => {})
   .mutation("function_payload_save", async (tx, input) => {
     await LambdaPayloadStore.put(tx, [input.id!], {
       id: input.id!,
@@ -276,18 +276,18 @@ export function useReplicache() {
   return result;
 }
 
-export function createSubscription<R extends object>(
+export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
 ): {
   value: R | undefined;
 };
-export function createSubscription<R extends object>(
+export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
   initial: R,
 ): {
   value: R;
 };
-export function createSubscription<R extends object>(
+export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
   initial?: R | undefined,
 ) {

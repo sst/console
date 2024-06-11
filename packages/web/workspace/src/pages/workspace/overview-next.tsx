@@ -23,9 +23,8 @@ import {
 } from "$/ui/icons";
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
-import { IconApp, IconArrowPathSpin } from "$/ui/icons/custom";
+import { IconApp } from "$/ui/icons/custom";
 import type { App, Stage } from "@console/core/app";
-import type { Account } from "@console/core/aws/account";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
@@ -209,7 +208,7 @@ export function OverviewNext() {
   const cols = createMemo(() =>
     splitCols(
       pipe(
-        apps(),
+        apps.value,
         filter((app) => stages().find((s) => s.appID === app.id) !== undefined),
         sortBy(
           (app) => (app.name === local().app ? 0 : 1),
@@ -223,7 +222,9 @@ export function OverviewNext() {
   const ambiguous = createMemo(() => {
     const result = pipe(
       stages(),
-      groupBy((s) => `${apps().find((a) => a.id === s.appID)?.name}/${s.name}`),
+      groupBy(
+        (s) => `${apps.value.find((a) => a.id === s.appID)?.name}/${s.name}`,
+      ),
       toPairs,
       filter(([, stages]) => stages.length > 1),
       flatMap(([_, stages]) => stages),
@@ -279,7 +280,7 @@ export function OverviewNext() {
         (c) =>
           props.app.name === local().app && c.name === local().stage ? 0 : 1,
         (c) => (c.unsupported ? 1 : 0),
-        (c) => apps().find((app) => app.id === c.appID)?.name || "",
+        (c) => apps.value.find((app) => app.id === c.appID)?.name || "",
         (c) => c.name,
       );
     });

@@ -626,7 +626,7 @@ export function Alerts() {
                                 label: "All users",
                                 seperator: true,
                               },
-                              ...users().map((user) => ({
+                              ...users.value.map((user) => ({
                                 value: user.id,
                                 label: user.email,
                               })),
@@ -759,7 +759,7 @@ export function Alerts() {
           </Text>
         </Stack>
         <Show
-          when={alerts().length !== 0 || editing.active}
+          when={alerts.value.length !== 0 || editing.active}
           fallback={
             <Row>
               <Button color="secondary" onClick={() => createAlert()}>
@@ -769,7 +769,7 @@ export function Alerts() {
           }
         >
           <AlertsPanel>
-            <For each={alerts()}>
+            <For each={alerts.value}>
               {(alert) => {
                 const isEditingRow = createMemo(
                   () => editing.active && editing.id === alert.id,
@@ -862,8 +862,9 @@ export function Alerts() {
                                           )
                                             .map(
                                               (id) =>
-                                                users().find((u) => u.id === id)
-                                                  ?.email,
+                                                users.value.find(
+                                                  (u) => u.id === id,
+                                                )?.email,
                                             )
                                             .join(", ")}
                                     </AlertsPanelToLabel>
@@ -953,7 +954,7 @@ export function Alerts() {
             </For>
             <Show when={editing.active && !editing.id}>
               <>
-                <Show when={alerts().length !== 0}>
+                <Show when={alerts.value.length !== 0}>
                   <AlertsPanelRow new>
                     <AlertsPanelRowIcon dimmed>
                       <IconEllipsisHorizontal width={18} height={18} />
@@ -967,7 +968,9 @@ export function Alerts() {
               </>
             </Show>
             <Show
-              when={alerts().length !== 0 && (!editing.active || editing.id)}
+              when={
+                alerts.value.length !== 0 && (!editing.active || editing.id)
+              }
             >
               <AlertsPanelRow new>
                 <AlertsPanelRowIcon>

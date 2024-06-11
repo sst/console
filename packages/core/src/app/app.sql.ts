@@ -9,8 +9,8 @@ import {
   foreignKey,
   mysqlEnum,
   bigint,
-  timestamp,
   text,
+  timestamp,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid } from "../util/sql";
 import { Trigger } from "../run/run.sql";
@@ -26,7 +26,7 @@ export const app = mysqlTable(
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     name: uniqueIndex("name").on(table.workspaceID, table.name),
     updated: index("updated").on(table.timeUpdated),
-  })
+  }),
 );
 
 export const stage = mysqlTable(
@@ -46,10 +46,10 @@ export const stage = mysqlTable(
       table.appID,
       table.awsAccountID,
       table.region,
-      table.name
+      table.name,
     ),
     updated: index("updated").on(table.timeUpdated),
-  })
+  }),
 );
 
 export const resource = mysqlTable(
@@ -69,7 +69,7 @@ export const resource = mysqlTable(
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),
     addr: uniqueIndex("addr").on(table.workspaceID, table.stageID, table.addr),
-  })
+  }),
 );
 
 export const appRepo = mysqlTable(
@@ -84,7 +84,9 @@ export const appRepo = mysqlTable(
     lastEventID: cuid("last_event_id"),
     lastEventStatus: text("last_event_status"),
     lastEventStateUpdateID: cuid("last_event_state_update_id"),
-    timeLastEvent: timestamp("time_last_event"),
+    timeLastEvent: timestamp("time_last_event", {
+      mode: "string",
+    }),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),
@@ -93,5 +95,5 @@ export const appRepo = mysqlTable(
       foreignColumns: [app.workspaceID, app.id],
     }).onDelete("cascade"),
     repo: index("repo").on(table.type, table.repoID),
-  })
+  }),
 );
