@@ -560,7 +560,10 @@ export function Settings() {
                 >
                   <Dropdown.Item>Copy value</Dropdown.Item>
                   <Dropdown.Seperator />
-                  <Dropdown.Item>Remove</Dropdown.Item>
+                  <Dropdown.Item
+                  >
+                    Remove variable
+                  </Dropdown.Item>
                 </Dropdown>
               </TargetFormFieldCol>
             </TargetFormField>
@@ -579,10 +582,17 @@ export function Settings() {
                 >
                   <Dropdown.Item>Copy value</Dropdown.Item>
                   <Dropdown.Seperator />
-                  <Dropdown.Item>Remove</Dropdown.Item>
+                  <Dropdown.Item
+                  >
+                    Remove variable
+                  </Dropdown.Item>
                 </Dropdown>
               </TargetFormFieldCol>
             </TargetFormField>
+            <LinkButton>
+              <IconAdd width="10" height="10" />
+              Add another variable
+            </LinkButton>
           </TargetFormFieldStack>
         </TargetFormRow>
         <TargetFormRowControls>
