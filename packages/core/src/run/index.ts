@@ -251,7 +251,6 @@ export module Run {
 
       // Get AWS Account ID from Run Env
       const envs = await RunEnv.listByStage({ appID, stageName });
-      console.log(envs, stageName);
       const awsAccountID = envs["__AWS_ACCOUNT_ID"];
       if (!awsAccountID)
         throw new Error("AWS Account ID is not set in Run Env");
@@ -722,7 +721,7 @@ export module Run {
       const architecture = input.runnerConfig?.architecture ?? "x86_64";
       const image =
         input.runnerConfig?.image ?? `${Config.IMAGE_URI}:${architecture}-1`;
-      const suffix =
+      const runnerSuffix =
         architecture +
         "-" +
         createHash("sha256")
@@ -772,7 +771,7 @@ export module Run {
           credentials,
           retryStrategy: RETRY_STRATEGY,
         });
-        const roleName = `sst-runner-${region}-${suffix}`;
+        const roleName = `sst-runner-${region}-${runnerSuffix}`;
         try {
           const ret = await iam.send(
             new CreateRoleCommand({
@@ -836,7 +835,7 @@ export module Run {
           region,
           retryStrategy: RETRY_STRATEGY,
         });
-        const functionName = `sst-runner-${suffix}`;
+        const functionName = `sst-runner-${runnerSuffix}`;
         try {
           const ret = await lambda.send(
             new CreateFunctionCommand({
@@ -889,6 +888,7 @@ export module Run {
           region,
           retryStrategy: RETRY_STRATEGY,
         });
+        const suffix = Config.STAGE !== "production" ? "-" + Config.STAGE : "";
         const ruleName = "SSTConsoleExternal" + suffix;
         try {
           await eb.send(
@@ -902,9 +902,7 @@ export module Run {
           );
 
           const iam = new IAMClient({ credentials });
-          const roleName =
-            "SSTConsolePublisher" +
-            (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
+          const roleName = "SSTConsolePublisher" + suffix;
           const roleRet = await iam.send(
             new GetRoleCommand({
               RoleName: roleName,
