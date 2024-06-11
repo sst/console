@@ -29,18 +29,18 @@ export const handler = EventHandler(RunEnv.Events.Updated, (evt) =>
     const config = await Run.parseSstConfig({
       content,
       stage: stageName,
-    } satisfies Run.ConfigParserEvent);
-    if (!config) return;
-    console.log(config);
+    });
+    if ("error" in config) return;
 
     // Get runner (create if not exist)
     const awsAccount = await AWS.Account.fromID(value);
     if (!awsAccount) return;
     console.log(config.ci);
+    const region = config.app.providers?.aws?.region ?? "us-east-1";
     const runner = await Run.lookupRunner({
       awsAccountID: awsAccount.id,
       appRepoID: appRepo.id,
-      region: config.region,
+      region,
       runnerConfig: config.ci.runner,
     });
 
@@ -52,12 +52,12 @@ export const handler = EventHandler(RunEnv.Events.Updated, (evt) =>
       const runner = await Run.createRunner({
         appRepoID: appRepo.id,
         awsAccountID: awsAccount.id,
-        region: config.region,
+        region,
         runnerConfig: config.ci.runner,
         credentials,
       });
       await Run.warmRunner({
-        region: config.region,
+        region,
         resource: runner.resource,
         credentials,
         cloneUrl: await Github.getCloneUrl(gitRepo),

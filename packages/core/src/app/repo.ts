@@ -5,7 +5,7 @@ import { appRepo } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
 import { createSelectSchema } from "drizzle-zod";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { event } from "../event";
 import { Trigger } from "../run/run.sql";
 
@@ -111,40 +111,71 @@ export const setLastEvent = zod(
     gitContext: Trigger,
   }),
   async ({ repoID, gitContext }) => {
+    const lastEventID = createId();
     await useTransaction((tx) =>
       tx
         .update(appRepo)
         .set({
           lastEvent: gitContext,
-          lastEventError: null,
+          lastEventID,
+          lastEventStateUpdateID: null,
+          lastEventStatus: null,
           timeLastEvent: new Date(),
         })
         .where(eq(appRepo.repoID, repoID))
     );
+    return lastEventID;
   }
 );
 
-export const setLastEventError = zod(
+export const setLastEventStatus = zod(
   z.object({
     appID: z.string().cuid2().optional(),
     repoID: z.number().int(),
-    error: z.string().nonempty(),
+    lastEventID: z.string().cuid2(),
+    status: z.string().nonempty(),
   }),
-  async ({ appID, repoID, error }) => {
+  async ({ appID, repoID, lastEventID, status }) => {
     await useTransaction((tx) =>
       tx
         .update(appRepo)
-        .set({
-          lastEventError: error,
-        })
+        .set({ lastEventStatus: status })
         .where(
           appID
             ? and(
                 eq(appRepo.workspaceID, useWorkspace()),
                 eq(appRepo.repoID, repoID),
-                eq(appRepo.appID, appID)
+                eq(appRepo.appID, appID),
+                eq(appRepo.lastEventID, lastEventID)
               )
-            : eq(appRepo.repoID, repoID)
+            : and(
+                eq(appRepo.repoID, repoID),
+                eq(appRepo.lastEventID, lastEventID)
+              )
+        )
+    );
+  }
+);
+
+export const setLastEventStateUpdateID = zod(
+  z.object({
+    appID: z.string().cuid2(),
+    repoID: z.number().int(),
+    lastEventID: z.string().cuid2(),
+    stateUpdateID: z.string().cuid2(),
+  }),
+  async ({ appID, repoID, lastEventID, stateUpdateID }) => {
+    await useTransaction((tx) =>
+      tx
+        .update(appRepo)
+        .set({ lastEventStateUpdateID: stateUpdateID })
+        .where(
+          and(
+            eq(appRepo.workspaceID, useWorkspace()),
+            eq(appRepo.repoID, repoID),
+            eq(appRepo.appID, appID),
+            eq(appRepo.lastEventID, lastEventID)
+          )
         )
     );
   }

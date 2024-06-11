@@ -120,7 +120,6 @@ export module Run {
   };
 
   export const SstConfig = z.object({
-    region: z.string().nonempty(),
     ci: CiConfig,
     app: z.object({
       version: z.string().nonempty().optional(),
@@ -129,6 +128,15 @@ export module Run {
     }),
   });
   export type SstConfig = z.infer<typeof SstConfig>;
+  export type SstConfigParseError = {
+    error:
+      | "parse_config"
+      | "evaluate_config"
+      | "v2_app"
+      | "missing_ci"
+      | "missing_ci_target"
+      | "missing_ci_stage";
+  };
 
   export const Event = {
     Created: event(
@@ -219,30 +227,9 @@ export module Run {
       if (ret.FunctionError) throw new Error("Failed to parse config");
 
       const payload = JSON.parse(Buffer.from(ret.Payload!).toString());
-      if (payload.error === "parse_config")
-        throw new Error("Failed to parse config");
-      if (payload.error === "evaluate_config")
-        throw new Error("Failed to evaluate config");
-      if (payload.error === "v2_app")
-        throw new Error("SST v2 apps are not supported");
-      if (payload.error === "missing_ci") return;
-      if (payload.error === "missing_ci_target") return;
-      if (payload.error === "missing_ci_stage")
-        throw new Error("Missing stage in CI target");
-
-      payload.ci = payload.ci ?? {};
-      payload.ci.runner = payload.ci.runner ?? {};
-      payload.ci.runner.architecture =
-        payload.ci.runner.architecture ?? "x86_64";
-      payload.ci.runner.image =
-        payload.ci.runner.image ??
-        `${Config.IMAGE_URI}:${payload.ci.runner.architecture}-1`;
-      payload.region =
-        typeof payload.app.providers?.aws === "object"
-          ? payload.app.providers.aws.region ?? "us-east-1"
-          : "us-east-1";
-
-      return payload as SstConfig;
+      return payload.error
+        ? (payload as SstConfigParseError)
+        : (payload as SstConfig);
     }
   );
 
@@ -255,7 +242,7 @@ export module Run {
     async (input) => {
       const appID = input.appID;
       const stageName = input.sstConfig.ci.target.stage;
-      const region = input.sstConfig.region;
+      const region = input.sstConfig.app.providers?.aws?.region ?? "us-east-1";
 
       // Validate app name
       const app = await App.fromID(appID);
@@ -317,6 +304,8 @@ export module Run {
 
         await createTransactionEffect(() => Event.Created.publish({ stageID }));
       });
+
+      return { runID, stateUpdateID };
     }
   );
 
@@ -689,6 +678,9 @@ export module Run {
       runnerConfig: CiConfig.shape.runner,
     }),
     async (input) => {
+      const architecture = input.runnerConfig?.architecture ?? "x86_64";
+      const image =
+        input.runnerConfig?.image ?? `${Config.IMAGE_URI}:${architecture}-1`;
       return await useTransaction((tx) =>
         tx
           .select()
@@ -699,8 +691,8 @@ export module Run {
               eq(runnerTable.awsAccountID, input.awsAccountID),
               eq(runnerTable.appRepoID, input.appRepoID),
               eq(runnerTable.region, input.region),
-              eq(runnerTable.architecture, input.runnerConfig.architecture),
-              eq(runnerTable.image, input.runnerConfig.image)
+              eq(runnerTable.architecture, architecture),
+              eq(runnerTable.image, image)
             )
           )
           .execute()
@@ -720,8 +712,9 @@ export module Run {
     async (input) => {
       const region = input.region;
       const credentials = input.credentials;
-      const architecture = input.runnerConfig.architecture;
-      const image = input.runnerConfig.image;
+      const architecture = input.runnerConfig?.architecture ?? "x86_64";
+      const image =
+        input.runnerConfig?.image ?? `${Config.IMAGE_URI}:${architecture}-1`;
       const suffix =
         architecture +
         "-" +

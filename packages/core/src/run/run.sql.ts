@@ -81,10 +81,12 @@ export const Trigger = z.discriminatedUnion("type", [
 export type Trigger = z.infer<typeof Trigger>;
 
 export const CiConfig = z.object({
-  runner: z.object({
-    architecture: z.enum(["x86_64", "arm64"]),
-    image: z.string().nonempty(),
-  }),
+  runner: z
+    .object({
+      architecture: z.enum(["x86_64", "arm64"]).optional(),
+      image: z.string().nonempty().optional(),
+    })
+    .optional(),
   target: z.object({
     stage: z.string().nonempty(),
     env: z.record(z.string().nonempty()).optional(),

@@ -63,12 +63,12 @@ export async function handler(evt: Run.ConfigParserEvent) {
             `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_ci_stage"}));`,
             `  process.exit(0);`,
             `}`,
-            `const ciRunner = mod.ci.runner({stage: ciTarget.stage});`,
+            `const ciRunner = mod.ci.runner?.({stage: ciTarget.stage});`,
             `const app = mod.app({stage: ciTarget.stage});`,
             `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, ci: { runner: ciRunner, target: ciTarget }}));`,
           ]
         : [
-            `const ciRunner = mod.ci.runner({stage: "${evt.stage}"});`,
+            `const ciRunner = mod.ci.runner?.({stage: "${evt.stage}"});`,
             `const app = mod.app({stage: "${evt.stage}"});`,
             `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, ci: { runner: ciRunner }}));`,
           ]),

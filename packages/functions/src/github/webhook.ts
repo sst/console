@@ -82,33 +82,50 @@ async function process(octokit: Octokit, trigger: Trigger) {
   const appRepos = await AppRepo.listByRepo({ type: "github", repoID });
   if (appRepos.length === 0) return;
 
-  await AppRepo.setLastEvent({ repoID, gitContext: trigger });
+  const lastEventID = await AppRepo.setLastEvent({
+    repoID,
+    gitContext: trigger,
+  });
 
-  let sstConfig: Run.SstConfig | undefined;
-  try {
-    // Get `sst.config.ts` file
-    const file = await octokit.rest.repos.getContent({
-      owner: trigger.repo.owner,
-      repo: trigger.repo.repo,
-      ref: commitID,
-      path: "sst.config.ts",
+  // Get `sst.config.ts` file
+  const file = await octokit.rest.repos.getContent({
+    owner: trigger.repo.owner,
+    repo: trigger.repo.repo,
+    ref: commitID,
+    path: "sst.config.ts",
+  });
+  if (!("content" in file.data)) {
+    await AppRepo.setLastEventStatus({
+      repoID,
+      lastEventID,
+      status: "sst.config.ts not found",
     });
-    if (!("content" in file.data)) {
-      throw new Error("sst.config.ts not found");
-    }
-
-    // Parse CI config
-    sstConfig = await Run.parseSstConfig({
-      content: file.data.content,
-      trigger,
-    });
-  } catch (e: any) {
-    await AppRepo.setLastEventError({ repoID, error: e.message });
-    throw e;
+    return;
   }
 
-  // Do not trigger build
-  if (!sstConfig) return;
+  // Parse CI config
+  const sstConfig = await Run.parseSstConfig({
+    content: file.data.content,
+    trigger,
+  });
+  if ("error" in sstConfig) {
+    const status =
+      sstConfig.error === "parse_config"
+        ? "Failed to parse sst.config.ts"
+        : sstConfig.error === "evaluate_config"
+        ? "Failed to evaluate sst.config.ts"
+        : sstConfig.error === "v2_app"
+        ? "SST v2 apps are not supported"
+        : sstConfig.error === "missing_ci"
+        ? "CI config not defined in sst.config.ts"
+        : sstConfig.error === "missing_ci_target"
+        ? "CI target not defined in sst.config.ts"
+        : sstConfig.error === "missing_ci_stage"
+        ? "Missing stage in CI target"
+        : "Failed to parse sst.config.ts";
+    await AppRepo.setLastEventStatus({ repoID, lastEventID, status });
+    return;
+  }
 
   // Loop through all apps connected to the repo
   for (const appRepo of appRepos) {
@@ -119,18 +136,24 @@ async function process(octokit: Octokit, trigger: Trigger) {
       },
       async () => {
         try {
-          await Run.create({
+          const { stateUpdateID } = await Run.create({
             appID: appRepo.appID,
             trigger,
             sstConfig: sstConfig!,
           });
-        } catch (e: any) {
-          await AppRepo.setLastEventError({
+          await AppRepo.setLastEventStateUpdateID({
             appID: appRepo.appID,
             repoID,
-            error: e.message,
+            lastEventID,
+            stateUpdateID,
           });
-          throw e;
+        } catch (e: any) {
+          await AppRepo.setLastEventStatus({
+            appID: appRepo.appID,
+            repoID,
+            lastEventID,
+            status: e.message,
+          });
         }
       }
     );

@@ -81,7 +81,9 @@ export const appRepo = mysqlTable(
     type: mysqlEnum("type", ["github"]),
     repoID: bigint("repo_id", { mode: "number" }).notNull(),
     lastEvent: json("last_event").$type<Trigger>(),
-    lastEventError: text("last_event_error"),
+    lastEventID: cuid("last_event_id"),
+    lastEventStatus: text("last_event_status"),
+    lastEventStateUpdateID: cuid("last_event_state_update_id"),
     timeLastEvent: timestamp("time_last_event"),
   },
   (table) => ({
