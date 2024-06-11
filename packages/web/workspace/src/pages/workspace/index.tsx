@@ -95,20 +95,6 @@ export function Content() {
   const apps = createSubscription(AppStore.all, []);
   const stages = StageStore.list.watch(useReplicache(), () => []);
 
-  bar.register("app-switcher", async (_, global) => {
-    if (global) return [];
-    return apps().map((app) =>
-      NavigationAction({
-        icon: IconApp,
-        category: "App",
-        title: `Go to "${app.name}"`,
-        path: `/${params.workspaceSlug}/${app.name}`,
-        prefix: true,
-        nav,
-      }),
-    );
-  });
-
   bar.register("stage-switcher", async (input, global) => {
     if (!input && global) return [];
     return stages().map((stage) => {
@@ -122,6 +108,20 @@ export function Content() {
         nav,
       });
     });
+  });
+
+  bar.register("app-switcher", async (input, global) => {
+    if (!input && global) return [];
+    return apps().map((app) =>
+      NavigationAction({
+        icon: IconApp,
+        category: "App",
+        title: `Go to "${app.name}"`,
+        path: `/${params.workspaceSlug}/${app.name}`,
+        prefix: true,
+        nav,
+      }),
+    );
   });
 
   const flags = useFlags();
