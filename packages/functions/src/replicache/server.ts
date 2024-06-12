@@ -16,7 +16,7 @@ import { warning } from "@console/core/warning/warning.sql";
 import { Github } from "@console/core/git/github";
 import { Slack } from "@console/core/slack";
 import { AppRepo } from "@console/core/app/repo";
-import { RunEnv } from "@console/core/run/env";
+import { RunConfig } from "@console/core/run/env";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
@@ -110,7 +110,7 @@ export const server = new Server()
   .expose("app_create", App.create)
   .expose("app_repo_connect", AppRepo.connect)
   .expose("app_repo_disconnect", AppRepo.disconnect)
-  .expose("env_create", RunEnv.create)
-  .expose("env_remove", RunEnv.remove);
+  .expose("env_create", RunConfig.create)
+  .expose("env_remove", RunConfig.remove);
 
 export type ServerType = typeof server;

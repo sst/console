@@ -108,6 +108,9 @@ export const CiConfig = z.object({
 });
 export type CiConfig = z.infer<typeof CiConfig>;
 
+export const Env = z.record(z.string().nonempty());
+export type Env = z.infer<typeof Env>;
+
 export const runnerTable = mysqlTable(
   "runner",
   {
@@ -194,6 +197,30 @@ export const runTable = mysqlTable(
       table.stageID,
       table.active
     ),
+  })
+);
+
+export const runConfigTable = mysqlTable(
+  "run_config",
+  {
+    ...workspaceID,
+    ...timestampsNext,
+    appID: cuid("app_id").notNull(),
+    stagePattern: varchar("stage_pattern", { length: 255 }).notNull(),
+    awsAccountID: cuid("aws_account_id").notNull(),
+    env: json("env").$type<Env>(),
+  },
+  (table) => ({
+    ...workspaceIndexes(table),
+    stagePattern: unique("unique_stage_pattern").on(
+      table.workspaceID,
+      table.appID,
+      table.stagePattern
+    ),
+    appID: foreignKey({
+      columns: [table.workspaceID, table.appID],
+      foreignColumns: [app.workspaceID, app.id],
+    }).onDelete("cascade"),
   })
 );
 

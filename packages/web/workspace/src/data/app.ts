@@ -1,6 +1,6 @@
 import type { App } from "@console/core/app";
 import { Store } from "./store";
-import type { RunEnv } from "@console/core/run/env";
+import type { RunConfig } from "@console/core/run/env";
 import type { Github } from "@console/core/git/github";
 import type { Slack } from "@console/core/slack";
 import type { Issue } from "@console/core/issue";
@@ -22,11 +22,11 @@ export const AppRepoStore = new Store()
   .scan("forApp", (appID: string) => ["appRepo", appID])
   .build();
 
-export const RunEnvStore = new Store()
-  .type<RunEnv.Info>()
-  .scan("all", () => ["runEnv"])
-  .get((id: string) => ["runEnv", id])
-  .scan("forApp", (appID: string) => ["appRepo", appID])
+export const RunConfigStore = new Store()
+  .type<RunConfig.Info>()
+  .scan("all", () => ["runConfig"])
+  .get((id: string) => ["runConfig", id])
+  .scan("forApp", (appID: string) => ["runConfig", appID])
   .build();
 
 export const GithubOrgStore = new Store()

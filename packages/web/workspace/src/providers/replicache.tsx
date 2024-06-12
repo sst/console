@@ -28,7 +28,7 @@ import {
   SlackTeamStore,
   GithubOrgStore,
   AppRepoStore,
-  RunEnvStore,
+  RunConfigStore,
 } from "$/data/app";
 import { useReplicacheStatus } from "./replicache-status";
 import { useAuth2 } from "./auth2";
@@ -158,7 +158,7 @@ const mutators = new Client<ServerType>()
     await AppRepoStore.remove(tx, input);
   })
   .mutation("env_create", async (tx, input) => {
-    await RunEnvStore.put(tx, [input.id!], {
+    await RunConfigStore.put(tx, [input.id!], {
       id: input.id,
       appID: input.appID,
       stageName: input.stageName,
@@ -168,7 +168,7 @@ const mutators = new Client<ServerType>()
     });
   })
   .mutation("env_remove", async (tx, input) => {
-    await RunEnvStore.remove(tx, input);
+    await RunConfigStore.remove(tx, input);
   })
   .build();
 

@@ -43,7 +43,7 @@ import {
   Engine,
 } from "./run.sql";
 import { App, Stage } from "../app";
-import { RunEnv } from "./env";
+import { RunConfig } from "./env";
 import { RETRY_STRATEGY } from "../util/aws";
 import { State } from "../state";
 import { Function } from "sst/node/function";
@@ -249,8 +249,8 @@ export module Run {
         throw new Error("App name does not match sst.config.ts");
 
       // Get AWS Account ID from Run Env
-      const envs = await RunEnv.listByStage({ appID, stageName });
-      const awsAccountID = envs["__AWS_ACCOUNT_ID"];
+      const env = await RunConfig.getByStageName({ appID, stageName });
+      const awsAccountID = env?.awsAccountID;
       if (!awsAccountID)
         throw new Error("AWS Account ID is not set in Run Env");
 
@@ -415,10 +415,11 @@ export module Run {
       }
 
       // Get run env
-      const consoleEnv = await RunEnv.listByStage({
+      const env = await RunConfig.getByStageName({
         appID: stage.appID,
         stageName: run.config.target.stage,
       });
+      if (!env) throw new Error("AWS Account ID is not set in Run Env");
 
       // Build cloneUrl
       context = "start runner";
@@ -445,7 +446,7 @@ export module Run {
           stage: run.config.target.stage,
           env: {
             ...run.config.target.env,
-            ...consoleEnv,
+            ...env.env,
           },
           cloneUrl,
           credentials: awsConfig.credentials,

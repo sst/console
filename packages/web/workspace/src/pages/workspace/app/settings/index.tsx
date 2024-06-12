@@ -1,5 +1,5 @@
 import {
-  RunEnvStore,
+  RunConfigStore,
   AppRepoStore,
   GithubOrgStore,
   GithubRepoStore,
@@ -430,8 +430,8 @@ export function Settings() {
       (repo) => repo.repoID === appRepo[0]?.repoID
     );
     const ghRepoOrg = await GithubOrgStore.get(tx, ghRepo?.githubOrgID!);
-    const runEnvs = await RunEnvStore.forApp(tx, app.app.id);
-    return { appRepo, ghRepo, ghRepoOrg, runEnvs };
+    const runConfigs = await RunConfigStore.forApp(tx, app.app.id);
+    return { appRepo, ghRepo, ghRepoOrg, runConfigs };
   });
 
   const appRepo = () => repoInfo.value?.appRepo[0];
@@ -444,9 +444,10 @@ export function Settings() {
     }
 
     const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
-    const uri = ev.type === "push"
-      ? githubBranch(repoURL, ev.branch)
-      : githubPr(repoURL, ev.number);
+    const uri =
+      ev.type === "push"
+        ? githubBranch(repoURL, ev.branch)
+        : githubPr(repoURL, ev.number);
     const branch = ev.type === "push" ? ev.branch : `pr#${ev.number}`;
     const commit = ev.commit.id;
 
@@ -521,9 +522,7 @@ export function Settings() {
     return (
       <TargetsRoot>
         <TargetHeader>
-          <TargetHeaderCopy>
-            Deployment Targets
-          </TargetHeaderCopy>
+          <TargetHeaderCopy>Deployment Targets</TargetHeaderCopy>
           <LinkButton>
             <TargetAddIcon>
               <IconAdd width="10" height="10" />
@@ -601,7 +600,10 @@ export function Settings() {
             </TargetFormFieldLabelDesc>
           </TargetFormFieldLabel>
           <TargetFormField>
-            <FormField hint="Accepts glob patterns." class={targetFormFieldFlex}>
+            <FormField
+              hint="Accepts glob patterns."
+              class={targetFormFieldFlex}
+            >
               <Input placeholder="production" type="text" />
             </FormField>
             <Grower />
@@ -685,11 +687,17 @@ export function Settings() {
   function TargetEnvVar(props: TargetEnvVarProps) {
     return (
       <TargetFormField>
-        <FormField label={props.first ? "Key" : undefined} class={targetFormFieldFlex}>
+        <FormField
+          label={props.first ? "Key" : undefined}
+          class={targetFormFieldFlex}
+        >
           <Input type="text" value={props.key} />
         </FormField>
         <TargetFormFieldCol>
-          <FormField label={props.first ? "Value" : undefined} class={targetFormFieldFlex}>
+          <FormField
+            label={props.first ? "Value" : undefined}
+            class={targetFormFieldFlex}
+          >
             <Input type="text" value={props.value} />
           </FormField>
           <Dropdown
@@ -699,10 +707,7 @@ export function Settings() {
           >
             <Dropdown.Item>Copy value</Dropdown.Item>
             <Dropdown.Seperator />
-            <Dropdown.Item
-            >
-              Remove variable
-            </Dropdown.Item>
+            <Dropdown.Item>Remove variable</Dropdown.Item>
           </Dropdown>
         </TargetFormFieldCol>
       </TargetFormField>
@@ -786,216 +791,7 @@ export function Settings() {
             </Match>
           </Switch>
         </Stack>
-        <Divider />
-        <RepoInfo />
-        <Divider />
-        <Env />
       </SettingsRoot>
     </Show>
-  );
-}
-
-const PutForm = object({
-  stage: string([minLength(0)]),
-  key: string([minLength(1)]),
-  value: string([minLength(1)]),
-});
-
-function Env() {
-  const rep = useReplicache();
-  const app = useAppContext();
-  const envs = RunEnvStore.all.watch(rep, () => []);
-  const stageNames = createMemo(() => {
-    const names = new Set<string>();
-    envs()
-      .filter((env) => env.stageName !== "")
-      .forEach((env) => names.add(env.stageName));
-    return Array.from(names);
-  });
-  const [putForm, { Form, Field }] = createForm({
-    validate: valiForm(PutForm),
-  });
-  return (
-    <>
-      <h1>Environment Variables</h1>
-      <For each={envs().filter((env) => env.stageName === "")}>
-        {(env) => (
-          <Row flex space="4" vertical="start">
-            <Text>{env.key}</Text>
-            <Text>{env.value}</Text>
-            <Button
-              color="secondary"
-              onClick={(e) => {
-                rep().mutate.env_remove(env.id);
-              }}
-            >
-              Remove
-            </Button>
-          </Row>
-        )}
-      </For>
-      <For each={stageNames()}>
-        {(stageName) => (
-          <>
-            <h2>{stageName}</h2>
-            <For each={envs().filter((env) => env.stageName === stageName)}>
-              {(env) => (
-                <Row flex space="4" vertical="start">
-                  <Text>{env.key}</Text>
-                  <Text>{env.value}</Text>
-                  <Button
-                    color="secondary"
-                    onClick={(e) => {
-                      rep().mutate.env_remove(env.id);
-                    }}
-                  >
-                    Remove
-                  </Button>
-                </Row>
-              )}
-            </For>
-          </>
-        )}
-      </For>
-      <Row flex space="4" vertical="start">
-        <Field
-          name="stage"
-          transform={toCustom(
-            (value) => {
-              if (!value) return "";
-              return value.trim();
-            },
-            {
-              on: "blur",
-            }
-          )}
-        >
-          {(field, props) => (
-            <FormField>
-              <Input {...props} value={field.value} placeholder="stage name" />
-            </FormField>
-          )}
-        </Field>
-        <Field
-          name="key"
-          transform={toCustom(
-            (value) => {
-              if (!value) return "";
-              return value.trim();
-            },
-            {
-              on: "blur",
-            }
-          )}
-        >
-          {(field, props) => (
-            <FormField>
-              <Input {...props} value={field.value} placeholder="env name" />
-            </FormField>
-          )}
-        </Field>
-        <Field
-          name="value"
-          transform={toCustom(
-            (value) => {
-              if (!value) return "";
-              return value.trim();
-            },
-            {
-              on: "blur",
-            }
-          )}
-        >
-          {(field, props) => (
-            <FormField>
-              <Input {...props} value={field.value} placeholder="env value" />
-            </FormField>
-          )}
-        </Field>
-        <Button
-          color="secondary"
-          onClick={(e) => {
-            rep().mutate.env_create({
-              id: createId(),
-              appID: app.app.id,
-              stageName: getValue(putForm, "stage")!,
-              key: getValue(putForm, "key")!,
-              value: getValue(putForm, "value")!,
-            });
-          }}
-        >
-          Add
-        </Button>
-      </Row>
-    </>
-  );
-}
-
-function RepoInfo() {
-  const rep = useReplicache();
-  const app = useAppContext();
-  const githubRepos = GithubRepoStore.all.watch(rep, () => []);
-  const appRepo = AppRepoStore.all.watch(
-    rep,
-    () => [],
-    (all) => all.at(0)
-  );
-  const connectedRepo = createMemo(() =>
-    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID)
-  );
-  const connectedRepoOrg = GithubOrgStore.all.watch(
-    rep,
-    () => [],
-    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID)
-  );
-
-  return (
-    <>
-      <h3>Repo</h3>
-      <Show
-        when={appRepo()}
-        fallback={
-          <>
-            <p>Not connected to a repo. Select one:</p>
-            <ul>
-              <For each={githubRepos()}>
-                {(repo) => (
-                  <li>
-                    <Button
-                      color="secondary"
-                      onClick={(e) => {
-                        rep().mutate.app_repo_connect({
-                          id: createId(),
-                          appID: app.app.id,
-                          type: "github",
-                          repoID: repo.repoID,
-                        });
-                      }}
-                    >
-                      {repo.name}
-                    </Button>
-                  </li>
-                )}
-              </For>
-            </ul>
-          </>
-        }
-      >
-        <Text size="sm" color="dimmed">
-          Connected to{" "}
-          <Text color="dimmed" size="sm" weight="medium">
-            {connectedRepoOrg()?.login}/{connectedRepo()?.name}
-          </Text>
-        </Text>
-        <Button
-          color="secondary"
-          onClick={(e) => {
-            rep().mutate.app_repo_disconnect(appRepo()!.id);
-          }}
-        >
-          Disconnect
-        </Button>
-      </Show>
-    </>
   );
 }

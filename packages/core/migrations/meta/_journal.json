@@ -218,6 +218,13 @@
       "when": 1718209842874,
       "tag": "0030_bored_vivisector",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1718219277712,
+      "tag": "0031_friendly_patch",
+      "breakpoints": true
     }
   ]
 }

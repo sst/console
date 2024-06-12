@@ -47,7 +47,7 @@ import {
   stateUpdateTable,
 } from "@console/core/state/state.sql";
 import { State } from "@console/core/state";
-import { runEnvTable, runTable } from "@console/core/run/run.sql";
+import { runConfigTable, runTable } from "@console/core/run/run.sql";
 import { Run } from "@console/core/run";
 import { Replicache } from "@console/core/replicache";
 import { AppRepo } from "@console/core/app/repo";
@@ -77,14 +77,14 @@ export const TABLES = {
   stateResource: stateResourceTable,
   stateEvent: stateEventTable,
   run: runTable,
-  runEnv: runEnvTable,
+  runConfig: runConfigTable,
 };
 
 type TableName = keyof typeof TABLES;
 
 const TABLE_KEY = {
   appRepo: [appRepoTable.appID, appRepoTable.id],
-  runEnv: [runEnvTable.appID, runEnvTable.id],
+  runConfig: [runConfigTable.appID, runConfigTable.id],
   issue: [issue.stageID, issue.id],
   resource: [resource.stageID, resource.id],
   issueCount: [issueCount.group, issueCount.id],
