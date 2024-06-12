@@ -38,7 +38,7 @@ export const Architecture = ["x86_64", "arm64"] as const;
 export const Log = z.discriminatedUnion("engine", [
   z.object({
     engine: z.literal("lambda"),
-    requestID: z.string().nonempty().optional(),
+    requestID: z.string().nonempty(),
     logGroup: z.string().nonempty(),
     logStream: z.string().nonempty(),
     timestamp: z.number().int(),

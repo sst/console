@@ -581,13 +581,20 @@ export module Run {
           .update(runTable)
           .set({
             timeStarted: new Date(),
-            log: {
-              engine: input.engine,
-              requestID: input.awsRequestId,
-              logGroup: input.logGroup,
-              logStream: input.logStream,
-              timestamp: input.timestamp,
-            },
+            log:
+              input.engine === "lambda"
+                ? {
+                    engine: "lambda",
+                    requestID: input.awsRequestId!,
+                    logGroup: input.logGroup,
+                    logStream: input.logStream,
+                    timestamp: input.timestamp,
+                  }
+                : {
+                    engine: "codebuild",
+                    logGroup: input.logGroup,
+                    logStream: input.logStream,
+                  },
           })
           .where(
             and(
