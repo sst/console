@@ -110,7 +110,7 @@ export const server = new Server()
   .expose("app_create", App.create)
   .expose("app_repo_connect", AppRepo.connect)
   .expose("app_repo_disconnect", AppRepo.disconnect)
-  .expose("env_create", RunConfig.create)
-  .expose("env_remove", RunConfig.remove);
+  .expose("run_config_create", RunConfig.create)
+  .expose("run_config_remove", RunConfig.remove);
 
 export type ServerType = typeof server;

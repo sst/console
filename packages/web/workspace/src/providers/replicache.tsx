@@ -157,17 +157,20 @@ const mutators = new Client<ServerType>()
   .mutation("app_repo_disconnect", async (tx, input) => {
     await AppRepoStore.remove(tx, input);
   })
-  .mutation("env_create", async (tx, input) => {
+  .mutation("run_config_create", async (tx, input) => {
     await RunConfigStore.put(tx, [input.id!], {
       id: input.id,
       appID: input.appID,
-      stageName: input.stageName,
-      key: input.key,
-      value: input.value,
-      timeCreated: new Date(),
+      stagePattern: input.stagePattern,
+      awsAccountID: input.awsAccountID,
+      env: input.env,
+      time: {
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+      },
     });
   })
-  .mutation("env_remove", async (tx, input) => {
+  .mutation("run_config_remove", async (tx, input) => {
     await RunConfigStore.remove(tx, input);
   })
   .build();
