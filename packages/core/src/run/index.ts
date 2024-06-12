@@ -47,7 +47,7 @@ import { RunConfig } from "./env";
 import { RETRY_STRATEGY } from "../util/aws";
 import { State } from "../state";
 import { Function } from "sst/node/function";
-import { Credentials } from "../aws";
+import { AWS, Credentials } from "../aws";
 import { AppRepo } from "../app/repo";
 import { Github } from "../git/github";
 import { LambdaRunner } from "./lambda-runner";
@@ -250,16 +250,19 @@ export module Run {
 
       // Get AWS Account ID from Run Env
       const env = await RunConfig.getByStageName({ appID, stageName });
-      const awsAccountID = env?.awsAccountID;
-      if (!awsAccountID)
+      const awsAccountExternalID = env?.awsAccountExternalID;
+      if (!awsAccountExternalID)
         throw new Error("AWS Account ID is not set in Run Env");
+      const awsAccount = await AWS.Account.fromExternalID(awsAccountExternalID);
+      if (!awsAccount)
+        throw new Error("AWS Account is not linked to the workspace");
 
       // Create stage if stage not exist
       let stageID = await App.Stage.fromName({
         appID,
         name: stageName,
         region,
-        awsAccountID,
+        awsAccountID: awsAccount.id,
       }).then((s) => s?.id!);
 
       if (!stageID) {
@@ -268,7 +271,7 @@ export module Run {
           name: stageName,
           appID,
           region,
-          awsAccountID,
+          awsAccountID: awsAccount.id,
         });
       }
 
@@ -404,7 +407,7 @@ export module Run {
         runner = await createRunner({
           appRepoID: appRepo.id,
           awsAccountID: stage.awsAccountID,
-          awsAccount: awsConfig.awsAccountID,
+          awsAccountExternalID: awsConfig.awsAccountID,
           region: stage.region,
           runnerConfig: run.config.runner,
           credentials: awsConfig.credentials,
@@ -732,13 +735,13 @@ export module Run {
     z.object({
       appRepoID: z.string().cuid2(),
       awsAccountID: z.string().cuid2(),
-      awsAccount: z.string().nonempty(),
+      awsAccountExternalID: z.string().nonempty(),
       region: z.string().nonempty(),
       runnerConfig: CiConfig.shape.runner,
       credentials: z.custom<Credentials>(),
     }),
     async (input) => {
-      const awsAccount = input.awsAccount;
+      const awsAccountExternalID = input.awsAccountExternalID;
       const region = input.region;
       const credentials = input.credentials;
       const engine = input.runnerConfig?.engine ?? DEFAULT_ENGINE;
@@ -778,7 +781,7 @@ export module Run {
         // Create resources
         resource = await Runner.createResource({
           credentials,
-          awsAccount,
+          awsAccountExternalID,
           region,
           suffix: runnerSuffix,
           image,

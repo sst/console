@@ -36,7 +36,7 @@ export module LambdaRunner {
   export const createResource = zod(
     z.object({
       credentials: z.custom<Credentials>(),
-      awsAccount: z.string().nonempty(),
+      awsAccountExternalID: z.string().nonempty(),
       region: z.string().nonempty(),
       suffix: z.string().nonempty(),
       image: z.string().nonempty(),

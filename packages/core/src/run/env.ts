@@ -15,7 +15,7 @@ export module RunConfig {
       z.object({
         appID: z.string().cuid2(),
         stagePattern: z.string().nonempty(),
-        awsAccountID: z.string().cuid2(),
+        awsAccountExternalID: z.string().cuid2(),
       })
     ),
   };
@@ -64,7 +64,7 @@ export module RunConfig {
       id: z.string().cuid2().optional(),
       appID: z.string().cuid2(),
       stagePattern: z.string().nonempty(),
-      awsAccountID: z.string().cuid2(),
+      awsAccountExternalID: z.string().cuid2(),
       env: z.custom<Env>().optional(),
     }),
     async (input) => {
@@ -76,7 +76,7 @@ export module RunConfig {
             workspaceID: useWorkspace(),
             appID: input.appID,
             stagePattern: input.stagePattern,
-            awsAccountID: input.awsAccountID,
+            awsAccountExternalID: input.awsAccountExternalID,
             env: input.env,
           })
           .execute()
@@ -85,7 +85,7 @@ export module RunConfig {
         Events.Updated.publish({
           appID: input.appID,
           stagePattern: input.stagePattern,
-          awsAccountID: input.awsAccountID,
+          awsAccountExternalID: input.awsAccountExternalID,
         })
       );
     }

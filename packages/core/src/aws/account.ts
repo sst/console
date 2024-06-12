@@ -141,6 +141,22 @@ export const fromID = zod(Info.shape.id, (accountID) =>
   )
 );
 
+export const fromExternalID = zod(Info.shape.accountID, (externalID) =>
+  useTransaction((tx) =>
+    tx
+      .select()
+      .from(awsAccount)
+      .where(
+        and(
+          eq(awsAccount.workspaceID, useWorkspace()),
+          eq(awsAccount.accountID, externalID)
+        )
+      )
+      .execute()
+      .then((rows) => rows[0])
+  )
+);
+
 export const fromAccountID = zod(Info.shape.accountID, (accountID) =>
   useTransaction((tx) =>
     tx

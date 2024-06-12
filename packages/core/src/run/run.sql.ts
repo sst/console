@@ -207,7 +207,9 @@ export const runConfigTable = mysqlTable(
     ...timestampsNext,
     appID: cuid("app_id").notNull(),
     stagePattern: varchar("stage_pattern", { length: 255 }).notNull(),
-    awsAccountID: cuid("aws_account_id").notNull(),
+    awsAccountExternalID: varchar("aws_account_external_id", {
+      length: 12,
+    }).notNull(),
     env: json("env").$type<Env>(),
   },
   (table) => ({

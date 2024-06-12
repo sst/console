@@ -8,7 +8,7 @@ import { EventHandler } from "sst/node/event-bus";
 
 export const handler = EventHandler(RunConfig.Events.Updated, (evt) =>
   withActor(evt.metadata.actor, async () => {
-    const { appID, stagePattern, awsAccountID } = evt.properties;
+    const { appID, stagePattern, awsAccountExternalID } = evt.properties;
 
     const appRepo = await AppRepo.getByAppID(appID);
     if (!appRepo) return;
@@ -31,7 +31,7 @@ export const handler = EventHandler(RunConfig.Events.Updated, (evt) =>
     if ("error" in config) return;
 
     // Get runner (create if not exist)
-    const awsAccount = await AWS.Account.fromID(awsAccountID);
+    const awsAccount = await AWS.Account.fromExternalID(awsAccountExternalID);
     if (!awsAccount) return;
     console.log(config.ci);
     const region = config.app.providers?.aws?.region ?? "us-east-1";
@@ -50,7 +50,7 @@ export const handler = EventHandler(RunConfig.Events.Updated, (evt) =>
       const runner = await Run.createRunner({
         appRepoID: appRepo.id,
         awsAccountID: awsAccount.id,
-        awsAccount: awsAccount.accountID,
+        awsAccountExternalID: awsAccount.accountID,
         region,
         runnerConfig: config.ci.runner,
         credentials,

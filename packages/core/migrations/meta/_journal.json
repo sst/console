@@ -225,6 +225,13 @@
       "when": 1718219277712,
       "tag": "0031_friendly_patch",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1718225921664,
+      "tag": "0032_mean_butterfly",
+      "breakpoints": true
     }
   ]
 }

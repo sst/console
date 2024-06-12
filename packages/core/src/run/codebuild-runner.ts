@@ -31,7 +31,7 @@ export module CodebuildRunner {
   export const createResource = zod(
     z.object({
       credentials: z.custom<Credentials>(),
-      awsAccount: z.string().nonempty(),
+      awsAccountExternalID: z.string().nonempty(),
       region: z.string().nonempty(),
       suffix: z.string().nonempty(),
       image: z.string().nonempty(),
@@ -39,7 +39,7 @@ export module CodebuildRunner {
     }),
     async ({
       credentials,
-      awsAccount,
+      awsAccountExternalID,
       region,
       suffix,
       image,
@@ -102,8 +102,8 @@ export module CodebuildRunner {
                       "logs:PutLogEvents",
                     ],
                     Resource: [
-                      `arn:aws:logs:${region}:${awsAccount}:log-group:/aws/codebuild/${projectName}`,
-                      `arn:aws:logs:${region}:${awsAccount}:log-group:/aws/codebuild/${projectName}:*`,
+                      `arn:aws:logs:${region}:${awsAccountExternalID}:log-group:/aws/codebuild/${projectName}`,
+                      `arn:aws:logs:${region}:${awsAccountExternalID}:log-group:/aws/codebuild/${projectName}:*`,
                     ],
                   },
                   {
@@ -114,7 +114,7 @@ export module CodebuildRunner {
                       "codebuild:BatchPutTestCases",
                       "codebuild:BatchPutCodeCoverages",
                     ],
-                    Resource: `arn:aws:codebuild:${region}:${awsAccount}:report-group/${projectName}-*`,
+                    Resource: `arn:aws:codebuild:${region}:${awsAccountExternalID}:report-group/${projectName}-*`,
                     Effect: "Allow",
                   },
                 ],
@@ -178,7 +178,7 @@ export module CodebuildRunner {
             throw e;
           }
 
-          return `arn:aws:codebuild:${region}:${awsAccount}:project/${projectName}`;
+          return `arn:aws:codebuild:${region}:${awsAccountExternalID}:project/${projectName}`;
         }
       }
     }
