@@ -1,0 +1,1 @@
+ALTER TABLE `runner` ADD `engine` enum('lambda','codebuild') NOT NULL;

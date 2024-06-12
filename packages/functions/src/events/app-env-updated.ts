@@ -52,12 +52,14 @@ export const handler = EventHandler(RunEnv.Events.Updated, (evt) =>
       const runner = await Run.createRunner({
         appRepoID: appRepo.id,
         awsAccountID: awsAccount.id,
+        awsAccount: awsAccount.accountID,
         region,
         runnerConfig: config.ci.runner,
         credentials,
       });
       await Run.warmRunner({
         region,
+        engine: runner.engine,
         resource: runner.resource,
         credentials,
         cloneUrl: await Github.getCloneUrl(gitRepo),

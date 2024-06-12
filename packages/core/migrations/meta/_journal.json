@@ -211,6 +211,13 @@
       "when": 1718127424814,
       "tag": "0029_fast_scarlet_witch",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1718209842874,
+      "tag": "0030_bored_vivisector",
+      "breakpoints": true
     }
   ]
 }

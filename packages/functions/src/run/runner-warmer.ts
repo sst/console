@@ -42,6 +42,7 @@ export async function handler(evt: Run.RunnerWarmerEvent, context: Context) {
       if (!credentials) return;
       await Run.warmRunner({
         region: runner.region,
+        engine: runner.engine,
         resource: runner.resource,
         credentials,
         cloneUrl,

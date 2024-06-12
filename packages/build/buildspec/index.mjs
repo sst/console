@@ -128,7 +128,7 @@ export async function handler(event, context) {
    * @param {any} payload
    */
   async function publish(type, payload) {
-    const { warm, workspaceID, runID } = event;
+    const { warm, engine, workspaceID, runID } = event;
     if (warm) return;
 
     await eb.send(
@@ -140,6 +140,7 @@ export async function handler(event, context) {
             Detail: JSON.stringify({
               properties: {
                 ...payload,
+                engine,
                 workspaceID,
                 runID,
               },

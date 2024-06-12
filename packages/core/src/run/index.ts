@@ -4,14 +4,7 @@ import {
   CreateScheduleCommand,
   SchedulerClient,
 } from "@aws-sdk/client-scheduler";
-import {
-  CreateFunctionCommand,
-  DeleteFunctionCommand,
-  GetFunctionCommand,
-  InvokeCommand,
-  LambdaClient,
-  PutFunctionEventInvokeConfigCommand,
-} from "@aws-sdk/client-lambda";
+import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 import {
   AttachRolePolicyCommand,
   PutRolePolicyCommand,
@@ -47,6 +40,7 @@ import {
   runTable,
   runnerUsageTable,
   CiConfig,
+  Engine,
 } from "./run.sql";
 import { App, Stage } from "../app";
 import { RunEnv } from "./env";
@@ -56,9 +50,12 @@ import { Function } from "sst/node/function";
 import { Credentials } from "../aws";
 import { AppRepo } from "../app/repo";
 import { Github } from "../git/github";
+import { LambdaRunner } from "./lambda-runner";
+import { CodebuildRunner } from "./codebuild-runner";
 
 export module Run {
-  const BUILD_TIMEOUT = 960000; // 16 minutes
+  const DEFAULT_ENGINE = "codebuild";
+  const DEFAULT_ARCHITECTURE = "x86_64";
   const RUNNER_INACTIVE_TIME = 604800000; // 1 week
   const RUNNER_WARMING_INTERVAL = 300000; // 5 minutes
   const RUNNER_WARMING_INACTIVE_TIME = 86400000; // 1 day
@@ -95,6 +92,7 @@ export module Run {
       }
     | {
         warm: false;
+        engine: string;
         runID: string;
         workspaceID: string;
         stateUpdateID: string;
@@ -155,10 +153,11 @@ export module Run {
       "runner.started",
       z.object({
         workspaceID: z.string().nonempty(),
+        engine: z.enum(Engine),
         runID: z.string().nonempty(),
         logGroup: z.string().nonempty(),
         logStream: z.string().nonempty(),
-        awsRequestId: z.string().nonempty(),
+        awsRequestId: z.string().nonempty().optional(),
         timestamp: z.number().int(),
       })
     ),
@@ -388,7 +387,8 @@ export module Run {
 
       // Get runner (create if not exist)
       context = "lookup existing runner";
-      while (true) {
+      const waitTill = Date.now() + 120000; // wait up to 2 minutes
+      while (Date.now() < waitTill) {
         runner = await lookupRunner({
           awsAccountID: stage.awsAccountID,
           appRepoID: appRepo.id,
@@ -404,6 +404,7 @@ export module Run {
         runner = await createRunner({
           appRepoID: appRepo.id,
           awsAccountID: stage.awsAccountID,
+          awsAccount: awsConfig.awsAccountID,
           region: stage.region,
           runnerConfig: run.config.runner,
           credentials: awsConfig.credentials,
@@ -426,35 +427,31 @@ export module Run {
       const cloneUrl = await Github.getCloneUrl(gitRepo);
 
       // Run runner
-      const lambda = new LambdaClient({
+      const Runner = useRunner(runner.engine);
+      await Runner.invoke({
         credentials: awsConfig.credentials,
         region: runner.region,
-        retryStrategy: RETRY_STRATEGY,
+        resource: runner.resource,
+        payload: {
+          warm: false,
+          engine: runner.engine,
+          buildspec: {
+            version: Config.BUILDSPEC_VERSION,
+            bucket: Bucket.Buildspec.bucketName,
+          },
+          runID: run.id,
+          stateUpdateID: run.stateUpdateID,
+          workspaceID: useWorkspace(),
+          stage: run.config.target.stage,
+          env: {
+            ...run.config.target.env,
+            ...consoleEnv,
+          },
+          cloneUrl,
+          credentials: awsConfig.credentials,
+          trigger: run.trigger,
+        },
       });
-      await lambda.send(
-        new InvokeCommand({
-          FunctionName: runner.resource.properties.function,
-          InvocationType: "Event",
-          Payload: JSON.stringify({
-            warm: false,
-            buildspec: {
-              version: Config.BUILDSPEC_VERSION,
-              bucket: Bucket.Buildspec.bucketName,
-            },
-            runID: run.id,
-            stateUpdateID: run.stateUpdateID,
-            workspaceID: useWorkspace(),
-            stage: run.config.target.stage,
-            env: {
-              ...run.config.target.env,
-              ...consoleEnv,
-            },
-            cloneUrl,
-            credentials: awsConfig.credentials,
-            trigger: run.trigger,
-          } satisfies RunnerEvent),
-        })
-      );
 
       // Update runner's last run time
       const now = new Date();
@@ -489,6 +486,7 @@ export module Run {
     }
 
     // Schedule timeout monitor
+    const Runner = useRunner(runner.engine);
     const scheduler = new SchedulerClient({ retryStrategy: RETRY_STRATEGY });
     await scheduler.send(
       new CreateScheduleCommand({
@@ -498,7 +496,9 @@ export module Run {
           Mode: "OFF",
         },
         ScheduleExpression: `at(${
-          new Date(Date.now() + BUILD_TIMEOUT).toISOString().split(".")[0]
+          new Date(Date.now() + Runner.BUILD_TIMEOUT)
+            .toISOString()
+            .split(".")[0]
         })`,
         Target: {
           Arn: process.env.RUN_TIMEOUT_MONITOR_FUNCTION_ARN,
@@ -568,8 +568,9 @@ export module Run {
 
   export const markRunStarted = zod(
     z.object({
+      engine: z.enum(Engine),
       runID: z.string().nonempty(),
-      awsRequestId: z.string().nonempty(),
+      awsRequestId: z.string().nonempty().optional(),
       logGroup: z.string().nonempty(),
       logStream: z.string().nonempty(),
       timestamp: z.number().int(),
@@ -581,7 +582,7 @@ export module Run {
           .set({
             timeStarted: new Date(),
             log: {
-              type: "lambda",
+              engine: input.engine,
               requestID: input.awsRequestId,
               logGroup: input.logGroup,
               logStream: input.logStream,
@@ -636,6 +637,15 @@ export module Run {
     }
   );
 
+  const useRunner = zod(
+    z.enum(Engine),
+    (engine) =>
+      ({
+        lambda: LambdaRunner,
+        codebuild: CodebuildRunner,
+      }[engine])
+  );
+
   export const setRunnerWarmer = zod(
     z.object({
       runnerID: z.string().cuid2(),
@@ -684,9 +694,11 @@ export module Run {
       runnerConfig: CiConfig.shape.runner,
     }),
     async (input) => {
-      const architecture = input.runnerConfig?.architecture ?? "x86_64";
-      const image =
-        input.runnerConfig?.image ?? `${Config.IMAGE_URI}:${architecture}-1`;
+      const engine = input.runnerConfig?.engine ?? DEFAULT_ENGINE;
+      const Runner = useRunner(engine);
+      const architecture =
+        input.runnerConfig?.architecture ?? DEFAULT_ARCHITECTURE;
+      const image = input.runnerConfig?.image ?? Runner.getImage(architecture);
       return await useTransaction((tx) =>
         tx
           .select()
@@ -697,6 +709,7 @@ export module Run {
               eq(runnerTable.awsAccountID, input.awsAccountID),
               eq(runnerTable.appRepoID, input.appRepoID),
               eq(runnerTable.region, input.region),
+              eq(runnerTable.engine, engine),
               eq(runnerTable.architecture, architecture),
               eq(runnerTable.image, image)
             )
@@ -711,46 +724,34 @@ export module Run {
     z.object({
       appRepoID: z.string().cuid2(),
       awsAccountID: z.string().cuid2(),
+      awsAccount: z.string().nonempty(),
       region: z.string().nonempty(),
       runnerConfig: CiConfig.shape.runner,
       credentials: z.custom<Credentials>(),
     }),
     async (input) => {
+      const awsAccount = input.awsAccount;
       const region = input.region;
       const credentials = input.credentials;
-      const architecture = input.runnerConfig?.architecture ?? "x86_64";
-      const image =
-        input.runnerConfig?.image ?? `${Config.IMAGE_URI}:${architecture}-1`;
+      const engine = input.runnerConfig?.engine ?? DEFAULT_ENGINE;
+      const Runner = useRunner(engine);
+      const architecture =
+        input.runnerConfig?.architecture ?? DEFAULT_ARCHITECTURE;
+      const image = input.runnerConfig?.image ?? Runner.getImage(architecture);
       const runnerSuffix =
         architecture +
         "-" +
         createHash("sha256")
-          .update(`lambda${architecture}${image}`)
+          .update(`${engine}${architecture}${image}`)
           .digest("hex")
           .substring(0, 8) +
         (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
 
       const runnerID = createId();
-      await scheduleRunnerRemover(runnerID);
-      await createRunnerRecordWithoutResource();
-      const roleArn = await createIamRoleInUserAccount();
-      const functionArn = await createFunctionInUserAccount();
-      await createEventTargetInUserAccount();
-
-      const resource = {
-        type: "lambda" as const,
-        properties: {
-          role: roleArn,
-          function: functionArn,
-        },
-      };
-
-      await updateRunnerRecordWithResource();
-
-      return { id: runnerID, region, resource, warmer: null };
-
-      function createRunnerRecordWithoutResource() {
-        return useTransaction((tx) =>
+      let resource;
+      try {
+        // Create runner row without resource
+        await useTransaction((tx) =>
           tx
             .insert(runnerTable)
             .values({
@@ -759,130 +760,24 @@ export module Run {
               awsAccountID: input.awsAccountID,
               appRepoID: input.appRepoID,
               region,
+              engine,
               architecture,
               image,
             })
             .execute()
         );
-      }
 
-      async function createIamRoleInUserAccount() {
-        const iam = new IAMClient({
+        // Create resources
+        resource = await Runner.createResource({
           credentials,
-          retryStrategy: RETRY_STRATEGY,
-        });
-        const roleName = `sst-runner-${region}-${runnerSuffix}`;
-        try {
-          const ret = await iam.send(
-            new CreateRoleCommand({
-              RoleName: roleName,
-              AssumeRolePolicyDocument: JSON.stringify({
-                Version: "2012-10-17",
-                Statement: [
-                  {
-                    Effect: "Allow",
-                    Principal: {
-                      Service: "lambda.amazonaws.com",
-                    },
-                    Action: "sts:AssumeRole",
-                  },
-                ],
-              }),
-            })
-          );
-          await iam.send(
-            new PutRolePolicyCommand({
-              RoleName: roleName,
-              PolicyName: "eventbridge",
-              PolicyDocument: JSON.stringify({
-                Version: "2012-10-17",
-                Statement: [
-                  {
-                    Effect: "Allow",
-                    Action: "events:PutEvents",
-                    Resource: "*",
-                  },
-                ],
-              }),
-            })
-          );
-          await iam.send(
-            new AttachRolePolicyCommand({
-              RoleName: roleName,
-              PolicyArn:
-                "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-            })
-          );
-          return ret.Role?.Arn!;
-        } catch (e: any) {
-          if (e.name !== "EntityAlreadyExistsException") {
-            throw e;
-          }
-
-          return await iam
-            .send(
-              new GetRoleCommand({
-                RoleName: roleName,
-              })
-            )
-            .then((ret) => ret.Role?.Arn!);
-        }
-      }
-
-      async function createFunctionInUserAccount() {
-        const lambda = new LambdaClient({
-          credentials,
+          awsAccount,
           region,
-          retryStrategy: RETRY_STRATEGY,
+          suffix: runnerSuffix,
+          image,
+          architecture,
         });
-        const functionName = `sst-runner-${runnerSuffix}`;
-        try {
-          const ret = await lambda.send(
-            new CreateFunctionCommand({
-              FunctionName: functionName,
-              Role: roleArn,
-              Code: { ImageUri: image },
-              Timeout: 900,
-              MemorySize: 10240,
-              EphemeralStorage: {
-                Size: 10240,
-              },
-              PackageType: "Image",
-              Architectures: [architecture],
-            })
-          );
 
-          await lambda.send(
-            new PutFunctionEventInvokeConfigCommand({
-              FunctionName: ret.FunctionArn!,
-              MaximumRetryAttempts: 0,
-              MaximumEventAgeInSeconds: 3600,
-            })
-          );
-        } catch (e: any) {
-          if (e.name === "InvalidParameterValueException")
-            return createFunctionInUserAccount();
-          else if (e.name === "ResourceConflictException") {
-            /* ignore */
-          } else throw e;
-        }
-
-        // Wait or function state is ACTIVE
-        while (true) {
-          const ret = await lambda.send(
-            new GetFunctionCommand({
-              FunctionName: functionName,
-            })
-          );
-
-          if (ret.Configuration?.State !== "Pending") {
-            return ret.Configuration?.FunctionArn!;
-          }
-          await new Promise((r) => setTimeout(r, 5000));
-        }
-      }
-
-      async function createEventTargetInUserAccount() {
+        // Create event target in user account to forward external events
         const eb = new EventBridgeClient({
           credentials,
           region,
@@ -926,15 +821,12 @@ export module Run {
             throw e;
           }
         }
-      }
 
-      function updateRunnerRecordWithResource() {
-        return useTransaction((tx) =>
+        // Store resource
+        await useTransaction((tx) =>
           tx
             .update(runnerTable)
-            .set({
-              resource,
-            })
+            .set({ resource: resource! })
             .where(
               and(
                 eq(runnerTable.id, runnerID),
@@ -943,7 +835,25 @@ export module Run {
             )
             .execute()
         );
+      } catch (e) {
+        // Remove from db
+        await useTransaction((tx) =>
+          tx
+            .delete(runnerTable)
+            .where(
+              and(
+                eq(runnerTable.id, runnerID),
+                eq(runnerTable.workspaceID, useWorkspace())
+              )
+            )
+            .execute()
+        );
+        throw e;
       }
+
+      await scheduleRunnerRemover(runnerID);
+
+      return { id: runnerID, region, engine, resource, warmer: null };
     }
   );
 
@@ -954,127 +864,61 @@ export module Run {
     }),
     async (input) => {
       const { runner, credentials } = input;
+      const Runner = useRunner(runner.engine);
 
-      await removeIamRoleInUserAccount();
-      await removeFunctionInUserAccount();
-      await removeRunnerRecord();
-
-      async function removeIamRoleInUserAccount() {
-        const roleArn = runner.resource?.properties.role;
-        if (!roleArn) return;
-        const roleName = roleArn.split("/").pop()!;
-
-        const iam = new IAMClient({
-          credentials,
-          retryStrategy: RETRY_STRATEGY,
-        });
-        try {
-          await iam.send(
-            new DeleteRolePolicyCommand({
-              RoleName: roleName,
-              PolicyName: "eventbridge",
-            })
-          );
-        } catch (e: any) {
-          console.error(e);
-        }
-
-        try {
-          await iam.send(
-            new DetachRolePolicyCommand({
-              RoleName: roleName,
-              PolicyArn:
-                "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-            })
-          );
-        } catch (e: any) {
-          if (e.name !== "NoSuchEntityException") {
-            console.error(e);
-          }
-        }
-
-        try {
-          await iam.send(
-            new DeleteRoleCommand({
-              RoleName: roleName,
-            })
-          );
-        } catch (e: any) {
-          console.error(e);
-        }
-      }
-
-      async function removeFunctionInUserAccount() {
-        const functionName = runner.resource?.properties.function;
-        if (!functionName) return;
-
-        const lambda = new LambdaClient({
+      // Remove resources
+      if (runner.resource) {
+        await Runner.removeResource({
           credentials,
           region: runner.region,
-          retryStrategy: RETRY_STRATEGY,
+          resource: runner.resource,
         });
-        try {
-          const ret = await lambda.send(
-            new DeleteFunctionCommand({
-              FunctionName: functionName,
-            })
-          );
-        } catch (e: any) {
-          console.error(e);
-        }
       }
 
-      function removeRunnerRecord() {
-        return useTransaction((tx) =>
-          tx
-            .delete(runnerTable)
-            .where(
-              and(
-                eq(runnerTable.id, runner.id),
-                eq(runnerTable.workspaceID, useWorkspace())
-              )
+      // Remove db entry
+      return useTransaction((tx) =>
+        tx
+          .delete(runnerTable)
+          .where(
+            and(
+              eq(runnerTable.id, runner.id),
+              eq(runnerTable.workspaceID, useWorkspace())
             )
-            .execute()
-        );
-      }
+          )
+          .execute()
+      );
     }
   );
 
   export const warmRunner = zod(
     z.object({
       region: z.string().nonempty(),
+      engine: z.enum(Engine),
       resource: Resource,
       credentials: z.custom<Credentials>(),
       cloneUrl: z.string().nonempty(),
       instances: z.number().int(),
     }),
-    async (input) => {
-      const { region, resource, credentials, cloneUrl, instances } = input;
-
-      const lambda = new LambdaClient({
-        credentials,
-        region,
-        retryStrategy: RETRY_STRATEGY,
-      });
+    async ({ region, engine, resource, credentials, cloneUrl, instances }) => {
+      const Runner = useRunner(engine);
       await Promise.all(
         Array(instances)
           .fill(0)
           .map((_) =>
-            lambda.send(
-              new InvokeCommand({
-                FunctionName: resource.properties.function,
-                InvocationType: "Event",
-                Payload: JSON.stringify({
-                  warm: true,
-                  buildspec: {
-                    version: Config.BUILDSPEC_VERSION,
-                    bucket: Bucket.Buildspec.bucketName,
-                  },
-                  cloneUrl,
-                  credentials,
-                } satisfies RunnerEvent),
-              })
-            )
+            Runner.invoke({
+              region,
+              resource,
+              credentials,
+              payload: {
+                warm: true,
+                buildspec: {
+                  version: Config.BUILDSPEC_VERSION,
+                  bucket: Bucket.Buildspec.bucketName,
+                },
+                cloneUrl,
+                credentials,
+              },
+            })
           )
       );
     }

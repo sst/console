@@ -7,5 +7,12 @@
   },
   "dependencies": {
     "@aws-sdk/client-eventbridge": "3.433.0"
-  }
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "description": ""
 }

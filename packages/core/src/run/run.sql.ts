@@ -15,25 +15,38 @@ import { app, appRepoTable, stage } from "../app/app.sql";
 import { workspaceIndexes } from "../workspace/workspace.sql";
 import { awsAccount } from "../aws/aws.sql";
 
-export const Resource = z.discriminatedUnion("type", [
+export const Resource = z.discriminatedUnion("engine", [
   z.object({
-    type: z.literal("lambda"),
+    engine: z.literal("lambda"),
     properties: z.object({
       role: z.string().nonempty(),
       function: z.string().nonempty(),
     }),
   }),
+  z.object({
+    engine: z.literal("codebuild"),
+    properties: z.object({
+      role: z.string().nonempty(),
+      project: z.string().nonempty(),
+    }),
+  }),
 ]);
 export type Resource = z.infer<typeof Resource>;
+export const Engine = ["lambda", "codebuild"] as const;
 export const Architecture = ["x86_64", "arm64"] as const;
 
-export const Log = z.discriminatedUnion("type", [
+export const Log = z.discriminatedUnion("engine", [
   z.object({
-    type: z.literal("lambda"),
-    requestID: z.string().nonempty(),
+    engine: z.literal("lambda"),
+    requestID: z.string().nonempty().optional(),
     logGroup: z.string().nonempty(),
     logStream: z.string().nonempty(),
     timestamp: z.number().int(),
+  }),
+  z.object({
+    engine: z.literal("codebuild"),
+    logGroup: z.string().nonempty(),
+    logStream: z.string().nonempty(),
   }),
 ]);
 export type Log = z.infer<typeof Log>;
@@ -83,7 +96,8 @@ export type Trigger = z.infer<typeof Trigger>;
 export const CiConfig = z.object({
   runner: z
     .object({
-      architecture: z.enum(["x86_64", "arm64"]).optional(),
+      engine: z.enum(Engine).optional(),
+      architecture: z.enum(Architecture).optional(),
       image: z.string().nonempty().optional(),
     })
     .optional(),
@@ -103,6 +117,7 @@ export const runnerTable = mysqlTable(
     awsAccountID: cuid("aws_account_id").notNull(),
     region: varchar("region", { length: 255 }).notNull(),
     appRepoID: cuid("app_repo_id").notNull(),
+    engine: mysqlEnum("engine", Engine).notNull(),
     architecture: mysqlEnum("architecture", Architecture).notNull(),
     image: varchar("image", { length: 255 }).notNull(),
     resource: json("resource").$type<Resource>(),
