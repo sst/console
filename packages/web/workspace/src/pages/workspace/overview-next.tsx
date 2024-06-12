@@ -23,8 +23,8 @@ import {
 } from "$/ui/icons";
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
-import { IconApp } from "$/ui/icons/custom";
 import type { App, Stage } from "@console/core/app";
+import { IconApp, IconCommit, IconGitHub } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
@@ -33,6 +33,7 @@ import { useLocalContext } from "$/providers/local";
 import { filter, flatMap, groupBy, map, pipe, sortBy, toPairs } from "remeda";
 import { User } from "@console/core/user";
 import { useAuth2 } from "$/providers/auth2";
+import { parseTime, formatSinceTime } from "$/common/format";
 
 const OVERFLOW_APPS_COUNT = 9;
 const OVERFLOW_APPS_DISPLAY = 6;
@@ -103,11 +104,124 @@ const Card = styled("div", {
 const CardHeader = styled("div", {
   base: {
     ...utility.row(0.5),
-    height: 46,
+    height: 58,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `0 ${theme.space[2]} 0 ${theme.space[4]}`,
+    padding: `0 ${theme.space[4]}`,
     borderBottom: `1px solid ${theme.color.divider.base}`,
+  },
+});
+
+const CardTitle = styled(Link, {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    fontSize: theme.font.size.base,
+    fontWeight: theme.font.weight.medium,
+    color: theme.color.text.primary.base,
+    lineHeight: "normal",
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+  },
+});
+
+const CardTitleTeam = styled("p", {
+  base: {
+    fontSize: theme.font.size.base,
+    fontWeight: theme.font.weight.medium,
+    color: theme.color.text.primary.base,
+    lineHeight: "normal",
+  },
+});
+
+const CardTitleTeamCount = styled("p", {
+  base: {
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.dimmed.base,
+    lineHeight: "normal",
+  },
+});
+
+const CardTitleIcon = styled("span", {
+  base: {
+    lineHeight: 0,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.primary.base,
+  },
+});
+
+const RepoLink = styled("a", {
+  base: {
+    ...utility.row(0),
+    gap: 4,
+    height: 30,
+    padding: "0 10px",
+    alignItems: "center",
+    color: theme.color.text.secondary.surface,
+    backgroundColor: theme.color.background.surface,
+    borderRadius: theme.borderRadius,
+    ":hover": {
+      color: theme.color.text.primary.surface,
+    },
+  },
+});
+
+const RepoLinkCopy = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    lineHeight: "normal",
+  },
+});
+
+const RepoLinkIcon = styled("span", {
+  base: {
+    lineHeight: 0,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.secondary.surface,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${RepoLink}:hover &`]: {
+        color: theme.color.text.primary.surface,
+      },
+    },
+  },
+});
+
+const RepoConnectLink = styled(Link, {
+  base: {
+    ...utility.row(0),
+    gap: 4,
+    alignItems: "center",
+    color: theme.color.text.dimmed.base,
+    ":hover": {
+      color: theme.color.text.secondary.base,
+    },
+  },
+});
+
+const RepoConnectLinkCopy = styled("span", {
+  base: {
+    ...utility.text.label,
+    fontSize: theme.font.size.mono_sm,
+  },
+});
+
+const RepoConnectLinkIcon = styled("span", {
+  base: {
+    lineHeight: "normal",
+    opacity: theme.iconOpacity,
+  },
+});
+
+const RepoLinkSeparator = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.base,
+    paddingInline: 3,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${RepoLink}:hover &`]: {
+        color: theme.color.text.secondary.base,
+      },
+    },
   },
 });
 
@@ -296,19 +410,21 @@ export function OverviewNext() {
     return (
       <Card>
         <CardHeader>
-          <Row space="0.5">
-            <Text code size="mono_sm" color="dimmed">
-              {props.app.name}
-            </Text>
-          </Row>
-          <Dropdown
-            size="sm"
-            icon={<IconEllipsisVertical width={18} height={18} />}
-          >
-            <Dropdown.Item>Action 1</Dropdown.Item>
-            <Dropdown.Seperator />
-            <Dropdown.Item>Action 2</Dropdown.Item>
-          </Dropdown>
+          <CardTitle href={props.app.name}>
+            <CardTitleIcon><IconApp width="20" height="20" /></CardTitleIcon>
+            {props.app.name}
+          </CardTitle>
+          <Switch>
+            <Match when={props.app.name.includes("console")}>
+              <RepoLink
+                target="_blank"
+                href={`https://github.com/sst/console}`}
+              >
+                <RepoLinkIcon><IconGitHub width="14" height="14" /></RepoLinkIcon>
+                <RepoLinkCopy>console</RepoLinkCopy>
+              </RepoLink>
+            </Match>
+          </Switch>
         </CardHeader>
         <div>
           <For each={showOverflow() ? children() : childrenCapped()}>
@@ -424,14 +540,12 @@ export function OverviewNext() {
                   <Col>
                     <Card>
                       <CardHeader>
-                        <Row space="0.5">
-                          <Text code size="mono_sm" color="dimmed">
-                            Team:
-                          </Text>
-                          <Text code size="mono_sm" color="dimmed">
-                            {sortedUsers().length}
-                          </Text>
-                        </Row>
+                        <CardTitleTeam>
+                          Team
+                        </CardTitleTeam>
+                        <CardTitleTeamCount>
+                          {sortedUsers().length}
+                        </CardTitleTeamCount>
                       </CardHeader>
                       <div>
                         <For each={query.users ? sortedUsers() : usersCapped()}>
@@ -471,17 +585,14 @@ export function OverviewNext() {
   );
 }
 
-const StageRoot = styled(Link, {
+const StageRoot = styled("div", {
   base: {
     ...utility.row(3),
-    height: 58,
+    height: 52,
     alignItems: "center",
     padding: `0 ${theme.space[4]}`,
     justifyContent: "space-between",
     borderTop: `1px solid ${theme.color.divider.base}`,
-    ":hover": {
-      backgroundColor: theme.color.background.hover,
-    },
     selectors: {
       "&:first-child": {
         borderTop: "none",
@@ -490,28 +601,132 @@ const StageRoot = styled(Link, {
   },
 });
 
-const StageIcon = styled("div", {
+const StageCardLeft = styled("div", {
   base: {
-    flex: "0 0 auto",
-    width: 16,
-    height: 16,
-    color: theme.color.icon.secondary,
+    ...utility.row(3),
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+});
+
+const StageLink = styled(Link, {
+  base: {
+    ...utility.row(2.5),
+    alignItems: "center",
+    color: theme.color.text.primary.base,
   },
   variants: {
-    dimmed: {
+    unsupported: {
       true: {
-        color: theme.color.icon.dimmed,
+        color: theme.color.text.dimmed.base,
       },
-      false: {},
+      false: {}
     },
   },
 });
 
-const StageCardTags = styled("div", {
+const StageIcon = styled("div", {
   base: {
-    ...utility.row(3),
+    marginInline: 5,
+    width: 10,
+    height: 10,
+    borderRadius: "50%",
+  },
+  variants: {
+    status: {
+      base: {
+        backgroundColor: theme.color.divider.base,
+      },
+      unsupported: {
+        opacity: 0.5,
+        backgroundColor: theme.color.divider.base,
+      },
+      success: {
+        backgroundColor: `hsla(${theme.color.base.blue}, 100%)`,
+      },
+      error: {
+        backgroundColor: `hsla(${theme.color.base.red}, 100%)`,
+      },
+      updating: {
+        backgroundColor: `hsla(${theme.color.base.brand}, 100%)`,
+        animation: "glow-pulse-status 1.7s linear infinite alternate",
+      },
+    },
+  },
+});
+
+const StageLinkText = styled("span", {
+  base: {
+    ...utility.text.line,
+    fontSize: theme.font.size.sm,
+    lineHeight: "normal",
+  },
+});
+
+const StageCardRight = styled("div", {
+  base: {
+    ...utility.row(1),
     alignItems: "center",
+    justifyContent: "flex-end",
     flex: "0 0 auto",
+  },
+});
+
+const StageGitLink = styled("a", {
+  base: {
+    ...utility.row(1),
+    alignItems: "center",
+  },
+});
+
+const StageGitIcon = styled("span", {
+  base: {
+    lineHeight: 0,
+    color: theme.color.icon.dimmed,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    width: 14,
+    height: 14,
+    selectors: {
+      [`${StageGitLink}:hover &`]: {
+        color: theme.color.text.secondary.base,
+      },
+    },
+  },
+});
+
+const StageGitCommit = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.base,
+    fontWeight: theme.font.weight.medium,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${StageGitLink}:hover &`]: {
+        color: theme.color.text.secondary.base,
+      },
+    },
+  },
+});
+
+const StageRegion = styled("span", {
+  base: {
+    letterSpacing: 0.5,
+    minWidth: 84,
+    textAlign: "right",
+    textTransform: "uppercase",
+    fontSize: theme.font.size.xs,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const StageUpdatedTime = styled("span", {
+  base: {
+    minWidth: 56,
+    textAlign: "right",
+    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.xs,
   },
 });
 
@@ -521,56 +736,96 @@ interface StageCardProps {
 }
 function StageCard(props: StageCardProps) {
   const app = AppStore.get.watch(useReplicache(), () => [props.stage.appID]);
+  const stageUri = () => `${app()?.name}/${props.ambiguous ? props.stage.id : props.stage.name}`;
   const local = useLocalContext();
   return (
-    <StageRoot
-      href={`${app()?.name}/${
-        props.ambiguous ? props.stage.id : props.stage.name
-      }`}
-    >
-      <Row space="2" vertical="center">
-        <StageIcon dimmed={props.stage.unsupported || false}>
-          <IconApp />
-        </StageIcon>
-        <Row space="1" vertical="center">
-          <Text
-            line
-            size="base"
-            weight="medium"
-            leading="normal"
-            color={props.stage.unsupported ? "dimmed" : "primary"}
-          >
-            {app()?.name}
-          </Text>
-          <Text size="base" color="dimmed">
-            /
-          </Text>
-          <Text
-            line
-            size="base"
-            weight="medium"
-            leading="normal"
-            color={props.stage.unsupported ? "dimmed" : "primary"}
-          >
-            {props.stage.name}
-          </Text>
-        </Row>
-      </Row>
-      <StageCardTags>
-        <Show
-          when={
-            props.stage.name === local()?.stage && app()?.name === local()?.app
-          }
+    <StageRoot>
+      <StageCardLeft>
+        <StageLink
+          href={stageUri()}
+          unsupported={props.stage.unsupported || false}
         >
-          <Tag level="tip" style="outline">
-            Local
-          </Tag>
+          <Switch>
+            <Match when={props.stage.unsupported}>
+              <StageIcon status="unsupported" />
+            </Match>
+            <Match when={props.stage.name.includes("jayair")}>
+              <StageIcon status="success" />
+            </Match>
+            <Match when={props.stage.name.includes("frank")}>
+              <StageIcon status="error" />
+            </Match>
+            <Match when={props.stage.name.includes("dev")}>
+              <StageIcon status="updating" />
+            </Match>
+            <Match when={true}>
+              <StageIcon status="base" />
+            </Match>
+          </Switch>
+          <StageLinkText>{props.stage.name}</StageLinkText>
+        </StageLink>
+        <Switch>
+          <Match when={props.stage.name === local()?.stage && app()?.name === local()?.app}>
+            <Link href={`${stageUri()}/local`}>
+              <Tag level="tip" style="outline">Local</Tag>
+            </Link>
+          </Match>
+          <Match when={props.stage.name.includes("frank")}>
+            <Link href={`${stageUri()}/link/to/update/with/error`}>
+              <Tag style="outline" level="danger">Error</Tag>
+            </Link>
+          </Match>
+          <Match when={props.stage.unsupported}>
+            <Link href={stageUri()}>
+              <Tag style="outline">Upgrade</Tag>
+            </Link>
+          </Match>
+        </Switch>
+      </StageCardLeft>
+      <StageCardRight>
+        <Show when={props.stage.name.includes("jayair")}>
+          <StageGitLink
+            target="_blank"
+            href={"https://github.com"}
+          >
+            <StageGitIcon><IconCommit /></StageGitIcon>
+            <StageGitCommit>34j19d0</StageGitCommit>
+          </StageGitLink>
         </Show>
-        <Show when={props.stage.unsupported}>
-          <Tag style="outline">Upgrade</Tag>
-        </Show>
-        <Tag style="outline">{props.stage.region}</Tag>
-      </StageCardTags>
+        <StageRegion>{props.stage.region}</StageRegion>
+        <Switch>
+          <Match
+            when={props.stage.name.includes("dev") && DateTime.now().minus({ minutes: 20 }).toSQL()!}
+          >
+            {date =>
+              <StageUpdatedTime title={parseTime(date()).toLocaleString(DateTime.DATETIME_FULL)}>
+                {formatSinceTime(date(), false, true)}
+              </StageUpdatedTime>
+            }
+          </Match>
+          <Match
+            when={props.stage.name.includes("jayair") && DateTime.now().minus({ minutes: 230 }).toSQL()!}
+          >
+            {date =>
+              <StageUpdatedTime title={parseTime(date()).toLocaleString(DateTime.DATETIME_FULL)}>
+                {formatSinceTime(date(), false, true)}
+              </StageUpdatedTime>
+            }
+          </Match>
+          <Match
+            when={props.stage.name.includes("frank") && DateTime.now().startOf("day").toSQL()!}
+          >
+            {date =>
+              <StageUpdatedTime title={parseTime(date()).toLocaleString(DateTime.DATETIME_FULL)}>
+                {formatSinceTime(date(), false, true)}
+              </StageUpdatedTime>
+            }
+          </Match>
+          <Match when={true}>
+            <StageUpdatedTime>—</StageUpdatedTime>
+          </Match>
+        </Switch>
+      </StageCardRight>
     </StageRoot>
   );
 }

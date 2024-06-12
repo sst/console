@@ -83,7 +83,10 @@ export function formatDuration(ms: number, useFullFormat?: boolean): string {
 export function formatSinceTime(
   timestamp: string,
   useFullFormat?: boolean,
+  noPostfix?: boolean,
 ): string {
+
+  const postfix = noPostfix ? "" : " ago";
   const diffInSeconds = Math.max(
     0,
     Math.ceil(parseTime(timestamp).diffNow().as("seconds") * -1),
@@ -92,74 +95,74 @@ export function formatSinceTime(
   if (diffInSeconds < 60) {
     return useFullFormat
       ? diffInSeconds === 1
-        ? "1 second ago"
-        : `${diffInSeconds} seconds ago`
-      : `${diffInSeconds}s ago`;
+        ? `1 second${postfix}`
+        : `${diffInSeconds} seconds${postfix}`
+      : `${diffInSeconds}s${postfix}`;
   }
 
   const diffInMinutes = Math.round(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return useFullFormat
       ? diffInMinutes === 1
-        ? "1 minute ago"
-        : `${diffInMinutes} minutes ago`
+        ? `1 minute${postfix}`
+        : `${diffInMinutes} minutes${postfix}`
       : diffInMinutes === 1
-        ? "1min ago"
-        : `${diffInMinutes}mins ago`;
+        ? `1min${postfix}`
+        : `${diffInMinutes}mins${postfix}`;
   }
 
   const diffInHours = Math.round(diffInMinutes / 60);
   if (diffInHours < 24) {
     return useFullFormat
       ? diffInHours === 1
-        ? "1 hour ago"
-        : `${diffInHours} hours ago`
+        ? `1 hour${postfix}`
+        : `${diffInHours} hours${postfix}`
       : diffInHours === 1
-        ? "1hr ago"
-        : `${diffInHours}hrs ago`;
+        ? `1hr${postfix}`
+        : `${diffInHours}hrs${postfix}`;
   }
 
   const diffInDays = Math.round(diffInHours / 24);
   if (diffInDays < 7) {
     return useFullFormat
       ? diffInDays === 1
-        ? "1 day ago"
-        : `${diffInDays} days ago`
+        ? `1 day${postfix}`
+        : `${diffInDays} days${postfix}`
       : diffInDays === 1
-        ? "1d ago"
-        : `${diffInDays}d ago`;
+        ? `1d${postfix}`
+        : `${diffInDays}d${postfix}`;
   }
 
   const diffInWeeks = Math.round(diffInDays / 7);
   if (diffInWeeks < 4) {
     return useFullFormat
       ? diffInWeeks === 1
-        ? "1 week ago"
-        : `${diffInWeeks} weeks ago`
+        ? `1 week${postfix}`
+        : `${diffInWeeks} weeks${postfix}`
       : diffInWeeks === 1
-        ? "1wk ago"
-        : `${diffInWeeks}wks ago`;
+        ? `1wk${postfix}`
+        : `${diffInWeeks}wks${postfix}`;
   }
 
   const diffInMonths = Math.round(diffInDays / 30);
   if (diffInMonths < 12) {
     return useFullFormat
       ? diffInMonths === 1
-        ? "1 month ago"
-        : `${diffInMonths} months ago`
+        ? `1 month${postfix}`
+        : `${diffInMonths} months${postfix}`
       : diffInMonths === 1
-        ? "1mo ago"
-        : `${diffInMonths}mos ago`;
+        ? `1mo${postfix}`
+        : `${diffInMonths}mos${postfix}`;
   }
 
   const diffInYears = Math.round(diffInDays / 365);
   return useFullFormat
     ? diffInYears === 1
-      ? "1 year ago"
-      : `${diffInYears} years ago`
+      ? `1 year${postfix}`
+      : `${diffInYears} years${postfix}`
     : diffInYears === 1
-      ? "1yr ago"
-      : `${diffInYears}yrs ago`;
+      ? `1yr${postfix}`
+      : `${diffInYears}yrs${postfix}`;
 }
 
 export function formatCommit(commit: string) {
