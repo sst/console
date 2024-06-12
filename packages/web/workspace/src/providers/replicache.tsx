@@ -162,7 +162,7 @@ const mutators = new Client<ServerType>()
       id: input.id,
       appID: input.appID,
       stagePattern: input.stagePattern,
-      awsAccountID: input.awsAccountID,
+      awsAccountExternalID: input.awsAccountExternalID,
       env: input.env,
       time: {
         created: new Date().toISOString(),

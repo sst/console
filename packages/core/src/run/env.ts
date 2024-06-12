@@ -24,7 +24,7 @@ export module RunConfig {
     id: z.string().cuid2(),
     appID: z.string().cuid2(),
     stagePattern: z.string().nonempty(),
-    awsAccountID: z.string().cuid2(),
+    awsAccountExternalID: z.string().length(12),
     env: z.custom<Env>(),
     time: z.object({
       created: z.string(),
