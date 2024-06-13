@@ -53,6 +53,9 @@ import { Replicache } from "@console/core/replicache";
 import { AppRepo } from "@console/core/app/repo";
 
 export const TABLES = {
+  stateUpdate: stateUpdateTable,
+  stateResource: stateResourceTable,
+  stateEvent: stateEventTable,
   workspace,
   stripe,
   user,
@@ -73,9 +76,6 @@ export const TABLES = {
   githubRepo,
   slackTeam,
   usage,
-  stateUpdate: stateUpdateTable,
-  stateResource: stateResourceTable,
-  stateEvent: stateEventTable,
   run: runTable,
   runConfig: runConfigTable,
 };
