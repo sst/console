@@ -321,8 +321,6 @@ export const handler = ApiHandler(
 
           if (!ids.length) continue;
           const table = TABLES[name as keyof typeof TABLES];
-          let offset = 0;
-          const page = 10_000;
 
           for (const group of chunk(ids, 1000)) {
             log("fetching", name, "count", group.length);
@@ -337,8 +335,6 @@ export const handler = ApiHandler(
                   inArray(table.id, group),
                 ),
               )
-              .offset(offset)
-              .limit(page)
               .execute();
             console.log("got rows", rows.length);
             const projection =
@@ -351,8 +347,6 @@ export const handler = ApiHandler(
                 value: projection ? projection(row as any) : row,
               });
             }
-            if (rows.length < page) break;
-            offset += rows.length;
           }
         }
 
