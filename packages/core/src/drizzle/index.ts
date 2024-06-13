@@ -12,5 +12,15 @@ const client = new Client({
 });
 
 export const db = drizzle(client, {
-  logger: process.env.DRIZZLE_LOG === "true",
+  logger:
+    process.env.DRIZZLE_LOG === "true"
+      ? {
+          logQuery(query) {
+            console.log({
+              query,
+              params: query.length,
+            });
+          },
+        }
+      : undefined,
 });
