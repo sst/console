@@ -100,8 +100,14 @@ export function API({ stack, app }: StackContext) {
     routes: {
       "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
       "POST /replicache/push": "packages/functions/src/replicache/push.handler",
-      "POST /replicache/pull1":
-        "packages/functions/src/replicache/pull1.handler",
+      "POST /replicache/pull1": {
+        function: {
+          handler: "packages/functions/src/replicache/pull1.handler",
+          environment: {
+            DRIZZLE_LOG: app.local ? "false" : "true",
+          },
+        },
+      },
       "POST /replicache/dummy/pull":
         "packages/functions/src/replicache/dummy/pull.handler",
       "POST /replicache/push1":
