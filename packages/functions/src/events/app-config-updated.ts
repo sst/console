@@ -1,5 +1,5 @@
 import { withActor } from "@console/core/actor";
-import { RunConfig } from "@console/core/run/env";
+import { RunConfig } from "@console/core/run/config";
 import { AppRepo } from "@console/core/app/repo";
 import { AWS } from "@console/core/aws";
 import { Github } from "@console/core/git/github";
@@ -13,7 +13,7 @@ export const handler = EventHandler(RunConfig.Events.Updated, (evt) =>
     const appRepo = await AppRepo.getByAppID(appID);
     if (!appRepo) return;
 
-    const gitRepo = await Github.getByRepoID(appRepo.repoID);
+    const gitRepo = await Github.getExternalInfoByRepoID(appRepo.repoID);
     if (!gitRepo) return;
 
     // Get `sst.config.ts` file from the default stage

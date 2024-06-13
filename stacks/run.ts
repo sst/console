@@ -230,8 +230,8 @@ export function Run({ stack, app }: StackContext) {
     },
   });
 
-  bus.subscribe(stack, "app.env.updated", {
-    handler: "packages/functions/src/events/app-env-updated.handler",
+  bus.subscribe(stack, "app.config.updated", {
+    handler: "packages/functions/src/events/app-config-updated.handler",
     timeout: "15 minute",
     bind: [
       ...Object.values(secrets.database),

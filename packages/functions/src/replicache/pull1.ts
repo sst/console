@@ -37,7 +37,7 @@ import {
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
 import { db } from "@console/core/drizzle";
-import { githubOrg, githubRepo } from "@console/core/git/git.sql";
+import { githubOrgTable, githubRepoTable } from "@console/core/git/git.sql";
 import { slackTeam } from "@console/core/slack/slack.sql";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { gzipSync } from "zlib";
@@ -72,8 +72,8 @@ export const TABLES = {
   issueSubscriber,
   issueCount,
   issueAlert,
-  githubOrg,
-  githubRepo,
+  githubOrg: githubOrgTable,
+  githubRepo: githubRepoTable,
   slackTeam,
   usage,
   run: runTable,

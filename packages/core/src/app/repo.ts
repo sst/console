@@ -4,27 +4,16 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { appRepoTable } from "./app.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
-import { createSelectSchema } from "drizzle-zod";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { event } from "../event";
 import { Trigger } from "../run/run.sql";
 
 export module AppRepo {
-  export const Events = {
-    Connected: event(
-      "app.repo.connected",
-      z.object({
-        appID: z.string(),
-        repoID: z.number().int(),
-      })
-    ),
-  };
-
-  export const AppRepo = z.object({
+  export const Repo = z.object({
     id: z.string().cuid2(),
     appID: z.string().cuid2(),
     type: z.enum(["github"]),
-    repoID: z.number().int(),
+    repoID: z.string().cuid2(),
     time: z.object({
       created: z.string(),
       deleted: z.string().optional(),
@@ -35,11 +24,21 @@ export module AppRepo {
     lastEventID: z.string().cuid2().optional(),
     lastEventStatus: z.string().nonempty().optional(),
   });
-  export type AppRepo = z.infer<typeof AppRepo>;
+  export type Repo = z.infer<typeof Repo>;
+
+  export const Events = {
+    Connected: event(
+      "app.repo.connected",
+      z.object({
+        appID: Repo.shape.appID,
+        repoID: Repo.shape.repoID,
+      })
+    ),
+  };
 
   export function serializeAppRepo(
     input: typeof appRepoTable.$inferSelect
-  ): AppRepo {
+  ): Repo {
     return {
       id: input.id,
       appID: input.appID,
@@ -57,27 +56,7 @@ export module AppRepo {
     };
   }
 
-  export const listByRepo = zod(
-    AppRepo.pick({
-      type: true,
-      repoID: true,
-    }),
-    (input) =>
-      useTransaction((tx) =>
-        tx
-          .select()
-          .from(appRepoTable)
-          .where(
-            and(
-              eq(appRepoTable.type, "github"),
-              eq(appRepoTable.repoID, input.repoID)
-            )
-          )
-          .execute()
-      )
-  );
-
-  export const getByID = zod(AppRepo.shape.id, (id) =>
+  export const getByID = zod(Repo.shape.id, (id) =>
     useTransaction((tx) =>
       tx
         .select()
@@ -93,7 +72,7 @@ export module AppRepo {
     )
   );
 
-  export const getByAppID = zod(AppRepo.shape.appID, (appID) =>
+  export const getByAppID = zod(Repo.shape.appID, (appID) =>
     useTransaction((tx) =>
       tx
         .select()
@@ -110,7 +89,7 @@ export module AppRepo {
   );
 
   export const connect = zod(
-    AppRepo.pick({ id: true, appID: true, type: true, repoID: true }).partial({
+    Repo.pick({ id: true, appID: true, type: true, repoID: true }).partial({
       id: true,
     }),
     async (input) => {
@@ -138,7 +117,7 @@ export module AppRepo {
     }
   );
 
-  export const disconnect = zod(AppRepo.shape.id, (input) =>
+  export const disconnect = zod(Repo.shape.id, (input) =>
     useTransaction((tx) => {
       return tx
         .delete(appRepoTable)
@@ -154,10 +133,10 @@ export module AppRepo {
 
   export const setLastEvent = zod(
     z.object({
-      repoID: z.number().int(),
+      appRepoIDs: z.array(Repo.shape.id),
       gitContext: Trigger,
     }),
-    async ({ repoID, gitContext }) => {
+    async ({ appRepoIDs, gitContext }) => {
       const lastEventID = createId();
       await useTransaction((tx) =>
         tx
@@ -168,7 +147,7 @@ export module AppRepo {
             lastEventStatus: null,
             timeLastEvent: new Date(),
           })
-          .where(eq(appRepoTable.repoID, repoID))
+          .where(inArray(appRepoTable.id, appRepoIDs))
       );
       return lastEventID;
     }
@@ -176,28 +155,21 @@ export module AppRepo {
 
   export const setLastEventStatus = zod(
     z.object({
-      appID: z.string().cuid2().optional(),
-      repoID: z.number().int(),
+      appRepoIDs: z.array(Repo.shape.id),
       lastEventID: z.string().cuid2(),
       status: z.string().nonempty(),
     }),
-    async ({ appID, repoID, lastEventID, status }) => {
+    async ({ appRepoIDs, lastEventID, status }) => {
       await useTransaction((tx) =>
         tx
           .update(appRepoTable)
           .set({ lastEventStatus: status })
           .where(
-            appID
-              ? and(
-                  eq(appRepoTable.workspaceID, useWorkspace()),
-                  eq(appRepoTable.repoID, repoID),
-                  eq(appRepoTable.appID, appID),
-                  eq(appRepoTable.lastEventID, lastEventID)
-                )
-              : and(
-                  eq(appRepoTable.repoID, repoID),
-                  eq(appRepoTable.lastEventID, lastEventID)
-                )
+            and(
+              eq(appRepoTable.workspaceID, useWorkspace()),
+              inArray(appRepoTable.id, appRepoIDs),
+              eq(appRepoTable.lastEventID, lastEventID)
+            )
           )
       );
     }

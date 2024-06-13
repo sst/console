@@ -128,12 +128,12 @@ export function Overview() {
   const ghRepo = GithubRepoStore.all.watch(
     rep,
     () => [],
-    (repos) => repos.find((repo) => repo.repoID === appRepo()[0]?.repoID),
+    (repos) => repos.find((repo) => repo.id === appRepo()[0]?.repoID)
   );
   const ghRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID),
+    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID)
   );
 
   const stages = createSubscription(async (tx) => {

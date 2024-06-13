@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid, timestampsNext } from "../util/sql";
 import { Trigger } from "../run/run.sql";
+import { workspaceIndexes } from "../workspace/workspace.sql";
 
 export const app = mysqlTable(
   "app",
@@ -73,6 +74,30 @@ export const resource = mysqlTable(
 );
 
 export const appRepoTable = mysqlTable(
+  "app_repository",
+  {
+    ...workspaceID,
+    ...timestampsNext,
+    appID: cuid("app_id").notNull(),
+    type: mysqlEnum("type", ["github"]).notNull(),
+    repoID: cuid("repo_id").notNull(),
+    lastEvent: json("last_event").$type<Trigger>(),
+    lastEventID: cuid("last_event_id"),
+    lastEventStatus: text("last_event_status"),
+    timeLastEvent: timestamp("time_last_event"),
+  },
+  (table) => ({
+    ...workspaceIndexes(table),
+    appID: foreignKey({
+      name: "fk_app_id",
+      columns: [table.workspaceID, table.appID],
+      foreignColumns: [app.workspaceID, app.id],
+    }).onDelete("cascade"),
+  })
+);
+
+// TODO REMOVE
+export const appRepoTable_REMOVE = mysqlTable(
   "app_repo",
   {
     ...workspaceID,

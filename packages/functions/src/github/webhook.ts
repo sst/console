@@ -79,11 +79,12 @@ async function process(octokit: Octokit, trigger: Trigger) {
   const commitID = trigger.commit.id;
 
   // Get all apps connected to the repo
-  const appRepos = await AppRepo.listByRepo({ type: "github", repoID });
+  const appRepos = await Github.listAppReposByExternalRepoID(repoID);
+  const appRepoIDs = appRepos.map((x) => x.id);
   if (appRepos.length === 0) return;
 
   const lastEventID = await AppRepo.setLastEvent({
-    repoID,
+    appRepoIDs,
     gitContext: trigger,
   });
 
@@ -96,7 +97,7 @@ async function process(octokit: Octokit, trigger: Trigger) {
   });
   if (!("content" in file.data)) {
     await AppRepo.setLastEventStatus({
-      repoID,
+      appRepoIDs,
       lastEventID,
       status: "sst.config.ts not found",
     });
@@ -123,7 +124,7 @@ async function process(octokit: Octokit, trigger: Trigger) {
         : sstConfig.error === "missing_ci_stage"
         ? "Missing stage in CI target"
         : "Failed to parse sst.config.ts";
-    await AppRepo.setLastEventStatus({ repoID, lastEventID, status });
+    await AppRepo.setLastEventStatus({ appRepoIDs, lastEventID, status });
     return;
   }
 
@@ -143,8 +144,7 @@ async function process(octokit: Octokit, trigger: Trigger) {
           });
         } catch (e: any) {
           await AppRepo.setLastEventStatus({
-            appID: appRepo.appID,
-            repoID,
+            appRepoIDs: [appRepo.id],
             lastEventID,
             status: e.message,
           });

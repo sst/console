@@ -156,7 +156,7 @@ export module CodebuildRunner {
               },
               artifacts: { type: "NO_ARTIFACTS" },
               environment: {
-                computeType: "BUILD_GENERAL1_MEDIUM",
+                computeType: "BUILD_GENERAL1_SMALL",
                 image,
                 type:
                   architecture === "x86_64"
@@ -174,9 +174,15 @@ export module CodebuildRunner {
           );
           return ret.project?.arn!;
         } catch (e: any) {
-          if (e.name !== "EntityAlreadyExistsException") {
-            throw e;
-          }
+          if (
+            e.name === "InvalidInputException" &&
+            e.message ===
+              "CodeBuild is not authorized to perform: sts:AssumeRole on service role"
+          )
+            return createProjectInUserAccount();
+          if (e.name === "EntityAlreadyExistsException") {
+            /* ignore */
+          } else throw e;
 
           return `arn:aws:codebuild:${region}:${awsAccountExternalID}:project/${projectName}`;
         }

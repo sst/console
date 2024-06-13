@@ -226,7 +226,8 @@ export const runConfigTable = mysqlTable(
   }),
 );
 
-export const runEnvTable = mysqlTable(
+// TODO REMOVE
+export const runEnvTable_REMOVE = mysqlTable(
   "run_env",
   {
     ...workspaceID,

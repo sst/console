@@ -1,6 +1,5 @@
 import type { App } from "@console/core/app";
 import { Store } from "./store";
-import type { RunConfig } from "@console/core/run/env";
 import type { Github } from "@console/core/git/github";
 import type { Slack } from "@console/core/slack";
 import type { Issue } from "@console/core/issue";
@@ -8,6 +7,7 @@ import type { Billing } from "@console/core/billing";
 import type { AppRepo } from "@console/core/app/repo";
 import type { State } from "@console/core/state";
 import type { Run } from "@console/core/run";
+import type { RunConfig } from "@console/core/run/config";
 
 export const AppStore = new Store()
   .type<App.Info>()
@@ -16,7 +16,7 @@ export const AppStore = new Store()
   .build();
 
 export const AppRepoStore = new Store()
-  .type<AppRepo.AppRepo>()
+  .type<AppRepo.Repo>()
   .scan("all", () => ["appRepo"])
   .get((id: string) => ["appRepo", id])
   .scan("forApp", (appID: string) => ["appRepo", appID])
@@ -30,13 +30,13 @@ export const RunConfigStore = new Store()
   .build();
 
 export const GithubOrgStore = new Store()
-  .type<Github.OrgInfo>()
+  .type<Github.Org>()
   .scan("all", () => ["githubOrg"])
   .get((id: string) => ["githubOrg", id])
   .build();
 
 export const GithubRepoStore = new Store()
-  .type<Github.RepoInfo>()
+  .type<Github.Repo>()
   .scan("all", () => ["githubRepo"])
   .get((id: string) => ["githubRepo", id])
   .build();

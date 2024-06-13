@@ -438,8 +438,8 @@ export const EditTargetForm = object({
       object({
         key: string([minLength(1, "Key cannot be empty")]),
         value: string([minLength(1, "Value cannot be empty")]),
-      }),
-    ),
+      })
+    )
   ),
 });
 
@@ -448,12 +448,12 @@ export function Settings() {
   const app = useAppContext();
   const runConfigs = createSubscription(
     (tx) => RunConfigStore.forApp(tx, app.app.id),
-    [],
+    []
   );
   const repoInfo = createSubscription(async (tx) => {
     const appRepo = await AppRepoStore.forApp(tx, app.app.id);
     const ghRepo = (await GithubRepoStore.all(tx)).find(
-      (repo) => repo.repoID === appRepo[0]?.repoID,
+      (repo) => repo.id === appRepo[0]?.repoID
     );
     const ghRepoOrg = await GithubOrgStore.get(tx, ghRepo?.githubOrgID!);
     return { appRepo, ghRepo, ghRepoOrg };
@@ -535,11 +535,11 @@ export function Settings() {
           <EventLabel>Last Commit</EventLabel>
           <EventTime
             title={DateTime.fromISO(appRepo()!.time.lastEvent!).toLocaleString(
-              DateTime.DATETIME_FULL,
+              DateTime.DATETIME_FULL
             )}
           >
             {formatSinceTime(
-              DateTime.fromISO(appRepo()!.time.lastEvent!).toSQL()!,
+              DateTime.fromISO(appRepo()!.time.lastEvent!).toSQL()!
             )}
           </EventTime>
         </EventRight>
@@ -566,7 +566,7 @@ export function Settings() {
               awsAccountExternalID: data.awsAccount,
               appID: app.app.id,
               env: fromPairs(
-                (data.env || []).map((item) => [item.key, item.value]),
+                (data.env || []).map((item) => [item.key, item.value])
               ),
             });
             setEditing("active", false);
@@ -776,7 +776,7 @@ export function Settings() {
                         target="_blank"
                         href={githubRepo(
                           repoInfo.value!.ghRepoOrg!.login,
-                          repoInfo.value!.ghRepo!.name!,
+                          repoInfo.value!.ghRepo!.name!
                         )}
                       >
                         {repoInfo.value!.ghRepoOrg!.login}
@@ -790,12 +790,12 @@ export function Settings() {
                     onClick={() => {
                       if (
                         !confirm(
-                          "Are you sure you want to disconnect from this repo?",
+                          "Are you sure you want to disconnect from this repo?"
                         )
                       )
                         return;
                       rep().mutate.app_repo_disconnect(
-                        repoInfo.value!.appRepo[0]!.id,
+                        repoInfo.value!.appRepo[0]!.id
                       );
                     }}
                   >
@@ -831,7 +831,7 @@ export function Settings() {
                   <For
                     each={pipe(
                       runConfigs.value,
-                      sortBy((val) => val.stagePattern.length),
+                      sortBy((val) => val.stagePattern.length)
                     )}
                   >
                     {(config) => (
@@ -856,7 +856,7 @@ export function Settings() {
                                     stagePattern: config.stagePattern,
                                     awsAccount: config.awsAccountExternalID,
                                     env: Object.entries(config.env).map(
-                                      ([key, value]) => ({ key, value }),
+                                      ([key, value]) => ({ key, value })
                                     ),
                                   });
                                 }}
@@ -872,7 +872,7 @@ export function Settings() {
                                     stagePattern: config.stagePattern,
                                     awsAccount: config.awsAccountExternalID,
                                     env: Object.entries(config.env).map(
-                                      ([key, value]) => ({ key, value }),
+                                      ([key, value]) => ({ key, value })
                                     ),
                                   });
                                 }}
@@ -944,15 +944,15 @@ function RepoInfo() {
   const appRepo = AppRepoStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0),
+    (all) => all.at(0)
   );
   const connectedRepo = createMemo(() =>
-    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID),
+    githubRepos().find((repo) => repo.id === appRepo()?.repoID)
   );
   const connectedRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID),
+    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID)
   );
 
   return (
@@ -974,7 +974,7 @@ function RepoInfo() {
                           id: createId(),
                           appID: app.app.id,
                           type: "github",
-                          repoID: repo.repoID,
+                          repoID: repo.id,
                         });
                       }}
                     >

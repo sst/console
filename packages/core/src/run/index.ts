@@ -43,7 +43,7 @@ import {
   Engine,
 } from "./run.sql";
 import { App, Stage } from "../app";
-import { RunConfig } from "./env";
+import { RunConfig } from "./config";
 import { RETRY_STRATEGY } from "../util/aws";
 import { State } from "../state";
 import { Function } from "sst/node/function";
@@ -426,7 +426,7 @@ export module Run {
 
       // Build cloneUrl
       context = "start runner";
-      const gitRepo = await Github.getByRepoID(appRepo.repoID);
+      const gitRepo = await Github.getExternalInfoByRepoID(appRepo.repoID);
       if (!gitRepo) throw new Error("Github Repo not found");
       const cloneUrl = await Github.getCloneUrl(gitRepo);
 

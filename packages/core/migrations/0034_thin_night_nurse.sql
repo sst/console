@@ -1,0 +1,1 @@
+CREATE INDEX `external_repo_id` ON `github_repository` (`external_repo_id`);

@@ -2,231 +2,332 @@ import { z } from "zod";
 import { zod } from "../util/zod";
 import { App } from "octokit";
 import { createTransaction, useTransaction } from "../util/transaction";
-import { githubOrg, githubRepo } from "./git.sql";
+import { githubOrgTable, githubRepoTable } from "./git.sql";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
-import { and, eq, notInArray, or, inArray, sql } from "../drizzle";
-import { createSelectSchema } from "drizzle-zod";
+import { and, eq, isNull, notInArray, or, sql } from "../drizzle";
 import { Config } from "sst/node/config";
 import { event } from "../event";
+import { appRepoTable } from "../app/app.sql";
 
-export * as Github from "./github";
+export module Github {
+  export const Events = {
+    Installed: event(
+      "github.installed",
+      z.object({
+        installationID: z.number().int(),
+      })
+    ),
+  };
 
-export const Events = {
-  Installed: event(
-    "github.installed",
-    z.object({
-      installationID: z.number().int(),
-    })
-  ),
-};
+  export const Org = z.object({
+    id: z.string().cuid2(),
+    externalOrgID: z.number().int(),
+    login: z.string().nonempty(),
+    installationID: z.number().int(),
+    time: z.object({
+      created: z.string(),
+      deleted: z.string().optional(),
+      updated: z.string(),
+      disconnected: z.string().optional(),
+    }),
+  });
+  export type Org = z.infer<typeof Org>;
 
-export const OrgInfo = createSelectSchema(githubOrg);
-export type OrgInfo = z.infer<typeof OrgInfo>;
-export const RepoInfo = createSelectSchema(githubRepo);
-export type RepoInfo = z.infer<typeof RepoInfo>;
+  export const Repo = z.object({
+    id: z.string().cuid2(),
+    githubOrgID: z.string().cuid2(),
+    externalRepoID: z.number().int(),
+    name: z.string().nonempty(),
+    time: z.object({
+      created: z.string(),
+      deleted: z.string().optional(),
+      updated: z.string(),
+    }),
+  });
+  export type Repo = z.infer<typeof Repo>;
 
-let client: {
-  octokit: Awaited<ReturnType<typeof createClient>>;
-  installationID: number;
-};
-async function useClient(installationID: number) {
-  if (client?.installationID !== installationID) {
-    client = {
-      octokit: await createClient(installationID),
-      installationID,
+  export function serializeOrg(input: typeof githubOrgTable.$inferSelect): Org {
+    return {
+      id: input.id,
+      externalOrgID: input.externalOrgID,
+      login: input.login,
+      installationID: input.installationID,
+      time: {
+        created: input.timeCreated.toISOString(),
+        updated: input.timeUpdated.toISOString(),
+        deleted: input.timeDeleted?.toISOString(),
+        disconnected: input.timeDisconnected?.toISOString(),
+      },
     };
   }
-  return client.octokit;
-}
-function createClient(installationID: number) {
-  const app = new App({
-    appId: Config.GITHUB_APP_ID,
-    privateKey: Config.GITHUB_PRIVATE_KEY,
-  });
-  return app.getInstallationOctokit(installationID);
-}
 
-export const connect = zod(z.number(), async (installationID) => {
-  // Get installation detail
-  const client = await useClient(installationID);
-  const installation = await client.rest.apps.getInstallation({
-    installation_id: installationID,
-  });
-  const orgID = installation.data.account?.id!;
-  // @ts-ignore
-  const login = installation.data.account?.login;
+  export function serializeRepo(
+    input: typeof githubRepoTable.$inferSelect
+  ): Repo {
+    return {
+      id: input.id,
+      githubOrgID: input.githubOrgID,
+      externalRepoID: input.externalRepoID,
+      name: input.name,
+      time: {
+        created: input.timeCreated.toISOString(),
+        updated: input.timeUpdated.toISOString(),
+        deleted: input.timeDeleted?.toISOString(),
+      },
+    };
+  }
 
-  await useTransaction(async (tx) =>
-    tx
-      .insert(githubOrg)
-      .values({
-        workspaceID: useWorkspace(),
-        id: createId(),
-        orgID,
-        login,
+  let client: {
+    octokit: Awaited<ReturnType<typeof createClient>>;
+    installationID: number;
+  };
+  async function useClient(installationID: number) {
+    if (client?.installationID !== installationID) {
+      client = {
+        octokit: await createClient(installationID),
         installationID,
-      })
-      .onDuplicateKeyUpdate({
-        set: {
-          login,
-          installationID,
-        },
-      })
-      .execute()
-  );
-  await Events.Installed.publish({ installationID });
-});
-
-export const disconnect = zod(OrgInfo.shape.id, (id) =>
-  useTransaction((tx) => {
-    return tx
-      .delete(githubOrg)
-      .where(
-        and(eq(githubOrg.id, id), eq(githubOrg.workspaceID, useWorkspace()))
-      )
-      .execute();
-  })
-);
-
-export const disconnectAll = zod(z.number().int(), (input) =>
-  useTransaction((tx) => {
-    return tx
-      .delete(githubOrg)
-      .where(eq(githubOrg.installationID, input))
-      .execute();
-  })
-);
-
-export const getByRepoID = zod(z.number(), (repoID) =>
-  useTransaction(async (tx) =>
-    tx
-      .select({
-        installationID: githubOrg.installationID,
-        owner: githubOrg.login,
-        repo: githubRepo.name,
-      })
-      .from(githubRepo)
-      .innerJoin(githubOrg, eq(githubRepo.githubOrgID, githubOrg.id))
-      .where(
-        and(
-          eq(githubRepo.repoID, repoID),
-          eq(githubRepo.workspaceID, useWorkspace())
-        )
-      )
-      .execute()
-      .then((x) => x[0])
-  )
-);
-
-export const syncRepos = zod(
-  z.object({
-    installationID: z.number().int(),
-  }),
-  async (input) => {
-    // get workspaces with this installation
-    const orgs = await useTransaction((tx) =>
-      tx
-        .select()
-        .from(githubOrg)
-        .where(eq(githubOrg.installationID, input.installationID))
-        .execute()
-    );
-    if (orgs.length === 0) return;
-
-    // fetch repos from GitHub
-    const client = await useClient(input.installationID);
-    const repos: { id: number; name: string }[] = [];
-    for (let page = 1; ; page++) {
-      const ret = await client.rest.apps.listReposAccessibleToInstallation({
-        per_page: 100,
-        page,
-      });
-      repos.push(
-        ...ret.data.repositories.map((repo) => ({
-          id: repo.id,
-          name: repo.name,
-        }))
-      );
-      if (ret.data.repositories.length < 100) break;
+      };
     }
+    return client.octokit;
+  }
+  function createClient(installationID: number) {
+    const app = new App({
+      appId: Config.GITHUB_APP_ID,
+      privateKey: Config.GITHUB_PRIVATE_KEY,
+    });
+    return app.getInstallationOctokit(installationID);
+  }
 
-    // store repos for each workspace
-    await createTransaction(async (tx) => {
-      await tx
-        .delete(githubRepo)
+  export const connect = zod(
+    Org.shape.installationID,
+    async (installationID) => {
+      // Get installation detail
+      const client = await useClient(installationID);
+      const installation = await client.rest.apps.getInstallation({
+        installation_id: installationID,
+      });
+      const externalOrgID = installation.data.account?.id!;
+      // @ts-ignore
+      const login = installation.data.account?.login;
+
+      await useTransaction(async (tx) =>
+        tx
+          .insert(githubOrgTable)
+          .values({
+            workspaceID: useWorkspace(),
+            id: createId(),
+            externalOrgID,
+            login,
+            installationID,
+          })
+          .onDuplicateKeyUpdate({
+            set: {
+              login,
+              installationID,
+              timeDisconnected: null,
+            },
+          })
+          .execute()
+      );
+      await Events.Installed.publish({ installationID });
+    }
+  );
+
+  export const disconnect = zod(Org.shape.id, (id) =>
+    useTransaction((tx) => {
+      return tx
+        .update(githubOrgTable)
+        .set({
+          timeDisconnected: new Date(),
+        })
         .where(
-          or(
-            ...orgs.map((org) =>
-              and(
-                eq(githubRepo.workspaceID, org.workspaceID),
-                eq(githubRepo.githubOrgID, org.id),
-                notInArray(
-                  githubRepo.repoID,
-                  repos.map(({ id }) => id)
+          and(
+            eq(githubOrgTable.id, id),
+            eq(githubOrgTable.workspaceID, useWorkspace())
+          )
+        )
+        .execute();
+    })
+  );
+
+  export const disconnectAll = zod(Org.shape.installationID, (installationID) =>
+    useTransaction((tx) => {
+      return tx
+        .update(githubOrgTable)
+        .set({
+          timeDisconnected: new Date(),
+        })
+        .where(eq(githubOrgTable.installationID, installationID))
+        .execute();
+    })
+  );
+
+  export const listAppReposByExternalRepoID = zod(
+    Repo.shape.externalRepoID,
+    (externalRepoID) =>
+      useTransaction((tx) =>
+        tx
+          .select({
+            id: appRepoTable.id,
+            workspaceID: appRepoTable.workspaceID,
+            appID: appRepoTable.appID,
+            repoID: appRepoTable.repoID,
+          })
+          .from(githubRepoTable)
+          .innerJoin(
+            githubOrgTable,
+            and(
+              eq(githubOrgTable.workspaceID, githubRepoTable.workspaceID),
+              eq(githubOrgTable.id, githubRepoTable.githubOrgID),
+              isNull(githubOrgTable.timeDisconnected)
+            )
+          )
+          .innerJoin(
+            appRepoTable,
+            and(
+              eq(appRepoTable.workspaceID, githubRepoTable.workspaceID),
+              eq(appRepoTable.type, "github"),
+              eq(appRepoTable.repoID, githubRepoTable.id)
+            )
+          )
+          .where(eq(githubRepoTable.externalRepoID, externalRepoID))
+          .execute()
+      )
+  );
+
+  export const getExternalInfoByRepoID = zod(Repo.shape.id, (repoID) =>
+    useTransaction(async (tx) =>
+      tx
+        .select({
+          installationID: githubOrgTable.installationID,
+          owner: githubOrgTable.login,
+          repo: githubRepoTable.name,
+        })
+        .from(githubRepoTable)
+        .innerJoin(
+          githubOrgTable,
+          and(
+            eq(githubOrgTable.workspaceID, useWorkspace()),
+            eq(githubOrgTable.id, githubRepoTable.githubOrgID)
+          )
+        )
+        .where(
+          and(
+            eq(githubRepoTable.id, repoID),
+            eq(githubRepoTable.workspaceID, useWorkspace())
+          )
+        )
+        .execute()
+        .then((x) => x[0])
+    )
+  );
+
+  export const syncRepos = zod(
+    Org.shape.installationID,
+    async (installationID) => {
+      // get workspaces with this installation
+      const orgs = await useTransaction((tx) =>
+        tx
+          .select()
+          .from(githubOrgTable)
+          .where(eq(githubOrgTable.installationID, installationID))
+          .execute()
+      );
+      if (orgs.length === 0) return;
+
+      // fetch repos from GitHub
+      const client = await useClient(installationID);
+      const repos: { id: number; name: string }[] = [];
+      for (let page = 1; ; page++) {
+        const ret = await client.rest.apps.listReposAccessibleToInstallation({
+          per_page: 100,
+          page,
+        });
+        repos.push(
+          ...ret.data.repositories.map((repo) => ({
+            id: repo.id,
+            name: repo.name,
+          }))
+        );
+        if (ret.data.repositories.length < 100) break;
+      }
+
+      // store repos for each workspace
+      await createTransaction(async (tx) => {
+        await tx
+          .delete(githubRepoTable)
+          .where(
+            or(
+              ...orgs.map((org) =>
+                and(
+                  eq(githubRepoTable.workspaceID, org.workspaceID),
+                  eq(githubRepoTable.githubOrgID, org.id),
+                  notInArray(
+                    githubRepoTable.externalRepoID,
+                    repos.map(({ id }) => id)
+                  )
                 )
               )
             )
           )
-        )
-        .execute();
+          .execute();
 
-      await tx
-        .insert(githubRepo)
-        .values(
-          orgs.flatMap((org) =>
-            repos.map((repo) => ({
-              id: createId(),
-              workspaceID: org.workspaceID,
-              githubOrgID: org.id,
-              repoID: repo.id,
-              name: repo.name,
-            }))
+        await tx
+          .insert(githubRepoTable)
+          .values(
+            orgs.flatMap((org) =>
+              repos.map((repo) => ({
+                id: createId(),
+                workspaceID: org.workspaceID,
+                githubOrgID: org.id,
+                externalRepoID: repo.id,
+                name: repo.name,
+              }))
+            )
           )
-        )
-        .onDuplicateKeyUpdate({
-          set: {
-            name: sql`VALUES(name)`,
-          },
-        })
-        .execute();
-    });
-  }
-);
-
-export const getFile = zod(
-  z.object({
-    installationID: z.number().int(),
-    owner: z.string().nonempty(),
-    repo: z.string().nonempty(),
-    ref: z.string().nonempty().optional(),
-  }),
-  async (input) => {
-    const client = await useClient(input.installationID);
-    const file = await client.rest.repos.getContent({
-      owner: input.owner,
-      repo: input.repo,
-      ref: input.ref,
-      path: "sst.config.ts",
-    });
-    if (!("content" in file.data)) {
-      throw new Error("sst.config.ts not found");
+          .onDuplicateKeyUpdate({
+            set: { name: sql`VALUES(name)` },
+          })
+          .execute();
+      });
     }
-    return file.data.content;
-  }
-);
+  );
 
-export const getCloneUrl = zod(
-  z.object({
-    installationID: z.number().int(),
-    owner: z.string().nonempty(),
-    repo: z.string().nonempty(),
-  }),
-  async (input) => {
-    const client = await useClient(input.installationID);
-    const oauthToken = await client
-      .auth({ type: "installation" })
-      .then((x: any) => x.token);
-    return `https://oauth2:${oauthToken}@github.com/${input.owner}/${input.repo}.git`;
-  }
-);
+  export const getFile = zod(
+    z.object({
+      installationID: z.number().int(),
+      owner: z.string().nonempty(),
+      repo: z.string().nonempty(),
+      ref: z.string().nonempty().optional(),
+    }),
+    async (input) => {
+      const client = await useClient(input.installationID);
+      const file = await client.rest.repos.getContent({
+        owner: input.owner,
+        repo: input.repo,
+        ref: input.ref,
+        path: "sst.config.ts",
+      });
+      if (!("content" in file.data)) {
+        throw new Error("sst.config.ts not found");
+      }
+      return file.data.content;
+    }
+  );
+
+  export const getCloneUrl = zod(
+    z.object({
+      installationID: z.number().int(),
+      owner: z.string().nonempty(),
+      repo: z.string().nonempty(),
+    }),
+    async (input) => {
+      const client = await useClient(input.installationID);
+      const oauthToken = await client
+        .auth({ type: "installation" })
+        .then((x: any) => x.token);
+      return `https://oauth2:${oauthToken}@github.com/${input.owner}/${input.repo}.git`;
+    }
+  );
+}

@@ -29,9 +29,7 @@ export async function handler(evt: Run.RunnerWarmerEvent, context: Context) {
       }
 
       // Build cloneUrl
-      const appRepo = await AppRepo.getByID(runner.appRepoID);
-      if (!appRepo) return;
-      const gitRepo = await Github.getByRepoID(appRepo.repoID);
+      const gitRepo = await Github.getExternalInfoByRepoID(runner.appRepoID);
       if (!gitRepo) return;
       const cloneUrl = await Github.getCloneUrl(gitRepo);
 

@@ -16,7 +16,7 @@ import { warning } from "@console/core/warning/warning.sql";
 import { Github } from "@console/core/git/github";
 import { Slack } from "@console/core/slack";
 import { AppRepo } from "@console/core/app/repo";
-import { RunConfig } from "@console/core/run/env";
+import { RunConfig } from "@console/core/run/config";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
@@ -59,8 +59,8 @@ export const server = new Server()
           .where(
             and(
               eq(issueSubscriber.workspaceID, useWorkspace()),
-              eq(issueSubscriber.stageID, input.stageID),
-            ),
+              eq(issueSubscriber.stageID, input.stageID)
+            )
           )
           .execute();
         await tx
@@ -71,22 +71,22 @@ export const server = new Server()
               eq(warning.stageID, input.stageID),
               or(
                 eq(warning.type, "log_subscription"),
-                eq(warning.type, "issue_rate_limited"),
-              ),
-            ),
+                eq(warning.type, "issue_rate_limited")
+              )
+            )
           )
           .execute();
       });
       await Stage.Events.ResourcesUpdated.publish({
         stageID: input.stageID,
       });
-    },
+    }
   )
   .expose("aws_account_scan", AWS.Account.scan)
   .mutation(
     "app_stage_sync",
     z.object({ stageID: z.string() }),
-    async (input) => await App.Stage.Events.Updated.publish(input),
+    async (input) => await App.Stage.Events.Updated.publish(input)
   )
   .mutation("workspace_create", Workspace.create.schema, async (input) => {
     const actor = assertActor("account");
@@ -102,7 +102,7 @@ export const server = new Server()
         User.create({
           email: actor.properties.email,
           first: true,
-        }),
+        })
     );
   })
   .expose("user_create", User.create)

@@ -232,6 +232,20 @@
       "when": 1718225921664,
       "tag": "0032_mean_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1718300908302,
+      "tag": "0033_whole_goliath",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1718303360926,
+      "tag": "0034_thin_night_nurse",
+      "breakpoints": true
     }
   ]
 }

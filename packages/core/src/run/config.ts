@@ -11,12 +11,12 @@ import { event } from "../event";
 export module RunConfig {
   export const Events = {
     Updated: event(
-      "app.env.updated",
+      "app.config.updated",
       z.object({
         appID: z.string().cuid2(),
         stagePattern: z.string().nonempty(),
         awsAccountExternalID: z.string(),
-      }),
+      })
     ),
   };
 
@@ -48,15 +48,15 @@ export module RunConfig {
           .where(
             and(
               eq(runConfigTable.workspaceID, useWorkspace()),
-              eq(runConfigTable.appID, input.appID),
-            ),
+              eq(runConfigTable.appID, input.appID)
+            )
           )
           .execute()
-          .then((rows) => rows),
+          .then((rows) => rows)
       );
 
       return stages.find((row) => minimatch(input.stageName, row.stagePattern));
-    },
+    }
   );
 
   export const put = zod(
@@ -86,16 +86,16 @@ export module RunConfig {
               stagePattern: input.stagePattern,
             },
           })
-          .execute(),
+          .execute()
       );
       await createTransactionEffect(() =>
         Events.Updated.publish({
           appID: input.appID,
           stagePattern: input.stagePattern,
           awsAccountExternalID: input.awsAccountExternalID,
-        }),
+        })
       );
-    },
+    }
   );
 
   export const remove = zod(z.string().cuid2(), (input) =>
@@ -105,10 +105,10 @@ export module RunConfig {
         .where(
           and(
             eq(runConfigTable.id, input),
-            eq(runConfigTable.workspaceID, useWorkspace()),
-          ),
+            eq(runConfigTable.workspaceID, useWorkspace())
+          )
         )
         .execute();
-    }),
+    })
   );
 }
