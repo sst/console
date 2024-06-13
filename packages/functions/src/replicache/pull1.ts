@@ -25,7 +25,7 @@ import {
   replicache_client_group,
 } from "@console/core/replicache/replicache.sql";
 import { lambdaPayload } from "@console/core/lambda/lambda.sql";
-import { equals, mapValues } from "remeda";
+import { chunk, equals, mapValues } from "remeda";
 import { log_poller, log_search } from "@console/core/log/log.sql";
 import { PatchOperation, PullRequest, PullResponseV1 } from "replicache";
 import { warning } from "@console/core/warning/warning.sql";
@@ -164,7 +164,7 @@ export const handler = ApiHandler(
 
         const oldCvr = await Replicache.CVR.get(
           req.clientGroupID,
-          req.cookie as number
+          req.cookie as number,
         );
 
         const cvr = oldCvr ?? {
@@ -191,7 +191,7 @@ export const handler = ApiHandler(
 
         const results: [
           string,
-          { id: string; version: string; key: string }[]
+          { id: string; version: string; key: string }[],
         ][] = [];
 
         if (actor.type === "user") {
@@ -201,7 +201,7 @@ export const handler = ApiHandler(
             log_search: eq(log_search.userID, actor.properties.userID),
             usage: gte(
               usage.day,
-              DateTime.now().toUTC().startOf("month").toSQLDate()!
+              DateTime.now().toUTC().startOf("month").toSQLDate()!,
             ),
             issueCount: gte(
               issueCount.hour,
@@ -209,7 +209,7 @@ export const handler = ApiHandler(
                 .toUTC()
                 .startOf("hour")
                 .minus({ day: 1 })
-                .toSQL({ includeOffset: false })!
+                .toSQL({ includeOffset: false })!,
             ),
             issue: isNull(issue.timeDeleted),
           } satisfies {
@@ -236,12 +236,12 @@ export const handler = ApiHandler(
                 and(
                   eq(
                     "workspaceID" in table ? table.workspaceID : table.id,
-                    workspaceID
+                    workspaceID,
                   ),
                   ...(name in tableFilters
                     ? [tableFilters[name as keyof typeof tableFilters]]
-                    : [])
-                )
+                    : []),
+                ),
               );
             log("getting updated from", name);
             const rows = await query.execute();
@@ -265,8 +265,8 @@ export const handler = ApiHandler(
                 and(
                   eq(user.email, actor.properties.email),
                   isNull(user.timeDeleted),
-                  isNull(workspace.timeDeleted)
-                )
+                  isNull(workspace.timeDeleted),
+                ),
               )
               .execute(),
           ]);
@@ -284,8 +284,8 @@ export const handler = ApiHandler(
               and(
                 eq(user.email, actor.properties.email),
                 isNull(user.timeDeleted),
-                isNull(workspace.timeDeleted)
-              )
+                isNull(workspace.timeDeleted),
+              ),
             )
             .execute();
           results.push(["workspace", workspaces]);
@@ -306,7 +306,7 @@ export const handler = ApiHandler(
 
         log(
           "toPut",
-          mapValues(toPut, (value) => value.length)
+          mapValues(toPut, (value) => value.length),
         );
 
         log("toDel", cvr.data);
@@ -316,7 +316,7 @@ export const handler = ApiHandler(
           log(name);
           const ids = items.map((item) => item.id);
           const keys = Object.fromEntries(
-            items.map((item) => [item.id, item.key])
+            items.map((item) => [item.id, item.key]),
           );
 
           if (!ids.length) continue;
@@ -324,8 +324,8 @@ export const handler = ApiHandler(
           let offset = 0;
           const page = 10_000;
 
-          while (true) {
-            log("fetching", name, "offset", offset, ids.length);
+          for (const group of chunk(ids, 1000)) {
+            log("fetching", name, "count", group.length);
             const rows = await tx
               .select()
               .from(table)
@@ -334,8 +334,8 @@ export const handler = ApiHandler(
                   "workspaceID" in table && actor.type === "user"
                     ? eq(table.workspaceID, useWorkspace())
                     : undefined,
-                  inArray(table.id, ids)
-                )
+                  inArray(table.id, group),
+                ),
               )
               .offset(offset)
               .limit(page)
@@ -343,7 +343,6 @@ export const handler = ApiHandler(
             console.log("got rows", rows.length);
             const projection =
               TABLE_PROJECTION[name as keyof typeof TABLE_PROJECTION];
-
             for (const row of rows) {
               const key = keys[row.id]!;
               patch.push({
@@ -375,13 +374,13 @@ export const handler = ApiHandler(
           .where(
             and(
               eq(replicache_client.clientGroupID, req.clientGroupID),
-              gt(replicache_client.clientVersion, cvr.clientVersion)
-            )
+              gt(replicache_client.clientVersion, cvr.clientVersion),
+            ),
           )
           .execute();
 
         const lastMutationIDChanges = Object.fromEntries(
-          clients.map((c) => [c.id, c.mutationID] as const)
+          clients.map((c) => [c.id, c.mutationID] as const),
         );
         if (patch.length > 0 || Object.keys(lastMutationIDChanges).length > 0) {
           log("inserting", req.clientGroupID);
@@ -413,7 +412,7 @@ export const handler = ApiHandler(
       },
       {
         isolationLevel: "serializable",
-      }
+      },
     );
 
     const response: APIGatewayProxyStructuredResultV2 = {
@@ -435,5 +434,5 @@ export const handler = ApiHandler(
     }
 
     return response;
-  })
+  }),
 );
