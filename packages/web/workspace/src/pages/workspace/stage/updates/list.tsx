@@ -472,13 +472,11 @@ function Update(props: UpdateProps) {
                 <UpdateGitBranch>{runInfo()!.branch}</UpdateGitBranch>
               </UpdateGitLink>
             </Row>
-            <Show when={runInfo()!.trigger.commit.message}>
-              <UpdateGitMessage>
-                <Show when={runInfo()!.trigger.commit.message} fallback="—">
-                  {runInfo()!.trigger.commit.message}
-                </Show>
-              </UpdateGitMessage>
-            </Show>
+            <UpdateGitMessage>
+              <Show when={runInfo()!.trigger.commit.message} fallback="—">
+                {runInfo()!.trigger.commit.message}
+              </Show>
+            </UpdateGitMessage>
           </UpdateGit>
         </Show>
       </UpdateLeftCol>

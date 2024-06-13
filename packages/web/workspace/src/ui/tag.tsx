@@ -46,6 +46,7 @@ export const Tag = styled("div", {
         fontWeight: 500,
       },
       outline: {
+        lineHeight: "normal",
         padding: "0 8px",
         borderWidth: 1,
         borderStyle: "solid",

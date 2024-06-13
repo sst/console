@@ -881,9 +881,9 @@ function StageCard(props: StageCardProps) {
 const UserRoot = styled("div", {
   base: {
     ...utility.row(3),
-    height: 58,
+    height: 52,
     alignItems: "center",
-    padding: `0 ${theme.space[4]}`,
+    padding: `0 ${theme.space[2]} 0 ${theme.space[4]}`,
     justifyContent: "space-between",
     borderTop: `1px solid ${theme.color.divider.base}`,
     selectors: {
@@ -909,7 +909,7 @@ function UserCard(props: UserCardProps) {
         <AvatarInitialsIcon
           type="user"
           text={user()?.email || ""}
-          style={{ width: "24px", height: "24px" }}
+          style={{ width: "20px", height: "20px" }}
         />
         <Text line size="base" leading="normal">
           {user()?.email}

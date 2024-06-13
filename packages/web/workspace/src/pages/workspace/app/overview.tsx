@@ -1,4 +1,5 @@
 import {
+  Tag,
   Row,
   Text,
   theme,
@@ -8,6 +9,7 @@ import {
   ButtonIcon,
   TextButton,
 } from "$/ui";
+import { DateTime } from "luxon";
 import { For, Show, Match, Switch, createMemo, createEffect } from "solid-js";
 import { AppRepoStore, GithubOrgStore, GithubRepoStore } from "$/data/app";
 import { Header } from "../header";
@@ -15,8 +17,10 @@ import { Link } from "@solidjs/router";
 import { useAppContext } from "./context";
 import { styled } from "@macaron-css/solid";
 import { IconChevronRight } from "$/ui/icons";
-import { IconGitHub } from "$/ui/icons/custom";
+import type { Stage } from "@console/core/app";
+import { IconPr, IconGit, IconCommit, IconGitHub } from "$/ui/icons/custom";
 import { createSubscription, useReplicache } from "$/providers/replicache";
+import { parseTime, formatSinceTime, formatCommit } from "$/common/format";
 import { StageStore } from "$/data/stage";
 import { App } from "@console/core/app";
 
@@ -97,13 +101,18 @@ const RepoLinkSeparator = styled("span", {
 
 const StageGrid = styled("div", {
   base: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: theme.space[4],
+    ...utility.row(4),
   },
 });
 
-const Card = styled("div", {
+const Col = styled("div", {
+  base: {
+    ...utility.stack(4),
+    flex: 1,
+  },
+});
+
+const CardRoot = styled("div", {
   base: {
     borderRadius: theme.borderRadius,
     border: `1px solid ${theme.color.divider.base}`,
@@ -113,11 +122,186 @@ const Card = styled("div", {
 const CardHeader = styled("div", {
   base: {
     ...utility.row(0.5),
-    height: 46,
+    height: 80,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `0 ${theme.space[2]} 0 ${theme.space[4]}`,
-    borderBottom: `1px solid ${theme.color.divider.base}`,
+    padding: `0 ${theme.space[4]} ${theme.space[1]} ${theme.space[4]}`,
+  },
+});
+
+const CardHeaderLeft = styled("div", {
+  base: {
+    ...utility.stack(2),
+  },
+});
+
+const CardTitle = styled("div", {
+  base: {
+    ...utility.row(3),
+    alignItems: "center",
+  },
+});
+
+const CardTitleText = styled(Link, {
+  base: {
+    lineHeight: "26px",
+    color: theme.color.text.primary.base,
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const CardIcon = styled("div", {
+  base: {
+    width: 16,
+    height: 16,
+    borderRadius: "50%",
+  },
+  variants: {
+    status: {
+      base: {
+        backgroundColor: theme.color.divider.base,
+      },
+      unsupported: {
+        opacity: 0.5,
+        backgroundColor: theme.color.divider.base,
+      },
+      success: {
+        backgroundColor: `hsla(${theme.color.base.blue}, 100%)`,
+      },
+      error: {
+        backgroundColor: `hsla(${theme.color.base.red}, 100%)`,
+      },
+      updating: {
+        backgroundColor: `hsla(${theme.color.base.brand}, 100%)`,
+        animation: "glow-pulse-status 1.7s linear infinite alternate",
+      },
+    },
+  },
+});
+
+const CardUpdatedTime = styled("span", {
+  base: {
+    marginLeft: `calc(${theme.space[3]} + 16px)`,
+    fontSize: theme.font.size.xs,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const CardHeaderRight = styled("div", {
+  base: {
+    ...utility.stack("px"),
+  },
+});
+
+const CardRegion = styled("span", {
+  base: {
+    letterSpacing: 0.5,
+    lineHeight: "26px",
+    textAlign: "right",
+    textTransform: "uppercase",
+    fontSize: theme.font.size.xs,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const CardBody = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    padding: `${theme.space[2.5]} ${theme.space[3]}`,
+    backgroundColor: theme.color.background.surface,
+    borderTop: `1px solid ${theme.color.divider.surface}`,
+  },
+});
+
+const CardGitAvatar = styled("div", {
+  base: {
+    flex: "0 0 auto",
+    width: 24,
+    height: 24,
+    overflow: "hidden",
+    borderRadius: theme.borderRadius,
+  },
+});
+
+const CardGitLink = styled("a", {
+  base: {
+    ...utility.row(1),
+    alignItems: "center",
+  },
+});
+
+const CardGitIcon = styled("span", {
+  base: {
+    lineHeight: 0,
+    opacity: theme.iconOpacity,
+    color: theme.color.text.secondary.surface,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${CardGitLink}:hover &`]: {
+        color: theme.color.text.primary.surface,
+      },
+    },
+  },
+  variants: {
+    size: {
+      sm: {
+        width: 10,
+        height: 10,
+        color: theme.color.text.dimmed.surface,
+        selectors: {
+          [`${CardGitLink}:hover &`]: {
+            color: theme.color.text.secondary.surface,
+          },
+        },
+      },
+      md: {
+        width: 12,
+        height: 12,
+      },
+    },
+  },
+});
+
+const CardGitBranch = styled("span", {
+  base: {
+    ...utility.text.line,
+    maxWidth: 140,
+    lineHeight: "normal",
+    fontSize: theme.font.size.xs,
+    color: theme.color.text.dimmed.surface,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${CardGitLink}:hover &`]: {
+        color: theme.color.text.secondary.surface,
+      },
+    },
+  },
+});
+
+const CardGitCommit = styled("span", {
+  base: {
+    lineHeight: "normal",
+    fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.secondary.surface,
+    fontWeight: theme.font.weight.medium,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${CardGitLink}:hover &`]: {
+        color: theme.color.text.primary.surface,
+      },
+    },
+  },
+});
+
+const CardGitMessage = styled("span", {
+  base: {
+    ...utility.text.line,
+    lineHeight: "normal",
+    maxWidth: 260,
+    fontSize: theme.font.size.xs,
+    color: theme.color.text.dimmed.surface,
   },
 });
 
@@ -140,6 +324,87 @@ export function Overview() {
     const all = await StageStore.list(tx);
     return all.filter((stage) => stage.appID === app.app.id);
   }, []);
+
+  const columns = createMemo(() => {
+    const columns: Stage.Info[][] = [[], [], []];
+    stages.value.forEach((stage, i) => {
+      const index = i % 3;
+      columns[index].push(stage);
+    });
+
+    return columns;
+  });
+
+  function Card(props: { stage: Stage.Info }) {
+    const stage = props.stage;
+    return (
+      <CardRoot>
+        <CardHeader>
+          <CardHeaderLeft>
+            <CardTitle>
+              <CardIcon status="base" />
+              <Row space="2">
+                <CardTitleText href={stage.name}>
+                  {stage.name}
+                </CardTitleText>
+                <Show when={stage.name.includes("dev")}>
+                  <Link href={`${stage.name}/local`}>
+                    <Tag level="tip" style="outline">Local</Tag>
+                  </Link>
+                </Show>
+              </Row>
+            </CardTitle>
+            <CardUpdatedTime
+              title={parseTime(stage.timeUpdated).toLocaleString(
+                DateTime.DATETIME_FULL,
+              )}
+            >
+              Updated {formatSinceTime(stage.timeUpdated, true)}
+            </CardUpdatedTime>
+          </CardHeaderLeft>
+          <CardHeaderRight>
+            <CardRegion>{stage.region}</CardRegion>
+            <Tag>123456789012</Tag>
+          </CardHeaderRight>
+        </CardHeader>
+        <Show when={stage.name.includes("dev")}>
+          <CardBody>
+            <CardGitAvatar>
+              <img width="24" height="24" src="https://avatars.githubusercontent.com/u/53023?s=48&v=4" />
+            </CardGitAvatar>
+            <Stack space="1">
+              <Row space="2">
+                <CardGitLink target="_blank" href={`https://github.com`}>
+                  <CardGitIcon size="md">
+                    <IconCommit />
+                  </CardGitIcon>
+                  <CardGitCommit>556d324</CardGitCommit>
+                </CardGitLink>
+                <CardGitLink target="_blank" href={`https://github.com`}>
+                  <CardGitIcon size="sm">
+                    <Switch>
+                      <Match when={true}>
+                        <IconPr />
+                      </Match>
+                      <Match when={true}>
+                        <IconGit />
+                      </Match>
+                    </Switch>
+                  </CardGitIcon>
+                  <CardGitBranch>production</CardGitBranch>
+                </CardGitLink>
+              </Row>
+              <CardGitMessage>
+                <Show when={true} fallback="—">
+                  fixing ci again
+                </Show>
+              </CardGitMessage>
+            </Stack>
+          </CardBody>
+        </Show>
+      </CardRoot>
+    );
+  }
 
   return (
     <>
@@ -174,9 +439,8 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${
-                    ghRepo()?.name
-                  }`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
+                    }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />
@@ -191,13 +455,21 @@ export function Overview() {
             </Show>
           </Row>
           <StageGrid>
-            <For each={stages.value}>
-              {(stage) => (
-                <Card>
-                  <CardHeader>{stage.name}</CardHeader>
-                </Card>
-              )}
-            </For>
+            <Col>
+              <For each={columns()[0]}>
+                {(stage) => (<Card stage={stage} />)}
+              </For>
+            </Col>
+            <Col>
+              <For each={columns()[1]}>
+                {(stage) => (<Card stage={stage} />)}
+              </For>
+            </Col>
+            <Col>
+              <For each={columns()[2]}>
+                {(stage) => (<Card stage={stage} />)}
+              </For>
+            </Col>
           </StageGrid>
         </Stack>
       </Root>
