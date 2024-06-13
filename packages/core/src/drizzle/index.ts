@@ -15,10 +15,10 @@ export const db = drizzle(client, {
   logger:
     process.env.DRIZZLE_LOG === "true"
       ? {
-          logQuery(query) {
+          logQuery(query, params) {
             console.log({
               query,
-              params: query.length,
+              params: params.length,
             });
           },
         }
