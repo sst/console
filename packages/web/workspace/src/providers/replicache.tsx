@@ -307,7 +307,6 @@ export function createSubscription<R>(
     if (subscription) {
       subscription();
     }
-    console.log("setting up subscription");
     subscription = rep().subscribe((tx) => cb(tx), {
       onData(result) {
         setStore(

@@ -1,5 +1,12 @@
 import { DateTime } from "luxon";
-import { AppStore, StateUpdateStore } from "$/data/app";
+import {
+  AppRepoStore,
+  AppStore,
+  GithubRepoStore,
+  RunConfigStore,
+  RunStore,
+  StateUpdateStore,
+} from "$/data/app";
 import { UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
@@ -42,7 +49,8 @@ import {
 } from "remeda";
 import { User } from "@console/core/user";
 import { useAuth2 } from "$/providers/auth2";
-import { parseTime, formatSinceTime } from "$/common/format";
+import { parseTime, formatSinceTime, formatCommit } from "$/common/format";
+import { githubCommit, githubRepo } from "$/common/url-builder";
 
 const OVERFLOW_APPS_COUNT = 9;
 const OVERFLOW_APPS_DISPLAY = 6;
@@ -764,6 +772,35 @@ function StageCard(props: StageCardProps) {
     `${app()?.name}/${props.ambiguous ? props.stage.id : props.stage.name}`;
   const local = useLocalContext();
 
+  function Github() {
+    const repoUrl = createSubscription(async (tx) => {
+      console.log("latestUpdate", latestUpdate.value);
+      if (latestUpdate.value?.source.type !== "ci") return;
+      const run = await RunStore.get(
+        tx,
+        props.stage.id,
+        latestUpdate.value?.source.properties.runID,
+      );
+      console.log("run", run);
+      if (run.trigger.source !== "github") return;
+      const repoUrl = githubRepo(run.trigger.repo.owner, run.trigger.repo.repo);
+      return {
+        url: githubCommit(repoUrl, run.trigger.commit.id),
+        commit: run.trigger.commit.id,
+      };
+    });
+    return (
+      <Show when={repoUrl.value}>
+        <StageGitLink target="_blank" href={repoUrl.value!.url}>
+          <StageGitIcon>
+            <IconCommit />
+          </StageGitIcon>
+          <StageGitCommit>{formatCommit(repoUrl.value!.commit)}</StageGitCommit>
+        </StageGitLink>
+      </Show>
+    );
+  }
+
   return (
     <StageRoot>
       <StageCardLeft>
@@ -825,13 +862,8 @@ function StageCard(props: StageCardProps) {
         </Switch>
       </StageCardLeft>
       <StageCardRight>
-        <Show when={props.stage.name.includes("jayair")}>
-          <StageGitLink target="_blank" href={"https://github.com"}>
-            <StageGitIcon>
-              <IconCommit />
-            </StageGitIcon>
-            <StageGitCommit>34j19d0</StageGitCommit>
-          </StageGitLink>
+        <Show when={latestUpdate.value}>
+          <Github />
         </Show>
         <StageRegion>{props.stage.region}</StageRegion>
         <StageUpdatedTime
