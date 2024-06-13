@@ -29,6 +29,7 @@ import { RETRY_STRATEGY } from "../util/aws";
 import { AWS } from "../aws";
 import { Replicache } from "../replicache";
 import { useTransition } from "react";
+import { stage } from "../app/app.sql";
 
 export module State {
   export const Event = {
@@ -399,7 +400,17 @@ export module State {
                 inArray(stateResourceTable.urn, resourceDeletes),
               ),
             );
-
+        await tx
+          .update(stage)
+          .set({
+            timeUpdated: sql`CURRENT_TIMESTAMP(6)`,
+          })
+          .where(
+            and(
+              eq(stage.workspaceID, useWorkspace()),
+              eq(stage.id, input.config.stageID),
+            ),
+          );
         await createTransactionEffect(() =>
           Event.HistorySynced.publish({
             stageID: input.config.stageID,
@@ -474,6 +485,17 @@ export module State {
             },
             timeStarted: new Date(lock.created),
           });
+        await tx
+          .update(stage)
+          .set({
+            timeUpdated: sql`CURRENT_TIMESTAMP(6)`,
+          })
+          .where(
+            and(
+              eq(stage.workspaceID, useWorkspace()),
+              eq(stage.id, input.config.stageID),
+            ),
+          );
 
         await createTransactionEffect(() => Replicache.poke());
       });
@@ -537,6 +559,17 @@ export module State {
             and(
               eq(stateUpdateTable.workspaceID, useWorkspace()),
               eq(stateUpdateTable.id, input.updateID),
+            ),
+          );
+        await tx
+          .update(stage)
+          .set({
+            timeUpdated: sql`CURRENT_TIMESTAMP(6)`,
+          })
+          .where(
+            and(
+              eq(stage.workspaceID, useWorkspace()),
+              eq(stage.id, input.config.stageID),
             ),
           );
         await createTransactionEffect(() => Replicache.poke());

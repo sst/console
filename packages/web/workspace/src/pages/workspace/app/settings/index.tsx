@@ -49,6 +49,7 @@ import {
   setValues,
   remove,
   reset,
+  getValue,
 } from "@modular-forms/solid";
 import {
   IconPr,
@@ -61,6 +62,7 @@ import {
 import { array, minLength, object, optional, string } from "valibot";
 import { AWS } from "$/data/aws";
 import { createStore } from "solid-js/store";
+import { fromPairs, pipe, sortBy } from "remeda";
 
 const HEADER_HEIGHT = 50;
 
@@ -556,32 +558,16 @@ export function Settings() {
   function TargetForm(props: TargetProps) {
     return (
       <TargetFormRoot>
-        <TargetFormHeader>
-          <Switch>
-            <Match when={props.new}>
-              <TargetFormHeaderCopy>Add a new target</TargetFormHeaderCopy>
-            </Match>
-            <Match when={true}>
-              <TargetFormHeaderCopy>production</TargetFormHeaderCopy>
-              <Dropdown
-                size="sm"
-                icon={<IconEllipsisVertical width={18} height={18} />}
-              >
-                <Dropdown.Item>Duplicate target</Dropdown.Item>
-                <Dropdown.Seperator />
-                <Dropdown.Item>Remove target</Dropdown.Item>
-              </Dropdown>
-            </Match>
-          </Switch>
-        </TargetFormHeader>
         <Form
           onSubmit={(data) => {
-            rep().mutate.run_config_create({
-              id: createId(),
+            rep().mutate.run_config_put({
+              id: editing.id || createId(),
               stagePattern: data.stagePattern,
-              awsAccountID: data.awsAccount,
+              awsAccountExternalID: data.awsAccount,
               appID: app.app.id,
-              env: {},
+              env: fromPairs(
+                (data.env || []).map((item) => [item.key, item.value]),
+              ),
             });
             setEditing("active", false);
           }}
@@ -823,7 +809,7 @@ export function Settings() {
               <TargetsRoot>
                 <TargetHeader>
                   <TargetHeaderCopy>Deployment Targets</TargetHeaderCopy>
-                  <Show when={!editing.active}>
+                  <Show when={!editing.active || editing.id}>
                     <LinkButton
                       onClick={() => {
                         reset(putForm);
@@ -842,30 +828,83 @@ export function Settings() {
                   </Show>
                 </TargetHeader>
                 <div>
-                  <For each={runConfigs.value}>
+                  <For
+                    each={pipe(
+                      runConfigs.value,
+                      sortBy((val) => val.stagePattern.length),
+                    )}
+                  >
                     {(config) => (
-                      <TargetFormRoot>
-                        <TargetFormHeader>
-                          <TargetFormHeaderCopy>
-                            {config.stagePattern}
-                          </TargetFormHeaderCopy>
-                          <Dropdown
-                            size="sm"
-                            icon={
-                              <IconEllipsisVertical width={18} height={18} />
-                            }
-                          >
-                            <Dropdown.Item>Edit target</Dropdown.Item>
-                            <Dropdown.Item>Duplicate target</Dropdown.Item>
-                            <Dropdown.Seperator />
-                            <Dropdown.Item>Remove target</Dropdown.Item>
-                          </Dropdown>
-                        </TargetFormHeader>
-                      </TargetFormRoot>
+                      <>
+                        <TargetFormRoot>
+                          <TargetFormHeader>
+                            <TargetFormHeaderCopy>
+                              {config.stagePattern}
+                            </TargetFormHeaderCopy>
+                            <Dropdown
+                              size="sm"
+                              icon={
+                                <IconEllipsisVertical width={18} height={18} />
+                              }
+                            >
+                              <Dropdown.Item
+                                onSelect={() => {
+                                  setEditing("id", config.id);
+                                  setEditing("active", true);
+                                  reset(putForm);
+                                  setValues(putForm, {
+                                    stagePattern: config.stagePattern,
+                                    awsAccount: config.awsAccountExternalID,
+                                    env: Object.entries(config.env).map(
+                                      ([key, value]) => ({ key, value }),
+                                    ),
+                                  });
+                                }}
+                              >
+                                Edit target
+                              </Dropdown.Item>
+                              <Dropdown.Item
+                                onSelect={() => {
+                                  setEditing("id", undefined);
+                                  setEditing("active", true);
+                                  reset(putForm);
+                                  setValues(putForm, {
+                                    stagePattern: config.stagePattern,
+                                    awsAccount: config.awsAccountExternalID,
+                                    env: Object.entries(config.env).map(
+                                      ([key, value]) => ({ key, value }),
+                                    ),
+                                  });
+                                }}
+                              >
+                                Duplicate target
+                              </Dropdown.Item>
+                              <Dropdown.Seperator />
+                              <Dropdown.Item
+                                onSelect={() =>
+                                  rep().mutate.run_config_remove(config.id)
+                                }
+                              >
+                                Remove target
+                              </Dropdown.Item>
+                            </Dropdown>
+                          </TargetFormHeader>
+                        </TargetFormRoot>
+                        <Show when={editing.active && editing.id === config.id}>
+                          <TargetForm />
+                        </Show>
+                      </>
                     )}
                   </For>
-                  <Show when={editing.active}>
-                    <TargetForm new={!Boolean(editing.id)} />
+                  <Show when={editing.active && !editing.id}>
+                    <TargetFormRoot>
+                      <TargetFormHeader>
+                        <TargetFormHeaderCopy>
+                          Add a new target
+                        </TargetFormHeaderCopy>
+                      </TargetFormHeader>
+                    </TargetFormRoot>
+                    <TargetForm new />
                   </Show>
                   <Show when={false}>
                     <TargetsEmpty>

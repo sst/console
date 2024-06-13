@@ -364,6 +364,13 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
             inArray(resource.id, toDelete),
           ),
         );
+
+    await tx
+      .update(stage)
+      .set({ timeUpdated: sql`CURRENT_TIMESTAMP(3)` })
+      .where(
+        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace())),
+      );
     await createTransactionEffect(() => Replicache.poke());
     await createTransactionEffect(() =>
       Events.ResourcesUpdated.publish({

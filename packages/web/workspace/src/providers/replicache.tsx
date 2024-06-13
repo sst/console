@@ -157,8 +157,8 @@ const mutators = new Client<ServerType>()
   .mutation("app_repo_disconnect", async (tx, input) => {
     await AppRepoStore.remove(tx, input);
   })
-  .mutation("run_config_create", async (tx, input) => {
-    await RunConfigStore.put(tx, [input.id!], {
+  .mutation("run_config_put", async (tx, input) => {
+    await RunConfigStore.put(tx, [input.appID, input.id!], {
       id: input.id,
       appID: input.appID,
       stagePattern: input.stagePattern,
@@ -246,7 +246,7 @@ function createReplicache(workspaceID: string, token: string) {
 }
 
 export function ReplicacheProvider(
-  props: ParentProps<{ workspaceID: string }>
+  props: ParentProps<{ workspaceID: string }>,
 ) {
   const auth = useAuth2();
   const rep = createMemo(() => {
@@ -283,19 +283,19 @@ export function useReplicache() {
 }
 
 export function createSubscription<R>(
-  cb: (tx: ReadTransaction) => Promise<R>
+  cb: (tx: ReadTransaction) => Promise<R>,
 ): {
   value: R | undefined;
 };
 export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial: R
+  initial: R,
 ): {
   value: R;
 };
 export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial?: R | undefined
+  initial?: R | undefined,
 ) {
   const [store, setStore] = createStore({
     value: initial,
@@ -317,8 +317,8 @@ export function createSubscription<R>(
             },
             {
               merge: true,
-            }
-          )
+            },
+          ),
         );
       },
     });

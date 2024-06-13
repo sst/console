@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { AppStore } from "$/data/app";
+import { AppStore, StateUpdateStore } from "$/data/app";
 import { UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
 import { StageStore } from "$/data/stage";
@@ -30,7 +30,16 @@ import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
-import { filter, flatMap, groupBy, map, pipe, sortBy, toPairs } from "remeda";
+import {
+  filter,
+  flatMap,
+  groupBy,
+  map,
+  maxBy,
+  pipe,
+  sortBy,
+  toPairs,
+} from "remeda";
 import { User } from "@console/core/user";
 import { useAuth2 } from "$/providers/auth2";
 import { parseTime, formatSinceTime } from "$/common/format";
@@ -326,6 +335,15 @@ export function OverviewNext() {
         filter((app) => stages().find((s) => s.appID === app.id) !== undefined),
         sortBy(
           (app) => (app.name === local().app ? 0 : 1),
+          [
+            (app) =>
+              pipe(
+                stages(),
+                filter((s) => s.appID === app.id),
+                sortBy((s) => s.timeUpdated),
+              ).at(-1)?.timeUpdated || "",
+            "desc",
+          ],
           (app) => app.name,
         ),
       ),
@@ -395,8 +413,7 @@ export function OverviewNext() {
         (c) =>
           props.app.name === local().app && c.name === local().stage ? 0 : 1,
         (c) => (c.unsupported ? 1 : 0),
-        (c) => apps.value.find((app) => app.id === c.appID)?.name || "",
-        (c) => c.name,
+        [(c) => c.timeUpdated, "desc"],
       );
     });
     const childrenCapped = createMemo(() =>
@@ -411,7 +428,9 @@ export function OverviewNext() {
       <Card>
         <CardHeader>
           <CardTitle href={props.app.name}>
-            <CardTitleIcon><IconApp width="20" height="20" /></CardTitleIcon>
+            <CardTitleIcon>
+              <IconApp width="20" height="20" />
+            </CardTitleIcon>
             {props.app.name}
           </CardTitle>
           <Switch>
@@ -420,7 +439,9 @@ export function OverviewNext() {
                 target="_blank"
                 href={`https://github.com/sst/console}`}
               >
-                <RepoLinkIcon><IconGitHub width="14" height="14" /></RepoLinkIcon>
+                <RepoLinkIcon>
+                  <IconGitHub width="14" height="14" />
+                </RepoLinkIcon>
                 <RepoLinkCopy>console</RepoLinkCopy>
               </RepoLink>
             </Match>
@@ -540,9 +561,7 @@ export function OverviewNext() {
                   <Col>
                     <Card>
                       <CardHeader>
-                        <CardTitleTeam>
-                          Team
-                        </CardTitleTeam>
+                        <CardTitleTeam>Team</CardTitleTeam>
                         <CardTitleTeamCount>
                           {sortedUsers().length}
                         </CardTitleTeamCount>
@@ -620,7 +639,7 @@ const StageLink = styled(Link, {
       true: {
         color: theme.color.text.dimmed.base,
       },
-      false: {}
+      false: {},
     },
   },
 });
@@ -736,8 +755,15 @@ interface StageCardProps {
 }
 function StageCard(props: StageCardProps) {
   const app = AppStore.get.watch(useReplicache(), () => [props.stage.appID]);
-  const stageUri = () => `${app()?.name}/${props.ambiguous ? props.stage.id : props.stage.name}`;
+  const latestUpdate = createSubscription(async (tx) => {
+    const updates = await StateUpdateStore.forStage(tx, props.stage.id);
+    const latest = updates.sort((a, b) => b.index - a.index)[0];
+    return latest;
+  });
+  const stageUri = () =>
+    `${app()?.name}/${props.ambiguous ? props.stage.id : props.stage.name}`;
   const local = useLocalContext();
+
   return (
     <StageRoot>
       <StageCardLeft>
@@ -749,13 +775,20 @@ function StageCard(props: StageCardProps) {
             <Match when={props.stage.unsupported}>
               <StageIcon status="unsupported" />
             </Match>
-            <Match when={props.stage.name.includes("jayair")}>
+            <Match
+              when={
+                latestUpdate.value?.time.completed &&
+                latestUpdate.value?.errors.length === 0
+              }
+            >
               <StageIcon status="success" />
             </Match>
-            <Match when={props.stage.name.includes("frank")}>
+            <Match when={latestUpdate.value?.errors.length}>
               <StageIcon status="error" />
             </Match>
-            <Match when={props.stage.name.includes("dev")}>
+            <Match
+              when={latestUpdate.value && !latestUpdate.value.time.completed}
+            >
               <StageIcon status="updating" />
             </Match>
             <Match when={true}>
@@ -765,14 +798,23 @@ function StageCard(props: StageCardProps) {
           <StageLinkText>{props.stage.name}</StageLinkText>
         </StageLink>
         <Switch>
-          <Match when={props.stage.name === local()?.stage && app()?.name === local()?.app}>
+          <Match
+            when={
+              props.stage.name === local()?.stage &&
+              app()?.name === local()?.app
+            }
+          >
             <Link href={`${stageUri()}/local`}>
-              <Tag level="tip" style="outline">Local</Tag>
+              <Tag level="tip" style="outline">
+                Local
+              </Tag>
             </Link>
           </Match>
-          <Match when={props.stage.name.includes("frank")}>
+          <Match when={latestUpdate.value?.errors.length}>
             <Link href={`${stageUri()}/link/to/update/with/error`}>
-              <Tag style="outline" level="danger">Error</Tag>
+              <Tag style="outline" level="danger">
+                Error
+              </Tag>
             </Link>
           </Match>
           <Match when={props.stage.unsupported}>
@@ -784,47 +826,21 @@ function StageCard(props: StageCardProps) {
       </StageCardLeft>
       <StageCardRight>
         <Show when={props.stage.name.includes("jayair")}>
-          <StageGitLink
-            target="_blank"
-            href={"https://github.com"}
-          >
-            <StageGitIcon><IconCommit /></StageGitIcon>
+          <StageGitLink target="_blank" href={"https://github.com"}>
+            <StageGitIcon>
+              <IconCommit />
+            </StageGitIcon>
             <StageGitCommit>34j19d0</StageGitCommit>
           </StageGitLink>
         </Show>
         <StageRegion>{props.stage.region}</StageRegion>
-        <Switch>
-          <Match
-            when={props.stage.name.includes("dev") && DateTime.now().minus({ minutes: 20 }).toSQL()!}
-          >
-            {date =>
-              <StageUpdatedTime title={parseTime(date()).toLocaleString(DateTime.DATETIME_FULL)}>
-                {formatSinceTime(date(), false, true)}
-              </StageUpdatedTime>
-            }
-          </Match>
-          <Match
-            when={props.stage.name.includes("jayair") && DateTime.now().minus({ minutes: 230 }).toSQL()!}
-          >
-            {date =>
-              <StageUpdatedTime title={parseTime(date()).toLocaleString(DateTime.DATETIME_FULL)}>
-                {formatSinceTime(date(), false, true)}
-              </StageUpdatedTime>
-            }
-          </Match>
-          <Match
-            when={props.stage.name.includes("frank") && DateTime.now().startOf("day").toSQL()!}
-          >
-            {date =>
-              <StageUpdatedTime title={parseTime(date()).toLocaleString(DateTime.DATETIME_FULL)}>
-                {formatSinceTime(date(), false, true)}
-              </StageUpdatedTime>
-            }
-          </Match>
-          <Match when={true}>
-            <StageUpdatedTime>—</StageUpdatedTime>
-          </Match>
-        </Switch>
+        <StageUpdatedTime
+          title={parseTime(props.stage.timeUpdated).toLocaleString(
+            DateTime.DATETIME_FULL,
+          )}
+        >
+          {formatSinceTime(props.stage.timeUpdated, false, true)}
+        </StageUpdatedTime>
       </StageCardRight>
     </StageRoot>
   );

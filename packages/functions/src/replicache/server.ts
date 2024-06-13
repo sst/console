@@ -59,8 +59,8 @@ export const server = new Server()
           .where(
             and(
               eq(issueSubscriber.workspaceID, useWorkspace()),
-              eq(issueSubscriber.stageID, input.stageID)
-            )
+              eq(issueSubscriber.stageID, input.stageID),
+            ),
           )
           .execute();
         await tx
@@ -71,22 +71,22 @@ export const server = new Server()
               eq(warning.stageID, input.stageID),
               or(
                 eq(warning.type, "log_subscription"),
-                eq(warning.type, "issue_rate_limited")
-              )
-            )
+                eq(warning.type, "issue_rate_limited"),
+              ),
+            ),
           )
           .execute();
       });
       await Stage.Events.ResourcesUpdated.publish({
         stageID: input.stageID,
       });
-    }
+    },
   )
   .expose("aws_account_scan", AWS.Account.scan)
   .mutation(
     "app_stage_sync",
     z.object({ stageID: z.string() }),
-    async (input) => await App.Stage.Events.Updated.publish(input)
+    async (input) => await App.Stage.Events.Updated.publish(input),
   )
   .mutation("workspace_create", Workspace.create.schema, async (input) => {
     const actor = assertActor("account");
@@ -102,7 +102,7 @@ export const server = new Server()
         User.create({
           email: actor.properties.email,
           first: true,
-        })
+        }),
     );
   })
   .expose("user_create", User.create)
@@ -110,7 +110,7 @@ export const server = new Server()
   .expose("app_create", App.create)
   .expose("app_repo_connect", AppRepo.connect)
   .expose("app_repo_disconnect", AppRepo.disconnect)
-  .expose("run_config_create", RunConfig.create)
+  .expose("run_config_put", RunConfig.put)
   .expose("run_config_remove", RunConfig.remove);
 
 export type ServerType = typeof server;

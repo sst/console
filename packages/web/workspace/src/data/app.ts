@@ -25,7 +25,7 @@ export const AppRepoStore = new Store()
 export const RunConfigStore = new Store()
   .type<RunConfig.Info>()
   .scan("all", () => ["runConfig"])
-  .get((id: string) => ["runConfig", id])
+  .get((appID: string, id: string) => ["runConfig", appID, id])
   .scan("forApp", (appID: string) => ["runConfig", appID])
   .build();
 
