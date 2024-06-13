@@ -1,8 +1,8 @@
 import {
-  RunConfigStore,
   AppRepoStore,
   GithubOrgStore,
   GithubRepoStore,
+  RunConfigStore,
 } from "$/data/app";
 import {
   theme,
@@ -32,11 +32,9 @@ import { useAppContext } from "../context";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { createId } from "@paralleldrive/cuid2";
-import { Trigger } from "@console/core/run/run.sql";
-import { minLength, object, string } from "valibot";
 import { formatCommit, formatSinceTime } from "$/common/format";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
-import { IconEllipsisHorizontal, IconEllipsisVertical } from "$/ui/icons";
+import { IconEllipsisVertical } from "$/ui/icons";
 import { useReplicache, createSubscription } from "$/providers/replicache";
 import {
   githubPr,
@@ -44,16 +42,25 @@ import {
   githubBranch,
   githubCommit,
 } from "$/common/url-builder";
-import { valiForm, toCustom, createForm, getValue } from "@modular-forms/solid";
+import {
+  insert,
+  valiForm,
+  createForm,
+  setValues,
+  remove,
+  reset,
+} from "@modular-forms/solid";
 import {
   IconPr,
   IconAdd,
   IconGit,
-  IconStage,
   IconCommit,
   IconGitHub,
   IconSubRight,
 } from "$/ui/icons/custom";
+import { array, minLength, object, optional, string } from "valibot";
+import { AWS } from "$/data/aws";
+import { createStore } from "solid-js/store";
 
 const HEADER_HEIGHT = 50;
 
@@ -421,28 +428,49 @@ const targetFormFieldFlex = style({
   flex: 1,
 });
 
+export const EditTargetForm = object({
+  stagePattern: string([minLength(1, "Stage pattern not be empty")]),
+  awsAccount: string([minLength(1, "AWS account ID cannot be empty")]),
+  env: optional(
+    array(
+      object({
+        key: string([minLength(1, "Key cannot be empty")]),
+        value: string([minLength(1, "Value cannot be empty")]),
+      }),
+    ),
+  ),
+});
+
 export function Settings() {
   const rep = useReplicache();
   const app = useAppContext();
+  const runConfigs = createSubscription(
+    (tx) => RunConfigStore.forApp(tx, app.app.id),
+    [],
+  );
   const repoInfo = createSubscription(async (tx) => {
     const appRepo = await AppRepoStore.forApp(tx, app.app.id);
     const ghRepo = (await GithubRepoStore.all(tx)).find(
-      (repo) => repo.repoID === appRepo[0]?.repoID
+      (repo) => repo.repoID === appRepo[0]?.repoID,
     );
     const ghRepoOrg = await GithubOrgStore.get(tx, ghRepo?.githubOrgID!);
-    const runConfigs = await RunConfigStore.forApp(tx, app.app.id);
-    return { appRepo, ghRepo, ghRepoOrg, runConfigs };
+    return { appRepo, ghRepo, ghRepoOrg };
   });
 
   const appRepo = () => repoInfo.value?.appRepo[0];
+  const awsAccounts = createSubscription(AWS.AccountStore.list, []);
+  const [editing, setEditing] = createStore<{
+    id?: string;
+    active: boolean;
+  }>({
+    active: false,
+  });
 
   const lastEvent = createMemo(() => {
     const ev = appRepo()?.lastEvent;
-
     if (!appRepo() || !ev) {
       return;
     }
-
     const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
     const uri =
       ev.type === "push"
@@ -505,11 +533,11 @@ export function Settings() {
           <EventLabel>Last Commit</EventLabel>
           <EventTime
             title={DateTime.fromISO(appRepo()!.time.lastEvent!).toLocaleString(
-              DateTime.DATETIME_FULL
+              DateTime.DATETIME_FULL,
             )}
           >
             {formatSinceTime(
-              DateTime.fromISO(appRepo()!.time.lastEvent!).toSQL()!
+              DateTime.fromISO(appRepo()!.time.lastEvent!).toSQL()!,
             )}
           </EventTime>
         </EventRight>
@@ -517,60 +545,14 @@ export function Settings() {
     );
   }
 
-  function Targets() {
-    const empty = false;
-    return (
-      <TargetsRoot>
-        <TargetHeader>
-          <TargetHeaderCopy>Deployment Targets</TargetHeaderCopy>
-          <LinkButton>
-            <TargetAddIcon>
-              <IconAdd width="10" height="10" />
-            </TargetAddIcon>
-            Add a new target
-          </LinkButton>
-        </TargetHeader>
-        <div>
-          <Target />
-          <TargetForm />
-          <TargetForm new />
-          <Show when={empty}>
-            <TargetsEmpty>
-              <LinkButton>
-                <TargetsEmptyIcon>
-                  <IconAdd width="10" height="10" />
-                </TargetsEmptyIcon>
-                Add a deployment target
-              </LinkButton>
-            </TargetsEmpty>
-          </Show>
-        </div>
-      </TargetsRoot>
-    );
-  }
-
-  function Target() {
-    return (
-      <TargetFormRoot>
-        <TargetFormHeader>
-          <TargetFormHeaderCopy>staging</TargetFormHeaderCopy>
-          <Dropdown
-            size="sm"
-            icon={<IconEllipsisVertical width={18} height={18} />}
-          >
-            <Dropdown.Item>Edit target</Dropdown.Item>
-            <Dropdown.Item>Duplicate target</Dropdown.Item>
-            <Dropdown.Seperator />
-            <Dropdown.Item>Remove target</Dropdown.Item>
-          </Dropdown>
-        </TargetFormHeader>
-      </TargetFormRoot>
-    );
-  }
+  const [putForm, { Form, Field, FieldArray }] = createForm({
+    validate: valiForm(EditTargetForm),
+  });
 
   interface TargetProps {
     new?: boolean;
   }
+
   function TargetForm(props: TargetProps) {
     return (
       <TargetFormRoot>
@@ -592,125 +574,184 @@ export function Settings() {
             </Match>
           </Switch>
         </TargetFormHeader>
-        <TargetFormRow>
-          <TargetFormFieldLabel>
-            <TargetFormFieldLabelCopy>Stage</TargetFormFieldLabelCopy>
-            <TargetFormFieldLabelDesc>
-              The stage that's being deployed.
-            </TargetFormFieldLabelDesc>
-          </TargetFormFieldLabel>
-          <TargetFormField>
-            <FormField
-              hint="Accepts glob patterns."
-              class={targetFormFieldFlex}
-            >
-              <Input placeholder="production" type="text" />
-            </FormField>
-            <Grower />
-          </TargetFormField>
-        </TargetFormRow>
-        <TargetFormRow>
-          <TargetFormFieldLabel>
-            <TargetFormFieldLabelCopy>AWS Account</TargetFormFieldLabelCopy>
-            <TargetFormFieldLabelDesc>
-              The account this stage is being deployed to.
-            </TargetFormFieldLabelDesc>
-          </TargetFormFieldLabel>
-          <TargetFormField>
-            <FormField
-              class={targetFormFieldFlex}
-              hint={
-                <TargetAddAccountLink href="/">
-                  Connect another AWS account
-                </TargetAddAccountLink>
-              }
-            >
-              <Select
-                options={[
-                  {
-                    value: "917397401067",
-                    label: "917397401067",
-                  },
-                ]}
-              />
-            </FormField>
-            <Grower />
-          </TargetFormField>
-        </TargetFormRow>
-        <TargetFormRow>
-          <TargetFormFieldLabel>
-            <TargetFormFieldLabelCopy>
-              Environment Variables
-            </TargetFormFieldLabelCopy>
-            <TargetFormFieldLabelDesc>
-              A list of environment variables for the runner.
-            </TargetFormFieldLabelDesc>
-          </TargetFormFieldLabel>
-          <TargetFormFieldStack>
+        <Form
+          onSubmit={(data) => {
+            rep().mutate.run_config_create({
+              id: createId(),
+              stagePattern: data.stagePattern,
+              awsAccountID: data.awsAccount,
+              appID: app.app.id,
+              env: {},
+            });
+            setEditing("active", false);
+          }}
+        >
+          <TargetFormRow>
+            <TargetFormFieldLabel>
+              <TargetFormFieldLabelCopy>Stage</TargetFormFieldLabelCopy>
+              <TargetFormFieldLabelDesc>
+                The stage that's being deployed.
+              </TargetFormFieldLabelDesc>
+            </TargetFormFieldLabel>
+            <TargetFormField>
+              <Field name="stagePattern">
+                {(field, props) => (
+                  <FormField
+                    color={field.error ? "danger" : "primary"}
+                    hint={field.error || "Accepts glob patterns."}
+                    class={targetFormFieldFlex}
+                  >
+                    <Input
+                      {...props}
+                      autofocus
+                      value={field.value || ""}
+                      placeholder="production"
+                      type="text"
+                    />
+                  </FormField>
+                )}
+              </Field>
+              <Grower />
+            </TargetFormField>
+          </TargetFormRow>
+          <TargetFormRow>
+            <TargetFormFieldLabel>
+              <TargetFormFieldLabelCopy>AWS Account</TargetFormFieldLabelCopy>
+              <TargetFormFieldLabelDesc>
+                The account this stage is being deployed to.
+              </TargetFormFieldLabelDesc>
+            </TargetFormFieldLabel>
+            <TargetFormField>
+              <Field name="awsAccount">
+                {(field, props) => (
+                  <FormField
+                    color={field.error ? "danger" : "primary"}
+                    class={targetFormFieldFlex}
+                    hint={
+                      <Show when={!field.error} fallback={field.error}>
+                        <TargetAddAccountLink href="/">
+                          Connect another AWS account
+                        </TargetAddAccountLink>
+                      </Show>
+                    }
+                  >
+                    <Select
+                      {...props}
+                      error={field.error}
+                      value={field.value}
+                      options={awsAccounts.value.map((item) => ({
+                        value: item.accountID,
+                        label: item.accountID,
+                      }))}
+                    />
+                  </FormField>
+                )}
+              </Field>
+              <Grower />
+            </TargetFormField>
+          </TargetFormRow>
+          <TargetFormRow>
+            <TargetFormFieldLabel>
+              <TargetFormFieldLabelCopy>
+                Environment Variables
+              </TargetFormFieldLabelCopy>
+              <TargetFormFieldLabelDesc>
+                A list of environment variables for the runner.
+              </TargetFormFieldLabelDesc>
+            </TargetFormFieldLabel>
+            <TargetFormFieldStack>
+              <FieldArray name="env">
+                {(fieldArray) => (
+                  <For each={fieldArray.items}>
+                    {(_, index) => (
+                      <TargetFormField>
+                        <Field name={`env.${index()}.key`}>
+                          {(field, props) => (
+                            <FormField
+                              hint={field.error}
+                              color={field.error ? "danger" : "primary"}
+                              label={"Key"}
+                              class={targetFormFieldFlex}
+                            >
+                              <Input
+                                {...props}
+                                value={field.value}
+                                type="text"
+                              />
+                            </FormField>
+                          )}
+                        </Field>
+                        <TargetFormFieldCol>
+                          <Field name={`env.${index()}.value`}>
+                            {(field, props) => (
+                              <FormField
+                                hint={field.error}
+                                color={field.error ? "danger" : "primary"}
+                                label={"Value"}
+                                class={targetFormFieldFlex}
+                              >
+                                <Input
+                                  {...props}
+                                  value={field.value}
+                                  type="text"
+                                />
+                              </FormField>
+                            )}
+                          </Field>
+                          <Dropdown
+                            size="sm"
+                            triggerClass={targetFormFieldDropdown}
+                            icon={
+                              <IconEllipsisVertical width={18} height={18} />
+                            }
+                          >
+                            <Dropdown.Item
+                              onSelect={() => {
+                                remove(putForm, "env", { at: index() });
+                              }}
+                            >
+                              Remove variable
+                            </Dropdown.Item>
+                          </Dropdown>
+                        </TargetFormFieldCol>
+                      </TargetFormField>
+                    )}
+                  </For>
+                )}
+              </FieldArray>
+              <TargetAddVarLink
+                onClick={() => {
+                  insert(putForm, "env", {
+                    value: { key: "", value: "" },
+                  });
+                }}
+              >
+                <TargetAddVarIcon>
+                  <IconAdd width="10" height="10" />
+                </TargetAddVarIcon>
+                Add another variable
+              </TargetAddVarLink>
+            </TargetFormFieldStack>
+          </TargetFormRow>
+          <TargetFormRowControls>
+            <LinkButton onClick={() => setEditing("active", false)}>
+              Cancel
+            </LinkButton>
             <Switch>
               <Match when={props.new}>
-                <TargetEnvVar first />
+                <Button type="submit" color="primary">
+                  Add Target
+                </Button>
               </Match>
               <Match when={true}>
-                <TargetEnvVar first key="key1" value="value1" />
-                <TargetEnvVar key="key2" value="value2" />
+                <Button type="submit" color="success">
+                  Update Target
+                </Button>
               </Match>
             </Switch>
-            <TargetAddVarLink>
-              <TargetAddVarIcon>
-                <IconAdd width="10" height="10" />
-              </TargetAddVarIcon>
-              Add another variable
-            </TargetAddVarLink>
-          </TargetFormFieldStack>
-        </TargetFormRow>
-        <TargetFormRowControls>
-          <LinkButton>Cancel</LinkButton>
-          <Switch>
-            <Match when={props.new}>
-              <Button color="primary">Add Target</Button>
-            </Match>
-            <Match when={true}>
-              <Button color="success">Update Target</Button>
-            </Match>
-          </Switch>
-        </TargetFormRowControls>
+          </TargetFormRowControls>
+        </Form>
       </TargetFormRoot>
-    );
-  }
-
-  interface TargetEnvVarProps {
-    key?: string;
-    value?: string;
-    first?: boolean;
-  }
-  function TargetEnvVar(props: TargetEnvVarProps) {
-    return (
-      <TargetFormField>
-        <FormField
-          label={props.first ? "Key" : undefined}
-          class={targetFormFieldFlex}
-        >
-          <Input type="text" value={props.key} />
-        </FormField>
-        <TargetFormFieldCol>
-          <FormField
-            label={props.first ? "Value" : undefined}
-            class={targetFormFieldFlex}
-          >
-            <Input type="text" value={props.value} />
-          </FormField>
-          <Dropdown
-            size="sm"
-            triggerClass={targetFormFieldDropdown}
-            icon={<IconEllipsisVertical width={18} height={18} />}
-          >
-            <Dropdown.Item>Copy value</Dropdown.Item>
-            <Dropdown.Seperator />
-            <Dropdown.Item>Remove variable</Dropdown.Item>
-          </Dropdown>
-        </TargetFormFieldCol>
-      </TargetFormField>
     );
   }
 
@@ -749,7 +790,7 @@ export function Settings() {
                         target="_blank"
                         href={githubRepo(
                           repoInfo.value!.ghRepoOrg!.login,
-                          repoInfo.value!.ghRepo!.name!
+                          repoInfo.value!.ghRepo!.name!,
                         )}
                       >
                         {repoInfo.value!.ghRepoOrg!.login}
@@ -763,12 +804,12 @@ export function Settings() {
                     onClick={() => {
                       if (
                         !confirm(
-                          "Are you sure you want to disconnect from this repo?"
+                          "Are you sure you want to disconnect from this repo?",
                         )
                       )
                         return;
                       rep().mutate.app_repo_disconnect(
-                        repoInfo.value!.appRepo[0]!.id
+                        repoInfo.value!.appRepo[0]!.id,
                       );
                     }}
                   >
@@ -779,7 +820,65 @@ export function Settings() {
                   <LastEvent />
                 </Show>
               </GitRepoPanel>
-              <Targets />
+              <TargetsRoot>
+                <TargetHeader>
+                  <TargetHeaderCopy>Deployment Targets</TargetHeaderCopy>
+                  <Show when={!editing.active}>
+                    <LinkButton
+                      onClick={() => {
+                        reset(putForm);
+                        setValues(putForm, {
+                          env: [],
+                        });
+                        setEditing("active", true);
+                        setEditing("id", undefined);
+                      }}
+                    >
+                      <TargetAddIcon>
+                        <IconAdd width="10" height="10" />
+                      </TargetAddIcon>
+                      Add a new target
+                    </LinkButton>
+                  </Show>
+                </TargetHeader>
+                <div>
+                  <For each={runConfigs.value}>
+                    {(config) => (
+                      <TargetFormRoot>
+                        <TargetFormHeader>
+                          <TargetFormHeaderCopy>
+                            {config.stagePattern}
+                          </TargetFormHeaderCopy>
+                          <Dropdown
+                            size="sm"
+                            icon={
+                              <IconEllipsisVertical width={18} height={18} />
+                            }
+                          >
+                            <Dropdown.Item>Edit target</Dropdown.Item>
+                            <Dropdown.Item>Duplicate target</Dropdown.Item>
+                            <Dropdown.Seperator />
+                            <Dropdown.Item>Remove target</Dropdown.Item>
+                          </Dropdown>
+                        </TargetFormHeader>
+                      </TargetFormRoot>
+                    )}
+                  </For>
+                  <Show when={editing.active}>
+                    <TargetForm new={!Boolean(editing.id)} />
+                  </Show>
+                  <Show when={false}>
+                    <TargetsEmpty>
+                      <LinkButton>
+                        <TargetsEmptyIcon>
+                          <IconAdd width="10" height="10" />
+                        </TargetsEmptyIcon>
+                        Add a deployment target
+                      </LinkButton>
+                    </TargetsEmpty>
+                  </Show>
+                </div>
+              </TargetsRoot>
             </Match>
             <Match when={true}>
               <Button color="github">
@@ -791,7 +890,79 @@ export function Settings() {
             </Match>
           </Switch>
         </Stack>
+        <Divider />
+        <RepoInfo />
+        <Divider />
       </SettingsRoot>
     </Show>
+  );
+}
+
+function RepoInfo() {
+  const rep = useReplicache();
+  const app = useAppContext();
+  const githubRepos = GithubRepoStore.all.watch(rep, () => []);
+  const appRepo = AppRepoStore.all.watch(
+    rep,
+    () => [],
+    (all) => all.at(0),
+  );
+  const connectedRepo = createMemo(() =>
+    githubRepos().find((repo) => repo.repoID === appRepo()?.repoID),
+  );
+  const connectedRepoOrg = GithubOrgStore.all.watch(
+    rep,
+    () => [],
+    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID),
+  );
+
+  return (
+    <>
+      <h3>Repo</h3>
+      <Show
+        when={appRepo()}
+        fallback={
+          <>
+            <p>Not connected to a repo. Select one:</p>
+            <ul>
+              <For each={githubRepos()}>
+                {(repo) => (
+                  <li>
+                    <Button
+                      color="secondary"
+                      onClick={() => {
+                        rep().mutate.app_repo_connect({
+                          id: createId(),
+                          appID: app.app.id,
+                          type: "github",
+                          repoID: repo.repoID,
+                        });
+                      }}
+                    >
+                      {repo.name}
+                    </Button>
+                  </li>
+                )}
+              </For>
+            </ul>
+          </>
+        }
+      >
+        <Text size="sm" color="dimmed">
+          Connected to{" "}
+          <Text color="dimmed" size="sm" weight="medium">
+            {connectedRepoOrg()?.login}/{connectedRepo()?.name}
+          </Text>
+        </Text>
+        <Button
+          color="secondary"
+          onClick={() => {
+            rep().mutate.app_repo_disconnect(appRepo()!.id);
+          }}
+        >
+          Disconnect
+        </Button>
+      </Show>
+    </>
   );
 }
