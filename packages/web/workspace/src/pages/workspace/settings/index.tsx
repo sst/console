@@ -15,6 +15,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { Alerts } from "./alerts";
 import { useNavigate } from "@solidjs/router";
 import { useAuth2 } from "$/providers/auth2";
+import { AWS } from "./aws";
 
 export const PANEL_CONTENT_SPACE = "10";
 export const PANEL_HEADER_SPACE = "3";
@@ -113,7 +114,7 @@ export function Settings() {
   const invocations = createMemo(() =>
     usages()
       .map((usage) => usage.invocations)
-      .reduce((a, b) => a + b, 0)
+      .reduce((a, b) => a + b, 0),
   );
   console.log("usages", usages().length);
   const auth = useAuth2();
@@ -140,7 +141,7 @@ export function Settings() {
           "x-sst-workspace": workspace().id,
           Authorization: rep().auth,
         },
-      }
+      },
     );
   }
   function generateCheckoutLink() {
@@ -153,7 +154,7 @@ export function Settings() {
           "x-sst-workspace": workspace().id,
           Authorization: rep().auth,
         },
-      }
+      },
     );
   }
 
@@ -198,6 +199,8 @@ export function Settings() {
             View and manage your workspace settings
           </Text>
         </Stack>
+        <Divider />
+        <AWS />
         <Divider />
         <Alerts />
         <Divider />
@@ -343,7 +346,7 @@ export function Settings() {
               onClick={async () => {
                 if (
                   !confirm(
-                    "Are you sure you want to remove this workspace?\n\nYou cannot undo this."
+                    "Are you sure you want to remove this workspace?\n\nYou cannot undo this.",
                   )
                 )
                   return;
@@ -376,12 +379,12 @@ function Integrations() {
   const slackTeam = SlackTeamStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0)
+    (all) => all.at(0),
   );
   const githubOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0)
+    (all) => all.at(0),
   );
 
   const [overrideSlack, setOverrideSlack] = createSignal(false);
@@ -393,7 +396,7 @@ function Integrations() {
     (e) => {
       if (e.data === "slack.success") setOverrideSlack(true);
       if (e.data === "github.success") setOverrideGithub(true);
-    }
+    },
   );
 
   return (
