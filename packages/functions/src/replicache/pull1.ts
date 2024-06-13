@@ -323,7 +323,7 @@ export const handler = ApiHandler(
           const table = TABLES[name as keyof typeof TABLES];
 
           for (const group of chunk(ids, 1000)) {
-            log("fetching", name, "count", group.length);
+            log(name, "fetching", group.length);
             const rows = await tx
               .select()
               .from(table)
@@ -336,7 +336,7 @@ export const handler = ApiHandler(
                 ),
               )
               .execute();
-            console.log("got rows", rows.length);
+            console.log(name, "got", rows.length);
             const projection =
               TABLE_PROJECTION[name as keyof typeof TABLE_PROJECTION];
             for (const row of rows) {
