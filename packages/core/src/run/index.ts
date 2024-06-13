@@ -485,7 +485,13 @@ export module Run {
           .execute();
       });
     } catch (e) {
-      await complete({ runID: run.id, error: `Failed to ${context}` });
+      await complete({
+        runID: run.id,
+        error:
+          e instanceof CodebuildRunner.UnsupportedArmRegionError
+            ? e.message
+            : `Failed to ${context}`,
+      });
       throw e;
     }
 

@@ -22,6 +22,8 @@ import { Run } from ".";
 export module CodebuildRunner {
   export const BUILD_TIMEOUT = 5400000; // 1.5 hours
 
+  export class UnsupportedArmRegionError extends Error {}
+
   export const getImage = zod(z.enum(Architecture), (architecture) =>
     architecture === "x86_64"
       ? `aws/codebuild/amazonlinux2-x86_64-standard:5.0`
@@ -175,6 +177,13 @@ export module CodebuildRunner {
           return ret.project?.arn!;
         } catch (e: any) {
           if (
+            e.name === "InvalidInputException" &&
+            e.message === `Region ${region} is not supported for ARM_CONTAINER`
+          )
+            throw new UnsupportedArmRegionError(
+              `AWS CodeBuild does not support ARM architecture in ${region} region`
+            );
+          else if (
             e.name === "InvalidInputException" &&
             e.message ===
               "CodeBuild is not authorized to perform: sts:AssumeRole on service role"
