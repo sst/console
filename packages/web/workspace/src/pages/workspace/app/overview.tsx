@@ -114,8 +114,12 @@ const Col = styled("div", {
 
 const CardRoot = styled("div", {
   base: {
+    ...utility.row(0),
+    alignItems: "center",
+    justifyContent: "space-between",
     borderRadius: theme.borderRadius,
     border: `1px solid ${theme.color.divider.base}`,
+    padding: `${theme.space[3]} ${theme.space[4]} ${theme.space[4]} ${theme.space[4]}`,
   },
 });
 
@@ -125,11 +129,10 @@ const CardHeader = styled("div", {
     height: 80,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `0 ${theme.space[4]} ${theme.space[1]} ${theme.space[4]}`,
   },
 });
 
-const CardHeaderLeft = styled("div", {
+const CardBodyLeft = styled("div", {
   base: {
     ...utility.stack(2),
   },
@@ -187,9 +190,9 @@ const CardUpdatedTime = styled("span", {
   },
 });
 
-const CardHeaderRight = styled("div", {
+const CardBodyRight = styled("div", {
   base: {
-    ...utility.stack("px"),
+    ...utility.row(20),
   },
 });
 
@@ -204,23 +207,11 @@ const CardRegion = styled("span", {
   },
 });
 
-const CardBody = styled("div", {
+const CardGit = styled("div", {
   base: {
-    ...utility.row(2),
-    alignItems: "center",
-    padding: `${theme.space[2.5]} ${theme.space[3]}`,
-    backgroundColor: theme.color.background.surface,
-    borderTop: `1px solid ${theme.color.divider.surface}`,
-  },
-});
-
-const CardGitAvatar = styled("div", {
-  base: {
-    flex: "0 0 auto",
-    width: 24,
-    height: 24,
-    overflow: "hidden",
-    borderRadius: theme.borderRadius,
+    ...utility.stack(1.5),
+    alignItems: "stretch",
+    justifyContent: "center",
   },
 });
 
@@ -235,29 +226,29 @@ const CardGitIcon = styled("span", {
   base: {
     lineHeight: 0,
     opacity: theme.iconOpacity,
-    color: theme.color.text.secondary.surface,
+    color: theme.color.text.secondary.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     selectors: {
       [`${CardGitLink}:hover &`]: {
-        color: theme.color.text.primary.surface,
+        color: theme.color.text.primary.base,
       },
     },
   },
   variants: {
     size: {
       sm: {
-        width: 10,
-        height: 10,
-        color: theme.color.text.dimmed.surface,
+        width: 12,
+        height: 12,
+        color: theme.color.text.dimmed.base,
         selectors: {
           [`${CardGitLink}:hover &`]: {
-            color: theme.color.text.secondary.surface,
+            color: theme.color.text.secondary.base,
           },
         },
       },
       md: {
-        width: 12,
-        height: 12,
+        width: 14,
+        height: 14,
       },
     },
   },
@@ -268,12 +259,12 @@ const CardGitBranch = styled("span", {
     ...utility.text.line,
     maxWidth: 140,
     lineHeight: "normal",
-    fontSize: theme.font.size.xs,
-    color: theme.color.text.dimmed.surface,
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     selectors: {
       [`${CardGitLink}:hover &`]: {
-        color: theme.color.text.secondary.surface,
+        color: theme.color.text.secondary.base,
       },
     },
   },
@@ -283,25 +274,24 @@ const CardGitCommit = styled("span", {
   base: {
     lineHeight: "normal",
     fontFamily: theme.font.family.code,
-    fontSize: theme.font.size.mono_sm,
-    color: theme.color.text.secondary.surface,
+    fontSize: theme.font.size.mono_base,
+    color: theme.color.text.secondary.base,
     fontWeight: theme.font.weight.medium,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     selectors: {
       [`${CardGitLink}:hover &`]: {
-        color: theme.color.text.primary.surface,
+        color: theme.color.text.primary.base,
       },
     },
   },
 });
 
-const CardGitMessage = styled("span", {
+const CardGitMessage = styled("div", {
   base: {
     ...utility.text.line,
     lineHeight: "normal",
-    maxWidth: 260,
     fontSize: theme.font.size.xs,
-    color: theme.color.text.dimmed.surface,
+    color: theme.color.text.dimmed.base,
   },
 });
 
@@ -339,40 +329,49 @@ export function Overview() {
     const stage = props.stage;
     return (
       <CardRoot>
-        <CardHeader>
-          <CardHeaderLeft>
-            <CardTitle>
-              <CardIcon status="base" />
-              <Row space="2">
-                <CardTitleText href={stage.name}>
-                  {stage.name}
-                </CardTitleText>
-                <Show when={stage.name.includes("dev")}>
-                  <Link href={`${stage.name}/local`}>
-                    <Tag level="tip" style="outline">Local</Tag>
-                  </Link>
-                </Show>
-              </Row>
-            </CardTitle>
-            <CardUpdatedTime
-              title={parseTime(stage.timeUpdated).toLocaleString(
-                DateTime.DATETIME_FULL,
-              )}
-            >
-              Updated {formatSinceTime(stage.timeUpdated, true)}
-            </CardUpdatedTime>
-          </CardHeaderLeft>
-          <CardHeaderRight>
-            <CardRegion>{stage.region}</CardRegion>
-            <Tag>123456789012</Tag>
-          </CardHeaderRight>
-        </CardHeader>
-        <Show when={stage.name.includes("dev")}>
-          <CardBody>
-            <CardGitAvatar>
-              <img width="24" height="24" src="https://avatars.githubusercontent.com/u/53023?s=48&v=4" />
-            </CardGitAvatar>
-            <Stack space="1">
+        <CardBodyLeft>
+          <CardTitle>
+            <Switch>
+              <Match when={stage.name.includes("thdxr")}>
+                <CardIcon status="updating" />
+              </Match>
+              <Match when={stage.name.includes("jayair")}>
+                <CardIcon status="success" />
+              </Match>
+              <Match when={stage.name.includes("frank")}>
+                <CardIcon status="error" />
+              </Match>
+              <Match when={true}>
+                <CardIcon status="unsupported" />
+              </Match>
+            </Switch>
+            <Row space="2">
+              <CardTitleText href={stage.name}>
+                {stage.name}
+              </CardTitleText>
+              <Show when={stage.name.includes("dev")}>
+                <Link href={`${stage.name}/local`}>
+                  <Tag level="tip" style="outline">Local</Tag>
+                </Link>
+              </Show>
+              <Show when={stage.name.includes("frank")}>
+                <Link href={`${stage.name}/link/to/the/update`}>
+                  <Tag level="danger" style="outline">Error</Tag>
+                </Link>
+              </Show>
+            </Row>
+          </CardTitle>
+          <CardUpdatedTime
+            title={parseTime(stage.timeUpdated).toLocaleString(
+              DateTime.DATETIME_FULL,
+            )}
+          >
+            Updated {formatSinceTime(stage.timeUpdated, true)}
+          </CardUpdatedTime>
+        </CardBodyLeft>
+        <CardBodyRight>
+          <Show when={stage.name.includes("dev")}>
+            <CardGit>
               <Row space="2">
                 <CardGitLink target="_blank" href={`https://github.com`}>
                   <CardGitIcon size="md">
@@ -399,9 +398,13 @@ export function Overview() {
                   fixing ci again
                 </Show>
               </CardGitMessage>
-            </Stack>
-          </CardBody>
-        </Show>
+            </CardGit>
+          </Show>
+          <Stack space="px">
+            <CardRegion>{stage.region}</CardRegion>
+            <Tag>123456789012</Tag>
+          </Stack>
+        </CardBodyRight>
       </CardRoot>
     );
   }
@@ -459,13 +462,9 @@ export function Overview() {
               <For each={columns()[0]}>
                 {(stage) => (<Card stage={stage} />)}
               </For>
-            </Col>
-            <Col>
               <For each={columns()[1]}>
                 {(stage) => (<Card stage={stage} />)}
               </For>
-            </Col>
-            <Col>
               <For each={columns()[2]}>
                 {(stage) => (<Card stage={stage} />)}
               </For>
