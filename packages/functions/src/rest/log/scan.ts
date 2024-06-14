@@ -7,7 +7,7 @@ import { z } from "zod";
 const Body = z.object({
   stageID: z.string(),
   requestID: z.string().optional(),
-  timestamp: z.number({ coerce: true }),
+  timestamp: z.number({ coerce: true }).optional(),
   logGroup: z.string(),
   logStream: z.string(),
 });
@@ -29,6 +29,7 @@ export const handler = ApiHandler(
 
     const logs = await Log.scan({
       ...body,
+      timestamp: body.timestamp || undefined,
       config,
     });
 

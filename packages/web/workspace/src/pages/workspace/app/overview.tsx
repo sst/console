@@ -25,7 +25,7 @@ import { IconChevronRight } from "$/ui/icons";
 import type { Stage } from "@console/core/app";
 import { IconPr, IconGit, IconCommit, IconGitHub } from "$/ui/icons/custom";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { parseTime, formatSinceTime } from "$/common/format";
+import { parseTime, formatSinceTime, formatCommit } from "$/common/format";
 import { StageStore } from "$/data/stage";
 import { useLocalContext } from "$/providers/local";
 import { AWS } from "$/data/aws";
@@ -422,9 +422,11 @@ export function Overview() {
                     <CardGitIcon size="md">
                       <IconCommit />
                     </CardGitIcon>
-                    <CardGitCommit>{v().trigger.commit.id}</CardGitCommit>
+                    <CardGitCommit>
+                      {formatCommit(v().trigger.commit.id)}
+                    </CardGitCommit>
                   </CardGitLink>
-                  <CardGitLink target="_blank" href={`https://github.com`}>
+                  <CardGitLink target="_blank" href={v().url}>
                     <CardGitIcon size="sm">
                       <Switch>
                         <Match when={v().trigger.type === "pull_request"}>

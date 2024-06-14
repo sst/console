@@ -445,7 +445,7 @@ export const expand = zod(
 
 export const scan = zod(
   z.object({
-    timestamp: z.number(),
+    timestamp: z.number().optional(),
     logGroup: z.string(),
     logStream: z.string(),
     requestID: z.string().optional(),
