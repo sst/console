@@ -28,6 +28,7 @@
     "@console/mail": "workspace:*",
     "drizzle-orm": "^0.30.10",
     "esbuild": "0.21.4",
+    "@esbuild/linux-arm64": "0.21.4",
     "fast-jwt": "^2.2.1",
     "hono": "^3.9.2",
     "luxon": "^3.3.0",

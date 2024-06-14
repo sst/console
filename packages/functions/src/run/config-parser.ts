@@ -21,7 +21,7 @@ export async function handler(evt: Run.ConfigParserEvent) {
     },
     outfile: "/tmp/sst.config.mjs",
     write: true,
-    bundle: true,
+    bundle: false,
     banner: {
       js: ["const $config = (input) => input;"].join("\n"),
     },
@@ -55,7 +55,7 @@ export async function handler(evt: Run.ConfigParserEvent) {
       ...(evt.trigger
         ? [
             `const target = mod.console.autodeploy.target?.(${JSON.stringify(
-              evt.trigger
+              evt.trigger,
             )});`,
             `if (!target) {`,
             `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_target"}));`,
@@ -74,7 +74,7 @@ export async function handler(evt: Run.ConfigParserEvent) {
             `const app = mod.app({stage: "${evt.stage}"});`,
             `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, console: { autodeploy: { runner }}}));`,
           ]),
-    ].join("\n")
+    ].join("\n"),
   );
   const evalRet = spawnSync("node /tmp/eval.mjs", {
     stdio: "pipe",
