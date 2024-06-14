@@ -5,7 +5,7 @@ export const handler = ApiHandler(async (event) => {
   const workspaceID = event.queryStringParameters?.workspaceID;
   const appName =
     Config.STAGE === "production"
-      ? "placeholder"
+      ? "sst-console"
       : `sst-console-${Config.STAGE}`;
   return {
     statusCode: 302,
