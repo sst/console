@@ -67,10 +67,11 @@ import { createStore } from "solid-js/store";
 import { fromPairs, pipe, sortBy } from "remeda";
 
 const HEADER_HEIGHT = 50;
+const SELECT_REPO_NAME = "select-repo";
 
 const GitRepoRoot = styled("div", {
   base: {
-    ...utility.stack(4),
+    ...utility.stack(6),
     width: "100%",
   },
 });
@@ -303,10 +304,12 @@ const TargetFormRoot = styled("div", {
     borderColor: theme.color.divider.base,
     selectors: {
       "&:first-child": {
-        borderRadius: `${theme.borderRadius} ${theme.borderRadius} 0 0`,
+        borderTopLeftRadius: theme.borderRadius,
+        borderTopRightRadius: theme.borderRadius,
       },
       "&:last-child": {
-        borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+        borderBottomLeftRadius: theme.borderRadius,
+        borderBottomRightRadius: theme.borderRadius,
         borderBottomWidth: 1,
       },
     },
@@ -339,6 +342,13 @@ const TargetAddIcon = styled("span", {
 const TargetFormHeaderCopy = styled("div", {
   base: {
     fontWeight: theme.font.weight.medium,
+  },
+  variants: {
+    new: {
+      true: {
+        color: theme.color.text.secondary.surface,
+      },
+    },
   },
 });
 
@@ -445,16 +455,38 @@ const GitOrgError = styled("div", {
     alignItems: "center",
     justifyContent: "space-between",
     borderRadius: theme.borderRadius,
-    border: `2px dashed ${theme.color.divider.base}`,
     padding: `${theme.space[3]} ${theme.space[3]} ${theme.space[3]} ${theme.space[4]}`,
+  },
+  variants: {
+    danger: {
+      true: {
+        backgroundColor: theme.color.background.red,
+        color: `hsla(${theme.color.red.l2}, 100%)`,
+      },
+      false: {
+        border: `2px dashed ${theme.color.divider.base}`,
+        color: theme.color.text.primary.surface,
+      },
+    },
   },
 });
 
 const GitOrgErrorCopy = styled("div", {
   base: {
     fontSize: theme.font.size.sm,
-    color: theme.color.text.primary.surface,
   },
+});
+
+const SelectRepoRoot = styled("div", {
+  base: {
+    ...utility.row(3.5),
+    maxWidth: 440,
+    alignItems: "flex-start",
+  },
+});
+
+const selectRepo = style({
+  flex: 1,
 });
 
 export const EditTargetForm = object({
@@ -481,19 +513,23 @@ export function Settings() {
   );
   const repoInfo = createSubscription(async (tx) => {
     const orgs = await GithubOrgStore.all(tx)
-    console.log("orgs", orgs);
+    const ghRepos = await GithubRepoStore.all(tx);
+
     const ghRepoOrg = orgs.find((org) => !org.time.disconnected);
 
     const appRepos = await AppRepoStore.forApp(tx, app.app.id);
-    if (!appRepos.length) return { ghRepoOrg };
+    if (!appRepos.length) return { ghRepos, ghRepoOrg };
 
-    const ghRepo = await GithubRepoStore.get(tx, appRepos[0].repoID);
-    if (!ghRepo) return { ghRepoOrg };
+    const ghRepo = ghRepos.find((repo) => repo.id === appRepos[0].repoID);
+    if (!ghRepo) return { ghRepos, ghRepoOrg };
 
     return {
       ghRepo,
       appRepo: appRepos[0],
-      ghRepoOrg: (ghRepoOrg && ghRepoOrg.id === ghRepo.githubOrgID) ? ghRepoOrg : undefined,
+      ghRepoOrg:
+        (ghRepoOrg?.id === ghRepo.githubOrgID)
+          ? ghRepoOrg
+          : orgs.find((org) => org.id === ghRepo.githubOrgID)
     };
   });
 
@@ -521,6 +557,8 @@ export function Settings() {
 
     return { repoURL, uri, branch, commit };
   });
+
+  const [repo, setRepo] = createSignal<string>();
 
   const [overrideGithub, setOverrideGithub] = createSignal(false);
 
@@ -663,7 +701,7 @@ export function Settings() {
                     class={targetFormFieldFlex}
                     hint={
                       <Show when={!field.error} fallback={field.error}>
-                        <TargetAddAccountLink href="/">
+                        <TargetAddAccountLink href="../../settings#accounts">
                           Connect another AWS account
                         </TargetAddAccountLink>
                       </Show>
@@ -695,76 +733,83 @@ export function Settings() {
             </TargetFormFieldLabel>
             <TargetFormFieldStack>
               <FieldArray name="env">
-                {(fieldArray) => (
-                  <For each={fieldArray.items}>
-                    {(_, index) => (
-                      <TargetFormField>
-                        <Field name={`env.${index()}.key`}>
-                          {(field, props) => (
-                            <FormField
-                              hint={field.error}
-                              color={field.error ? "danger" : "primary"}
-                              label={"Key"}
-                              class={targetFormFieldFlex}
-                            >
-                              <Input
-                                {...props}
-                                value={field.value}
-                                type="text"
-                              />
-                            </FormField>
-                          )}
-                        </Field>
-                        <TargetFormFieldCol>
-                          <Field name={`env.${index()}.value`}>
-                            {(field, props) => (
-                              <FormField
-                                hint={field.error}
-                                color={field.error ? "danger" : "primary"}
-                                label={"Value"}
-                                class={targetFormFieldFlex}
+                {(fieldArray) => {
+                  return (
+                    <>
+                      <For each={fieldArray.items}>
+                        {(_, index) => (
+                          <TargetFormField>
+                            <Field name={`env.${index()}.key`}>
+                              {(field, props) => (
+                                <FormField
+                                  hint={field.error}
+                                  color={field.error ? "danger" : "primary"}
+                                  label={index() === 0 ? "Key" : undefined}
+                                  class={targetFormFieldFlex}
+                                >
+                                  <Input
+                                    {...props}
+                                    value={field.value}
+                                    type="text"
+                                  />
+                                </FormField>
+                              )}
+                            </Field>
+                            <TargetFormFieldCol>
+                              <Field name={`env.${index()}.value`}>
+                                {(field, props) => (
+                                  <FormField
+                                    hint={field.error}
+                                    color={field.error ? "danger" : "primary"}
+                                    label={index() === 0 ? "Value" : undefined}
+                                    class={targetFormFieldFlex}
+                                  >
+                                    <Input
+                                      {...props}
+                                      value={field.value}
+                                      type="text"
+                                    />
+                                  </FormField>
+                                )}
+                              </Field>
+                              <Dropdown
+                                size="sm"
+                                triggerClass={targetFormFieldDropdown}
+                                icon={
+                                  <IconEllipsisVertical width={18} height={18} />
+                                }
                               >
-                                <Input
-                                  {...props}
-                                  value={field.value}
-                                  type="text"
-                                />
-                              </FormField>
-                            )}
-                          </Field>
-                          <Dropdown
-                            size="sm"
-                            triggerClass={targetFormFieldDropdown}
-                            icon={
-                              <IconEllipsisVertical width={18} height={18} />
-                            }
-                          >
-                            <Dropdown.Item
-                              onSelect={() => {
-                                remove(putForm, "env", { at: index() });
-                              }}
-                            >
-                              Remove variable
-                            </Dropdown.Item>
-                          </Dropdown>
-                        </TargetFormFieldCol>
-                      </TargetFormField>
-                    )}
-                  </For>
-                )}
-              </FieldArray>
-              <TargetAddVarLink
-                onClick={() => {
-                  insert(putForm, "env", {
-                    value: { key: "", value: "" },
-                  });
+                                <Dropdown.Item
+                                  onSelect={() => {
+                                    remove(putForm, "env", { at: index() });
+                                  }}
+                                >
+                                  Remove variable
+                                </Dropdown.Item>
+                              </Dropdown>
+                            </TargetFormFieldCol>
+                          </TargetFormField>
+                        )}
+                      </For>
+                      <TargetAddVarLink
+                        onClick={() => {
+                          insert(putForm, "env", {
+                            value: { key: "", value: "" },
+                          });
+                        }}
+                      >
+                        <TargetAddVarIcon>
+                          <IconAdd width="10" height="10" />
+                        </TargetAddVarIcon>
+                        <Show when={fieldArray.items.length !== 0}
+                          fallback="Add a variable">
+                          Add another variable
+                        </Show>
+                      </TargetAddVarLink>
+                    </>
+                  );
                 }}
-              >
-                <TargetAddVarIcon>
-                  <IconAdd width="10" height="10" />
-                </TargetAddVarIcon>
-                Add another variable
-              </TargetAddVarLink>
+              </FieldArray>
             </TargetFormFieldStack>
           </TargetFormRow>
           <TargetFormRowControls>
@@ -812,10 +857,20 @@ export function Settings() {
             </Text>
           </Stack>
           <GitRepoRoot>
-            <Show when={!repoInfo.value?.ghRepoOrg && !overrideGithub()}>
-              <GitOrgError>
+            <Show when={
+              !overrideGithub()
+              && (!repoInfo.value?.ghRepoOrg || repoInfo.value?.ghRepoOrg.time.disconnected)
+            }>
+              <GitOrgError danger={
+                repoInfo.value?.ghRepoOrg?.time.disconnected !== undefined
+              }>
                 <GitOrgErrorCopy>
-                  Start by connecting to your GitHub organization
+                  <Show
+                    fallback="Reconnect your GitHub organization"
+                    when={repoInfo.value?.ghRepoOrg?.time.disconnected === undefined}
+                  >
+                    Start by connecting to your GitHub organization
+                  </Show>
                 </GitOrgErrorCopy>
                 <form
                   action={import.meta.env.VITE_API_URL + "/github/connect"}
@@ -865,9 +920,8 @@ export function Settings() {
                           )
                         )
                           return;
-                        rep().mutate.app_repo_disconnect(
-                          repoInfo.value!.appRepo[0]!.id,
-                        );
+                        setRepo(undefined);
+                        rep().mutate.app_repo_disconnect(repoInfo.value!.appRepo!.id);
                       }}
                     >
                       Disconnect
@@ -879,8 +933,8 @@ export function Settings() {
                 </GitRepoPanel>
                 <TargetsRoot>
                   <TargetHeader>
-                    <TargetHeaderCopy>Deployment Targets</TargetHeaderCopy>
-                    <Show when={!editing.active || editing.id}>
+                    <TargetHeaderCopy>Targets</TargetHeaderCopy>
+                    <Show when={(!editing.active || editing.id) && runConfigs.value.length}>
                       <LinkButton
                         onClick={() => {
                           reset(putForm);
@@ -952,9 +1006,13 @@ export function Settings() {
                                 </Dropdown.Item>
                                 <Dropdown.Seperator />
                                 <Dropdown.Item
-                                  onSelect={() =>
+                                  onSelect={() => {
+                                    if (
+                                      !confirm("Are you sure you want to remove this target?")
+                                    )
+                                      return;
                                     rep().mutate.run_config_remove(config.id)
-                                  }
+                                  }}
                                 >
                                   Remove target
                                 </Dropdown.Item>
@@ -970,20 +1028,29 @@ export function Settings() {
                     <Show when={editing.active && !editing.id}>
                       <TargetFormRoot>
                         <TargetFormHeader>
-                          <TargetFormHeaderCopy>
+                          <TargetFormHeaderCopy new>
                             Add a new target
                           </TargetFormHeaderCopy>
                         </TargetFormHeader>
                       </TargetFormRoot>
                       <TargetForm new />
                     </Show>
-                    <Show when={false}>
+                    <Show when={(!editing.active || editing.id) && runConfigs.value.length === 0}>
                       <TargetsEmpty>
-                        <LinkButton>
+                        <LinkButton
+                          onClick={() => {
+                            reset(putForm);
+                            setValues(putForm, {
+                              env: [],
+                            });
+                            setEditing("active", true);
+                            setEditing("id", undefined);
+                          }}
+                        >
                           <TargetsEmptyIcon>
                             <IconAdd width="10" height="10" />
                           </TargetsEmptyIcon>
-                          Add a deployment target
+                          Add an autodeploy target
                         </LinkButton>
                       </TargetsEmpty>
                     </Show>
@@ -991,15 +1058,57 @@ export function Settings() {
                 </TargetsRoot>
               </Match>
               <Match when={true}>
-                <Button
-                  color="secondary"
-                  disabled={!repoInfo.value?.ghRepoOrg}
-                >
-                  <ButtonIcon>
-                    <IconGitHub />
-                  </ButtonIcon>
-                  Select Repo
-                </Button>
+                <SelectRepoRoot>
+                  <FormField
+                    class={selectRepo}
+                    hint={
+                      repoInfo.value?.ghRepoOrg && repoInfo.value?.ghRepos!.length === 0
+                        ? <>
+                          Try <Link href="../../settings#github">connecting to a different organization</Link>
+                        </>
+                        : undefined
+                    }
+                  >
+                    <Select
+                      name={SELECT_REPO_NAME}
+                      disabled={
+                        !repoInfo.value?.ghRepoOrg || repoInfo.value?.ghRepos!.length === 0
+                      }
+                      onChange={(e) => setRepo(e.currentTarget.value)}
+                      placeholder={
+                        repoInfo.value?.ghRepoOrg && repoInfo.value?.ghRepos!.length === 0
+                          ? "No repos found"
+                          : "Select a repo..."
+                      }
+                      options={
+                        repoInfo.value?.ghRepoOrg
+                          ? repoInfo.value?.ghRepos!.map((repo) => ({
+                            label: repo.name,
+                            value: repo.id,
+                          }))
+                          : []
+                      }
+                    />
+                  </FormField>
+                  <Button
+                    color="secondary"
+                    disabled={
+                      !repoInfo.value?.ghRepoOrg
+                      || repoInfo.value?.ghRepos!.length === 0
+                      || !repo()
+                    }
+                    onClick={() => {
+                      rep().mutate.app_repo_connect({
+                        id: createId(),
+                        appID: app.app.id,
+                        type: "github",
+                        repoID: repo()!,
+                      });
+                    }}
+                  >
+                    Select
+                  </Button>
+                </SelectRepoRoot>
               </Match>
             </Switch>
           </GitRepoRoot>

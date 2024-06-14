@@ -107,11 +107,9 @@ const CardStatusCopy = styled("span", {
   },
 });
 
-const AddAccountLink = styled(LinkButton, {
+const AddAccountLink = styled(Link, {
   base: {
     fontSize: theme.font.size.sm,
-    fontFamily: theme.font.family.body,
-    fontWeight: theme.font.weight.regular,
   },
 });
 
@@ -126,7 +124,7 @@ export function AWS() {
   const rep = useReplicache();
 
   return (
-    <Stack space="10">
+    <Stack space="10" id="accounts">
       <Stack space="3">
         <Text size="lg" weight="medium">
           Accounts

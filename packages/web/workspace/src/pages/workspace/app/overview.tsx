@@ -6,6 +6,7 @@ import {
   Stack,
   Button,
   utility,
+  ButtonIcon,
   TextButton,
 } from "$/ui";
 import { DateTime } from "luxon";
@@ -493,7 +494,12 @@ export function Overview() {
               when={ghRepoOrg()}
               fallback={
                 <Link href="settings#repo">
-                  <Button color="primary">Connect Repo</Button>
+                  <Button color="secondary">
+                    <ButtonIcon>
+                      <IconGitHub />
+                    </ButtonIcon>
+                    Select Repo
+                  </Button>
                 </Link>
               }
             >
