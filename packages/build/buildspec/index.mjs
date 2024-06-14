@@ -79,9 +79,12 @@ export async function handler(event, context) {
     process.chdir(REPO_PATH);
 
     if (fs.existsSync("yarn.lock")) shell("yarn install");
-    else if (fs.existsSync("pnpm-lock.yaml")) shell("pnpm install");
-    else if (fs.existsSync("bun.lockb")) shell("bun install");
-    else if (fs.existsSync("package.json")) shell("npm install");
+    else if (fs.existsSync("pnpm-lock.yaml")) {
+      shell("pnpm install");
+    } else if (fs.existsSync("bun.lockb")) {
+      shell("npm install -g bun");
+      shell("bun install");
+    } else if (fs.existsSync("package.json")) shell("npm install");
   }
 
   function deploy() {
