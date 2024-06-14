@@ -30,6 +30,7 @@ import { StageStore } from "$/data/stage";
 import { useLocalContext } from "$/providers/local";
 import { AWS } from "$/data/aws";
 import { githubCommit, githubRepo } from "$/common/url-builder";
+import { filter, pipe, sortBy } from "remeda";
 
 const Root = styled("div", {
   base: {
@@ -308,9 +309,17 @@ export function Overview() {
     (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID),
   );
 
+  const local = useLocalContext();
   const stages = createSubscription(async (tx) => {
     const all = await StageStore.list(tx);
-    return all.filter((stage) => stage.appID === app.app.id);
+    return pipe(
+      all,
+      filter((stage) => stage.appID === app.app.id),
+      sortBy(
+        (stage) => (stage.name === local().stage ? 0 : 1),
+        [(stage) => stage.timeUpdated, "desc"],
+      ),
+    );
   }, []);
 
   const columns = createMemo(() => {
