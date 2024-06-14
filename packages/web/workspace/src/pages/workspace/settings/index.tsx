@@ -200,8 +200,6 @@ export function Settings() {
           </Text>
         </Stack>
         <Divider />
-        <AWS />
-        <Divider />
         <Alerts />
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE}>
@@ -329,6 +327,8 @@ export function Settings() {
             </Show>
           </Stack>
         </Stack>
+        <Divider />
+        <AWS />
         <Integrations />
         <Divider />
         <Stack space={PANEL_CONTENT_SPACE} horizontal="start" id="billing">

@@ -996,6 +996,12 @@ function RepoInfo() {
         <Button
           color="secondary"
           onClick={() => {
+            if (
+              !confirm(
+                "Are you sure you want to disconnect this repo?",
+              )
+            )
+              return;
             rep().mutate.app_repo_disconnect(appRepo()!.id);
           }}
         >

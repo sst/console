@@ -1,35 +1,65 @@
 import { AccountStore } from "$/data/aws";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { theme, utility, Text, Row, Stack } from "$/ui";
+import { theme, utility, Text, Row, Stack, Button, LinkButton } from "$/ui";
 import { Dropdown } from "$/ui/dropdown";
 import { IconEllipsisVertical, IconExclamationTriangle } from "$/ui/icons";
-import { IconArrowPathSpin } from "$/ui/icons/custom";
+import { IconAws, IconAdd, IconArrowPathSpin } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
 const Root = styled("div", {
   base: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
   },
 });
 
 const Card = styled("div", {
   base: {
-    borderRadius: theme.borderRadius,
-    border: `1px solid ${theme.color.divider.base}`,
+    ...utility.row(3.5),
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 });
 
-const CardHeader = styled("div", {
+const CardLeft = styled("div", {
   base: {
-    ...utility.row(0.5),
-    height: 46,
+    ...utility.row(3),
     alignItems: "center",
-    justifyContent: "space-between",
-    padding: `0 ${theme.space[2]} 0 ${theme.space[4]}`,
-    borderBottom: `1px solid ${theme.color.divider.base}`,
+  }
+});
+
+const CardTitle = styled("p", {
+  base: {
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const CardDesc = styled("p", {
+  base: {
+    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.sm,
+  },
+});
+
+const CardError = styled(Link, {
+  base: {
+    textDecoration: "underline",
+    fontSize: theme.font.size.sm,
+    color: `hsla(${theme.color.base.red}, 100%)`,
+  },
+});
+
+const CardRight = styled("div", {
+  base: {
+    ...utility.row(5),
+    alignItems: "center",
+  }
+});
+
+const CardActions = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
   },
 });
 
@@ -42,9 +72,8 @@ const CardErrorCopy = styled(Text, {
 
 const CardStatus = styled("div", {
   base: {
-    ...utility.row(2),
+    ...utility.row(1.5),
     alignItems: "center",
-    padding: theme.space[4],
     borderTop: `1px solid ${theme.color.divider.base}`,
     selectors: {
       "&:first-child": {
@@ -71,6 +100,27 @@ const CardStatusIcon = styled("div", {
   },
 });
 
+const CardStatusCopy = styled("span", {
+  base: {
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const AddAccountLink = styled(LinkButton, {
+  base: {
+    fontSize: theme.font.size.sm,
+    fontFamily: theme.font.family.body,
+    fontWeight: theme.font.weight.regular,
+  },
+});
+
+const AddIcon = styled("span", {
+  base: {
+    paddingRight: 6,
+  },
+});
+
 export function AWS() {
   const accounts = createSubscription(AccountStore.list, []);
   const rep = useReplicache();
@@ -79,83 +129,90 @@ export function AWS() {
     <Stack space="10">
       <Stack space="3">
         <Text size="lg" weight="medium">
-          AWS Accounts
+          Accounts
         </Text>
         <Text size="sm" color="dimmed">
-          Manage the connected aws accounts
+          Connect and manage your AWS accounts
         </Text>
       </Stack>
       <Root>
-        <For each={accounts.value}>
-          {(account) => (
-            <Card>
-              <CardHeader>
-                <Row space="0.5">
-                  <Text code size="mono_sm" color="dimmed">
-                    ID:
-                  </Text>
-                  <Text code size="mono_sm" color="dimmed">
-                    {account.accountID}
-                  </Text>
-                </Row>
-                <Dropdown
-                  size="sm"
-                  icon={<IconEllipsisVertical width={18} height={18} />}
-                >
-                  <Dropdown.Item
-                    disabled={account.timeDiscovered === null}
-                    onSelect={() => {
-                      rep().mutate.aws_account_scan(account.id);
-                    }}
-                  >
-                    <Show
-                      when={account.timeDiscovered}
-                      fallback="Rescanning account…"
-                    >
-                      Rescan account
+        <Show when={accounts.value.length} fallback={
+          <Link href="../account">
+            <Button color="secondary">Add AWS Account</Button>
+          </Link>
+        }>
+          <Stack space="7">
+            <For each={accounts.value}>
+              {(account) => (
+                <Card>
+                  <CardLeft>
+                    <IconAws width="32" height="32" />
+                    <Stack space="1.5">
+                      <CardTitle>{account.accountID}</CardTitle>
+                      <Show when={account.timeFailed} fallback={
+                        <CardDesc>Connected</CardDesc>
+                      }>
+                        <CardError href="../account">
+                          <CardErrorCopy>Reconnect account</CardErrorCopy>
+                        </CardError>
+                      </Show>
+                    </Stack>
+                  </CardLeft>
+                  <CardRight>
+                    <Show when={!account.timeDiscovered && !account.timeFailed}>
+                      <CardStatus>
+                        <CardStatusIcon status="info">
+                          <IconArrowPathSpin />
+                        </CardStatusIcon>
+                        <CardStatusCopy>
+                          Searching for SST apps&hellip;
+                        </CardStatusCopy>
+                      </CardStatus>
                     </Show>
-                  </Dropdown.Item>
-                  <Dropdown.Seperator />
-                  <Dropdown.Item
-                    onSelect={() => {
-                      if (
-                        !confirm(
-                          "Are you sure you want to remove this account?",
-                        )
-                      )
-                        return;
-                      rep().mutate.aws_account_remove(account.id);
-                    }}
-                  >
-                    Remove account
-                  </Dropdown.Item>
-                </Dropdown>
-              </CardHeader>
-              <div>
-                <Show when={account.timeFailed}>
-                  <CardStatus>
-                    <CardStatusIcon status="error">
-                      <IconExclamationTriangle />
-                    </CardStatusIcon>
-                    <Link href="account">
-                      <CardErrorCopy>Reconnect account</CardErrorCopy>
-                    </Link>
-                  </CardStatus>
-                </Show>
-                <Show when={!account.timeDiscovered && !account.timeFailed}>
-                  <CardStatus>
-                    <CardStatusIcon status="info">
-                      <IconArrowPathSpin />
-                    </CardStatusIcon>
-                    <Text size="sm" color="dimmed">
-                      Searching for SST apps&hellip;
-                    </Text>
-                  </CardStatus>
-                </Show>
-              </div>
-            </Card>
-          )}
-        </For>
+                    <CardActions>
+                      <Button
+                        color="secondary"
+                        disabled={account.timeDiscovered === null}
+                        onClick={() => {
+                          rep().mutate.aws_account_scan(account.id);
+                        }}>
+                        <Show
+                          when={account.timeDiscovered}
+                          fallback="Rescanning…"
+                        >
+                          Rescan
+                        </Show>
+                      </Button>
+                      <Dropdown
+                        icon={<IconEllipsisVertical width={18} height={18} />}
+                      >
+                        <Dropdown.Item
+                          onSelect={() => {
+                            if (
+                              !confirm(
+                                "Are you sure you want to remove this account?",
+                              )
+                            )
+                              return;
+                            rep().mutate.aws_account_remove(account.id);
+                          }}
+                        >
+                          Remove account
+                        </Dropdown.Item>
+                      </Dropdown>
+                    </CardActions>
+                  </CardRight>
+                </Card>
+              )}
+            </For>
+            <AddAccountLink href="../account">
+              <AddIcon>
+                <IconAdd width="10" height="10" />
+              </AddIcon>
+              Connect another account
+            </AddAccountLink>
+          </Stack>
+        </Show>
       </Root>
     </Stack>
   );
