@@ -44,9 +44,9 @@ export async function handler(evt: Run.ConfigParserEvent) {
       `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"v2_app"}));`,
       `  process.exit(0);`,
       `}`,
-      // Ensure CI is defined in the config
-      `if (!mod.ci) {`,
-      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_ci"}));`,
+      // Ensure Autodeploy is defined in the config
+      `if (!mod.console?.autodeploy) {`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy"}));`,
       `  process.exit(0);`,
       `}`,
       // Two use cases:
@@ -54,23 +54,25 @@ export async function handler(evt: Run.ConfigParserEvent) {
       // - "evt.stage" defined, ie. called on repo connect to get JUST runner config
       ...(evt.trigger
         ? [
-            `const ciTarget = mod.ci.target?.(${JSON.stringify(evt.trigger)});`,
-            `if (!ciTarget) {`,
-            `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_ci_target"}));`,
+            `const target = mod.console.autodeploy.target?.(${JSON.stringify(
+              evt.trigger
+            )});`,
+            `if (!target) {`,
+            `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_target"}));`,
             `  process.exit(0);`,
             `}`,
-            `if (!ciTarget.stage) {`,
-            `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_ci_stage"}));`,
+            `if (!target.stage) {`,
+            `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_stage"}));`,
             `  process.exit(0);`,
             `}`,
-            `const ciRunner = mod.ci.runner?.({stage: ciTarget.stage});`,
-            `const app = mod.app({stage: ciTarget.stage});`,
-            `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, ci: { runner: ciRunner, target: ciTarget }}));`,
+            `const runner = mod.console.autodeploy.runner?.({stage: target.stage});`,
+            `const app = mod.app({stage: target.stage});`,
+            `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, console: { autodeploy: { runner, target }}}));`,
           ]
         : [
-            `const ciRunner = mod.ci.runner?.({stage: "${evt.stage}"});`,
+            `const runner = mod.console.autodeploy.runner?.({stage: "${evt.stage}"});`,
             `const app = mod.app({stage: "${evt.stage}"});`,
-            `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, ci: { runner: ciRunner }}));`,
+            `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, console: { autodeploy: { runner }}}));`,
           ]),
     ].join("\n")
   );

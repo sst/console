@@ -39,7 +39,7 @@ import {
   runnerTable,
   runTable,
   runnerUsageTable,
-  CiConfig,
+  AutodeployConfig,
   Engine,
 } from "./run.sql";
 import { App, Stage } from "../app";
@@ -118,7 +118,9 @@ export module Run {
   };
 
   export const SstConfig = z.object({
-    ci: CiConfig,
+    console: z.object({
+      autodeploy: AutodeployConfig,
+    }),
     app: z.object({
       version: z.string().nonempty().optional(),
       name: z.string().nonempty(),
@@ -131,9 +133,9 @@ export module Run {
       | "parse_config"
       | "evaluate_config"
       | "v2_app"
-      | "missing_ci"
-      | "missing_ci_target"
-      | "missing_ci_stage";
+      | "missing_autodeploy"
+      | "missing_autodeploy_target"
+      | "missing_autodeploy_stage";
   };
 
   export const Event = {
@@ -240,7 +242,7 @@ export module Run {
     }),
     async (input) => {
       const appID = input.appID;
-      const stageName = input.sstConfig.ci.target.stage;
+      const stageName = input.sstConfig.console.autodeploy.target.stage;
       const region = input.sstConfig.app.providers?.aws?.region ?? "us-east-1";
 
       // Validate app name
@@ -287,7 +289,7 @@ export module Run {
             stageID,
             stateUpdateID,
             trigger: input.trigger,
-            config: input.sstConfig.ci,
+            config: input.sstConfig.console.autodeploy,
           })
           .execute();
 
@@ -708,7 +710,7 @@ export module Run {
       region: z.string().nonempty(),
       awsAccountID: z.string().cuid2(),
       appRepoID: z.string().cuid2(),
-      runnerConfig: CiConfig.shape.runner,
+      runnerConfig: AutodeployConfig.shape.runner,
     }),
     async (input) => {
       const engine = input.runnerConfig?.engine ?? DEFAULT_ENGINE;
@@ -743,7 +745,7 @@ export module Run {
       awsAccountID: z.string().cuid2(),
       awsAccountExternalID: z.string().nonempty(),
       region: z.string().nonempty(),
-      runnerConfig: CiConfig.shape.runner,
+      runnerConfig: AutodeployConfig.shape.runner,
       credentials: z.custom<Credentials>(),
     }),
     async (input) => {

@@ -131,12 +131,13 @@ export module AppRepo {
     })
   );
 
-  export const setLastEvent = zod(
+  export const multiSetLastEvent = zod(
     z.object({
+      workspaceIDs: z.array(z.string().cuid2()),
       appRepoIDs: z.array(Repo.shape.id),
       gitContext: Trigger,
     }),
-    async ({ appRepoIDs, gitContext }) => {
+    async ({ workspaceIDs, appRepoIDs, gitContext }) => {
       const lastEventID = createId();
       await useTransaction((tx) =>
         tx
@@ -147,7 +148,12 @@ export module AppRepo {
             lastEventStatus: null,
             timeLastEvent: new Date(),
           })
-          .where(inArray(appRepoTable.id, appRepoIDs))
+          .where(
+            and(
+              inArray(appRepoTable.workspaceID, workspaceIDs),
+              inArray(appRepoTable.id, appRepoIDs)
+            )
+          )
       );
       return lastEventID;
     }
@@ -155,11 +161,11 @@ export module AppRepo {
 
   export const setLastEventStatus = zod(
     z.object({
-      appRepoIDs: z.array(Repo.shape.id),
+      appRepoID: Repo.shape.id,
       lastEventID: z.string().cuid2(),
       status: z.string().nonempty(),
     }),
-    async ({ appRepoIDs, lastEventID, status }) => {
+    async ({ appRepoID, lastEventID, status }) => {
       await useTransaction((tx) =>
         tx
           .update(appRepoTable)
@@ -167,6 +173,29 @@ export module AppRepo {
           .where(
             and(
               eq(appRepoTable.workspaceID, useWorkspace()),
+              eq(appRepoTable.id, appRepoID),
+              eq(appRepoTable.lastEventID, lastEventID)
+            )
+          )
+      );
+    }
+  );
+
+  export const multiSetLastEventStatus = zod(
+    z.object({
+      workspaceIDs: z.array(z.string().cuid2()),
+      appRepoIDs: z.array(Repo.shape.id),
+      lastEventID: z.string().cuid2(),
+      status: z.string().nonempty(),
+    }),
+    async ({ workspaceIDs, appRepoIDs, lastEventID, status }) => {
+      await useTransaction((tx) =>
+        tx
+          .update(appRepoTable)
+          .set({ lastEventStatus: status })
+          .where(
+            and(
+              inArray(appRepoTable.workspaceID, workspaceIDs),
               inArray(appRepoTable.id, appRepoIDs),
               eq(appRepoTable.lastEventID, lastEventID)
             )

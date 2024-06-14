@@ -189,7 +189,7 @@ export module CodebuildRunner {
               "CodeBuild is not authorized to perform: sts:AssumeRole on service role"
           )
             return createProjectInUserAccount();
-          if (e.name === "EntityAlreadyExistsException") {
+          if (e.name === "ResourceAlreadyExistsException") {
             /* ignore */
           } else throw e;
 

@@ -93,7 +93,7 @@ export const Trigger = z.discriminatedUnion("type", [
 ]);
 export type Trigger = z.infer<typeof Trigger>;
 
-export const CiConfig = z.object({
+export const AutodeployConfig = z.object({
   runner: z
     .object({
       engine: z.enum(Engine).optional(),
@@ -106,7 +106,7 @@ export const CiConfig = z.object({
     env: z.record(z.string().nonempty()).optional(),
   }),
 });
-export type CiConfig = z.infer<typeof CiConfig>;
+export type AutodeployConfig = z.infer<typeof AutodeployConfig>;
 
 export const Env = z.record(z.string().nonempty());
 export type Env = z.infer<typeof Env>;
@@ -138,7 +138,7 @@ export const runnerTable = mysqlTable(
       columns: [table.workspaceID, table.appRepoID],
       foreignColumns: [appRepoTable.workspaceID, appRepoTable.id],
     }).onDelete("cascade"),
-  }),
+  })
 );
 
 export const runnerUsageTable = mysqlTable(
@@ -165,9 +165,9 @@ export const runnerUsageTable = mysqlTable(
     uniqueStageID: unique("runner_id_stage_id_unique").on(
       table.workspaceID,
       table.runnerID,
-      table.stageID,
+      table.stageID
     ),
-  }),
+  })
 );
 
 export const runTable = mysqlTable(
@@ -181,7 +181,7 @@ export const runTable = mysqlTable(
     stateUpdateID: cuid("state_update_id").notNull(),
     log: json("log").$type<Log>(),
     trigger: json("git_context").$type<Trigger>().notNull(),
-    config: json("config").$type<CiConfig>().notNull(),
+    config: json("config").$type<AutodeployConfig>().notNull(),
     error: text("error"),
     active: boolean("active"),
   },
@@ -195,9 +195,9 @@ export const runTable = mysqlTable(
     active: unique("unique_active").on(
       table.workspaceID,
       table.stageID,
-      table.active,
+      table.active
     ),
-  }),
+  })
 );
 
 export const runConfigTable = mysqlTable(
@@ -217,13 +217,13 @@ export const runConfigTable = mysqlTable(
     stagePattern: unique("unique_stage_pattern").on(
       table.workspaceID,
       table.appID,
-      table.stagePattern,
+      table.stagePattern
     ),
     appID: foreignKey({
       columns: [table.workspaceID, table.appID],
       foreignColumns: [app.workspaceID, app.id],
     }).onDelete("cascade"),
-  }),
+  })
 );
 
 // TODO REMOVE
@@ -243,11 +243,11 @@ export const runEnvTable_REMOVE = mysqlTable(
       table.workspaceID,
       table.appID,
       table.stageName,
-      table.key,
+      table.key
     ),
     appID: foreignKey({
       columns: [table.workspaceID, table.appID],
       foreignColumns: [app.workspaceID, app.id],
     }).onDelete("cascade"),
-  }),
+  })
 );

@@ -23,7 +23,7 @@ export const handler = EventHandler(RunConfig.Events.Updated, (evt) =>
       repo: gitRepo.repo,
     });
 
-    // Parse CI config
+    // Parse Autodeploy config
     const config = await Run.parseSstConfig({
       content,
       stage: stagePattern,
@@ -33,13 +33,12 @@ export const handler = EventHandler(RunConfig.Events.Updated, (evt) =>
     // Get runner (create if not exist)
     const awsAccount = await AWS.Account.fromExternalID(awsAccountExternalID);
     if (!awsAccount) return;
-    console.log(config.ci);
     const region = config.app.providers?.aws?.region ?? "us-east-1";
     const runner = await Run.lookupRunner({
       awsAccountID: awsAccount.id,
       appRepoID: appRepo.id,
       region,
-      runnerConfig: config.ci.runner,
+      runnerConfig: config.console.autodeploy.runner,
     });
 
     // Assume into AWS account and region
@@ -52,7 +51,7 @@ export const handler = EventHandler(RunConfig.Events.Updated, (evt) =>
         awsAccountID: awsAccount.id,
         awsAccountExternalID: awsAccount.accountID,
         region,
-        runnerConfig: config.ci.runner,
+        runnerConfig: config.console.autodeploy.runner,
         credentials,
       });
       await Run.warmRunner({
