@@ -6,12 +6,17 @@ import {
   Stack,
   Button,
   utility,
-  ButtonIcon,
   TextButton,
 } from "$/ui";
 import { DateTime } from "luxon";
-import { For, Show, Match, Switch, createMemo, createEffect } from "solid-js";
-import { AppRepoStore, GithubOrgStore, GithubRepoStore } from "$/data/app";
+import { For, Show, Match, Switch, createMemo } from "solid-js";
+import {
+  AppRepoStore,
+  GithubOrgStore,
+  GithubRepoStore,
+  RunStore,
+  StateUpdateStore,
+} from "$/data/app";
 import { Header } from "../header";
 import { Link } from "@solidjs/router";
 import { useAppContext } from "./context";
@@ -20,9 +25,11 @@ import { IconChevronRight } from "$/ui/icons";
 import type { Stage } from "@console/core/app";
 import { IconPr, IconGit, IconCommit, IconGitHub } from "$/ui/icons/custom";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { parseTime, formatSinceTime, formatCommit } from "$/common/format";
+import { parseTime, formatSinceTime } from "$/common/format";
 import { StageStore } from "$/data/stage";
-import { App } from "@console/core/app";
+import { useLocalContext } from "$/providers/local";
+import { AWS } from "$/data/aws";
+import { githubCommit, githubRepo } from "$/common/url-builder";
 
 const Root = styled("div", {
   base: {
@@ -120,15 +127,6 @@ const CardRoot = styled("div", {
     borderRadius: theme.borderRadius,
     border: `1px solid ${theme.color.divider.base}`,
     padding: `${theme.space[3]} ${theme.space[4]} ${theme.space[4]} ${theme.space[4]}`,
-  },
-});
-
-const CardHeader = styled("div", {
-  base: {
-    ...utility.row(0.5),
-    height: 80,
-    alignItems: "center",
-    justifyContent: "space-between",
   },
 });
 
@@ -302,12 +300,12 @@ export function Overview() {
   const ghRepo = GithubRepoStore.all.watch(
     rep,
     () => [],
-    (repos) => repos.find((repo) => repo.id === appRepo()[0]?.repoID)
+    (repos) => repos.find((repo) => repo.id === appRepo()[0]?.repoID),
   );
   const ghRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID)
+    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID),
   );
 
   const stages = createSubscription(async (tx) => {
@@ -326,83 +324,133 @@ export function Overview() {
   });
 
   function Card(props: { stage: Stage.Info }) {
-    const stage = props.stage;
+    const latest = createSubscription(async (tx) => {
+      const updates = await StateUpdateStore.forStage(tx, props.stage.id);
+      if (!updates.length) return;
+      const update = updates.sort((a, b) => b.index - a.index)[0];
+      let result = {
+        update,
+      };
+      if (update.source.type !== "ci") return result;
+      const run = await RunStore.get(
+        tx,
+        props.stage.id,
+        update.source.properties.runID,
+      );
+      if (run?.trigger.source !== "github") result;
+      if (!run) return result;
+      const repoUrl = githubRepo(run.trigger.repo.owner, run.trigger.repo.repo);
+      return {
+        ...result,
+        url: githubCommit(repoUrl, run.trigger.commit.id),
+        trigger: run.trigger,
+      };
+    });
+    const local = useLocalContext();
+    const aws = createSubscription(async (tx) =>
+      AWS.AccountStore.get(tx, props.stage.awsAccountID),
+    );
     return (
       <CardRoot>
         <CardBodyLeft>
           <CardTitle>
             <Switch>
-              <Match when={stage.name.includes("thdxr")}>
+              <Match when={props.stage.unsupported}>
+                <CardIcon status="unsupported" />
+              </Match>
+              <Match when={latest.value && !latest.value.update.time.completed}>
                 <CardIcon status="updating" />
               </Match>
-              <Match when={stage.name.includes("jayair")}>
+              <Match
+                when={
+                  latest.value?.update.time.completed &&
+                  latest.value?.update.errors.length === 0
+                }
+              >
                 <CardIcon status="success" />
               </Match>
-              <Match when={stage.name.includes("frank")}>
+              <Match when={latest.value?.update.errors.length}>
                 <CardIcon status="error" />
               </Match>
               <Match when={true}>
-                <CardIcon status="unsupported" />
+                <CardIcon status="base" />
               </Match>
             </Switch>
             <Row space="2">
-              <CardTitleText href={stage.name}>
-                {stage.name}
+              <CardTitleText href={props.stage.name}>
+                {props.stage.name}
               </CardTitleText>
-              <Show when={stage.name.includes("dev")}>
-                <Link href={`${stage.name}/local`}>
-                  <Tag level="tip" style="outline">Local</Tag>
+              <Show
+                when={
+                  props.stage.name === local().stage &&
+                  app.app.name === local().app
+                }
+              >
+                <Link href={`${props.stage.name}/local`}>
+                  <Tag level="tip" style="outline">
+                    Local
+                  </Tag>
                 </Link>
               </Show>
-              <Show when={stage.name.includes("frank")}>
-                <Link href={`${stage.name}/link/to/the/update`}>
-                  <Tag level="danger" style="outline">Error</Tag>
+              <Show when={latest.value?.update.errors.length}>
+                <Link href={`${props.stage.name}/link/to/the/update`}>
+                  <Tag level="danger" style="outline">
+                    Error
+                  </Tag>
                 </Link>
               </Show>
             </Row>
           </CardTitle>
           <CardUpdatedTime
-            title={parseTime(stage.timeUpdated).toLocaleString(
+            title={parseTime(props.stage.timeUpdated).toLocaleString(
               DateTime.DATETIME_FULL,
             )}
           >
-            Updated {formatSinceTime(stage.timeUpdated, true)}
+            Updated {formatSinceTime(props.stage.timeUpdated, true)}
           </CardUpdatedTime>
         </CardBodyLeft>
         <CardBodyRight>
-          <Show when={stage.name.includes("dev")}>
-            <CardGit>
-              <Row space="2">
-                <CardGitLink target="_blank" href={`https://github.com`}>
-                  <CardGitIcon size="md">
-                    <IconCommit />
-                  </CardGitIcon>
-                  <CardGitCommit>556d324</CardGitCommit>
-                </CardGitLink>
-                <CardGitLink target="_blank" href={`https://github.com`}>
-                  <CardGitIcon size="sm">
-                    <Switch>
-                      <Match when={true}>
-                        <IconPr />
-                      </Match>
-                      <Match when={true}>
-                        <IconGit />
-                      </Match>
-                    </Switch>
-                  </CardGitIcon>
-                  <CardGitBranch>production</CardGitBranch>
-                </CardGitLink>
-              </Row>
-              <CardGitMessage>
-                <Show when={true} fallback="—">
-                  fixing ci again
-                </Show>
-              </CardGitMessage>
-            </CardGit>
+          <Show
+            when={
+              latest.value && "trigger" in latest.value ? latest.value : false
+            }
+          >
+            {(v) => (
+              <CardGit>
+                <Row space="2">
+                  <CardGitLink target="_blank" href={v().url}>
+                    <CardGitIcon size="md">
+                      <IconCommit />
+                    </CardGitIcon>
+                    <CardGitCommit>{v().trigger.commit.id}</CardGitCommit>
+                  </CardGitLink>
+                  <CardGitLink target="_blank" href={`https://github.com`}>
+                    <CardGitIcon size="sm">
+                      <Switch>
+                        <Match when={v().trigger.type === "pull_request"}>
+                          <IconPr />
+                        </Match>
+                        <Match when={v().trigger.type === "push"}>
+                          <IconGit />
+                        </Match>
+                      </Switch>
+                    </CardGitIcon>
+                    <CardGitBranch>
+                      {(() => {
+                        const trigger = v().trigger;
+                        if (trigger.type === "push") return trigger.branch;
+                        return trigger.base;
+                      })()}
+                    </CardGitBranch>
+                  </CardGitLink>
+                </Row>
+                <CardGitMessage>{v().trigger.commit.message}</CardGitMessage>
+              </CardGit>
+            )}
           </Show>
           <Stack space="px">
-            <CardRegion>{stage.region}</CardRegion>
-            <Tag>123456789012</Tag>
+            <CardRegion>{props.stage.region}</CardRegion>
+            <Tag>{aws.value?.accountID}</Tag>
           </Stack>
         </CardBodyRight>
       </CardRoot>
@@ -442,8 +490,9 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
-                    }`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${
+                    ghRepo()?.name
+                  }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />
@@ -459,15 +508,9 @@ export function Overview() {
           </Row>
           <StageGrid>
             <Col>
-              <For each={columns()[0]}>
-                {(stage) => (<Card stage={stage} />)}
-              </For>
-              <For each={columns()[1]}>
-                {(stage) => (<Card stage={stage} />)}
-              </For>
-              <For each={columns()[2]}>
-                {(stage) => (<Card stage={stage} />)}
-              </For>
+              <For each={columns()[0]}>{(stage) => <Card stage={stage} />}</For>
+              <For each={columns()[1]}>{(stage) => <Card stage={stage} />}</For>
+              <For each={columns()[2]}>{(stage) => <Card stage={stage} />}</For>
             </Col>
           </StageGrid>
         </Stack>

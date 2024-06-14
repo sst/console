@@ -8,6 +8,7 @@ import type { AppRepo } from "@console/core/app/repo";
 import type { State } from "@console/core/state";
 import type { Run } from "@console/core/run";
 import type { RunConfig } from "@console/core/run/config";
+import { ReadTransaction } from "replicache";
 
 export const AppStore = new Store()
   .type<App.Info>()
@@ -91,3 +92,14 @@ export const RunStore = new Store()
   .scan("forStage", (stageID: string) => ["run", stageID])
   .get((stageID: string, runID: string) => ["run", stageID, runID])
   .build();
+
+export function RepoFromApp(id: string) {
+  return async (tx: ReadTransaction) => {
+    const appRepo = await AppRepoStore.forApp(tx, id);
+    if (!appRepo.length) return;
+    const repo = await GithubRepoStore.get(tx, appRepo[0].repoID);
+    const org = await GithubOrgStore.get(tx, repo.githubOrgID);
+    console.log(repo, org);
+    return { repo, org };
+  };
+}

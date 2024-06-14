@@ -3,6 +3,7 @@ import {
   AppRepoStore,
   AppStore,
   GithubRepoStore,
+  RepoFromApp,
   RunConfigStore,
   RunStore,
   StateUpdateStore,
@@ -51,6 +52,7 @@ import { User } from "@console/core/user";
 import { useAuth2 } from "$/providers/auth2";
 import { parseTime, formatSinceTime, formatCommit } from "$/common/format";
 import { githubCommit, githubRepo } from "$/common/url-builder";
+import { AppRepo } from "@console/core/app/repo";
 
 const OVERFLOW_APPS_COUNT = 9;
 const OVERFLOW_APPS_DISPLAY = 6;
@@ -360,7 +362,6 @@ export function OverviewNext() {
   const nav = useNavigate();
   const selfEmail = createMemo(() => auth.current.email);
   const ambiguous = createMemo(() => {
-    console.log(apps.value);
     const result = pipe(
       stages(),
       groupBy(
@@ -424,6 +425,7 @@ export function OverviewNext() {
         [(c) => c.timeUpdated, "desc"],
       );
     });
+    const repo = createSubscription(RepoFromApp(props.app.id));
     const childrenCapped = createMemo(() =>
       children().length > OVERFLOW_APPS_COUNT
         ? children().slice(0, OVERFLOW_APPS_DISPLAY)
@@ -441,19 +443,17 @@ export function OverviewNext() {
             </CardTitleIcon>
             {props.app.name}
           </CardTitle>
-          <Switch>
-            <Match when={props.app.name.includes("console")}>
-              <RepoLink
-                target="_blank"
-                href={`https://github.com/sst/console}`}
-              >
-                <RepoLinkIcon>
-                  <IconGitHub width="14" height="14" />
-                </RepoLinkIcon>
-                <RepoLinkCopy>console</RepoLinkCopy>
-              </RepoLink>
-            </Match>
-          </Switch>
+          <Show when={repo.value}>
+            <RepoLink
+              target="_blank"
+              href={githubRepo(repo.value!.org.login, repo.value!.repo.name)}
+            >
+              <RepoLinkIcon>
+                <IconGitHub width="14" height="14" />
+              </RepoLinkIcon>
+              <RepoLinkCopy>{repo.value!.repo.name}</RepoLinkCopy>
+            </RepoLink>
+          </Show>
         </CardHeader>
         <div>
           <For each={showOverflow() ? children() : childrenCapped()}>
