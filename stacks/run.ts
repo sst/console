@@ -65,7 +65,7 @@ export function Run({ stack, app }: StackContext) {
       new PolicyStatement({
         actions: ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
         principals: [new ServicePrincipal("lambda.amazonaws.com")],
-      }),
+      })
     );
     repo.addToResourcePolicy(
       new PolicyStatement({
@@ -76,7 +76,7 @@ export function Run({ stack, app }: StackContext) {
             "aws:RequestedRegion": stack.region,
           },
         },
-      }),
+      })
     );
 
     new CfnReplicationConfiguration(stack, "Replication", {
@@ -115,7 +115,7 @@ export function Run({ stack, app }: StackContext) {
     "RunTimeoutMonitor",
     {
       name: app.logicalPrefixedName("RunTimeoutMonitor"),
-    },
+    }
   );
   const runTimeoutMonitor = new Function(stack, "RunTimeoutHandler", {
     handler: "packages/functions/src/run/monitor.handler",
@@ -144,7 +144,7 @@ export function Run({ stack, app }: StackContext) {
     "RunnerRemover",
     {
       name: app.logicalPrefixedName("RunnerRemover"),
-    },
+    }
   );
   const runnerRemover = new Function(stack, "RunnerRemoverHandler", {
     bind: [...Object.values(secrets.database)],
@@ -165,7 +165,7 @@ export function Run({ stack, app }: StackContext) {
     "RunnerWarmer",
     {
       name: app.logicalPrefixedName("RunnerWarmer"),
-    },
+    }
   );
   const runnerWarmer = new Function(stack, "RunnerWarmerHandler", {
     bind: [
@@ -223,6 +223,7 @@ export function Run({ stack, app }: StackContext) {
         handler: {
           function: {
             handler: "packages/functions/src/events/runner-completed.handler",
+            permissions: ["iot"],
             bind: [bus, ...Object.values(secrets.database)],
           },
         },
