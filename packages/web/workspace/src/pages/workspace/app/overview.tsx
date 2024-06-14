@@ -306,7 +306,7 @@ export function Overview() {
   const ghRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID),
+    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID && !org.time.disconnected),
   );
 
   const local = useLocalContext();
@@ -501,9 +501,8 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${
-                    ghRepo()?.name
-                  }`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
+                    }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />

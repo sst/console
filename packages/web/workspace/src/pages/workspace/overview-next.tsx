@@ -123,7 +123,7 @@ const Card = styled("div", {
 const CardHeader = styled("div", {
   base: {
     ...utility.row(0.5),
-    height: 58,
+    height: 54,
     alignItems: "center",
     justifyContent: "space-between",
     padding: `0 ${theme.space[4]}`,

@@ -384,7 +384,7 @@ function Integrations() {
   const githubOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0),
+    (orgs) => orgs.find(org => !org.time.disconnected)
   );
 
   const [overrideSlack, setOverrideSlack] = createSignal(false);
