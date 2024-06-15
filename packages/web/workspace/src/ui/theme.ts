@@ -111,6 +111,7 @@ const space = {
 const color = {
   base: {
     brand: "13, 88%",
+    yellow: "47, 99%",
     white: "0, 0%",
     black: "240, 28%",
     blue: "198, 39%",
@@ -121,6 +122,7 @@ const color = {
 const light = (() => {
   const base = {
     brand: `${color.base.brand}, 60%`,
+    yellow: `${color.base.yellow}, 51%`,
     white: `${color.base.white}, 100%`,
     black: `${color.base.black}, 14%`,
     blue: `${color.base.blue}, 51%`,
@@ -135,6 +137,15 @@ const light = (() => {
     d1: `${color.base.brand}, 54%`,
     l1: `${color.base.brand}, 66%`,
     l2: `${color.base.brand}, 72%`,
+  };
+
+  const yellow = {
+    d4: `${color.base.yellow}, 27%`,
+    d3: `${color.base.yellow}, 33%`,
+    d2: `${color.base.yellow}, 39%`,
+    d1: `${color.base.yellow}, 45%`,
+    l1: `${color.base.yellow}, 57%`,
+    l2: `${color.base.yellow}, 63%`,
   };
 
   const blue = {
@@ -238,6 +249,7 @@ const light = (() => {
     inset: {
       surface: `0 1px 0 inset hsla(${base.white}, 54%)`,
       accent: `0 1px 0 inset hsla(${brand.l2}, 80%)`,
+      warning: `0 1px 0 inset hsla(${yellow.l2}, 80%)`,
       danger: `0 1px 0 inset hsla(${red.l2}, 80%)`,
       success: `0 1px 0 inset hsla(${blue.l2}, 80%)`,
     },
@@ -277,6 +289,20 @@ const light = (() => {
         opacity: "0.65",
       },
       shadow: `${shadow.inset.accent}, ${shadow.drop.shortDark}`,
+    },
+    warning: {
+      text: text.primary.inverted,
+      color: `hsla(${base.yellow}, 100%)`,
+      active: `hsla(${yellow.d1}, 100%)`,
+      border: `hsla(${yellow.d1}, 100%)`,
+      hover: {
+        color: `hsla(${yellow.l1}, 100%)`,
+        border: `hsla(${yellow.d1}, 100%)`,
+      },
+      disabled: {
+        opacity: "0.65",
+      },
+      shadow: `${shadow.inset.warning}, ${shadow.drop.shortDark}`,
     },
     secondary: {
       text: text.primary.surface,
@@ -339,6 +365,7 @@ const light = (() => {
   return {
     base,
     brand,
+    yellow,
     blue,
     black,
     red,
@@ -358,6 +385,7 @@ const light = (() => {
 const dark = ((): typeof light => {
   const base = {
     brand: `${color.base.brand}, 58%`,
+    yellow: `${color.base.yellow}, 48%`,
     white: `${color.base.white}, 100%`,
     black: `${color.base.black}, 14%`,
     blue: `${color.base.blue}, 56%`,
@@ -372,6 +400,15 @@ const dark = ((): typeof light => {
     d1: `${color.base.brand}, 52%`,
     l1: `${color.base.brand}, 64%`,
     l2: `${color.base.brand}, 70%`,
+  };
+
+  const yellow = {
+    d4: `${color.base.yellow}, 24%`,
+    d3: `${color.base.yellow}, 30%`,
+    d2: `${color.base.yellow}, 36%`,
+    d1: `${color.base.yellow}, 42%`,
+    l1: `${color.base.yellow}, 54%`,
+    l2: `${color.base.yellow}, 60%`,
   };
 
   const blue = {
@@ -475,6 +512,7 @@ const dark = ((): typeof light => {
     inset: {
       surface: "",
       accent: "",
+      warning: "",
       danger: "",
       success: "",
     },
@@ -507,6 +545,20 @@ const dark = ((): typeof light => {
       hover: {
         color: `hsla(${brand.l1}, 100%)`,
         border: `hsla(${brand.l1}, 100%)`,
+      },
+      disabled: {
+        opacity: "0.65",
+      },
+      shadow: shadow.drop.shortDark,
+    },
+    warning: {
+      text: text.primary.surface,
+      color: `hsla(${base.yellow}, 100%)`,
+      active: `hsla(${yellow.d1}, 100%)`,
+      border: `hsla(${base.yellow}, 100%)`,
+      hover: {
+        color: `hsla(${yellow.l1}, 100%)`,
+        border: `hsla(${yellow.l1}, 100%)`,
       },
       disabled: {
         opacity: "0.65",
@@ -574,6 +626,7 @@ const dark = ((): typeof light => {
   return {
     base,
     brand,
+    yellow,
     blue,
     black,
     red,
