@@ -534,6 +534,18 @@ export function Settings() {
   });
 
   const appRepo = () => repoInfo?.value?.appRepo;
+  const ghDisconnected = createMemo(() =>
+    !repoInfo.value?.ghRepoOrg || repoInfo.value?.ghRepoOrg.time.disconnected
+  );
+  const sortedRepos = createMemo(() =>
+    repoInfo.value?.ghRepos
+      ? sortBy(repoInfo.value?.ghRepos!.map((repo) => ({
+        label: repo.name,
+        value: repo.id,
+      })), (repo) => repo.label)
+      : []
+  );
+
   const awsAccounts = createSubscription(AWS.AccountStore.list, []);
   const [editing, setEditing] = createStore<{
     id?: string;
@@ -836,7 +848,7 @@ export function Settings() {
 
   return (
     <>
-      <Header app={app.app.name} />
+      <Header />
       <SettingsRoot>
         <Stack space={PANEL_HEADER_SPACE}>
           <Text size="xl" weight="medium">
@@ -857,10 +869,7 @@ export function Settings() {
             </Text>
           </Stack>
           <GitRepoRoot>
-            <Show when={
-              !overrideGithub()
-              && (!repoInfo.value?.ghRepoOrg || repoInfo.value?.ghRepoOrg.time.disconnected)
-            }>
+            <Show when={!overrideGithub() && ghDisconnected()}>
               <GitOrgError danger={
                 repoInfo.value?.ghRepoOrg?.time.disconnected !== undefined
               }>
@@ -1057,12 +1066,12 @@ export function Settings() {
                   </div>
                 </TargetsRoot>
               </Match>
-              <Match when={true}>
+              <Match when={!ghDisconnected() || overrideGithub()}>
                 <SelectRepoRoot>
                   <FormField
                     class={selectRepo}
                     hint={
-                      repoInfo.value?.ghRepoOrg && repoInfo.value?.ghRepos!.length === 0
+                      repoInfo.value?.ghRepos!.length === 0
                         ? <>
                           Try <Link href="../../settings#github">connecting to a different organization</Link>
                         </>
@@ -1071,30 +1080,19 @@ export function Settings() {
                   >
                     <Select
                       name={SELECT_REPO_NAME}
-                      disabled={
-                        !repoInfo.value?.ghRepoOrg || repoInfo.value?.ghRepos!.length === 0
-                      }
+                      disabled={repoInfo.value?.ghRepos!.length === 0}
                       onChange={(e) => setRepo(e.currentTarget.value)}
                       placeholder={
-                        repoInfo.value?.ghRepoOrg && repoInfo.value?.ghRepos!.length === 0
+                        repoInfo.value?.ghRepos!.length === 0
                           ? "No repos found"
                           : "Select a repo..."
                       }
-                      options={
-                        repoInfo.value?.ghRepoOrg
-                          ? repoInfo.value?.ghRepos!.map((repo) => ({
-                            label: repo.name,
-                            value: repo.id,
-                          }))
-                          : []
-                      }
+                      options={sortedRepos()}
                     />
                   </FormField>
                   <Button
-                    color="secondary"
                     disabled={
-                      !repoInfo.value?.ghRepoOrg
-                      || repoInfo.value?.ghRepos!.length === 0
+                      repoInfo.value?.ghRepos!.length === 0
                       || !repo()
                     }
                     onClick={() => {
