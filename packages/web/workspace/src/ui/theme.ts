@@ -66,7 +66,7 @@ const constants = {
   },
   headerHeight: {
     root: "68px",
-    stage: "56px",
+    stage: "52px",
   },
 };
 

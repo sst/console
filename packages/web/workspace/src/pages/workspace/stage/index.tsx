@@ -15,6 +15,7 @@ import {
   createStageContext,
   StateResourcesProvider,
 } from "./context";
+import { useWorkspace } from "../context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
 import { Updates } from "./updates";
@@ -107,11 +108,33 @@ export function Warning(props: WarningProps) {
   );
 }
 
+const BreadcrumbLink = styled(Link, {
+  base: {
+    color: theme.color.text.dimmed.base,
+    ":hover": {
+      color: theme.color.text.primary.base,
+    },
+  },
+});
+
+const BreadcrumbText = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const BreadcrumbSeparator = styled("span", {
+  base: {
+    color: theme.color.divider.base,
+  },
+});
+
 export function Inner() {
   const flags = useFlags();
   const rep = useReplicache();
   const bar = useCommandBar();
   const ctx = useStageContext();
+  const workspace = useWorkspace();
   const issues = useIssuesContext();
   const issuesCount = createMemo(
     () =>
@@ -179,7 +202,7 @@ export function Inner() {
 
   return (
     <>
-      <Header app={ctx.app.name} stage={ctx.stage.name} />
+      <Header />
       <Switch>
         <Match when={ctx.stage.unsupported}>
           <Fullscreen inset="root">
@@ -203,32 +226,44 @@ export function Inner() {
         </Match>
         <Match when={true}>
           <PageHeader>
-            <Row space="5" vertical="center">
-              <Link href="resources">
-                <TabTitle>Resources</TabTitle>
-              </Link>
-              <Show when={updates().length > 0}>
-                <Link href="updates">
-                  <TabTitle>Updates</TabTitle>
+            <Row space="2">
+              <Row space="2" vertical="center">
+                <BreadcrumbLink href={`/${workspace().slug}/${ctx.app.name}`}>
+                  {ctx.app.name}
+                </BreadcrumbLink>
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                <BreadcrumbLink href={`/${workspace().slug}/${ctx.app.name}/${ctx.stage.name}`}>
+                  {ctx.stage.name}
+                </BreadcrumbLink>
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
+              </Row>
+              <Row space="5" vertical="center">
+                <Link href="resources">
+                  <TabTitle>Resources</TabTitle>
                 </Link>
-              </Show>
-              <Link href="issues">
-                <TabTitle
-                  count={issuesCount() ? issuesCount().toString() : undefined}
-                >
-                  Issues
-                </TabTitle>
-              </Link>
-              <Show when={updates().length > 0}>
-                <Link href="logs">
-                  <TabTitle>Logs</TabTitle>
+                <Show when={updates().length > 0}>
+                  <Link href="updates">
+                    <TabTitle>Updates</TabTitle>
+                  </Link>
+                </Show>
+                <Link href="issues">
+                  <TabTitle
+                    count={issuesCount() ? issuesCount().toString() : undefined}
+                  >
+                    Issues
+                  </TabTitle>
                 </Link>
-              </Show>
-              <Show when={ctx.connected}>
-                <Link href="local">
-                  <TabTitle>Local</TabTitle>
-                </Link>
-              </Show>
+                <Show when={updates().length > 0}>
+                  <Link href="logs">
+                    <TabTitle>Logs</TabTitle>
+                  </Link>
+                </Show>
+                <Show when={ctx.connected}>
+                  <Link href="local">
+                    <TabTitle>Local</TabTitle>
+                  </Link>
+                </Show>
+              </Row>
             </Row>
             <Show when={header.children}>{header.children}</Show>
           </PageHeader>

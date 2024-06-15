@@ -471,7 +471,7 @@ export function Overview() {
 
   return (
     <>
-      <Header app={app.app.name} />
+      <Header />
       <Root>
         <Stack space="4">
           <Row space="5" vertical="center" horizontal="between">

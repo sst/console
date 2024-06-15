@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 import { AppContext, createAppContext, useAppContext } from "./context";
-import { Header, HeaderProvider, useHeaderContext } from "../header";
+import { HeaderProvider } from "../header";
 import { Route, Routes, useNavigate } from "@solidjs/router";
 import { NotFound } from "$/pages/not-found";
 import { Stage } from "../stage";
