@@ -480,7 +480,7 @@ export function OverviewNext() {
                     : expandApp(props.app.id);
                 }}
               >
-                <Show when={showOverflow()} fallback="Show all apps">
+                <Show when={showOverflow()} fallback="Show all stages">
                   Hide
                 </Show>
               </TextButton>

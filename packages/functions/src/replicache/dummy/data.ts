@@ -20,15 +20,17 @@ export type DummyMode =
   // Overview
   | "overview:full"
   // Logs
-  | "overview:base;logs:base"
+  | "overview:base;logs:full"
   // Issues
-  | "overview:base;issues:base"
+  | "overview:base;issues:full"
   // Alerts
-  | "overview:base;alerts:base"
+  | "overview:base;alerts:full"
   // Updates
-  | "overview:base;updates:base"
+  | "overview:base;updates:full"
+  // Accounts
+  | "overview:base;accounts:full"
   // Resources
-  | "overview:base;resources:base"
+  | "overview:base;resources:full"
   // With billing details
   | "overview:base;usage:overage;subscription:active"
   // Ask for billing details
@@ -97,6 +99,10 @@ export function* generateData(
     yield* updatesBase();
   }
 
+  if (modeMap["accounts"]) {
+    yield* accountsFull();
+  }
+
   if (modeMap["resources"]) {
     yield* stageBase();
     yield* stageEmpty();
@@ -123,7 +129,7 @@ export function* generateData(
     yield* issueMissingSourcemap();
   }
 
-  if (modeMap["alerts"] === "base") {
+  if (modeMap["alerts"]) {
     yield* issueAlertsStar();
     yield* issueAlertsSingle();
     yield* issueAlertsSingleTo();
@@ -434,7 +440,7 @@ function* workspaceBase(): Generator<DummyData, void, unknown> {
 
 function* overviewFull(): Generator<DummyData, void, unknown> {
   yield user({ email: "invited-dummy@example.com" });
-  yield user({ email: "invited-dummy-with-long-email-address@example.com" });
+  yield user({ email: "invited-dummy-with-long-email-address-that-should-overflow-because-its-too-long@example.com" });
   yield user({
     email: "deleted-dummy@example.com",
     active: true,
@@ -530,7 +536,7 @@ function* overviewLongApps(): Generator<DummyData, void, unknown> {
   yield account({ id: ACCOUNT_ID_LONG_APPS, accountID: "123456789020" });
   yield app({
     id: APP_ID_LONG,
-    name: "my-sst-app-that-has-a-really-long-name-that-should-be-truncated",
+    name: "my-sst-app-that-has-a-really-long-name-that-should-be-truncated-because-its-too-long",
   });
   yield stage({
     id: "stage-long-id-1",
@@ -538,7 +544,7 @@ function* overviewLongApps(): Generator<DummyData, void, unknown> {
     awsAccountID: ACCOUNT_ID_LONG_APPS,
   });
   yield stage({
-    id: "this-stage-name-is-really-long-and-needs-to-be-truncated",
+    id: "this-stage-name-is-really-long-and-needs-to-be-truncated-because-its-too-long",
     appID: APP_ID_LONG,
     region: "ap-southeast-1",
     awsAccountID: ACCOUNT_ID_LONG_APPS,
@@ -1223,6 +1229,25 @@ function* stageIonLogsEmptyInternals(): Generator<DummyData, void, unknown> {
     type: "sst:aws:Function",
     parent: STACK_URN,
     urn: FN_URN,
+  });
+}
+
+function* accountsFull(): Generator<DummyData, void, unknown> {
+  yield account({
+    id: "syncing",
+    accountID: "123456789013",
+    syncing: true,
+  });
+  yield account({
+    id: "failed",
+    accountID: "123456789014",
+    failed: true,
+  });
+  yield account({
+    id: "syncing-failed",
+    accountID: "123456789015",
+    syncing: true,
+    failed: true,
   });
 }
 

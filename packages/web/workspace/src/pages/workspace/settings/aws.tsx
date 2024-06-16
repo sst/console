@@ -6,7 +6,7 @@ import { IconEllipsisVertical, IconExclamationTriangle } from "$/ui/icons";
 import { IconAws, IconAdd, IconArrowPathSpin } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
 import { Link } from "@solidjs/router";
-import { For, Show } from "solid-js";
+import { For, Show, Switch, Match } from "solid-js";
 
 const Root = styled("div", {
   base: {
@@ -43,9 +43,13 @@ const CardDesc = styled("p", {
 
 const CardError = styled(Link, {
   base: {
+    textUnderlineOffset: 3,
     textDecoration: "underline",
     fontSize: theme.font.size.sm,
     color: `hsla(${theme.color.base.red}, 100%)`,
+    ":hover": {
+      color: `hsla(${theme.color.base.red}, 100%)`,
+    },
   },
 });
 
@@ -136,7 +140,7 @@ export function AWS() {
       <Root>
         <Show when={accounts.value.length} fallback={
           <Link href="../account">
-            <Button color="secondary">Add AWS Account</Button>
+            <Button>Connect an AWS Account</Button>
           </Link>
         }>
           <Stack space="7">
@@ -150,36 +154,44 @@ export function AWS() {
                       <Show when={account.timeFailed} fallback={
                         <CardDesc>Connected</CardDesc>
                       }>
-                        <CardError href="../account">
-                          <CardErrorCopy>Reconnect account</CardErrorCopy>
-                        </CardError>
+                        <CardDesc>Disconnected</CardDesc>
                       </Show>
                     </Stack>
                   </CardLeft>
                   <CardRight>
-                    <Show when={!account.timeDiscovered && !account.timeFailed}>
-                      <CardStatus>
-                        <CardStatusIcon status="info">
-                          <IconArrowPathSpin />
-                        </CardStatusIcon>
-                        <CardStatusCopy>
-                          Searching for SST apps&hellip;
-                        </CardStatusCopy>
-                      </CardStatus>
-                    </Show>
+                    <Switch>
+                      <Match when={account.timeFailed}>
+                        <CardStatus>
+                          <CardStatusIcon status="error">
+                            <IconExclamationTriangle />
+                          </CardStatusIcon>
+                          <CardError href="../account">
+                            Reconnect account
+                          </CardError>
+                        </CardStatus>
+                      </Match>
+                      <Match when={!account.timeDiscovered && !account.timeFailed}>
+                        <CardStatus>
+                          <CardStatusIcon status="info">
+                            <IconArrowPathSpin />
+                          </CardStatusIcon>
+                          <CardStatusCopy>
+                            Searching for SST apps&hellip;
+                          </CardStatusCopy>
+                        </CardStatus>
+                      </Match>
+                    </Switch>
                     <CardActions>
                       <Button
                         color="secondary"
-                        disabled={account.timeDiscovered === null}
+                        disabled={
+                          account.timeDiscovered === null || account.timeFailed !== null
+                        }
                         onClick={() => {
                           rep().mutate.aws_account_scan(account.id);
-                        }}>
-                        <Show
-                          when={account.timeDiscovered}
-                          fallback="Rescanning…"
-                        >
-                          Rescan
-                        </Show>
+                        }}
+                      >
+                        Rescan
                       </Button>
                       <Dropdown
                         icon={<IconEllipsisVertical width={18} height={18} />}
