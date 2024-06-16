@@ -2,6 +2,7 @@
 /** @typedef {import("aws-lambda").Context} Context */
 import { spawnSync } from "child_process";
 import fs from "fs";
+import semver from "semver";
 import {
   EventBridgeClient,
   PutEventsCommand,
@@ -33,21 +34,13 @@ export async function handler(event, context) {
       timestamp: Date.now(),
     });
 
-    const invokedAt = Date.now();
-
     checkout();
-    const checkedOutAt = Date.now();
-    console.log("checkoutDuration:", checkedOutAt - invokedAt + "ms");
-
+    await checkSstVersion();
     installDependencies();
-    const depsInstalledAt = Date.now();
-    console.log("depsInstallDuration:", depsInstalledAt - checkedOutAt + "ms");
 
     if (event.warm) return "warmed";
 
     deploy();
-    const deployedAt = Date.now();
-    console.log("deployDuration:", deployedAt - depsInstalledAt + "ms");
   } catch (e) {
     error = e.message;
   } finally {
@@ -75,11 +68,42 @@ export async function handler(event, context) {
     }
   }
 
+  async function checkSstVersion() {
+    const content = fs.readFileSync("sst.config.ts", "utf8");
+    const matches = content.match(/version:\s*"(.*)"/);
+    if (!matches) return;
+
+    // check current version
+    const semverPattern = matches[1];
+    console.log({ semverPattern });
+    const installedVersion = shell("sst version", { stdio: "pipe" })
+      .stdout.toString()
+      .trim();
+    console.log({ installedVersion });
+    if (semver.satisfies(installedVersion, semverPattern)) return;
+
+    for (let i = 1; ; i++) {
+      const releases = await fetch(
+        `https://api.github.com/repos/sst/ion/releases?per_page=100&page=${i}`
+      ).then((res) => res.json());
+      if (releases.length === 0) break;
+
+      const release = releases.find((release) =>
+        semver.satisfies(release.tag_name.replace(/^v/, ""), semverPattern)
+      );
+      if (release) {
+        shell(`sst upgrade ${release.tag_name.replace(/^v/, "")}`);
+        break;
+      }
+    }
+  }
+
   function installDependencies() {
     process.chdir(REPO_PATH);
 
     if (fs.existsSync("yarn.lock")) shell("yarn install");
     else if (fs.existsSync("pnpm-lock.yaml")) {
+      shell("npm install -g pnpm");
       shell("pnpm install");
     } else if (fs.existsSync("bun.lockb")) {
       shell("npm install -g bun");
@@ -124,6 +148,7 @@ export async function handler(event, context) {
     if (ret.status !== 0) {
       throw new Error(`Failed to run: ${command}`);
     }
+    return ret;
   }
 
   /**

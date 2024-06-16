@@ -300,7 +300,7 @@ export module CodebuildRunner {
             "      - mkdir -p /tmp/buildspec",
             `      - curl -o /tmp/buildspec/index.mjs https://${payload.buildspec.bucket}.s3.amazonaws.com/buildspec/${payload.buildspec.version}/index.mjs`,
             `      - echo '{"name":"buildspec"}' > /tmp/buildspec/package.json`,
-            `      - cd /tmp/buildspec && npm i @aws-sdk/client-eventbridge`,
+            `      - cd /tmp/buildspec && npm i @aws-sdk/client-eventbridge semver`,
             [
               `      - node --input-type=module -e "`,
               `import { handler } from '/tmp/buildspec/index.mjs';`,
