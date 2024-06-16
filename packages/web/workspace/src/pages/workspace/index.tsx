@@ -97,7 +97,6 @@ export function Content() {
   bar.register("stage-switcher", async (input, global) => {
     if (!input && global) return [];
     return stages().map((stage) => {
-      console.log(apps.value);
       const app = apps.value.find((item) => item.id === stage.appID)!;
       return NavigationAction({
         icon: IconApp,

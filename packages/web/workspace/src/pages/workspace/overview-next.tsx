@@ -32,7 +32,7 @@ import {
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
 import type { App, Stage } from "@console/core/app";
-import { IconApp, IconCommit, IconGitHub } from "$/ui/icons/custom";
+import { IconApp, IconCommit, IconGitHub, IconArrowPathSpin } from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
@@ -118,6 +118,16 @@ const Card = styled("div", {
     borderRadius: theme.borderRadius,
     border: `1px solid ${theme.color.divider.base}`,
   },
+  variants: {
+    empty: {
+      true: {
+        height: 200,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      },
+    },
+  },
 });
 
 const CardHeader = styled("div", {
@@ -202,52 +212,6 @@ const RepoLinkIcon = styled("span", {
         color: theme.color.text.primary.surface,
       },
     },
-  },
-});
-
-const RepoConnectLink = styled(Link, {
-  base: {
-    ...utility.row(0),
-    gap: 4,
-    alignItems: "center",
-    color: theme.color.text.dimmed.base,
-    ":hover": {
-      color: theme.color.text.secondary.base,
-    },
-  },
-});
-
-const RepoConnectLinkCopy = styled("span", {
-  base: {
-    ...utility.text.label,
-    fontSize: theme.font.size.mono_sm,
-  },
-});
-
-const RepoConnectLinkIcon = styled("span", {
-  base: {
-    lineHeight: "normal",
-    opacity: theme.iconOpacity,
-  },
-});
-
-const RepoLinkSeparator = styled("span", {
-  base: {
-    color: theme.color.text.dimmed.base,
-    paddingInline: 3,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    selectors: {
-      [`${RepoLink}:hover &`]: {
-        color: theme.color.text.secondary.base,
-      },
-    },
-  },
-});
-
-const CardErrorCopy = styled(Text, {
-  base: {
-    fontSize: theme.font.size.sm,
-    color: `hsla(${theme.color.base.red}, 100%)`,
   },
 });
 
@@ -564,7 +528,20 @@ export function OverviewNext() {
                 </Row>
                 <Row space="4">
                   <Col>
-                    <For each={cols()[0]}>{(app) => <AppCard app={app} />}</For>
+                    <Show when={cols()[0].length} fallback={
+                      <Card empty>
+                        <CardStatus>
+                          <CardStatusIcon status="info">
+                            <IconArrowPathSpin />
+                          </CardStatusIcon>
+                          <Text color="dimmed">
+                            Searching for apps&hellip;
+                          </Text>
+                        </CardStatus>
+                      </Card>
+                    }>
+                      <For each={cols()[0]}>{(app) => <AppCard app={app} />}</For>
+                    </Show>
                   </Col>
                   <Col>
                     <Card>

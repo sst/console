@@ -6,6 +6,8 @@ import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
 import { State } from "@console/core/state";
 import { App, Stage } from "@console/core/app";
+import { AppRepo } from "@console/core/app/repo";
+import { Github } from "@console/core/git/github";
 import { Warning } from "@console/core/warning";
 import { Workspace } from "@console/core/workspace";
 import { Resource } from "@console/core/app/resource";
@@ -15,6 +17,8 @@ import { StackFrame, ParsedError, Invocation } from "@console/core/log";
 export type DummyMode =
   // Waiting to connect
   | "empty"
+  // No apps
+  | "overview:empty"
   // Default
   | "overview:base"
   // Overview
@@ -71,10 +75,14 @@ export function* generateData(
   yield user({ email: USER_ID, active: true });
 
   if (modeMap["overview"]) {
-    yield* workspaceBase();
-    yield* stageLocal();
+    yield* workspaceEmpty();
 
     yield usage({ day: "2021-01-01", invocations: 100 });
+  }
+
+  if (modeMap["overview"] === "base") {
+    yield* workspaceBase();
+    yield* stageLocal();
   }
 
   if (modeMap["overview"] === "full") {
@@ -172,6 +180,9 @@ export function* generateData(
 
 type DummyData =
   | (Run.Run & { _type: "run" })
+  | (AppRepo.Repo & { _type: "appRepo" })
+  | (Github.Org & { _type: "githubOrg" })
+  | (Github.Repo & { _type: "githubRepo" })
   | (DummyConfig & { _type: "dummyConfig" })
   | (Workspace.Info & { _type: "workspace" })
   | (State.Update & { _type: "stateUpdate" })
@@ -202,9 +213,10 @@ const USER_ID_ISSUE_7 = "issue-alert_7@example.com";
 const USER_ID_ISSUE_8 = "issue-alert_8@example.com";
 const USER_ID_ISSUE_9 = "issue-alert_9@example.com";
 
-const APP_ID = "1";
-const APP_ID_LONG = "2";
-const APP_LOCAL = "my-sst-app";
+const APP_ID = "111";
+const APP_ID_LONG = "234";
+const APP_LOCAL = "123";
+const APP_LOCAL_NAME = "my-sst-app";
 const APP_ISSUE_1 = "sst-app-issue-1";
 const APP_ISSUE_2 = "sst-app-issue-2";
 const APP_ISSUE_3 = "sst-app-issue-3";
@@ -216,6 +228,9 @@ const APP_ISSUE_8 = "sst-app-issue-8";
 const APP_ISSUE_9 = "sst-app-issue-9";
 const APP_ISSUE_ALERT_LONG =
   "mysstappissealertlongshouldoverflowbecaseitistoolongandshouldnotfitintheboxbecauseitstoolonganditkeepsgoingandgoing";
+
+const GITHUB_ORG = 100;
+const GITHUB_REPO = 100;
 
 const STACK = "stack-base";
 const STACK_LOCAL = "stack-local";
@@ -428,14 +443,20 @@ function stringToObject(input: string): { [key: string]: string } {
   return result;
 }
 
-function* workspaceBase(): Generator<DummyData, void, unknown> {
+function* workspaceEmpty(): Generator<DummyData, void, unknown> {
   yield account({ id: ACCOUNT_ID, accountID: "123456789012" });
-  yield app({ id: APP_LOCAL });
+}
+
+function* workspaceBase(): Generator<DummyData, void, unknown> {
+  yield app({ id: APP_LOCAL, name: APP_LOCAL_NAME });
   yield stage({
     id: STAGE_LOCAL,
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
   });
+  yield githubOrg({ id: GITHUB_ORG, name: "jayair" });
+  yield githubRepo({ id: GITHUB_REPO, name: "ion-sandbox", githubOrgID: GITHUB_ORG });
+  yield appRepo({ id: 100, appID: APP_LOCAL, repoID: GITHUB_REPO });
 }
 
 function* overviewFull(): Generator<DummyData, void, unknown> {
@@ -447,7 +468,7 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
     deleted: true,
   });
 
-  yield* overviewSortApps();
+  // yield* overviewSortApps();
   yield* overviewLongApps();
 
   yield app({ id: APP_ID, name: "my-sst-app" });
@@ -3624,5 +3645,77 @@ function dummyRepo(senderID?: number) {
     repoName: "ion-sandbox",
     senderID: senderID || 53023,
     senderUsername: "jayair",
+  };
+}
+
+interface GithubOrgProps {
+  id: number;
+  name: string;
+}
+function githubOrg({
+  id,
+  name,
+}: GithubOrgProps): DummyData {
+  return {
+    _type: "githubOrg",
+    id: id.toString(),
+    login: name,
+    time: {
+      deleted: undefined,
+      disconnected: undefined,
+      created: DateTime.now().startOf("day").toISO()!,
+      updated: DateTime.now().startOf("day").toISO()!,
+    },
+    externalOrgID: 123,
+    installationID: 123,
+  };
+}
+
+interface GithubRepoProps {
+  id: number;
+  name: string;
+  githubOrgID: number;
+}
+function githubRepo({
+  id,
+  name,
+  githubOrgID,
+}: GithubRepoProps): DummyData {
+  return {
+    _type: "githubRepo",
+    id: id.toString(),
+    name,
+    githubOrgID: githubOrgID.toString(),
+    externalRepoID: 123,
+    time: {
+      created: DateTime.now().startOf("day").toISO()!,
+      updated: DateTime.now().startOf("day").toISO()!,
+    },
+  };
+}
+
+interface AppRepoProps {
+  id: number;
+  appID: string;
+  repoID: number;
+}
+function appRepo({
+  id,
+  appID,
+  repoID,
+}: AppRepoProps): DummyData {
+  return {
+    _type: "appRepo",
+    id: id.toString(),
+    appID,
+    type: "github",
+    repoID: repoID.toString(),
+    time: {
+      created: DateTime.now().startOf("day").toISO()!,
+      updated: DateTime.now().startOf("day").toISO()!,
+    },
+    lastEvent: undefined,
+    lastEventID: undefined,
+    lastEventStatus: undefined,
   };
 }
