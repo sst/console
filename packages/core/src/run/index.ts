@@ -582,6 +582,7 @@ export module Run {
         await State.completeUpdate({
           updateIDs: [run.stateUpdateID],
           time: timeCompleted,
+          error,
         });
 
         await createTransactionEffect(() =>
