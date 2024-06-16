@@ -233,6 +233,18 @@ export function Design() {
             Button
           </Button>
         </Variant>
+        <Variant name="Warning">
+          <Button color="warning">Button</Button>
+          <Button data-state-hover color="warning">
+            Button
+          </Button>
+          <Button active color="warning">
+            Button
+          </Button>
+          <Button disabled color="warning">
+            Button
+          </Button>
+        </Variant>
         <Variant name="Success">
           <Button color="success">Button</Button>
           <Button data-state-hover color="success">
@@ -299,6 +311,9 @@ export function Design() {
           <Button size="sm" color="primary">
             Button
           </Button>
+          <Button size="sm" color="warning">
+            Button
+          </Button>
           <Button size="sm" color="secondary">
             Button
           </Button>
@@ -312,6 +327,9 @@ export function Design() {
         <Variant name="Grouped">
           <ButtonGroup>
             <Button grouped="left" color="primary">
+              Resolve
+            </Button>
+            <Button grouped="middle" color="warning">
               Resolve
             </Button>
             <Button grouped="middle" color="secondary">
@@ -329,6 +347,9 @@ export function Design() {
           <ButtonGroup>
             <Button size="sm" grouped="left" color="primary">
               Resolve
+            </Button>
+            <Button size="sm" grouped="middle" color="warning">
+              Ignore
             </Button>
             <Button size="sm" grouped="middle" color="secondary">
               Ignore

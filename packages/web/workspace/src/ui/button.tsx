@@ -19,6 +19,14 @@ const primaryActive: CSSProperties = {
   borderColor: "transparent",
   backgroundColor: theme.color.button.primary.active,
 };
+const warningHover: CSSProperties = {
+  borderColor: theme.color.button.warning.hover.border,
+  backgroundColor: theme.color.button.warning.hover.color,
+};
+const warningActive: CSSProperties = {
+  borderColor: "transparent",
+  backgroundColor: theme.color.button.warning.active,
+};
 const secondaryHover: CSSProperties = {
   borderColor: theme.color.button.secondary.hover.border,
   backgroundColor: theme.color.button.secondary.hover.color,
@@ -112,6 +120,22 @@ export const Button = styled("button", {
           "&:hover": primaryHover,
           "&:active": primaryActive,
           "&[data-state-hover]": primaryHover,
+        },
+      },
+      warning: {
+        backgroundColor: theme.color.button.warning.color,
+        borderColor: theme.color.button.warning.border,
+        boxShadow: theme.color.button.warning.shadow,
+        color: theme.color.button.warning.text,
+        ":disabled": {
+          boxShadow: "none",
+          borderColor: "transparent",
+          opacity: theme.color.button.warning.disabled.opacity,
+        },
+        selectors: {
+          "&:hover": warningHover,
+          "&:active": warningActive,
+          "&[data-state-hover]": warningHover,
         },
       },
       secondary: {

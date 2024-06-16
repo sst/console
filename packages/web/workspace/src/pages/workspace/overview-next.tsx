@@ -123,7 +123,7 @@ const Card = styled("div", {
 const CardHeader = styled("div", {
   base: {
     ...utility.row(0.5),
-    height: 58,
+    height: 54,
     alignItems: "center",
     justifyContent: "space-between",
     padding: `0 ${theme.space[4]}`,
@@ -675,7 +675,7 @@ const StageIcon = styled("div", {
         backgroundColor: `hsla(${theme.color.base.red}, 100%)`,
       },
       updating: {
-        backgroundColor: `hsla(${theme.color.base.brand}, 100%)`,
+        backgroundColor: `hsla(${theme.color.base.yellow}, 100%)`,
         animation: "glow-pulse-status 1.7s linear infinite alternate",
       },
     },

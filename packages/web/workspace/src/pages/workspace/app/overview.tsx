@@ -6,6 +6,7 @@ import {
   Stack,
   Button,
   utility,
+  ButtonIcon,
   TextButton,
 } from "$/ui";
 import { DateTime } from "luxon";
@@ -174,7 +175,7 @@ const CardIcon = styled("div", {
         backgroundColor: `hsla(${theme.color.base.red}, 100%)`,
       },
       updating: {
-        backgroundColor: `hsla(${theme.color.base.brand}, 100%)`,
+        backgroundColor: `hsla(${theme.color.base.yellow}, 100%)`,
         animation: "glow-pulse-status 1.7s linear infinite alternate",
       },
     },
@@ -306,7 +307,7 @@ export function Overview() {
   const ghRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID),
+    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID && !org.time.disconnected),
   );
 
   const local = useLocalContext();
@@ -470,7 +471,7 @@ export function Overview() {
 
   return (
     <>
-      <Header app={app.app.name} />
+      <Header />
       <Root>
         <Stack space="4">
           <Row space="5" vertical="center" horizontal="between">
@@ -493,7 +494,12 @@ export function Overview() {
               when={ghRepoOrg()}
               fallback={
                 <Link href="settings#repo">
-                  <Button color="primary">Connect Repo</Button>
+                  <Button color="secondary">
+                    <ButtonIcon>
+                      <IconGitHub />
+                    </ButtonIcon>
+                    Select Repo
+                  </Button>
                 </Link>
               }
             >
@@ -501,9 +507,8 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${
-                    ghRepo()?.name
-                  }`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
+                    }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />
