@@ -34,6 +34,7 @@ export const Resource = z.discriminatedUnion("engine", [
 export type Resource = z.infer<typeof Resource>;
 export const Engine = ["lambda", "codebuild"] as const;
 export const Architecture = ["x86_64", "arm64"] as const;
+export const Compute = ["small", "medium", "large", "xlarge"] as const;
 
 export const Log = z.discriminatedUnion("engine", [
   z.object({
@@ -99,6 +100,8 @@ export const AutodeployConfig = z.object({
       engine: z.enum(Engine).optional(),
       architecture: z.enum(Architecture).optional(),
       image: z.string().nonempty().optional(),
+      compute: z.enum(Compute).optional(),
+      timeout: z.string().optional(),
     })
     .optional(),
   target: z.object({
@@ -121,8 +124,7 @@ export const runnerTable = mysqlTable(
     region: varchar("region", { length: 255 }).notNull(),
     appRepoID: cuid("app_repo_id").notNull(),
     engine: mysqlEnum("engine", Engine).notNull(),
-    architecture: mysqlEnum("architecture", Architecture).notNull(),
-    image: varchar("image", { length: 255 }).notNull(),
+    type: varchar("type", { length: 255 }).notNull(),
     resource: json("resource").$type<Resource>(),
     warmer: varchar("warmer", { length: 255 }),
   },

@@ -19,13 +19,13 @@ import {
 } from "@aws-sdk/client-iam";
 import { Config } from "sst/node/config";
 import { zod } from "../util/zod";
-import { Resource, Architecture } from "./run.sql";
+import { Resource, Architecture, Compute } from "./run.sql";
 import { RETRY_STRATEGY } from "../util/aws";
 import { Credentials } from "../aws";
 import { Run } from ".";
 
 export module LambdaRunner {
-  export const BUILD_TIMEOUT = 960000; // 16 minutes
+  export const DEFAULT_BUILD_TIMEOUT_IN_MINUTES = 15; // 15 minutes
 
   export const getImage = zod(z.enum(Architecture), (architecture) =>
     architecture === "x86_64"
@@ -41,6 +41,7 @@ export module LambdaRunner {
       suffix: z.string().nonempty(),
       image: z.string().nonempty(),
       architecture: z.enum(Architecture),
+      compute: z.enum(Compute),
     }),
     async ({
       credentials,
@@ -262,6 +263,7 @@ export module LambdaRunner {
       region: z.string().nonempty(),
       resource: z.custom<Resource>(),
       payload: z.custom<Run.RunnerEvent>(),
+      timeoutInMinutes: z.number().int(),
     }),
     async ({ credentials, region, resource, payload }) => {
       if (resource.engine !== "lambda") return;

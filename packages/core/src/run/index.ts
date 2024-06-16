@@ -5,16 +5,7 @@ import {
   SchedulerClient,
 } from "@aws-sdk/client-scheduler";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
-import {
-  AttachRolePolicyCommand,
-  PutRolePolicyCommand,
-  CreateRoleCommand,
-  GetRoleCommand,
-  IAMClient,
-  DeleteRoleCommand,
-  DetachRolePolicyCommand,
-  DeleteRolePolicyCommand,
-} from "@aws-sdk/client-iam";
+import { GetRoleCommand, IAMClient } from "@aws-sdk/client-iam";
 import {
   EventBridgeClient,
   PutRuleCommand,
@@ -56,6 +47,7 @@ import { CodebuildRunner } from "./codebuild-runner";
 export module Run {
   const DEFAULT_ENGINE = "codebuild";
   const DEFAULT_ARCHITECTURE = "x86_64";
+  const DEFAULT_COMPUTE = "small";
   const RUNNER_INACTIVE_TIME = 604800000; // 1 week
   const RUNNER_WARMING_INTERVAL = 300000; // 5 minutes
   const RUNNER_WARMING_INACTIVE_TIME = 86400000; // 1 day
@@ -205,6 +197,20 @@ export module Run {
       error: input.error || undefined,
     };
   }
+
+  const timeoutToMinutes = (timeout?: string) => {
+    if (!timeout) return;
+
+    const [count, unit] = timeout.split(" ");
+    if (count === undefined) return;
+    const countNum = parseInt(count);
+    if (isNaN(countNum)) return;
+
+    if (unit === "hour" || unit === "hours") return countNum * 60;
+    if (unit === "minute" || unit === "minutes") return countNum;
+
+    return;
+  };
 
   export const parseSstConfig = zod(
     z.object({
@@ -434,6 +440,9 @@ export module Run {
 
       // Run runner
       const Runner = useRunner(runner.engine);
+      const timeoutInMinutes =
+        timeoutToMinutes(run.config.runner?.timeout) ??
+        Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
       await Runner.invoke({
         credentials: awsConfig.credentials,
         region: runner.region,
@@ -457,6 +466,7 @@ export module Run {
           credentials: awsConfig.credentials,
           trigger: run.trigger,
         },
+        timeoutInMinutes,
       });
 
       // Update runner's last run time
@@ -490,7 +500,7 @@ export module Run {
       await complete({
         runID: run.id,
         error:
-          e instanceof CodebuildRunner.UnsupportedArmRegionError
+          e instanceof CodebuildRunner.CreateResourceError
             ? e.message
             : `Failed to ${context}`,
       });
@@ -499,6 +509,9 @@ export module Run {
 
     // Schedule timeout monitor
     const Runner = useRunner(runner.engine);
+    const timeoutInMinutes =
+      timeoutToMinutes(run.config.runner?.timeout) ??
+      Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
     const scheduler = new SchedulerClient({ retryStrategy: RETRY_STRATEGY });
     await scheduler.send(
       new CreateScheduleCommand({
@@ -508,7 +521,7 @@ export module Run {
           Mode: "OFF",
         },
         ScheduleExpression: `at(${
-          new Date(Date.now() + Runner.BUILD_TIMEOUT)
+          new Date(Date.now() + (timeoutInMinutes + 1) * 60000)
             .toISOString()
             .split(".")[0]
         })`,
@@ -718,6 +731,8 @@ export module Run {
       const architecture =
         input.runnerConfig?.architecture ?? DEFAULT_ARCHITECTURE;
       const image = input.runnerConfig?.image ?? Runner.getImage(architecture);
+      const compute = input.runnerConfig?.compute ?? DEFAULT_COMPUTE;
+      const type = `${engine}-${architecture}-${image}-${compute}`;
       return await useTransaction((tx) =>
         tx
           .select()
@@ -729,8 +744,7 @@ export module Run {
               eq(runnerTable.appRepoID, input.appRepoID),
               eq(runnerTable.region, input.region),
               eq(runnerTable.engine, engine),
-              eq(runnerTable.architecture, architecture),
-              eq(runnerTable.image, image)
+              eq(runnerTable.type, type)
             )
           )
           .execute()
@@ -757,13 +771,12 @@ export module Run {
       const architecture =
         input.runnerConfig?.architecture ?? DEFAULT_ARCHITECTURE;
       const image = input.runnerConfig?.image ?? Runner.getImage(architecture);
+      const compute = input.runnerConfig?.compute ?? DEFAULT_COMPUTE;
+      const type = `${engine}-${architecture}-${image}-${compute}`;
       const runnerSuffix =
         architecture +
         "-" +
-        createHash("sha256")
-          .update(`${engine}${architecture}${image}`)
-          .digest("hex")
-          .substring(0, 8) +
+        createHash("sha256").update(type).digest("hex").substring(0, 8) +
         (Config.STAGE !== "production" ? "-" + Config.STAGE : "");
 
       const runnerID = createId();
@@ -780,8 +793,7 @@ export module Run {
               appRepoID: input.appRepoID,
               region,
               engine,
-              architecture,
-              image,
+              type,
             })
             .execute()
         );
@@ -794,6 +806,7 @@ export module Run {
           suffix: runnerSuffix,
           image,
           architecture,
+          compute,
         });
 
         // Create event target in user account to forward external events
@@ -937,6 +950,7 @@ export module Run {
                 cloneUrl,
                 credentials,
               },
+              timeoutInMinutes: Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES,
             })
           )
       );

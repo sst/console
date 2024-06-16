@@ -96,7 +96,7 @@ export async function handler(event, context) {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
         AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
         AWS_SESSION_TOKEN: credentials.sessionToken,
-        SST_CI: "1",
+        SST_AWS_NO_PROFILE: "1",
         SST_UPDATE_ID: stateUpdateID,
       },
     });

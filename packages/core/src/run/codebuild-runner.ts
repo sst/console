@@ -4,6 +4,7 @@ import {
   DeleteProjectCommand,
   StartBuildCommand,
   CodeBuildClient,
+  ComputeType,
 } from "@aws-sdk/client-codebuild";
 import {
   PutRolePolicyCommand,
@@ -14,15 +15,15 @@ import {
   DeleteRolePolicyCommand,
 } from "@aws-sdk/client-iam";
 import { zod } from "../util/zod";
-import { Resource, Architecture } from "./run.sql";
+import { Resource, Architecture, Compute } from "./run.sql";
 import { RETRY_STRATEGY } from "../util/aws";
 import { Credentials } from "../aws";
 import { Run } from ".";
 
 export module CodebuildRunner {
-  export const BUILD_TIMEOUT = 5400000; // 1.5 hours
+  export const DEFAULT_BUILD_TIMEOUT_IN_MINUTES = 60; // 60 minutes
 
-  export class UnsupportedArmRegionError extends Error {}
+  export class CreateResourceError extends Error {}
 
   export const getImage = zod(z.enum(Architecture), (architecture) =>
     architecture === "x86_64"
@@ -38,6 +39,7 @@ export module CodebuildRunner {
       suffix: z.string().nonempty(),
       image: z.string().nonempty(),
       architecture: z.enum(Architecture),
+      compute: z.enum(Compute),
     }),
     async ({
       credentials,
@@ -46,7 +48,15 @@ export module CodebuildRunner {
       suffix,
       image,
       architecture,
+      compute,
     }): Promise<Resource> => {
+      if (architecture === "arm64") {
+        if (compute !== "small" && compute !== "large")
+          throw new CreateResourceError(
+            `AWS CodeBuild does not support "${compute}" compute size for ARM architecture`
+          );
+      }
+
       const sdkConfig = {
         credentials,
         region,
@@ -158,7 +168,12 @@ export module CodebuildRunner {
               },
               artifacts: { type: "NO_ARTIFACTS" },
               environment: {
-                computeType: "BUILD_GENERAL1_SMALL",
+                computeType: {
+                  small: "BUILD_GENERAL1_SMALL" as const,
+                  medium: "BUILD_GENERAL1_MEDIUM" as const,
+                  large: "BUILD_GENERAL1_LARGE" as const,
+                  xlarge: "BUILD_GENERAL1_XLARGE" as const,
+                }[compute] as ComputeType,
                 image,
                 type:
                   architecture === "x86_64"
@@ -180,7 +195,7 @@ export module CodebuildRunner {
             e.name === "InvalidInputException" &&
             e.message === `Region ${region} is not supported for ARM_CONTAINER`
           )
-            throw new UnsupportedArmRegionError(
+            throw new CreateResourceError(
               `AWS CodeBuild does not support ARM architecture in ${region} region`
             );
           else if (
@@ -261,8 +276,9 @@ export module CodebuildRunner {
       region: z.string().nonempty(),
       resource: z.custom<Resource>(),
       payload: z.custom<Run.RunnerEvent>(),
+      timeoutInMinutes: z.number().int(),
     }),
-    async ({ credentials, region, resource, payload }) => {
+    async ({ credentials, region, resource, payload, timeoutInMinutes }) => {
       if (resource.engine !== "codebuild") return;
 
       const codebuild = new CodeBuildClient({
@@ -302,6 +318,7 @@ export module CodebuildRunner {
               value: JSON.stringify(payload),
             },
           ],
+          timeoutInMinutesOverride: timeoutInMinutes,
         })
       );
     }
