@@ -43,10 +43,10 @@ import {
   flatMap,
   groupBy,
   map,
-  maxBy,
   pipe,
   sortBy,
-  toPairs,
+  entries,
+  nthBy,
 } from "remeda";
 import { User } from "@console/core/user";
 import { useAuth2 } from "$/providers/auth2";
@@ -367,7 +367,7 @@ export function OverviewNext() {
       groupBy(
         (s) => `${apps.value.find((a) => a.id === s.appID)?.name}/${s.name}`,
       ),
-      toPairs,
+      entries,
       filter(([, stages]) => stages.length > 1),
       flatMap(([_, stages]) => stages),
       map((s) => s.id),

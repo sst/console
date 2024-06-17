@@ -44,7 +44,7 @@ import {
   githubCommit,
 } from "$/common/url-builder";
 import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
-import { sortBy } from "remeda";
+import { pipe, sortBy, dropWhile, takeWhile, filter } from "remeda";
 import { useWorkspace } from "../../context";
 import { useAuth2 } from "$/providers/auth2";
 
@@ -442,7 +442,12 @@ export function Detail() {
             }[]
           >,
       );
-      return results;
+      return pipe(
+        results,
+        dropWhile((r) => !r.message.includes("isWarm")),
+        filter((r) => r.message.trim() != ""),
+        takeWhile((r) => !r.message.includes("BUILD State")),
+      );
     },
   );
 

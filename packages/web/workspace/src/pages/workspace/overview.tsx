@@ -31,7 +31,7 @@ import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
 import { Header } from "./header";
 import { useLocalContext } from "$/providers/local";
-import { filter, flatMap, groupBy, map, pipe, sortBy, toPairs } from "remeda";
+import { filter, flatMap, groupBy, map, pipe, sortBy, entries } from "remeda";
 import { User } from "@console/core/user";
 import { useAuth2 } from "$/providers/auth2";
 
@@ -212,7 +212,7 @@ export function Overview() {
     const result = pipe(
       stages(),
       groupBy((s) => `${apps().find((a) => a.id === s.appID)?.name}/${s.name}`),
-      toPairs,
+      entries,
       filter(([, stages]) => stages.length > 1),
       flatMap(([_, stages]) => stages),
       map((s) => s.id),
@@ -267,7 +267,7 @@ export function Overview() {
         stages().filter((stage) => stage.awsAccountID === account.id),
         (c) =>
           apps().find((app) => app.id === c.appID)?.name === local().app &&
-            c.name === local().stage
+          c.name === local().stage
             ? 0
             : 1,
         (c) => (c.unsupported ? 1 : 0),
@@ -563,8 +563,9 @@ function StageCard(props: StageCardProps) {
   const local = useLocalContext();
   return (
     <StageRoot
-      href={`${app()?.name}/${props.ambiguous ? props.stage.id : props.stage.name
-        }`}
+      href={`${app()?.name}/${
+        props.ambiguous ? props.stage.id : props.stage.name
+      }`}
     >
       <Row space="2" vertical="center">
         <StageIcon dimmed={props.stage.unsupported || false}>

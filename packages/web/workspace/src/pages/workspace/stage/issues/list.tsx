@@ -33,7 +33,7 @@ import {
 import { useReplicache } from "$/providers/replicache";
 import { HeaderSlot } from "../../header";
 import { DateTime, Interval } from "luxon";
-import { filter, fromPairs, pipe, sortBy } from "remeda";
+import { filter, fromEntries, pipe, sortBy } from "remeda";
 import { WarningStore } from "$/data/warning";
 import { IssueCountStore } from "$/data/issue";
 import { useCommandBar } from "../../command-bar";
@@ -266,7 +266,7 @@ export function List() {
         icon: IconCaretRight,
         title: `Resolve ${selected().length} ${pluralize(
           "issue",
-          selected().length
+          selected().length,
         )}`,
         run: (control) => {
           rep().mutate.issue_resolve(selected());
@@ -281,7 +281,7 @@ export function List() {
         icon: IconCaretRight,
         title: `Reopen ${selected().length} ${pluralize(
           "issue",
-          selected().length
+          selected().length,
         )}`,
         run: (control) => {
           rep().mutate.issue_unresolve(selected());
@@ -295,7 +295,7 @@ export function List() {
         icon: IconCaretRight,
         title: `Ignore ${selected().length} ${pluralize(
           "issue",
-          selected().length
+          selected().length,
         )}`,
         run: (control) => {
           rep().mutate.issue_ignore(selected());
@@ -310,7 +310,7 @@ export function List() {
         icon: IconCaretRight,
         title: `Reopen ${selected().length} ${pluralize(
           "issue",
-          selected().length
+          selected().length,
         )}`,
         run: (control) => {
           rep().mutate.issue_unignore(selected());
@@ -358,8 +358,8 @@ export function List() {
         if (view() === "resolved") return Boolean(item.timeResolved);
         return false;
       }),
-      sortBy([(item) => item.timeSeen, "desc"])
-    )
+      sortBy([(item) => item.timeSeen, "desc"]),
+    ),
   );
 
   const stage = useStageContext();
@@ -368,13 +368,13 @@ export function List() {
     rep,
     () => [stage.stage.id],
     (warnings) =>
-      warnings.filter((warning) => warning.type === "log_subscription")
+      warnings.filter((warning) => warning.type === "log_subscription"),
   );
   const rateWarnings = WarningStore.forStage.watch(
     rep,
     () => [stage.stage.id],
     (warnings) =>
-      warnings.filter((warning) => warning.type === "issue_rate_limited")
+      warnings.filter((warning) => warning.type === "issue_rate_limited"),
   );
   const resources = useResourcesContext();
 
@@ -453,7 +453,7 @@ export function List() {
                         .map((item) => {
                           if (item.type === "issue_rate_limited") {
                             const logInfo = createMemo(() =>
-                              getLogInfo(resources(), item.target)
+                              getLogInfo(resources(), item.target),
                             );
                             return logInfo()?.name;
                           }
@@ -492,7 +492,7 @@ export function List() {
                               }
                             })();
                             const logInfo = createMemo(() =>
-                              getLogInfo(resources(), item.target)
+                              getLogInfo(resources(), item.target),
                             );
                             return `${logInfo()?.name}: ${reason}`;
                           }
@@ -546,7 +546,7 @@ export function List() {
             onChange={(e) => {
               const issues = [
                 ...e.currentTarget.querySelectorAll<HTMLInputElement>(
-                  "input[name='issue']:checked"
+                  "input[name='issue']:checked",
                 ),
               ].map((i) => i.value);
               setSelected(issues);
@@ -558,7 +558,7 @@ export function List() {
                   name="select-all"
                   onChange={(e) => {
                     for (const input of form.querySelectorAll<HTMLInputElement>(
-                      "input[type='checkbox']"
+                      "input[type='checkbox']",
                     )) {
                       input.checked = e.currentTarget.checked;
                     }
@@ -713,7 +713,7 @@ export function List() {
                   <For each={filtered()}>
                     {(issue, i) => {
                       const logInfo = createMemo(() =>
-                        getLogInfo(resources(), issue.pointer?.logGroup)
+                        getLogInfo(resources(), issue.pointer?.logGroup),
                       );
                       return (
                         <IssueRow
@@ -806,18 +806,18 @@ function IssueRow(props: IssueProps) {
   const counts = IssueCountStore.forIssue.watch(
     rep,
     () => [props.issue.group],
-    (items) => items.filter((item) => item.hour > min)
+    (items) => items.filter((item) => item.hour > min),
   );
   const histogram = createMemo(() => {
-    const hours = fromPairs(
+    const hours = fromEntries(
       counts().map((item) => [
         parseTime(item.hour).toSQL({ includeOffset: false })!,
         item.count,
-      ])
+      ]),
     );
     return Interval.fromDateTimes(
       DateTime.now().toUTC().startOf("hour").minus({ hours: 23 }),
-      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 })
+      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 }),
     )
       .splitBy({ hours: 1 })
       .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
@@ -875,7 +875,7 @@ function IssueRow(props: IssueProps) {
           color="dimmed"
           leading="normal"
           title={parseTime(props.issue.timeSeen).toLocaleString(
-            DateTime.DATETIME_FULL
+            DateTime.DATETIME_FULL,
           )}
         >
           {formatSinceTime(props.issue.timeSeen)}

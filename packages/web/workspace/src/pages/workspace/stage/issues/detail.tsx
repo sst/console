@@ -26,7 +26,7 @@ import { DateTime, Interval } from "luxon";
 import { StackTrace } from "../logs/error";
 import { bus } from "$/providers/bus";
 import { Log, LogTime, LogMessage } from "$/common/invocation";
-import { fromPairs } from "remeda";
+import { fromEntries } from "remeda";
 import { useResourcesContext, useStageContext } from "../context";
 import { useInvocations } from "$/providers/invocation";
 import { useCommandBar } from "../../command-bar";
@@ -163,18 +163,18 @@ export function Detail() {
     if (issue()?.invocation) return;
     await fetch(
       import.meta.env.VITE_API_URL +
-      "/rest/log?" +
-      new URLSearchParams({
-        pointer: JSON.stringify(issue()!.pointer),
-        stageID: issue()!.stageID,
-        groupID: issue()!.group,
-      }),
+        "/rest/log?" +
+        new URLSearchParams({
+          pointer: JSON.stringify(issue()!.pointer),
+          stageID: issue()!.stageID,
+          groupID: issue()!.group,
+        }),
       {
         headers: {
           authorization: rep().auth,
           "x-sst-workspace": issue()!.workspaceID,
         },
-      }
+      },
     ).then((x) => x.json());
   });
 
@@ -183,12 +183,12 @@ export function Detail() {
   });
 
   const invocation = createMemo(
-    () => issue()?.invocation || invocations.forSource(issue()?.id).at(0)
+    () => issue()?.invocation || invocations.forSource(issue()?.id).at(0),
   );
 
   const resources = useResourcesContext();
   const logInfo = createMemo(() =>
-    getLogInfo(resources(), issue()?.pointer?.logGroup)
+    getLogInfo(resources(), issue()?.pointer?.logGroup),
   );
 
   createEffect(() => {
@@ -203,18 +203,18 @@ export function Detail() {
   const counts = IssueCountStore.forIssue.watch(
     rep,
     () => [issue()?.group || "unknown"],
-    (items) => items.filter((item) => item.hour > min)
+    (items) => items.filter((item) => item.hour > min),
   );
   const histogram = createMemo(() => {
-    const hours = fromPairs(
+    const hours = fromEntries(
       counts().map((item) => [
         parseTime(item.hour).toSQL({ includeOffset: false })!,
         item.count,
-      ])
+      ]),
     );
     return Interval.fromDateTimes(
       DateTime.now().toUTC().startOf("hour").minus({ hours: 23 }),
-      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 })
+      DateTime.now().toUTC().startOf("hour").plus({ hours: 1 }),
     )
       .splitBy({ hours: 1 })
       .map((interval) => interval.start!.toSQL({ includeOffset: false })!)
@@ -340,7 +340,7 @@ export function Detail() {
                   >
                     Logs —{" "}
                     {DateTime.fromMillis(
-                      invocation()?.logs[0].timestamp!
+                      invocation()?.logs[0].timestamp!,
                     ).toLocaleString(DATETIME_NO_TIME)}
                   </PanelTitle>
                 </Show>
@@ -363,11 +363,11 @@ export function Detail() {
                             title={DateTime.fromMillis(entry.timestamp)
                               .toUTC()
                               .toLocaleString(
-                                DateTime.DATETIME_FULL_WITH_SECONDS
+                                DateTime.DATETIME_FULL_WITH_SECONDS,
                               )}
                           >
                             {DateTime.fromMillis(entry.timestamp).toFormat(
-                              "HH:mm:ss.SSS"
+                              "HH:mm:ss.SSS",
                             )}
                           </LogTime>
                           <LogMessage>{entry.message}</LogMessage>
@@ -454,7 +454,7 @@ export function Detail() {
                 <PanelTitle>Last Seen</PanelTitle>
                 <Text
                   title={parseTime(issue().timeSeen).toLocaleString(
-                    DateTime.DATETIME_FULL
+                    DateTime.DATETIME_FULL,
                   )}
                   color="secondary"
                 >
@@ -465,7 +465,7 @@ export function Detail() {
                 <PanelTitle>First Seen</PanelTitle>
                 <Text
                   title={parseTime(issue().timeCreated).toLocaleString(
-                    DateTime.DATETIME_FULL
+                    DateTime.DATETIME_FULL,
                   )}
                   color="secondary"
                 >

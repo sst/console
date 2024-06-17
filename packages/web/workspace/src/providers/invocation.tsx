@@ -2,7 +2,7 @@ import { createInitializedContext } from "$/common/context";
 import type { Invocation, ParsedError } from "@console/core/log";
 import { bus } from "./bus";
 import { createStore, produce } from "solid-js/store";
-import { pipe, sortBy, uniqBy } from "remeda";
+import { pipe, sortBy, uniqueBy } from "remeda";
 
 export const { use: useInvocations, provider: InvocationProvider } =
   createInitializedContext("InvocationProvider", () => {
@@ -36,7 +36,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
               if (invocation.output) exists.output = invocation.output;
               if (invocation.errors) {
                 exists.errors.push(...invocation.errors);
-                exists.errors = uniqBy(invocation.errors, (e) => e.id);
+                exists.errors = uniqueBy(invocation.errors, (e) => e.id);
               }
               if (invocation.report) exists.report = invocation.report;
               if (invocation.start) exists.start = invocation.start;
@@ -45,13 +45,13 @@ export const { use: useInvocations, provider: InvocationProvider } =
                 exists.logs.push(...invocation.logs);
                 exists.logs = pipe(
                   invocation.logs,
-                  uniqBy((e) => e.id),
-                  sortBy((e) => e.timestamp)
+                  uniqueBy((e) => e.id),
+                  sortBy((e) => e.timestamp),
                 );
               }
             }
           }
-        })
+        }),
       );
     });
 
@@ -71,7 +71,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
           };
           group.push(invocation);
           state.all.push(invocation);
-        })
+        }),
       );
     });
 
@@ -80,7 +80,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
         produce((state) => {
           let group = state[data.functionID];
           const invocation = group?.findLast(
-            (i) => i.source === data.functionID
+            (i) => i.source === data.functionID,
           );
           if (!invocation) return;
           invocation.logs.push({
@@ -88,7 +88,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             message: data.message,
             timestamp: Date.now(),
           });
-        })
+        }),
       );
     });
 
@@ -97,12 +97,12 @@ export const { use: useInvocations, provider: InvocationProvider } =
         produce((state) => {
           let group = state[data.functionID];
           const invocation = group?.findLast(
-            (i) => i.source === data.functionID
+            (i) => i.source === data.functionID,
           );
           if (!invocation) return;
           invocation.end = Date.now();
           invocation.output = data.body;
-        })
+        }),
       );
     });
 
@@ -111,7 +111,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
         produce((state) => {
           let group = state[data.functionID];
           const invocation = group?.findLast(
-            (i) => i.source === data.functionID
+            (i) => i.source === data.functionID,
           );
           if (!invocation) return;
           invocation.errors.push({
@@ -123,7 +123,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
             })),
             failed: true,
           });
-        })
+        }),
       );
     });
 
@@ -135,7 +135,7 @@ export const { use: useInvocations, provider: InvocationProvider } =
         setStore(
           produce((state) => {
             state[source] = [];
-          })
+          }),
         );
         bus.emit("log.cleared", { source });
       },

@@ -10,12 +10,10 @@ import {
   ComponentProps,
 } from "solid-js";
 import {
-  useStageContext,
   useFunctionsContext,
   useResourcesContext,
   useStateResources,
 } from "../context";
-import { useReplicache } from "$/providers/replicache";
 import { styled } from "@macaron-css/solid";
 import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
@@ -63,10 +61,9 @@ import {
 } from "$/ui/icons";
 import { sortBy } from "remeda";
 import { Dynamic } from "solid-js/web";
-import { } from "@solid-primitives/keyboard";
+import {} from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
-import { useFlags } from "$/providers/flags";
 
 const ION_ICON_MAP: { [key: string]: Component } = {
   "sst:aws:Auth": IconAuth,
@@ -818,9 +815,10 @@ export function List() {
 
   function renderStateOutputs() {
     return (
-      <Show when={stateOutputs().length} fallback={
-        <OutputsEmpty>No outputs</OutputsEmpty>
-      }>
+      <Show
+        when={stateOutputs().length}
+        fallback={<OutputsEmpty>No outputs</OutputsEmpty>}
+      >
         <Card>
           <HeaderRoot>
             <HeaderTitle>Outputs</HeaderTitle>
@@ -881,9 +879,10 @@ export function List() {
             </HeaderTitleTaglineLink>
           </Row>
           <Show when={hint}>
-            <Show when={isValidHttpUrl(hint!)} fallback={
-              <HeaderDescription outline>{hint}</HeaderDescription>
-            }>
+            <Show
+              when={isValidHttpUrl(hint!)}
+              fallback={<HeaderDescription outline>{hint}</HeaderDescription>}
+            >
               <HeaderDescriptionLink
                 href={hint}
                 target="_blank"
@@ -1185,7 +1184,7 @@ export function WebSocketApiCard(props: CardProps<"WebSocketApi">) {
       />
       <Children>
         <For each={sortedRoutes()}>
-          {(route) => {
+          {(route: any) => {
             const method = createMemo(() => route.route.slice(1));
             const path = createMemo(() => route.route.split(" ")[1]);
             return (
@@ -1606,8 +1605,8 @@ function FunctionChild(props: {
                 fallback={
                   exists().metadata.handler
                     ? new URL(
-                      "https://example.com/" + exists().metadata.handler,
-                    ).pathname.replace(/\/+/g, "/")
+                        "https://example.com/" + exists().metadata.handler,
+                      ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >

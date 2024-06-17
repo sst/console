@@ -35,7 +35,7 @@ import { createStore, unwrap } from "solid-js/store";
 import { MultiSelect, Select } from "$/ui/select";
 import { UserStore } from "$/data/user";
 import { StageStore } from "$/data/stage";
-import { filter, map, pipe, uniq } from "remeda";
+import { filter, map, pipe, unique } from "remeda";
 import { createId } from "@paralleldrive/cuid2";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
@@ -334,7 +334,7 @@ export function Alerts() {
       stages(),
       filter((s) => selectedApps().includes(s.appID)),
       map((s) => s.name),
-      uniq(),
+      unique(),
     );
   });
 

@@ -333,7 +333,7 @@ importers:
         version: 1.2.0
       '@macaron-css/solid':
         specifier: 1.0.1
-        version: 1.0.1(@vanilla-extract/recipes@0.2.5)(solid-js@1.8.3)
+        version: 1.0.1(@vanilla-extract/recipes@0.5.3)(solid-js@1.8.3)
       '@modular-forms/solid':
         specifier: ^0.20.0
         version: 0.20.0(solid-js@1.8.3)
@@ -380,8 +380,8 @@ importers:
         specifier: ^1.121.2
         version: 1.121.2
       remeda:
-        specifier: ^1.17.1
-        version: 1.26.0
+        specifier: ^2.0.10
+        version: 2.0.10
       replicache:
         specifier: ^14.2.2
         version: 14.2.2
@@ -5697,13 +5697,13 @@ packages:
       - terser
     dev: true
 
-  /@macaron-css/solid@1.0.1(@vanilla-extract/recipes@0.2.5)(solid-js@1.8.3):
+  /@macaron-css/solid@1.0.1(@vanilla-extract/recipes@0.5.3)(solid-js@1.8.3):
     resolution: {integrity: sha512-M/NOsagaNFYbYASMVRNRe+vpSzv1UAT1c601cE7BqnTyUZ8NyWTXVTzZlbThPTfNNRuvTcoirk0fF/iUshzGNw==}
     peerDependencies:
       '@vanilla-extract/recipes': ^0.2.5
       solid-js: ^1.4.3
     dependencies:
-      '@vanilla-extract/recipes': 0.2.5(@vanilla-extract/css@1.13.0)
+      '@vanilla-extract/recipes': 0.5.3(@vanilla-extract/css@1.13.0)
       solid-js: 1.8.3
     dev: false
 
@@ -7696,6 +7696,14 @@ packages:
 
   /@vanilla-extract/recipes@0.2.5(@vanilla-extract/css@1.13.0):
     resolution: {integrity: sha512-OWXUUiFJdswD3+Xg8f8avuw/vAHZRFS4oHqFeoV1TcO8cfbDQ0zmkreBHvyspoJU+qsyWK48yPHKSptqNRPy9Q==}
+    peerDependencies:
+      '@vanilla-extract/css': ^1.0.0
+    dependencies:
+      '@vanilla-extract/css': 1.13.0
+    dev: false
+
+  /@vanilla-extract/recipes@0.5.3(@vanilla-extract/css@1.13.0):
+    resolution: {integrity: sha512-SPREq1NmaoKuvJeOV0pppOkwy3pWZUoDufsyQ6iHrbkHhAU7XQqG9o0iZSmg5JoVgDLIiOr9djQb0x9wuxig7A==}
     peerDependencies:
       '@vanilla-extract/css': ^1.0.0
     dependencies:
@@ -12215,6 +12223,16 @@ packages:
 
   /remeda@1.26.0:
     resolution: {integrity: sha512-v+Qbi2krvXknCvG60gviLUSBJQPxXUVBAvi64m3Awoua3X+ygAmPYPrbFgqwPpiM1tBHNBVrHPBKtza7if+HyQ==}
+    dev: false
+
+  /remeda@1.61.0:
+    resolution: {integrity: sha512-caKfSz9rDeSKBQQnlJnVW3mbVdFgxgGWQKq1XlFokqjf+hQD5gxutLGTTY2A/x24UxVyJe9gH5fAkFI63ULw4A==}
+
+  /remeda@2.0.10:
+    resolution: {integrity: sha512-kV+jfOgF1fyzTv9p7n6Ue7XUVtxYv+2wlXmtrP2Bvdb6ElViN88xujslcN9oZPkvnpl4j3Fi2l1O3icQZqD10g==}
+    dependencies:
+      type-fest: 4.20.1
+    dev: false
 
   /replicache@14.2.2:
     resolution: {integrity: sha512-PBlt6C2X7wSPVUUVBKumHPTXXmPZYO/rqoTQXYLgvzPabYkKBdJbCEHjh9hXNUU5vpkzDeEmOPQqlVus9zCiBg==}
@@ -12603,7 +12621,7 @@ packages:
       openid-client: 5.5.0
       ora: 6.3.1
       react: 18.2.0
-      remeda: 1.26.0
+      remeda: 1.61.0
       sst-aws-cdk: 2.110.1-1
       tree-kill: 1.2.2
       undici: 5.24.0
@@ -13035,6 +13053,11 @@ packages:
   /type-fest@3.13.1:
     resolution: {integrity: sha512-tLq3bSNx+xSpwvAJnzrK0Ep5CLNWjvFTOp71URMaAEWBfRb9nnJiBoUe0tF8bI4ZFO3omgBR6NvnbzVUT3Ly4g==}
     engines: {node: '>=14.16'}
+
+  /type-fest@4.20.1:
+    resolution: {integrity: sha512-R6wDsVsoS9xYOpy8vgeBlqpdOyzJ12HNfQhC/aAKWM3YoCV9TtunJzh/QpkMgeDhkoynDcw5f1y+qF9yc/HHyg==}
+    engines: {node: '>=16'}
+    dev: false
 
   /type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}

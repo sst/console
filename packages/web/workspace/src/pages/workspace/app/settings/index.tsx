@@ -72,7 +72,7 @@ import {
 import { array, minLength, object, optional, string } from "valibot";
 import { AWS } from "$/data/aws";
 import { createStore } from "solid-js/store";
-import { fromPairs, map, pipe, sortBy, filter } from "remeda";
+import { fromEntries, map, pipe, sortBy, filter } from "remeda";
 
 const HEADER_HEIGHT = 50;
 const SELECT_REPO_NAME = "select-repo";
@@ -661,7 +661,7 @@ export function Settings() {
               stagePattern: data.stagePattern,
               awsAccountExternalID: data.awsAccount,
               appID: app.app.id,
-              env: fromPairs(
+              env: fromEntries(
                 (data.env || []).map((item) => [item.key, item.value]),
               ),
             });

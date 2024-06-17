@@ -1,6 +1,6 @@
 import { bus } from "$/providers/bus";
 import { LogEvent, StackFrame } from "@console/core/log";
-import { pipe, sortBy, uniqBy } from "remeda";
+import { pipe, sortBy, uniqueBy } from "remeda";
 import { createStore, produce } from "solid-js/store";
 
 export const [LogStore, setLogStore] = createStore<
@@ -14,7 +14,7 @@ export function clearLogStore(input: string) {
   setLogStore(
     produce((state) => {
       state[input] = [];
-    })
+    }),
   );
 }
 
@@ -148,11 +148,11 @@ bus.on("log", (data) => {
       for (const invocation of Object.values(state[currentGroup!] || {})) {
         invocation.logs = pipe(
           invocation.logs,
-          uniqBy((l) => l.id),
-          sortBy((l) => l.timestamp)
+          uniqueBy((l) => l.id),
+          sortBy((l) => l.timestamp),
         );
       }
-    })
+    }),
   );
   // console.log(track);
 });
@@ -174,7 +174,7 @@ bus.on("function.invoked", (e) => {
       const invocation = group.find((i) => i.id === e.requestID);
       if (!invocation) return;
       invocation.event = e.event;
-    })
+    }),
   );
 });
 
@@ -208,7 +208,7 @@ bus.on("function.success", (e) => {
       const invocation = group.find((i) => i.id === e.requestID);
       if (!invocation) return;
       invocation.response = e.body;
-    })
+    }),
   );
 });
 
@@ -235,6 +235,6 @@ bus.on("function.error", (e) => {
           raw: t,
         })),
       });
-    })
+    }),
   );
 });
