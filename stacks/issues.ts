@@ -140,15 +140,22 @@ export function Issues({ stack }: StackContext) {
     ],
   });
 
-  bus.subscribe(stack, "issue.rate_limited", {
-    handler: "packages/functions/src/issues/rate-limited.handler",
-    timeout: "1 minute",
-    permissions: ["ses", "sts", "logs:DeleteDestination"],
-    bind: [bus, ...Object.values(secrets.database)],
-    environment: {
-      EMAIL_DOMAIN: use(DNS).domain,
+  bus.subscribe(
+    stack,
+    "issue.rate_limited",
+    {
+      handler: "packages/functions/src/issues/rate-limited.handler",
+      timeout: "1 minute",
+      permissions: ["ses", "sts", "logs:DeleteDestination"],
+      bind: [bus, ...Object.values(secrets.database)],
+      environment: {
+        EMAIL_DOMAIN: use(DNS).domain,
+      },
     },
-  });
+    {
+      retries: 0,
+    },
+  );
 
   const issueDetectedQueue = new Queue(stack, "issue-detected-queue", {
     consumer: {
