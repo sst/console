@@ -404,6 +404,7 @@ export function Detail() {
   const [logs, logsAction] = createResource(
     () => run.value?.log,
     async (log) => {
+      console.log("log", log);
       if (!log) return [];
       const results = await fetch(
         import.meta.env.VITE_API_URL +
@@ -438,19 +439,24 @@ export function Detail() {
             }[]
           >,
       );
-      return pipe(
-        results,
-        dropWhile((r) => !r.message.includes("isWarm")),
-        drop(1),
-        filter((r) => r.message.trim() != ""),
-        takeWhile((r) => !r.message.includes("BUILD State")),
-      );
+      return results;
     },
+    {
+      initialValue: [],
+    },
+  );
+  const trimmedLogs = createMemo(() =>
+    pipe(
+      logs() || [],
+      dropWhile((r) => !r.message.includes("isWarm")),
+      drop(1),
+      filter((r) => r.message.trim() != ""),
+      takeWhile((r) => !r.message.includes(" BUILD State")),
+    ),
   );
 
   const logsPoller = setInterval(() => {
-    if (!run.value) return;
-    if (logs()?.at(-1)?.message.includes("REPORT")) return;
+    if (logs()?.findLast((r) => r.message.includes(" BUILD State"))) return;
     logsAction.refetch();
   }, 3000);
   onCleanup(() => clearInterval(logsPoller));
@@ -711,23 +717,23 @@ export function Detail() {
               >
                 <Stack space="2">
                   <Show
-                    when={logs.length}
+                    when={trimmedLogs().length}
                     fallback={<PanelTitle>Logs</PanelTitle>}
                   >
                     <PanelTitle
-                      title={DateTime.fromMillis(logs()![0].timestamp!)
+                      title={DateTime.fromMillis(trimmedLogs()![0].timestamp!)
                         .toUTC()
                         .toLocaleString(DateTime.DATETIME_FULL)}
                     >
                       Logs —{" "}
                       {DateTime.fromMillis(
-                        logs()![0].timestamp!,
+                        trimmedLogs()![0].timestamp!,
                       ).toLocaleString(DATETIME_NO_TIME)}
                     </PanelTitle>
                   </Show>
                   <LogsBackground>
                     <Show
-                      when={logs()?.length}
+                      when={trimmedLogs()?.length}
                       fallback={
                         <LogsLoading>
                           <LogsLoadingIcon>
@@ -736,13 +742,13 @@ export function Detail() {
                           <PanelEmptyCopy>
                             {update.value!.time.completed
                               ? "Fetching logs"
-                              : "Running"}{" "}
+                              : "Waiting for logs"}
                             &hellip;
                           </PanelEmptyCopy>
                         </LogsLoading>
                       }
                     >
-                      <For each={logs()!}>
+                      <For each={trimmedLogs()!}>
                         {(entry) => (
                           <Log>
                             <LogTime

@@ -43,6 +43,7 @@ import { AppRepo } from "../app/repo";
 import { Github } from "../git/github";
 import { LambdaRunner } from "./lambda-runner";
 import { CodebuildRunner } from "./codebuild-runner";
+import { Replicache } from "../replicache";
 
 export module Run {
   const DEFAULT_ENGINE = "codebuild";
@@ -135,13 +136,13 @@ export module Run {
       "run.created",
       z.object({
         stageID: z.string().nonempty(),
-      })
+      }),
     ),
     Completed: event(
       "run.completed",
       z.object({
         stageID: z.string().nonempty(),
-      })
+      }),
     ),
     RunnerStarted: event(
       "runner.started",
@@ -153,7 +154,7 @@ export module Run {
         logStream: z.string().nonempty(),
         awsRequestId: z.string().nonempty().optional(),
         timestamp: z.number().int(),
-      })
+      }),
     ),
     RunnerCompleted: event(
       "runner.completed",
@@ -161,7 +162,7 @@ export module Run {
         workspaceID: z.string().nonempty(),
         runID: z.string().nonempty(),
         error: z.string().nonempty().optional(),
-      })
+      }),
     ),
   };
 
@@ -231,7 +232,7 @@ export module Run {
             trigger: input.trigger,
             stage: input.stage,
           } satisfies ConfigParserEvent),
-        })
+        }),
       );
       if (ret.FunctionError) throw new Error("Failed to parse config");
 
@@ -239,7 +240,7 @@ export module Run {
       return payload.error
         ? (payload as SstConfigParseError)
         : (payload as SstConfig);
-    }
+    },
   );
 
   export const create = zod(
@@ -315,7 +316,7 @@ export module Run {
 
         await createTransactionEffect(() => Event.Created.publish({ stageID }));
       });
-    }
+    },
   );
 
   export const orchestrate = zod(z.string().cuid2(), async (stageID) => {
@@ -328,11 +329,11 @@ export module Run {
           and(
             eq(runTable.workspaceID, useWorkspace()),
             eq(runTable.stageID, stageID),
-            isNull(runTable.timeCompleted)
-          )
+            isNull(runTable.timeCompleted),
+          ),
         )
         .orderBy(runTable.timeCreated)
-        .execute()
+        .execute(),
     );
     if (!runs.length) return;
     if (runs.some((r) => r.active)) return;
@@ -349,15 +350,17 @@ export module Run {
           .where(
             and(
               eq(runTable.workspaceID, useWorkspace()),
-              eq(runTable.id, run.id)
-            )
-          )
+              eq(runTable.id, run.id),
+            ),
+          ),
       );
     } catch (e: any) {
       // A run is already active
       if (e.message.includes("errno 1062")) return;
       throw e;
     }
+
+    await Replicache.poke();
 
     // Skip all runs except the first one
     if (runsToSkip.length) {
@@ -371,10 +374,10 @@ export module Run {
               eq(runTable.workspaceID, useWorkspace()),
               inArray(
                 runTable.id,
-                runsToSkip.map((r) => r.id)
+                runsToSkip.map((r) => r.id),
               ),
-              isNull(runTable.timeCompleted)
-            )
+              isNull(runTable.timeCompleted),
+            ),
           )
           .execute();
 
@@ -481,8 +484,8 @@ export module Run {
           .where(
             and(
               eq(runnerTable.id, runnerID),
-              eq(runnerTable.workspaceID, useWorkspace())
-            )
+              eq(runnerTable.workspaceID, useWorkspace()),
+            ),
           )
           .execute();
 
@@ -536,7 +539,7 @@ export module Run {
           } satisfies RunTimeoutMonitorEvent),
         },
         ActionAfterCompletion: "DELETE",
-      })
+      }),
     );
 
     // Schedule warmer if not scheduled
@@ -556,11 +559,11 @@ export module Run {
           .where(
             and(
               eq(runTable.workspaceID, useWorkspace()),
-              eq(runTable.id, runID)
-            )
+              eq(runTable.id, runID),
+            ),
           )
           .execute()
-          .then((x) => x[0])
+          .then((x) => x[0]),
       );
       if (!run) return;
 
@@ -577,8 +580,8 @@ export module Run {
             and(
               eq(runTable.id, runID),
               eq(runTable.workspaceID, useWorkspace()),
-              isNull(runTable.timeCompleted)
-            )
+              isNull(runTable.timeCompleted),
+            ),
           )
           .execute();
         await State.completeUpdate({
@@ -588,10 +591,10 @@ export module Run {
         });
 
         await createTransactionEffect(() =>
-          Event.Completed.publish({ stageID: run.stageID })
+          Event.Completed.publish({ stageID: run.stageID }),
         );
       });
-    }
+    },
   );
 
   export const markRunStarted = zod(
@@ -604,8 +607,8 @@ export module Run {
       timestamp: z.number().int(),
     }),
     async (input) =>
-      useTransaction((tx) =>
-        tx
+      useTransaction(async (tx) => {
+        await tx
           .update(runTable)
           .set({
             timeStarted: new Date(),
@@ -627,11 +630,12 @@ export module Run {
           .where(
             and(
               eq(runTable.id, input.runID),
-              eq(runTable.workspaceID, useWorkspace())
-            )
+              eq(runTable.workspaceID, useWorkspace()),
+            ),
           )
-          .execute()
-      )
+          .execute();
+        await createTransactionEffect(() => Replicache.poke());
+      }),
   );
 
   export const getRunnerByID = zod(z.string().cuid2(), async (runnerID) => {
@@ -642,11 +646,11 @@ export module Run {
         .where(
           and(
             eq(runnerTable.workspaceID, useWorkspace()),
-            eq(runnerTable.id, runnerID)
-          )
+            eq(runnerTable.id, runnerID),
+          ),
         )
         .execute()
-        .then((x) => x[0])
+        .then((x) => x[0]),
     );
   });
 
@@ -663,13 +667,13 @@ export module Run {
               eq(runnerUsageTable.id, runnerID),
               gt(
                 runnerUsageTable.timeRun,
-                new Date(Date.now() - RUNNER_WARMING_INACTIVE_TIME)
-              )
-            )
+                new Date(Date.now() - RUNNER_WARMING_INACTIVE_TIME),
+              ),
+            ),
           )
-          .execute()
+          .execute(),
       );
-    }
+    },
   );
 
   const useRunner = zod(
@@ -678,7 +682,7 @@ export module Run {
       ({
         lambda: LambdaRunner,
         codebuild: CodebuildRunner,
-      }[engine])
+      })[engine],
   );
 
   export const setRunnerWarmer = zod(
@@ -696,12 +700,12 @@ export module Run {
           .where(
             and(
               eq(runnerTable.workspaceID, useWorkspace()),
-              eq(runnerTable.id, input.runnerID)
-            )
+              eq(runnerTable.id, input.runnerID),
+            ),
           )
-          .execute()
+          .execute(),
       );
-    }
+    },
   );
 
   export const unsetRunnerWarmer = zod(z.string().cuid2(), async (runnerID) => {
@@ -714,10 +718,10 @@ export module Run {
         .where(
           and(
             eq(runnerTable.workspaceID, useWorkspace()),
-            eq(runnerTable.id, runnerID)
-          )
+            eq(runnerTable.id, runnerID),
+          ),
         )
-        .execute()
+        .execute(),
     );
   });
 
@@ -747,13 +751,13 @@ export module Run {
               eq(runnerTable.appRepoID, input.appRepoID),
               eq(runnerTable.region, input.region),
               eq(runnerTable.engine, engine),
-              eq(runnerTable.type, type)
-            )
+              eq(runnerTable.type, type),
+            ),
           )
           .execute()
-          .then((x) => x[0])
+          .then((x) => x[0]),
       );
-    }
+    },
   );
 
   export const createRunner = zod(
@@ -798,7 +802,7 @@ export module Run {
               engine,
               type,
             })
-            .execute()
+            .execute(),
         );
 
         // Create resources
@@ -828,7 +832,7 @@ export module Run {
               EventPattern: JSON.stringify({
                 source: ["sst.external"],
               }),
-            })
+            }),
           );
 
           const iam = new IAMClient({ credentials });
@@ -836,7 +840,7 @@ export module Run {
           const roleRet = await iam.send(
             new GetRoleCommand({
               RoleName: roleName,
-            })
+            }),
           );
 
           await eb.send(
@@ -849,7 +853,7 @@ export module Run {
                   RoleArn: roleRet.Role?.Arn!,
                 },
               ],
-            })
+            }),
           );
         } catch (e: any) {
           if (e.name !== "ResourceConflictException") {
@@ -865,10 +869,10 @@ export module Run {
             .where(
               and(
                 eq(runnerTable.id, runnerID),
-                eq(runnerTable.workspaceID, useWorkspace())
-              )
+                eq(runnerTable.workspaceID, useWorkspace()),
+              ),
             )
-            .execute()
+            .execute(),
         );
       } catch (e) {
         // Remove from db
@@ -878,10 +882,10 @@ export module Run {
             .where(
               and(
                 eq(runnerTable.id, runnerID),
-                eq(runnerTable.workspaceID, useWorkspace())
-              )
+                eq(runnerTable.workspaceID, useWorkspace()),
+              ),
             )
-            .execute()
+            .execute(),
         );
         throw e;
       }
@@ -889,7 +893,7 @@ export module Run {
       await scheduleRunnerRemover(runnerID);
 
       return { id: runnerID, region, engine, resource, warmer: null };
-    }
+    },
   );
 
   export const removeRunner = zod(
@@ -917,12 +921,12 @@ export module Run {
           .where(
             and(
               eq(runnerTable.id, runner.id),
-              eq(runnerTable.workspaceID, useWorkspace())
-            )
+              eq(runnerTable.workspaceID, useWorkspace()),
+            ),
           )
-          .execute()
+          .execute(),
       );
-    }
+    },
   );
 
   export const warmRunner = zod(
@@ -954,10 +958,10 @@ export module Run {
                 credentials,
               },
               timeoutInMinutes: Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES,
-            })
-          )
+            }),
+          ),
       );
-    }
+    },
   );
 
   export const scheduleRunnerWarmer = zod(
@@ -987,11 +991,11 @@ export module Run {
             } satisfies Run.RunnerWarmerEvent),
           },
           ActionAfterCompletion: "DELETE",
-        })
+        }),
       );
 
       await setRunnerWarmer({ runnerID, warmer: name });
-    }
+    },
   );
 
   export const scheduleRunnerRemover = zod(
@@ -1026,8 +1030,8 @@ export module Run {
             } satisfies RunnerRemoverEvent),
           },
           ActionAfterCompletion: "DELETE",
-        })
+        }),
       );
-    }
+    },
   );
 }

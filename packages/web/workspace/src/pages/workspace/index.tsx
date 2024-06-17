@@ -124,8 +124,6 @@ export function Content() {
     );
   });
 
-  const flags = useFlags();
-
   return (
     <Routes>
       <Route path="user" component={User} />
@@ -133,7 +131,7 @@ export function Content() {
       <Route path="settings" component={Settings} />
       <Route path="debug" component={Debug} />
       <Route path=":appName/*" component={App} />
-      <Route path="" component={flags.nextOverview ? OverviewNext : Overview} />
+      <Route path="" component={OverviewNext} />
       <Route path="*" element={<NotFound header />} />
     </Routes>
   );
