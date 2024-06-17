@@ -37,6 +37,7 @@ export const STATUS_MAP = {
   updated: "Complete",
   error: "Error",
   updating: "In Progress",
+  queued: "Queued",
 };
 
 const Content = styled("div", {
@@ -377,7 +378,6 @@ type UpdateProps = {
   index: string;
   errors?: any[];
   timeStarted?: string;
-  timeQueued?: string;
   source: State.Update["source"];
   resourceSame?: number;
   timeCanceled?: string;
@@ -402,15 +402,16 @@ function Update(props: UpdateProps) {
     if (!run.value) return;
 
     const trigger = run.value.trigger;
-    const repoURL = trigger.source === "github"
-      ? githubRepo(trigger.repo.owner, trigger.repo.repo)
-      : "";
-    const branch = trigger.type === "push"
-      ? trigger.branch
-      : `pr#${trigger.number}`;
-    const uri = trigger.type === "push"
-      ? githubBranch(repoURL, trigger.branch)
-      : githubPr(repoURL, trigger.number);
+    const repoURL =
+      trigger.source === "github"
+        ? githubRepo(trigger.repo.owner, trigger.repo.repo)
+        : "";
+    const branch =
+      trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
+    const uri =
+      trigger.type === "push"
+        ? githubBranch(repoURL, trigger.branch)
+        : githubPr(repoURL, trigger.number);
 
     return { trigger, repoURL, branch, uri };
   });
@@ -422,7 +423,7 @@ function Update(props: UpdateProps) {
         : "updated"
       : props.timeCanceled
         ? "canceled"
-        : props.timeQueued
+        : run.value && !run.value.active
           ? "queued"
           : "updating",
   );
@@ -449,7 +450,10 @@ function Update(props: UpdateProps) {
             <Row space="2">
               <UpdateGitLink
                 target="_blank"
-                href={githubCommit(runInfo()!.repoURL, runInfo()!.trigger.commit.id)}
+                href={githubCommit(
+                  runInfo()!.repoURL,
+                  runInfo()!.trigger.commit.id,
+                )}
               >
                 <UpdateGitIcon size="md">
                   <IconCommit />
@@ -511,8 +515,9 @@ function Update(props: UpdateProps) {
                 <img
                   width="24"
                   height="24"
-                  src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                    }?s=48&v=4`}
+                  src={`https://avatars.githubusercontent.com/u/${
+                    runInfo()!.trigger.sender.id
+                  }?s=48&v=4`}
                 />
               </UpdateSenderAvatar>
             </Match>

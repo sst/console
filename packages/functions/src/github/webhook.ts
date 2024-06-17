@@ -82,7 +82,6 @@ async function process(octokit: Octokit, trigger: Trigger) {
   const appRepos = await Github.listAppReposByExternalRepoID(repoID);
   const workspaceIDs = appRepos.map((x) => x.workspaceID);
   const appRepoIDs = appRepos.map((x) => x.id);
-  console.log(appRepos.length, "appRepos");
   if (appRepos.length === 0) return;
 
   const lastEventID = await AppRepo.multiSetLastEvent({
