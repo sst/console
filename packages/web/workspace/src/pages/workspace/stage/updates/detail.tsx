@@ -757,7 +757,16 @@ export function Detail() {
               <Stack space="5">
                 <Show
                   when={!isEmpty()}
-                  fallback={<ResourceEmpty>No changes</ResourceEmpty>}
+                  fallback={
+                    <ResourceEmpty>
+                      <Show
+                        fallback="No changes"
+                        when={status() === "updating"}
+                      >
+                        Waiting for changes
+                      </Show>
+                    </ResourceEmpty>
+                  }
                 >
                   {renderResources()}
                 </Show>
