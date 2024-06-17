@@ -455,15 +455,10 @@ export function Detail() {
 
   const status = createMemo(() => {
     if (!update()) return;
-    return update().time.completed
-      ? update().errors.length
-        ? "error"
-        : "updated"
-      : // : update().time.canceled
-        //   ? "canceled"
-        //   : update().time.queued
-        //     ? "queued"
-        "updating";
+    if (update().time.completed)
+      return update().errors.length ? "error" : "updated";
+    if (run() && !run().active) return "queued";
+    return "updating";
   });
   const deleted = createMemo(() =>
     resources().filter((r) => r.action === "deleted"),
@@ -698,7 +693,7 @@ export function Detail() {
                 {renderHeader()}
                 <Show when={update().errors.length}>{renderErrors()}</Show>
               </Stack>
-              <Show when={run()}>
+              <Show when={run() && (run().active || run().time.completed)}>
                 <Stack space="2">
                   <Show
                     when={logs.length}
@@ -761,7 +756,7 @@ export function Detail() {
                     <ResourceEmpty>
                       <Show
                         fallback="No changes"
-                        when={status() === "updating"}
+                        when={status() === "updating" || status() === "queued"}
                       >
                         Waiting for changes
                       </Show>
