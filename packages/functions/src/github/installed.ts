@@ -5,7 +5,7 @@ import { withActor } from "@console/core/actor";
 export const handler = ApiHandler(async (event) => {
   const workspaceID = event.queryStringParameters?.state;
   const installationID = parseInt(
-    event.queryStringParameters?.installation_id ?? ""
+    event.queryStringParameters?.installation_id ?? "",
   );
   if (!installationID)
     throw new Response({
@@ -24,7 +24,7 @@ export const handler = ApiHandler(async (event) => {
       },
       async () => {
         await Github.connect(installationID);
-      }
+      },
     );
   }
 

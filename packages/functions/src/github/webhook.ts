@@ -50,7 +50,7 @@ app.webhooks.on(
         username: event.payload.sender?.login!,
       },
     });
-  }
+  },
 );
 
 app.webhooks.on("push", async (event) => {
@@ -82,6 +82,7 @@ async function process(octokit: Octokit, trigger: Trigger) {
   const appRepos = await Github.listAppReposByExternalRepoID(repoID);
   const workspaceIDs = appRepos.map((x) => x.workspaceID);
   const appRepoIDs = appRepos.map((x) => x.id);
+  console.log(appRepos.length, "appRepos");
   if (appRepos.length === 0) return;
 
   const lastEventID = await AppRepo.multiSetLastEvent({
@@ -89,6 +90,7 @@ async function process(octokit: Octokit, trigger: Trigger) {
     appRepoIDs,
     gitContext: trigger,
   });
+  console.log(lastEventID);
 
   // Get `sst.config.ts` file
   const file = await octokit.rest.repos.getContent({
@@ -117,16 +119,16 @@ async function process(octokit: Octokit, trigger: Trigger) {
       sstConfig.error === "parse_config"
         ? "Failed to parse sst.config.ts"
         : sstConfig.error === "evaluate_config"
-        ? "Failed to evaluate sst.config.ts"
-        : sstConfig.error === "v2_app"
-        ? "SST v2 apps are not supported"
-        : sstConfig.error === "missing_autodeploy"
-        ? "Autodeploy config not defined in sst.config.ts"
-        : sstConfig.error === "missing_autodeploy_target"
-        ? "Autodeploy target not defined in sst.config.ts"
-        : sstConfig.error === "missing_autodeploy_stage"
-        ? "Missing stage in Autodeploy target"
-        : "Failed to parse sst.config.ts";
+          ? "Failed to evaluate sst.config.ts"
+          : sstConfig.error === "v2_app"
+            ? "SST v2 apps are not supported"
+            : sstConfig.error === "missing_autodeploy"
+              ? "Autodeploy config not defined in sst.config.ts"
+              : sstConfig.error === "missing_autodeploy_target"
+                ? "Autodeploy target not defined in sst.config.ts"
+                : sstConfig.error === "missing_autodeploy_stage"
+                  ? "Missing stage in Autodeploy target"
+                  : "Failed to parse sst.config.ts";
     await AppRepo.multiSetLastEventStatus({
       workspaceIDs,
       appRepoIDs,
@@ -157,7 +159,7 @@ async function process(octokit: Octokit, trigger: Trigger) {
             status: e.message,
           });
         }
-      }
+      },
     );
   }
 }

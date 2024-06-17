@@ -143,7 +143,7 @@ const mutators = new Client<ServerType>()
     }
   })
   .mutation("app_repo_connect", async (tx, input) => {
-    await AppRepoStore.put(tx, [input.id!], {
+    await AppRepoStore.put(tx, [input.appID, input.id!], {
       id: input.id,
       appID: input.appID,
       type: input.type,

@@ -37,7 +37,15 @@ import { createId } from "@paralleldrive/cuid2";
 import { IconEllipsisVertical } from "$/ui/icons";
 import { formatCommit, formatSinceTime } from "$/common/format";
 import { createEventListener } from "@solid-primitives/event-listener";
-import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+} from "solid-js";
 import { useReplicache, createSubscription } from "$/providers/replicache";
 import {
   githubPr,
@@ -64,7 +72,7 @@ import {
 import { array, minLength, object, optional, string } from "valibot";
 import { AWS } from "$/data/aws";
 import { createStore } from "solid-js/store";
-import { fromPairs, pipe, sortBy } from "remeda";
+import { fromPairs, map, pipe, sortBy, filter } from "remeda";
 
 const HEADER_HEIGHT = 50;
 const SELECT_REPO_NAME = "select-repo";
@@ -511,40 +519,23 @@ export function Settings() {
     (tx) => RunConfigStore.forApp(tx, app.app.id),
     [],
   );
-  const repoInfo = createSubscription(async (tx) => {
-    const orgs = await GithubOrgStore.all(tx)
-    const ghRepos = await GithubRepoStore.all(tx);
 
-    const ghRepoOrg = orgs.find((org) => !org.time.disconnected);
+  const appRepo = createSubscription((tx) =>
+    AppRepoStore.forApp(tx, app.app.id).then((repos) => repos[0]),
+  );
 
-    const appRepos = await AppRepoStore.forApp(tx, app.app.id);
-    if (!appRepos.length) return { ghRepos, ghRepoOrg };
-
-    const ghRepo = ghRepos.find((repo) => repo.id === appRepos[0].repoID);
-    if (!ghRepo) return { ghRepos, ghRepoOrg };
-
-    return {
-      ghRepo,
-      appRepo: appRepos[0],
-      ghRepoOrg:
-        (ghRepoOrg?.id === ghRepo.githubOrgID)
-          ? ghRepoOrg
-          : orgs.find((org) => org.id === ghRepo.githubOrgID)
-    };
+  const needsGithub = createSubscription(async (tx) => {
+    const ghOrgs = await GithubOrgStore.all(tx);
+    const appRepo = await AppRepoStore.forApp(tx, app.app.id).then(
+      (repos) => repos[0],
+    );
+    if (appRepo) {
+      const ghRepo = await GithubRepoStore.get(tx, appRepo.repoID);
+      const match = ghOrgs.find((org) => org.id === ghRepo.githubOrgID);
+      return !match || Boolean(match.time.disconnected);
+    }
+    return ghOrgs.filter((org) => !org.time.disconnected).length === 0;
   });
-
-  const appRepo = () => repoInfo?.value?.appRepo;
-  const ghDisconnected = createMemo(() =>
-    !repoInfo.value?.ghRepoOrg || repoInfo.value?.ghRepoOrg.time.disconnected
-  );
-  const sortedRepos = createMemo(() =>
-    repoInfo.value?.ghRepos
-      ? sortBy(repoInfo.value?.ghRepos!.map((repo) => ({
-        label: repo.name,
-        value: repo.id,
-      })), (repo) => repo.label)
-      : []
-  );
 
   const awsAccounts = createSubscription(AWS.AccountStore.list, []);
   const [editing, setEditing] = createStore<{
@@ -553,24 +544,6 @@ export function Settings() {
   }>({
     active: false,
   });
-
-  const lastEvent = createMemo(() => {
-    const ev = appRepo()?.lastEvent;
-    if (!appRepo() || !ev) {
-      return;
-    }
-    const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
-    const uri =
-      ev.type === "push"
-        ? githubBranch(repoURL, ev.branch)
-        : githubPr(repoURL, ev.number);
-    const branch = ev.type === "push" ? ev.branch : `pr#${ev.number}`;
-    const commit = ev.commit.id;
-
-    return { repoURL, uri, branch, commit };
-  });
-
-  const [repo, setRepo] = createSignal<string>();
 
   const [overrideGithub, setOverrideGithub] = createSignal(false);
 
@@ -583,65 +556,90 @@ export function Settings() {
   );
 
   function LastEvent() {
+    const event = createSubscription(async (tx) => {
+      const appRepo = await AppRepoStore.forApp(tx, app.app.id).then(
+        (repos) => repos[0],
+      );
+      if (!appRepo) return;
+      if (!appRepo.lastEvent) return;
+      const ev = appRepo.lastEvent;
+      const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
+      const uri =
+        ev.type === "push"
+          ? githubBranch(repoURL, ev.branch)
+          : githubPr(repoURL, ev.number);
+      const branch = ev.type === "push" ? ev.branch : `pr#${ev.number}`;
+      const commit = ev.commit.id;
+
+      return {
+        status: appRepo.lastEventStatus,
+        time: appRepo.time.lastEvent!,
+        type: ev.type,
+        repoURL,
+        uri,
+        branch,
+        commit,
+      };
+    });
     return (
-      <EventRoot>
-        <Stack space="2.5">
-          <EventCommit>
-            <EventCommitLink
-              target="_blank"
-              href={githubCommit(lastEvent()!.repoURL, lastEvent()!.commit)}
+      <Show when={event.value}>
+        <EventRoot>
+          <Stack space="2.5">
+            <EventCommit>
+              <EventCommitLink
+                target="_blank"
+                href={githubCommit(event.value!.repoURL, event.value!.commit)}
+              >
+                <EventCommitIcon>
+                  <IconCommit width="16" height="16" />
+                </EventCommitIcon>
+                {formatCommit(event.value!.commit)}
+              </EventCommitLink>
+              <EventBranchLink target="_blank" href={event.value!.uri}>
+                <EventBranchIcon>
+                  <Switch>
+                    <Match when={event.value!.type === "pull_request"}>
+                      <IconPr width="12" height="12" />
+                    </Match>
+                    <Match when={true}>
+                      <IconGit width="12" height="12" />
+                    </Match>
+                  </Switch>
+                </EventBranchIcon>
+                {event.value!.branch}
+              </EventBranchLink>
+            </EventCommit>
+            <EventResult>
+              <Switch>
+                <Match when={event.value!.status}>
+                  <EventResultIcon status="error">
+                    <IconSubRight />
+                  </EventResultIcon>
+                  <EventResultCopy status="error">
+                    {event.value!.status}
+                  </EventResultCopy>
+                </Match>
+                <Match when={true}>
+                  <EventResultIcon status="success">
+                    <IconSubRight />
+                  </EventResultIcon>
+                  <EventResultCopy status="success">Deployed</EventResultCopy>
+                </Match>
+              </Switch>
+            </EventResult>
+          </Stack>
+          <EventRight>
+            <EventLabel>Last Commit</EventLabel>
+            <EventTime
+              title={DateTime.fromISO(event.value!.time).toLocaleString(
+                DateTime.DATETIME_FULL,
+              )}
             >
-              <EventCommitIcon>
-                <IconCommit width="16" height="16" />
-              </EventCommitIcon>
-              {formatCommit(lastEvent()!.commit)}
-            </EventCommitLink>
-            <EventBranchLink target="_blank" href={lastEvent()!.uri}>
-              <EventBranchIcon>
-                <Switch>
-                  <Match when={appRepo()!.lastEvent!.type === "pull_request"}>
-                    <IconPr width="12" height="12" />
-                  </Match>
-                  <Match when={true}>
-                    <IconGit width="12" height="12" />
-                  </Match>
-                </Switch>
-              </EventBranchIcon>
-              {lastEvent()!.branch}
-            </EventBranchLink>
-          </EventCommit>
-          <EventResult>
-            <Switch>
-              <Match when={appRepo()?.lastEventStatus}>
-                <EventResultIcon status="error">
-                  <IconSubRight />
-                </EventResultIcon>
-                <EventResultCopy status="error">
-                  {appRepo()?.lastEventStatus}
-                </EventResultCopy>
-              </Match>
-              <Match when={true}>
-                <EventResultIcon status="success">
-                  <IconSubRight />
-                </EventResultIcon>
-                <EventResultCopy status="success">Deployed</EventResultCopy>
-              </Match>
-            </Switch>
-          </EventResult>
-        </Stack>
-        <EventRight>
-          <EventLabel>Last Commit</EventLabel>
-          <EventTime
-            title={DateTime.fromISO(appRepo()!.time.lastEvent!).toLocaleString(
-              DateTime.DATETIME_FULL,
-            )}
-          >
-            {formatSinceTime(
-              DateTime.fromISO(appRepo()!.time.lastEvent!).toSQL()!,
-            )}
-          </EventTime>
-        </EventRight>
-      </EventRoot>
+              {formatSinceTime(DateTime.fromISO(event.value!.time).toSQL()!)}
+            </EventTime>
+          </EventRight>
+        </EventRoot>
+      </Show>
     );
   }
 
@@ -788,7 +786,10 @@ export function Settings() {
                                 size="sm"
                                 triggerClass={targetFormFieldDropdown}
                                 icon={
-                                  <IconEllipsisVertical width={18} height={18} />
+                                  <IconEllipsisVertical
+                                    width={18}
+                                    height={18}
+                                  />
                                 }
                               >
                                 <Dropdown.Item
@@ -813,8 +814,10 @@ export function Settings() {
                         <TargetAddVarIcon>
                           <IconAdd width="10" height="10" />
                         </TargetAddVarIcon>
-                        <Show when={fieldArray.items.length !== 0}
-                          fallback="Add a variable">
+                        <Show
+                          when={fieldArray.items.length !== 0}
+                          fallback="Add a variable"
+                        >
                           Add another variable
                         </Show>
                       </TargetAddVarLink>
@@ -869,323 +872,329 @@ export function Settings() {
             </Text>
           </Stack>
           <GitRepoRoot>
-            <Show when={!overrideGithub() && ghDisconnected()}>
-              <GitOrgError danger={
-                repoInfo.value?.ghRepoOrg?.time.disconnected !== undefined
-              }>
-                <GitOrgErrorCopy>
-                  <Show
-                    fallback="Reconnect your GitHub organization"
-                    when={repoInfo.value?.ghRepoOrg?.time.disconnected === undefined}
-                  >
-                    Start by connecting to your GitHub organization
-                  </Show>
-                </GitOrgErrorCopy>
-                <form
-                  action={import.meta.env.VITE_API_URL + "/github/connect"}
-                  method="get"
-                  target="newWindow"
-                >
-                  <Button type="submit" color="github">
-                    <ButtonIcon>
-                      <IconGitHub />
-                    </ButtonIcon>
-                    Connect GitHub
-                  </Button>
-                  <input type="hidden" name="provider" value="github" />
-                  <input type="hidden" name="workspaceID" value={workspace().id} />
-                  <input type="hidden" name="token" value={auth.current.token} />
-                </form>
-              </GitOrgError>
-            </Show>
             <Switch>
-              <Match when={repoInfo.value?.ghRepo}>
-                <GitRepoPanel>
-                  <GitRepoPanelRow>
-                    <Row space="2">
-                      <GitRepoIcon>
-                        <IconGitHub width="32" height="32" />
-                      </GitRepoIcon>
-                      <Stack space="1">
-                        <GitRepoLink
-                          target="_blank"
-                          href={githubRepo(
-                            repoInfo.value!.ghRepoOrg!.login,
-                            repoInfo.value!.ghRepo!.name!,
-                          )}
-                        >
-                          {repoInfo.value!.ghRepoOrg!.login}
-                          <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
-                          {repoInfo.value!.ghRepo!.name}
-                        </GitRepoLink>
-                      </Stack>
-                    </Row>
-                    <Button
-                      color="danger"
-                      onClick={() => {
-                        if (
-                          !confirm(
-                            "Are you sure you want to disconnect from this repo?",
-                          )
-                        )
-                          return;
-                        setRepo(undefined);
-                        rep().mutate.app_repo_disconnect(repoInfo.value!.appRepo!.id);
-                      }}
+              <Match when={!overrideGithub() && needsGithub.value}>
+                <GitOrgError danger={!!appRepo.value}>
+                  <GitOrgErrorCopy>
+                    <Show
+                      fallback="Reconnect your GitHub organization"
+                      when={!appRepo.value}
                     >
-                      Disconnect
+                      Start by connecting to your GitHub organization
+                    </Show>
+                  </GitOrgErrorCopy>
+                  <form
+                    action={import.meta.env.VITE_API_URL + "/github/connect"}
+                    method="get"
+                    target="newWindow"
+                  >
+                    <Button type="submit" color="github">
+                      <ButtonIcon>
+                        <IconGitHub />
+                      </ButtonIcon>
+                      Connect GitHub
                     </Button>
-                  </GitRepoPanelRow>
-                  <Show when={lastEvent()}>
-                    <LastEvent />
-                  </Show>
-                </GitRepoPanel>
-                <TargetsRoot>
-                  <TargetHeader>
-                    <TargetHeaderCopy>Targets</TargetHeaderCopy>
-                    <Show when={(!editing.active || editing.id) && runConfigs.value.length}>
-                      <LinkButton
+                    <input type="hidden" name="provider" value="github" />
+                    <input
+                      type="hidden"
+                      name="workspaceID"
+                      value={workspace().id}
+                    />
+                    <input
+                      type="hidden"
+                      name="token"
+                      value={auth.current.token}
+                    />
+                  </form>
+                </GitOrgError>
+              </Match>
+
+              <Match when={appRepo.value}>
+                {(_item) => {
+                  const info = createSubscription(async (tx) => {
+                    const repo = await GithubRepoStore.get(
+                      tx,
+                      appRepo.value!.repoID,
+                    );
+                    const org = await GithubOrgStore.get(tx, repo.githubOrgID);
+                    return {
+                      org,
+                      repo,
+                    };
+                  });
+                  return (
+                    <Show when={info.value}>
+                      <GitRepoPanel>
+                        <GitRepoPanelRow>
+                          <Row space="2">
+                            <GitRepoIcon>
+                              <IconGitHub width="32" height="32" />
+                            </GitRepoIcon>
+                            <Stack space="1">
+                              <GitRepoLink
+                                target="_blank"
+                                href={githubRepo(
+                                  info.value!.org.login,
+                                  info.value!.repo.name,
+                                )}
+                              >
+                                {info.value!.org.login}
+                                <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
+                                {info.value!.repo.name}
+                              </GitRepoLink>
+                            </Stack>
+                          </Row>
+                          <Button
+                            color="danger"
+                            onClick={() => {
+                              if (
+                                !confirm(
+                                  "Are you sure you want to disconnect from this repo?",
+                                )
+                              )
+                                return;
+                              rep().mutate.app_repo_disconnect(
+                                appRepo.value!.id,
+                              );
+                            }}
+                          >
+                            Disconnect
+                          </Button>
+                        </GitRepoPanelRow>
+                        <LastEvent />
+                      </GitRepoPanel>
+                      <TargetsRoot>
+                        <TargetHeader>
+                          <TargetHeaderCopy>Targets</TargetHeaderCopy>
+                          <Show
+                            when={
+                              (!editing.active || editing.id) &&
+                              runConfigs.value.length
+                            }
+                          >
+                            <LinkButton
+                              onClick={() => {
+                                reset(putForm);
+                                setValues(putForm, {
+                                  env: [],
+                                });
+                                setEditing("active", true);
+                                setEditing("id", undefined);
+                              }}
+                            >
+                              <TargetAddIcon>
+                                <IconAdd width="10" height="10" />
+                              </TargetAddIcon>
+                              Add a new target
+                            </LinkButton>
+                          </Show>
+                        </TargetHeader>
+                        <div>
+                          <For
+                            each={pipe(
+                              runConfigs.value,
+                              sortBy((val) => val.stagePattern.length),
+                            )}
+                          >
+                            {(config) => (
+                              <>
+                                <TargetFormRoot>
+                                  <TargetFormHeader>
+                                    <TargetFormHeaderCopy>
+                                      {config.stagePattern}
+                                    </TargetFormHeaderCopy>
+                                    <Dropdown
+                                      size="sm"
+                                      icon={
+                                        <IconEllipsisVertical
+                                          width={18}
+                                          height={18}
+                                        />
+                                      }
+                                    >
+                                      <Dropdown.Item
+                                        onSelect={() => {
+                                          setEditing("id", config.id);
+                                          setEditing("active", true);
+                                          reset(putForm);
+                                          setValues(putForm, {
+                                            stagePattern: config.stagePattern,
+                                            awsAccount:
+                                              config.awsAccountExternalID,
+                                            env: Object.entries(config.env).map(
+                                              ([key, value]) => ({
+                                                key,
+                                                value,
+                                              }),
+                                            ),
+                                          });
+                                        }}
+                                      >
+                                        Edit target
+                                      </Dropdown.Item>
+                                      <Dropdown.Item
+                                        onSelect={() => {
+                                          setEditing("id", undefined);
+                                          setEditing("active", true);
+                                          reset(putForm);
+                                          setValues(putForm, {
+                                            stagePattern: config.stagePattern,
+                                            awsAccount:
+                                              config.awsAccountExternalID,
+                                            env: Object.entries(config.env).map(
+                                              ([key, value]) => ({
+                                                key,
+                                                value,
+                                              }),
+                                            ),
+                                          });
+                                        }}
+                                      >
+                                        Duplicate target
+                                      </Dropdown.Item>
+                                      <Dropdown.Seperator />
+                                      <Dropdown.Item
+                                        onSelect={() => {
+                                          if (
+                                            !confirm(
+                                              "Are you sure you want to remove this target?",
+                                            )
+                                          )
+                                            return;
+                                          rep().mutate.run_config_remove(
+                                            config.id,
+                                          );
+                                        }}
+                                      >
+                                        Remove target
+                                      </Dropdown.Item>
+                                    </Dropdown>
+                                  </TargetFormHeader>
+                                </TargetFormRoot>
+                                <Show
+                                  when={
+                                    editing.active && editing.id === config.id
+                                  }
+                                >
+                                  <TargetForm />
+                                </Show>
+                              </>
+                            )}
+                          </For>
+                          <Show when={editing.active && !editing.id}>
+                            <TargetFormRoot>
+                              <TargetFormHeader>
+                                <TargetFormHeaderCopy new>
+                                  Add a new target
+                                </TargetFormHeaderCopy>
+                              </TargetFormHeader>
+                            </TargetFormRoot>
+                            <TargetForm new />
+                          </Show>
+                          <Show
+                            when={
+                              (!editing.active || editing.id) &&
+                              runConfigs.value.length === 0
+                            }
+                          >
+                            <TargetsEmpty>
+                              <LinkButton
+                                onClick={() => {
+                                  reset(putForm);
+                                  setValues(putForm, {
+                                    env: [],
+                                  });
+                                  setEditing("active", true);
+                                  setEditing("id", undefined);
+                                }}
+                              >
+                                <TargetsEmptyIcon>
+                                  <IconAdd width="10" height="10" />
+                                </TargetsEmptyIcon>
+                                Add an autodeploy target
+                              </LinkButton>
+                            </TargetsEmpty>
+                          </Show>
+                        </div>
+                      </TargetsRoot>
+                    </Show>
+                  );
+                }}
+              </Match>
+
+              <Match when={true}>
+                {(_val) => {
+                  const [repo, setRepo] = createSignal<string>();
+                  const repos = createSubscription(GithubRepoStore.all, []);
+                  const orgs = createSubscription(GithubOrgStore.all, []);
+                  const activeOrgs = createMemo(
+                    () =>
+                      new Set(
+                        orgs.value
+                          .filter((org) => !org.time.disconnected)
+                          .map((org) => org.id),
+                      ),
+                  );
+                  const sortedRepos = createMemo(() =>
+                    pipe(
+                      repos.value,
+                      filter((repo) => activeOrgs().has(repo.githubOrgID)),
+                      map((repo) => ({
+                        label: repo.name,
+                        value: repo.id,
+                      })),
+                      sortBy((repo) => repo.label),
+                    ),
+                  );
+                  const empty = createMemo(() => sortedRepos().length === 0);
+                  return (
+                    <SelectRepoRoot>
+                      <FormField
+                        class={selectRepo}
+                        hint={
+                          empty() ? (
+                            <>
+                              Try{" "}
+                              <Link href="../../settings#github">
+                                connecting to a different organization
+                              </Link>
+                            </>
+                          ) : undefined
+                        }
+                      >
+                        <Select
+                          name={SELECT_REPO_NAME}
+                          disabled={empty()}
+                          onChange={(e) => setRepo(e.currentTarget.value)}
+                          placeholder={
+                            sortedRepos().length === 0
+                              ? "No repos found"
+                              : "Select a repo..."
+                          }
+                          options={sortedRepos()}
+                        />
+                      </FormField>
+                      <Button
+                        disabled={empty() || !repo()}
                         onClick={() => {
-                          reset(putForm);
-                          setValues(putForm, {
-                            env: [],
+                          rep().mutate.app_repo_connect({
+                            id: createId(),
+                            appID: app.app.id,
+                            type: "github",
+                            repoID: repo()!,
                           });
-                          setEditing("active", true);
-                          setEditing("id", undefined);
                         }}
                       >
-                        <TargetAddIcon>
-                          <IconAdd width="10" height="10" />
-                        </TargetAddIcon>
-                        Add a new target
-                      </LinkButton>
-                    </Show>
-                  </TargetHeader>
-                  <div>
-                    <For
-                      each={pipe(
-                        runConfigs.value,
-                        sortBy((val) => val.stagePattern.length),
-                      )}
-                    >
-                      {(config) => (
-                        <>
-                          <TargetFormRoot>
-                            <TargetFormHeader>
-                              <TargetFormHeaderCopy>
-                                {config.stagePattern}
-                              </TargetFormHeaderCopy>
-                              <Dropdown
-                                size="sm"
-                                icon={
-                                  <IconEllipsisVertical width={18} height={18} />
-                                }
-                              >
-                                <Dropdown.Item
-                                  onSelect={() => {
-                                    setEditing("id", config.id);
-                                    setEditing("active", true);
-                                    reset(putForm);
-                                    setValues(putForm, {
-                                      stagePattern: config.stagePattern,
-                                      awsAccount: config.awsAccountExternalID,
-                                      env: Object.entries(config.env).map(
-                                        ([key, value]) => ({ key, value }),
-                                      ),
-                                    });
-                                  }}
-                                >
-                                  Edit target
-                                </Dropdown.Item>
-                                <Dropdown.Item
-                                  onSelect={() => {
-                                    setEditing("id", undefined);
-                                    setEditing("active", true);
-                                    reset(putForm);
-                                    setValues(putForm, {
-                                      stagePattern: config.stagePattern,
-                                      awsAccount: config.awsAccountExternalID,
-                                      env: Object.entries(config.env).map(
-                                        ([key, value]) => ({ key, value }),
-                                      ),
-                                    });
-                                  }}
-                                >
-                                  Duplicate target
-                                </Dropdown.Item>
-                                <Dropdown.Seperator />
-                                <Dropdown.Item
-                                  onSelect={() => {
-                                    if (
-                                      !confirm("Are you sure you want to remove this target?")
-                                    )
-                                      return;
-                                    rep().mutate.run_config_remove(config.id)
-                                  }}
-                                >
-                                  Remove target
-                                </Dropdown.Item>
-                              </Dropdown>
-                            </TargetFormHeader>
-                          </TargetFormRoot>
-                          <Show when={editing.active && editing.id === config.id}>
-                            <TargetForm />
-                          </Show>
-                        </>
-                      )}
-                    </For>
-                    <Show when={editing.active && !editing.id}>
-                      <TargetFormRoot>
-                        <TargetFormHeader>
-                          <TargetFormHeaderCopy new>
-                            Add a new target
-                          </TargetFormHeaderCopy>
-                        </TargetFormHeader>
-                      </TargetFormRoot>
-                      <TargetForm new />
-                    </Show>
-                    <Show when={(!editing.active || editing.id) && runConfigs.value.length === 0}>
-                      <TargetsEmpty>
-                        <LinkButton
-                          onClick={() => {
-                            reset(putForm);
-                            setValues(putForm, {
-                              env: [],
-                            });
-                            setEditing("active", true);
-                            setEditing("id", undefined);
-                          }}
-                        >
-                          <TargetsEmptyIcon>
-                            <IconAdd width="10" height="10" />
-                          </TargetsEmptyIcon>
-                          Add an autodeploy target
-                        </LinkButton>
-                      </TargetsEmpty>
-                    </Show>
-                  </div>
-                </TargetsRoot>
-              </Match>
-              <Match when={!ghDisconnected() || overrideGithub()}>
-                <SelectRepoRoot>
-                  <FormField
-                    class={selectRepo}
-                    hint={
-                      repoInfo.value?.ghRepos!.length === 0
-                        ? <>
-                          Try <Link href="../../settings#github">connecting to a different organization</Link>
-                        </>
-                        : undefined
-                    }
-                  >
-                    <Select
-                      name={SELECT_REPO_NAME}
-                      disabled={repoInfo.value?.ghRepos!.length === 0}
-                      onChange={(e) => setRepo(e.currentTarget.value)}
-                      placeholder={
-                        repoInfo.value?.ghRepos!.length === 0
-                          ? "No repos found"
-                          : "Select a repo..."
-                      }
-                      options={sortedRepos()}
-                    />
-                  </FormField>
-                  <Button
-                    disabled={
-                      repoInfo.value?.ghRepos!.length === 0
-                      || !repo()
-                    }
-                    onClick={() => {
-                      rep().mutate.app_repo_connect({
-                        id: createId(),
-                        appID: app.app.id,
-                        type: "github",
-                        repoID: repo()!,
-                      });
-                    }}
-                  >
-                    Select
-                  </Button>
-                </SelectRepoRoot>
+                        Select
+                      </Button>
+                    </SelectRepoRoot>
+                  );
+                }}
               </Match>
             </Switch>
           </GitRepoRoot>
         </Stack>
-        <Divider />
-        <RepoInfo />
-        <Divider />
       </SettingsRoot>
-    </>
-  );
-}
-
-function RepoInfo() {
-  const rep = useReplicache();
-  const app = useAppContext();
-  const githubRepos = GithubRepoStore.all.watch(rep, () => []);
-  const appRepo = AppRepoStore.all.watch(
-    rep,
-    () => [],
-    (all) => all.at(0),
-  );
-  const connectedRepo = createMemo(() =>
-    githubRepos().find((repo) => repo.id === appRepo()?.repoID),
-  );
-  const connectedRepoOrg = GithubOrgStore.all.watch(
-    rep,
-    () => [],
-    (orgs) => orgs.find((org) => org.id === connectedRepo()?.githubOrgID),
-  );
-
-  return (
-    <>
-      <h3>Repo</h3>
-      <Show
-        when={appRepo()}
-        fallback={
-          <>
-            <p>Not connected to a repo. Select one:</p>
-            <ul>
-              <For each={githubRepos()}>
-                {(repo) => (
-                  <li>
-                    <Button
-                      color="secondary"
-                      onClick={() => {
-                        rep().mutate.app_repo_connect({
-                          id: createId(),
-                          appID: app.app.id,
-                          type: "github",
-                          repoID: repo.id,
-                        });
-                      }}
-                    >
-                      {repo.name}
-                    </Button>
-                  </li>
-                )}
-              </For>
-            </ul>
-          </>
-        }
-      >
-        <Text size="sm" color="dimmed">
-          Connected to{" "}
-          <Text color="dimmed" size="sm" weight="medium">
-            {connectedRepoOrg()?.login}/{connectedRepo()?.name}
-          </Text>
-        </Text>
-        <Button
-          color="secondary"
-          onClick={() => {
-            if (!confirm("Are you sure you want to disconnect this repo?"))
-              return;
-            rep().mutate.app_repo_disconnect(appRepo()!.id);
-          }}
-        >
-          Disconnect
-        </Button>
-      </Show>
     </>
   );
 }

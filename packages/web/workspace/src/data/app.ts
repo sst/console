@@ -19,7 +19,7 @@ export const AppStore = new Store()
 export const AppRepoStore = new Store()
   .type<AppRepo.Repo>()
   .scan("all", () => ["appRepo"])
-  .get((id: string) => ["appRepo", id])
+  .get((appID: string, id: string) => ["appRepo", appID, id])
   .scan("forApp", (appID: string) => ["appRepo", appID])
   .build();
 
