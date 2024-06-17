@@ -37,7 +37,7 @@ export type DummyMode =
   | "overview:base;usage:overage;resources:base;workspace:gated;subscription:overdue";
 
 export function* generateData(
-  mode: DummyMode
+  mode: DummyMode,
 ): Generator<DummyData, void, unknown> {
   console.log("generating for", mode);
 
@@ -234,7 +234,8 @@ const STAGE_ION_NO_OUTPUTS = { id: "1113", name: "ion-no-outputs" };
 const STAGE_ION_EMPTY_INTERNALS = { id: "1114", name: "ion-no-internal-fns" };
 const STAGE_ION_EMPTY_SST_FNS = { id: "1115", name: "ion-no-sst-fns" };
 
-const STACK_URN = "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair";
+const STACK_URN =
+  "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair";
 
 const ACCOUNT_ID = "connected";
 const ACCOUNT_ID_FULL = "full";
@@ -587,7 +588,8 @@ function* stageIonBase(): Generator<DummyData, void, unknown> {
     type: "pulumi:pulumi:Stack",
     urn: STACK_URN,
     outputs: {
-      AReallyReallyLongOutputNameThatIsGoingToOverFlowBecauseItsTooLong: "https://ty3jv62ykpmwwuqz4u3g7fxak40frlaf.lambda-url.us-east-1.on.aws/",
+      AReallyReallyLongOutputNameThatIsGoingToOverFlowBecauseItsTooLong:
+        "https://ty3jv62ykpmwwuqz4u3g7fxak40frlaf.lambda-url.us-east-1.on.aws/",
     },
   });
   yield stateResource({
@@ -598,25 +600,25 @@ function* stageIonBase(): Generator<DummyData, void, unknown> {
     outputs: {
       grants: [
         {
-          "id": "72aa549316ea5f938bb13dc4e5908a4d3cd4f43918e5d0654daf077680b4570f",
-          "permissions": [
-            "FULL_CONTROL"
-          ],
-          "type": "CanonicalUser",
-          "uri": ""
-        }
+          id: "72aa549316ea5f938bb13dc4e5908a4d3cd4f43918e5d0654daf077680b4570f",
+          permissions: ["FULL_CONTROL"],
+          type: "CanonicalUser",
+          uri: "",
+        },
       ],
-      defaultTags: "{\"tags\":{\"sst:app\":\"ion-sandbox\",\"sst:stage\":\"jayair\"}}",
+      defaultTags: '{"tags":{"sst:app":"ion-sandbox","sst:stage":"jayair"}}',
       profile: "sst-dev",
       region: "us-east-1",
       skipCredentialsValidation: "false",
       skipRegionValidation: "true",
-      version: "6.37.1"
+      version: "6.37.1",
     },
   });
 
-  const OVERFLOW_TYPE = "sst:reallyreallylongcloudprovider:AReallyReallyLongComponentNameThatIsGoingToOverFlowBecauseItsTooLongAndItKeepsGoingAndGoingForALongTime";
-  const OVERFLOW_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::AReallyReallyLongFunctionNameThatIsGoingToOverFlowBecauseItsTooLongAndKeepsGoingAndGoing";
+  const OVERFLOW_TYPE =
+    "sst:reallyreallylongcloudprovider:AReallyReallyLongComponentNameThatIsGoingToOverFlowBecauseItsTooLongAndItKeepsGoingAndGoingForALongTime";
+  const OVERFLOW_URN =
+    "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::AReallyReallyLongFunctionNameThatIsGoingToOverFlowBecauseItsTooLongAndKeepsGoingAndGoing";
 
   yield stateResource({
     id: ++STATE_RES_ID,
@@ -650,14 +652,17 @@ function* stageIonBase(): Generator<DummyData, void, unknown> {
   yield* stageIonBaseIconCase(STACK_URN);
 }
 
-function* stageIonUpdateLinks(parent: string): Generator<DummyData, void, unknown> {
+function* stageIonUpdateLinks(
+  parent: string,
+): Generator<DummyData, void, unknown> {
   const UPDATE_1 = 1;
   const UPDATE_2 = 2;
   const UPDATE_1_TIME = DateTime.now().minus({ minutes: 13 }).toISO()!;
   const UPDATE_2_TIME = DateTime.now().minus({ minutes: 11 }).toISO()!;
 
   const ASTRO_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroA";
-  const ASTRO_FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro$sst:aws:Function::MyAstroADefault";
+  const ASTRO_FN_URN =
+    "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro$sst:aws:Function::MyAstroADefault";
 
   yield update({
     id: UPDATE_1,
@@ -750,7 +755,9 @@ function* stageIonUpdateLinks(parent: string): Generator<DummyData, void, unknow
   });
 }
 
-function* stageIonBaseIconCase(parent: string): Generator<DummyData, void, unknown> {
+function* stageIonBaseIconCase(
+  parent: string,
+): Generator<DummyData, void, unknown> {
   yield stateResource({
     parent,
     id: ++STATE_RES_ID,
@@ -971,7 +978,8 @@ function* stageIonLogsBase(): Generator<DummyData, void, unknown> {
     urn: STACK_URN,
   });
 
-  const FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefault";
+  const FN_URN =
+    "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefault";
   yield stateFunction({
     id: ++STATE_RES_ID,
     stageID: STAGE_ION.id,
@@ -998,14 +1006,16 @@ function* stageIonLogsBase(): Generator<DummyData, void, unknown> {
     },
   });
 
-  const LONG_FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefaultIsAReallyLongFunctionNameThatShouldOverflowBecauseItJustKeepsKeepsGoingAndWeNeedToMakeItEvenLongerBecauseThatWasntEnough";
+  const LONG_FN_URN =
+    "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefaultIsAReallyLongFunctionNameThatShouldOverflowBecauseItJustKeepsKeepsGoingAndWeNeedToMakeItEvenLongerBecauseThatWasntEnough";
   yield stateFunction({
     id: ++STATE_RES_ID,
     stageID: STAGE_ION.id,
     parent: LONG_FN_URN,
     name: "MyWebDefaultFunctionLong",
     timeout: 631,
-    handler: "a/really/really/really/long/path/to/the/handler/that/also/needs/to/overflow/because/its/way/too/long/for/the/label/index.handler",
+    handler:
+      "a/really/really/really/long/path/to/the/handler/that/also/needs/to/overflow/because/its/way/too/long/for/the/label/index.handler",
   });
 
   yield stateResource({
@@ -1019,7 +1029,6 @@ function* stageIonLogsBase(): Generator<DummyData, void, unknown> {
   // Runtime icon cases
   yield* stageIonLogsRuntimes();
 }
-
 
 function* stageIonLogsRuntimes(): Generator<DummyData, void, unknown> {
   yield stateFunction({
@@ -1128,7 +1137,8 @@ function* stageIonLogsEmptySSTFns(): Generator<DummyData, void, unknown> {
   });
 
   const ASTRO_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro::MyAstroA";
-  const ASTRO_FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro$sst:aws:Function::SiteFunction";
+  const ASTRO_FN_URN =
+    "urn:pulumi:jayair::ion-sandbox::sst:aws:Astro$sst:aws:Function::SiteFunction";
   yield stateResource({
     id: ++STATE_RES_ID,
     stageID: STAGE_ION_EMPTY_SST_FNS.id,
@@ -1153,7 +1163,8 @@ function* stageIonLogsEmptySSTFns(): Generator<DummyData, void, unknown> {
     name: "MyAstroADefaultFunction",
   });
 
-  const INTERNAL_FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MarkedAsInternal";
+  const INTERNAL_FN_URN =
+    "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MarkedAsInternal";
   yield stateResource({
     id: ++STATE_RES_ID,
     stageID: STAGE_ION_EMPTY_SST_FNS.id,
@@ -1197,7 +1208,8 @@ function* stageIonLogsEmptyInternals(): Generator<DummyData, void, unknown> {
     urn: STACK_URN,
   });
 
-  const FN_URN = "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefault";
+  const FN_URN =
+    "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::MyWebDefault";
   yield stateFunction({
     id: ++STATE_RES_ID,
     stageID: STAGE_ION_EMPTY_INTERNALS.id,
@@ -2231,9 +2243,11 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   yield run({
     id: RUN_ID,
     stageID: STAGE_ION.id,
-    branch: "a-really-long-branch-name-that-should-overflow-because-its-too-long",
+    branch:
+      "a-really-long-branch-name-that-should-overflow-because-its-too-long",
     commitID: "99a2721dab38cb264be29b7d1b552802bcca32ce",
-    commitMessage: "chore: this is a long commit message that should overflow the 100 characters",
+    commitMessage:
+      "chore: this is a long commit message that should overflow the 100 characters",
     ...dummyRepo(-1),
   });
   yield update({
@@ -3251,18 +3265,18 @@ function invocation({
       duration === undefined
         ? duration
         : {
-          duration,
-          memory: 128,
-          size: 2048,
-          xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
-        },
+            duration,
+            memory: 128,
+            size: 2048,
+            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+          },
     start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
-        message,
-        id: `log-${INVOCATION_COUNT}-${i}`,
-        timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-      }))
+          message,
+          id: `log-${INVOCATION_COUNT}-${i}`,
+          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+        }))
       : [],
   };
 }
@@ -3404,15 +3418,15 @@ type BaseResourceProps = {
   parent?: State.ResourceEvent["parent"];
   stateCreated?: State.ResourceEvent["time"]["stateCreated"];
   stateModified?: State.ResourceEvent["time"]["stateModified"];
-}
+};
 type ResourceEventProps = BaseResourceProps & {
   action: State.ResourceEvent["action"];
   updateID: number;
-}
+};
 type ResourceProps = BaseResourceProps & {
   updateCreatedID?: number;
   updateModifiedID?: number;
-}
+};
 function stateEvent({
   id,
   stageID,
@@ -3498,7 +3512,7 @@ function stateFunction({
   sourceCodeSize,
   runtime,
   handler,
-  timeout
+  timeout,
 }: StateFunctionProps): DummyData {
   return stateResource({
     id,
@@ -3514,7 +3528,7 @@ function stateFunction({
       runtime: runtime || "nodejs20.x",
       loggingConfig: { logGroup: `/aws/lambda/ion-sandbox-jayair-${name}` },
       ...outputs,
-    }
+    },
   });
 }
 
@@ -3548,6 +3562,7 @@ function run({
 }: RunProps): DummyData {
   return {
     _type: "run",
+    active: false,
     id: `${id}`,
     stageID,
     time: {

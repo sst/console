@@ -37,7 +37,6 @@ export const STATUS_MAP = {
   updated: "Complete",
   error: "Error",
   updating: "In Progress",
-  queued: "Queued",
 };
 
 const Content = styled("div", {
