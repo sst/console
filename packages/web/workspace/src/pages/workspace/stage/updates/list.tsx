@@ -33,6 +33,7 @@ export const CMD_MAP = {
 
 export const STATUS_MAP = {
   queued: "Queued",
+  skipped: "Skipped",
   canceled: "Canceled",
   updated: "Complete",
   error: "Error",
@@ -99,6 +100,9 @@ export const UpdateStatusIcon = styled("div", {
   },
   variants: {
     status: {
+      skipped: {
+        backgroundColor: theme.color.divider.base,
+      },
       queued: {
         backgroundColor: theme.color.divider.base,
       },
@@ -379,7 +383,6 @@ type UpdateProps = {
   timeStarted?: string;
   source: State.Update["source"];
   resourceSame?: number;
-  timeCanceled?: string;
   timeCompleted?: string;
   same?: number;
   created?: number;
@@ -396,6 +399,10 @@ function Update(props: UpdateProps) {
     if (!runID) return;
     return RunStore.get(tx, ctx.stage.id, runID);
   });
+
+  const update = createSubscription((tx) =>
+    StateUpdateStore.get(tx, ctx.stage.id, props.id),
+  );
 
   const runInfo = createMemo(() => {
     if (!run.value) return;
@@ -415,17 +422,25 @@ function Update(props: UpdateProps) {
     return { trigger, repoURL, branch, uri };
   });
 
-  const status = createMemo(() =>
-    props.timeCompleted
-      ? errors()
-        ? "error"
-        : "updated"
-      : props.timeCanceled
-        ? "canceled"
-        : run.value && !run.value.active
-          ? "queued"
-          : "updating",
-  );
+  const status = createMemo(() => {
+    if (!update.value) return;
+
+    // Case 1: Update triggerd from Autodeploy
+    if (run.value) {
+      // Case 1a: completed
+      if (run.value.time.completed) {
+        if (!run.value.time.started) return "skipped";
+        return run.value.error ? "error" : "updated";
+      }
+      // Case 1a: not-completed
+      return run.value.active ? "updating" : "queued";
+    }
+
+    // Case 2: Update triggered from CLI
+    if (update.value.time.completed)
+      return update.value.errors.length ? "error" : "updated";
+    return "updating";
+  });
 
   return (
     <UpdateRoot>
@@ -440,7 +455,7 @@ function Update(props: UpdateProps) {
             <UpdateStatusCopy>
               {status() === "error"
                 ? errorCountCopy(errors())
-                : STATUS_MAP[status()]}
+                : STATUS_MAP[status()!]}
             </UpdateStatusCopy>
           </Stack>
         </UpdateStatus>

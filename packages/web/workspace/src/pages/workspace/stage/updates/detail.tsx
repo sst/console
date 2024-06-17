@@ -4,14 +4,12 @@ import {
   Match,
   Switch,
   createMemo,
-  createEffect,
   createSignal,
-  onMount,
   createResource,
   onCleanup,
 } from "solid-js";
-import { useReplicache } from "$/providers/replicache";
-import { Link, useParams } from "@solidjs/router";
+import { createSubscription, useReplicache } from "$/providers/replicache";
+import { useParams } from "@solidjs/router";
 import { RunStore, StateUpdateStore, StateEventStore } from "$/data/app";
 import { State } from "@console/core/state";
 import { DateTime } from "luxon";
@@ -43,7 +41,7 @@ import {
   githubBranch,
   githubCommit,
 } from "$/common/url-builder";
-import { Row, Tag, Text, Stack, theme, utility } from "$/ui";
+import { Row, Text, Stack, theme, utility } from "$/ui";
 import { pipe, sortBy, dropWhile, drop, takeWhile, filter } from "remeda";
 import { useWorkspace } from "../../context";
 import { useAuth2 } from "$/providers/auth2";
@@ -378,35 +376,33 @@ export function Detail() {
   const rep = useReplicache();
   const ctx = useStageContext();
   const replicacheStatus = useReplicacheStatus();
-  const update = StateUpdateStore.get.watch(rep, () => [
-    ctx.stage.id,
-    params.updateID,
-  ]);
+  const update = createSubscription((tx) =>
+    StateUpdateStore.get(tx, ctx.stage.id, params.updateID),
+  );
   const resources = StateEventStore.forUpdate.watch(
     rep,
     () => [ctx.stage.id, params.updateID],
     (resources) => sortBy(resources, [(r) => getResourceName(r.urn)!, "asc"]),
   );
 
-  const runID = createMemo(
-    () =>
-      update() &&
-      update().source.type === "ci" &&
-      (update().source.properties as { runID: string }).runID,
-  );
-  const run = RunStore.get.watch(rep, () => [
-    ctx.stage.id,
-    runID() || "unknown",
-  ]);
+  const run = createSubscription(async (tx) => {
+    const update = await StateUpdateStore.get(
+      tx,
+      ctx.stage.id,
+      params.updateID,
+    );
+    if (update.source.type !== "ci") return;
+    return RunStore.get(tx, ctx.stage.id, update.source.properties.runID);
+  });
   const repoURL = createMemo(() =>
-    run() && run().trigger.source === "github"
-      ? githubRepo(run().trigger.repo.owner, run().trigger.repo.repo)
+    run.value?.trigger.source === "github"
+      ? githubRepo(run.value.trigger.repo.owner, run.value.trigger.repo.repo)
       : "",
   );
   const workspace = useWorkspace();
   const auth = useAuth2();
   const [logs, logsAction] = createResource(
-    () => run()?.log,
+    () => run.value?.log,
     async (log) => {
       if (!log) return [];
       const results = await fetch(
@@ -453,17 +449,29 @@ export function Detail() {
   );
 
   const logsPoller = setInterval(() => {
-    if (!run()) return;
+    if (!run.value) return;
     if (logs()?.at(-1)?.message.includes("REPORT")) return;
     logsAction.refetch();
   }, 3000);
   onCleanup(() => clearInterval(logsPoller));
 
   const status = createMemo(() => {
-    if (!update()) return;
-    if (update().time.completed)
-      return update().errors.length ? "error" : "updated";
-    if (run() && !run().active) return "queued";
+    if (!update.value) return;
+
+    // Case 1: Update triggerd from Autodeploy
+    if (run.value) {
+      // Case 1a: completed
+      if (run.value.time.completed) {
+        if (!run.value.time.started) return "skipped";
+        return run.value.error ? "error" : "updated";
+      }
+      // Case 1a: not-completed
+      return run.value.active ? "updating" : "queued";
+    }
+
+    // Case 2: Update triggered from CLI
+    if (update.value.time.completed)
+      return update.value.errors.length ? "error" : "updated";
     return "updating";
   });
   const deleted = createMemo(() =>
@@ -477,18 +485,18 @@ export function Detail() {
   );
   const isEmpty = createMemo(
     () =>
-      update() &&
+      update.value &&
       !deleted().length &&
       !created().length &&
       !updated().length &&
-      !update().resource.same,
+      !update.value.resource.same,
   );
 
   function renderSidebar() {
     const runInfo = createMemo(() => {
-      if (!run()) return;
+      if (!run.value) return;
 
-      const trigger = run().trigger;
+      const trigger = run.value.trigger;
       const branch =
         trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
       const uri =
@@ -555,16 +563,16 @@ export function Detail() {
               <Text
                 color="secondary"
                 title={
-                  update().time.started
-                    ? DateTime.fromISO(update().time.started!).toLocaleString(
-                        DateTime.DATETIME_FULL,
-                      )
+                  update.value!.time.started
+                    ? DateTime.fromISO(
+                        update.value!.time.started!,
+                      ).toLocaleString(DateTime.DATETIME_FULL)
                     : undefined
                 }
               >
-                {update().time.started
+                {update.value!.time.started
                   ? formatSinceTime(
-                      DateTime.fromISO(update().time.started!).toSQL()!,
+                      DateTime.fromISO(update.value!.time.started!).toSQL()!,
                       true,
                     )
                   : "—"}
@@ -575,15 +583,15 @@ export function Detail() {
               <Text
                 color="secondary"
                 title={
-                  DateTime.fromISO(update().time.completed!)
-                    .diff(DateTime.fromISO(update().time.started!))
+                  DateTime.fromISO(update.value!.time.completed!)
+                    .diff(DateTime.fromISO(update.value!.time.started!))
                     .as("seconds") + " seconds"
                 }
               >
-                {update().time.started && update().time.completed
+                {update.value!.time.started && update.value!.time.completed
                   ? formatDuration(
-                      DateTime.fromISO(update().time.completed!)
-                        .diff(DateTime.fromISO(update().time.started!))
+                      DateTime.fromISO(update.value!.time.completed!)
+                        .diff(DateTime.fromISO(update.value!.time.started!))
                         .as("milliseconds"),
                       true,
                     )
@@ -592,7 +600,7 @@ export function Detail() {
             </Stack>
             <Stack space="2">
               <PanelTitle>Command</PanelTitle>
-              <PanelValueMono>{CMD_MAP[update().command]}</PanelValueMono>
+              <PanelValueMono>{CMD_MAP[update.value!.command]}</PanelValueMono>
             </Stack>
           </Stack>
         </Stack>
@@ -627,12 +635,12 @@ export function Detail() {
             </ResourceRoot>
           </Stack>
         </Show>
-        <Show when={update().resource.same! > 0}>
+        <Show when={update.value!.resource.same! > 0}>
           <Stack space="2">
             <PanelTitle>Unchanged</PanelTitle>
             <ResourceRoot action="same">
               <ResourceChildEmpty>
-                {countCopy(update().resource.same!)} were not changed
+                {countCopy(update.value!.resource.same!)} were not changed
               </ResourceChildEmpty>
             </ResourceRoot>
           </Stack>
@@ -648,12 +656,12 @@ export function Detail() {
           <UpdateStatusIcon status={status()} />
           <PageTitleCopy>
             Update <PageTitlePrefix>#</PageTitlePrefix>
-            {update().index}
+            {update.value!.index}
           </PageTitleCopy>
         </PageTitle>
         <PageTitleStatus>
           {status() === "error"
-            ? errorCountCopy(update().errors.length)
+            ? errorCountCopy(update.value!.errors.length)
             : STATUS_MAP[status()!]}
         </PageTitleStatus>
       </Stack>
@@ -663,7 +671,7 @@ export function Detail() {
   function renderErrors() {
     return (
       <Errors>
-        <For each={update().errors}>
+        <For each={update.value!.errors}>
           {(err) => (
             <Error>
               <ErrorIcon>
@@ -684,22 +692,23 @@ export function Detail() {
 
   return (
     <Switch>
-      <Match
-        when={
-          replicacheStatus.isSynced(rep().name) && !update() && update.ready
-        }
-      >
+      <Match when={replicacheStatus.isSynced(rep().name) && !update.value}>
         <NotFound inset="stage" />
       </Match>
-      <Match when={update()}>
+      <Match when={update.value}>
         <Container>
           <Content>
             <Stack space="6">
               <Stack space="4">
                 {renderHeader()}
-                <Show when={update().errors.length}>{renderErrors()}</Show>
+                <Show when={update.value!.errors.length}>{renderErrors()}</Show>
               </Stack>
-              <Show when={run() && (run().active || run().time.completed)}>
+              <Show
+                when={
+                  run.value &&
+                  (status() === "updating" || status() === "updated")
+                }
+              >
                 <Stack space="2">
                   <Show
                     when={logs.length}
@@ -725,7 +734,7 @@ export function Detail() {
                             <IconArrowPathSpin />
                           </LogsLoadingIcon>
                           <PanelEmptyCopy>
-                            {update().time.completed
+                            {update.value!.time.completed
                               ? "Fetching logs"
                               : "Running"}{" "}
                             &hellip;
