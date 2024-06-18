@@ -741,40 +741,36 @@ export function Detail() {
                     </PanelTitle>
                   </Show>
                   <LogsBackground>
-                    <Show
-                      when={trimmedLogs()?.length}
-                      fallback={
-                        <LogsLoading>
-                          <LogsLoadingIcon>
-                            <IconArrowPathSpin />
-                          </LogsLoadingIcon>
-                          <PanelEmptyCopy>
-                            {update.value!.time.completed
-                              ? "Loading"
-                              : "Running"}
-                            &hellip;
-                          </PanelEmptyCopy>
-                        </LogsLoading>
-                      }
-                    >
-                      <For each={trimmedLogs()!}>
-                        {(entry) => (
-                          <Log>
-                            <LogTime
-                              title={DateTime.fromMillis(entry.timestamp)
-                                .toUTC()
-                                .toLocaleString(
-                                  DateTime.DATETIME_FULL_WITH_SECONDS,
-                                )}
-                            >
-                              {DateTime.fromMillis(entry.timestamp).toFormat(
-                                "HH:mm:ss.SSS",
+                    <For each={trimmedLogs()!}>
+                      {(entry) => (
+                        <Log>
+                          <LogTime
+                            title={DateTime.fromMillis(entry.timestamp)
+                              .toUTC()
+                              .toLocaleString(
+                                DateTime.DATETIME_FULL_WITH_SECONDS,
                               )}
-                            </LogTime>
-                            <LogMessage>{entry.message}</LogMessage>
-                          </Log>
-                        )}
-                      </For>
+                          >
+                            {DateTime.fromMillis(entry.timestamp).toFormat(
+                              "HH:mm:ss.SSS",
+                            )}
+                          </LogTime>
+                          <LogMessage>{entry.message}</LogMessage>
+                        </Log>
+                      )}
+                    </For>
+                    <Show when={trimmedLogs()?.length === 0 || !update.value!.time.completed}>
+                      <LogsLoading>
+                        <LogsLoadingIcon>
+                          <IconArrowPathSpin />
+                        </LogsLoadingIcon>
+                        <PanelEmptyCopy>
+                          {update.value!.time.completed
+                            ? "Loading"
+                            : "Running"}
+                          &hellip;
+                        </PanelEmptyCopy>
+                      </LogsLoading>
                     </Show>
                   </LogsBackground>
                 </Stack>
