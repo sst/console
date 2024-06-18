@@ -287,97 +287,108 @@ export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
     return;
   }
 
-  return createTransaction(async (tx) => {
-    const existing = await tx
-      .select({
-        id: resource.id,
-        addr: resource.addr,
-      })
-      .from(resource)
-      .where(
-        and(
-          eq(resource.stageID, input.stageID),
-          eq(resource.workspaceID, useWorkspace()),
-        ),
-      )
-      .execute()
-      .then((x) => new Map(x.map((x) => [x.addr, x.id] as const)));
-    if (resources.length)
-      await tx
-        .insert(resource)
-        .values(
-          resources.map((res) => {
-            const id = existing.get(res.addr) || createId();
-            existing.delete(res.addr);
-            return {
-              workspaceID: useWorkspace(),
-              cfnID: res.id,
-              constructID: res.id,
-              addr: res.addr,
-              stackID: res.stackID,
-              stageID: input.stageID,
-              id,
-              type: res.type,
-              metadata: res.data,
-              enrichment: res.enrichment,
-            };
-          }),
-        )
-        .onDuplicateKeyUpdate({
-          set: {
-            addr: sql`VALUES(addr)`,
-            stackID: sql`VALUES(stack_id)`,
-            type: sql`VALUES(type)`,
-            metadata: sql`VALUES(metadata)`,
-            enrichment: sql`VALUES(enrichment)`,
-          },
+  return createTransaction(
+    async (tx) => {
+      const existing = await tx
+        .select({
+          id: resource.id,
+          addr: resource.addr,
         })
-        .execute();
-
-    const stacks = resources.filter((x) => x.type === "Stack");
-    const unsupported =
-      stacks.length ===
-      stacks.filter(
-        (x) =>
-          // @ts-ignore
-          !x.enrichment.version ||
-          // @ts-ignore
-          parseVersion(x.enrichment.version) < MINIMUM_VERSION,
-      ).length;
-
-    await tx
-      .update(stage)
-      .set({ unsupported })
-      .where(
-        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace())),
-      );
-
-    const toDelete = [...existing.values()];
-    console.log("deleting", toDelete.length, "resources");
-    if (toDelete.length)
-      await tx
-        .delete(resource)
+        .from(resource)
         .where(
           and(
             eq(resource.stageID, input.stageID),
             eq(resource.workspaceID, useWorkspace()),
-            inArray(resource.id, toDelete),
+          ),
+        )
+        .execute()
+        .then((x) => new Map(x.map((x) => [x.addr, x.id] as const)));
+      if (resources.length)
+        await tx
+          .insert(resource)
+          .values(
+            resources.map((res) => {
+              const id = existing.get(res.addr) || createId();
+              existing.delete(res.addr);
+              return {
+                workspaceID: useWorkspace(),
+                cfnID: res.id,
+                constructID: res.id,
+                addr: res.addr,
+                stackID: res.stackID,
+                stageID: input.stageID,
+                id,
+                type: res.type,
+                metadata: res.data,
+                enrichment: res.enrichment,
+              };
+            }),
+          )
+          .onDuplicateKeyUpdate({
+            set: {
+              addr: sql`VALUES(addr)`,
+              stackID: sql`VALUES(stack_id)`,
+              type: sql`VALUES(type)`,
+              metadata: sql`VALUES(metadata)`,
+              enrichment: sql`VALUES(enrichment)`,
+            },
+          })
+          .execute();
+
+      const stacks = resources.filter((x) => x.type === "Stack");
+      const unsupported =
+        stacks.length ===
+        stacks.filter(
+          (x) =>
+            // @ts-ignore
+            !x.enrichment.version ||
+            // @ts-ignore
+            parseVersion(x.enrichment.version) < MINIMUM_VERSION,
+        ).length;
+
+      await tx
+        .update(stage)
+        .set({ unsupported })
+        .where(
+          and(
+            eq(stage.id, input.stageID),
+            eq(stage.workspaceID, useWorkspace()),
           ),
         );
 
-    await tx
-      .update(stage)
-      .set({ timeUpdated: sql`CURRENT_TIMESTAMP(3)` })
-      .where(
-        and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace())),
+      const toDelete = [...existing.values()];
+      console.log("deleting", toDelete.length, "resources");
+      if (toDelete.length)
+        await tx
+          .delete(resource)
+          .where(
+            and(
+              eq(resource.stageID, input.stageID),
+              eq(resource.workspaceID, useWorkspace()),
+              inArray(resource.id, toDelete),
+            ),
+          );
+
+      await tx
+        .update(stage)
+        .set({ timeUpdated: sql`CURRENT_TIMESTAMP(3)` })
+        .where(
+          and(
+            eq(stage.id, input.stageID),
+            eq(stage.workspaceID, useWorkspace()),
+          ),
+        );
+      await createTransactionEffect(() => Replicache.poke());
+      await createTransactionEffect(() =>
+        Events.ResourcesUpdated.publish({
+          stageID: input.stageID,
+        }),
       );
-    await createTransactionEffect(() => Replicache.poke());
-    await createTransactionEffect(() =>
-      Events.ResourcesUpdated.publish({
-        stageID: input.stageID,
-      }),
-    );
-  });
+    },
+    {
+      isolationLevel: "read committed",
+    },
+  );
 });
 
 export type StageCredentials = Exclude<
