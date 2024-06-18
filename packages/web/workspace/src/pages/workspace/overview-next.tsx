@@ -835,7 +835,7 @@ function StageCard(props: StageCardProps) {
             </Link>
           </Match>
           <Match when={latestUpdate.value?.errors.length}>
-            <Link href={`${stageUri()}/${latestUpdate.value?.id}`}>
+            <Link href={`${stageUri()}/updates/${latestUpdate.value?.id}`}>
               <Tag style="outline" level="danger">
                 Error
               </Tag>
