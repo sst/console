@@ -32,7 +32,12 @@ import {
 import { AvatarInitialsIcon } from "$/ui/avatar-icon";
 import { Syncing } from "$/ui/loader";
 import type { App, Stage } from "@console/core/app";
-import { IconApp, IconCommit, IconGitHub, IconArrowPathSpin } from "$/ui/icons/custom";
+import {
+  IconApp,
+  IconCommit,
+  IconGitHub,
+  IconArrowPathSpin,
+} from "$/ui/icons/custom";
 import { styled } from "@macaron-css/solid";
 import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import { For, Match, Show, Switch, createEffect, createMemo } from "solid-js";
@@ -528,19 +533,24 @@ export function OverviewNext() {
                 </Row>
                 <Row space="4">
                   <Col>
-                    <Show when={cols()[0].length} fallback={
-                      <Card empty>
-                        <CardStatus>
-                          <CardStatusIcon status="info">
-                            <IconArrowPathSpin />
-                          </CardStatusIcon>
-                          <Text color="dimmed">
-                            Searching for apps&hellip;
-                          </Text>
-                        </CardStatus>
-                      </Card>
-                    }>
-                      <For each={cols()[0]}>{(app) => <AppCard app={app} />}</For>
+                    <Show
+                      when={cols()[0].length}
+                      fallback={
+                        <Card empty>
+                          <CardStatus>
+                            <CardStatusIcon status="info">
+                              <IconArrowPathSpin />
+                            </CardStatusIcon>
+                            <Text color="dimmed">
+                              Searching for apps&hellip;
+                            </Text>
+                          </CardStatus>
+                        </Card>
+                      }
+                    >
+                      <For each={cols()[0]}>
+                        {(app) => <AppCard app={app} />}
+                      </For>
                     </Show>
                   </Col>
                   <Col>
@@ -825,7 +835,7 @@ function StageCard(props: StageCardProps) {
             </Link>
           </Match>
           <Match when={latestUpdate.value?.errors.length}>
-            <Link href={`${stageUri()}/link/to/update/with/error`}>
+            <Link href={`${stageUri()}/${latestUpdate.value?.id}`}>
               <Tag style="outline" level="danger">
                 Error
               </Tag>
