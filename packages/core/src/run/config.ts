@@ -16,7 +16,7 @@ export module RunConfig {
         appID: z.string().cuid2(),
         stagePattern: z.string().nonempty(),
         awsAccountExternalID: z.string(),
-      })
+      }),
     ),
   };
 
@@ -48,15 +48,15 @@ export module RunConfig {
           .where(
             and(
               eq(runConfigTable.workspaceID, useWorkspace()),
-              eq(runConfigTable.appID, input.appID)
-            )
+              eq(runConfigTable.appID, input.appID),
+            ),
           )
           .execute()
-          .then((rows) => rows)
+          .then((rows) => rows),
       );
 
       return stages.find((row) => minimatch(input.stageName, row.stagePattern));
-    }
+    },
   );
 
   export const put = zod(
@@ -65,11 +65,11 @@ export module RunConfig {
       appID: z.string().cuid2(),
       stagePattern: z.string().nonempty(),
       awsAccountExternalID: z.string(),
-      env: z.custom<Env>().optional(),
+      env: Env,
     }),
     async (input) => {
-      await useTransaction(async (tx) =>
-        tx
+      await useTransaction(async (tx) => {
+        await tx
           .insert(runConfigTable)
           .values({
             id: input.id ?? createId(),
@@ -77,25 +77,50 @@ export module RunConfig {
             appID: input.appID,
             stagePattern: input.stagePattern,
             awsAccountExternalID: input.awsAccountExternalID,
-            env: input.env,
+            env: {},
           })
           .onDuplicateKeyUpdate({
             set: {
-              env: input.env,
               awsAccountExternalID: input.awsAccountExternalID,
               stagePattern: input.stagePattern,
             },
           })
-          .execute()
-      );
+          .execute();
+        const match = await tx
+          .select({
+            id: runConfigTable.id,
+            env: runConfigTable.env,
+          })
+          .from(runConfigTable)
+          .where(
+            and(
+              eq(runConfigTable.workspaceID, useWorkspace()),
+              eq(runConfigTable.appID, input.appID),
+              eq(runConfigTable.stagePattern, input.stagePattern),
+            ),
+          )
+          .then((rows) => rows[0]);
+        const next = {};
+        console.log(input.env);
+        for (const key of Object.keys(input.env)) {
+          console.log("setting", key);
+          const val = input.env[key];
+          next[key] = val === "__secret" ? match.env[key] : val;
+        }
+        await tx
+          .update(runConfigTable)
+          .set({ env: next })
+          .where(eq(runConfigTable.id, match.id))
+          .execute();
+      });
       await createTransactionEffect(() =>
         Events.Updated.publish({
           appID: input.appID,
           stagePattern: input.stagePattern,
           awsAccountExternalID: input.awsAccountExternalID,
-        })
+        }),
       );
-    }
+    },
   );
 
   export const remove = zod(z.string().cuid2(), (input) =>
@@ -105,10 +130,10 @@ export module RunConfig {
         .where(
           and(
             eq(runConfigTable.id, input),
-            eq(runConfigTable.workspaceID, useWorkspace())
-          )
+            eq(runConfigTable.workspaceID, useWorkspace()),
+          ),
         )
         .execute();
-    })
+    }),
   );
 }

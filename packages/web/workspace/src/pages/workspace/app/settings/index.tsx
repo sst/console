@@ -11,6 +11,7 @@ import {
   Text,
   Stack,
   Input,
+  Textarea,
   Grower,
   Button,
   FormField,
@@ -57,6 +58,7 @@ import {
   insert,
   valiForm,
   createForm,
+  setValue,
   setValues,
   remove,
   reset,
@@ -777,7 +779,20 @@ export function Settings() {
                                     <Input
                                       {...props}
                                       value={field.value}
-                                      type="text"
+                                      onPaste={(e) => {
+                                        const data =
+                                          e.clipboardData.getData("text/plain");
+                                        setValue(
+                                          putForm,
+                                          `env.${index()}.value`,
+                                          data,
+                                        );
+                                        e.currentTarget.value = "0".repeat(
+                                          data.length,
+                                        );
+                                        e.preventDefault();
+                                      }}
+                                      type="password"
                                     />
                                   </FormField>
                                 )}

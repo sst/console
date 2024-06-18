@@ -97,7 +97,6 @@ export const Input = styled("input", {
 export const Textarea = styled("textarea", {
   base: {
     ...inputStyles,
-    height: "auto",
     padding: `${theme.space[2]} ${theme.space[3]}`,
     ":focus": {
       ...inputFocusStyles,
