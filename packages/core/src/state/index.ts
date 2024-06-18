@@ -355,69 +355,74 @@ export module State {
         });
         resourceDeletes.push(resource.urn);
       }
-      await createTransaction(async (tx) => {
-        await createTransactionEffect(() => Replicache.poke());
-        await tx
-          .update(stateUpdateTable)
-          .set({
-            resourceSame: counts.same || 0,
-            resourceCreated: counts.created || 0,
-            resourceUpdated: counts.updated || 0,
-            resourceDeleted: counts.deleted || 0,
-          })
-          .where(
-            and(
-              eq(stateUpdateTable.workspaceID, useWorkspace()),
-              eq(stateUpdateTable.id, updateID),
-            ),
-          );
-        if (eventInserts.length)
-          await tx.insert(stateEventTable).ignore().values(eventInserts);
-        if (resourceInserts.length)
+      await createTransaction(
+        async (tx) => {
+          await createTransactionEffect(() => Replicache.poke());
           await tx
-            .insert(stateResourceTable)
-            .values(resourceInserts)
-            .onDuplicateKeyUpdate({
-              set: {
-                updateModifiedID: sql`COALESCE(VALUES(update_modified_id), update_modified_id)`,
-                updateCreatedID: sql`COALESCE(VALUES(update_created_id), update_created_id)`,
-                timeStateCreated: sql`VALUES(time_state_created)`,
-                timeStateModified: sql`VALUES(time_state_modified)`,
-                type: sql`VALUES(type)`,
-                custom: sql`VALUES(custom)`,
-                inputs: sql`VALUES(inputs)`,
-                outputs: sql`VALUES(outputs)`,
-                parent: sql`VALUES(parent)`,
-              },
-            });
-        if (resourceDeletes.length)
-          await tx
-            .delete(stateResourceTable)
+            .update(stateUpdateTable)
+            .set({
+              resourceSame: counts.same || 0,
+              resourceCreated: counts.created || 0,
+              resourceUpdated: counts.updated || 0,
+              resourceDeleted: counts.deleted || 0,
+            })
             .where(
               and(
-                eq(stateResourceTable.workspaceID, useWorkspace()),
-                eq(stateResourceTable.stageID, input.config.stageID),
-                inArray(stateResourceTable.urn, resourceDeletes),
+                eq(stateUpdateTable.workspaceID, useWorkspace()),
+                eq(stateUpdateTable.id, updateID),
               ),
             );
-        await tx
-          .update(stage)
-          .set({
-            timeUpdated: sql`CURRENT_TIMESTAMP(6)`,
-          })
-          .where(
-            and(
-              eq(stage.workspaceID, useWorkspace()),
-              eq(stage.id, input.config.stageID),
-            ),
+          if (eventInserts.length)
+            await tx.insert(stateEventTable).ignore().values(eventInserts);
+          if (resourceInserts.length)
+            await tx
+              .insert(stateResourceTable)
+              .values(resourceInserts)
+              .onDuplicateKeyUpdate({
+                set: {
+                  updateModifiedID: sql`COALESCE(VALUES(update_modified_id), update_modified_id)`,
+                  updateCreatedID: sql`COALESCE(VALUES(update_created_id), update_created_id)`,
+                  timeStateCreated: sql`VALUES(time_state_created)`,
+                  timeStateModified: sql`VALUES(time_state_modified)`,
+                  type: sql`VALUES(type)`,
+                  custom: sql`VALUES(custom)`,
+                  inputs: sql`VALUES(inputs)`,
+                  outputs: sql`VALUES(outputs)`,
+                  parent: sql`VALUES(parent)`,
+                },
+              });
+          if (resourceDeletes.length)
+            await tx
+              .delete(stateResourceTable)
+              .where(
+                and(
+                  eq(stateResourceTable.workspaceID, useWorkspace()),
+                  eq(stateResourceTable.stageID, input.config.stageID),
+                  inArray(stateResourceTable.urn, resourceDeletes),
+                ),
+              );
+          await tx
+            .update(stage)
+            .set({
+              timeUpdated: sql`CURRENT_TIMESTAMP(6)`,
+            })
+            .where(
+              and(
+                eq(stage.workspaceID, useWorkspace()),
+                eq(stage.id, input.config.stageID),
+              ),
+            );
+          await createTransactionEffect(() =>
+            Event.HistorySynced.publish({
+              stageID: input.config.stageID,
+              updateID: updateID,
+            }),
           );
-        await createTransactionEffect(() =>
-          Event.HistorySynced.publish({
-            stageID: input.config.stageID,
-            updateID: updateID,
-          }),
-        );
-      });
+        },
+        {
+          isolationLevel: "read uncommitted",
+        },
+      );
     },
   );
 
