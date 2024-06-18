@@ -1047,6 +1047,7 @@ export function Settings() {
                                       >
                                         Edit target
                                       </Dropdown.Item>
+                                      {/*
                                       <Dropdown.Item
                                         onSelect={() => {
                                           setEditing("id", undefined);
@@ -1067,6 +1068,7 @@ export function Settings() {
                                       >
                                         Duplicate target
                                       </Dropdown.Item>
+                                      */}
                                       <Dropdown.Seperator />
                                       <Dropdown.Item
                                         onSelect={() => {
