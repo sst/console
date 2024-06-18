@@ -403,7 +403,7 @@ export function Overview() {
                 </Link>
               </Show>
               <Show when={latest.value?.update.errors.length}>
-                <Link href={`${props.stage.name}/link/to/the/update`}>
+                <Link href={`${props.stage.name}/updates/${latest.value?.update.id}`}>
                   <Tag level="danger" style="outline">
                     Error
                   </Tag>

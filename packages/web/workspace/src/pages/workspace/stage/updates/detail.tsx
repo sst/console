@@ -708,6 +708,16 @@ export function Detail() {
                 {renderHeader()}
                 <Show when={update.value!.errors.length}>{renderErrors()}</Show>
               </Stack>
+              <Stack space="5">
+                <Switch>
+                  <Match when={!isEmpty()}>
+                    {renderResources()}
+                  </Match>
+                  <Match when={status() !== "updating" && status() !== "queued"}>
+                    <ResourceEmpty>No changes</ResourceEmpty>
+                  </Match>
+                </Switch>
+              </Stack>
               <Show
                 when={
                   run.value &&
@@ -769,29 +779,12 @@ export function Detail() {
                   </LogsBackground>
                 </Stack>
               </Show>
-              <Stack space="5">
-                <Show
-                  when={!isEmpty()}
-                  fallback={
-                    <ResourceEmpty>
-                      <Show
-                        fallback="No changes"
-                        when={status() === "updating" || status() === "queued"}
-                      >
-                        Waiting for changes
-                      </Show>
-                    </ResourceEmpty>
-                  }
-                >
-                  {renderResources()}
-                </Show>
-              </Stack>
             </Stack>
           </Content>
           {renderSidebar()}
         </Container>
       </Match>
-    </Switch>
+    </Switch >
   );
 }
 
