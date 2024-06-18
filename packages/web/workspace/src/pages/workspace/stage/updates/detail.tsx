@@ -408,22 +408,22 @@ export function Detail() {
       if (!log) return [];
       const results = await fetch(
         import.meta.env.VITE_API_URL +
-          "/rest/log/scan?" +
-          new URLSearchParams(
-            log.engine === "lambda"
-              ? {
-                  stageID: ctx.stage.id,
-                  timestamp: log.timestamp.toString(),
-                  logStream: log.logStream,
-                  logGroup: log.logGroup,
-                  requestID: log.requestID,
-                }
-              : {
-                  stageID: ctx.stage.id,
-                  logStream: log.logStream,
-                  logGroup: log.logGroup,
-                },
-          ).toString(),
+        "/rest/log/scan?" +
+        new URLSearchParams(
+          log.engine === "lambda"
+            ? {
+              stageID: ctx.stage.id,
+              timestamp: log.timestamp.toString(),
+              logStream: log.logStream,
+              logGroup: log.logGroup,
+              requestID: log.requestID,
+            }
+            : {
+              stageID: ctx.stage.id,
+              logStream: log.logStream,
+              logGroup: log.logGroup,
+            },
+        ).toString(),
         {
           headers: {
             "x-sst-workspace": workspace().id,
@@ -522,9 +522,8 @@ export function Detail() {
                   <img
                     width={AVATAR_SIZE}
                     height={AVATAR_SIZE}
-                    src={`https://avatars.githubusercontent.com/u/${
-                      runInfo()!.trigger.sender.id
-                    }?s=${2 * AVATAR_SIZE}&v=4`}
+                    src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                      }?s=${2 * AVATAR_SIZE}&v=4`}
                   />
                 </GitAvatar>
                 <Stack space="0.5">
@@ -571,16 +570,16 @@ export function Detail() {
                 title={
                   update.value!.time.started
                     ? DateTime.fromISO(
-                        update.value!.time.started!,
-                      ).toLocaleString(DateTime.DATETIME_FULL)
+                      update.value!.time.started!,
+                    ).toLocaleString(DateTime.DATETIME_FULL)
                     : undefined
                 }
               >
                 {update.value!.time.started
                   ? formatSinceTime(
-                      DateTime.fromISO(update.value!.time.started!).toSQL()!,
-                      true,
-                    )
+                    DateTime.fromISO(update.value!.time.started!).toSQL()!,
+                    true,
+                  )
                   : "—"}
               </Text>
             </Stack>
@@ -596,11 +595,11 @@ export function Detail() {
               >
                 {update.value!.time.started && update.value!.time.completed
                   ? formatDuration(
-                      DateTime.fromISO(update.value!.time.completed!)
-                        .diff(DateTime.fromISO(update.value!.time.started!))
-                        .as("milliseconds"),
-                      true,
-                    )
+                    DateTime.fromISO(update.value!.time.completed!)
+                      .diff(DateTime.fromISO(update.value!.time.started!))
+                      .as("milliseconds"),
+                    true,
+                  )
                   : "—"}
               </Text>
             </Stack>
@@ -741,8 +740,8 @@ export function Detail() {
                           </LogsLoadingIcon>
                           <PanelEmptyCopy>
                             {update.value!.time.completed
-                              ? "Fetching logs"
-                              : "Waiting for logs"}
+                              ? "Loading"
+                              : "Running"}
                             &hellip;
                           </PanelEmptyCopy>
                         </LogsLoading>
