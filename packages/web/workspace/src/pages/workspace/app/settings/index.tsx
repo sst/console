@@ -781,7 +781,10 @@ export function Settings() {
                                       value={field.value}
                                       onPaste={(e) => {
                                         const data =
-                                          e.clipboardData.getData("text/plain");
+                                          e.clipboardData?.getData(
+                                            "text/plain",
+                                          );
+                                        if (!data) return;
                                         setValue(
                                           putForm,
                                           `env.${index()}.value`,
