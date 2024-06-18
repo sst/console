@@ -332,7 +332,7 @@ export const handler = ApiHandler(
           if (!ids.length) continue;
           const table = TABLES[name as keyof typeof TABLES];
 
-          for (const group of chunk(ids, 1000)) {
+          for (const group of chunk(ids, 200)) {
             log(name, "fetching", group.length);
             const rows = await tx
               .select()
