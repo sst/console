@@ -426,32 +426,39 @@ export const assumeRole = zod(Info.shape.id, async (stageID) => {
 });
 
 export const remove = zod(Info.shape.id, (stageID) =>
-  createTransaction(async (tx) => {
-    console.log("removing stage", stageID);
-    await tx
-      .delete(stage)
-      .where(and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())))
-      .execute();
-    await tx
-      .delete(resource)
-      .where(
-        and(
-          eq(resource.stageID, stageID),
-          eq(resource.workspaceID, useWorkspace()),
-        ),
-      )
-      .execute();
-    await tx
-      .delete(issueSubscriber)
-      .where(
-        and(
-          eq(issueSubscriber.stageID, stageID),
-          eq(issueSubscriber.workspaceID, useWorkspace()),
-        ),
-      )
-      .execute();
-    await createTransactionEffect(() => Replicache.poke());
-  }),
+  createTransaction(
+    async (tx) => {
+      console.log("removing stage", stageID);
+      await tx
+        .delete(stage)
+        .where(
+          and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())),
+        )
+        .execute();
+      await tx
+        .delete(resource)
+        .where(
+          and(
+            eq(resource.stageID, stageID),
+            eq(resource.workspaceID, useWorkspace()),
+          ),
+        )
+        .execute();
+      await tx
+        .delete(issueSubscriber)
+        .where(
+          and(
+            eq(issueSubscriber.stageID, stageID),
+            eq(issueSubscriber.workspaceID, useWorkspace()),
+          ),
+        )
+        .execute();
+      await createTransactionEffect(() => Replicache.poke());
+    },
+    {
+      isolationLevel: "read uncommitted",
+    },
+  ),
 );
 
 function parseVersion(input: string) {
