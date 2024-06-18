@@ -14,7 +14,7 @@ export module RunConfig {
       "app.config.updated",
       z.object({
         appID: z.string().cuid2(),
-        stagePattern: z.string().nonempty(),
+        stagePattern: z.string().min(1),
         awsAccountExternalID: z.string(),
       }),
     ),
@@ -23,7 +23,7 @@ export module RunConfig {
   export const Info = z.object({
     id: z.string().cuid2(),
     appID: z.string().cuid2(),
-    stagePattern: z.string().nonempty(),
+    stagePattern: z.string().min(1),
     awsAccountExternalID: z.string().length(12),
     env: z.custom<Env>(),
     time: z.object({
@@ -37,7 +37,7 @@ export module RunConfig {
   export const getByStageName = zod(
     z.object({
       appID: z.string().cuid2(),
-      stageName: z.string().nonempty(),
+      stageName: z.string().min(1),
     }),
     async (input) => {
       // Get all stage patterns
@@ -63,7 +63,7 @@ export module RunConfig {
     z.object({
       id: z.string().cuid2().optional(),
       appID: z.string().cuid2(),
-      stagePattern: z.string().nonempty(),
+      stagePattern: z.string().min(1),
       awsAccountExternalID: z.string(),
       env: Env,
     }),
@@ -100,12 +100,11 @@ export module RunConfig {
             ),
           )
           .then((rows) => rows[0]);
-        const next = {};
-        console.log(input.env);
-        for (const key of Object.keys(input.env)) {
-          console.log("setting", key);
-          const val = input.env[key];
-          next[key] = val === "__secret" ? match.env[key] : val;
+        if (!match) return;
+        match.env = match.env ?? {};
+        const next = {} as Record<string, string>;
+        for (const [key, value] of Object.entries(input.env)) {
+          next[key] = value === "__secret" ? match.env[key]! : value;
         }
         await tx
           .update(runConfigTable)
