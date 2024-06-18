@@ -16,14 +16,14 @@ importers:
         version: 0.30.10(@aws-sdk/client-rds-data@3.598.0)(kysely@0.25.0)(react@18.3.1)
     devDependencies:
       '@aws-cdk/aws-kinesisfirehose-alpha':
-        specifier: ^2.110.1-alpha.0
-        version: 2.110.1-alpha.0(aws-cdk-lib@2.110.1)(constructs@10.3.0)
+        specifier: 2.142.1-alpha.0
+        version: 2.142.1-alpha.0(aws-cdk-lib@2.142.1)(constructs@10.3.0)
       '@tsconfig/node16':
         specifier: ^16.1.0
         version: 16.1.1
       aws-cdk-lib:
-        specifier: 2.110.1
-        version: 2.110.1(constructs@10.3.0)
+        specifier: 2.142.1
+        version: 2.142.1(constructs@10.3.0)
       constructs:
         specifier: 10.3.0
         version: 10.3.0
@@ -333,7 +333,7 @@ importers:
         version: 1.2.0
       '@macaron-css/solid':
         specifier: 1.0.1
-        version: 1.0.1(@vanilla-extract/recipes@0.5.3)(solid-js@1.8.3)
+        version: 1.0.1(@vanilla-extract/recipes@0.2.5)(solid-js@1.8.3)
       '@modular-forms/solid':
         specifier: ^0.20.0
         version: 0.20.0(solid-js@1.8.3)
@@ -443,31 +443,23 @@ packages:
     resolution: {integrity: sha512-pvFiLP2BeOKA/ZOS6jxx4XhKzdVLHDhGlFEaZ2flWWYf2xOqVniqpk38I04DFRyz+L0ASggl7SkItTc+ZLju4w==}
     dev: true
 
-  /@aws-cdk/asset-awscli-v1@2.2.201:
-    resolution: {integrity: sha512-INZqcwDinNaIdb5CtW3ez5s943nX5stGBQS6VOP2JDlOFP81hM3fds/9NDknipqfUkZM43dx+HgVvkXYXXARCQ==}
-    dev: true
-
   /@aws-cdk/asset-awscli-v1@2.2.202:
     resolution: {integrity: sha512-JqlF0D4+EVugnG5dAsNZMqhu3HW7ehOXm5SDMxMbXNDMdsF0pxtQKNHRl52z1U9igsHmaFpUgSGjbhAJ+0JONg==}
 
   /@aws-cdk/asset-kubectl-v20@2.1.2:
     resolution: {integrity: sha512-3M2tELJOxQv0apCIiuKQ4pAbncz9GuLwnKFqxifWfe77wuMxyTRPmxssYHs42ePqzap1LT6GDcPygGs+hHstLg==}
 
-  /@aws-cdk/asset-node-proxy-agent-v6@2.0.1:
-    resolution: {integrity: sha512-DDt4SLdLOwWCjGtltH4VCST7hpOI5DzieuhGZsBpZ+AgJdSI2GCjklCXm0GCTwJG/SolkL5dtQXyUKgg9luBDg==}
-    dev: true
-
   /@aws-cdk/asset-node-proxy-agent-v6@2.0.3:
     resolution: {integrity: sha512-twhuEG+JPOYCYPx/xy5uH2+VUsIEhPTzDY0F1KuB+ocjWWB/KEDiOVL19nHvbPCB6fhWnkykXEMJ4HHcKvjtvg==}
 
-  /@aws-cdk/aws-kinesisfirehose-alpha@2.110.1-alpha.0(aws-cdk-lib@2.110.1)(constructs@10.3.0):
-    resolution: {integrity: sha512-ElXrQTc7MQ14ZXSoRtyyxxVRtfBEefwBDYBqKkDNltr8sqG5Y1gfTzbkffGfkGnodL5Q/EgN5WE/eRhe0sSuZg==}
+  /@aws-cdk/aws-kinesisfirehose-alpha@2.142.1-alpha.0(aws-cdk-lib@2.142.1)(constructs@10.3.0):
+    resolution: {integrity: sha512-Wq4vQEPCW6THkkub3FBBEQ1NIuA7gYmigyf5mz+2OT2hsVGTiyfJgu62W9fjd0WiuPPVWZ+8VCz1VSyQGpGEYA==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      aws-cdk-lib: ^2.110.1
+      aws-cdk-lib: ^2.142.1
       constructs: ^10.0.0
     dependencies:
-      aws-cdk-lib: 2.110.1(constructs@10.3.0)
+      aws-cdk-lib: 2.142.1(constructs@10.3.0)
       constructs: 10.3.0
     dev: true
 
@@ -5724,13 +5716,13 @@ packages:
       - terser
     dev: true
 
-  /@macaron-css/solid@1.0.1(@vanilla-extract/recipes@0.5.3)(solid-js@1.8.3):
+  /@macaron-css/solid@1.0.1(@vanilla-extract/recipes@0.2.5)(solid-js@1.8.3):
     resolution: {integrity: sha512-M/NOsagaNFYbYASMVRNRe+vpSzv1UAT1c601cE7BqnTyUZ8NyWTXVTzZlbThPTfNNRuvTcoirk0fF/iUshzGNw==}
     peerDependencies:
       '@vanilla-extract/recipes': ^0.2.5
       solid-js: ^1.4.3
     dependencies:
-      '@vanilla-extract/recipes': 0.5.3(@vanilla-extract/css@1.13.0)
+      '@vanilla-extract/recipes': 0.2.5(@vanilla-extract/css@1.13.0)
       solid-js: 1.8.3
     dev: false
 
@@ -8235,14 +8227,6 @@ packages:
       '@vanilla-extract/css': 1.13.0
     dev: false
 
-  /@vanilla-extract/recipes@0.5.3(@vanilla-extract/css@1.13.0):
-    resolution: {integrity: sha512-SPREq1NmaoKuvJeOV0pppOkwy3pWZUoDufsyQ6iHrbkHhAU7XQqG9o0iZSmg5JoVgDLIiOr9djQb0x9wuxig7A==}
-    peerDependencies:
-      '@vanilla-extract/css': ^1.0.0
-    dependencies:
-      '@vanilla-extract/css': 1.13.0
-    dev: false
-
   /@vanilla-extract/vite-plugin@3.9.0(vite@3.2.7):
     resolution: {integrity: sha512-Q2HYAyEJ93Uy7GHQPPiP8SXwPMHGpd4d0YnrIQqB0YZccYbGJR/WFIln9Dmbzx2pdngQUoOfhwEg6kJF8sQrog==}
     peerDependencies:
@@ -8557,29 +8541,6 @@ packages:
     engines: {node: '>= 0.4'}
     dependencies:
       possible-typed-array-names: 1.0.0
-
-  /aws-cdk-lib@2.110.1(constructs@10.3.0):
-    resolution: {integrity: sha512-Z+42Jc/KSKFdBOpEv4LK9tz6kQUdVvUBquIYhLajam3aGblkonM0/FgexvAqy8iGwUaVEIpVyBTZUP2/VUMalg==}
-    engines: {node: '>= 14.15.0'}
-    peerDependencies:
-      constructs: ^10.0.0
-    dependencies:
-      '@aws-cdk/asset-awscli-v1': 2.2.201
-      '@aws-cdk/asset-kubectl-v20': 2.1.2
-      '@aws-cdk/asset-node-proxy-agent-v6': 2.0.1
-      constructs: 10.3.0
-    dev: true
-    bundledDependencies:
-      - '@balena/dockerignore'
-      - case
-      - fs-extra
-      - ignore
-      - jsonschema
-      - minimatch
-      - punycode
-      - semver
-      - table
-      - yaml
 
   /aws-cdk-lib@2.142.1(constructs@10.3.0):
     resolution: {integrity: sha512-xs4NRoml5/Zh30YHSk/Wwmr7VcZOZHyIInuBye3gC/BYwCh1lsUe9/ChWIeLUCRhUrELd5npyoBOJiHb3ql7Rg==}
