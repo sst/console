@@ -406,7 +406,7 @@ export module State {
             .set({
               timeUpdated: sql`CURRENT_TIMESTAMP(6)`,
               timeDeleted:
-                existing.command === "remove" && state.resources.length < 2
+                existing.command === "remove" && state.resources.length === 0
                   ? sql`CURRENT_TIMESTAMP(6)`
                   : null,
             })
