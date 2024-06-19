@@ -246,6 +246,7 @@ export module State {
               .latest || {},
         )
         .catch(() => {});
+      if (!state) return;
       if (!state.resources) state.resources = [];
       let continueToken: string | undefined;
       const previousKey = await s3
