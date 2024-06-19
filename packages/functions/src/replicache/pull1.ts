@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import { useActor, useWorkspace } from "@console/core/actor";
 import { user } from "@console/core/user/user.sql";
-import { createTransaction } from "@console/core/util/transaction";
+import { TxOrDb, createTransaction } from "@console/core/util/transaction";
 import { NotPublic, withApiAuth } from "../api";
 import { ApiHandler, Response, useHeader, useJsonBody } from "sst/node/api";
 import {
@@ -11,7 +11,6 @@ import {
   gte,
   inArray,
   isNull,
-  lt,
   SQLWrapper,
   sql,
   SQL,
@@ -36,7 +35,7 @@ import {
   issueAlert,
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
-import { db } from "@console/core/drizzle";
+import { db, isNotNull, notInArray } from "@console/core/drizzle";
 import { githubOrgTable, githubRepoTable } from "@console/core/git/git.sql";
 import { slackTeam } from "@console/core/slack/slack.sql";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
@@ -207,6 +206,16 @@ export const handler = ApiHandler(
         if (actor.type === "user") {
           log("syncing user");
 
+          const deletedStages = await tx
+            .select({ id: stage.id })
+            .from(stage)
+            .where(
+              and(
+                isNotNull(stage.timeDeleted),
+                eq(stage.workspaceID, useWorkspace()),
+              ),
+            )
+            .then((rows) => rows.map((row) => row.id));
           const tableFilters = {
             log_search: eq(log_search.userID, actor.properties.userID),
             usage: gte(
@@ -222,6 +231,23 @@ export const handler = ApiHandler(
                 .toSQL({ includeOffset: false })!,
             ),
             issue: isNull(issue.timeDeleted),
+            ...(deletedStages.length
+              ? {
+                  stateEvent: notInArray(
+                    stateEventTable.stageID,
+                    deletedStages,
+                  ),
+                  stateUpdate: notInArray(
+                    stateUpdateTable.stageID,
+                    deletedStages,
+                  ),
+                  stateResource: notInArray(
+                    stateResourceTable.stageID,
+                    deletedStages,
+                  ),
+                  run: notInArray(runTable.stageID, deletedStages),
+                }
+              : {}),
           } satisfies {
             [key in keyof typeof TABLES]?: SQLWrapper;
           };
@@ -248,6 +274,7 @@ export const handler = ApiHandler(
                     "workspaceID" in table ? table.workspaceID : table.id,
                     workspaceID,
                   ),
+                  isNull(table.timeDeleted),
                   ...(name in tableFilters
                     ? [tableFilters[name as keyof typeof tableFilters]]
                     : []),

@@ -17,7 +17,7 @@ export type Transaction = MySqlTransaction<
   ExtractTablesWithRelations<Record<string, never>>
 >;
 
-type TxOrDb = Transaction | typeof db;
+export type TxOrDb = Transaction | typeof db;
 
 const TransactionContext = Context.create<{
   tx: TxOrDb;

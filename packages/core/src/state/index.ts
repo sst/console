@@ -219,9 +219,10 @@ export module State {
               eq(stateUpdateTable.workspaceID, useWorkspace()),
               eq(stateUpdateTable.id, updateID),
             ),
-          ),
+          )
+          .then((result) => result.at(0)),
       );
-      if (!existing.length) {
+      if (!existing) {
         console.log("update not found", { updateID });
         return;
       }
@@ -242,11 +243,10 @@ export module State {
         .then(
           async (result) =>
             JSON.parse(await result.Body!.transformToString()).checkpoint
-              .latest,
+              .latest || {},
         )
         .catch(() => {});
-      if (!state) return;
-      if (!state.resources) return;
+      if (!state.resources) state.resources = [];
       let continueToken: string | undefined;
       const previousKey = await s3
         .send(
@@ -405,6 +405,10 @@ export module State {
             .update(stage)
             .set({
               timeUpdated: sql`CURRENT_TIMESTAMP(6)`,
+              timeDeleted:
+                existing.command === "remove" && state.resources.length < 2
+                  ? sql`CURRENT_TIMESTAMP(6)`
+                  : null,
             })
             .where(
               and(
@@ -494,6 +498,7 @@ export module State {
           .update(stage)
           .set({
             timeUpdated: sql`CURRENT_TIMESTAMP(6)`,
+            timeDeleted: null,
           })
           .where(
             and(
