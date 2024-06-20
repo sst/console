@@ -828,7 +828,13 @@ export function List() {
               {(output) => {
                 const [copying, setCopying] = createSignal(false);
                 return (
-                  <Show when={output.value && output.value.trim() !== ""}>
+                  <Show
+                    when={
+                      output.value &&
+                      typeof output.value === "string" &&
+                      output.value.trim() !== ""
+                    }
+                  >
                     <Child>
                       <ChildKey>{output.key}</ChildKey>
                       <Row space="3" vertical="center">
