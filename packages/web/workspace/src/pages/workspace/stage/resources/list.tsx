@@ -738,6 +738,7 @@ export function List() {
         });
       }
     });
+    console.log({ outputs });
 
     return sortBy(outputs, (o) => o.key);
   });
