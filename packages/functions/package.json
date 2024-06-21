@@ -27,7 +27,7 @@
     "@botpoison/node": "^0.1.10",
     "@console/mail": "workspace:*",
     "@esbuild/linux-arm64": "0.21.4",
-    "drizzle-orm": "^0.30.10",
+    "drizzle-orm": "0.31.2",
     "esbuild": "0.21.4",
     "fast-jwt": "^2.2.1",
     "hono": "^3.9.2",

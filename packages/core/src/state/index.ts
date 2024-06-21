@@ -458,6 +458,7 @@ export module State {
       if (!obj) return;
       const lock = JSON.parse(await obj.Body!.transformToString()) as {
         updateID: string;
+        runID?: string;
         command: string;
         created: string;
       };
@@ -486,6 +487,7 @@ export module State {
           .values({
             workspaceID: useWorkspace(),
             command: command.data,
+            runID: lock.runID || null,
             id: lock.updateID,
             index: result + 1,
             stageID: input.config.stageID,

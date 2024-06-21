@@ -1,0 +1,2 @@
+ALTER TABLE `state_update` ADD `run_id` char(24);--> statement-breakpoint
+ALTER TABLE `state_update` ADD CONSTRAINT `state_update_run_id` FOREIGN KEY (`workspace_id`,`run_id`) REFERENCES `run`(`workspace_id`,`id`) ON DELETE cascade ON UPDATE no action;

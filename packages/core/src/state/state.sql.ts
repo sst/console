@@ -14,6 +14,7 @@ import { cuid, timestamps, timestampsNext, workspaceID } from "../util/sql";
 import { stage } from "../app/app.sql";
 import { workspaceIndexes } from "../workspace/workspace.sql";
 import { z } from "zod";
+import { runTable } from "../run/run.sql";
 
 export const Source = z.discriminatedUnion("type", [
   z.object({
@@ -43,6 +44,7 @@ export const stateUpdateTable = mysqlTable(
   {
     ...workspaceID,
     stageID: cuid("stage_id").notNull(),
+    runID: cuid("run_id"),
     command: mysqlEnum("command", Command).notNull(),
     source: json("source").$type<Source>().notNull(),
     index: bigint("index", { mode: "number" }),
@@ -62,6 +64,11 @@ export const stateUpdateTable = mysqlTable(
       name: "state_update_stage_id",
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
+    }).onDelete("cascade"),
+    runID: foreignKey({
+      name: "state_update_run_id",
+      columns: [table.workspaceID, table.runID],
+      foreignColumns: [runTable.workspaceID, runTable.id],
     }).onDelete("cascade"),
     // index: unique("index").on(table.workspaceID, table.stageID, table.index),
   }),
