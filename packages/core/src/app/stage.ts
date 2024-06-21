@@ -430,7 +430,10 @@ export const remove = zod(Info.shape.id, (stageID) =>
     async (tx) => {
       console.log("removing stage", stageID);
       await tx
-        .delete(stage)
+        .update(stage)
+        .set({
+          timeDeleted: sql`CURRENT_TIMESTAMP(3)`,
+        })
         .where(
           and(eq(stage.id, stageID), eq(stage.workspaceID, useWorkspace())),
         )
