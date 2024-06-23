@@ -344,12 +344,8 @@ export function Overview() {
       let result = {
         update,
       };
-      if (update.source.type !== "ci") return result;
-      const run = await RunStore.get(
-        tx,
-        props.stage.id,
-        update.source.properties.runID
-      );
+      if (!update.runID) return result;
+      const run = await RunStore.get(tx, props.stage.id, update.runID);
       if (run?.trigger.source !== "github") result;
       if (!run) return result;
       const repoUrl = githubRepo(run.trigger.repo.owner, run.trigger.repo.repo);

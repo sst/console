@@ -264,7 +264,7 @@ function sortUsers(users: User.Info[], selfEmail: string): User.Info[] {
     users,
     (user) => (user.email === selfEmail ? 0 : 1), // Your own user
     (user) => (!user.timeSeen ? 0 : 1), // Invites
-    (user) => user.email.length, // Sort by length
+    (user) => user.email.length // Sort by length
   );
 }
 
@@ -300,7 +300,7 @@ export function OverviewNext() {
   const accounts = AccountStore.list.watch(
     rep,
     () => [],
-    (accounts) => accounts.filter((a) => !a.timeDeleted),
+    (accounts) => accounts.filter((a) => !a.timeDeleted)
   );
   const auth = useAuth2();
   const local = useLocalContext();
@@ -319,14 +319,14 @@ export function OverviewNext() {
               pipe(
                 stages(),
                 filter((s) => s.appID === app.id),
-                sortBy((s) => s.timeUpdated),
+                sortBy((s) => s.timeUpdated)
               ).at(-1)?.timeUpdated || "",
             "desc",
           ],
-          (app) => app.name,
-        ),
-      ),
-    ),
+          (app) => app.name
+        )
+      )
+    )
   );
   const nav = useNavigate();
   const selfEmail = createMemo(() => auth.current.email);
@@ -334,12 +334,12 @@ export function OverviewNext() {
     const result = pipe(
       stages(),
       groupBy(
-        (s) => `${apps.value.find((a) => a.id === s.appID)?.name}/${s.name}`,
+        (s) => `${apps.value.find((a) => a.id === s.appID)?.name}/${s.name}`
       ),
       entries,
       filter(([, stages]) => stages.length > 1),
       flatMap(([_, stages]) => stages),
-      map((s) => s.id),
+      map((s) => s.id)
     );
     console.log({ ambiguous: result });
     return new Set(result);
@@ -351,13 +351,13 @@ export function OverviewNext() {
   const sortedUsers = createMemo(() =>
     sortUsers(
       users().filter((u) => !u.timeDeleted),
-      selfEmail(),
-    ),
+      selfEmail()
+    )
   );
   const usersCapped = createMemo(() =>
     sortedUsers().length > OVERFLOW_USERS_COUNT
       ? sortedUsers().slice(0, OVERFLOW_USERS_DISPLAY)
-      : sortedUsers(),
+      : sortedUsers()
   );
 
   createEffect(() => {
@@ -391,14 +391,14 @@ export function OverviewNext() {
         (c) =>
           props.app.name === local().app && c.name === local().stage ? 0 : 1,
         (c) => (c.unsupported ? 1 : 0),
-        [(c) => c.timeUpdated, "desc"],
+        [(c) => c.timeUpdated, "desc"]
       );
     });
     const repo = createSubscription(RepoFromApp(props.app.id));
     const childrenCapped = createMemo(() =>
       children().length > OVERFLOW_APPS_COUNT
         ? children().slice(0, OVERFLOW_APPS_DISPLAY)
-        : children(),
+        : children()
     );
     const showOverflow = createMemo(() => {
       return showApps().includes(props.app.id);
@@ -762,11 +762,11 @@ function StageCard(props: StageCardProps) {
   function Github() {
     const repoUrl = createSubscription(async (tx) => {
       console.log("latestUpdate", latestUpdate.value);
-      if (latestUpdate.value?.source.type !== "ci") return;
+      if (!latestUpdate.value?.runID) return;
       const run = await RunStore.get(
         tx,
         props.stage.id,
-        latestUpdate.value?.source.properties.runID,
+        latestUpdate.value?.runID
       );
       console.log("run", run);
       if (run.trigger.source !== "github") return;
@@ -855,7 +855,7 @@ function StageCard(props: StageCardProps) {
         <StageRegion>{props.stage.region}</StageRegion>
         <StageUpdatedTime
           title={parseTime(props.stage.timeUpdated).toLocaleString(
-            DateTime.DATETIME_FULL,
+            DateTime.DATETIME_FULL
           )}
         >
           {formatSinceTime(props.stage.timeUpdated, false, true)}
@@ -915,7 +915,7 @@ function UserCard(props: UserCardProps) {
               onSelect={() => {
                 if (
                   !confirm(
-                    "Are you sure you want to remove them from the workspace?",
+                    "Are you sure you want to remove them from the workspace?"
                   )
                 )
                   return;

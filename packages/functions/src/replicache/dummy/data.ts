@@ -2216,8 +2216,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     timeStarted: DateTime.now().minus({ minutes: 11 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
     same: 20,
-    source: "ci",
-    runID: ++RUN_ID,
+    runID: `${++RUN_ID}`,
   });
   yield run({
     id: RUN_ID,
@@ -2236,8 +2235,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     created: 4,
     deleted: 4,
     same: 16,
-    source: "ci",
-    runID: ++RUN_ID,
+    runID: `${++RUN_ID}`,
   });
   yield run({
     id: RUN_ID,
@@ -2290,8 +2288,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     command: "edit",
     timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 4 }).toISO()!,
-    source: "ci",
-    runID: ++RUN_ID,
+    runID: `${++RUN_ID}`,
   });
   yield run({
     id: RUN_ID,
@@ -2307,8 +2304,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     id: ++UPDATE_ID,
     stageID: STAGE_ION.id,
     timeStarted: DateTime.now().minus({ minutes: 2 }).toISO()!,
-    source: "ci",
-    runID: ++RUN_ID,
+    runID: `${++RUN_ID}`,
   });
   yield run({
     id: RUN_ID,
@@ -3409,8 +3405,7 @@ interface UpdateProps {
   id: number;
   stageID: string;
   errors?: State.Update["errors"];
-  source?: "cli" | "ci";
-  runID?: number;
+  runID?: string;
   timeCreated?: string;
   timeStarted?: string;
   timeCompleted?: string;
@@ -3426,7 +3421,6 @@ function update({
   errors,
   command,
   runID,
-  source,
   timeCreated,
   timeStarted,
   timeCompleted,
@@ -3441,10 +3435,7 @@ function update({
     index: id,
     stageID,
     command: command || "deploy",
-    source:
-      source === "ci"
-        ? { type: "ci", properties: { runID: `${runID}` || "123" } }
-        : { type: "cli", properties: {} },
+    runID,
     time: {
       updated: DateTime.now().startOf("day").toISO()!,
       created: timeCreated || DateTime.now().startOf("day").toISO()!,

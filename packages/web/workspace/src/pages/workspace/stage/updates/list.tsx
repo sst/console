@@ -381,7 +381,7 @@ type UpdateProps = {
   index: string;
   errors?: any[];
   timeStarted?: string;
-  source: State.Update["source"];
+  runID?: string;
   resourceSame?: number;
   timeCompleted?: string;
   same?: number;
@@ -393,7 +393,7 @@ type UpdateProps = {
 function Update(props: UpdateProps) {
   const ctx = useStageContext();
   const errors = () => props.errors?.length || 0;
-  const runID = props.source.type === "ci" && props.source.properties.runID;
+  const runID = props.runID;
 
   const run = createSubscription(async (tx) => {
     if (!runID) return;
@@ -535,7 +535,7 @@ function Update(props: UpdateProps) {
                 />
               </UpdateSenderAvatar>
             </Match>
-            <Match when={props.source.type === "cli"}>
+            <Match when={!runID}>
               <UpdateSenderIcon title="From the CLI">
                 <IconCommandLine />
               </UpdateSenderIcon>
@@ -661,7 +661,7 @@ export function List() {
               index={item.index}
               errors={item.errors}
               command={item.command}
-              source={item.source}
+              runID={item.runID}
               same={item.resource.same}
               created={item.resource.created}
               updated={item.resource.updated}

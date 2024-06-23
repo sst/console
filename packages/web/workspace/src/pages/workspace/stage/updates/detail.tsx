@@ -391,8 +391,8 @@ export function Detail() {
       ctx.stage.id,
       params.updateID
     );
-    if (update.source.type !== "ci") return;
-    return RunStore.get(tx, ctx.stage.id, update.source.properties.runID);
+    if (!update.runID) return;
+    return RunStore.get(tx, ctx.stage.id, update.runID);
   });
   const repoURL = createMemo(() =>
     run.value?.trigger.source === "github"

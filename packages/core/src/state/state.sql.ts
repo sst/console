@@ -16,20 +16,6 @@ import { workspaceIndexes } from "../workspace/workspace.sql";
 import { z } from "zod";
 import { runTable } from "../run/run.sql";
 
-export const Source = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("cli"),
-    properties: z.object({}),
-  }),
-  z.object({
-    type: z.literal("ci"),
-    properties: z.object({
-      runID: z.string().cuid2(),
-    }),
-  }),
-]);
-export type Source = z.infer<typeof Source>;
-
 export const UpdateCommand = z.union([
   z.literal("deploy"),
   z.literal("refresh"),
@@ -46,7 +32,6 @@ export const stateUpdateTable = mysqlTable(
     stageID: cuid("stage_id").notNull(),
     runID: cuid("run_id"),
     command: mysqlEnum("command", Command).notNull(),
-    source: json("source").$type<Source>().notNull(),
     index: bigint("index", { mode: "number" }),
     ...timestampsNext,
     timeStarted: timestamp("time_started"),
@@ -71,7 +56,7 @@ export const stateUpdateTable = mysqlTable(
       foreignColumns: [runTable.workspaceID, runTable.id],
     }).onDelete("cascade"),
     // index: unique("index").on(table.workspaceID, table.stageID, table.index),
-  }),
+  })
 );
 
 export const Action = ["created", "updated", "deleted"] as const;
@@ -109,14 +94,14 @@ export const stateEventTable = mysqlTable(
       table.workspaceID,
       table.stageID,
       table.updateID,
-      table.urn,
+      table.urn
     ),
     updateID: foreignKey({
       name: "state_event_update_id",
       columns: [table.workspaceID, table.updateID],
       foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
     }).onDelete("cascade"),
-  }),
+  })
 );
 
 export const stateResourceTable = mysqlTable(
@@ -155,5 +140,5 @@ export const stateResourceTable = mysqlTable(
       columns: [table.workspaceID, table.updateModifiedID],
       foreignColumns: [stateUpdateTable.workspaceID, stateUpdateTable.id],
     }).onDelete("cascade"),
-  }),
+  })
 );

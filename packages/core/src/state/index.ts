@@ -3,7 +3,6 @@ import { zod } from "../util/zod";
 import {
   stateUpdateTable,
   stateEventTable,
-  Source,
   Action,
   UpdateCommand,
   Command,
@@ -60,7 +59,7 @@ export module State {
     index: z.number(),
     stageID: z.string().cuid2(),
     command: z.enum(Command),
-    source: Source,
+    runID: z.string().cuid2().optional(),
     time: z.object({
       created: z.string(),
       deleted: z.string().optional(),
@@ -142,7 +141,7 @@ export module State {
         started: input.timeStarted?.toISOString(),
         completed: input.timeCompleted?.toISOString(),
       },
-      source: input.source,
+      runID: input.runID || undefined,
       errors: input.errors || [],
       stageID: input.stageID,
     };
@@ -491,10 +490,6 @@ export module State {
             id: lock.updateID,
             index: result + 1,
             stageID: input.config.stageID,
-            source: {
-              type: "cli",
-              properties: {},
-            },
             timeStarted: new Date(lock.created),
           });
         await tx
