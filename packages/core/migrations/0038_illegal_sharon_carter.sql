@@ -1,0 +1,1 @@
+ALTER TABLE `run` RENAME COLUMN `git_context` TO `trigger`;

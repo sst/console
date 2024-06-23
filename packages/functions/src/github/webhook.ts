@@ -20,7 +20,7 @@ app.webhooks.on("installation.deleted", async (event) => {
 });
 
 app.webhooks.on(
-  ["pull_request.opened", "pull_request.synchronize"],
+  ["pull_request.opened", "pull_request.synchronize", "pull_request.closed"],
   async (event) => {
     const commitID = event.payload.pull_request.head.sha;
     const owner = event.payload.repository.owner!.login;
@@ -33,6 +33,7 @@ app.webhooks.on(
     await process(event.octokit, {
       source: "github",
       type: "pull_request",
+      action: event.payload.action === "closed" ? "removed" : "pushed",
       repo: {
         id: event.payload.repository.id,
         owner,
@@ -50,23 +51,38 @@ app.webhooks.on(
         username: event.payload.sender?.login!,
       },
     });
-  },
+  }
 );
 
 app.webhooks.on("push", async (event) => {
+  const owner = event.payload.repository.owner!.login;
+  const repo = event.payload.repository.name;
   await process(event.octokit, {
     source: "github",
-    type: "push",
+    type: "branch",
+    action: event.payload.deleted ? "removed" : "pushed",
     repo: {
       id: event.payload.repository.id,
-      owner: event.payload.repository.owner!.login,
-      repo: event.payload.repository.name,
+      owner,
+      repo,
     },
     branch: event.payload.ref.replace("refs/heads/", ""),
-    commit: {
-      id: event.payload.head_commit?.id!,
-      message: event.payload.head_commit?.message?.substring(0, 100)!,
-    },
+    commit: event.payload.deleted
+      ? await (() =>
+          event.octokit.rest.repos
+            .getCommit({
+              owner,
+              repo,
+              ref: event.payload.before,
+            })
+            .then((res) => ({
+              id: event.payload.before,
+              message: res.data.commit.message?.substring(0, 100)!,
+            })))()
+      : {
+          id: event.payload.head_commit?.id!,
+          message: event.payload.head_commit?.message?.substring(0, 100)!,
+        },
     sender: {
       id: event.payload.sender?.id!,
       username: event.payload.sender?.login!,
@@ -80,16 +96,7 @@ async function process(octokit: Octokit, trigger: Trigger) {
 
   // Get all apps connected to the repo
   const appRepos = await Github.listAppReposByExternalRepoID(repoID);
-  const workspaceIDs = appRepos.map((x) => x.workspaceID);
-  const appRepoIDs = appRepos.map((x) => x.id);
   if (appRepos.length === 0) return;
-
-  const lastEventID = await AppRepo.multiSetLastEvent({
-    workspaceIDs,
-    appRepoIDs,
-    gitContext: trigger,
-  });
-  console.log(lastEventID);
 
   // Get `sst.config.ts` file
   const file = await octokit.rest.repos.getContent({
@@ -98,44 +105,10 @@ async function process(octokit: Octokit, trigger: Trigger) {
     ref: commitID,
     path: "sst.config.ts",
   });
-  if (!("content" in file.data)) {
-    await AppRepo.multiSetLastEventStatus({
-      workspaceIDs,
-      appRepoIDs,
-      lastEventID,
-      status: "sst.config.ts not found",
-    });
-    return;
-  }
-
-  // Parse Autodeploy config
-  const sstConfig = await Run.parseSstConfig({
-    content: file.data.content,
-    trigger,
-  });
-  if ("error" in sstConfig) {
-    const status =
-      sstConfig.error === "parse_config"
-        ? "Failed to parse sst.config.ts"
-        : sstConfig.error === "evaluate_config"
-          ? "Failed to evaluate sst.config.ts"
-          : sstConfig.error === "v2_app"
-            ? "SST v2 apps are not supported"
-            : sstConfig.error === "missing_autodeploy"
-              ? "Autodeploy config not defined in sst.config.ts"
-              : sstConfig.error === "missing_autodeploy_target"
-                ? "Autodeploy target not defined in sst.config.ts"
-                : sstConfig.error === "missing_autodeploy_stage"
-                  ? "Missing stage in Autodeploy target"
-                  : "Failed to parse sst.config.ts";
-    await AppRepo.multiSetLastEventStatus({
-      workspaceIDs,
-      appRepoIDs,
-      lastEventID,
-      status,
-    });
-    return;
-  }
+  const sstConfig =
+    "content" in file.data
+      ? await Run.parseSstConfig({ content: file.data.content, trigger })
+      : { error: "config_not_found" as const };
 
   // Loop through all apps connected to the repo
   for (const appRepo of appRepos) {
@@ -144,21 +117,12 @@ async function process(octokit: Octokit, trigger: Trigger) {
         type: "system",
         properties: { workspaceID: appRepo.workspaceID },
       },
-      async () => {
-        try {
-          await Run.create({
-            appID: appRepo.appID,
-            trigger,
-            sstConfig: sstConfig!,
-          });
-        } catch (e: any) {
-          await AppRepo.setLastEventStatus({
-            appRepoID: appRepo.id,
-            lastEventID,
-            status: e.message,
-          });
-        }
-      },
+      () =>
+        Run.create({
+          appID: appRepo.appID,
+          trigger,
+          sstConfig,
+        })
     );
   }
 }

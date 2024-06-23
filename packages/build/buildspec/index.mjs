@@ -3,6 +3,7 @@
 import { spawnSync } from "child_process";
 import fs from "fs";
 import semver from "semver";
+import { build } from "esbuild";
 import {
   EventBridgeClient,
   PutEventsCommand,
@@ -35,13 +36,12 @@ export async function handler(event, context) {
     });
 
     checkout();
-    await checkSstVersion();
-    installDependencies();
-
+    const sstConfig = await loadSstConfig();
+    await checkSstVersion(sstConfig);
     if (event.warm) return "warmed";
-
-    deploy();
+    await runWorkflow(sstConfig);
   } catch (e) {
+    console.error(e);
     error = e.message;
   } finally {
     await publish("runner.completed", { error });
@@ -68,14 +68,44 @@ export async function handler(event, context) {
     }
   }
 
-  async function checkSstVersion() {
-    const content = fs.readFileSync("sst.config.ts", "utf8");
-    const matches = content.match(/version:\s*"(.*)"/);
-    if (!matches) return;
+  async function loadSstConfig() {
+    process.chdir(REPO_PATH);
+
+    const OUTPUT_PATH = "/tmp/sst.config.mjs";
+    fs.rmSync(OUTPUT_PATH, { force: true });
+
+    const buildRet = await build({
+      mainFields: ["module", "main"],
+      format: "esm",
+      platform: "node",
+      sourcemap: "inline",
+      stdin: {
+        contents: fs.readFileSync("sst.config.ts", "utf8"),
+        sourcefile: "sst.config.ts",
+        loader: "ts",
+      },
+      outfile: OUTPUT_PATH,
+      write: true,
+      bundle: false,
+      banner: {
+        js: ["const $config = (input) => input;"].join("\n"),
+      },
+    });
+    if (buildRet.errors.length) {
+      console.error(buildRet.errors);
+      throw new Error("Failed to load sst.config.ts");
+    }
+
+    return (await import(OUTPUT_PATH)).default;
+  }
+
+  async function checkSstVersion(sstConfig) {
+    const { stage } = event;
+    const semverPattern = sstConfig.app({ stage }).version;
+    console.log({ semverPattern });
+    if (!semverPattern) return;
 
     // check current version
-    const semverPattern = matches[1];
-    console.log({ semverPattern });
     const installedVersion = shell("sst version", { stdio: "pipe" })
       .stdout.toString()
       .trim();
@@ -93,12 +123,35 @@ export async function handler(event, context) {
       );
       if (release) {
         shell(`sst upgrade ${release.tag_name.replace(/^v/, "")}`);
+        shell(`mv /root/.sst/bin/sst /usr/local/bin/sst`);
         break;
       }
     }
   }
 
-  function installDependencies() {
+  async function runWorkflow(sstConfig) {
+    const { warm, stage, trigger } = event;
+    if (warm) return;
+
+    const context = {
+      stage,
+      trigger,
+      install,
+      deploy,
+      remove,
+      shell,
+    };
+    const workflow =
+      sstConfig.console?.autodeploy?.workflow ??
+      (async (context) => {
+        install();
+        context.trigger.action === "removed" ? remove() : deploy();
+      });
+
+    await workflow(context);
+  }
+
+  function install() {
     process.chdir(REPO_PATH);
 
     if (fs.existsSync("yarn.lock")) shell("yarn install");
@@ -112,7 +165,7 @@ export async function handler(event, context) {
   }
 
   function deploy() {
-    const { stage, credentials, stateUpdateID } = event;
+    const { stage, credentials, runID } = event;
 
     process.chdir(REPO_PATH);
     shell(`sst deploy --stage ${stage}`, {
@@ -121,7 +174,22 @@ export async function handler(event, context) {
         AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
         AWS_SESSION_TOKEN: credentials.sessionToken,
         SST_AWS_NO_PROFILE: "1",
-        SST_UPDATE_ID: stateUpdateID,
+        SST_RUN_ID: runID,
+      },
+    });
+  }
+
+  function remove() {
+    const { stage, credentials, runID } = event;
+
+    process.chdir(REPO_PATH);
+    shell(`sst remove --stage ${stage}`, {
+      env: {
+        AWS_ACCESS_KEY_ID: credentials.accessKeyId,
+        AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
+        AWS_SESSION_TOKEN: credentials.sessionToken,
+        SST_AWS_NO_PROFILE: "1",
+        SST_RUN_ID: runID,
       },
     });
   }

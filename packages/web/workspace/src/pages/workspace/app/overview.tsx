@@ -302,12 +302,15 @@ export function Overview() {
   const ghRepo = GithubRepoStore.all.watch(
     rep,
     () => [],
-    (repos) => repos.find((repo) => repo.id === appRepo()[0]?.repoID),
+    (repos) => repos.find((repo) => repo.id === appRepo()[0]?.repoID)
   );
   const ghRepoOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find((org) => org.id === ghRepo()?.githubOrgID && !org.time.disconnected),
+    (orgs) =>
+      orgs.find(
+        (org) => org.id === ghRepo()?.githubOrgID && !org.time.disconnected
+      )
   );
 
   const local = useLocalContext();
@@ -318,8 +321,8 @@ export function Overview() {
       filter((stage) => stage.appID === app.app.id),
       sortBy(
         (stage) => (stage.name === local().stage ? 0 : 1),
-        [(stage) => stage.timeUpdated, "desc"],
-      ),
+        [(stage) => stage.timeUpdated, "desc"]
+      )
     );
   }, []);
 
@@ -345,7 +348,7 @@ export function Overview() {
       const run = await RunStore.get(
         tx,
         props.stage.id,
-        update.source.properties.runID,
+        update.source.properties.runID
       );
       if (run?.trigger.source !== "github") result;
       if (!run) return result;
@@ -358,7 +361,7 @@ export function Overview() {
     });
     const local = useLocalContext();
     const aws = createSubscription(async (tx) =>
-      AWS.AccountStore.get(tx, props.stage.awsAccountID),
+      AWS.AccountStore.get(tx, props.stage.awsAccountID)
     );
     return (
       <CardRoot>
@@ -403,7 +406,9 @@ export function Overview() {
                 </Link>
               </Show>
               <Show when={latest.value?.update.errors.length}>
-                <Link href={`${props.stage.name}/updates/${latest.value?.update.id}`}>
+                <Link
+                  href={`${props.stage.name}/updates/${latest.value?.update.id}`}
+                >
                   <Tag level="danger" style="outline">
                     Error
                   </Tag>
@@ -413,7 +418,7 @@ export function Overview() {
           </CardTitle>
           <CardUpdatedTime
             title={parseTime(props.stage.timeUpdated).toLocaleString(
-              DateTime.DATETIME_FULL,
+              DateTime.DATETIME_FULL
             )}
           >
             Updated {formatSinceTime(props.stage.timeUpdated, true)}
@@ -442,7 +447,7 @@ export function Overview() {
                         <Match when={v().trigger.type === "pull_request"}>
                           <IconPr />
                         </Match>
-                        <Match when={v().trigger.type === "push"}>
+                        <Match when={v().trigger.type === "branch"}>
                           <IconGit />
                         </Match>
                       </Switch>
@@ -450,7 +455,7 @@ export function Overview() {
                     <CardGitBranch>
                       {(() => {
                         const trigger = v().trigger;
-                        if (trigger.type === "push") return trigger.branch;
+                        if (trigger.type === "branch") return trigger.branch;
                         return trigger.base;
                       })()}
                     </CardGitBranch>
@@ -507,8 +512,9 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
-                    }`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${
+                    ghRepo()?.name
+                  }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />

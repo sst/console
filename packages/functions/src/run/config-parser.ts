@@ -44,37 +44,21 @@ export async function handler(evt: Run.ConfigParserEvent) {
       `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"v2_app"}));`,
       `  process.exit(0);`,
       `}`,
-      // Ensure Autodeploy is defined in the config
-      `if (!mod.console?.autodeploy) {`,
-      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy"}));`,
+      // Run the target function
+      `const target = mod.console?.autodeploy
+        ? mod.console.autodeploy.target?.(${JSON.stringify(evt.trigger)})
+        : {stage:"${evt.defaultStage}"};`,
+      `if (!target) {`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_target"}));`,
       `  process.exit(0);`,
       `}`,
-      // Two use cases:
-      // - "evt.trigger" defined, ie. called on git webhook to get all config
-      // - "evt.stage" defined, ie. called on repo connect to get JUST runner config
-      ...(evt.trigger
-        ? [
-            `const target = mod.console.autodeploy.target?.(${JSON.stringify(
-              evt.trigger,
-            )});`,
-            `if (!target) {`,
-            `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_target"}));`,
-            `  process.exit(0);`,
-            `}`,
-            `if (!target.stage) {`,
-            `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_stage"}));`,
-            `  process.exit(0);`,
-            `}`,
-            `const runner = mod.console.autodeploy.runner?.({stage: target.stage});`,
-            `const app = mod.app({stage: target.stage});`,
-            `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, console: { autodeploy: { runner, target }}}));`,
-          ]
-        : [
-            `const runner = mod.console.autodeploy.runner?.({stage: "${evt.stage}"});`,
-            `const app = mod.app({stage: "${evt.stage}"});`,
-            `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, console: { autodeploy: { runner }}}));`,
-          ]),
-    ].join("\n"),
+      `if (!target.stage) {`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_stage"}));`,
+      `  process.exit(0);`,
+      `}`,
+      `const app = mod.app({stage: target.stage});`,
+      `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, console: { autodeploy: { target }}}));`,
+    ].join("\n")
   );
   const evalRet = spawnSync("node /tmp/eval.mjs", {
     stdio: "pipe",

@@ -507,8 +507,8 @@ export const EditTargetForm = object({
       object({
         key: string([minLength(1, "Key cannot be empty")]),
         value: string([minLength(1, "Value cannot be empty")]),
-      }),
-    ),
+      })
+    )
   ),
 });
 
@@ -519,17 +519,17 @@ export function Settings() {
   const workspace = useWorkspace();
   const runConfigs = createSubscription(
     (tx) => RunConfigStore.forApp(tx, app.app.id),
-    [],
+    []
   );
 
   const appRepo = createSubscription((tx) =>
-    AppRepoStore.forApp(tx, app.app.id).then((repos) => repos[0]),
+    AppRepoStore.forApp(tx, app.app.id).then((repos) => repos[0])
   );
 
   const needsGithub = createSubscription(async (tx) => {
     const ghOrgs = await GithubOrgStore.all(tx);
     const appRepo = await AppRepoStore.forApp(tx, app.app.id).then(
-      (repos) => repos[0],
+      (repos) => repos[0]
     );
     if (appRepo) {
       const ghRepo = await GithubRepoStore.get(tx, appRepo.repoID);
@@ -554,23 +554,23 @@ export function Settings() {
     "message",
     (e) => {
       if (e.data === "github.success") setOverrideGithub(true);
-    },
+    }
   );
 
   function LastEvent() {
     const event = createSubscription(async (tx) => {
       const appRepo = await AppRepoStore.forApp(tx, app.app.id).then(
-        (repos) => repos[0],
+        (repos) => repos[0]
       );
       if (!appRepo) return;
       if (!appRepo.lastEvent) return;
       const ev = appRepo.lastEvent;
       const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
       const uri =
-        ev.type === "push"
+        ev.type === "branch"
           ? githubBranch(repoURL, ev.branch)
           : githubPr(repoURL, ev.number);
-      const branch = ev.type === "push" ? ev.branch : `pr#${ev.number}`;
+      const branch = ev.type === "branch" ? ev.branch : `pr#${ev.number}`;
       const commit = ev.commit.id;
 
       return {
@@ -634,7 +634,7 @@ export function Settings() {
             <EventLabel>Last Commit</EventLabel>
             <EventTime
               title={DateTime.fromISO(event.value!.time).toLocaleString(
-                DateTime.DATETIME_FULL,
+                DateTime.DATETIME_FULL
               )}
             >
               {formatSinceTime(DateTime.fromISO(event.value!.time).toSQL()!)}
@@ -664,7 +664,7 @@ export function Settings() {
               awsAccountExternalID: data.awsAccount,
               appID: app.app.id,
               env: fromEntries(
-                (data.env || []).map((item) => [item.key, item.value]),
+                (data.env || []).map((item) => [item.key, item.value])
               ),
             });
             setEditing("active", false);
@@ -782,16 +782,16 @@ export function Settings() {
                                       onPaste={(e) => {
                                         const data =
                                           e.clipboardData?.getData(
-                                            "text/plain",
+                                            "text/plain"
                                           );
                                         if (!data) return;
                                         setValue(
                                           putForm,
                                           `env.${index()}.value`,
-                                          data,
+                                          data
                                         );
                                         e.currentTarget.value = "0".repeat(
-                                          data.length,
+                                          data.length
                                         );
                                         e.preventDefault();
                                       }}
@@ -932,7 +932,7 @@ export function Settings() {
                   const info = createSubscription(async (tx) => {
                     const repo = await GithubRepoStore.get(
                       tx,
-                      appRepo.value!.repoID,
+                      appRepo.value!.repoID
                     );
                     const org = await GithubOrgStore.get(tx, repo.githubOrgID);
                     return {
@@ -953,7 +953,7 @@ export function Settings() {
                                 target="_blank"
                                 href={githubRepo(
                                   info.value!.org.login,
-                                  info.value!.repo.name,
+                                  info.value!.repo.name
                                 )}
                               >
                                 {info.value!.org.login}
@@ -967,12 +967,12 @@ export function Settings() {
                             onClick={() => {
                               if (
                                 !confirm(
-                                  "Are you sure you want to disconnect from this repo?",
+                                  "Are you sure you want to disconnect from this repo?"
                                 )
                               )
                                 return;
                               rep().mutate.app_repo_disconnect(
-                                appRepo.value!.id,
+                                appRepo.value!.id
                               );
                             }}
                           >
@@ -1011,7 +1011,7 @@ export function Settings() {
                           <For
                             each={pipe(
                               runConfigs.value,
-                              sortBy((val) => val.stagePattern.length),
+                              sortBy((val) => val.stagePattern.length)
                             )}
                           >
                             {(config) => (
@@ -1043,7 +1043,7 @@ export function Settings() {
                                               ([key, value]) => ({
                                                 key,
                                                 value,
-                                              }),
+                                              })
                                             ),
                                           });
                                         }}
@@ -1077,12 +1077,12 @@ export function Settings() {
                                         onSelect={() => {
                                           if (
                                             !confirm(
-                                              "Are you sure you want to remove this target?",
+                                              "Are you sure you want to remove this target?"
                                             )
                                           )
                                             return;
                                           rep().mutate.run_config_remove(
-                                            config.id,
+                                            config.id
                                           );
                                         }}
                                       >
@@ -1152,8 +1152,8 @@ export function Settings() {
                       new Set(
                         orgs.value
                           .filter((org) => !org.time.disconnected)
-                          .map((org) => org.id),
-                      ),
+                          .map((org) => org.id)
+                      )
                   );
                   const sortedRepos = createMemo(() =>
                     pipe(
@@ -1163,8 +1163,8 @@ export function Settings() {
                         label: repo.name,
                         value: repo.id,
                       })),
-                      sortBy((repo) => repo.label),
-                    ),
+                      sortBy((repo) => repo.label)
+                    )
                   );
                   const empty = createMemo(() => sortedRepos().length === 0);
                   return (

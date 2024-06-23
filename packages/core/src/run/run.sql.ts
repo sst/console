@@ -54,7 +54,8 @@ export type Log = z.infer<typeof Log>;
 
 export const Trigger = z.discriminatedUnion("type", [
   z.object({
-    type: z.enum(["push"]),
+    type: z.enum(["branch"]),
+    action: z.enum(["pushed", "removed"]),
     source: z.enum(["github"]),
     repo: z.object({
       id: z.number(),
@@ -73,6 +74,7 @@ export const Trigger = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.enum(["pull_request"]),
+    action: z.enum(["pushed", "removed"]),
     source: z.enum(["github"]),
     repo: z.object({
       id: z.number(),
@@ -95,18 +97,17 @@ export const Trigger = z.discriminatedUnion("type", [
 export type Trigger = z.infer<typeof Trigger>;
 
 export const AutodeployConfig = z.object({
-  runner: z
-    .object({
-      engine: z.enum(Engine).optional(),
-      architecture: z.enum(Architecture).optional(),
-      image: z.string().min(1).optional(),
-      compute: z.enum(Compute).optional(),
-      timeout: z.string().optional(),
-    })
-    .optional(),
   target: z.object({
     stage: z.string().min(1),
-    env: z.record(z.string().min(1)).optional(),
+    runner: z
+      .object({
+        engine: z.enum(Engine).optional(),
+        architecture: z.enum(Architecture).optional(),
+        image: z.string().min(1).optional(),
+        compute: z.enum(Compute).optional(),
+        timeout: z.string().optional(),
+      })
+      .optional(),
   }),
 });
 export type AutodeployConfig = z.infer<typeof AutodeployConfig>;
@@ -140,7 +141,7 @@ export const runnerTable = mysqlTable(
       columns: [table.workspaceID, table.appRepoID],
       foreignColumns: [appRepoTable.workspaceID, appRepoTable.id],
     }).onDelete("cascade"),
-  }),
+  })
 );
 
 export const runnerUsageTable = mysqlTable(
@@ -167,9 +168,9 @@ export const runnerUsageTable = mysqlTable(
     uniqueStageID: unique("runner_id_stage_id_unique").on(
       table.workspaceID,
       table.runnerID,
-      table.stageID,
+      table.stageID
     ),
-  }),
+  })
 );
 
 export const runTable = mysqlTable(
@@ -179,27 +180,32 @@ export const runTable = mysqlTable(
     ...timestampsNext,
     timeStarted: timestamp("time_started"),
     timeCompleted: timestamp("time_completed"),
-    stageID: cuid("stage_id").notNull(),
-    stateUpdateID: cuid("state_update_id").notNull(),
+    appID: cuid("app_id"),
+    stageID: cuid("stage_id"),
     log: json("log").$type<Log>(),
-    trigger: json("git_context").$type<Trigger>().notNull(),
-    config: json("config").$type<AutodeployConfig>().notNull(),
+    trigger: json("trigger").$type<Trigger>().notNull(),
+    config: json("config").$type<AutodeployConfig>(),
     error: text("error"),
     active: boolean("active"),
   },
   (table) => ({
     ...workspaceIndexes(table),
-    appID: foreignKey({
+    stageID: foreignKey({
       name: "workspace_id_stage_id_fk",
       columns: [table.workspaceID, table.stageID],
       foreignColumns: [stage.workspaceID, stage.id],
     }).onDelete("cascade"),
+    appID: foreignKey({
+      name: "workspace_id_app_id_fk",
+      columns: [table.workspaceID, table.appID],
+      foreignColumns: [app.workspaceID, app.id],
+    }).onDelete("cascade"),
     active: unique("unique_active").on(
       table.workspaceID,
       table.stageID,
-      table.active,
+      table.active
     ),
-  }),
+  })
 );
 
 export const runConfigTable = mysqlTable(
@@ -219,13 +225,13 @@ export const runConfigTable = mysqlTable(
     stagePattern: unique("unique_stage_pattern").on(
       table.workspaceID,
       table.appID,
-      table.stagePattern,
+      table.stagePattern
     ),
     appID: foreignKey({
       columns: [table.workspaceID, table.appID],
       foreignColumns: [app.workspaceID, app.id],
     }).onDelete("cascade"),
-  }),
+  })
 );
 
 // TODO REMOVE
@@ -245,11 +251,11 @@ export const runEnvTable_REMOVE = mysqlTable(
       table.workspaceID,
       table.appID,
       table.stageName,
-      table.key,
+      table.key
     ),
     appID: foreignKey({
       columns: [table.workspaceID, table.appID],
       foreignColumns: [app.workspaceID, app.id],
     }).onDelete("cascade"),
-  }),
+  })
 );

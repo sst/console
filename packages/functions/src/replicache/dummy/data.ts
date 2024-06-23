@@ -43,7 +43,7 @@ export type DummyMode =
   | "overview:base;usage:overage;resources:base;workspace:gated;subscription:overdue";
 
 export function* generateData(
-  mode: DummyMode,
+  mode: DummyMode
 ): Generator<DummyData, void, unknown> {
   console.log("generating for", mode);
 
@@ -455,13 +455,20 @@ function* workspaceBase(): Generator<DummyData, void, unknown> {
     awsAccountID: ACCOUNT_ID,
   });
   yield githubOrg({ id: GITHUB_ORG, name: "jayair" });
-  yield githubRepo({ id: GITHUB_REPO, name: "ion-sandbox", githubOrgID: GITHUB_ORG });
+  yield githubRepo({
+    id: GITHUB_REPO,
+    name: "ion-sandbox",
+    githubOrgID: GITHUB_ORG,
+  });
   yield appRepo({ id: 100, appID: APP_LOCAL, repoID: GITHUB_REPO });
 }
 
 function* overviewFull(): Generator<DummyData, void, unknown> {
   yield user({ email: "invited-dummy@example.com" });
-  yield user({ email: "invited-dummy-with-long-email-address-that-should-overflow-because-its-too-long@example.com" });
+  yield user({
+    email:
+      "invited-dummy-with-long-email-address-that-should-overflow-because-its-too-long@example.com",
+  });
   yield user({
     email: "deleted-dummy@example.com",
     active: true,
@@ -680,7 +687,7 @@ function* stageIonBase(): Generator<DummyData, void, unknown> {
 }
 
 function* stageIonUpdateLinks(
-  parent: string,
+  parent: string
 ): Generator<DummyData, void, unknown> {
   const UPDATE_1 = 1;
   const UPDATE_2 = 2;
@@ -783,7 +790,7 @@ function* stageIonUpdateLinks(
 }
 
 function* stageIonBaseIconCase(
-  parent: string,
+  parent: string
 ): Generator<DummyData, void, unknown> {
   yield stateResource({
     parent,
@@ -3619,7 +3626,8 @@ function run({
     },
     trigger: {
       source: "github",
-      type: "push",
+      type: "branch",
+      action: "pushed",
       branch: branch || "",
       commit: {
         id: commitID,
@@ -3652,10 +3660,7 @@ interface GithubOrgProps {
   id: number;
   name: string;
 }
-function githubOrg({
-  id,
-  name,
-}: GithubOrgProps): DummyData {
+function githubOrg({ id, name }: GithubOrgProps): DummyData {
   return {
     _type: "githubOrg",
     id: id.toString(),
@@ -3676,11 +3681,7 @@ interface GithubRepoProps {
   name: string;
   githubOrgID: number;
 }
-function githubRepo({
-  id,
-  name,
-  githubOrgID,
-}: GithubRepoProps): DummyData {
+function githubRepo({ id, name, githubOrgID }: GithubRepoProps): DummyData {
   return {
     _type: "githubRepo",
     id: id.toString(),
@@ -3699,11 +3700,7 @@ interface AppRepoProps {
   appID: string;
   repoID: number;
 }
-function appRepo({
-  id,
-  appID,
-  repoID,
-}: AppRepoProps): DummyData {
+function appRepo({ id, appID, repoID }: AppRepoProps): DummyData {
   return {
     _type: "appRepo",
     id: id.toString(),

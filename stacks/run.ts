@@ -209,6 +209,7 @@ export function Run({ stack, app }: StackContext) {
         handler: {
           function: {
             handler: "packages/functions/src/events/runner-started.handler",
+            permissions: ["iot"],
             bind: [bus, ...Object.values(secrets.database)],
           },
         },
@@ -228,30 +229,6 @@ export function Run({ stack, app }: StackContext) {
           },
         },
       },
-    },
-  });
-
-  bus.subscribe(stack, "app.config.updated", {
-    handler: "packages/functions/src/events/app-config-updated.handler",
-    timeout: "15 minute",
-    bind: [
-      ...Object.values(secrets.database),
-      bus,
-      ...secrets.github,
-      configParser,
-      buildspecBucket,
-      buildspecVersion,
-      buildImage,
-    ],
-    permissions: ["sts", "iot", "scheduler:CreateSchedule", "iam:PassRole"],
-    environment: {
-      EVENT_BUS_ARN: bus.eventBusArn,
-      RUNNER_REMOVER_SCHEDULE_GROUP_NAME: runnerRemoverScheduleGroup.name!,
-      RUNNER_REMOVER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
-      RUNNER_REMOVER_FUNCTION_ARN: runnerRemover.functionArn,
-      RUNNER_WARMER_SCHEDULE_GROUP_NAME: runnerWarmerScheduleGroup.name!,
-      RUNNER_WARMER_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
-      RUNNER_WARMER_FUNCTION_ARN: runnerWarmer.functionArn,
     },
   });
 

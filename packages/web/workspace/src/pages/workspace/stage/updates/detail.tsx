@@ -377,19 +377,19 @@ export function Detail() {
   const ctx = useStageContext();
   const replicacheStatus = useReplicacheStatus();
   const update = createSubscription((tx) =>
-    StateUpdateStore.get(tx, ctx.stage.id, params.updateID),
+    StateUpdateStore.get(tx, ctx.stage.id, params.updateID)
   );
   const resources = StateEventStore.forUpdate.watch(
     rep,
     () => [ctx.stage.id, params.updateID],
-    (resources) => sortBy(resources, [(r) => getResourceName(r.urn)!, "asc"]),
+    (resources) => sortBy(resources, [(r) => getResourceName(r.urn)!, "asc"])
   );
 
   const run = createSubscription(async (tx) => {
     const update = await StateUpdateStore.get(
       tx,
       ctx.stage.id,
-      params.updateID,
+      params.updateID
     );
     if (update.source.type !== "ci") return;
     return RunStore.get(tx, ctx.stage.id, update.source.properties.runID);
@@ -397,7 +397,7 @@ export function Detail() {
   const repoURL = createMemo(() =>
     run.value?.trigger.source === "github"
       ? githubRepo(run.value.trigger.repo.owner, run.value.trigger.repo.repo)
-      : "",
+      : ""
   );
   const workspace = useWorkspace();
   const auth = useAuth2();
@@ -408,28 +408,28 @@ export function Detail() {
       if (!log) return [];
       const results = await fetch(
         import.meta.env.VITE_API_URL +
-        "/rest/log/scan?" +
-        new URLSearchParams(
-          log.engine === "lambda"
-            ? {
-              stageID: ctx.stage.id,
-              timestamp: log.timestamp.toString(),
-              logStream: log.logStream,
-              logGroup: log.logGroup,
-              requestID: log.requestID,
-            }
-            : {
-              stageID: ctx.stage.id,
-              logStream: log.logStream,
-              logGroup: log.logGroup,
-            },
-        ).toString(),
+          "/rest/log/scan?" +
+          new URLSearchParams(
+            log.engine === "lambda"
+              ? {
+                  stageID: ctx.stage.id,
+                  timestamp: log.timestamp.toString(),
+                  logStream: log.logStream,
+                  logGroup: log.logGroup,
+                  requestID: log.requestID,
+                }
+              : {
+                  stageID: ctx.stage.id,
+                  logStream: log.logStream,
+                  logGroup: log.logGroup,
+                }
+          ).toString(),
         {
           headers: {
             "x-sst-workspace": workspace().id,
             Authorization: "Bearer " + auth.current.token,
           },
-        },
+        }
       ).then(
         (res) =>
           res.json() as Promise<
@@ -437,13 +437,13 @@ export function Detail() {
               message: string;
               timestamp: number;
             }[]
-          >,
+          >
       );
       return results;
     },
     {
       initialValue: [],
-    },
+    }
   );
   const trimmedLogs = createMemo(() =>
     pipe(
@@ -451,8 +451,8 @@ export function Detail() {
       dropWhile((r) => !r.message.includes("isWarm")),
       drop(1),
       filter((r) => r.message.trim() != ""),
-      takeWhile((r) => !r.message.includes(" BUILD State")),
-    ),
+      takeWhile((r) => !r.message.includes(" BUILD State"))
+    )
   );
 
   const logsPoller = setInterval(() => {
@@ -481,13 +481,13 @@ export function Detail() {
     return "updating";
   });
   const deleted = createMemo(() =>
-    resources().filter((r) => r.action === "deleted"),
+    resources().filter((r) => r.action === "deleted")
   );
   const created = createMemo(() =>
-    resources().filter((r) => r.action === "created"),
+    resources().filter((r) => r.action === "created")
   );
   const updated = createMemo(() =>
-    resources().filter((r) => r.action === "updated"),
+    resources().filter((r) => r.action === "updated")
   );
   const isEmpty = createMemo(
     () =>
@@ -495,7 +495,7 @@ export function Detail() {
       !deleted().length &&
       !created().length &&
       !updated().length &&
-      !update.value.resource.same,
+      !update.value.resource.same
   );
 
   function renderSidebar() {
@@ -504,9 +504,9 @@ export function Detail() {
 
       const trigger = run.value.trigger;
       const branch =
-        trigger.type === "push" ? trigger.branch : `pr#${trigger.number}`;
+        trigger.type === "branch" ? trigger.branch : `pr#${trigger.number}`;
       const uri =
-        trigger.type === "push"
+        trigger.type === "branch"
           ? githubBranch(repoURL(), trigger.branch)
           : githubPr(repoURL(), trigger.number);
 
@@ -522,8 +522,9 @@ export function Detail() {
                   <img
                     width={AVATAR_SIZE}
                     height={AVATAR_SIZE}
-                    src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                      }?s=${2 * AVATAR_SIZE}&v=4`}
+                    src={`https://avatars.githubusercontent.com/u/${
+                      runInfo()!.trigger.sender.id
+                    }?s=${2 * AVATAR_SIZE}&v=4`}
                   />
                 </GitAvatar>
                 <Stack space="0.5">
@@ -570,16 +571,16 @@ export function Detail() {
                 title={
                   update.value!.time.started
                     ? DateTime.fromISO(
-                      update.value!.time.started!,
-                    ).toLocaleString(DateTime.DATETIME_FULL)
+                        update.value!.time.started!
+                      ).toLocaleString(DateTime.DATETIME_FULL)
                     : undefined
                 }
               >
                 {update.value!.time.started
                   ? formatSinceTime(
-                    DateTime.fromISO(update.value!.time.started!).toSQL()!,
-                    true,
-                  )
+                      DateTime.fromISO(update.value!.time.started!).toSQL()!,
+                      true
+                    )
                   : "—"}
               </Text>
             </Stack>
@@ -595,11 +596,11 @@ export function Detail() {
               >
                 {update.value!.time.started && update.value!.time.completed
                   ? formatDuration(
-                    DateTime.fromISO(update.value!.time.completed!)
-                      .diff(DateTime.fromISO(update.value!.time.started!))
-                      .as("milliseconds"),
-                    true,
-                  )
+                      DateTime.fromISO(update.value!.time.completed!)
+                        .diff(DateTime.fromISO(update.value!.time.started!))
+                        .as("milliseconds"),
+                      true
+                    )
                   : "—"}
               </Text>
             </Stack>
@@ -710,10 +711,10 @@ export function Detail() {
               </Stack>
               <Stack space="5">
                 <Switch>
-                  <Match when={!isEmpty()}>
-                    {renderResources()}
-                  </Match>
-                  <Match when={status() !== "updating" && status() !== "queued"}>
+                  <Match when={!isEmpty()}>{renderResources()}</Match>
+                  <Match
+                    when={status() !== "updating" && status() !== "queued"}
+                  >
                     <ResourceEmpty>No changes</ResourceEmpty>
                   </Match>
                 </Switch>
@@ -736,7 +737,7 @@ export function Detail() {
                     >
                       Logs —{" "}
                       {DateTime.fromMillis(
-                        trimmedLogs()![0].timestamp!,
+                        trimmedLogs()![0].timestamp!
                       ).toLocaleString(DATETIME_NO_TIME)}
                     </PanelTitle>
                   </Show>
@@ -748,26 +749,29 @@ export function Detail() {
                             title={DateTime.fromMillis(entry.timestamp)
                               .toUTC()
                               .toLocaleString(
-                                DateTime.DATETIME_FULL_WITH_SECONDS,
+                                DateTime.DATETIME_FULL_WITH_SECONDS
                               )}
                           >
                             {DateTime.fromMillis(entry.timestamp).toFormat(
-                              "HH:mm:ss.SSS",
+                              "HH:mm:ss.SSS"
                             )}
                           </LogTime>
                           <LogMessage>{entry.message}</LogMessage>
                         </Log>
                       )}
                     </For>
-                    <Show when={trimmedLogs()?.length === 0 || !update.value!.time.completed}>
+                    <Show
+                      when={
+                        trimmedLogs()?.length === 0 ||
+                        !update.value!.time.completed
+                      }
+                    >
                       <LogsLoading>
                         <LogsLoadingIcon>
                           <IconArrowPathSpin />
                         </LogsLoadingIcon>
                         <PanelEmptyCopy>
-                          {update.value!.time.completed
-                            ? "Loading"
-                            : "Running"}
+                          {update.value!.time.completed ? "Loading" : "Running"}
                           &hellip;
                         </PanelEmptyCopy>
                       </LogsLoading>
@@ -780,7 +784,7 @@ export function Detail() {
           {renderSidebar()}
         </Container>
       </Match>
-    </Switch >
+    </Switch>
   );
 }
 
