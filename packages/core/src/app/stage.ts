@@ -1,7 +1,6 @@
 import { createSelectSchema } from "drizzle-zod";
 import { app, resource, stage } from "./app.sql";
 import { z } from "zod";
-import { State } from "../state/";
 import { zod } from "../util/zod";
 import {
   createTransaction,
@@ -16,15 +15,12 @@ import { AWS } from "../aws";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
-  NoSuchBucket,
-  NoSuchKey,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Enrichers, Resource } from "./resource";
 import { db } from "../drizzle";
 import { event } from "../event";
 import { Replicache } from "../replicache";
-import { Pulumi } from "../pulumi";
 import { issueSubscriber } from "../issue/issue.sql";
 
 export * as Stage from "./stage";
@@ -33,25 +29,25 @@ export const Events = {
   Connected: event(
     "app.stage.connected",
     z.object({
-      stageID: z.string().nonempty(),
+      stageID: z.string().min(1),
     }),
   ),
   Updated: event(
     "app.stage.updated",
     z.object({
-      stageID: z.string().nonempty(),
+      stageID: z.string().min(1),
     }),
   ),
   ResourcesUpdated: event(
     "app.stage.resources_updated",
     z.object({
-      stageID: z.string().nonempty(),
+      stageID: z.string().min(1),
     }),
   ),
   UsageRequested: event(
     "app.stage.usage_requested",
     z.object({
-      stageID: z.string().nonempty(),
+      stageID: z.string().min(1),
       daysOffset: z.number().int().min(1),
     }),
   ),
@@ -59,10 +55,10 @@ export const Events = {
 
 export const Info = createSelectSchema(stage, {
   id: (schema) => schema.id.cuid2(),
-  name: (schema) => schema.name.trim().nonempty(),
+  name: (schema) => schema.name.trim().min(1),
   appID: (schema) => schema.appID.cuid2(),
   workspaceID: (schema) => schema.workspaceID.cuid2(),
-  region: (schema) => schema.region.trim().nonempty(),
+  region: (schema) => schema.region.trim().min(1),
   awsAccountID: (schema) => schema.awsAccountID.cuid2(),
 });
 export type Info = z.infer<typeof Info>;
@@ -142,6 +138,7 @@ export const connect = zod(
           set: {
             awsAccountID: input.awsAccountID,
             region: input.region,
+            timeDeleted: null,
           },
         })
         .execute();
@@ -169,227 +166,236 @@ export const connect = zod(
     }),
 );
 
-export const syncMetadata = zod(z.custom<StageCredentials>(), async (input) => {
-  console.log("syncing metadata", input.stageID);
-  const row = await db
-    .select({
-      app: app.name,
-      stage: stage.name,
-      region: stage.region,
-    })
-    .from(stage)
-    .innerJoin(app, eq(stage.appID, app.id))
-    .where(
-      and(eq(stage.id, input.stageID), eq(stage.workspaceID, useWorkspace())),
-    )
-    .execute()
-    .then((x) => x[0]);
-  if (!row) {
-    return;
-  }
-  console.log(input.app, input.stage, input.region);
-  const bootstrap = await AWS.Account.bootstrap(input);
-  if (!bootstrap) return;
-  const resources = [] as {
-    [key in Resource.Info["type"]]: {
-      type: key;
-      id: string;
-      stackID: string;
-      addr: string;
-      data: Resource.InfoByType<key>["metadata"];
-      enrichment: Resource.InfoByType<key>["enrichment"];
-    };
-  }[Resource.Info["type"]][];
-  const s3 = new S3Client(input);
-  const key = `stackMetadata/app.${input.app}/stage.${input.stage}/`;
-  console.log("listing", key, "for", bootstrap.bucket);
-  const list = await s3
-    .send(
-      new ListObjectsV2Command({
-        Prefix: key,
-        Bucket: bootstrap.bucket,
-      }),
-    )
-    .catch((err) => {
-      if (err.name === "AccessDenied") return;
-      if (err.name === "NoSuchBucket") return;
-      throw err;
-    });
-  if (!list) {
-    console.log("could not list from bucket");
-    return;
-  }
-  if (!list.Contents?.length) {
-    const ion = await AWS.Account.bootstrapIon(input);
-    if (ion) {
-      const state = await s3
-        .send(
-          new GetObjectCommand({
-            Key: `app/${input.app}/${input.stage}.json`,
-            Bucket: ion.bucket,
-          }),
-        )
-        .catch(() => {});
-      if (state) return;
+export const syncMetadata = zod(
+  z.object({
+    config: z.custom<StageCredentials>(),
+    remove: z.boolean().optional(),
+  }),
+  async (input) => {
+    console.log("syncing metadata", input.config.stageID);
+    const row = await db
+      .select({
+        app: app.name,
+        stage: stage.name,
+        region: stage.region,
+      })
+      .from(stage)
+      .innerJoin(app, eq(stage.appID, app.id))
+      .where(
+        and(
+          eq(stage.id, input.config.stageID),
+          eq(stage.workspaceID, useWorkspace()),
+        ),
+      )
+      .execute()
+      .then((x) => x[0]);
+    if (!row) {
+      return;
     }
-    await remove(input.stageID);
-    return;
-  }
-  console.log("found", list.Contents?.length, "stacks");
-  const results: any[] = [];
-  for (const obj of list.Contents) {
-    const stackID = obj.Key?.split("/").pop()!.split(".")[1];
-    const result = await s3
+    console.log(input.config.app, input.config.stage, input.config.region);
+    const bootstrap = await AWS.Account.bootstrap(input.config);
+    if (!bootstrap) return;
+    const resources = [] as {
+      [key in Resource.Info["type"]]: {
+        type: key;
+        id: string;
+        stackID: string;
+        addr: string;
+        data: Resource.InfoByType<key>["metadata"];
+        enrichment: Resource.InfoByType<key>["enrichment"];
+      };
+    }[Resource.Info["type"]][];
+    const s3 = new S3Client(input);
+    const key = `stackMetadata/app.${input.config.app}/stage.${input.config.stage}/`;
+    console.log("listing", key, "for", bootstrap.bucket);
+    const list = await s3
       .send(
-        new GetObjectCommand({
-          Key: obj.Key!,
+        new ListObjectsV2Command({
+          Prefix: key,
           Bucket: bootstrap.bucket,
         }),
       )
       .catch((err) => {
         if (err.name === "AccessDenied") return;
         if (err.name === "NoSuchBucket") return;
-        if (err.name === "NoSuchKey") return;
         throw err;
       });
-    if (!result) continue;
-    const body = await result
-      .Body!.transformToString()
-      .then((x) => JSON.parse(x));
-    const r = [];
-    body.push({
-      type: "Stack",
-      id: stackID,
-      addr: stackID,
-      data: {},
-    });
-    for (let res of body) {
-      const { type } = res;
-      const enrichment =
-        type in Enrichers
-          ? await Enrichers[type as keyof typeof Enrichers](
-              res,
-              input.credentials,
-              input.region,
-            ).catch(() => ({}))
-          : {};
-      r.push({
-        ...res,
-        stackID,
-        enrichment,
-      });
+    if (!list) {
+      console.log("could not list from bucket");
+      return;
     }
-    results.push(...r);
-  }
-  resources.push(...results);
-  s3.destroy();
-  if (!resources.length) {
-    return;
-  }
-
-  return createTransaction(
-    async (tx) => {
-      const existing = await tx
-        .select({
-          id: resource.id,
-          addr: resource.addr,
-        })
-        .from(resource)
-        .where(
-          and(
-            eq(resource.stageID, input.stageID),
-            eq(resource.workspaceID, useWorkspace()),
-          ),
-        )
-        .execute()
-        .then((x) => new Map(x.map((x) => [x.addr, x.id] as const)));
-      if (resources.length)
-        await tx
-          .insert(resource)
-          .values(
-            resources.map((res) => {
-              const id = existing.get(res.addr) || createId();
-              existing.delete(res.addr);
-              return {
-                workspaceID: useWorkspace(),
-                cfnID: res.id,
-                constructID: res.id,
-                addr: res.addr,
-                stackID: res.stackID,
-                stageID: input.stageID,
-                id,
-                type: res.type,
-                metadata: res.data,
-                enrichment: res.enrichment,
-              };
+    if (!list.Contents?.length && input.remove) {
+      const ion = await AWS.Account.bootstrapIon(input.config);
+      if (ion) {
+        const state = await s3
+          .send(
+            new GetObjectCommand({
+              Key: `app/${input.config.app}/${input.config.stage}.json`,
+              Bucket: ion.bucket,
             }),
           )
-          .onDuplicateKeyUpdate({
-            set: {
-              addr: sql`VALUES(addr)`,
-              stackID: sql`VALUES(stack_id)`,
-              type: sql`VALUES(type)`,
-              metadata: sql`VALUES(metadata)`,
-              enrichment: sql`VALUES(enrichment)`,
-            },
+          .catch(() => {});
+        if (state) return;
+      }
+      await remove(input.config.stageID);
+      return;
+    }
+    console.log("found", list.Contents?.length, "stacks");
+    const results: any[] = [];
+    for (const obj of list.Contents || []) {
+      const stackID = obj.Key?.split("/").pop()!.split(".")[1];
+      const result = await s3
+        .send(
+          new GetObjectCommand({
+            Key: obj.Key!,
+            Bucket: bootstrap.bucket,
+          }),
+        )
+        .catch((err) => {
+          if (err.name === "AccessDenied") return;
+          if (err.name === "NoSuchBucket") return;
+          if (err.name === "NoSuchKey") return;
+          throw err;
+        });
+      if (!result) continue;
+      const body = await result
+        .Body!.transformToString()
+        .then((x) => JSON.parse(x));
+      const r = [];
+      body.push({
+        type: "Stack",
+        id: stackID,
+        addr: stackID,
+        data: {},
+      });
+      for (let res of body) {
+        const { type } = res;
+        const enrichment =
+          type in Enrichers
+            ? await Enrichers[type as keyof typeof Enrichers](
+                res,
+                input.config.credentials,
+                input.config.region,
+              ).catch(() => ({}))
+            : {};
+        r.push({
+          ...res,
+          stackID,
+          enrichment,
+        });
+      }
+      results.push(...r);
+    }
+    resources.push(...results);
+    s3.destroy();
+    if (!resources.length) {
+      return;
+    }
+
+    return createTransaction(
+      async (tx) => {
+        const existing = await tx
+          .select({
+            id: resource.id,
+            addr: resource.addr,
           })
-          .execute();
-
-      const stacks = resources.filter((x) => x.type === "Stack");
-      const unsupported =
-        stacks.length ===
-        stacks.filter(
-          (x) =>
-            // @ts-ignore
-            !x.enrichment.version ||
-            // @ts-ignore
-            parseVersion(x.enrichment.version) < MINIMUM_VERSION,
-        ).length;
-
-      await tx
-        .update(stage)
-        .set({ unsupported })
-        .where(
-          and(
-            eq(stage.id, input.stageID),
-            eq(stage.workspaceID, useWorkspace()),
-          ),
-        );
-
-      const toDelete = [...existing.values()];
-      console.log("deleting", toDelete.length, "resources");
-      if (toDelete.length)
-        await tx
-          .delete(resource)
+          .from(resource)
           .where(
             and(
-              eq(resource.stageID, input.stageID),
+              eq(resource.stageID, input.config.stageID),
               eq(resource.workspaceID, useWorkspace()),
-              inArray(resource.id, toDelete),
+            ),
+          )
+          .execute()
+          .then((x) => new Map(x.map((x) => [x.addr, x.id] as const)));
+        if (resources.length)
+          await tx
+            .insert(resource)
+            .values(
+              resources.map((res) => {
+                const id = existing.get(res.addr) || createId();
+                existing.delete(res.addr);
+                return {
+                  workspaceID: useWorkspace(),
+                  cfnID: res.id,
+                  constructID: res.id,
+                  addr: res.addr,
+                  stackID: res.stackID,
+                  stageID: input.config.stageID,
+                  id,
+                  type: res.type,
+                  metadata: res.data,
+                  enrichment: res.enrichment,
+                };
+              }),
+            )
+            .onDuplicateKeyUpdate({
+              set: {
+                addr: sql`VALUES(addr)`,
+                stackID: sql`VALUES(stack_id)`,
+                type: sql`VALUES(type)`,
+                metadata: sql`VALUES(metadata)`,
+                enrichment: sql`VALUES(enrichment)`,
+              },
+            })
+            .execute();
+
+        const stacks = resources.filter((x) => x.type === "Stack");
+        const unsupported =
+          stacks.length ===
+          stacks.filter(
+            (x) =>
+              // @ts-ignore
+              !x.enrichment.version ||
+              // @ts-ignore
+              parseVersion(x.enrichment.version) < MINIMUM_VERSION,
+          ).length;
+
+        await tx
+          .update(stage)
+          .set({ unsupported })
+          .where(
+            and(
+              eq(stage.id, input.config.stageID),
+              eq(stage.workspaceID, useWorkspace()),
             ),
           );
 
-      await tx
-        .update(stage)
-        .set({ timeUpdated: sql`CURRENT_TIMESTAMP(3)` })
-        .where(
-          and(
-            eq(stage.id, input.stageID),
-            eq(stage.workspaceID, useWorkspace()),
-          ),
+        const toDelete = [...existing.values()];
+        console.log("deleting", toDelete.length, "resources");
+        if (toDelete.length)
+          await tx
+            .delete(resource)
+            .where(
+              and(
+                eq(resource.stageID, input.config.stageID),
+                eq(resource.workspaceID, useWorkspace()),
+                inArray(resource.id, toDelete),
+              ),
+            );
+
+        await tx
+          .update(stage)
+          .set({ timeUpdated: sql`CURRENT_TIMESTAMP(3)` })
+          .where(
+            and(
+              eq(stage.id, input.config.stageID),
+              eq(stage.workspaceID, useWorkspace()),
+            ),
+          );
+        await createTransactionEffect(() => Replicache.poke());
+        await createTransactionEffect(() =>
+          Events.ResourcesUpdated.publish({
+            stageID: input.config.stageID,
+          }),
         );
-      await createTransactionEffect(() => Replicache.poke());
-      await createTransactionEffect(() =>
-        Events.ResourcesUpdated.publish({
-          stageID: input.stageID,
-        }),
-      );
-    },
-    {
-      isolationLevel: "read committed",
-    },
-  );
-});
+      },
+      {
+        isolationLevel: "read committed",
+      },
+    );
+  },
+);
 
 export type StageCredentials = Exclude<
   Awaited<ReturnType<typeof assumeRole>>,
