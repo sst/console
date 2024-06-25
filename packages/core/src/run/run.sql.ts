@@ -195,13 +195,6 @@ export const runnerUsageTable = mysqlTable(
   })
 );
 
-// Statuses:
-// - queued: timeStarted + !timeCompleted + !error + !active
-// - in progress: timeStarted + !timeCompleted + !error + active
-// - skipped: timeStarted + !timeCompleted + error IN [config_target_skipped, target_not_matched]
-// - failed before run: timeStarted + !timeCompleted + error NOT IN [config_target_skipped, target_not_matched]
-// - failed after run: timeStarted + timeCompleted + error
-// - completed: timeStarted + timeCompleted + !error
 export const runTable = mysqlTable(
   "run",
   {
