@@ -8,7 +8,6 @@ import {
   Match,
   Show,
   Switch,
-  batch,
   createMemo,
   createSignal,
   mergeProps,
@@ -22,6 +21,7 @@ import { Invocation } from "@console/core/log";
 import { Link } from "@solidjs/router";
 import { DateTime } from "luxon";
 import { useKeyboardNavigator } from "./keyboard-navigator";
+import { useStageContext } from "$/pages/workspace/stage/context";
 
 const shortDateOptions: Intl.DateTimeFormatOptions = {
   month: "short",
@@ -272,7 +272,11 @@ const FunctionLink = styled(Link, {
 export function InvocationRow(props: {
   invocation: Invocation;
   onSavePayload?: () => void;
-  function: Resource.InfoByType<"Function">;
+  function: {
+    arn: string;
+    handler: string;
+    id: string;
+  };
   local: boolean;
   mixed?: boolean;
   focus?: boolean;
@@ -286,12 +290,12 @@ export function InvocationRow(props: {
   const shortDate = createMemo(() =>
     new Intl.DateTimeFormat("en-US", shortDateOptions)
       .format(props.invocation.start)
-      .replace(" at ", ", ")
+      .replace(" at ", ", "),
   );
   const longDate = createMemo(() =>
     new Intl.DateTimeFormat("en-US", longDateOptions).format(
-      props.invocation.start
-    )
+      props.invocation.start,
+    ),
   );
   const [replaying, setReplaying] = createSignal(false);
   const rep = useReplicache();
@@ -300,10 +304,11 @@ export function InvocationRow(props: {
       ? props.invocation.errors.some((error) => error.failed)
         ? "fail"
         : "error"
-      : "info"
+      : "info",
   );
 
   const navigator = useKeyboardNavigator();
+  const ctx = useStageContext();
 
   return (
     <Root
@@ -339,7 +344,7 @@ export function InvocationRow(props: {
         </RequestID>
         <LogPreview>
           {props.mixed
-            ? props.function.metadata.handler
+            ? props.function.handler
             : props.invocation.errors[0]?.message ||
               props.invocation.logs[0]?.message}
         </LogPreview>
@@ -363,8 +368,8 @@ export function InvocationRow(props: {
                     !props.invocation.input!
                       ? "disabled"
                       : tab() === "request"
-                      ? "active"
-                      : "inactive"
+                        ? "active"
+                        : "inactive"
                   }
                 >
                   Request
@@ -378,8 +383,8 @@ export function InvocationRow(props: {
                     !props.invocation.output
                       ? "disabled"
                       : tab() === "response"
-                      ? "active"
-                      : "inactive"
+                        ? "active"
+                        : "inactive"
                   }
                 >
                   Response
@@ -422,8 +427,8 @@ export function InvocationRow(props: {
                     e.stopPropagation();
                     setReplaying(true);
                     rep().mutate.function_invoke({
-                      stageID: props.function.stageID,
-                      functionARN: props.function.metadata.arn,
+                      stageID: ctx.stage.id,
+                      functionARN: props.function.arn,
                       payload: structuredClone(unwrap(props.invocation.input)),
                     });
                     setTimeout(() => setReplaying(false), 2000);
@@ -465,11 +470,11 @@ export function InvocationRow(props: {
                               title={DateTime.fromMillis(entry.timestamp)
                                 .toUTC()
                                 .toLocaleString(
-                                  DateTime.DATETIME_FULL_WITH_SECONDS
+                                  DateTime.DATETIME_FULL_WITH_SECONDS,
                                 )}
                             >
                               {DateTime.fromMillis(entry.timestamp).toFormat(
-                                "HH:mm:ss.SSS"
+                                "HH:mm:ss.SSS",
                               )}
                             </LogTime>
                             <LogMessage>{entry.message}</LogMessage>
@@ -527,7 +532,7 @@ export function InvocationRow(props: {
                         <Show when={props.invocation.report?.memory}>
                           {(size) => {
                             const formattedSize = formatBytes(
-                              size() * 1024 * 1024
+                              size() * 1024 * 1024,
                             );
                             return `${formattedSize.value}${formattedSize.unit}`;
                           }}
@@ -541,7 +546,7 @@ export function InvocationRow(props: {
                       <Show when={props.invocation.report?.size}>
                         {(size) => {
                           const formattedSize = formatBytes(
-                            size() * 1024 * 1024
+                            size() * 1024 * 1024,
                           );
                           return `${formattedSize.value}${formattedSize.unit}`;
                         }}

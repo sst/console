@@ -309,6 +309,7 @@ export function Detail() {
 
   const mode = createMemo(() => {
     if (resource()?.enrichment.live) return "live";
+    if (stateResource()?.outputs._live) return "live";
     if (query.view === "tail") return "tail";
     return "search";
   });
@@ -395,7 +396,8 @@ export function Detail() {
     const base = logGroup();
     const searchID = id.search;
     const addr = resource()?.addr!;
-    if (mode() === "live") return addr;
+    const urn = stateResource()?.urn!;
+    if (mode() === "live") return addr || urn;
     if (mode() === "search") return searchID;
     return base + "-tail";
   });
@@ -677,7 +679,24 @@ export function Detail() {
                         }}
                         invocation={invocation}
                         local={mode() === "live"}
-                        function={resource()!}
+                        function={
+                          resource()
+                            ? {
+                                id: resource()!.id,
+                                arn: resource()!.metadata.arn,
+                                handler: resource()!.metadata.handler,
+                              }
+                            : {
+                                id: stateResource()!.id,
+                                arn: stateResources().find(
+                                  (child) =>
+                                    child.type ===
+                                      "aws:lambda/function:Function" &&
+                                    child.parent === stateResource()!.urn,
+                                )?.outputs.arn,
+                                handler: stateResource()!.outputs.handler,
+                              }
+                        }
                       />
                     )}
                   </For>

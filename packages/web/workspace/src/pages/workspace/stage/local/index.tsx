@@ -8,8 +8,12 @@ import {
 import { theme, Text, utility, Row, TextButton } from "$/ui";
 import { InvocationRow } from "$/common/invocation";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
-import { useResourcesContext, useStageContext } from "../context";
-import { filter, flatMap, pipe } from "remeda";
+import {
+  useResourcesContext,
+  useStageContext,
+  useStateResources,
+} from "../context";
+import { concat, filter, flatMap, map, pipe } from "remeda";
 import { IconArrowsUpDown, IconBoltSolid } from "$/ui/icons";
 import { useInvocations } from "$/providers/invocation";
 import {
@@ -26,23 +30,45 @@ const Root = styled("div", {
 
 export function Local() {
   const resources = useResourcesContext();
+  const stateResources = useStateResources();
   const functionByLocalID = createMemo(() =>
     Object.fromEntries(
-      pipe(
-        resources(),
-        filter((item) => item.type === "Function"),
-        flatMap((item) =>
-          item.type === "Function"
-            ? [[item.metadata.localId, item] as const]
-            : []
-        )
-      )
-    )
+      concat(
+        pipe(
+          resources(),
+          filter((item) => item.type === "Function"),
+          map((item) => [
+            item.metadata.localId,
+            {
+              id: item.metadata.localId,
+              handler: item.metadata.handler,
+              arn: item.metadata.arn,
+            },
+          ]),
+        ),
+        pipe(
+          stateResources(),
+          filter((item) => item.type === "sst:aws:Function"),
+          map((item) => [
+            item.urn,
+            {
+              id: item.id,
+              handler: item.outputs._metadata.handler,
+              arn: stateResources().find(
+                (child) =>
+                  child.type === "aws:lambda/function:Function" &&
+                  child.parent === item.urn,
+              )?.outputs.arn,
+            },
+          ]),
+        ),
+      ),
+    ),
   );
   const ctx = useStageContext();
   const invocationsContext = useInvocations();
   const invocations = createMemo(() =>
-    invocationsContext.forSource("all").slice().reverse()
+    invocationsContext.forSource("all").slice().reverse(),
   );
   const navigator = createKeyboardNavigator({
     target: "[data-element='invocation']",
@@ -97,14 +123,16 @@ export function Local() {
         </LogLoadingIndicator>
         <KeyboardNavigator value={navigator}>
           <For each={invocations()}>
-            {(invocation) => (
-              <InvocationRow
-                mixed
-                local
-                invocation={invocation}
-                function={functionByLocalID()[invocation.source!]}
-              />
-            )}
+            {(invocation) => {
+              return (
+                <InvocationRow
+                  mixed
+                  local
+                  invocation={invocation}
+                  function={functionByLocalID()[invocation.source!]}
+                />
+              );
+            }}
           </For>
         </KeyboardNavigator>
       </LogList>

@@ -401,7 +401,7 @@ function Update(props: UpdateProps) {
   });
 
   const update = createSubscription((tx) =>
-    StateUpdateStore.get(tx, ctx.stage.id, props.id)
+    StateUpdateStore.get(tx, ctx.stage.id, props.id),
   );
 
   const runInfo = createMemo(() => {
@@ -466,7 +466,7 @@ function Update(props: UpdateProps) {
                 target="_blank"
                 href={githubCommit(
                   runInfo()!.repoURL,
-                  runInfo()!.trigger.commit.id
+                  runInfo()!.trigger.commit.id,
                 )}
               >
                 <UpdateGitIcon size="md">
@@ -516,7 +516,7 @@ function Update(props: UpdateProps) {
             >
               <UpdateTime
                 title={DateTime.fromISO(props.timeStarted!).toLocaleString(
-                  DateTime.DATETIME_FULL
+                  DateTime.DATETIME_FULL,
                 )}
               >
                 {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
@@ -563,7 +563,7 @@ function ChangeLegend(props: ChangeLegendProps) {
 
   const widths = createMemo(() => {
     const nonZero = [same(), created(), updated(), deleted()].filter(
-      (n) => n !== 0
+      (n) => n !== 0,
     ).length;
 
     let sameWidth =
@@ -587,7 +587,7 @@ function ChangeLegend(props: ChangeLegendProps) {
         sameWidth,
         createdWidth,
         updatedWidth,
-        deletedWidth
+        deletedWidth,
       );
       if (maxWidth === sameWidth) {
         sameWidth += widthDifference;
@@ -648,7 +648,7 @@ export function List() {
   const ctx = useStageContext();
   const updates = createSubscription(
     (tx) => StateUpdateStore.forStage(tx, ctx.stage.id),
-    []
+    [],
   );
 
   return (
