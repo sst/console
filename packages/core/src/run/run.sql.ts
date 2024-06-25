@@ -35,6 +35,26 @@ export type Resource = z.infer<typeof Resource>;
 export const Engine = ["lambda", "codebuild"] as const;
 export const Architecture = ["x86_64", "arm64"] as const;
 export const Compute = ["small", "medium", "large", "xlarge"] as const;
+type RunErrors = {
+  config_not_found: {};
+  config_build_failed: {};
+  config_parse_failed: {};
+  config_evaluate_failed: {};
+  config_target_skipped: {};
+  config_target_no_stage: {};
+  config_v2_unsupported: {};
+  config_app_name_mismatch: { name: string };
+  target_not_found: {};
+  target_not_matched: { stage: string };
+  target_missing_aws_account: { target: string };
+  target_missing_workspace: { target: string };
+  run_failed: { message: string };
+  unknown: { message: string };
+};
+export type RunErrorType = keyof RunErrors;
+export type RunError = {
+  [key in keyof RunErrors]: { type: key; properties?: RunErrors[key] };
+}[keyof RunErrors];
 
 export const Log = z.discriminatedUnion("engine", [
   z.object({
@@ -96,19 +116,21 @@ export const Trigger = z.discriminatedUnion("type", [
 ]);
 export type Trigger = z.infer<typeof Trigger>;
 
+export const AutodeployConfigRunner = z.object({
+  engine: z.enum(Engine).optional(),
+  architecture: z.enum(Architecture).optional(),
+  image: z.string().min(1).optional(),
+  compute: z.enum(Compute).optional(),
+  timeout: z.string().optional(),
+});
+
 export const AutodeployConfig = z.object({
-  target: z.object({
-    stage: z.string().min(1),
-    runner: z
-      .object({
-        engine: z.enum(Engine).optional(),
-        architecture: z.enum(Architecture).optional(),
-        image: z.string().min(1).optional(),
-        compute: z.enum(Compute).optional(),
-        timeout: z.string().optional(),
-      })
-      .optional(),
-  }),
+  target: z
+    .object({
+      stage: z.string().min(1),
+      runner: AutodeployConfigRunner.optional(),
+    })
+    .optional(),
 });
 export type AutodeployConfig = z.infer<typeof AutodeployConfig>;
 
@@ -173,6 +195,13 @@ export const runnerUsageTable = mysqlTable(
   })
 );
 
+// Statuses:
+// - queued: timeStarted + !timeCompleted + !error + !active
+// - in progress: timeStarted + !timeCompleted + !error + active
+// - skipped: timeStarted + !timeCompleted + error IN [config_target_skipped, target_not_matched]
+// - failed before run: timeStarted + !timeCompleted + error NOT IN [config_target_skipped, target_not_matched]
+// - failed after run: timeStarted + timeCompleted + error
+// - completed: timeStarted + timeCompleted + !error
 export const runTable = mysqlTable(
   "run",
   {
@@ -185,7 +214,7 @@ export const runTable = mysqlTable(
     log: json("log").$type<Log>(),
     trigger: json("trigger").$type<Trigger>().notNull(),
     config: json("config").$type<AutodeployConfig>(),
-    error: text("error"),
+    error: json("error").$type<RunError>(),
     active: boolean("active"),
   },
   (table) => ({

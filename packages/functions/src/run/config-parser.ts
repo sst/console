@@ -28,7 +28,7 @@ export async function handler(evt: Run.ConfigParserEvent) {
   });
   if (buildRet.errors.length) {
     console.log("errors", buildRet.errors);
-    return { error: "parse_config" };
+    return { error: "config_build_failed" };
   }
 
   // Import the config
@@ -41,23 +41,24 @@ export async function handler(evt: Run.ConfigParserEvent) {
       `import mod from "./sst.config.mjs";`,
       // Ensure SST v3 app
       `if (mod.stacks || mod.config) {`,
-      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"v2_app"}));`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"config_v2_unsupported"}));`,
       `  process.exit(0);`,
       `}`,
       // Run the target function
-      `const target = mod.console?.autodeploy
-        ? mod.console.autodeploy.target?.(${JSON.stringify(evt.trigger)})
-        : {stage:"${evt.defaultStage}"};`,
-      `if (!target) {`,
-      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_target"}));`,
+      `const target = mod.console?.autodeploy?.target?.(${JSON.stringify(
+        evt.trigger
+      )});`,
+      `if (mod.console?.autodeploy?.target && !target) {`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"config_target_skipped"}));`,
       `  process.exit(0);`,
       `}`,
-      `if (!target.stage) {`,
-      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"missing_autodeploy_stage"}));`,
+      `if (target && !target.stage) {`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"config_target_no_stage"}));`,
       `  process.exit(0);`,
       `}`,
-      `const app = mod.app({stage: target.stage});`,
-      `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, console: { autodeploy: { target }}}));`,
+      `const stage = target?.stage ?? "${evt.defaultStage}";`,
+      `const app = mod.app({stage});`,
+      `fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({app, stage, console: { autodeploy: { target }}}));`,
     ].join("\n")
   );
   const evalRet = spawnSync("node /tmp/eval.mjs", {
@@ -67,7 +68,7 @@ export async function handler(evt: Run.ConfigParserEvent) {
   if (evalRet.status !== 0) {
     console.log(evalRet.stdout?.toString());
     console.log(evalRet.stderr?.toString());
-    return { error: "evaluate_config" };
+    return { error: "config_evaluate_failed" };
   }
   const output = await fs.readFile("/tmp/eval-output.mjs", "utf-8");
   console.log("deploy config", output);

@@ -55,15 +55,15 @@ export async function handler(event, context) {
       process.chdir(REPO_PATH);
       shell("git reset --hard");
       shell(`git remote set-url origin ${cloneUrl}`);
-      shell("git fetch");
     } else {
       process.chdir(ROOT_PATH);
-      shell(`git clone ${cloneUrl} ${REPO_DIR_NAME}`);
+      shell(`git clone --depth 1 ${cloneUrl} ${REPO_DIR_NAME}`);
     }
 
     // Checkout commit
     if (!warm) {
       process.chdir(REPO_PATH);
+      shell(`git fetch origin ${trigger.commit.id}`);
       shell(`git -c advice.detachedHead=false checkout ${trigger.commit.id}`);
     }
   }

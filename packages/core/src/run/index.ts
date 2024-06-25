@@ -32,11 +32,13 @@ import {
   runnerUsageTable,
   AutodeployConfig,
   Engine,
+  RunError,
+  AutodeployConfigRunner,
+  RunErrorType,
 } from "./run.sql";
 import { App, Stage } from "../app";
 import { RunConfig } from "./config";
 import { RETRY_STRATEGY } from "../util/aws";
-import { State } from "../state";
 import { Function } from "sst/node/function";
 import { AWS, Credentials } from "../aws";
 import { AppRepo } from "../app/repo";
@@ -44,6 +46,7 @@ import { Github } from "../git/github";
 import { LambdaRunner } from "./lambda-runner";
 import { CodebuildRunner } from "./codebuild-runner";
 import { Replicache } from "../replicache";
+import { minimatch } from "minimatch";
 
 export module Run {
   const DEFAULT_ENGINE = "codebuild";
@@ -110,25 +113,19 @@ export module Run {
   };
 
   export const SstConfig = z.object({
-    console: z.object({
-      autodeploy: AutodeployConfig,
-    }),
     app: z.object({
       version: z.string().nonempty().optional(),
       name: z.string().nonempty(),
       providers: z.record(z.any()).optional(),
     }),
+    stage: z.string(),
+    console: z.object({
+      autodeploy: AutodeployConfig,
+    }),
   });
   export type SstConfig = z.infer<typeof SstConfig>;
   export const SstConfigParseError = z.object({
-    error: z.enum([
-      "config_not_found",
-      "parse_config",
-      "evaluate_config",
-      "v2_app",
-      "missing_autodeploy_target",
-      "missing_autodeploy_stage",
-    ]),
+    error: z.custom<RunErrorType>(),
   });
   export type SstConfigParseError = z.infer<typeof SstConfigParseError>;
 
@@ -182,7 +179,7 @@ export module Run {
     log: Log.optional(),
     config: AutodeployConfig.optional(),
     trigger: Trigger,
-    error: z.string().optional(),
+    error: z.custom<RunError>().optional(),
   });
   export type Run = z.infer<typeof Run>;
 
@@ -236,16 +233,22 @@ export module Run {
             defaultStage:
               input.trigger.type === "branch"
                 ? input.trigger.branch
-                : `pr${input.trigger.number}`,
+                    .replace(/[^a-zA-Z0-9-]/g, "-")
+                    .replace(/-+/g, "-")
+                    .replace(/^-/g, "")
+                    .replace(/-$/g, "")
+                : `pr-${input.trigger.number}`,
           } satisfies ConfigParserEvent),
         })
       );
-      if (ret.FunctionError) throw new Error("Failed to parse config");
 
-      const payload = JSON.parse(Buffer.from(ret.Payload!).toString());
+      const payload = ret.FunctionError
+        ? { error: "config_parse_failed" }
+        : JSON.parse(Buffer.from(ret.Payload!).toString());
+
       return payload.error
-        ? (payload as SstConfigParseError)
-        : (payload as SstConfig);
+        ? SstConfigParseError.parse(payload)
+        : SstConfig.parse(payload);
     }
   );
 
@@ -253,46 +256,58 @@ export module Run {
     z.object({
       appID: z.string().cuid2(),
       trigger: Trigger,
-      sstConfig: SstConfigParseError.or(SstConfig),
+      sstConfig: z.custom<Awaited<ReturnType<typeof parseSstConfig>>>(),
     }),
     async ({ appID, trigger, sstConfig }) => {
-      try {
+      const handler = async () => {
         // Failed to parse Autodeploy config
-        if ("error" in sstConfig) {
-          throw new Error(
-            {
-              config_not_found: "sst.config.ts not found",
-              parse_config: "Failed to parse sst.config.ts",
-              evaluate_config: "Failed to evaluate sst.config.ts",
-              v2_app: "SST v2 apps are not supported",
-              missing_autodeploy_target:
-                "Autodeploy target not defined in sst.config.ts",
-              missing_autodeploy_stage: "Missing stage in Autodeploy target",
-            }[sstConfig.error] ?? "Failed to parse sst.config.ts"
-          );
-        }
+        if ("error" in sstConfig) return { type: sstConfig.error };
 
-        const stageName = sstConfig.console.autodeploy.target.stage;
         const region = sstConfig.app.providers?.aws?.region ?? "us-east-1";
+        const stageName = sstConfig.stage;
 
         // Validate app name
         const app = await App.fromID(appID);
         if (app?.name !== sstConfig.app.name)
-          throw new Error("App name does not match sst.config.ts");
+          return {
+            type: "config_app_name_mismatch" as const,
+            properties: {
+              name: sstConfig.app.name,
+            },
+          };
+
+        // Do not remove branches with default `autodeploy` config
+        if (
+          trigger.type === "branch" &&
+          trigger.action === "removed" &&
+          !sstConfig.console.autodeploy.target
+        )
+          return { type: "config_target_skipped" as const };
 
         // Get AWS Account ID from Run Env
-        const env = await RunConfig.getByStageName({ appID, stageName });
+        const allEnv = await RunConfig.list(appID);
+        if (!allEnv.length) return { type: "target_not_found" as const };
+        const env = allEnv.find((row) =>
+          minimatch(stageName, row.stagePattern)
+        );
         if (!env)
-          throw new Error(`No targets configured for stage "${stageName}"`);
+          return {
+            type: "target_not_matched" as const,
+            properties: { stage: stageName },
+          };
         if (!env.awsAccountExternalID)
-          throw new Error(
-            `AWS Account is not configured for target "${env.stagePattern}"`
-          );
+          return {
+            type: "target_missing_aws_account" as const,
+            properties: { target: env.stagePattern },
+          };
         const awsAccount = await AWS.Account.fromExternalID(
           env.awsAccountExternalID
         );
         if (!awsAccount)
-          throw new Error("AWS Account is not linked to the workspace");
+          return {
+            type: "target_missing_workspace" as const,
+            properties: { target: env.stagePattern },
+          };
 
         // Create stage if stage not exist
         let stageID = await App.Stage.fromName({
@@ -330,21 +345,30 @@ export module Run {
             Event.Created.publish({ stageID })
           );
         });
+      };
+
+      let error: RunError | undefined;
+      try {
+        error = await handler();
       } catch (e: any) {
-        // Create failed error
-        await useTransaction((tx) =>
-          tx
-            .insert(runTable)
-            .values({
-              id: createId(),
-              workspaceID: useWorkspace(),
-              appID,
-              trigger,
-              error: e.message,
-            })
-            .execute()
-        );
+        console.error(e);
+        error = { type: "unknown", properties: { message: e.message } };
       }
+      if (!error) return;
+
+      // Create failed error
+      await useTransaction((tx) =>
+        tx
+          .insert(runTable)
+          .values({
+            id: createId(),
+            workspaceID: useWorkspace(),
+            appID,
+            trigger,
+            error,
+          })
+          .execute()
+      );
     }
   );
 
@@ -435,7 +459,7 @@ export module Run {
           awsAccountID: stage.awsAccountID,
           appRepoID: appRepo.id,
           region: stage.region,
-          runnerConfig: run.config.target.runner,
+          runnerConfig: run.config.target?.runner,
         });
         if (!runner || runner.resource) break;
         await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -448,7 +472,7 @@ export module Run {
           awsAccountID: stage.awsAccountID,
           awsAccountExternalID: awsConfig.awsAccountID,
           region: stage.region,
-          runnerConfig: run.config.target.runner,
+          runnerConfig: run.config.target?.runner,
           credentials: awsConfig.credentials,
         });
       }
@@ -457,10 +481,9 @@ export module Run {
       }
 
       // Get run env
-      const env = await RunConfig.getByStageName({
-        appID: stage.appID,
-        stageName: run.config.target.stage,
-      });
+      const env = (await RunConfig.list(stage.appID)).find((row) =>
+        minimatch(stage.name, row.stagePattern)
+      );
       if (!env) throw new Error("AWS Account ID is not set in Run Env");
 
       // Build cloneUrl
@@ -472,7 +495,7 @@ export module Run {
       // Run runner
       const Runner = useRunner(runner.engine);
       const timeoutInMinutes =
-        timeoutToMinutes(run.config.target.runner?.timeout) ??
+        timeoutToMinutes(run.config.target?.runner?.timeout) ??
         Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
       await Runner.invoke({
         credentials: awsConfig.credentials,
@@ -487,7 +510,7 @@ export module Run {
           },
           runID: run.id,
           workspaceID: useWorkspace(),
-          stage: run.config.target.stage,
+          stage: stage.name,
           env: env.env ?? {},
           cloneUrl,
           credentials: awsConfig.credentials,
@@ -537,7 +560,7 @@ export module Run {
     // Schedule timeout monitor
     const Runner = useRunner(runner.engine);
     const timeoutInMinutes =
-      timeoutToMinutes(run.config.target.runner?.timeout) ??
+      timeoutToMinutes(run.config.target?.runner?.timeout) ??
       Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
     const scheduler = new SchedulerClient({ retryStrategy: RETRY_STRATEGY });
     await scheduler.send(
@@ -594,7 +617,13 @@ export module Run {
           .update(runTable)
           .set({
             timeCompleted: new Date(),
-            error,
+            error:
+              error === undefined
+                ? undefined
+                : {
+                    type: "run_failed" as const,
+                    properties: { message: error },
+                  },
             active: null,
           })
           .where(
@@ -746,7 +775,7 @@ export module Run {
       region: z.string().nonempty(),
       awsAccountID: z.string().cuid2(),
       appRepoID: z.string().cuid2(),
-      runnerConfig: AutodeployConfig.shape.target.shape.runner,
+      runnerConfig: AutodeployConfigRunner.optional(),
     }),
     async (input) => {
       const engine = input.runnerConfig?.engine ?? DEFAULT_ENGINE;
@@ -782,7 +811,7 @@ export module Run {
       awsAccountID: z.string().cuid2(),
       awsAccountExternalID: z.string().nonempty(),
       region: z.string().nonempty(),
-      runnerConfig: AutodeployConfig.shape.target.shape.runner,
+      runnerConfig: AutodeployConfigRunner.optional(),
       credentials: z.custom<Credentials>(),
     }),
     async (input) => {

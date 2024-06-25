@@ -135,7 +135,7 @@ export const handler = ApiHandler(async (event) => {
     payload: useBody()!,
   });
 
-  console.log(useHeader("x-github-event"), event);
+  //console.log(useHeader("x-github-event"), event);
   return {
     statusCode: 200,
     body: "ok",
