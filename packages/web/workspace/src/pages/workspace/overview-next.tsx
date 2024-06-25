@@ -187,7 +187,7 @@ const RepoLink = styled("a", {
   base: {
     ...utility.row(0),
     gap: 4,
-    height: 30,
+    height: 26,
     padding: "0 10px",
     alignItems: "center",
     color: theme.color.text.secondary.surface,
@@ -412,6 +412,11 @@ export function OverviewNext() {
             </CardTitleIcon>
             {props.app.name}
           </CardTitle>
+          <Show when={false}>
+            <Link href={`${props.app.name}/autodeploy`}>
+              <Tag level="danger" style="outline">Error</Tag>
+            </Link>
+          </Show>
           <Show when={repo.value}>
             <RepoLink
               target="_blank"

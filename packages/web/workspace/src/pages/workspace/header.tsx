@@ -23,16 +23,19 @@ import {
 import { createInitializedContext } from "$/common/context";
 import { dropAllDatabases } from "replicache";
 
-const stageSwitcherStyles: CSSProperties = {
+const breadCrumbStyles: CSSProperties = {
   flexShrink: 0,
   maxWidth: 400,
   display: "flex",
   justifyContent: "flex-start",
   alignItems: "center",
-  borderLeft: `1px solid ${theme.color.divider.base}`,
-  paddingLeft: theme.space[4],
-  gap: theme.space[3],
+  gap: theme.space[1],
   font: theme.font.family.heading,
+};
+
+const breadCrumbFirstStyles: CSSProperties = {
+  borderLeft: `1px solid ${theme.color.divider.base}`,
+  paddingLeft: `calc(${theme.space[4]} - 1px)`,
 };
 
 const Root = styled("div", {
@@ -52,6 +55,13 @@ const Root = styled("div", {
   },
 });
 
+const Breadcrumbs = styled("div", {
+  base: {
+    ...utility.row(0),
+    alignItems: "center",
+  },
+});
+
 const WorkspaceLogoLink = styled(Link, {
   base: {
     display: "flex",
@@ -60,7 +70,8 @@ const WorkspaceLogoLink = styled(Link, {
 
 const SSTConsoleTitle = styled(Link, {
   base: {
-    ...stageSwitcherStyles,
+    ...breadCrumbStyles,
+    ...breadCrumbFirstStyles,
   },
 });
 
@@ -77,13 +88,51 @@ const SSTIcon = styled("span", {
   },
 });
 
-const StageSwitcher = styled("button", {
+const Breadcrumb = styled("div", {
   base: {
-    ...stageSwitcherStyles,
+    ...breadCrumbStyles,
+  },
+  variants: {
+    first: {
+      true: breadCrumbFirstStyles,
+    },
   },
 });
 
-const StageSwitcherCopyMain = styled("span", {
+const BreadcrumbCopy = styled(Link, {
+  base: {
+    ...utility.text.line,
+    lineHeight: "normal",
+    color: theme.color.text.dimmed.base,
+    ":hover": {
+      color: theme.color.text.dimmed.base,
+    },
+  },
+  variants: {
+    first: {
+      true: {
+        color: theme.color.text.secondary.base,
+        fontSize: theme.font.size.lg,
+        fontWeight: theme.font.weight.medium,
+        ":hover": {
+          color: theme.color.text.secondary.base,
+        },
+      },
+    },
+  },
+});
+
+const BreadcrumbSeparator = styled("div", {
+  base: {
+    paddingInlineStart: `calc(${theme.space[4]} - 4px)`,
+    paddingInlineEnd: `calc(${theme.space[4]} - 2px)`,
+    color: theme.color.divider.base,
+    fontSize: theme.font.size.lg,
+    lineHeight: 1,
+  },
+});
+
+const SSTConsoleTitleCopy = styled("span", {
   base: {
     ...utility.text.line,
     lineHeight: "normal",
@@ -108,12 +157,19 @@ const StageSwitcherCopy = styled("div", {
   },
 });
 
-const SwitcherIcon = styled(IconChevronUpDown, {
+const Switcher = styled("button", {
   base: {
     flex: "0 0 auto",
+    lineHeight: 0,
+  },
+});
+
+const SwitcherIcon = styled(IconChevronUpDown, {
+  base: {
+    opacity: theme.iconOpacity,
     color: theme.color.text.dimmed.base,
-    width: 28,
-    height: 28,
+    width: 20,
+    height: 20,
   },
 });
 
@@ -154,7 +210,7 @@ const JumpToButtonCopy = styled("span", {
 
 export const PageHeader = styled("div", {
   base: {
-    display: "flex",
+    ...utility.row(4),
     alignItems: "center",
     padding: `0 ${theme.space[4]}`,
     justifyContent: "space-between",
@@ -223,7 +279,7 @@ export function Header(props: { app?: string; stage?: string }) {
                 </SSTIcon>
               </Link>
               <SSTConsoleTitle href="/">
-                <StageSwitcherCopyMain>Console</StageSwitcherCopyMain>
+                <SSTConsoleTitleCopy>Console</SSTConsoleTitleCopy>
               </SSTConsoleTitle>
             </>
           }
@@ -231,37 +287,42 @@ export function Header(props: { app?: string; stage?: string }) {
           <WorkspaceLogoLink href={`/${workspace!().slug}`}>
             <AvatarInitialsIcon type="workspace" text={workspace!().slug} />
           </WorkspaceLogoLink>
-          <StageSwitcher
-            onClick={() =>
-              props.stage
-                ? bar.show("stage-switcher")
-                : props.app
-                  ? bar.show("app-switcher")
-                  : bar.show("workspace-switcher")
-            }
-          >
-            <Switch>
-              <Match when={props.stage}>
-                <StageSwitcherCopy>
-                  <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
-                  <StageSwitcherCopySub>{props.stage}</StageSwitcherCopySub>
-                </StageSwitcherCopy>
-              </Match>
-              <Match when={props.app}>
-                <StageSwitcherCopy>
-                  <StageSwitcherCopyMain>{props.app}</StageSwitcherCopyMain>
-                </StageSwitcherCopy>
-              </Match>
-              <Match when={true}>
-                <StageSwitcherCopy>
-                  <StageSwitcherCopyMain>
-                    {workspace!().slug}
-                  </StageSwitcherCopyMain>
-                </StageSwitcherCopy>
-              </Match>
-            </Switch>
-            <SwitcherIcon />
-          </StageSwitcher>
+          <Breadcrumbs>
+            <Breadcrumb first>
+              <BreadcrumbCopy first href={`/${workspace!().slug}`}>
+                {workspace!().slug}
+              </BreadcrumbCopy>
+              <Show when={!props.app && !props.stage}>
+                <Switcher onClick={() => bar.show("workspace-switcher")}>
+                  <SwitcherIcon />
+                </Switcher>
+              </Show>
+            </Breadcrumb>
+            <Show when={props.app}>
+              <BreadcrumbSeparator>/</BreadcrumbSeparator>
+              <Breadcrumb>
+                <BreadcrumbCopy href={`/${workspace!().slug}/${props.app}`}>
+                  {props.app}
+                </BreadcrumbCopy>
+                <Show when={!props.stage}>
+                  <Switcher onClick={() => bar.show("app-switcher")}>
+                    <SwitcherIcon />
+                  </Switcher>
+                </Show>
+              </Breadcrumb>
+              <Show when={props.stage}>
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                <Breadcrumb>
+                  <BreadcrumbCopy href={`/${workspace!().slug}/${props.app}/${props.stage}`}>
+                    {props.stage}
+                  </BreadcrumbCopy>
+                  <Switcher onClick={() => bar.show("stage-switcher")}>
+                    <SwitcherIcon />
+                  </Switcher>
+                </Breadcrumb>
+              </Show>
+            </Show>
+          </Breadcrumbs>
         </Show>
       </Row>
       <Row space="4" vertical="center">

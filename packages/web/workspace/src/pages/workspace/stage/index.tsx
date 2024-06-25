@@ -23,7 +23,6 @@ import { Resources } from "./resources";
 import { IconSubRight } from "$/ui/icons/custom";
 import {
   Header,
-  PageHeader,
   HeaderProvider,
   useHeaderContext,
 } from "../header";
@@ -108,24 +107,14 @@ export function Warning(props: WarningProps) {
   );
 }
 
-const BreadcrumbLink = styled(Link, {
+const PageHeader = styled("div", {
   base: {
-    color: theme.color.text.dimmed.base,
-    ":hover": {
-      color: theme.color.text.primary.base,
-    },
-  },
-});
-
-const BreadcrumbText = styled("span", {
-  base: {
-    color: theme.color.text.dimmed.base,
-  },
-});
-
-const BreadcrumbSeparator = styled("span", {
-  base: {
-    color: theme.color.divider.base,
+    display: "flex",
+    alignItems: "center",
+    padding: `0 ${theme.space[4]}`,
+    justifyContent: "space-between",
+    height: theme.headerHeight.stage,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
   },
 });
 
@@ -202,7 +191,7 @@ export function Inner() {
 
   return (
     <>
-      <Header />
+      <Header app={ctx.app.name} stage={ctx.stage.name} />
       <Switch>
         <Match when={ctx.stage.unsupported}>
           <Fullscreen inset="root">
@@ -226,44 +215,32 @@ export function Inner() {
         </Match>
         <Match when={true}>
           <PageHeader>
-            <Row space="2">
-              <Row space="2" vertical="center">
-                <BreadcrumbLink href={`/${workspace().slug}/${ctx.app.name}`}>
-                  {ctx.app.name}
-                </BreadcrumbLink>
-                <BreadcrumbSeparator>/</BreadcrumbSeparator>
-                <BreadcrumbLink href={`/${workspace().slug}/${ctx.app.name}/${ctx.stage.name}`}>
-                  {ctx.stage.name}
-                </BreadcrumbLink>
-                <BreadcrumbSeparator>/</BreadcrumbSeparator>
-              </Row>
-              <Row space="5" vertical="center">
-                <Link href="resources">
-                  <TabTitle>Resources</TabTitle>
+            <Row space="5" vertical="center">
+              <Link href="resources">
+                <TabTitle>Resources</TabTitle>
+              </Link>
+              <Show when={updates().length > 0}>
+                <Link href="updates">
+                  <TabTitle>Updates</TabTitle>
                 </Link>
-                <Show when={updates().length > 0}>
-                  <Link href="updates">
-                    <TabTitle>Updates</TabTitle>
-                  </Link>
-                </Show>
-                <Link href="issues">
-                  <TabTitle
-                    count={issuesCount() ? issuesCount().toString() : undefined}
-                  >
-                    Issues
-                  </TabTitle>
+              </Show>
+              <Link href="issues">
+                <TabTitle
+                  count={issuesCount() ? issuesCount().toString() : undefined}
+                >
+                  Issues
+                </TabTitle>
+              </Link>
+              <Show when={updates().length > 0}>
+                <Link href="logs">
+                  <TabTitle>Logs</TabTitle>
                 </Link>
-                <Show when={updates().length > 0}>
-                  <Link href="logs">
-                    <TabTitle>Logs</TabTitle>
-                  </Link>
-                </Show>
-                <Show when={ctx.connected}>
-                  <Link href="local">
-                    <TabTitle>Local</TabTitle>
-                  </Link>
-                </Show>
-              </Row>
+              </Show>
+              <Show when={ctx.connected}>
+                <Link href="local">
+                  <TabTitle>Local</TabTitle>
+                </Link>
+              </Show>
             </Row>
             <Show when={header.children}>{header.children}</Show>
           </PageHeader>

@@ -472,7 +472,7 @@ export function Overview() {
 
   return (
     <>
-      <Header />
+      <Header app={app.app.name} />
       <Root>
         <Stack space="4">
           <Row space="5" vertical="center" horizontal="between">
@@ -508,9 +508,8 @@ export function Overview() {
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${
-                    ghRepo()?.name
-                  }`}
+                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
+                    }`}
                 >
                   <RepoLinkIcon>
                     <IconGitHub width="16" height="16" />

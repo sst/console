@@ -869,7 +869,7 @@ export function Settings() {
 
   return (
     <>
-      <Header />
+      <Header app={app.app.name} />
       <SettingsRoot>
         <Stack space={PANEL_HEADER_SPACE}>
           <Text size="xl" weight="medium">
