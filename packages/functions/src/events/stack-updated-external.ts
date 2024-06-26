@@ -137,10 +137,7 @@ export const handler = async (evt: Payload) => {
     evt["detail-type"] === "Object Created" ||
     evt["detail-type"] === "Object Deleted"
   ) {
-    if (
-      !evt.detail.object.key.startsWith("stackMetadata") &&
-      !evt.detail.object.key.startsWith("app")
-    ) {
+    if (!evt.detail.object.key.startsWith("stackMetadata")) {
       console.log("skipping", evt.detail.object.key);
       return;
     }
