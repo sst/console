@@ -467,6 +467,21 @@ export function Design() {
             </Row>
           </TextContainer>
         </Variant>
+        <Variant name="Indicator">
+          <TextContainer>
+            <Row space="4">
+              <TabTitle count="•" state="active">
+                Button
+              </TabTitle>
+              <TabTitle count="•" state="inactive">
+                Button
+              </TabTitle>
+              <TabTitle count="•" state="disabled">
+                Button
+              </TabTitle>
+            </Row>
+          </TextContainer>
+        </Variant>
         <Variant name="Long Count">
           <TextContainer>
             <Row space="4">

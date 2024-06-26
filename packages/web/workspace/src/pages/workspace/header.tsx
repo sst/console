@@ -112,7 +112,6 @@ const BreadcrumbCopy = styled(Link, {
     first: {
       true: {
         color: theme.color.text.secondary.base,
-        fontSize: theme.font.size.lg,
         fontWeight: theme.font.weight.medium,
         ":hover": {
           color: theme.color.text.secondary.base,
@@ -139,21 +138,6 @@ const SSTConsoleTitleCopy = styled("span", {
     fontSize: theme.font.size.lg,
     fontWeight: theme.font.weight.medium,
     color: theme.color.text.secondary.base,
-  },
-});
-
-const StageSwitcherCopySub = styled("span", {
-  base: {
-    ...utility.text.line,
-    lineHeight: "normal",
-    color: theme.color.text.dimmed.base,
-  },
-});
-
-const StageSwitcherCopy = styled("div", {
-  base: {
-    ...utility.stack(1.5),
-    minWidth: 0,
   },
 });
 
@@ -210,7 +194,7 @@ const JumpToButtonCopy = styled("span", {
 
 export const PageHeader = styled("div", {
   base: {
-    ...utility.row(4),
+    display: "flex",
     alignItems: "center",
     padding: `0 ${theme.space[4]}`,
     justifyContent: "space-between",

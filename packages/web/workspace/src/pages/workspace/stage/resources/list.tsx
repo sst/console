@@ -19,7 +19,7 @@ import { theme } from "$/ui/theme";
 import { utility } from "$/ui/utility";
 import { Dropdown } from "$/ui/dropdown";
 import { Fullscreen, Row, Stack } from "$/ui/layout";
-import { Tag, Text, TabTitle, SplitOptions, SplitOptionsOption } from "$/ui";
+import { Tag, Text, TabTitle, TextButton, SplitOptions, SplitOptionsOption } from "$/ui";
 import {
   IconApi,
   IconRDS,
@@ -56,12 +56,14 @@ import { Link, Route, Routes } from "@solidjs/router";
 import { Syncing } from "$/ui/loader";
 import {
   IconCheck,
+  IconChevronRight,
   IconEllipsisVertical,
   IconDocumentDuplicate,
 } from "$/ui/icons";
+import { UpdateStatusIcon } from "../updates/list";
 import { sortBy } from "remeda";
 import { Dynamic } from "solid-js/web";
-import {} from "@solid-primitives/keyboard";
+import { } from "@solid-primitives/keyboard";
 import { formatBytes } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
 
@@ -99,6 +101,39 @@ const ION_ICON_MAP: { [key: string]: Component } = {
 const Content = styled("div", {
   base: {
     padding: theme.space[4],
+  },
+});
+
+const TitleRow = styled("div", {
+  base: {
+    ...utility.row(3),
+    alignItems: "center",
+  },
+});
+
+const TitleText = styled("div", {
+  base: {
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.medium,
+  },
+});
+
+const TitleDescLink = styled(Link, {
+  base: {
+    marginLeft: `calc(${theme.space[3]} + 12px)`,
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.dimmed.base,
+    ":hover": {
+      color: theme.color.text.secondary.base,
+    },
+  },
+});
+
+const TitleDescIcon = styled("div", {
+  base: {
+    top: 2,
+    position: "relative",
+    opacity: theme.iconOpacity,
   },
 });
 
@@ -978,8 +1013,31 @@ export function List() {
           <Match when={stateResources().length}>
             <Content>
               <Stack space="4">
-                {renderStateOutputs()}
+                <Show when={false}>
+                  <Row space="2" horizontal="between" vertical="center">
+                    <Stack space="2.5">
+                      <TitleRow>
+                        <UpdateStatusIcon status="updated" />
+                        <TitleText>jayair</TitleText>
+                      </TitleRow>
+                      <TitleDescLink href="">
+                        Updated 5 hours ago
+                      </TitleDescLink>
+                    </Stack>
+                    <Link href="../updates">
+                      <TextButton>
+                        <Row space="0.5" horizontal="center">
+                          View history
+                          <TitleDescIcon>
+                            <IconChevronRight width="13" height="13" />
+                          </TitleDescIcon>
+                        </Row>
+                      </TextButton>
+                    </Link>
+                  </Row>
+                </Show>
                 <Stack space="5">
+                  {renderStateOutputs()}
                   <For each={SortedStateResource()}>{renderStateResource}</For>
                 </Stack>
               </Stack>
@@ -1612,8 +1670,8 @@ function FunctionChild(props: {
                 fallback={
                   exists().metadata.handler
                     ? new URL(
-                        "https://example.com/" + exists().metadata.handler,
-                      ).pathname.replace(/\/+/g, "/")
+                      "https://example.com/" + exists().metadata.handler,
+                    ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >

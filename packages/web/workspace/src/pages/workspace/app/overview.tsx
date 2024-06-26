@@ -42,7 +42,7 @@ const Root = styled("div", {
 const PageHeader = styled("div", {
   base: {
     ...utility.stack(0),
-    height: 40,
+    height: 42,
     justifyContent: "space-between",
   },
 });
@@ -108,16 +108,9 @@ const RepoLinkSeparator = styled("span", {
   },
 });
 
-const StageGrid = styled("div", {
-  base: {
-    ...utility.row(4),
-  },
-});
-
-const Col = styled("div", {
+const Stages = styled("div", {
   base: {
     ...utility.stack(4),
-    flex: 1,
   },
 });
 
@@ -155,8 +148,8 @@ const CardTitleText = styled(Link, {
 
 const CardIcon = styled("div", {
   base: {
-    width: 16,
-    height: 16,
+    width: 12,
+    height: 12,
     borderRadius: "50%",
   },
   variants: {
@@ -184,7 +177,7 @@ const CardIcon = styled("div", {
 
 const CardUpdatedTime = styled("span", {
   base: {
-    marginLeft: `calc(${theme.space[3]} + 16px)`,
+    marginLeft: `calc(${theme.space[3]} + 12px)`,
     fontSize: theme.font.size.xs,
     color: theme.color.text.dimmed.base,
   },
@@ -504,7 +497,7 @@ export function Overview() {
                 </Link>
               }
             >
-              <Stack space="1.5" horizontal="end">
+              <Stack space="2" horizontal="end">
                 <RepoLabel>Connected</RepoLabel>
                 <RepoLink
                   target="_blank"
@@ -523,13 +516,9 @@ export function Overview() {
               </Stack>
             </Show>
           </Row>
-          <StageGrid>
-            <Col>
-              <For each={columns()[0]}>{(stage) => <Card stage={stage} />}</For>
-              <For each={columns()[1]}>{(stage) => <Card stage={stage} />}</For>
-              <For each={columns()[2]}>{(stage) => <Card stage={stage} />}</For>
-            </Col>
-          </StageGrid>
+          <Stages>
+            <For each={stages.value}>{(stage) => <Card stage={stage} />}</For>
+          </Stages>
         </Stack>
       </Root>
     </>

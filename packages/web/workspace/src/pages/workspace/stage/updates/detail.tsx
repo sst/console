@@ -72,14 +72,14 @@ const Content = styled("div", {
 
 const PageTitle = styled("div", {
   base: {
-    ...utility.row(3.5),
+    ...utility.row(3),
     alignItems: "center",
   },
 });
 
 const PageTitleCopy = styled("h1", {
   base: {
-    fontSize: theme.font.size["xl"],
+    fontSize: theme.font.size.lg,
     fontWeight: theme.font.weight.medium,
   },
 });
@@ -95,7 +95,7 @@ const PageTitlePrefix = styled("span", {
 
 const PageTitleStatus = styled("p", {
   base: {
-    marginLeft: `calc(${theme.space[3.5]} + 12px)`,
+    marginLeft: `calc(${theme.space[3]} + 12px)`,
     fontSize: theme.font.size.sm,
     color: theme.color.text.secondary.base,
   },

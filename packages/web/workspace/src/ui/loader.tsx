@@ -32,8 +32,6 @@ globalKeyframes("pulse33", {
 
 const Title = styled("div", {
   base: {
-    fontSize: theme.font.size.lg,
-    fontWeight: 500,
     color: theme.color.text.dimmed.base,
   },
 });

@@ -98,7 +98,7 @@ const AnnouncementLinkIcon = styled("span", {
 const PageHeader = styled("div", {
   base: {
     ...utility.stack(0),
-    height: 40,
+    height: 42,
     justifyContent: "space-between",
   },
 });

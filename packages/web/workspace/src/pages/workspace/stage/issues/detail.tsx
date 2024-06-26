@@ -104,7 +104,13 @@ export const LogsLoading = styled("div", {
   base: {
     ...utility.row(2),
     alignItems: "center",
-    padding: `${theme.space[5]} 0`,
+    padding: `${theme.space[4]} 0`,
+    borderTop: `1px solid ${theme.color.divider.surface}`,
+    selectors: {
+      "&:first-child": {
+        borderTop: "none",
+      },
+    },
   },
 });
 
@@ -163,12 +169,12 @@ export function Detail() {
     if (issue()?.invocation) return;
     await fetch(
       import.meta.env.VITE_API_URL +
-        "/rest/log?" +
-        new URLSearchParams({
-          pointer: JSON.stringify(issue()!.pointer),
-          stageID: issue()!.stageID,
-          groupID: issue()!.group,
-        }),
+      "/rest/log?" +
+      new URLSearchParams({
+        pointer: JSON.stringify(issue()!.pointer),
+        stageID: issue()!.stageID,
+        groupID: issue()!.group,
+      }),
       {
         headers: {
           authorization: rep().auth,

@@ -23,6 +23,7 @@ import { Resources } from "./resources";
 import { IconSubRight } from "$/ui/icons/custom";
 import {
   Header,
+  PageHeader,
   HeaderProvider,
   useHeaderContext,
 } from "../header";
@@ -106,17 +107,6 @@ export function Warning(props: WarningProps) {
     </WarningRoot>
   );
 }
-
-const PageHeader = styled("div", {
-  base: {
-    display: "flex",
-    alignItems: "center",
-    padding: `0 ${theme.space[4]}`,
-    justifyContent: "space-between",
-    height: theme.headerHeight.stage,
-    borderBottom: `1px solid ${theme.color.divider.base}`,
-  },
-});
 
 export function Inner() {
   const flags = useFlags();
@@ -221,7 +211,7 @@ export function Inner() {
               </Link>
               <Show when={updates().length > 0}>
                 <Link href="updates">
-                  <TabTitle>Updates</TabTitle>
+                  <TabTitle>Autodeploy</TabTitle>
                 </Link>
               </Show>
               <Link href="issues">
