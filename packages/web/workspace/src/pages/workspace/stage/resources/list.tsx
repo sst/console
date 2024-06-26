@@ -1010,7 +1010,7 @@ export function List() {
                     <Stack space="2.5">
                       <TitleRow>
                         <Switch>
-                          <Match when={!latestUpdate.value.time.completed}>
+                          <Match when={!latestUpdate.value!.time.completed}>
                             <UpdateStatusIcon status="updating" />
                           </Match>
                           <Match
@@ -1028,12 +1028,12 @@ export function List() {
                         <TitleText>{ctx.stage.name}</TitleText>
                       </TitleRow>
                       <TitleDescLink
-                        href={`../updates/${latestUpdate.value.id}`}
+                        href={`../updates/${latestUpdate.value!.id}`}
                       >
                         Updated{" "}
                         {formatSinceTime(
                           DateTime.fromISO(
-                            latestUpdate.value.time.updated
+                            latestUpdate.value!.time.updated
                           ).toSQL()!,
                           true
                         )}
