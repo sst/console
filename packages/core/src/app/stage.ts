@@ -205,7 +205,10 @@ export const syncMetadata = zod(
         enrichment: Resource.InfoByType<key>["enrichment"];
       };
     }[Resource.Info["type"]][];
-    const s3 = new S3Client(input);
+    const s3 = new S3Client({
+      ...input,
+      followRegionRedirects: true,
+    });
     const key = `stackMetadata/app.${input.config.app}/stage.${input.config.stage}/`;
     console.log("listing", key, "for", bootstrap.bucket);
     const list = await s3
