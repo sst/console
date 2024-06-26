@@ -295,7 +295,6 @@ export module CodebuildRunner {
             "phases:",
             "  build:",
             "    commands:",
-            "      - touch /root/.bashrc && curl -fsSL https://ion.sst.dev/install | bash && mv /root/.sst/bin/sst /usr/local/bin/sst",
             "      - rm -rf /tmp/buildspec",
             "      - mkdir -p /tmp/buildspec",
             `      - curl -o /tmp/buildspec/index.mjs https://${payload.buildspec.bucket}.s3.amazonaws.com/buildspec/${payload.buildspec.version}/index.mjs`,

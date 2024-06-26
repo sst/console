@@ -37,7 +37,7 @@ export async function handler(event, context) {
 
     checkout();
     const sstConfig = await loadSstConfig();
-    await checkSstVersion(sstConfig);
+    await installSst(sstConfig);
     if (event.warm) return "warmed";
     await runWorkflow(sstConfig);
   } catch (e) {
@@ -99,34 +99,38 @@ export async function handler(event, context) {
     return (await import(OUTPUT_PATH)).default;
   }
 
-  async function checkSstVersion(sstConfig) {
+  async function installSst(sstConfig) {
     const { stage } = event;
     const semverPattern = sstConfig.app({ stage }).version;
-    console.log({ semverPattern });
-    if (!semverPattern) return;
+    console.log("Required SST version:", semverPattern ?? "Latest");
 
-    // check current version
-    const installedVersion = shell("sst version", { stdio: "pipe" })
-      .stdout.toString()
-      .trim();
-    console.log({ installedVersion });
-    if (semver.satisfies(installedVersion, semverPattern)) return;
+    const version = await (async () => {
+      // install latest version
+      if (!semverPattern) return;
 
-    for (let i = 1; ; i++) {
-      const releases = await fetch(
-        `https://api.github.com/repos/sst/ion/releases?per_page=100&page=${i}`
-      ).then((res) => res.json());
-      if (releases.length === 0) break;
+      // install specific version
+      for (let i = 1; ; i++) {
+        const releases = await fetch(
+          `https://api.github.com/repos/sst/ion/releases?per_page=100&page=${i}`
+        ).then((res) => res.json());
+        if (releases.length === 0) break;
 
-      const release = releases.find((release) =>
-        semver.satisfies(release.tag_name.replace(/^v/, ""), semverPattern)
-      );
-      if (release) {
-        shell(`sst upgrade ${release.tag_name.replace(/^v/, "")}`);
-        shell(`mv /root/.sst/bin/sst /usr/local/bin/sst`);
-        break;
+        const release = releases.find((release) =>
+          semver.satisfies(release.tag_name.replace(/^v/, ""), semverPattern)
+        );
+        return release.tag_name.replace(/^v/, "");
       }
-    }
+    })();
+
+    console.log("Installed SST version:", version ?? "Latest");
+    const cmdVersion = version ? `VERSION=${version}` : "";
+    shell(
+      [
+        `touch /root/.bashrc`,
+        `curl -fsSL https://ion.sst.dev/install | ${cmdVersion} bash`,
+        `mv /root/.sst/bin/sst /usr/local/bin/sst`,
+      ].join(" && ")
+    );
   }
 
   async function runWorkflow(sstConfig) {
