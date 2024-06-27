@@ -510,6 +510,7 @@ export const TabTitleText = styled("span", {
     letterSpacing: 0.5,
     textTransform: "uppercase",
     fontFamily: theme.font.family.code,
+    fontSize: theme.font.size.mono_base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     color: theme.color.text.dimmed.base,
     ":hover": {
@@ -535,18 +536,13 @@ export const TabTitleText = styled("span", {
     },
   },
   variants: {
-    size: (() => {
-      const result = {} as Record<`${keyof typeof theme.font.size}`, any>;
-      for (const [key, value] of Object.entries(theme.font.size)) {
-        result[key as keyof typeof theme.font.size] = {
-          fontSize: value,
-        };
-      }
-      return result;
-    })(),
-  },
-  defaultVariants: {
-    size: "mono_base",
+    size: {
+      base: {},
+      sm: {
+        letterSpacing: 1,
+        fontSize: theme.font.size.mono_sm,
+      },
+    },
   },
 });
 
@@ -574,10 +570,20 @@ export const TabTitleCount = styled("div", {
       },
     },
   },
+  variants: {
+    size: {
+      base: {},
+      sm: {
+        letterSpacing: 1,
+        fontSize: "0.5625rem",
+        padding: "5px 7px",
+      },
+    },
+  },
 });
 
 type TabTitleProps = ComponentProps<typeof TabTitleRoot> & {
-  size?: keyof typeof theme.font.size;
+  size?: "base" | "sm";
   count?: string;
 };
 
@@ -587,7 +593,7 @@ export function TabTitle(props: TabTitleProps) {
       <Row space="2" vertical="center">
         <TabTitleText size={props.size}>{props.children}</TabTitleText>
         <Show when={props.count}>
-          <TabTitleCount>{props.count}</TabTitleCount>
+          <TabTitleCount size={props.size}>{props.count}</TabTitleCount>
         </Show>
       </Row>
     </TabTitleRoot>

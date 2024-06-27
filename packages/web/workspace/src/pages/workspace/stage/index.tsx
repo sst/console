@@ -207,15 +207,16 @@ export function Inner() {
           <PageHeader>
             <Row space="5" vertical="center">
               <Link href="resources">
-                <TabTitle>Resources</TabTitle>
+                <TabTitle size="sm">Resources</TabTitle>
               </Link>
               <Show when={updates().length > 0}>
                 <Link href="updates">
-                  <TabTitle>Autodeploy</TabTitle>
+                  <TabTitle size="sm">Autodeploy</TabTitle>
                 </Link>
               </Show>
               <Link href="issues">
                 <TabTitle
+                  size="sm"
                   count={issuesCount() ? issuesCount().toString() : undefined}
                 >
                   Issues
@@ -223,12 +224,12 @@ export function Inner() {
               </Link>
               <Show when={updates().length > 0}>
                 <Link href="logs">
-                  <TabTitle>Logs</TabTitle>
+                  <TabTitle size="sm">Logs</TabTitle>
                 </Link>
               </Show>
               <Show when={ctx.connected}>
                 <Link href="local">
-                  <TabTitle>Local</TabTitle>
+                  <TabTitle size="sm">Local</TabTitle>
                 </Link>
               </Show>
             </Row>
