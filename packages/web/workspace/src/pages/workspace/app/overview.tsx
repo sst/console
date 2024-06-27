@@ -6,6 +6,7 @@ import {
   Stack,
   Button,
   utility,
+  TabTitle,
   ButtonIcon,
   TextButton,
 } from "$/ui";
@@ -18,7 +19,7 @@ import {
   RunStore,
   StateUpdateStore,
 } from "$/data/app";
-import { Header } from "../header";
+import { Header, PageHeader } from "../header";
 import { Link } from "@solidjs/router";
 import { useAppContext } from "./context";
 import { styled } from "@macaron-css/solid";
@@ -39,7 +40,7 @@ const Root = styled("div", {
   },
 });
 
-const PageHeader = styled("div", {
+const ContentHeader = styled("div", {
   base: {
     ...utility.stack(0),
     height: 42,
@@ -319,16 +320,6 @@ export function Overview() {
     );
   }, []);
 
-  const columns = createMemo(() => {
-    const columns: Stage.Info[][] = [[], [], []];
-    stages.value.forEach((stage, i) => {
-      const index = i % 3;
-      columns[index].push(stage);
-    });
-
-    return columns;
-  });
-
   function Card(props: { stage: Stage.Info }) {
     const latest = createSubscription(async (tx) => {
       const updates = await StateUpdateStore.forStage(tx, props.stage.id);
@@ -466,60 +457,54 @@ export function Overview() {
   return (
     <>
       <Header app={app.app.name} />
-      <Root>
-        <Stack space="4">
-          <Row space="5" vertical="center" horizontal="between">
-            <PageHeader>
-              <Text size="lg" weight="medium">
-                {app.app.name}
-              </Text>
-              <Link href="settings">
-                <TextButton>
-                  <Row space="0.5" horizontal="center">
-                    Manage app
-                    <ManageIcon>
-                      <IconChevronRight width="13" height="13" />
-                    </ManageIcon>
-                  </Row>
-                </TextButton>
-              </Link>
-            </PageHeader>
-            <Show
-              when={ghRepoOrg()}
-              fallback={
-                <Link href="settings#repo">
-                  <Button color="secondary">
-                    <ButtonIcon>
-                      <IconGitHub />
-                    </ButtonIcon>
-                    Select Repo
-                  </Button>
-                </Link>
-              }
+      <PageHeader>
+        <Row space="5" vertical="center">
+          <Link href="">
+            <TabTitle>Stages</TabTitle>
+          </Link>
+          <Link href="autodeploy">
+            <TabTitle>Autodeploy</TabTitle>
+          </Link>
+          <Link href="settings">
+            <TabTitle>
+              Settings
+            </TabTitle>
+          </Link>
+        </Row>
+        <Show
+          when={ghRepoOrg()}
+          fallback={
+            <Link href="settings#repo">
+              <Button color="github" size="sm">
+                <ButtonIcon size="sm">
+                  <IconGitHub />
+                </ButtonIcon>
+                Connect Repo
+              </Button>
+            </Link>
+          }
+        >
+          <Stack space="2" horizontal="end">
+            <RepoLink
+              target="_blank"
+              href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name}`}
             >
-              <Stack space="2" horizontal="end">
-                <RepoLabel>Connected</RepoLabel>
-                <RepoLink
-                  target="_blank"
-                  href={`https://github.com/${ghRepoOrg()?.login}/${ghRepo()?.name
-                    }`}
-                >
-                  <RepoLinkIcon>
-                    <IconGitHub width="16" height="16" />
-                  </RepoLinkIcon>
-                  <RepoLinkCopy>
-                    {ghRepoOrg()?.login}
-                    <RepoLinkSeparator>/</RepoLinkSeparator>
-                    {ghRepo()?.name}
-                  </RepoLinkCopy>
-                </RepoLink>
-              </Stack>
-            </Show>
-          </Row>
-          <Stages>
-            <For each={stages.value}>{(stage) => <Card stage={stage} />}</For>
-          </Stages>
-        </Stack>
+              <RepoLinkIcon>
+                <IconGitHub width="16" height="16" />
+              </RepoLinkIcon>
+              <RepoLinkCopy>
+                {ghRepoOrg()?.login}
+                <RepoLinkSeparator>/</RepoLinkSeparator>
+                {ghRepo()?.name}
+              </RepoLinkCopy>
+            </RepoLink>
+          </Stack>
+        </Show>
+      </PageHeader>
+      <Root>
+        <Stages>
+          <For each={stages.value}>{(stage) => <Card stage={stage} />}</For>
+        </Stages>
       </Root>
     </>
   );

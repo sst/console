@@ -68,13 +68,23 @@ export const ButtonIcon = styled("span", {
     verticalAlign: -4,
     display: "inline-block",
   },
+  variants: {
+    size: {
+      sm: {
+        marginRight: 5,
+        verticalAlign: -3,
+        width: 14,
+        height: 14,
+      },
+    },
+  },
 });
 
 export const Button = styled("button", {
   base: {
     borderRadius: 4,
     border: "1px solid",
-    padding: `0 1rem`,
+    padding: `0 ${theme.space[4]}`,
     fontWeight: 500,
     lineHeight: "normal",
     fontFamily: theme.font.family.code,
@@ -101,6 +111,7 @@ export const Button = styled("button", {
         fontSize: theme.font.size.mono_sm,
       },
       sm: {
+        padding: `0 ${theme.space[2.5]}`,
         height: theme.input.size.sm,
         fontSize: theme.font.size.mono_xs,
       },

@@ -307,6 +307,32 @@ export function Design() {
             Login with GitHub
           </Button>
         </Variant>
+        <Variant name="Icon Small">
+          <Button color="github" size="sm">
+            <ButtonIcon size="sm">
+              <IconGitHub />
+            </ButtonIcon>
+            Login with GitHub
+          </Button>
+          <Button data-state-hover color="github" size="sm">
+            <ButtonIcon size="sm">
+              <IconGitHub />
+            </ButtonIcon>
+            Login with GitHub
+          </Button>
+          <Button active color="github" size="sm">
+            <ButtonIcon size="sm">
+              <IconGitHub />
+            </ButtonIcon>
+            Login with GitHub
+          </Button>
+          <Button disabled color="github" size="sm">
+            <ButtonIcon size="sm">
+              <IconGitHub />
+            </ButtonIcon>
+            Login with GitHub
+          </Button>
+        </Variant>
         <Variant name="Small">
           <Button size="sm" color="primary">
             Button
