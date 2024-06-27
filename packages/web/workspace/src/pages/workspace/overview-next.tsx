@@ -403,6 +403,23 @@ export function OverviewNext() {
     const showOverflow = createMemo(() => {
       return showApps().includes(props.app.id);
     });
+    const latestRunError = createSubscription(async (tx) => {
+      const runs = await RunStore.all(tx);
+      const run = runs
+        .filter((run) => run.appID === props.app.id)
+        .sort(
+          (a, b) =>
+            DateTime.fromISO(b.time.created).toMillis() -
+            DateTime.fromISO(a.time.created).toMillis()
+        )[0];
+      if (!run) return;
+      return (
+        !run.stageID &&
+        run.error &&
+        run.error.type !== "config_target_skipped" &&
+        run.error.type !== "target_not_matched"
+      );
+    });
     return (
       <Card>
         <CardHeader>
@@ -412,12 +429,14 @@ export function OverviewNext() {
             </CardTitleIcon>
             {props.app.name}
           </CardTitle>
-          <Show when={false}>
+          <Show when={repo.value && latestRunError.value}>
             <Link href={`${props.app.name}/autodeploy`}>
-              <Tag level="danger" style="outline">Error</Tag>
+              <Tag level="danger" style="outline">
+                Error
+              </Tag>
             </Link>
           </Show>
-          <Show when={repo.value}>
+          <Show when={repo.value && !latestRunError.value}>
             <RepoLink
               target="_blank"
               href={githubRepo(repo.value!.org.login, repo.value!.repo.name)}
@@ -771,7 +790,7 @@ function StageCard(props: StageCardProps) {
       const run = await RunStore.get(
         tx,
         props.stage.id,
-        latestUpdate.value?.runID
+        latestUpdate.value.runID
       );
       console.log("run", run);
       if (run.trigger.source !== "github") return;
