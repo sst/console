@@ -2,13 +2,13 @@ import type { App } from "@console/core/app";
 import { Store } from "./store";
 import type { Github } from "@console/core/git/github";
 import type { Slack } from "@console/core/slack";
-import type { Issue } from "@console/core/issue";
 import type { Billing } from "@console/core/billing";
 import type { AppRepo } from "@console/core/app/repo";
 import type { State } from "@console/core/state";
 import type { Run } from "@console/core/run";
 import type { RunConfig } from "@console/core/run/config";
 import { ReadTransaction } from "replicache";
+import { Alert } from "@console/core/alert";
 
 export const AppStore = new Store()
   .type<App.Info>()
@@ -48,10 +48,10 @@ export const SlackTeamStore = new Store()
   .get((id: string) => ["slackTeam", id])
   .build();
 
-export const IssueAlertStore = new Store()
-  .type<Issue.Alert.Info>()
-  .scan("all", () => ["issueAlert"])
-  .get((id: string) => ["issueAlert", id])
+export const AlertStore = new Store()
+  .type<Alert.Info>()
+  .scan("all", () => ["alert"])
+  .get((id: string) => ["alert", id])
   .build();
 
 export const StripeStore = new Store()

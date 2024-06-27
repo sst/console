@@ -24,7 +24,7 @@ import { useDummy } from "./dummy";
 import { createGet } from "$/data/store";
 import { AWS } from "$/data/aws";
 import {
-  IssueAlertStore,
+  AlertStore,
   SlackTeamStore,
   GithubOrgStore,
   AppRepoStore,
@@ -110,8 +110,8 @@ const mutators = new Client<ServerType>()
   .mutation("aws_account_remove", async (tx, input) => {
     await AWS.AccountStore.remove(tx, input);
   })
-  .mutation("issue_alert_create", async (tx, input) => {
-    await IssueAlertStore.put(tx, [input.id!], {
+  .mutation("alert_create", async (tx, input) => {
+    await AlertStore.put(tx, [input.id!], {
       id: input.id,
       destination: {
         type: "email",
@@ -123,12 +123,12 @@ const mutators = new Client<ServerType>()
       },
     });
   })
-  .mutation("issue_alert_put", async (tx, input) => {
+  .mutation("alert_put", async (tx, input) => {
     console.log(input);
-    await IssueAlertStore.put(tx, [input.id!], input);
+    await AlertStore.put(tx, [input.id!], input);
   })
-  .mutation("issue_alert_remove", async (tx, input) => {
-    await IssueAlertStore.remove(tx, input);
+  .mutation("alert_remove", async (tx, input) => {
+    await AlertStore.remove(tx, input);
   })
   .mutation("slack_disconnect", async (tx) => {
     const all = await SlackTeamStore.all(tx);
@@ -246,7 +246,7 @@ function createReplicache(workspaceID: string, token: string) {
 }
 
 export function ReplicacheProvider(
-  props: ParentProps<{ workspaceID: string }>,
+  props: ParentProps<{ workspaceID: string }>
 ) {
   const auth = useAuth2();
   const rep = createMemo(() => {
@@ -283,19 +283,19 @@ export function useReplicache() {
 }
 
 export function createSubscription<R>(
-  cb: (tx: ReadTransaction) => Promise<R>,
+  cb: (tx: ReadTransaction) => Promise<R>
 ): {
   value: R | undefined;
 };
 export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial: R,
+  initial: R
 ): {
   value: R;
 };
 export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial?: R | undefined,
+  initial?: R | undefined
 ) {
   const [store, setStore] = createStore({
     value: initial,
@@ -316,8 +316,8 @@ export function createSubscription<R>(
             },
             {
               merge: true,
-            },
-          ),
+            }
+          )
         );
       },
     });

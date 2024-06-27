@@ -29,8 +29,8 @@ import {
 } from "$/ui/icons";
 import { IconLogosSlackBW } from "$/ui/icons/custom";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { AppStore, IssueAlertStore, SlackTeamStore } from "$/data/app";
-import { Issue } from "@console/core/issue";
+import { AppStore, AlertStore, SlackTeamStore } from "$/data/app";
+import { Alert } from "@console/core/alert";
 import { createStore, unwrap } from "solid-js/store";
 import { MultiSelect, Select } from "$/ui/select";
 import { UserStore } from "$/data/user";
@@ -301,9 +301,13 @@ export function Alerts() {
   const rep = useReplicache();
   const users = createSubscription(
     async (tx) => UserStore.list(tx).then(filter((u) => !u.timeDeleted)),
-    [],
+    []
   );
-  const alerts = createSubscription(async (tx) => IssueAlertStore.all(tx), []);
+  const alerts = createSubscription(async (tx) => {
+    const ret = AlertStore.all(tx);
+    console.log("ALERTS", ret);
+    return ret;
+  }, []);
 
   const [putForm, { Form, Field }] = createForm({
     validate: valiForm(PutForm),
@@ -326,7 +330,7 @@ export function Alerts() {
           formData.source?.app?.includes(app.name)
         );
       })
-      .map((app) => app.id),
+      .map((app) => app.id)
   );
 
   const availableStages = createMemo(() => {
@@ -334,7 +338,7 @@ export function Alerts() {
       stages(),
       filter((s) => selectedApps().includes(s.appID)),
       map((s) => s.name),
-      unique(),
+      unique()
     );
   });
 
@@ -362,7 +366,7 @@ export function Alerts() {
     setEditing("id", undefined);
   }
 
-  function editAlert(alert: Issue.Alert.Info, clone?: boolean) {
+  function editAlert(alert: Alert.Info, clone?: boolean) {
     reset(putForm);
     alert = structuredClone(unwrap(alert));
 
@@ -425,7 +429,7 @@ export function Alerts() {
           <MatchingStagesPanelExpanded>
             <MatchingStagesCopy>
               {joinWithAnd(
-                matchingStages().map(({ app, stage }) => `${app}/${stage}`),
+                matchingStages().map(({ app, stage }) => `${app}/${stage}`)
               )}
             </MatchingStagesCopy>
           </MatchingStagesPanelExpanded>
@@ -512,7 +516,7 @@ export function Alerts() {
                     }, []);
 
                     createComputed(() =>
-                      setValue(putForm, "source.app", value()),
+                      setValue(putForm, "source.app", value())
                     );
 
                     return (
@@ -609,7 +613,7 @@ export function Alerts() {
                       }, []);
 
                       createComputed(() =>
-                        setValue(putForm, "destination.email.users", value()),
+                        setValue(putForm, "destination.email.users", value())
                       );
                       return (
                         <FormField
@@ -651,7 +655,7 @@ export function Alerts() {
                       },
                       {
                         on: "blur",
-                      },
+                      }
                     )}
                   >
                     {(field, props) => (
@@ -691,7 +695,7 @@ export function Alerts() {
               const cloned = getValues(putForm);
               console.log("values", cloned);
               if (Object.keys(getErrors(putForm)).length) return;
-              await rep().mutate.issue_alert_put({
+              await rep().mutate.alert_put({
                 id: editing.id || createId(),
                 source: {
                   app: cloned.source!.app!.includes("*")
@@ -738,13 +742,13 @@ export function Alerts() {
       Object.fromEntries(
         warnings
           .filter((w) => w.type === "issue_alert_slack")
-          .map((w) => [w.target, w] as const),
-      ),
+          .map((w) => [w.target, w] as const)
+      )
   );
   const slackTeam = SlackTeamStore.all.watch(
     rep,
     () => [],
-    (all) => all.at(0),
+    (all) => all.at(0)
   );
 
   return (
@@ -772,7 +776,7 @@ export function Alerts() {
             <For each={alerts.value}>
               {(alert) => {
                 const isEditingRow = createMemo(
-                  () => editing.active && editing.id === alert.id,
+                  () => editing.active && editing.id === alert.id
                 );
 
                 return (
@@ -863,8 +867,8 @@ export function Alerts() {
                                             .map(
                                               (id) =>
                                                 users.value.find(
-                                                  (u) => u.id === id,
-                                                )?.email,
+                                                  (u) => u.id === id
+                                                )?.email
                                             )
                                             .join(", ")}
                                     </AlertsPanelToLabel>
@@ -936,7 +940,7 @@ export function Alerts() {
                             <Dropdown.Seperator />
                             <Dropdown.Item
                               onSelect={() => {
-                                rep().mutate.issue_alert_remove(alert.id);
+                                rep().mutate.alert_remove(alert.id);
                               }}
                             >
                               Remove alert

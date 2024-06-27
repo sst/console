@@ -17,6 +17,7 @@ import { Github } from "@console/core/git/github";
 import { Slack } from "@console/core/slack";
 import { AppRepo } from "@console/core/app/repo";
 import { RunConfig } from "@console/core/run/config";
+import { Alert } from "@console/core/alert";
 
 export const server = new Server()
   .expose("log_poller_subscribe", LogPoller.subscribe)
@@ -28,9 +29,9 @@ export const server = new Server()
   .expose("issue_unignore", Issue.unignore)
   .expose("issue_resolve", Issue.resolve)
   .expose("issue_unresolve", Issue.unresolve)
-  .expose("issue_alert_create", Issue.Alert.create)
-  .expose("issue_alert_put", Issue.Alert.put)
-  .expose("issue_alert_remove", Issue.Alert.remove)
+  .expose("alert_create", Alert.create)
+  .expose("alert_put", Alert.put)
+  .expose("alert_remove", Alert.remove)
   .expose("github_disconnect", Github.disconnect)
   .expose("slack_disconnect", Slack.disconnect)
   .expose("workspace_remove", Workspace.remove)

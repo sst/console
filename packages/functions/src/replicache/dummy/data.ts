@@ -13,6 +13,7 @@ import { Workspace } from "@console/core/workspace";
 import { Resource } from "@console/core/app/resource";
 import { Usage, Billing } from "@console/core/billing";
 import { StackFrame, ParsedError, Invocation } from "@console/core/log";
+import { Alert } from "@console/core/alert";
 
 export type DummyMode =
   // Waiting to connect
@@ -54,7 +55,7 @@ export function* generateData(
   STATE_RES_EV_ID = 0;
   WARNING_COUNT = 0;
   INVOCATION_COUNT = 0;
-  ISSUE_ALERT_COUNT = 0;
+  ALERT_COUNT = 0;
 
   const modeMap = stringToObject(mode);
 
@@ -138,16 +139,16 @@ export function* generateData(
   }
 
   if (modeMap["alerts"]) {
-    yield* issueAlertsStar();
-    yield* issueAlertsSingle();
-    yield* issueAlertsSingleTo();
-    yield* issueAlertsDoubleTo();
-    yield* issueAlertsDoubleFrom();
-    yield* issueAlertsMultipleTo();
-    yield* issueAlertsOverflowTo();
-    yield* issueAlertsSlackWarning();
-    yield* issueAlertsOverflowFrom();
-    yield* issueAlertsMultipleFrom();
+    yield* alertsStar();
+    yield* alertsSingle();
+    yield* alertsSingleTo();
+    yield* alertsDoubleTo();
+    yield* alertsDoubleFrom();
+    yield* alertsMultipleTo();
+    yield* alertsOverflowTo();
+    yield* alertsSlackWarning();
+    yield* alertsOverflowFrom();
+    yield* alertsMultipleFrom();
   }
 
   if (modeMap["logs"]) {
@@ -198,7 +199,7 @@ type DummyData =
   | (Omit<Issue.Count, "workspaceID"> & { _type: "issueCount" })
   | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
   | (Omit<Billing.Stripe.Info, "workspaceID"> & { _type: "stripe" })
-  | (Omit<Issue.Alert.Info, "workspaceID"> & { _type: "issueAlert" })
+  | (Omit<Alert.Info, "workspaceID"> & { _type: "alert" })
   | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" });
 
 const USER_ID = "me@example.com";
@@ -226,7 +227,7 @@ const APP_ISSUE_6 = "sst-app-issue-6";
 const APP_ISSUE_7 = "sst-app-issue-7";
 const APP_ISSUE_8 = "sst-app-issue-8";
 const APP_ISSUE_9 = "sst-app-issue-9";
-const APP_ISSUE_ALERT_LONG =
+const APP_ALERT_LONG =
   "mysstappissealertlongshouldoverflowbecaseitistoolongandshouldnotfitintheboxbecauseitstoolonganditkeepsgoingandgoing";
 
 const GITHUB_ORG = 100;
@@ -414,7 +415,7 @@ let STATE_RES_ID = 0;
 let STATE_RES_EV_ID = 0;
 let WARNING_COUNT = 0;
 let INVOCATION_COUNT = 0;
-let ISSUE_ALERT_COUNT = 0;
+let ALERT_COUNT = 0;
 
 const timestamps = {
   timeCreated: DateTime.now().startOf("day").toSQL()!,
@@ -2551,8 +2552,8 @@ function* issueMissingSourcemap(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsStar(): Generator<DummyData, void, unknown> {
-  yield issueAlert({
+function* alertsStar(): Generator<DummyData, void, unknown> {
+  yield alert({
     app: "*",
     stage: "*",
     destination: {
@@ -2562,7 +2563,7 @@ function* issueAlertsStar(): Generator<DummyData, void, unknown> {
       type: "email",
     },
   });
-  yield issueAlert({
+  yield alert({
     app: "*",
     stage: "*",
     destination: {
@@ -2574,7 +2575,7 @@ function* issueAlertsStar(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsSlackWarning(): Generator<DummyData, void, unknown> {
+function* alertsSlackWarning(): Generator<DummyData, void, unknown> {
   const ALERT_ID = "alert-slack-warning";
 
   yield warning({
@@ -2582,7 +2583,7 @@ function* issueAlertsSlackWarning(): Generator<DummyData, void, unknown> {
     type: "issue_alert_slack",
     target: ALERT_ID,
   });
-  yield issueAlert({
+  yield alert({
     id: ALERT_ID,
     app: "*",
     stage: "*",
@@ -2595,8 +2596,8 @@ function* issueAlertsSlackWarning(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsSingle(): Generator<DummyData, void, unknown> {
-  yield issueAlert({
+function* alertsSingle(): Generator<DummyData, void, unknown> {
+  yield alert({
     app: [APP_LOCAL],
     stage: "*",
     destination: {
@@ -2606,7 +2607,7 @@ function* issueAlertsSingle(): Generator<DummyData, void, unknown> {
       type: "email",
     },
   });
-  yield issueAlert({
+  yield alert({
     app: [APP_LOCAL],
     stage: [STAGE],
     destination: {
@@ -2616,7 +2617,7 @@ function* issueAlertsSingle(): Generator<DummyData, void, unknown> {
       type: "email",
     },
   });
-  yield issueAlert({
+  yield alert({
     app: "*",
     stage: [STAGE],
     destination: {
@@ -2628,8 +2629,8 @@ function* issueAlertsSingle(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsSingleTo(): Generator<DummyData, void, unknown> {
-  yield issueAlert({
+function* alertsSingleTo(): Generator<DummyData, void, unknown> {
+  yield alert({
     app: [APP_LOCAL],
     stage: "*",
     destination: {
@@ -2641,10 +2642,10 @@ function* issueAlertsSingleTo(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsDoubleTo(): Generator<DummyData, void, unknown> {
+function* alertsDoubleTo(): Generator<DummyData, void, unknown> {
   yield user({ email: USER_ID_ISSUE_ALERT, active: true });
 
-  yield issueAlert({
+  yield alert({
     app: "*",
     stage: "*",
     destination: {
@@ -2656,8 +2657,8 @@ function* issueAlertsDoubleTo(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsMultipleFrom(): Generator<DummyData, void, unknown> {
-  yield issueAlert({
+function* alertsMultipleFrom(): Generator<DummyData, void, unknown> {
+  yield alert({
     app: [
       APP_ISSUE_1,
       APP_ISSUE_2,
@@ -2679,7 +2680,7 @@ function* issueAlertsMultipleFrom(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsMultipleTo(): Generator<DummyData, void, unknown> {
+function* alertsMultipleTo(): Generator<DummyData, void, unknown> {
   yield user({ email: USER_ID_ISSUE_1, active: true });
   yield user({ email: USER_ID_ISSUE_2, active: true });
   yield user({ email: USER_ID_ISSUE_3, active: true });
@@ -2690,7 +2691,7 @@ function* issueAlertsMultipleTo(): Generator<DummyData, void, unknown> {
   yield user({ email: USER_ID_ISSUE_8, active: true });
   yield user({ email: USER_ID_ISSUE_9, active: true });
 
-  yield issueAlert({
+  yield alert({
     app: "*",
     stage: "*",
     destination: {
@@ -2712,8 +2713,8 @@ function* issueAlertsMultipleTo(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsDoubleFrom(): Generator<DummyData, void, unknown> {
-  yield issueAlert({
+function* alertsDoubleFrom(): Generator<DummyData, void, unknown> {
+  yield alert({
     app: [APP_ISSUE_1, APP_ISSUE_2],
     stage: "*",
     destination: {
@@ -2723,7 +2724,7 @@ function* issueAlertsDoubleFrom(): Generator<DummyData, void, unknown> {
       type: "email",
     },
   });
-  yield issueAlert({
+  yield alert({
     app: [APP_ISSUE_1, APP_ISSUE_2],
     stage: [STAGE],
     destination: {
@@ -2735,9 +2736,9 @@ function* issueAlertsDoubleFrom(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsOverflowFrom(): Generator<DummyData, void, unknown> {
-  yield issueAlert({
-    app: [APP_ISSUE_ALERT_LONG],
+function* alertsOverflowFrom(): Generator<DummyData, void, unknown> {
+  yield alert({
+    app: [APP_ALERT_LONG],
     stage: "*",
     destination: {
       properties: {
@@ -2748,8 +2749,8 @@ function* issueAlertsOverflowFrom(): Generator<DummyData, void, unknown> {
   });
 }
 
-function* issueAlertsOverflowTo(): Generator<DummyData, void, unknown> {
-  yield issueAlert({
+function* alertsOverflowTo(): Generator<DummyData, void, unknown> {
+  yield alert({
     app: "*",
     stage: "*",
     destination: {
@@ -3376,21 +3377,16 @@ function warning({ type, stage, target, data }: WarningProps): DummyData {
   };
 }
 
-interface IssueAlertProps {
+interface AlertProps {
   id?: string;
-  app: Issue.Alert.Source["app"];
-  stage: Issue.Alert.Source["stage"];
-  destination: Issue.Alert.Destination;
+  app: Alert.Source["app"];
+  stage: Alert.Source["stage"];
+  destination: Alert.Destination;
 }
-function issueAlert({
-  id,
-  app,
-  stage,
-  destination,
-}: IssueAlertProps): DummyData {
+function alert({ id, app, stage, destination }: AlertProps): DummyData {
   return {
-    _type: "issueAlert",
-    id: id || `${ISSUE_ALERT_COUNT++}`,
+    _type: "alert",
+    id: id || `${ALERT_COUNT++}`,
     source: {
       app,
       stage,

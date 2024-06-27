@@ -1,9 +1,9 @@
 import { Workspace } from "@console/core/workspace";
 import { stripe } from "@console/core/stripe";
 import { EventHandler } from "sst/node/event-bus";
-import { Issue } from "@console/core/issue";
 import { withActor } from "@console/core/actor";
 import { Billing } from "@console/core/billing";
+import { Alert } from "@console/core/alert";
 
 export const handler = EventHandler(Workspace.Events.Created, async (evt) =>
   withActor(
@@ -12,7 +12,7 @@ export const handler = EventHandler(Workspace.Events.Created, async (evt) =>
       properties: { workspaceID: evt.properties.workspaceID },
     },
     async () => {
-      await Issue.Alert.put({
+      await Alert.put({
         source: {
           app: "*",
           stage: "*",

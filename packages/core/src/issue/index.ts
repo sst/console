@@ -33,13 +33,13 @@ import { Config } from "sst/node/config";
 import { Warning } from "../warning";
 import { createTransaction, useTransaction } from "../util/transaction";
 import { Log } from "../log";
-import { Alert } from "./alert";
 import { stateResourceTable } from "../state/state.sql";
+import * as Send from "./send";
 
 export const Info = createSelectSchema(issue, {});
 export type Info = typeof issue.$inferSelect;
 export type Count = typeof issueCount.$inferSelect;
-export { Alert } from "./alert";
+export * as Send from "./send";
 
 export const Events = {
   ErrorDetected: event(
@@ -59,27 +59,27 @@ export const Events = {
             .array(),
         })
         .array(),
-    }),
+    })
   ),
   RateLimited: event(
     "issue.rate_limited",
     z.object({
       stageID: z.string(),
       logGroup: z.string(),
-    }),
+    })
   ),
   IssueDetected: event(
     "issue.detected",
     z.object({
       stageID: z.string(),
       group: z.string(),
-    }),
+    })
   ),
   SubscribeRequested: event(
     "issue.subscribe_requested",
     z.object({
       stageID: z.string(),
-    }),
+    })
   ),
 };
 
@@ -94,9 +94,9 @@ export const ignore = zod(Info.shape.id.array(), async (input) =>
         resolver: null,
       })
       .where(
-        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
-      ),
-  ),
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input))
+      )
+  )
 );
 
 export const unignore = zod(Info.shape.id.array(), async (input) =>
@@ -108,9 +108,9 @@ export const unignore = zod(Info.shape.id.array(), async (input) =>
         ignorer: null,
       })
       .where(
-        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
-      ),
-  ),
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input))
+      )
+  )
 );
 
 export const resolve = zod(Info.shape.id.array(), async (input) =>
@@ -124,9 +124,9 @@ export const resolve = zod(Info.shape.id.array(), async (input) =>
         ignorer: null,
       })
       .where(
-        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
-      ),
-  ),
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input))
+      )
+  )
 );
 
 export const unresolve = zod(Info.shape.id.array(), async (input) =>
@@ -138,9 +138,9 @@ export const unresolve = zod(Info.shape.id.array(), async (input) =>
         resolver: null,
       })
       .where(
-        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input)),
-      ),
-  ),
+        and(eq(issue.workspaceID, useWorkspace()), inArray(issue.id, input))
+      )
+  )
 );
 
 function destinationIdentifier(config: StageCredentials) {
@@ -156,7 +156,7 @@ export const connectStage = zod(
       config.region,
       uniqueIdentifier,
       Config.ISSUES_ROLE_ARN,
-      Config.ISSUES_STREAM_ARN,
+      Config.ISSUES_STREAM_ARN
     );
     const cw = new CloudWatchLogsClient({
       region: config.region,
@@ -169,7 +169,7 @@ export const connectStage = zod(
           destinationName: uniqueIdentifier,
           roleArn: Config.ISSUES_ROLE_ARN,
           targetArn: Config.ISSUES_STREAM_ARN,
-        }),
+        })
       );
 
       await cw.send(
@@ -188,12 +188,12 @@ export const connectStage = zod(
               },
             ],
           }),
-        }),
+        })
       );
     } finally {
       cw.destroy();
     }
-  },
+  }
 );
 
 /** @deprecated */
@@ -214,7 +214,7 @@ const disconnectStage = zod(z.custom<StageCredentials>(), async (config) => {
     await cw.send(
       new DeleteDestinationCommand({
         destinationName: uniqueIdentifier,
-      }),
+      })
     );
     return true;
   } catch (ex: any) {
@@ -245,7 +245,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
       types: ["Function", "NextjsSite"],
     });
     const functions = resources.filter(
-      (x) => x.type === "Function" && !x.enrichment.live,
+      (x) => x.type === "Function" && !x.enrichment.live
     );
     if (!functions.length) {
       console.log("no functions");
@@ -265,10 +265,10 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
           not(
             inArray(
               issueSubscriber.functionID,
-              functions.map((x) => x.id),
-            ),
-          ),
-        ),
+              functions.map((x) => x.id)
+            )
+          )
+        )
       );
 
     for (const item of toDelete) {
@@ -279,7 +279,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
             filterName:
               uniqueIdentifier + (Config.STAGE === "production" ? "" : `#dev`),
             logGroupName: item.logGroup!,
-          }),
+          })
         )
         .catch((e) => {
           if (e instanceof ResourceNotFoundException) return;
@@ -291,8 +291,8 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
         .where(
           and(
             eq(issueSubscriber.workspaceID, useWorkspace()),
-            eq(issueSubscriber.id, item.id),
-          ),
+            eq(issueSubscriber.id, item.id)
+          )
         );
     }
 
@@ -303,10 +303,10 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
         not(
           inArray(
             issueSubscriber.functionID,
-            functions.map((x) => x.id),
-          ),
-        ),
-      ),
+            functions.map((x) => x.id)
+          )
+        )
+      )
     );
 
     const exists = await db
@@ -318,8 +318,8 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
       .where(
         and(
           eq(issueSubscriber.stageID, config.stageID),
-          eq(issueSubscriber.workspaceID, useWorkspace()),
-        ),
+          eq(issueSubscriber.workspaceID, useWorkspace())
+        )
       )
       .execute();
 
@@ -327,8 +327,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
     async function subscribe(logGroup: string, functionID: string) {
       if (
         exists.find(
-          (item) =>
-            item.functionID === functionID && item.logGroup === logGroup,
+          (item) => item.functionID === functionID && item.logGroup === logGroup
         )
       )
         return;
@@ -355,7 +354,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
                 //   : []),
               ].join(" "),
               logGroupName: logGroup,
-            }),
+            })
           );
 
           if (functionID)
@@ -389,7 +388,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
               .send(
                 new CreateLogGroupCommand({
                   logGroupName: logGroup,
-                }),
+                })
               )
               .catch((e) => {
                 if (e instanceof ResourceAlreadyExistsException) return;
@@ -460,8 +459,7 @@ export const subscribe = zod(z.custom<StageCredentials>(), async (config) => {
         if (!routes) continue;
         const fn = resources.find(
           (r) =>
-            r.type === "Function" &&
-            r.metadata.arn === resource.metadata.server,
+            r.type === "Function" && r.metadata.arn === resource.metadata.server
         );
         if (!fn) continue;
 
@@ -500,11 +498,11 @@ export const subscribeIon = zod(
           and(
             eq(stateResourceTable.type, "aws:lambda/function:Function"),
             eq(stateResourceTable.workspaceID, useWorkspace()),
-            eq(stateResourceTable.stageID, config.stageID),
-          ),
+            eq(stateResourceTable.stageID, config.stageID)
+          )
         );
       const functions = resources.filter((r) =>
-        Boolean(r.outputs?.environment?.variables?.SST_FUNCTION_ID),
+        Boolean(r.outputs?.environment?.variables?.SST_FUNCTION_ID)
       );
       if (!functions.length) {
         console.log("no functions");
@@ -524,10 +522,10 @@ export const subscribeIon = zod(
             not(
               inArray(
                 issueSubscriber.functionID,
-                functions.map((x) => x.id),
-              ),
-            ),
-          ),
+                functions.map((x) => x.id)
+              )
+            )
+          )
         );
 
       for (const item of toDelete) {
@@ -539,7 +537,7 @@ export const subscribeIon = zod(
                 uniqueIdentifier +
                 (Config.STAGE === "production" ? "" : `#dev`),
               logGroupName: item.logGroup!,
-            }),
+            })
           )
           .catch((e) => {
             if (e instanceof ResourceNotFoundException) return;
@@ -551,8 +549,8 @@ export const subscribeIon = zod(
           .where(
             and(
               eq(issueSubscriber.workspaceID, useWorkspace()),
-              eq(issueSubscriber.id, item.id),
-            ),
+              eq(issueSubscriber.id, item.id)
+            )
           );
       }
 
@@ -563,10 +561,10 @@ export const subscribeIon = zod(
           not(
             inArray(
               issueSubscriber.functionID,
-              functions.map((x) => x.id),
-            ),
-          ),
-        ),
+              functions.map((x) => x.id)
+            )
+          )
+        )
       );
 
       const exists = await db
@@ -578,8 +576,8 @@ export const subscribeIon = zod(
         .where(
           and(
             eq(issueSubscriber.stageID, config.stageID),
-            eq(issueSubscriber.workspaceID, useWorkspace()),
-          ),
+            eq(issueSubscriber.workspaceID, useWorkspace())
+          )
         )
         .execute();
 
@@ -588,7 +586,7 @@ export const subscribeIon = zod(
         if (
           exists.find(
             (item) =>
-              item.functionID === functionID && item.logGroup === logGroup,
+              item.functionID === functionID && item.logGroup === logGroup
           )
         )
           return;
@@ -615,7 +613,7 @@ export const subscribeIon = zod(
                   //   : []),
                 ].join(" "),
                 logGroupName: logGroup,
-              }),
+              })
             );
 
             if (functionID)
@@ -649,7 +647,7 @@ export const subscribeIon = zod(
                 .send(
                   new CreateLogGroupCommand({
                     logGroupName: logGroup,
-                  }),
+                  })
                 )
                 .catch((e) => {
                   if (e instanceof ResourceAlreadyExistsException) return;
@@ -730,7 +728,7 @@ export const subscribeIon = zod(
     } finally {
       cw.destroy();
     }
-  },
+  }
 );
 
 export const disableLogGroup = zod(
@@ -747,8 +745,8 @@ export const disableLogGroup = zod(
         and(
           eq(issueSubscriber.workspaceID, useWorkspace()),
           eq(issueSubscriber.stageID, input.config.stageID),
-          eq(issueSubscriber.logGroup, input.logGroup),
-        ),
+          eq(issueSubscriber.logGroup, input.logGroup)
+        )
       );
     if (!existing.length && false) {
       console.log("no existing");
@@ -766,7 +764,7 @@ export const disableLogGroup = zod(
           filterName:
             uniqueIdentifier + (Config.STAGE === "production" ? "" : `#dev`),
           logGroupName: input.logGroup,
-        }),
+        })
       )
       .catch((e) => {
         if (e instanceof ResourceNotFoundException) return;
@@ -786,11 +784,11 @@ export const disableLogGroup = zod(
           and(
             eq(issueSubscriber.workspaceID, useWorkspace()),
             eq(issueSubscriber.stageID, input.config.stageID),
-            eq(issueSubscriber.logGroup, input.logGroup),
-          ),
+            eq(issueSubscriber.logGroup, input.logGroup)
+          )
         );
     });
-  },
+  }
 );
 
 /** @deprecated */
@@ -803,8 +801,8 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
     .where(
       and(
         eq(issueSubscriber.workspaceID, useWorkspace()),
-        eq(issueSubscriber.stageID, config.stageID),
-      ),
+        eq(issueSubscriber.stageID, config.stageID)
+      )
     )
     .execute();
   await Warning.create({
@@ -813,7 +811,7 @@ export const unsubscribe = zod(z.custom<StageCredentials>(), async (config) => {
     stageID: config.stageID,
     data: {},
   });
-  await Alert.triggerRateLimit({
+  await Send.triggerRateLimit({
     app: config.app,
     stage: config.stage,
     stageID: config.stageID,
@@ -869,8 +867,8 @@ export const expand = zod(
         and(
           eq(issue.workspaceID, useWorkspace()),
           eq(issue.stageID, input.stageID),
-          eq(issue.group, input.group),
-        ),
+          eq(issue.group, input.group)
+        )
       )
       .limit(1)
       .then((rows) => rows.at(0));
@@ -897,5 +895,5 @@ export const expand = zod(
         .then(() => true);
       if (result) break;
     }
-  },
+  }
 );

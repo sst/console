@@ -20,12 +20,12 @@ export const handler = EventHandler(Issue.Events.IssueDetected, async (event) =>
               event.properties.group,
               event.properties.stageID,
             ].join("-"),
-          }),
+          })
         ),
         // Issue.expand(event.properties),
-      ]),
+      ])
     );
-  }),
+  })
 );
 
 export const queue = Handler("sqs", async (event) => {
@@ -33,7 +33,7 @@ export const queue = Handler("sqs", async (event) => {
   for (const record of event.Records) {
     const evt = JSON.parse(record.body);
     await withActor(evt.metadata.actor, async () => {
-      await Issue.Alert.triggerIssue(evt.properties);
+      await Issue.Send.triggerIssue(evt.properties);
     });
   }
 });

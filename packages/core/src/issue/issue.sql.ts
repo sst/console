@@ -12,7 +12,6 @@ import {
 import { blob, cuid, timestamps, workspaceID } from "../util/sql";
 import { Actor } from "../actor";
 import { Invocation, StackFrame } from "../log";
-import { Destination, Source } from "./alert";
 
 export const issue = mysqlTable(
   "issue",
@@ -104,19 +103,6 @@ export const issueAlertLimit = mysqlTable(
   {
     ...workspaceID,
     ...timestamps,
-  },
-  (table) => ({
-    primary: primaryKey({ columns: [table.workspaceID, table.id] }),
-  })
-);
-
-export const issueAlert = mysqlTable(
-  "issue_alert",
-  {
-    ...workspaceID,
-    ...timestamps,
-    source: json("source").$type<Source>().notNull(),
-    destination: json("destination").$type<Destination>().notNull(),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.workspaceID, table.id] }),

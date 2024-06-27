@@ -1,5 +1,4 @@
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
-import { createId } from "@paralleldrive/cuid2";
 import {
   eq,
   and,
@@ -17,10 +16,9 @@ import { app, stage } from "../app/app.sql";
 import { db } from "../drizzle";
 import { Slack } from "../slack";
 import { workspace } from "../workspace/workspace.sql";
-import { issue, issueAlert, issueAlertLimit } from "./issue.sql";
+import { issue, issueAlertLimit } from "./issue.sql";
 import { createSelectSchema } from "drizzle-zod";
 import { zod } from "../util/zod";
-import { useTransaction } from "../util/transaction";
 import { z } from "zod";
 import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
 import { IssueRateLimitEmail } from "@console/mail/emails/templates/IssueRateLimitEmail";
@@ -28,122 +26,13 @@ import { render } from "@jsx-email/render";
 import { user } from "../user/user.sql";
 import { KnownBlock } from "@slack/web-api";
 import { Warning } from "../warning";
-import { warning } from "../warning/warning.sql";
 import { Workspace } from "../workspace";
-
-export * as Alert from "./alert";
-
-export const Limit = createSelectSchema(issueAlertLimit);
-
-export const Info = createSelectSchema(issueAlert, {
-  source: () => z.custom<Source>(),
-  destination: () => z.custom<Destination>(),
-});
-export type Info = z.infer<typeof Info>;
+import { Alert } from "../alert";
+import { alert } from "../alert/alert.sql";
 
 const ses = new SESv2Client({});
 
-export interface Source {
-  app: "*" | string[];
-  stage: "*" | string[];
-}
-
-export type Destination = SlackDestination | EmailDestination;
-
-export interface SlackDestination {
-  type: "slack";
-  properties: {
-    channel: string;
-  };
-}
-
-export interface EmailDestination {
-  type: "email";
-  properties: {
-    users: "*" | string[];
-  };
-}
-
-export const list = zod(z.void(), (input) =>
-  useTransaction((tx) =>
-    tx
-      .select()
-      .from(issueAlert)
-      .where(eq(issueAlert.workspaceID, useWorkspace()))
-      .execute()
-      .then((rows) => rows as Info[]),
-  ),
-);
-
-export const put = zod(
-  Info.pick({ id: true, source: true, destination: true }).partial({
-    id: true,
-  }),
-  (input) =>
-    useTransaction(async (tx) => {
-      const id = input.id ?? createId();
-      await tx
-        .insert(issueAlert)
-        .values({
-          id,
-          workspaceID: useWorkspace(),
-          source: input.source,
-          destination: input.destination,
-        })
-        .onDuplicateKeyUpdate({
-          set: {
-            source: input.source,
-            destination: input.destination,
-          },
-        });
-      await tx
-        .delete(warning)
-        .where(
-          and(
-            eq(warning.workspaceID, useWorkspace()),
-            eq(warning.type, "issue_alert_slack"),
-            eq(warning.target, id),
-          ),
-        );
-      return id;
-    }),
-);
-
-export const create = zod(
-  Info.pick({ id: true }).partial({ id: true }),
-  (input) =>
-    useTransaction(async (tx) => {
-      const id = input.id ?? createId();
-      await tx.insert(issueAlert).values({
-        id,
-        workspaceID: useWorkspace(),
-        source: {
-          stage: "*",
-          app: "*",
-        },
-        destination: {
-          type: "email",
-          properties: {
-            users: "*",
-          },
-        },
-      });
-      return id;
-    }),
-);
-
-export const remove = zod(Info.shape.id, (input) =>
-  useTransaction((tx) =>
-    tx
-      .delete(issueAlert)
-      .where(
-        and(
-          eq(issueAlert.id, input),
-          eq(issueAlert.workspaceID, useWorkspace()),
-        ),
-      ),
-  ),
-);
+export const Limit = createSelectSchema(issueAlertLimit);
 
 export const triggerIssue = zod(
   z.object({
@@ -164,18 +53,18 @@ export const triggerIssue = zod(
       .innerJoin(workspace, eq(workspace.id, issue.workspaceID))
       .innerJoin(
         stage,
-        and(eq(stage.id, issue.stageID), eq(stage.workspaceID, useWorkspace())),
+        and(eq(stage.id, issue.stageID), eq(stage.workspaceID, useWorkspace()))
       )
       .innerJoin(
         app,
-        and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace())),
+        and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace()))
       )
       .leftJoin(
         issueAlertLimit,
         and(
           eq(issueAlertLimit.workspaceID, useWorkspace()),
-          eq(issueAlertLimit.id, issue.id),
-        ),
+          eq(issueAlertLimit.id, issue.id)
+        )
       )
       .where(
         and(
@@ -188,10 +77,10 @@ export const triggerIssue = zod(
             // do not alert more than once every 30min
             lt(issueAlertLimit.timeUpdated, sql`NOW() - INTERVAL 30 MINUTE`),
             // if issue resolved after last alert, send alert
-            gt(issue.timeResolved, issueAlertLimit.timeUpdated),
+            gt(issue.timeResolved, issueAlertLimit.timeUpdated)
           ),
-          isNull(issue.timeIgnored),
-        ),
+          isNull(issue.timeIgnored)
+        )
       )
       .then((rows) => rows[0]);
 
@@ -204,8 +93,8 @@ export const triggerIssue = zod(
 
     const alerts = await db
       .select()
-      .from(issueAlert)
-      .where(eq(issueAlert.workspaceID, useWorkspace()));
+      .from(alert)
+      .where(eq(alert.workspaceID, useWorkspace()));
 
     console.log("alerts", alerts.length);
 
@@ -289,7 +178,7 @@ export const triggerIssue = zod(
             assetsUrl: `https://console.sst.dev/email`,
             consoleUrl: "https://console.sst.dev",
             workspace: result.workspaceSlug,
-          }),
+          })
         );
         console.log("rendered email");
         const users = await db
@@ -304,12 +193,12 @@ export const triggerIssue = zod(
                 ? undefined
                 : inArray(user.id, destination.properties.users),
               isNull(user.timeDeleted),
-              isNotNull(user.timeSeen),
-            ),
+              isNotNull(user.timeSeen)
+            )
           );
         console.log(
           "sending email to",
-          users.map((u) => u.email),
+          users.map((u) => u.email)
         );
         if (!users.length) continue;
         try {
@@ -337,7 +226,7 @@ export const triggerIssue = zod(
                   },
                 },
               },
-            }),
+            })
           );
         } catch (ex) {
           console.error(ex);
@@ -357,7 +246,7 @@ export const triggerIssue = zod(
             timeUpdated: sql`NOW()`,
           },
         });
-  },
+  }
 );
 
 export const triggerRateLimit = zod(
@@ -367,7 +256,7 @@ export const triggerRateLimit = zod(
     stageID: z.string().cuid2(),
   }),
   async (input) => {
-    const alerts = await list();
+    const alerts = await Alert.list();
 
     for (const alert of alerts) {
       const { source, destination } = alert;
@@ -432,7 +321,7 @@ export const triggerRateLimit = zod(
             assetsUrl: `https://console.sst.dev/email`,
             consoleUrl: "https://console.sst.dev",
             workspace: workspace!.slug,
-          }),
+          })
         );
         const users = await db
           .select({
@@ -445,12 +334,12 @@ export const triggerRateLimit = zod(
               destination.properties.users === "*"
                 ? undefined
                 : inArray(user.id, destination.properties.users),
-              isNull(user.timeDeleted),
-            ),
+              isNull(user.timeDeleted)
+            )
           );
         console.log(
           "sending email to",
-          users.map((u) => u.email),
+          users.map((u) => u.email)
         );
         try {
           await ses.send(
@@ -475,17 +364,17 @@ export const triggerRateLimit = zod(
                   },
                 },
               },
-            }),
+            })
           );
         } catch (ex) {
           console.error(ex);
         }
       }
     }
-  },
+  }
 );
 
-function matchAlert(appName: string, stageName: string, source: Source) {
+function matchAlert(appName: string, stageName: string, source: Alert.Source) {
   return (
     (source.app === "*" || source.app.includes(appName)) &&
     (source.stage === "*" || source.stage.includes(stageName))

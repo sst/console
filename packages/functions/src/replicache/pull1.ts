@@ -32,7 +32,6 @@ import {
   issue,
   issueSubscriber,
   issueCount,
-  issueAlert,
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
 import { db, isNotNull, notInArray } from "@console/core/drizzle";
@@ -51,6 +50,7 @@ import { Run } from "@console/core/run";
 import { Replicache } from "@console/core/replicache";
 import { AppRepo } from "@console/core/app/repo";
 import { Github } from "@console/core/git/github";
+import { alert } from "@console/core/alert/alert.sql";
 
 export const TABLES = {
   stateUpdate: stateUpdateTable,
@@ -71,7 +71,7 @@ export const TABLES = {
   issue,
   issueSubscriber,
   issueCount,
-  issueAlert,
+  alert,
   githubOrg: githubOrgTable,
   githubRepo: githubRepoTable,
   slackTeam,
