@@ -101,8 +101,8 @@ const TABLE_KEY = {
   run: [runTable.stageID, runTable.id],
   stripe: [],
 } as {
-  [key in TableName]?: MySqlColumn[];
-};
+    [key in TableName]?: MySqlColumn[];
+  };
 
 const TABLE_PROJECTION = {
   alert: (input) => Alert.serialize(input),
@@ -121,8 +121,8 @@ const TABLE_PROJECTION = {
   },
   run: (input) => Run.serializeRun(input),
 } as {
-  [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
-};
+    [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
+  };
 
 export const handler = ApiHandler(
   withApiAuth(async () => {
@@ -235,23 +235,23 @@ export const handler = ApiHandler(
             issue: isNull(issue.timeDeleted),
             ...(deletedStages.length
               ? {
-                  stateEvent: notInArray(
-                    stateEventTable.stageID,
-                    deletedStages
-                  ),
-                  stateUpdate: notInArray(
-                    stateUpdateTable.stageID,
-                    deletedStages
-                  ),
-                  stateResource: notInArray(
-                    stateResourceTable.stageID,
-                    deletedStages
-                  ),
-                }
+                stateEvent: notInArray(
+                  stateEventTable.stageID,
+                  deletedStages
+                ),
+                stateUpdate: notInArray(
+                  stateUpdateTable.stageID,
+                  deletedStages
+                ),
+                stateResource: notInArray(
+                  stateResourceTable.stageID,
+                  deletedStages
+                ),
+              }
               : {}),
           } satisfies {
-            [key in keyof typeof TABLES]?: SQLWrapper;
-          };
+              [key in keyof typeof TABLES]?: SQLWrapper;
+            };
 
           const workspaceID = useWorkspace();
 
@@ -275,7 +275,9 @@ export const handler = ApiHandler(
                     "workspaceID" in table ? table.workspaceID : table.id,
                     workspaceID
                   ),
-                  isNull(table.timeDeleted),
+                  ...(name === "stage"
+                    ? []
+                    : [isNull(table.timeDeleted)]),
                   ...(name in tableFilters
                     ? [tableFilters[name as keyof typeof tableFilters]]
                     : [])

@@ -25,7 +25,7 @@ import type { Stage } from "@console/core/app";
 import { IconPr, IconGit, IconCommit, IconGitHub } from "$/ui/icons/custom";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { parseTime, formatSinceTime, formatCommit } from "$/common/format";
-import { StageStore } from "$/data/stage";
+import { ActiveStagesForApp } from "$/data/stage";
 import { useLocalContext } from "$/providers/local";
 import { AWS } from "$/data/aws";
 import { githubCommit, githubRepo } from "$/common/url-builder";
@@ -281,17 +281,13 @@ export function Overview() {
   );
 
   const local = useLocalContext();
-  const stages = createSubscription(async (tx) => {
-    const all = await StageStore.list(tx);
-    return pipe(
-      all,
-      filter((stage) => stage.appID === app.app.id),
-      sortBy(
-        (stage) => (stage.name === local().stage ? 0 : 1),
-        [(stage) => stage.timeUpdated, "desc"]
-      )
+  const stages = createSubscription(async tx => {
+    return sortBy(
+      await ActiveStagesForApp(app.app.id)(tx),
+      (stage) => app.app.name === local().app && stage.name === local().stage ? 0 : 1,
+      [(stage) => stage.timeUpdated, "desc"]
     );
-  }, []);
+  });
 
   function Card(props: { stage: Stage.Info }) {
     const latest = createSubscription(async (tx) => {

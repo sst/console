@@ -10,7 +10,7 @@ import {
 } from "$/data/app";
 import { UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
-import { StageStore } from "$/data/stage";
+import { StageStore, ActiveStages } from "$/data/stage";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import {
   theme,
@@ -305,7 +305,8 @@ export function OverviewNext() {
   const auth = useAuth2();
   const local = useLocalContext();
   const users = UserStore.list.watch(rep, () => []);
-  const stages = StageStore.list.watch(rep, () => []);
+  const activeStages = createSubscription(ActiveStages());
+  const stages = createMemo(() => activeStages.value || []);
   const apps = createSubscription((tx) => AppStore.all(tx), [] as App.Info[]);
   const cols = createMemo(() =>
     splitCols(
