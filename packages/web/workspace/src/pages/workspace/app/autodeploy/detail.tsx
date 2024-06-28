@@ -832,3 +832,4 @@ function getResourceName(urn: string) {
 function shortenCommit(commit: string) {
   return commit.slice(0, 7);
 }
+

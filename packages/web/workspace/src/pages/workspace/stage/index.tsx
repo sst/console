@@ -184,7 +184,7 @@ export function Inner() {
       <Header app={ctx.app.name} stage={ctx.stage.name} />
       <Switch>
         <Match when={ctx.stage.unsupported}>
-          <Fullscreen inset="root">
+          <Fullscreen inset="header">
             <Warning
               title={
                 <>
@@ -243,7 +243,7 @@ export function Inner() {
               <Route path="logs/*" component={Logs} />
               <Route path="local/*" component={Local} />
               <Route path="" element={<Navigate href="resources" />} />
-              <Route path="*" element={<NotFound inset="stage" />} />
+              <Route path="*" element={<NotFound inset="header-tabs" />} />
             </Routes>
           </div>
         </Match>

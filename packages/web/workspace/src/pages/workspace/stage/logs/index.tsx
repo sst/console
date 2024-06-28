@@ -8,7 +8,7 @@ export function Logs() {
     <Routes>
       <Route path="" element={<List />} />
       <Route path=":resourceID/*" component={Detail} />
-      <Route path="*" element={<NotFound inset="stage" />} />
+      <Route path="*" element={<NotFound inset="header-tabs" />} />
     </Routes>
   );
 }

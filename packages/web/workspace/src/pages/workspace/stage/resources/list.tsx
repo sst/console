@@ -71,7 +71,7 @@ import {
 import { UpdateStatusIcon } from "../updates/list";
 import { sortBy } from "remeda";
 import { Dynamic } from "solid-js/web";
-import {} from "@solid-primitives/keyboard";
+import { } from "@solid-primitives/keyboard";
 import { formatBytes, formatSinceTime } from "$/common/format";
 import { ResourceIcon } from "$/common/resource-icon";
 import { createSubscription } from "$/providers/replicache";
@@ -671,8 +671,8 @@ function sortResources(resources: Resource.Info[]): Resource.Info[] {
           ? 1
           : -1
         : a.type > b.type
-        ? 1
-        : -1
+          ? 1
+          : -1
       : priority;
   });
 }
@@ -996,7 +996,7 @@ export function List() {
   return (
     <Switch>
       <Match when={!resources().length && !stateResources().length}>
-        <Fullscreen inset="stage">
+        <Fullscreen inset="header-tabs">
           <Syncing>Waiting for resources&hellip;</Syncing>
         </Fullscreen>
       </Match>
@@ -1068,7 +1068,7 @@ export function List() {
                     outputs().length
                   }
                   fallback={
-                    <Fullscreen inset="stage">
+                    <Fullscreen inset="header-tabs">
                       <EmptyResourcesCopy>
                         Deploy some resources to get started!
                       </EmptyResourcesCopy>
@@ -1685,8 +1685,8 @@ function FunctionChild(props: {
                 fallback={
                   exists().metadata.handler
                     ? new URL(
-                        "https://example.com/" + exists().metadata.handler
-                      ).pathname.replace(/\/+/g, "/")
+                      "https://example.com/" + exists().metadata.handler
+                    ).pathname.replace(/\/+/g, "/")
                     : exists().cfnID
                 }
               >

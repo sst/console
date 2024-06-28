@@ -200,9 +200,9 @@ export function Detail() {
   const outputs = createMemo(() =>
     resource() && Object.keys(resource()!.outputs).length
       ? Object.keys(resource()!.outputs).map((key) => ({
-          key,
-          value: resource()!.outputs[key],
-        }))
+        key,
+        value: resource()!.outputs[key],
+      }))
       : [],
   );
 
@@ -210,13 +210,13 @@ export function Detail() {
     return [
       ...(resource()?.parent
         ? [
-            NavigationAction({
-              category: "Resource",
-              title: "Go to parent",
-              nav,
-              path: "../" + encodeURIComponent(resource()!.parent!),
-            }),
-          ]
+          NavigationAction({
+            category: "Resource",
+            title: "Go to parent",
+            nav,
+            path: "../" + encodeURIComponent(resource()!.parent!),
+          }),
+        ]
         : []),
       {
         icon: IconClipboard,
@@ -271,7 +271,7 @@ export function Detail() {
           replicacheStatus.isSynced(rep().name) && !resource() && resource.ready
         }
       >
-        <NotFound inset="stage" />
+        <NotFound inset="header-tabs" />
       </Match>
       <Match when={resource()}>
         <Container>
@@ -349,7 +349,7 @@ export function Detail() {
                     when={
                       resource()!.time.stateModified &&
                       resource()!.time.stateCreated !==
-                        resource()!.time.stateModified
+                      resource()!.time.stateModified
                     }
                     fallback={<PanelValueEmpty>—</PanelValueEmpty>}
                   >

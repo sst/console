@@ -38,9 +38,9 @@ export function App() {
       <AppContext.Provider value={appContext}>
         <HeaderProvider>
           <Routes>
-            <Route path=":stageName/*" component={Stage} />
             <Route path="settings" component={Settings} />
-            <Route path="autodeploy" component={Autodeploy} />
+            <Route path="autodeploy/*" component={Autodeploy} />
+            <Route path=":stageName/*" component={Stage} />
             <Route path="" component={Overview} />
             <Route path="*" element={<NotFound header />} />
           </Routes>

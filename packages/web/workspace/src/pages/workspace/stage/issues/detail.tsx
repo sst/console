@@ -284,7 +284,7 @@ export function Detail() {
       <Match
         when={replicacheStatus.isSynced(rep().name) && !issue() && issue.ready}
       >
-        <NotFound inset="stage" />
+        <NotFound inset="header-tabs" />
       </Match>
       <Match when={issue()}>
         <Container>

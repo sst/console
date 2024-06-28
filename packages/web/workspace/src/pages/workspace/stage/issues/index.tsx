@@ -17,7 +17,7 @@ export function Issues() {
         <Match
           when={workspace().timeGated != null && !ctx.connected && !ctx.isFree}
         >
-          <Fullscreen inset="stage">
+          <Fullscreen inset="header-tabs">
             <Warning
               title="Update billing details"
               description={
@@ -39,7 +39,7 @@ export function Issues() {
           <Routes>
             <Route path="" element={<List />} />
             <Route path=":issueID" element={<Detail />} />
-            <Route path="*" element={<NotFound inset="stage" />} />
+            <Route path="*" element={<NotFound inset="header-tabs" />} />
           </Routes>
         </Match>
       </Switch>
