@@ -122,10 +122,10 @@ export const Fullscreen = styled("div", {
   variants: {
     inset: {
       none: {},
-      root: {
+      header: {
         top: theme.headerHeight.root,
       },
-      stage: {
+      "header-tabs": {
         top: `calc(${theme.headerHeight.root} + ${theme.headerHeight.stage})`,
       },
     },

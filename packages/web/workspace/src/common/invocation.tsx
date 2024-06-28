@@ -346,7 +346,7 @@ export function InvocationRow(props: {
           {props.mixed
             ? props.function.handler
             : props.invocation.errors[0]?.message ||
-              props.invocation.logs[0]?.message}
+            props.invocation.logs[0]?.message}
         </LogPreview>
       </Summary>
       <Show when={expanded()}>
@@ -354,7 +354,7 @@ export function InvocationRow(props: {
           <DetailHeader>
             <Row space="5" vertical="center">
               <TabTitle
-                size="mono_sm"
+                size="sm"
                 onClick={() => setTab("logs")}
                 state={tab() === "logs" ? "active" : "inactive"}
               >
@@ -362,7 +362,7 @@ export function InvocationRow(props: {
               </TabTitle>
               <Show when={props.invocation.input || props.local}>
                 <TabTitle
-                  size="mono_sm"
+                  size="sm"
                   onClick={() => setTab("request")}
                   state={
                     !props.invocation.input!
@@ -377,7 +377,7 @@ export function InvocationRow(props: {
               </Show>
               <Show when={props.invocation.output || props.local}>
                 <TabTitle
-                  size="mono_sm"
+                  size="sm"
                   onClick={() => setTab("response")}
                   state={
                     !props.invocation.output
@@ -392,7 +392,7 @@ export function InvocationRow(props: {
               </Show>
               <Show when={props.invocation.report && !props.local}>
                 <TabTitle
-                  size="mono_sm"
+                  size="sm"
                   onClick={() => setTab("report")}
                   state={tab() === "report" ? "active" : "inactive"}
                 >
