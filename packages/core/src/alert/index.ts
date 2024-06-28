@@ -1,18 +1,23 @@
-import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { createId } from "@paralleldrive/cuid2";
 import { eq, and } from "drizzle-orm";
 import { useWorkspace } from "../actor";
-import { createSelectSchema } from "drizzle-zod";
 import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
 import { z } from "zod";
 import { warning } from "../warning/warning.sql";
-import { alert } from "./alert.sql";
+import { Event, alert } from "./alert.sql";
 
 export module Alert {
-  export const Info = createSelectSchema(alert, {
-    source: () => z.custom<Source>(),
-    destination: () => z.custom<Destination>(),
+  export const Info = z.object({
+    id: z.string().cuid2(),
+    source: z.custom<Source>(),
+    destination: z.custom<Destination>(),
+    event: z.enum(Event).default("issue"),
+    time: z.object({
+      created: z.string(),
+      deleted: z.string().optional(),
+      updated: z.string(),
+    }),
   });
   export type Info = z.infer<typeof Info>;
 
@@ -37,20 +42,49 @@ export module Alert {
     };
   }
 
-  export const list = zod(z.void(), (input) =>
-    useTransaction((tx) =>
-      tx
-        .select()
-        .from(alert)
-        .where(eq(alert.workspaceID, useWorkspace()))
-        .execute()
-        .then((rows) => rows as Info[])
-    )
+  export function serialize(input: typeof alert.$inferSelect): Info {
+    return {
+      id: input.id,
+      time: {
+        created: input.timeCreated.toISOString(),
+        updated: input.timeUpdated.toISOString(),
+        deleted: input.timeDeleted?.toISOString(),
+      },
+      source: input.source,
+      destination: input.destination,
+      event: input.event ?? "issue",
+    };
+  }
+
+  export const list = zod(
+    z.object({
+      app: z.string(),
+      stage: z.string(),
+      event: z.enum(Event),
+    }),
+    async ({ app, stage, event }) => {
+      const alerts = await useTransaction((tx) =>
+        tx
+          .select()
+          .from(alert)
+          .where(eq(alert.workspaceID, useWorkspace()))
+          .execute()
+      );
+      return alerts.filter(
+        (alert) =>
+          (alert.source.app === "*" || alert.source.app.includes(app)) &&
+          (alert.source.stage === "*" || alert.source.stage.includes(stage)) &&
+          (alert.event ?? "issue") === event
+      );
+    }
   );
 
   export const put = zod(
-    Info.pick({ id: true, source: true, destination: true }).partial({
-      id: true,
+    z.object({
+      id: Info.shape.id.optional(),
+      source: Info.shape.source,
+      destination: Info.shape.destination,
+      event: Info.shape.event,
     }),
     (input) =>
       useTransaction(async (tx) => {
@@ -62,11 +96,13 @@ export module Alert {
             workspaceID: useWorkspace(),
             source: input.source,
             destination: input.destination,
+            event: input.event,
           })
           .onDuplicateKeyUpdate({
             set: {
               source: input.source,
               destination: input.destination,
+              event: input.event,
             },
           });
         await tx
@@ -78,29 +114,6 @@ export module Alert {
               eq(warning.target, id)
             )
           );
-        return id;
-      })
-  );
-
-  export const create = zod(
-    Info.pick({ id: true }).partial({ id: true }),
-    (input) =>
-      useTransaction(async (tx) => {
-        const id = input.id ?? createId();
-        await tx.insert(alert).values({
-          id,
-          workspaceID: useWorkspace(),
-          source: {
-            stage: "*",
-            app: "*",
-          },
-          destination: {
-            type: "email",
-            properties: {
-              users: "*",
-            },
-          },
-        });
         return id;
       })
   );

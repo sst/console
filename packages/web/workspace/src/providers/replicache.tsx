@@ -110,19 +110,6 @@ const mutators = new Client<ServerType>()
   .mutation("aws_account_remove", async (tx, input) => {
     await AWS.AccountStore.remove(tx, input);
   })
-  .mutation("alert_create", async (tx, input) => {
-    await AlertStore.put(tx, [input.id!], {
-      id: input.id,
-      destination: {
-        type: "email",
-        properties: { users: "*" },
-      },
-      source: {
-        app: "*",
-        stage: "*",
-      },
-    });
-  })
   .mutation("alert_put", async (tx, input) => {
     console.log(input);
     await AlertStore.put(tx, [input.id!], input);

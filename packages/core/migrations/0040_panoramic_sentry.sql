@@ -1,0 +1,1 @@
+ALTER TABLE `issue_alert` ADD `event` enum('issue','autodeploy','autodeploy.error') DEFAULT 'issue';

@@ -13,16 +13,20 @@ export const handler = EventHandler(Workspace.Events.Created, async (evt) =>
     },
     async () => {
       await Alert.put({
-        source: {
-          app: "*",
-          stage: "*",
-        },
+        source: { app: "*", stage: "*" },
         destination: {
           type: "email",
-          properties: {
-            users: "*",
-          },
+          properties: { users: "*" },
         },
+        event: "issue",
+      });
+      await Alert.put({
+        source: { app: "*", stage: "*" },
+        destination: {
+          type: "email",
+          properties: { users: "*" },
+        },
+        event: "autodeploy",
       });
 
       const subscription = await Billing.Stripe.get();

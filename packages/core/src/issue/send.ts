@@ -28,7 +28,6 @@ import { KnownBlock } from "@slack/web-api";
 import { Warning } from "../warning";
 import { Workspace } from "../workspace";
 import { Alert } from "../alert";
-import { alert } from "../alert/alert.sql";
 
 const ses = new SESv2Client({});
 
@@ -91,16 +90,16 @@ export const triggerIssue = zod(
 
     console.log("alerting", result.id);
 
-    const alerts = await db
-      .select()
-      .from(alert)
-      .where(eq(alert.workspaceID, useWorkspace()));
+    const alerts = await Alert.list({
+      app: result.appName,
+      stage: result.stageName,
+      event: "issue",
+    });
 
     console.log("alerts", alerts.length);
 
     for (const alert of alerts) {
-      const { source, destination } = alert;
-      if (!matchAlert(result.appName, result.stageName, source)) continue;
+      const { destination } = alert;
 
       if (destination.type === "slack") {
         const context = (function () {
@@ -256,11 +255,14 @@ export const triggerRateLimit = zod(
     stageID: z.string().cuid2(),
   }),
   async (input) => {
-    const alerts = await Alert.list();
+    const alerts = await Alert.list({
+      app: input.app,
+      stage: input.stage,
+      event: "issue",
+    });
 
     for (const alert of alerts) {
-      const { source, destination } = alert;
-      if (!matchAlert(input.app, input.stage, source)) continue;
+      const { destination } = alert;
 
       const workspaceID = useWorkspace();
       const workspace = await Workspace.fromID(workspaceID);
@@ -373,10 +375,3 @@ export const triggerRateLimit = zod(
     }
   }
 );
-
-function matchAlert(appName: string, stageName: string, source: Alert.Source) {
-  return (
-    (source.app === "*" || source.app.includes(appName)) &&
-    (source.stage === "*" || source.stage.includes(stageName))
-  );
-}

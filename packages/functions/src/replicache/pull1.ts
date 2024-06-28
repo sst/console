@@ -51,6 +51,7 @@ import { Replicache } from "@console/core/replicache";
 import { AppRepo } from "@console/core/app/repo";
 import { Github } from "@console/core/git/github";
 import { alert } from "@console/core/alert/alert.sql";
+import { Alert } from "@console/core/alert";
 
 export const TABLES = {
   stateUpdate: stateUpdateTable,
@@ -104,6 +105,7 @@ const TABLE_KEY = {
 };
 
 const TABLE_PROJECTION = {
+  alert: (input) => Alert.serialize(input),
   appRepo: (input) => AppRepo.serializeAppRepo(input),
   githubOrg: (input) => Github.serializeOrg(input),
   githubRepo: (input) => Github.serializeRepo(input),

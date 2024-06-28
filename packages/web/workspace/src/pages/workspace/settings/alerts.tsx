@@ -283,7 +283,7 @@ function joinWithAnd(arr: string[]): string {
 
 const PutForm = object({
   destination: object({
-    type: union([literal("email"), literal("slack")], "Must select type"),
+    type: union([literal("email"), literal("slack")], "Must select channel"),
     email: object({
       users: array(string(), [minLength(1)]),
     }),
@@ -295,6 +295,10 @@ const PutForm = object({
     app: array(string(), [minLength(1, "Must select at least one app")]),
     stage: string([minLength(1)]),
   }),
+  event: union(
+    [literal("issue"), literal("autodeploy"), literal("autodeploy.error")],
+    "Must select event"
+  ),
 });
 
 export function Alerts() {
@@ -305,7 +309,6 @@ export function Alerts() {
   );
   const alerts = createSubscription(async (tx) => {
     const ret = AlertStore.all(tx);
-    console.log("ALERTS", ret);
     return ret;
   }, []);
 
@@ -361,6 +364,7 @@ export function Alerts() {
     setValues(putForm, {
       source: {},
       destination: {},
+      event: undefined,
     });
     setEditing("active", true);
     setEditing("id", undefined);
@@ -391,6 +395,7 @@ export function Alerts() {
               : undefined,
         },
       },
+      event: alert.event,
     });
     setEditing("active", true);
     setEditing("id", clone ? undefined : alert.id);
@@ -450,7 +455,7 @@ export function Alerts() {
         <Stack>
           <AlertsPanelRowEditingField>
             <AlertsPanelRowEditingFieldLabel>
-              <AlertsPanelEditingLabel>Type</AlertsPanelEditingLabel>
+              <AlertsPanelEditingLabel>Channel</AlertsPanelEditingLabel>
               <AlertsPanelEditingDesc>
                 The channel to use for sending the alerts.
               </AlertsPanelEditingDesc>
@@ -681,6 +686,45 @@ export function Alerts() {
               <Grower />
             </Row>
           </AlertsPanelRowEditingField>
+          <AlertsPanelRowEditingField>
+            <AlertsPanelRowEditingFieldLabel>
+              <AlertsPanelEditingLabel>Type</AlertsPanelEditingLabel>
+              <AlertsPanelEditingDesc>
+                The type of events to get alerted.
+              </AlertsPanelEditingDesc>
+            </AlertsPanelRowEditingFieldLabel>
+            <Row flex space="4" vertical="start">
+              <Field name="event">
+                {(field, props) => (
+                  <FormField
+                    class={alertsPanelRowEditingDropdown}
+                    color={field.error ? "danger" : "primary"}
+                  >
+                    <Select
+                      {...props}
+                      value={field.value}
+                      error={field.error}
+                      options={[
+                        {
+                          value: "issue",
+                          label: "Issues",
+                        },
+                        {
+                          value: "autodeploy",
+                          label: "Autodeploy",
+                        },
+                        {
+                          value: "autodeploy.error",
+                          label: "Autodeploy Errors",
+                        },
+                      ]}
+                    />
+                  </FormField>
+                )}
+              </Field>
+              <Grower />
+            </Row>
+          </AlertsPanelRowEditingField>
         </Stack>
         <Row space="4" vertical="center" horizontal="end">
           <LinkButton onClick={() => setEditing("active", false)}>
@@ -722,6 +766,7 @@ export function Alerts() {
                             : cloned.destination!.email!.users!,
                         },
                       },
+                event: cloned.event!,
               });
               setEditing("active", false);
             }}
@@ -803,7 +848,16 @@ export function Alerts() {
                         </AlertsPanelRowIcon>
                         <Stack space="2">
                           <AlertsPanelRowFromLabel>
-                            From{" "}
+                            <AlertsPanelFromKeyword>
+                              {
+                                {
+                                  issue: "Issues",
+                                  autodeploy: "Autodeploy",
+                                  "autodeploy.error": "Autodeploy errors",
+                                }[alert.event]
+                              }
+                            </AlertsPanelFromKeyword>{" "}
+                            from{" "}
                             <Show
                               when={alert.source.app !== "*"}
                               fallback={

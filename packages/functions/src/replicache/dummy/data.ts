@@ -180,6 +180,7 @@ export function* generateData(
 }
 
 type DummyData =
+  | (Alert.Info & { _type: "alert" })
   | (Run.Run & { _type: "run" })
   | (AppRepo.Repo & { _type: "appRepo" })
   | (Github.Org & { _type: "githubOrg" })
@@ -199,7 +200,6 @@ type DummyData =
   | (Omit<Issue.Count, "workspaceID"> & { _type: "issueCount" })
   | (Omit<Resource.Info, "workspaceID"> & { _type: "resource" })
   | (Omit<Billing.Stripe.Info, "workspaceID"> & { _type: "stripe" })
-  | (Omit<Alert.Info, "workspaceID"> & { _type: "alert" })
   | (Omit<AWS.Account.Info, "workspaceID"> & { _type: "awsAccount" });
 
 const USER_ID = "me@example.com";
@@ -3392,8 +3392,11 @@ function alert({ id, app, stage, destination }: AlertProps): DummyData {
       stage,
     },
     destination,
-    timeDeleted: null,
-    ...timestamps,
+    time: {
+      created: DateTime.now().startOf("day").toISO()!,
+      updated: DateTime.now().startOf("day").toISO()!,
+    },
+    event: "issue",
   };
 }
 

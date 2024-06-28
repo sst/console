@@ -281,6 +281,13 @@
       "when": 1719338888131,
       "tag": "0039_fantastic_inhumans",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1719527458604,
+      "tag": "0040_panoramic_sentry",
+      "breakpoints": true
     }
   ]
 }
