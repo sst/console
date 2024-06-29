@@ -74,6 +74,7 @@ const RepoLinkSeparator = styled("span", {
     color: theme.color.text.dimmed.base,
     paddingInline: 3,
     transition: `color ${theme.colorFadeDuration} ease-out`,
+    fontSize: theme.font.size.xs,
     selectors: {
       [`${RepoLink}:hover &`]: {
         color: theme.color.text.secondary.base,
@@ -256,6 +257,7 @@ const CardGitCommit = styled("span", {
 const CardGitMessage = styled("div", {
   base: {
     ...utility.text.line,
+    width: 260,
     lineHeight: "normal",
     fontSize: theme.font.size.xs,
     color: theme.color.text.dimmed.base,
