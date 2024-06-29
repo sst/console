@@ -6,7 +6,7 @@ import { useAppContext } from "../context";
 import { Link, Route, Routes } from "@solidjs/router";
 import { Header, PageHeader } from "../../header";
 import { NotFound } from "../../../not-found";
-// import { Detail } from "./detail";
+import { Detail } from "./detail";
 import { List } from "./list";
 
 export function Autodeploy() {
@@ -29,7 +29,7 @@ export function Autodeploy() {
       </PageHeader>
       <Routes>
         <Route path="" element={<List />} />
-        <Route path=":runID" element={<List />} />
+        <Route path=":runID" element={<Detail />} />
         <Route path="*" element={<NotFound inset="header-tabs" />} />
       </Routes>
     </>

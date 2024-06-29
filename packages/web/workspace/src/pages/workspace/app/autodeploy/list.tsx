@@ -22,11 +22,7 @@ import { RunStore } from "$/data/app";
 import { StageStore } from "$/data/stage";
 import { For, Show, Match, Switch, createMemo } from "solid-js";
 
-const LEGEND_RES = 2;
-const LEGEND_WIDTH = 160;
-
-function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
-  console.log(typeof error);
+export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
   switch (error.type) {
     case "config_not_found":
       return "`sst.config.ts` was found in the repo root";
@@ -63,7 +59,7 @@ function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
   }
 }
 
-const STATUS_MAP = {
+export const STATUS_MAP = {
   queued: "Queued",
   skipped: "Skipped",
   updated: "Deployed",
@@ -210,7 +206,6 @@ const RunMessageCopy = styled("p", {
 const RunMessageLink = styled(Link, {
   base: {
     fontSize: theme.font.size.sm,
-    fontWeight: theme.font.weight.medium,
   },
 });
 
@@ -311,79 +306,6 @@ const RunRightCol = styled("div", {
   },
 });
 
-const RunCmd = styled("span", {
-  base: {
-    fontSize: theme.font.size.mono_sm,
-    fontWeight: theme.font.weight.medium,
-    fontFamily: theme.font.family.code,
-    color: theme.color.text.secondary.base,
-  },
-});
-
-const ChangeLegendRoot = styled("div", {
-  base: {
-    ...utility.row("px"),
-  },
-  variants: {
-    empty: {
-      true: {
-        height: 16,
-        width: LEGEND_WIDTH,
-        borderRadius: 2,
-        backgroundSize: "4px 4px",
-        backgroundColor: "transparent",
-        border: `1px solid ${theme.color.background.surface}`,
-        backgroundImage: `repeating-linear-gradient(
-          45deg,
-          ${theme.color.background.selected} 0,
-          ${theme.color.background.selected} 1px,
-          transparent 0,
-          transparent 50%
-        )`,
-      },
-    },
-  },
-});
-
-const ChangeLegendTag = styled("div", {
-  base: {
-    height: 16,
-    lineHeight: 1,
-    display: "flex",
-    alignItems: "center",
-    textTransform: "uppercase",
-    userSelect: "none",
-    WebkitUserSelect: "none",
-    fontWeight: theme.font.weight.semibold,
-    justifyContent: "center",
-    fontSize: "0.625rem",
-    ":first-child": {
-      borderTopLeftRadius: 2,
-      borderBottomLeftRadius: 2,
-    },
-    ":last-child": {
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
-    },
-  },
-  variants: {
-    type: {
-      created: {
-        backgroundColor: `hsla(${theme.color.blue.l2}, 100%)`,
-      },
-      deleted: {
-        backgroundColor: `hsla(${theme.color.red.l1}, 100%)`,
-      },
-      updated: {
-        backgroundColor: `hsla(${theme.color.brand.l2}, 100%)`,
-      },
-      same: {
-        backgroundColor: theme.color.divider.base,
-      },
-    },
-  },
-});
-
 const RunInfo = styled("div", {
   base: {
     ...utility.row(1),
@@ -396,14 +318,6 @@ const RunSource = styled("div", {
   base: {
     ...utility.stack(2.5),
     width: 120,
-  },
-});
-
-const RunSourceType = styled("span", {
-  base: {
-    ...utility.text.label,
-    fontSize: theme.font.size.mono_sm,
-    color: theme.color.text.secondary.base,
   },
 });
 
@@ -424,29 +338,7 @@ const RunSenderAvatar = styled("div", {
   },
 });
 
-const RunSenderIcon = styled("div", {
-  base: {
-    flex: "0 0 auto",
-    width: 24,
-    height: 24,
-    color: theme.color.icon.dimmed,
-  },
-});
-
 function RunItem({ run }: { run: Run.Run }) {
-  // const ctx = useStageContext();
-  // const errors = () => props.errors?.length || 0;
-  // const runID = props.runID;
-
-  // const run = createSubscription(async (tx) => {
-  //   if (!runID) return;
-  //   return RunStore.get(tx, ctx.stage.id, runID);
-  // });
-
-  // const update = createSubscription((tx) =>
-  //   StateRunStore.get(tx, ctx.stage.id, props.id),
-  // );
-
   const stage = createSubscription(async (tx) => {
     if (!run.stageID) return;
     return await StageStore.get(tx, run.stageID);
@@ -503,7 +395,9 @@ function RunItem({ run }: { run: Run.Run }) {
               <RunMessageIcon>
                 <IconArrowLongRight width="12" height="12" />
               </RunMessageIcon>
-              <RunMessageLink href="/">{stage.value?.name}</RunMessageLink>
+              <RunMessageLink href={`../${stage.value?.name!}`}>
+                {stage.value?.name}
+              </RunMessageLink>
             </Match>
           </Switch>
         </RunMessage>
@@ -592,12 +486,3 @@ export function List() {
     </Content>
   );
 }
-
-export function countCopy(count?: number) {
-  return count! > 1 ? `${count} resources` : "1 resource";
-}
-
-export function errorCountCopy(count?: number) {
-  return count! > 1 ? `${count} errors` : "Error";
-}
-
