@@ -75,6 +75,57 @@ const Content = styled("div", {
   },
 });
 
+const EmptyRunsSign = styled("div", {
+  base: {
+    ...utility.stack(5),
+    alignItems: "center",
+    justifyContent: "center",
+    height: 300,
+    padding: `0 ${theme.space[4]}`,
+  },
+});
+
+const EmptyRunsHelper = styled("div", {
+  base: {
+    ...utility.stack(5),
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const EmptyRunsHelperHeader = styled("span", {
+  base: {
+    textAlign: "center",
+    marginLeft: theme.space[3.5],
+    marginRight: theme.space[3.5],
+    paddingBottom: theme.space[5],
+    borderBottom: `2px dashed ${theme.color.divider.base}`,
+    fontSize: theme.font.size.lg,
+  },
+});
+
+const EmptyRunsHint = styled("ul", {
+  base: {
+    ...utility.stack(3),
+    paddingLeft: 30,
+    listStyle: "circle",
+    fontSize: theme.font.size.base,
+  },
+});
+
+const EmptyRunsHintCode = styled("span", {
+  base: {
+    fontSize: theme.font.size.mono_base,
+    fontFamily: theme.font.family.code,
+  },
+});
+
+const EmptyRunsCopy = styled("span", {
+  base: {
+    fontSize: theme.font.size.lg,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
 const RunRoot = styled("div", {
   base: {
     ...utility.row(4),
@@ -368,14 +419,14 @@ function RunItem({ run }: { run: Run.Run }) {
         ? "error"
         : "updated"
       : run.error
-      ? run.error.type === "config_branch_remove_skipped" ||
-        run.error.type === "config_target_returned_undefined" ||
-        run.error.type === "target_not_matched"
-        ? "skipped"
-        : "error"
-      : run.active
-      ? "updating"
-      : "queued"
+        ? run.error.type === "config_branch_remove_skipped" ||
+          run.error.type === "config_target_returned_undefined" ||
+          run.error.type === "target_not_matched"
+          ? "skipped"
+          : "error"
+        : run.active
+          ? "updating"
+          : "queued"
   );
 
   return (
@@ -457,9 +508,8 @@ function RunItem({ run }: { run: Run.Run }) {
             <img
               width="24"
               height="24"
-              src={`https://avatars.githubusercontent.com/u/${
-                runInfo()!.trigger.sender.id
-              }?s=48&v=4`}
+              src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                }?s=48&v=4`}
             />
           </RunSenderAvatar>
         </RunInfo>
@@ -482,6 +532,27 @@ export function List() {
 
   return (
     <Content>
+      <Show when={runs.value && runs.value.length === 0}>
+        <EmptyRunsSign>
+          <EmptyRunsHelper>
+            <EmptyRunsHelperHeader>Autodeploy your app</EmptyRunsHelperHeader>
+            <EmptyRunsHint>
+              <li>Connect your app to its GitHub repo</li>
+              <li>
+                Add an envrionment for your{" "}
+                <EmptyRunsHintCode>`production`</EmptyRunsHintCode>{" "}
+                branch
+              </li>
+              <li>
+                And push to it{" "}
+                <EmptyRunsHintCode>
+                  `git push origin main:production`
+                </EmptyRunsHintCode>
+              </li>
+            </EmptyRunsHint>
+          </EmptyRunsHelper>
+        </EmptyRunsSign>
+      </Show>
       <For each={runs.value}>{(run) => <RunItem run={run} />}</For>
     </Content>
   );
