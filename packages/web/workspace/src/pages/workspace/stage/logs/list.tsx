@@ -436,7 +436,7 @@ export function List() {
         </Content>
       </Match>
       <Match when={true}>
-        <Fullscreen inset="stage">
+        <Fullscreen inset="header-tabs">
           <EmptyResourcesCopy>
             Deploy a function to get started!
           </EmptyResourcesCopy>

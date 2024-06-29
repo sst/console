@@ -55,7 +55,7 @@ export function WorkspaceCreate() {
   return (
     <>
       <Header />
-      <Fullscreen inset="root">
+      <Fullscreen inset="header">
         <Stack space="5">
           <Stack horizontal="center" space="5">
             <AvatarInitialsIcon

@@ -8,7 +8,7 @@ export function Updates() {
     <Routes>
       <Route path="" element={<List />} />
       <Route path=":updateID" element={<Detail />} />
-      <Route path="*" element={<NotFound inset="stage" />} />
+      <Route path="*" element={<NotFound inset="header-tabs" />} />
     </Routes>
   );
 }

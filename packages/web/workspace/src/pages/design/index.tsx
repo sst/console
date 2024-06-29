@@ -493,6 +493,21 @@ export function Design() {
             </Row>
           </TextContainer>
         </Variant>
+        <Variant name="Count Small">
+          <TextContainer>
+            <Row space="4">
+              <TabTitle count="4" state="active" size="sm">
+                Button
+              </TabTitle>
+              <TabTitle count="4" state="inactive" size="sm">
+                Button
+              </TabTitle>
+              <TabTitle count="4" state="disabled" size="sm">
+                Button
+              </TabTitle>
+            </Row>
+          </TextContainer>
+        </Variant>
         <Variant name="Indicator">
           <TextContainer>
             <Row space="4">
@@ -518,6 +533,21 @@ export function Design() {
                 Button
               </TabTitle>
               <TabTitle count="41+" state="disabled">
+                Button
+              </TabTitle>
+            </Row>
+          </TextContainer>
+        </Variant>
+        <Variant name="Long Count Small">
+          <TextContainer>
+            <Row space="4">
+              <TabTitle count="41+" state="active" size="sm">
+                Button
+              </TabTitle>
+              <TabTitle count="41+" state="inactive" size="sm">
+                Button
+              </TabTitle>
+              <TabTitle count="41+" state="disabled" size="sm">
                 Button
               </TabTitle>
             </Row>

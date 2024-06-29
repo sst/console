@@ -10,7 +10,7 @@ export function Resources() {
       <Route path="" element={<List />} />
       <Route path=":urn" component={Detail} />
       <Route path="logs/:resourceID/*" component={ResourceLogs} />
-      <Route path="*" element={<NotFound inset="stage" />} />
+      <Route path="*" element={<NotFound inset="header-tabs" />} />
     </Routes>
   );
 }

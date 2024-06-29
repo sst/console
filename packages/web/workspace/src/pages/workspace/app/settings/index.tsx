@@ -12,6 +12,7 @@ import {
   Stack,
   Input,
   Textarea,
+  TabTitle,
   Grower,
   Button,
   FormField,
@@ -21,13 +22,13 @@ import {
 import { Select } from "$/ui/select";
 import { Dropdown } from "$/ui/dropdown";
 import {
+  Divider,
+  SettingsRoot,
   PANEL_HEADER_SPACE,
   PANEL_CONTENT_SPACE,
-  SettingsRoot,
-  Divider,
 } from "../../settings";
 import { DateTime } from "luxon";
-import { Header } from "../../header";
+import { Header, PageHeader } from "../../header";
 import { Link } from "@solidjs/router";
 import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
@@ -870,6 +871,19 @@ export function Settings() {
   return (
     <>
       <Header app={app.app.name} />
+      <PageHeader>
+        <Row space="5" vertical="center">
+          <Link href="../">
+            <TabTitle size="sm">Stages</TabTitle>
+          </Link>
+          <Link href="../autodeploy">
+            <TabTitle size="sm">Autodeploy</TabTitle>
+          </Link>
+          <Link href="">
+            <TabTitle size="sm">Settings</TabTitle>
+          </Link>
+        </Row>
+      </PageHeader>
       <SettingsRoot>
         <Stack space={PANEL_HEADER_SPACE}>
           <Text size="xl" weight="medium">

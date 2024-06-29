@@ -47,6 +47,14 @@ export const SettingsRoot = styled("div", {
   },
 });
 
+export const NavIcon = styled("div", {
+  base: {
+    top: 2,
+    position: "relative",
+    opacity: theme.iconOpacity,
+  },
+});
+
 export const Divider = styled("div", {
   base: {
     margin: `${theme.space[12]} 0`,
