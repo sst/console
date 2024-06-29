@@ -3,6 +3,7 @@ import {
   RunConfigStore,
   GithubOrgStore,
   GithubRepoStore,
+  RunStore,
 } from "$/data/app";
 import {
   theme,
@@ -547,6 +548,22 @@ export function Settings() {
   }>({
     active: false,
   });
+  const latestRunError = createSubscription(async (tx) => {
+    const runs = await RunStore.all(tx);
+    const run = runs
+      .filter((run) => run.appID === app.app.id)
+      .sort(
+        (a, b) =>
+          DateTime.fromISO(b.time.created).toMillis() -
+          DateTime.fromISO(a.time.created).toMillis()
+      )[0];
+    return (
+      run?.error &&
+      run.error.type !== "config_target_returned_undefined" &&
+      run.error.type !== "config_branch_remove_skipped" &&
+      run.error.type !== "target_not_matched"
+    );
+  });
 
   const [overrideGithub, setOverrideGithub] = createSignal(false);
 
@@ -877,7 +894,9 @@ export function Settings() {
             <TabTitle size="sm">Stages</TabTitle>
           </Link>
           <Link href="../autodeploy">
-            <TabTitle size="sm">Autodeploy</TabTitle>
+            <TabTitle size="sm" count={latestRunError.value ? "•" : ""}>
+              Autodeploy
+            </TabTitle>
           </Link>
           <Link href="">
             <TabTitle size="sm">Settings</TabTitle>
