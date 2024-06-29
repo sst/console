@@ -341,11 +341,6 @@ const RunSenderAvatar = styled("div", {
 });
 
 function RunItem({ run }: { run: Run.Run }) {
-  const stage = createSubscription(async (tx) => {
-    if (!run.stageID) return;
-    return await StageStore.get(tx, run.stageID);
-  });
-
   const runInfo = createMemo(() => {
     const trigger = run.trigger;
     const repoURL =
@@ -396,14 +391,6 @@ function RunItem({ run }: { run: Run.Run }) {
                 </RunMessageIcon>
                 <RunMessageCopy>{ERROR_MAP(run.error!)}</RunMessageCopy>
               </>
-            </Match>
-            <Match when={stage.value}>
-              <RunMessageIcon>
-                <IconArrowLongRight width="12" height="12" />
-              </RunMessageIcon>
-              <RunMessageLink href={`../${stage.value?.name!}`}>
-                {stage.value?.name}
-              </RunMessageLink>
             </Match>
           </Switch>
         </RunMessage>
@@ -470,9 +457,10 @@ function RunItem({ run }: { run: Run.Run }) {
 
 export function List() {
   const ctx = useStageContext();
-  const runs = createSubscription(
-    async (tx) => await RunStore.forStage(tx, ctx.stage.id)
-  );
+  const runs = createSubscription(async (tx) => {
+    const all = await RunStore.forStage(tx, ctx.stage.id);
+    return pipe(all, sortBy([(run) => run.time.created, "desc"]));
+  });
 
   return (
     <Content>
