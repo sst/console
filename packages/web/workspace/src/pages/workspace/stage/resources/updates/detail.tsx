@@ -5,23 +5,15 @@ import {
   Switch,
   createMemo,
   createSignal,
-  createResource,
-  onCleanup,
 } from "solid-js";
 import { createSubscription, useReplicache } from "$/providers/replicache";
-import { useParams } from "@solidjs/router";
+import { Link, useParams } from "@solidjs/router";
 import { RunStore, StateUpdateStore, StateEventStore } from "$/data/app";
 import { State } from "@console/core/state";
 import { DateTime } from "luxon";
 import { Dropdown } from "$/ui/dropdown";
 import { useStageContext } from "../../context";
 import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
-import {
-  LogsLoading,
-  LogsLoadingIcon,
-  PanelEmptyCopy,
-  LogsBackground,
-} from "../../issues/detail";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
@@ -29,12 +21,10 @@ import {
   IconPr,
   IconGit,
   IconCommit,
-  IconArrowPathSpin,
 } from "$/ui/icons/custom";
-import { Log, LogTime, LogMessage } from "$/common/invocation";
 import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
-import { IconCheck, IconXCircle, IconEllipsisVertical } from "$/ui/icons";
+import { IconCheck, IconXCircle, IconChevronRight, IconEllipsisVertical } from "$/ui/icons";
 import {
   githubPr,
   githubRepo,
@@ -42,15 +32,7 @@ import {
   githubCommit,
 } from "$/common/url-builder";
 import { Row, Text, Stack, theme, utility } from "$/ui";
-import { pipe, sortBy, dropWhile, drop, takeWhile, filter } from "remeda";
-import { useWorkspace } from "../../../context";
-import { useAuth2 } from "$/providers/auth2";
-
-const DATETIME_NO_TIME = {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-} as const;
+import { sortBy } from "remeda";
 
 const AVATAR_SIZE = 36;
 const SIDEBAR_WIDTH = 300;
@@ -229,29 +211,6 @@ const ResourceValue = styled("span", {
   },
 });
 
-const ResourceCopyButton = styled("button", {
-  base: {
-    flexShrink: 0,
-    height: 16,
-    width: 16,
-    color: theme.color.icon.dimmed,
-    ":hover": {
-      color: theme.color.icon.secondary,
-    },
-  },
-  variants: {
-    copying: {
-      true: {
-        cursor: "default",
-        color: theme.color.accent,
-        ":hover": {
-          color: theme.color.accent,
-        },
-      },
-    },
-  },
-});
-
 const Sidebar = styled("div", {
   base: {
     flex: "0 0 auto",
@@ -265,11 +224,25 @@ const SidebarSpacer = styled("div", {
   },
 });
 
+const PanelTitle = styled("span", {
+  base: {
+    ...utility.text.label,
+    fontSize: theme.font.size.mono_sm,
+    color: theme.color.text.dimmed.base,
+  },
+});
+
+const AutodeployInfo = styled("div", {
+  base: {
+    ...utility.stack(0),
+    gap: `calc(${theme.space[3]} - 2px)`,
+  },
+});
+
 const GitInfo = styled("div", {
   base: {
     ...utility.stack(2),
     justifyContent: "center",
-    height: 44,
   },
 });
 
@@ -355,11 +328,22 @@ const GitBranch = styled("span", {
   },
 });
 
-const PanelTitle = styled("span", {
+const AutodeployLink = styled(Link, {
   base: {
-    ...utility.text.label,
-    fontSize: theme.font.size.mono_sm,
-    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.sm,
+    color: theme.color.text.secondary.base,
+    ":hover": {
+      color: theme.color.text.primary.base,
+    },
+  },
+});
+
+const AutodeployLinkIcon = styled("span", {
+  base: {
+    verticalAlign: -2,
+    lineHeight: 0,
+    opacity: theme.iconOpacity,
+    marginLeft: theme.space[0.5],
   },
 });
 
@@ -400,67 +384,6 @@ export function Detail() {
       ? githubRepo(run.value.trigger.repo.owner, run.value.trigger.repo.repo)
       : ""
   );
-  const workspace = useWorkspace();
-  const auth = useAuth2();
-  const [logs, logsAction] = createResource(
-    () => run.value?.log,
-    async (log) => {
-      console.log("log", log);
-      if (!log) return [];
-      const results = await fetch(
-        import.meta.env.VITE_API_URL +
-        "/rest/log/scan?" +
-        new URLSearchParams(
-          log.engine === "lambda"
-            ? {
-              stageID: ctx.stage.id,
-              timestamp: log.timestamp.toString(),
-              logStream: log.logStream,
-              logGroup: log.logGroup,
-              requestID: log.requestID,
-            }
-            : {
-              stageID: ctx.stage.id,
-              logStream: log.logStream,
-              logGroup: log.logGroup,
-            }
-        ).toString(),
-        {
-          headers: {
-            "x-sst-workspace": workspace().id,
-            Authorization: "Bearer " + auth.current.token,
-          },
-        }
-      ).then(
-        (res) =>
-          res.json() as Promise<
-            {
-              message: string;
-              timestamp: number;
-            }[]
-          >
-      );
-      return results;
-    },
-    {
-      initialValue: [],
-    }
-  );
-  const trimmedLogs = createMemo(() =>
-    pipe(
-      logs() || [],
-      dropWhile((r) => !r.message.includes("isWarm")),
-      drop(1),
-      filter((r) => r.message.trim() != ""),
-      takeWhile((r) => !r.message.includes(" BUILD State"))
-    )
-  );
-
-  const logsPoller = setInterval(() => {
-    if (logs()?.findLast((r) => r.message.includes(" BUILD State"))) return;
-    logsAction.refetch();
-  }, 3000);
-  onCleanup(() => clearInterval(logsPoller));
 
   const status = createMemo(() => {
     if (!update.value) return;
@@ -517,51 +440,60 @@ export function Detail() {
       <Sidebar>
         <Stack space={runInfo() ? "7" : "0"}>
           <Show when={runInfo()} fallback={<SidebarSpacer />}>
-            <GitInfo>
-              <Row space="1.5" vertical="center">
-                <GitAvatar title={runInfo()!.trigger.sender.username}>
-                  <img
-                    width={AVATAR_SIZE}
-                    height={AVATAR_SIZE}
-                    src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                      }?s=${2 * AVATAR_SIZE}&v=4`}
-                  />
-                </GitAvatar>
-                <Stack space="0.5">
-                  <GitLink
-                    target="_blank"
-                    rel="noreferrer"
-                    href={githubCommit(repoURL(), runInfo()!.trigger.commit.id)}
-                  >
-                    <GitIcon size="md">
-                      <IconCommit />
-                    </GitIcon>
-                    <GitCommit>
-                      {shortenCommit(runInfo()!.trigger.commit.id)}
-                    </GitCommit>
-                  </GitLink>
-                  <GitLink
-                    target="_blank"
-                    rel="noreferrer"
-                    href={runInfo()!.uri}
-                  >
-                    <GitIcon size="sm">
-                      <Switch>
-                        <Match
-                          when={runInfo()!.trigger.type === "pull_request"}
-                        >
-                          <IconPr />
-                        </Match>
-                        <Match when={true}>
-                          <IconGit />
-                        </Match>
-                      </Switch>
-                    </GitIcon>
-                    <GitBranch>{runInfo()!.branch}</GitBranch>
-                  </GitLink>
-                </Stack>
-              </Row>
-            </GitInfo>
+            <AutodeployInfo>
+              <PanelTitle>Autodeployed</PanelTitle>
+              <GitInfo>
+                <Row space="1.5" vertical="center">
+                  <GitAvatar title={runInfo()!.trigger.sender.username}>
+                    <img
+                      width={AVATAR_SIZE}
+                      height={AVATAR_SIZE}
+                      src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                        }?s=${2 * AVATAR_SIZE}&v=4`}
+                    />
+                  </GitAvatar>
+                  <Stack space="0.5">
+                    <GitLink
+                      target="_blank"
+                      rel="noreferrer"
+                      href={githubCommit(repoURL(), runInfo()!.trigger.commit.id)}
+                    >
+                      <GitIcon size="md">
+                        <IconCommit />
+                      </GitIcon>
+                      <GitCommit>
+                        {shortenCommit(runInfo()!.trigger.commit.id)}
+                      </GitCommit>
+                    </GitLink>
+                    <GitLink
+                      target="_blank"
+                      rel="noreferrer"
+                      href={runInfo()!.uri}
+                    >
+                      <GitIcon size="sm">
+                        <Switch>
+                          <Match
+                            when={runInfo()!.trigger.type === "pull_request"}
+                          >
+                            <IconPr />
+                          </Match>
+                          <Match when={true}>
+                            <IconGit />
+                          </Match>
+                        </Switch>
+                      </GitIcon>
+                      <GitBranch>{runInfo()!.branch}</GitBranch>
+                    </GitLink>
+                  </Stack>
+                </Row>
+              </GitInfo>
+              <AutodeployLink href={`../../../autodeploy/${run.value!.id}`}>
+                View logs
+                <AutodeployLinkIcon>
+                  <IconChevronRight width="12" height="12" />
+                </AutodeployLinkIcon>
+              </AutodeployLink>
+            </AutodeployInfo>
           </Show>
           <Stack space="7">
             <Stack space="2">
@@ -719,66 +651,6 @@ export function Detail() {
                   </Match>
                 </Switch>
               </Stack>
-              <Show
-                when={
-                  run.value &&
-                  (status() === "updating" || status() === "updated")
-                }
-              >
-                <Stack space="2">
-                  <Show
-                    when={trimmedLogs().length}
-                    fallback={<PanelTitle>Logs</PanelTitle>}
-                  >
-                    <PanelTitle
-                      title={DateTime.fromMillis(trimmedLogs()![0].timestamp!)
-                        .toUTC()
-                        .toLocaleString(DateTime.DATETIME_FULL)}
-                    >
-                      Logs —{" "}
-                      {DateTime.fromMillis(
-                        trimmedLogs()![0].timestamp!
-                      ).toLocaleString(DATETIME_NO_TIME)}
-                    </PanelTitle>
-                  </Show>
-                  <LogsBackground>
-                    <For each={trimmedLogs()!}>
-                      {(entry) => (
-                        <Log>
-                          <LogTime
-                            title={DateTime.fromMillis(entry.timestamp)
-                              .toUTC()
-                              .toLocaleString(
-                                DateTime.DATETIME_FULL_WITH_SECONDS
-                              )}
-                          >
-                            {DateTime.fromMillis(entry.timestamp).toFormat(
-                              "HH:mm:ss.SSS"
-                            )}
-                          </LogTime>
-                          <LogMessage>{entry.message}</LogMessage>
-                        </Log>
-                      )}
-                    </For>
-                    <Show
-                      when={
-                        trimmedLogs()?.length === 0 ||
-                        !update.value!.time.completed
-                      }
-                    >
-                      <LogsLoading>
-                        <LogsLoadingIcon>
-                          <IconArrowPathSpin />
-                        </LogsLoadingIcon>
-                        <PanelEmptyCopy>
-                          {update.value!.time.completed ? "Loading" : "Running"}
-                          &hellip;
-                        </PanelEmptyCopy>
-                      </LogsLoading>
-                    </Show>
-                  </LogsBackground>
-                </Stack>
-              </Show>
             </Stack>
           </Content>
           {renderSidebar()}

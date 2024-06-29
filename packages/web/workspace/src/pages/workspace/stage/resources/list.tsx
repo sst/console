@@ -115,6 +115,15 @@ const Content = styled("div", {
   },
 });
 
+const TitleRoot = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: theme.space[1.5],
+  },
+});
+
 const TitleRow = styled("div", {
   base: {
     ...utility.row(3),
@@ -1004,9 +1013,9 @@ export function List() {
         <Switch>
           <Match when={stateResources().length}>
             <Content>
-              <Stack space="4">
+              <Stack space="6">
                 <Show when={latestUpdate.value}>
-                  <Row space="2" horizontal="between" vertical="center">
+                  <TitleRoot>
                     <Stack space="2.5">
                       <TitleRow>
                         <Switch>
@@ -1049,7 +1058,7 @@ export function List() {
                         </Row>
                       </TextButton>
                     </Link>
-                  </Row>
+                  </TitleRoot>
                 </Show>
                 <Stack space="5">
                   {renderStateOutputs()}
