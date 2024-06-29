@@ -1,9 +1,9 @@
 import { Link, Navigate, Route, Routes, useNavigate } from "@solidjs/router";
 import { JSX, Match, Show, Switch, createMemo, createEffect } from "solid-js";
-import { StateUpdateStore } from "$/data/app";
+import { RunStore, StateUpdateStore } from "$/data/app";
 import { NavigationAction, useCommandBar } from "$/pages/workspace/command-bar";
 import { useFlags } from "$/providers/flags";
-import { useReplicache } from "$/providers/replicache";
+import { createSubscription, useReplicache } from "$/providers/replicache";
 import {
   useOutdated,
   StageContext,
@@ -32,6 +32,7 @@ import { Local } from "./local";
 import { IconExclamationTriangle } from "$/ui/icons";
 import { styled } from "@macaron-css/solid";
 import { NotFound } from "../../not-found";
+import { DateTime } from "luxon";
 
 export function Stage() {
   const stageContext = createStageContext();
@@ -109,11 +110,9 @@ export function Warning(props: WarningProps) {
 }
 
 export function Inner() {
-  const flags = useFlags();
   const rep = useReplicache();
   const bar = useCommandBar();
   const ctx = useStageContext();
-  const workspace = useWorkspace();
   const issues = useIssuesContext();
   const issuesCount = createMemo(
     () =>
@@ -128,6 +127,20 @@ export function Inner() {
         .map((r) => r.type === "Stack" && r.enrichment.version)
         .sort()[0]
   );
+  const latestRunError = createSubscription(async (tx) => {
+    const runs = await RunStore.forStage(tx, ctx.stage.id);
+    const run = runs.sort(
+      (a, b) =>
+        DateTime.fromISO(b.time.created).toMillis() -
+        DateTime.fromISO(a.time.created).toMillis()
+    )[0];
+    return (
+      run?.error &&
+      run.error.type !== "config_target_returned_undefined" &&
+      run.error.type !== "config_branch_remove_skipped" &&
+      run.error.type !== "target_not_matched"
+    );
+  });
 
   const nav = useNavigate();
 
@@ -211,7 +224,9 @@ export function Inner() {
               </Link>
               <Show when={updates().length > 0}>
                 <Link href="autodeploy">
-                  <TabTitle size="sm">Autodeploy</TabTitle>
+                  <TabTitle size="sm" count={latestRunError.value ? "•" : ""}>
+                    Autodeploy
+                  </TabTitle>
                 </Link>
               </Show>
               <Link href="issues">
