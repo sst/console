@@ -256,6 +256,7 @@ const CardGitCommit = styled("span", {
 const CardGitMessage = styled("div", {
   base: {
     ...utility.text.line,
+    width: 260,
     lineHeight: "normal",
     fontSize: theme.font.size.xs,
     color: theme.color.text.dimmed.base,
