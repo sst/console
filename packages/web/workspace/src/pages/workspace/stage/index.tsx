@@ -19,6 +19,7 @@ import { useWorkspace } from "../context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
 import { Updates } from "./updates";
+import { Autodeploy } from "./autodeploy";
 import { Resources } from "./resources";
 import { IconSubRight } from "$/ui/icons/custom";
 import {
@@ -117,7 +118,7 @@ export function Inner() {
   const issues = useIssuesContext();
   const issuesCount = createMemo(
     () =>
-      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length,
+      issues().filter((item) => !item.timeResolved && !item.timeIgnored).length
   );
   const updates = StateUpdateStore.forStage.watch(rep, () => [ctx.stage.id]);
   const header = useHeaderContext();
@@ -126,7 +127,7 @@ export function Inner() {
     () =>
       outdated()
         .map((r) => r.type === "Stack" && r.enrichment.version)
-        .sort()[0],
+        .sort()[0]
   );
 
   const nav = useNavigate();
@@ -210,7 +211,7 @@ export function Inner() {
                 <TabTitle size="sm">Resources</TabTitle>
               </Link>
               <Show when={updates().length > 0}>
-                <Link href="updates">
+                <Link href="autodeploy">
                   <TabTitle size="sm">Autodeploy</TabTitle>
                 </Link>
               </Show>
@@ -238,6 +239,7 @@ export function Inner() {
           <div>
             <Routes>
               <Route path="resources/*" component={Resources} />
+              <Route path="autodeploy/*" component={Autodeploy} />
               <Route path="updates/*" component={Updates} />
               <Route path="issues/*" component={Issues} />
               <Route path="logs/*" component={Logs} />
