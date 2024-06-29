@@ -32,10 +32,10 @@ export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
       return "Failed to run `sst.config.ts`";
     case "config_evaluate_failed":
       return "Error evaluating `sst.config.ts`";
-    // case "config_target_returned_undefined":
-    //   return "`console.autodeploy.target` returned `undefined`";
-    // case "config_branch_remove_skipped":
-    //   return "Skipped branch remove";
+    case "config_target_returned_undefined":
+      return "`console.autodeploy.target` returned `undefined`";
+    case "config_branch_remove_skipped":
+      return "Skipped branch remove";
     case "config_target_no_stage":
       return "`console.autodeploy.target` did not return a stage";
     case "config_v2_unsupported":
