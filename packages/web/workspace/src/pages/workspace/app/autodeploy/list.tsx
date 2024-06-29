@@ -119,13 +119,6 @@ const EmptyRunsHintCode = styled("span", {
   },
 });
 
-const EmptyRunsCopy = styled("span", {
-  base: {
-    fontSize: theme.font.size.lg,
-    color: theme.color.text.dimmed.base,
-  },
-});
-
 const RunRoot = styled("div", {
   base: {
     ...utility.row(4),
@@ -544,7 +537,7 @@ export function List() {
                 branch
               </li>
               <li>
-                And push to it{" "}
+                Git push to deploy{" "}
                 <EmptyRunsHintCode>
                   `git push origin main:production`
                 </EmptyRunsHintCode>
