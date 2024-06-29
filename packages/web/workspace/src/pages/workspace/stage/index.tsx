@@ -18,7 +18,6 @@ import {
 import { useWorkspace } from "../context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
-import { Updates } from "./updates";
 import { Autodeploy } from "./autodeploy";
 import { Resources } from "./resources";
 import { IconSubRight } from "$/ui/icons/custom";
@@ -240,7 +239,6 @@ export function Inner() {
             <Routes>
               <Route path="resources/*" component={Resources} />
               <Route path="autodeploy/*" component={Autodeploy} />
-              <Route path="updates/*" component={Updates} />
               <Route path="issues/*" component={Issues} />
               <Route path="logs/*" component={Logs} />
               <Route path="local/*" component={Local} />

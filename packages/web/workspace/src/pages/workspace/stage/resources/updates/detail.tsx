@@ -14,14 +14,14 @@ import { RunStore, StateUpdateStore, StateEventStore } from "$/data/app";
 import { State } from "@console/core/state";
 import { DateTime } from "luxon";
 import { Dropdown } from "$/ui/dropdown";
-import { useStageContext } from "../context";
+import { useStageContext } from "../../context";
 import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
 import {
   LogsLoading,
   LogsLoadingIcon,
   PanelEmptyCopy,
   LogsBackground,
-} from "../issues/detail";
+} from "../../issues/detail";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
@@ -43,7 +43,7 @@ import {
 } from "$/common/url-builder";
 import { Row, Text, Stack, theme, utility } from "$/ui";
 import { pipe, sortBy, dropWhile, drop, takeWhile, filter } from "remeda";
-import { useWorkspace } from "../../context";
+import { useWorkspace } from "../../../context";
 import { useAuth2 } from "$/providers/auth2";
 
 const DATETIME_NO_TIME = {
@@ -73,6 +73,7 @@ const Content = styled("div", {
 const PageTitle = styled("div", {
   base: {
     ...utility.row(3),
+    paddingTop: theme.space[1.5],
     alignItems: "center",
   },
 });

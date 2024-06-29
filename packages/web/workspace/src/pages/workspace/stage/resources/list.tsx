@@ -68,7 +68,7 @@ import {
   IconEllipsisVertical,
   IconDocumentDuplicate,
 } from "$/ui/icons";
-import { UpdateStatusIcon } from "../updates/list";
+import { UpdateStatusIcon } from "./updates/list";
 import { sortBy } from "remeda";
 import { Dynamic } from "solid-js/web";
 import { } from "@solid-primitives/keyboard";
@@ -186,7 +186,7 @@ const HeaderRoot = styled("div", {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `0 ${theme.space[4]}`,
+    padding: `0 ${theme.space[3]}`,
     height: 50,
     gap: theme.space[6],
   },
@@ -1028,7 +1028,7 @@ export function List() {
                         <TitleText>{ctx.stage.name}</TitleText>
                       </TitleRow>
                       <TitleDescLink
-                        href={`../updates/${latestUpdate.value!.id}`}
+                        href={`updates/${latestUpdate.value!.id}`}
                       >
                         Updated{" "}
                         {formatSinceTime(
@@ -1039,7 +1039,7 @@ export function List() {
                         )}
                       </TitleDescLink>
                     </Stack>
-                    <Link href="../updates">
+                    <Link href="updates">
                       <TextButton>
                         <Row space="0.5" horizontal="center">
                           View history

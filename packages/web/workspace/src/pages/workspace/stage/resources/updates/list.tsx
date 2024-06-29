@@ -4,10 +4,10 @@ import { Row } from "$/ui/layout";
 import { Link } from "@solidjs/router";
 import { styled } from "@macaron-css/solid";
 import { State } from "@console/core/state";
-import { useStageContext } from "../context";
 import { Stack, theme, utility } from "$/ui";
 import { IconCommandLine } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
+import { useStageContext } from "../../context";
 import { globalKeyframes } from "@macaron-css/core";
 import { IconPr, IconGit, IconCommit } from "$/ui/icons/custom";
 import { formatCommit, formatSinceTime } from "$/common/format";
@@ -529,9 +529,8 @@ function Update(props: UpdateProps) {
                 <img
                   width="24"
                   height="24"
-                  src={`https://avatars.githubusercontent.com/u/${
-                    runInfo()!.trigger.sender.id
-                  }?s=48&v=4`}
+                  src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                    }?s=48&v=4`}
                 />
               </UpdateSenderAvatar>
             </Match>
