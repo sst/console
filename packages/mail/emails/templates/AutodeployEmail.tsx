@@ -28,9 +28,14 @@ import {
   buttonPrimary,
   breadcrumbSeparator,
   breadcrumbColonSeparator,
+  SECONDARY_COLOR,
 } from "../styles";
 
 const LOCAL_ASSETS_URL = "/static";
+
+const contextInfo = {
+  color: SECONDARY_COLOR,
+};
 
 interface AutodeployEmailProps {
   app: string;
@@ -50,10 +55,11 @@ export const AutodeployEmail = ({
   app = "console",
   workspace = "seed",
   stage = "production",
-  subject = "Deploy failed",
+  // subject = "Deploy failed",
+  subject = "Deployed",
   message = "Deploy failed",
-  context = "Failed to initialize runner",
-  trigger = "Branch main",
+  // context = "Failed to initialize runner",
+  context = "Deployed successfully to production",
   commit = "7c14080",
   commitUrl = "https://github.com/fwang/ion-playground/commit/7c14080b5675d2b2e02aeb154a73c098ae764776",
   assetsUrl = LOCAL_ASSETS_URL,
@@ -115,9 +121,9 @@ export const AutodeployEmail = ({
               </Text>
             </Section>
             <Section style={{ padding: `${unit}px 0 0 0` }}>
-              <Text style={{ ...compactText, ...code }}>
-                Using {trigger}, commit
-                <Link href={commitUrl} style={footerLink}>
+              <Text style={{ ...compactText, ...contextInfo }}>
+                Using commit:{" "}
+                <Link href={commitUrl} style={code}>
                   {commit}
                 </Link>
               </Text>
