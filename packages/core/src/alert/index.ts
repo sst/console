@@ -1,11 +1,18 @@
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { createId } from "@paralleldrive/cuid2";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray, isNull, isNotNull } from "drizzle-orm";
 import { useWorkspace } from "../actor";
 import { zod } from "../util/zod";
 import { useTransaction } from "../util/transaction";
 import { z } from "zod";
 import { warning } from "../warning/warning.sql";
 import { Event, alert } from "./alert.sql";
+import { db } from "../drizzle";
+import { user } from "../user/user.sql";
+import { Slack } from "../slack";
+import type { KnownBlock } from "@slack/web-api";
+import { Warning } from "../warning";
+const ses = new SESv2Client({});
 
 export module Alert {
   export const Info = z.object({
@@ -60,9 +67,9 @@ export module Alert {
     z.object({
       app: z.string(),
       stage: z.string(),
-      event: z.enum(Event),
+      events: z.array(z.enum(Event)),
     }),
-    async ({ app, stage, event }) => {
+    async ({ app, stage, events }) => {
       const alerts = await useTransaction((tx) =>
         tx
           .select()
@@ -74,7 +81,7 @@ export module Alert {
         (alert) =>
           (alert.source.app === "*" || alert.source.app.includes(app)) &&
           (alert.source.stage === "*" || alert.source.stage.includes(stage)) &&
-          (alert.event ?? "issue") === event
+          events.includes(alert.event ?? "issue")
       );
     }
   );
@@ -124,5 +131,93 @@ export module Alert {
         .delete(alert)
         .where(and(eq(alert.id, input), eq(alert.workspaceID, useWorkspace())))
     )
+  );
+
+  export const sendSlack = zod(
+    z.object({
+      stageID: z.string().cuid2(),
+      alertID: z.string().cuid2(),
+      destination: z.custom<SlackDestination>(),
+      blocks: z.array(z.custom<KnownBlock>()),
+      text: z.string().min(1),
+    }),
+    async ({ stageID, alertID, destination, blocks, text }) => {
+      try {
+        console.log("sending slack");
+        await Slack.send({
+          channel: destination.properties.channel,
+          blocks,
+          text,
+        });
+        await Warning.remove({
+          stageID,
+          type: "issue_alert_slack",
+          target: alertID,
+        });
+      } catch {
+        await Warning.create({
+          stageID,
+          type: "issue_alert_slack",
+          target: alertID,
+          data: {
+            channel: destination.properties.channel,
+          },
+        });
+      }
+    }
+  );
+  export const sendEmail = zod(
+    z.object({
+      destination: z.custom<EmailDestination>(),
+      subject: z.string().min(1),
+      html: z.string().min(1),
+      plain: z.string().min(1),
+      replyToAddress: z.string().min(1),
+      fromAddress: z.string().min(1),
+    }),
+    ({ destination, subject, html, plain, replyToAddress, fromAddress }) =>
+      useTransaction(async (tx) => {
+        const users = await db
+          .select({ email: user.email })
+          .from(user)
+          .where(
+            and(
+              eq(user.workspaceID, useWorkspace()),
+              destination.properties.users === "*"
+                ? undefined
+                : inArray(user.id, destination.properties.users),
+              isNull(user.timeDeleted),
+              isNotNull(user.timeSeen)
+            )
+          );
+        console.log(
+          "sending email to",
+          users.map((u) => u.email)
+        );
+        if (!users.length) return;
+
+        try {
+          await ses.send(
+            new SendEmailCommand({
+              Destination: {
+                ToAddresses: users.map((u) => u.email),
+              },
+              ReplyToAddresses: [replyToAddress],
+              FromEmailAddress: fromAddress,
+              Content: {
+                Simple: {
+                  Body: {
+                    Html: { Data: html },
+                    Text: { Data: plain },
+                  },
+                  Subject: { Data: subject },
+                },
+              },
+            })
+          );
+        } catch (ex) {
+          console.error(ex);
+        }
+      })
   );
 }

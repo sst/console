@@ -416,7 +416,8 @@ export function OverviewNext() {
       return (
         !run.stageID &&
         run.error &&
-        run.error.type !== "config_target_skipped" &&
+        run.error.type !== "config_target_returned_undefined" &&
+        run.error.type !== "config_branch_remove_skipped" &&
         run.error.type !== "target_not_matched"
       );
     });

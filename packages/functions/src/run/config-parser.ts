@@ -49,7 +49,7 @@ export async function handler(evt: Run.ConfigParserEvent) {
         evt.trigger
       )});`,
       `if (mod.console?.autodeploy?.target && !target) {`,
-      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"config_target_skipped"}));`,
+      `  fs.writeFileSync("/tmp/eval-output.mjs", JSON.stringify({error:"config_target_returned_undefined"}));`,
       `  process.exit(0);`,
       `}`,
       `if (target && !target.stage) {`,

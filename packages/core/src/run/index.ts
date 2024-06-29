@@ -21,7 +21,15 @@ import {
 } from "../util/transaction";
 import { useWorkspace } from "../actor";
 import { createId } from "@paralleldrive/cuid2";
-import { and, eq, gt, inArray, isNull } from "../drizzle";
+import {
+  and,
+  eq,
+  getTableColumns,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+} from "../drizzle";
 import { event } from "../event";
 import {
   Log,
@@ -47,6 +55,12 @@ import { LambdaRunner } from "./lambda-runner";
 import { CodebuildRunner } from "./codebuild-runner";
 import { Replicache } from "../replicache";
 import { minimatch } from "minimatch";
+import { app, stage } from "../app/app.sql";
+import { workspace } from "../workspace/workspace.sql";
+import { Alert } from "../alert";
+import type { KnownBlock } from "@slack/web-api";
+import { render } from "@jsx-email/render";
+import { AutodeployEmail } from "@console/mail/emails/templates/AutodeployEmail";
 
 export module Run {
   const DEFAULT_ENGINE = "codebuild";
@@ -55,6 +69,56 @@ export module Run {
   const RUNNER_INACTIVE_TIME = 604800000; // 1 week
   const RUNNER_WARMING_INTERVAL = 300000; // 5 minutes
   const RUNNER_WARMING_INACTIVE_TIME = 86400000; // 1 day
+  const ERROR_STATUS_MAP = (error: RunError | null) => {
+    if (!error) return "succeeded";
+    switch (error.type) {
+      case "config_target_returned_undefined":
+      case "config_branch_remove_skipped":
+      case "target_not_matched":
+        return "skipped";
+      default:
+        return "failed";
+    }
+  };
+  const ERROR_MESSAGE_MAP = (error: RunError) => {
+    switch (error.type) {
+      case "config_not_found":
+        return "`sst.config.ts` was found in the repo root";
+      case "config_build_failed":
+        return "Failed to compile `sst.config.ts`";
+      case "config_parse_failed":
+        return "Failed to run `sst.config.ts`";
+      case "config_evaluate_failed":
+        return "Error evaluating `sst.config.ts`";
+      case "config_target_returned_undefined":
+        return "`console.autodeploy.target` returned `undefined`";
+      case "config_branch_remove_skipped":
+        return "Skipped branch remove";
+      case "config_target_no_stage":
+        return "`console.autodeploy.target` did not return a stage";
+      case "config_v2_unsupported":
+        return "Autodeploy does not support SST v2 apps";
+      case "config_app_name_mismatch":
+        return `\`sst.config.ts\` is for app \`${error.properties?.name}\``;
+      case "target_not_found":
+        return "Add a target in your app settings";
+      case "target_not_matched":
+        return `No matching targets for \`${error.properties?.stage}\` in the app settings`;
+      case "target_missing_aws_account":
+        return `No AWS account for \`${error.properties?.target}\` in the app settings`;
+      case "target_missing_workspace":
+        return `AWS account for \`${error.properties?.target}\` is not configured`;
+      case "run_failed":
+        return error.properties?.message || "Error running `sst deploy`";
+      case "unknown":
+        return (
+          error.properties?.message ||
+          "Deploy failed before running `sst deploy`"
+        );
+      default:
+        return "Error running this deploy";
+    }
+  };
 
   export type RunTimeoutMonitorEvent = {
     workspaceID: string;
@@ -114,8 +178,8 @@ export module Run {
 
   export const SstConfig = z.object({
     app: z.object({
-      version: z.string().nonempty().optional(),
-      name: z.string().nonempty(),
+      version: z.string().min(1).optional(),
+      name: z.string().min(1),
       providers: z.record(z.any()).optional(),
     }),
     stage: z.string(),
@@ -133,33 +197,34 @@ export module Run {
     Created: event(
       "run.created",
       z.object({
-        stageID: z.string().nonempty(),
+        stageID: z.string().min(1),
       })
     ),
     Completed: event(
       "run.completed",
       z.object({
-        stageID: z.string().nonempty(),
+        runID: z.string().min(1),
+        stageID: z.string().min(1),
       })
     ),
     RunnerStarted: event(
       "runner.started",
       z.object({
-        workspaceID: z.string().nonempty(),
+        workspaceID: z.string().min(1),
         engine: z.enum(Engine),
-        runID: z.string().nonempty(),
-        logGroup: z.string().nonempty(),
-        logStream: z.string().nonempty(),
-        awsRequestId: z.string().nonempty().optional(),
+        runID: z.string().min(1),
+        logGroup: z.string().min(1),
+        logStream: z.string().min(1),
+        awsRequestId: z.string().min(1).optional(),
         timestamp: z.number().int(),
       })
     ),
     RunnerCompleted: event(
       "runner.completed",
       z.object({
-        workspaceID: z.string().nonempty(),
-        runID: z.string().nonempty(),
-        error: z.string().nonempty().optional(),
+        workspaceID: z.string().min(1),
+        runID: z.string().min(1),
+        error: z.string().min(1).optional(),
       })
     ),
   };
@@ -218,7 +283,7 @@ export module Run {
 
   export const parseSstConfig = zod(
     z.object({
-      content: z.string().nonempty(),
+      content: z.string().min(1),
       trigger: Trigger,
     }),
     async (input) => {
@@ -282,7 +347,7 @@ export module Run {
           trigger.action === "removed" &&
           !sstConfig.console.autodeploy.target
         )
-          return { type: "config_target_skipped" as const };
+          return { type: "config_branch_remove_skipped" as const };
 
         // Get AWS Account ID from Run Env
         const allEnv = await RunConfig.list(appID);
@@ -439,6 +504,9 @@ export module Run {
     let runner;
     let context = "initialize runner";
     try {
+      // TODO
+      throw new Error("Manual error!!!");
+
       if (!run.stageID) throw new Error("Run is not associated with a stage");
       if (!run.config) throw new Error("Run does not have a config");
 
@@ -594,7 +662,7 @@ export module Run {
   export const complete = zod(
     z.object({
       runID: z.string().cuid2(),
-      error: z.string().nonempty().optional(),
+      error: z.string().min(1).optional(),
     }),
     async ({ runID, error }) => {
       const run = await useTransaction((tx) =>
@@ -636,7 +704,7 @@ export module Run {
           .execute();
 
         await createTransactionEffect(() =>
-          Event.Completed.publish({ stageID: run.stageID! })
+          Event.Completed.publish({ runID, stageID: run.stageID! })
         );
       });
     }
@@ -645,10 +713,10 @@ export module Run {
   export const markRunStarted = zod(
     z.object({
       engine: z.enum(Engine),
-      runID: z.string().nonempty(),
-      awsRequestId: z.string().nonempty().optional(),
-      logGroup: z.string().nonempty(),
-      logStream: z.string().nonempty(),
+      runID: z.string().min(1),
+      awsRequestId: z.string().min(1).optional(),
+      logGroup: z.string().min(1),
+      logStream: z.string().min(1),
       timestamp: z.number().int(),
     }),
     async (input) =>
@@ -733,7 +801,7 @@ export module Run {
   export const setRunnerWarmer = zod(
     z.object({
       runnerID: z.string().cuid2(),
-      warmer: z.string().nonempty(),
+      warmer: z.string().min(1),
     }),
     async (input) => {
       return await useTransaction((tx) =>
@@ -772,7 +840,7 @@ export module Run {
 
   export const lookupRunner = zod(
     z.object({
-      region: z.string().nonempty(),
+      region: z.string().min(1),
       awsAccountID: z.string().cuid2(),
       appRepoID: z.string().cuid2(),
       runnerConfig: AutodeployConfigRunner.optional(),
@@ -809,8 +877,8 @@ export module Run {
     z.object({
       appRepoID: z.string().cuid2(),
       awsAccountID: z.string().cuid2(),
-      awsAccountExternalID: z.string().nonempty(),
-      region: z.string().nonempty(),
+      awsAccountExternalID: z.string().min(1),
+      region: z.string().min(1),
       runnerConfig: AutodeployConfigRunner.optional(),
       credentials: z.custom<Credentials>(),
     }),
@@ -976,11 +1044,11 @@ export module Run {
 
   export const warmRunner = zod(
     z.object({
-      region: z.string().nonempty(),
+      region: z.string().min(1),
       engine: z.enum(Engine),
       resource: Resource,
       credentials: z.custom<Credentials>(),
-      cloneUrl: z.string().nonempty(),
+      cloneUrl: z.string().min(1),
       instances: z.number().int(),
     }),
     async ({ region, engine, resource, credentials, cloneUrl, instances }) => {
@@ -1079,4 +1147,133 @@ export module Run {
       );
     }
   );
+
+  export const alert = zod(Run.shape.id, async (runID) => {
+    const run = await useTransaction((tx) =>
+      tx
+        .select({
+          ...getTableColumns(runTable),
+          appName: app.name,
+          stageName: stage.name,
+          workspaceSlug: workspace.slug,
+        })
+        .from(runTable)
+        .innerJoin(workspace, eq(workspace.id, runTable.workspaceID))
+        .innerJoin(
+          stage,
+          and(
+            eq(stage.id, runTable.stageID),
+            eq(stage.workspaceID, useWorkspace())
+          )
+        )
+        .innerJoin(
+          app,
+          and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace()))
+        )
+        .where(
+          and(
+            eq(runTable.workspaceID, useWorkspace()),
+            eq(runTable.id, runID),
+            isNotNull(runTable.stageID)
+          )
+        )
+        .execute()
+        .then((x) => x[0])
+    );
+    if (!run) return;
+
+    const { appName, stageName, workspaceSlug } = run;
+    const status = ERROR_STATUS_MAP(run.error);
+    const message = [
+      { pushed: "Deploy", removed: "Remove" }[run.trigger.action],
+      {
+        succeeded: "succeeded",
+        skipped: "skipped",
+        failed: "failed",
+      }[status],
+    ].join(" ");
+    const context =
+      status === "failed" ? ERROR_MESSAGE_MAP(run.error!) : "View deploy";
+    const trigger =
+      run.trigger.type === "branch"
+        ? `branch ${run.trigger.branch}`
+        : `pr#${run.trigger.number}`;
+    const commit = run.trigger.commit.id.slice(0, 7);
+    const commitUrl = `https://github.com/${run.trigger.repo.owner}/${run.trigger.repo.repo}/commit/${run.trigger.commit.id}`;
+    const consoleUrl = "https://console.sst.dev";
+    const runUrl = `https://console.sst.dev/${workspaceSlug}/${appName}/${stageName}/autodeploy/${runID}`;
+
+    const alerts = await Alert.list({
+      app: appName,
+      stage: stageName,
+      events:
+        status === "failed"
+          ? ["autodeploy", "autodeploy.error"]
+          : ["autodeploy"],
+    });
+
+    for (const alert of alerts) {
+      const { destination } = alert;
+
+      if (destination.type === "slack") {
+        await Alert.sendSlack({
+          stageID: run.stageID!,
+          alertID: alert.id,
+          destination,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: [
+                  message,
+                  `*<${runUrl} | ${context}>*`,
+                  "_" + [appName, stageName].join(" / ") + "_",
+                ].join("\n"),
+              },
+            },
+            {
+              type: "context",
+              elements: [
+                {
+                  type: "mrkdwn",
+                  text: [
+                    `Using ${trigger}, commit <${commitUrl} | ${commit}>`,
+                  ].join("\n"),
+                },
+              ],
+            },
+          ],
+          text: message,
+        });
+      }
+
+      if (destination.type === "email") {
+        await Alert.sendEmail({
+          destination,
+          subject: message,
+          html: render(
+            // @ts-ignore
+            AutodeployEmail({
+              stage: stageName,
+              app: appName,
+              subject: message,
+              message,
+              context,
+              trigger,
+              commit,
+              commitUrl,
+              assetsUrl: `https://console.sst.dev/email`,
+              consoleUrl,
+              runUrl,
+              workspace: run.workspaceSlug,
+            })
+          ),
+          plain: message,
+          replyToAddress: `alert+autodeploy@${process.env.EMAIL_DOMAIN}`,
+          fromAddress: `${appName}/${stageName} via SST <alert+autodeploy@${process.env.EMAIL_DOMAIN}>`,
+        });
+      }
+    }
+  });
 }

@@ -18,6 +18,7 @@ import {
 } from "aws-cdk-lib/aws-iam";
 import { Secrets } from "./secrets";
 import { Events } from "./events";
+import { DNS } from "./dns";
 
 export function Run({ stack, app }: StackContext) {
   const secrets = use(Secrets);
@@ -283,6 +284,16 @@ export function Run({ stack, app }: StackContext) {
         runTimeoutMonitorScheduleGroup.name!,
       RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN: scheduleRole.roleArn,
       RUN_TIMEOUT_MONITOR_FUNCTION_ARN: runTimeoutMonitor.functionArn,
+    },
+  });
+
+  bus.subscribe(stack, "run.completed", {
+    handler: "packages/functions/src/events/run-alert.handler",
+    timeout: "15 minute",
+    bind: [...Object.values(secrets.database)],
+    permissions: ["ses"],
+    environment: {
+      EMAIL_DOMAIN: use(DNS).domain,
     },
   });
 

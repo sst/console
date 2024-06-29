@@ -1,20 +1,7 @@
-import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
-import {
-  eq,
-  and,
-  isNotNull,
-  isNull,
-  gt,
-  sql,
-  getTableColumns,
-  or,
-  lt,
-  inArray,
-} from "drizzle-orm";
+import { eq, and, isNull, gt, sql, getTableColumns, or, lt } from "drizzle-orm";
 import { useWorkspace } from "../actor";
 import { app, stage } from "../app/app.sql";
 import { db } from "../drizzle";
-import { Slack } from "../slack";
 import { workspace } from "../workspace/workspace.sql";
 import { issue, issueAlertLimit } from "./issue.sql";
 import { createSelectSchema } from "drizzle-zod";
@@ -23,13 +10,9 @@ import { z } from "zod";
 import { IssueEmail } from "@console/mail/emails/templates/IssueEmail";
 import { IssueRateLimitEmail } from "@console/mail/emails/templates/IssueRateLimitEmail";
 import { render } from "@jsx-email/render";
-import { user } from "../user/user.sql";
-import { KnownBlock } from "@slack/web-api";
-import { Warning } from "../warning";
+import type { KnownBlock } from "@slack/web-api";
 import { Workspace } from "../workspace";
 import { Alert } from "../alert";
-
-const ses = new SESv2Client({});
 
 export const Limit = createSelectSchema(issueAlertLimit);
 
@@ -93,7 +76,7 @@ export const triggerIssue = zod(
     const alerts = await Alert.list({
       app: result.appName,
       stage: result.stageName,
-      event: "issue",
+      events: ["issue"],
     });
 
     console.log("alerts", alerts.length);
@@ -142,94 +125,34 @@ export const triggerIssue = zod(
             },
           });
         }
-        try {
-          console.log("sending slack");
-          await Slack.send({
-            channel: destination.properties.channel,
-            blocks,
-            text: `${result.error}: ${result.message.substring(0, 512)}`,
-          });
-          await Warning.remove({
-            stageID: input.stageID,
-            type: "issue_alert_slack",
-            target: alert.id,
-          });
-        } catch {
-          await Warning.create({
-            stageID: input.stageID,
-            type: "issue_alert_slack",
-            target: alert.id,
-            data: {
-              channel: destination.properties.channel,
-            },
-          });
-        }
+        await Alert.sendSlack({
+          stageID: input.stageID,
+          alertID: alert.id,
+          destination,
+          blocks,
+          text: `${result.error}: ${result.message.substring(0, 512)}`,
+        });
       }
 
       if (destination.type === "email") {
-        console.log("rendering email");
-        const html = render(
-          // @ts-ignore
-          IssueEmail({
-            issue: result,
-            stage: result.stageName,
-            app: result.appName,
-            assetsUrl: `https://console.sst.dev/email`,
-            consoleUrl: "https://console.sst.dev",
-            workspace: result.workspaceSlug,
-          })
-        );
-        console.log("rendered email");
-        const users = await db
-          .select({
-            email: user.email,
-          })
-          .from(user)
-          .where(
-            and(
-              eq(user.workspaceID, useWorkspace()),
-              destination.properties.users === "*"
-                ? undefined
-                : inArray(user.id, destination.properties.users),
-              isNull(user.timeDeleted),
-              isNotNull(user.timeSeen)
-            )
-          );
-        console.log(
-          "sending email to",
-          users.map((u) => u.email)
-        );
-        if (!users.length) continue;
-        try {
-          await ses.send(
-            new SendEmailCommand({
-              Destination: {
-                ToAddresses: users.map((u) => u.email),
-              },
-              ReplyToAddresses: [
-                `alert+issues+${result.id}@${process.env.EMAIL_DOMAIN}`,
-              ],
-              FromEmailAddress: `${result.appName}/${result.stageName} via SST <alert+issues+${result.id}@${process.env.EMAIL_DOMAIN}>`,
-              Content: {
-                Simple: {
-                  Body: {
-                    Html: {
-                      Data: html,
-                    },
-                    Text: {
-                      Data: result.message,
-                    },
-                  },
-                  Subject: {
-                    Data: `Error: ${encodeURIComponent(result.error)}`,
-                  },
-                },
-              },
+        await Alert.sendEmail({
+          destination,
+          subject: `Error: ${encodeURIComponent(result.error)}`,
+          html: render(
+            // @ts-ignore
+            IssueEmail({
+              issue: result,
+              stage: result.stageName,
+              app: result.appName,
+              assetsUrl: `https://console.sst.dev/email`,
+              consoleUrl: "https://console.sst.dev",
+              workspace: result.workspaceSlug,
             })
-          );
-        } catch (ex) {
-          console.error(ex);
-        }
+          ),
+          plain: result.message,
+          replyToAddress: `alert+issues+${result.id}@${process.env.EMAIL_DOMAIN}`,
+          fromAddress: `${result.appName}/${result.stageName} via SST <alert+issues+${result.id}@${process.env.EMAIL_DOMAIN}>`,
+        });
       }
     }
 
@@ -258,7 +181,7 @@ export const triggerRateLimit = zod(
     const alerts = await Alert.list({
       app: input.app,
       stage: input.stage,
-      event: "issue",
+      events: ["issue"],
     });
 
     for (const alert of alerts) {
@@ -287,90 +210,36 @@ export const triggerRateLimit = zod(
           },
         ];
 
-        try {
-          console.log("sending slack");
-          await Slack.send({
-            channel: destination.properties.channel,
-            blocks,
-            text: message,
-          });
-          await Warning.remove({
-            stageID: input.stageID,
-            type: "issue_alert_slack",
-            target: alert.id,
-          });
-        } catch {
-          await Warning.create({
-            stageID: input.stageID,
-            type: "issue_alert_slack",
-            target: alert.id,
-            data: {
-              channel: destination.properties.channel,
-            },
-          });
-        }
+        await Alert.sendSlack({
+          stageID: input.stageID,
+          alertID: alert.id,
+          destination,
+          blocks,
+          text: message,
+        });
       }
 
       if (destination.type === "email") {
         const subject = "Issues temporarily disabled";
-        const html = render(
-          // @ts-ignore
-          IssueRateLimitEmail({
-            stage: input.stage,
-            app: input.app,
-            subject,
-            message,
-            assetsUrl: `https://console.sst.dev/email`,
-            consoleUrl: "https://console.sst.dev",
-            workspace: workspace!.slug,
-          })
-        );
-        const users = await db
-          .select({
-            email: user.email,
-          })
-          .from(user)
-          .where(
-            and(
-              eq(user.workspaceID, useWorkspace()),
-              destination.properties.users === "*"
-                ? undefined
-                : inArray(user.id, destination.properties.users),
-              isNull(user.timeDeleted)
-            )
-          );
-        console.log(
-          "sending email to",
-          users.map((u) => u.email)
-        );
-        try {
-          await ses.send(
-            new SendEmailCommand({
-              Destination: {
-                ToAddresses: users.map((u) => u.email),
-              },
-              ReplyToAddresses: [`alert+issues@${process.env.EMAIL_DOMAIN}`],
-              FromEmailAddress: `${input.app}/${input.stage} via SST <alert+issues@${process.env.EMAIL_DOMAIN}>`,
-              Content: {
-                Simple: {
-                  Body: {
-                    Html: {
-                      Data: html,
-                    },
-                    Text: {
-                      Data: message,
-                    },
-                  },
-                  Subject: {
-                    Data: subject,
-                  },
-                },
-              },
+        await Alert.sendEmail({
+          destination,
+          subject,
+          html: render(
+            // @ts-ignore
+            IssueRateLimitEmail({
+              stage: input.stage,
+              app: input.app,
+              subject,
+              message,
+              assetsUrl: `https://console.sst.dev/email`,
+              consoleUrl: "https://console.sst.dev",
+              workspace: workspace!.slug,
             })
-          );
-        } catch (ex) {
-          console.error(ex);
-        }
+          ),
+          plain: message,
+          replyToAddress: `alert+issues@${process.env.EMAIL_DOMAIN}`,
+          fromAddress: `${input.app}/${input.stage} via SST <alert+issues@${process.env.EMAIL_DOMAIN}>`,
+        });
       }
     }
   }

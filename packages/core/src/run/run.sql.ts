@@ -40,7 +40,8 @@ type RunErrors = {
   config_build_failed: {};
   config_parse_failed: {};
   config_evaluate_failed: {};
-  config_target_skipped: {};
+  config_target_returned_undefined: {};
+  config_branch_remove_skipped: {};
   config_target_no_stage: {};
   config_v2_unsupported: {};
   config_app_name_mismatch: { name: string };
