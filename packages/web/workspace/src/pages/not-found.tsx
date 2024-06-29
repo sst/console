@@ -21,6 +21,7 @@ const NotAllowedDesc = styled("div", {
 
 interface ErrorScreenProps {
   inset?: "none" | "header" | "header-tabs";
+  message?: string;
   header?: boolean;
 }
 export function NotFound(props: ErrorScreenProps) {
@@ -31,7 +32,7 @@ export function NotFound(props: ErrorScreenProps) {
       </Show>
       <Fullscreen inset={props.inset ? props.inset : props.header ? "header" : "none"}>
         <Stack space="2.5" horizontal="center">
-          <Text size="lg">Page not found</Text>
+          <Text size="lg">{props.message || "Page not found"}</Text>
           <HomeLink href="/">Go back home</HomeLink>
         </Stack>
       </Fullscreen>

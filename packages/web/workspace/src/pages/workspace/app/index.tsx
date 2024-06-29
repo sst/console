@@ -34,7 +34,10 @@ export function App() {
   });
 
   return (
-    <Show when={appContext.app}>
+    <Show
+      when={appContext.app}
+      fallback={<NotFound header inset="header" message="App not found" />}
+    >
       <AppContext.Provider value={appContext}>
         <HeaderProvider>
           <Routes>
