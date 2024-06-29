@@ -131,13 +131,10 @@ export function ResourcesProvider(props: ParentProps) {
                 title: `${item.route}`,
                 run(control: any) {
                   nav(
-                    `/${
-                      params.workspaceSlug
-                    }/${appName}/${stageName}/resources/logs/${
-                      fn.id
-                    }?logGroup=${
-                      resource.metadata.routes!.logGroupPrefix +
-                      item.logGroupPath
+                    `/${params.workspaceSlug
+                    }/${appName}/${stageName}/resources/logs/${fn.id
+                    }?logGroup=${resource.metadata.routes!.logGroupPrefix +
+                    item.logGroupPath
                     }`,
                   );
                   control.hide();
@@ -149,11 +146,10 @@ export function ResourcesProvider(props: ParentProps) {
               {
                 icon: IconApi,
                 category: "API Routes",
-                title: `${
-                  resource.metadata.routes.find(
-                    (r: any) => r.fn?.node === fn.addr,
-                  )?.route
-                }`,
+                title: `${resource.metadata.routes.find(
+                  (r: any) => r.fn?.node === fn.addr,
+                )?.route
+                  }`,
                 run,
               },
             ];

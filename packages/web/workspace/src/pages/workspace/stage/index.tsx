@@ -38,19 +38,24 @@ export function Stage() {
   const stageContext = createStageContext();
 
   return (
-    <Show when={stageContext.app && stageContext.stage}>
-      <StageContext.Provider value={stageContext}>
-        <StateResourcesProvider>
-          <ResourcesProvider>
-            <IssuesProvider>
-              <HeaderProvider>
-                <Inner />
-              </HeaderProvider>
-            </IssuesProvider>
-          </ResourcesProvider>
-        </StateResourcesProvider>
-      </StageContext.Provider>
-    </Show>
+    <Switch>
+      <Match when={stageContext.app && stageContext.stage}>
+        <StageContext.Provider value={stageContext}>
+          <StateResourcesProvider>
+            <ResourcesProvider>
+              <IssuesProvider>
+                <HeaderProvider>
+                  <Inner />
+                </HeaderProvider>
+              </IssuesProvider>
+            </ResourcesProvider>
+          </StateResourcesProvider>
+        </StageContext.Provider>
+      </Match >
+      <Match when={!stageContext.stage}>
+        <NotFound header inset="header" message="Stage not found" />
+      </Match >
+    </Switch>
   );
 }
 
@@ -216,6 +221,9 @@ export function Inner() {
             />
           </Fullscreen>
         </Match>
+        <Match when={ctx.stage.timeDeleted}>
+          <NotFound inset="header" message="Stage has been removed" />
+        </Match>
         <Match when={true}>
           <PageHeader>
             <Row space="5" vertical="center">
@@ -229,14 +237,16 @@ export function Inner() {
                   </TabTitle>
                 </Link>
               </Show>
-              <Link href="issues">
-                <TabTitle
-                  size="sm"
-                  count={issuesCount() ? issuesCount().toString() : undefined}
-                >
-                  Issues
-                </TabTitle>
-              </Link>
+              <Show when={!ctx.stage.timeDeleted}>
+                <Link href="issues">
+                  <TabTitle
+                    size="sm"
+                    count={issuesCount() ? issuesCount().toString() : undefined}
+                  >
+                    Issues
+                  </TabTitle>
+                </Link>
+              </Show>
               <Show when={updates().length > 0}>
                 <Link href="logs">
                   <TabTitle size="sm">Logs</TabTitle>
