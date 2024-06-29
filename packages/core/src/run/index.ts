@@ -504,9 +504,6 @@ export module Run {
     let runner;
     let context = "initialize runner";
     try {
-      // TODO
-      throw new Error("Manual error!!!");
-
       if (!run.stageID) throw new Error("Run is not associated with a stage");
       if (!run.config) throw new Error("Run does not have a config");
 

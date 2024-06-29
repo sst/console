@@ -53,7 +53,9 @@ export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
     case "run_failed":
       return error.properties?.message || "Error running `sst deploy`";
     case "unknown":
-      return error.properties?.message || "Deploy failed before running `sst deploy`";
+      return (
+        error.properties?.message || "Deploy failed before running `sst deploy`"
+      );
     default:
       return "Error running this deploy";
   }
@@ -366,12 +368,14 @@ function RunItem({ run }: { run: Run.Run }) {
         ? "error"
         : "updated"
       : run.error
-        ? run.error.type === "config_target_skipped" || run.error.type === "target_not_matched"
-          ? "skipped"
-          : "error"
-        : run.active
-          ? "updating"
-          : "queued"
+      ? run.error.type === "config_branch_remove_skipped" ||
+        run.error.type === "config_target_returned_undefined" ||
+        run.error.type === "target_not_matched"
+        ? "skipped"
+        : "error"
+      : run.active
+      ? "updating"
+      : "queued"
   );
 
   return (
@@ -379,7 +383,9 @@ function RunItem({ run }: { run: Run.Run }) {
       <RunLeftCol>
         <RunStatus>
           <RunStatusIcon status={status()} />
-          <RunLink href={run.id} error={status() === "error"}>{STATUS_MAP[status()!]}</RunLink>
+          <RunLink href={run.id} error={status() === "error"}>
+            {STATUS_MAP[status()!]}
+          </RunLink>
         </RunStatus>
         <RunMessage>
           <Switch>
@@ -408,7 +414,7 @@ function RunItem({ run }: { run: Run.Run }) {
             target="_blank"
             href={githubCommit(
               runInfo()!.repoURL,
-              runInfo()!.trigger.commit.id,
+              runInfo()!.trigger.commit.id
             )}
           >
             <RunGitIcon size="md">
@@ -432,20 +438,15 @@ function RunItem({ run }: { run: Run.Run }) {
             <RunGitBranch>{runInfo()!.branch}</RunGitBranch>
           </RunGitLink>
           <Show when={runInfo()!.trigger.commit.message}>
-            <RunGitMessage>
-              {runInfo()!.trigger.commit.message}
-            </RunGitMessage>
+            <RunGitMessage>{runInfo()!.trigger.commit.message}</RunGitMessage>
           </Show>
         </RunGit>
         <RunInfo>
           <RunSource>
-            <Show
-              when={run.time.created}
-              fallback={<RunTime>—</RunTime>}
-            >
+            <Show when={run.time.created} fallback={<RunTime>—</RunTime>}>
               <RunTime
                 title={DateTime.fromISO(run.time.created!).toLocaleString(
-                  DateTime.DATETIME_FULL,
+                  DateTime.DATETIME_FULL
                 )}
               >
                 {formatSinceTime(DateTime.fromISO(run.time.created!).toSQL()!)}
@@ -456,8 +457,9 @@ function RunItem({ run }: { run: Run.Run }) {
             <img
               width="24"
               height="24"
-              src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                }?s=48&v=4`}
+              src={`https://avatars.githubusercontent.com/u/${
+                runInfo()!.trigger.sender.id
+              }?s=48&v=4`}
             />
           </RunSenderAvatar>
         </RunInfo>
@@ -480,9 +482,7 @@ export function List() {
 
   return (
     <Content>
-      <For each={runs.value}>
-        {(run) => <RunItem run={run} />}
-      </For>
+      <For each={runs.value}>{(run) => <RunItem run={run} />}</For>
     </Content>
   );
 }

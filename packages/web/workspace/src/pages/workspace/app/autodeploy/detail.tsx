@@ -211,7 +211,9 @@ export function Detail() {
   const rep = useReplicache();
   const replicacheStatus = useReplicacheStatus();
   const data = createSubscription(async (tx) => {
-    const runs = (await RunStore.all(tx)).filter(run => run.id === params.runID);
+    const runs = (await RunStore.all(tx)).filter(
+      (run) => run.id === params.runID
+    );
     if (!runs.length) return;
 
     const run = runs[0];
@@ -232,12 +234,14 @@ export function Detail() {
         ? "error"
         : "updated"
       : run.error
-        ? run.error.type === "config_target_skipped" || run.error.type === "target_not_matched"
-          ? "skipped"
-          : "error"
-        : run.active
-          ? "updating"
-          : "queued";
+      ? run.error.type === "config_branch_remove_skipped" ||
+        run.error.type === "config_target_returned_undefined" ||
+        run.error.type === "target_not_matched"
+        ? "skipped"
+        : "error"
+      : run.active
+      ? "updating"
+      : "queued";
   });
 
   function Header() {
@@ -245,9 +249,7 @@ export function Detail() {
       <Stack space="2.5">
         <PageTitle>
           <RunStatusIcon status={status()} />
-          <PageTitleCopy>
-            {STATUS_MAP[status()!]}
-          </PageTitleCopy>
+          <PageTitleCopy>{STATUS_MAP[status()!]}</PageTitleCopy>
         </PageTitle>
         <Switch>
           <Match when={data.value!.run.error}>
@@ -289,8 +291,9 @@ export function Detail() {
                 <img
                   width={AVATAR_SIZE}
                   height={AVATAR_SIZE}
-                  src={`https://avatars.githubusercontent.com/u/${trigger.sender.id
-                    }?s=${2 * AVATAR_SIZE}&v=4`}
+                  src={`https://avatars.githubusercontent.com/u/${
+                    trigger.sender.id
+                  }?s=${2 * AVATAR_SIZE}&v=4`}
                 />
               </GitAvatar>
               <Stack space="0.5">
@@ -302,20 +305,12 @@ export function Detail() {
                   <GitIcon size="md">
                     <IconCommit />
                   </GitIcon>
-                  <GitCommit>
-                    {formatCommit(trigger.commit.id)}
-                  </GitCommit>
+                  <GitCommit>{formatCommit(trigger.commit.id)}</GitCommit>
                 </GitLink>
-                <GitLink
-                  target="_blank"
-                  rel="noreferrer"
-                  href={runInfo()!.uri}
-                >
+                <GitLink target="_blank" rel="noreferrer" href={runInfo()!.uri}>
                   <GitIcon size="sm">
                     <Switch>
-                      <Match
-                        when={trigger.type === "pull_request"}
-                      >
+                      <Match when={trigger.type === "pull_request"}>
                         <IconPr />
                       </Match>
                       <Match when={true}>
@@ -343,16 +338,16 @@ export function Detail() {
               title={
                 data.value!.run.time.started
                   ? DateTime.fromISO(
-                    data.value!.run.time.started!
-                  ).toLocaleString(DateTime.DATETIME_FULL)
+                      data.value!.run.time.started!
+                    ).toLocaleString(DateTime.DATETIME_FULL)
                   : undefined
               }
             >
               {data.value!.run.time.started
                 ? formatSinceTime(
-                  DateTime.fromISO(data.value!.run.time.started!).toSQL()!,
-                  true
-                )
+                    DateTime.fromISO(data.value!.run.time.started!).toSQL()!,
+                    true
+                  )
                 : "—"}
             </Text>
           </Stack>
@@ -368,11 +363,11 @@ export function Detail() {
             >
               {data.value!.run.time.started && data.value!.run.time.completed
                 ? formatDuration(
-                  DateTime.fromISO(data.value!.run.time.completed!)
-                    .diff(DateTime.fromISO(data.value!.run.time.started!))
-                    .as("milliseconds"),
-                  true
-                )
+                    DateTime.fromISO(data.value!.run.time.completed!)
+                      .diff(DateTime.fromISO(data.value!.run.time.started!))
+                      .as("milliseconds"),
+                    true
+                  )
                 : "—"}
             </Text>
           </Stack>
@@ -390,22 +385,22 @@ export function Detail() {
         if (!log) return [];
         const results = await fetch(
           import.meta.env.VITE_API_URL +
-          "/rest/log/scan?" +
-          new URLSearchParams(
-            log.engine === "lambda"
-              ? {
-                stageID: data.value!.stage!.id,
-                timestamp: log.timestamp.toString(),
-                logStream: log.logStream,
-                logGroup: log.logGroup,
-                requestID: log.requestID,
-              }
-              : {
-                stageID: data.value!.stage!.id,
-                logStream: log.logStream,
-                logGroup: log.logGroup,
-              }
-          ).toString(),
+            "/rest/log/scan?" +
+            new URLSearchParams(
+              log.engine === "lambda"
+                ? {
+                    stageID: data.value!.stage!.id,
+                    timestamp: log.timestamp.toString(),
+                    logStream: log.logStream,
+                    logGroup: log.logGroup,
+                    requestID: log.requestID,
+                  }
+                : {
+                    stageID: data.value!.stage!.id,
+                    logStream: log.logStream,
+                    logGroup: log.logGroup,
+                  }
+            ).toString(),
           {
             headers: {
               "x-sst-workspace": workspace().id,
@@ -455,9 +450,9 @@ export function Detail() {
               .toLocaleString(DateTime.DATETIME_FULL)}
           >
             Logs —{" "}
-            {DateTime.fromMillis(
-              trimmedLogs()![0].timestamp!
-            ).toLocaleString(DATETIME_NO_TIME)}
+            {DateTime.fromMillis(trimmedLogs()![0].timestamp!).toLocaleString(
+              DATETIME_NO_TIME
+            )}
           </PanelTitle>
         </Show>
         <LogsBackground>
@@ -467,9 +462,7 @@ export function Detail() {
                 <LogTime
                   title={DateTime.fromMillis(entry.timestamp)
                     .toUTC()
-                    .toLocaleString(
-                      DateTime.DATETIME_FULL_WITH_SECONDS
-                    )}
+                    .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}
                 >
                   {DateTime.fromMillis(entry.timestamp).toFormat(
                     "HH:mm:ss.SSS"
@@ -481,8 +474,7 @@ export function Detail() {
           </For>
           <Show
             when={
-              trimmedLogs()?.length === 0 ||
-              !data.value!.run.time.completed
+              trimmedLogs()?.length === 0 || !data.value!.run.time.completed
             }
           >
             <LogsLoading>
