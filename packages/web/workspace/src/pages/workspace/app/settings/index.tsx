@@ -575,94 +575,6 @@ export function Settings() {
     }
   );
 
-  function LastEvent() {
-    const event = createSubscription(async (tx) => {
-      const appRepo = await AppRepoStore.forApp(tx, app.app.id).then(
-        (repos) => repos[0]
-      );
-      if (!appRepo) return;
-      if (!appRepo.lastEvent) return;
-      const ev = appRepo.lastEvent;
-      const repoURL = githubRepo(ev.repo.owner, ev.repo.repo);
-      const uri =
-        ev.type === "branch"
-          ? githubBranch(repoURL, ev.branch)
-          : githubPr(repoURL, ev.number);
-      const branch = ev.type === "branch" ? ev.branch : `pr#${ev.number}`;
-      const commit = ev.commit.id;
-
-      return {
-        status: appRepo.lastEventStatus,
-        time: appRepo.time.lastEvent!,
-        type: ev.type,
-        repoURL,
-        uri,
-        branch,
-        commit,
-      };
-    });
-    return (
-      <Show when={event.value}>
-        <EventRoot>
-          <Stack space="2.5">
-            <EventCommit>
-              <EventCommitLink
-                target="_blank"
-                href={githubCommit(event.value!.repoURL, event.value!.commit)}
-              >
-                <EventCommitIcon>
-                  <IconCommit width="16" height="16" />
-                </EventCommitIcon>
-                {formatCommit(event.value!.commit)}
-              </EventCommitLink>
-              <EventBranchLink target="_blank" href={event.value!.uri}>
-                <EventBranchIcon>
-                  <Switch>
-                    <Match when={event.value!.type === "pull_request"}>
-                      <IconPr width="12" height="12" />
-                    </Match>
-                    <Match when={true}>
-                      <IconGit width="12" height="12" />
-                    </Match>
-                  </Switch>
-                </EventBranchIcon>
-                {event.value!.branch}
-              </EventBranchLink>
-            </EventCommit>
-            <EventResult>
-              <Switch>
-                <Match when={event.value!.status}>
-                  <EventResultIcon status="error">
-                    <IconSubRight />
-                  </EventResultIcon>
-                  <EventResultCopy status="error">
-                    {event.value!.status}
-                  </EventResultCopy>
-                </Match>
-                <Match when={true}>
-                  <EventResultIcon status="success">
-                    <IconSubRight />
-                  </EventResultIcon>
-                  <EventResultCopy status="success">Deployed</EventResultCopy>
-                </Match>
-              </Switch>
-            </EventResult>
-          </Stack>
-          <EventRight>
-            <EventLabel>Last Commit</EventLabel>
-            <EventTime
-              title={DateTime.fromISO(event.value!.time).toLocaleString(
-                DateTime.DATETIME_FULL
-              )}
-            >
-              {formatSinceTime(DateTime.fromISO(event.value!.time).toSQL()!)}
-            </EventTime>
-          </EventRight>
-        </EventRoot>
-      </Show>
-    );
-  }
-
   const [putForm, { Form, Field, FieldArray }] = createForm({
     validate: valiForm(EditTargetForm),
   });
@@ -1012,7 +924,6 @@ export function Settings() {
                             Disconnect
                           </Button>
                         </GitRepoPanelRow>
-                        <LastEvent />
                       </GitRepoPanel>
                       <TargetsRoot>
                         <TargetHeader>
