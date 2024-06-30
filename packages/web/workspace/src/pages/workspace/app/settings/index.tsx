@@ -828,7 +828,7 @@ export function Settings() {
       <PageHeader>
         <Row space="5" vertical="center">
           <Link href="../">
-            <TabTitle size="sm">Stages</TabTitle>
+            <TabTitle size="sm">Environment</TabTitle>
           </Link>
           <Link href="../autodeploy">
             <TabTitle size="sm" count={latestRunError.value ? "•" : ""}>
@@ -1081,7 +1081,7 @@ export function Settings() {
                             <TargetFormRoot>
                               <TargetFormHeader>
                                 <TargetFormHeaderCopy new>
-                                  Add a new target
+                                  Add new environment
                                 </TargetFormHeaderCopy>
                               </TargetFormHeader>
                             </TargetFormRoot>
