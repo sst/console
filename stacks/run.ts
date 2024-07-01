@@ -287,7 +287,7 @@ export function Run({ stack, app }: StackContext) {
     },
   });
 
-  bus.subscribe(stack, "run.completed", {
+  bus.subscribe(stack, ["run.completed", "run.create-failed"], {
     handler: "packages/functions/src/events/run-alert.handler",
     timeout: "15 minute",
     bind: [...Object.values(secrets.database)],

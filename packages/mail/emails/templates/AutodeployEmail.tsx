@@ -39,12 +39,10 @@ const contextInfo = {
 
 interface AutodeployEmailProps {
   app: string;
-  stage: string;
+  stage?: string;
   workspace: string;
   subject: string;
   message: string;
-  context: string;
-  trigger: string;
   commit: string;
   commitUrl: string;
   assetsUrl: string;
@@ -54,12 +52,12 @@ interface AutodeployEmailProps {
 export const AutodeployEmail = ({
   app = "console",
   workspace = "seed",
-  stage = "production",
-  // subject = "Deploy failed",
+  //stage = "production",
+  stage = undefined,
+  //subject = "Deploy failed",
   subject = "Deployed",
-  message = "Deploy failed",
-  // context = "Failed to initialize runner",
-  context = "Deployed successfully to production",
+  //message = "Failed to initialize runner",
+  message = "Deployed successfully to production",
   commit = "7c14080",
   commitUrl = "https://github.com/fwang/ion-playground/commit/7c14080b5675d2b2e02aeb154a73c098ae764776",
   assetsUrl = LOCAL_ASSETS_URL,
@@ -69,10 +67,10 @@ export const AutodeployEmail = ({
   return (
     <Html lang="en">
       <Head>
-        <title>{`SST — ${message}`}</title>
+        <title>{`SST — ${subject}`}</title>
       </Head>
       <Fonts assetsUrl={assetsUrl} />
-      <Preview>{message}</Preview>
+      <Preview>{subject}</Preview>
       <Body style={body} id={Math.random().toString()}>
         <Container style={container}>
           <Section style={frame}>
@@ -104,10 +102,14 @@ export const AutodeployEmail = ({
                 <span>{workspace}</span>
                 <span style={{ ...code, ...breadcrumbColonSeparator }}>:</span>
                 <span>{app}</span>
-                <span style={{ ...code, ...breadcrumbSeparator }}>
-                  &nbsp;/&nbsp;
-                </span>
-                <span>{stage}</span>
+                {stage && (
+                  <>
+                    <span style={{ ...code, ...breadcrumbSeparator }}>
+                      &nbsp;/&nbsp;
+                    </span>
+                    <span>{stage}</span>
+                  </>
+                )}
               </Text>
               <Text style={{ ...heading, ...compactText }}>
                 <Link style={code} href={runUrl}>
@@ -117,7 +119,7 @@ export const AutodeployEmail = ({
             </Section>
             <Section style={{ padding: `${unit}px 0 0 0` }}>
               <Text style={{ ...compactText, ...code }}>
-                <SplitString text={context} split={63} />
+                <SplitString text={message} split={63} />
               </Text>
             </Section>
             <Section style={{ padding: `${unit}px 0 0 0` }}>

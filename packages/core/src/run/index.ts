@@ -55,10 +55,9 @@ import { LambdaRunner } from "./lambda-runner";
 import { CodebuildRunner } from "./codebuild-runner";
 import { Replicache } from "../replicache";
 import { minimatch } from "minimatch";
-import { app, stage } from "../app/app.sql";
+import { app, stage as stageTable } from "../app/app.sql";
 import { workspace } from "../workspace/workspace.sql";
 import { Alert } from "../alert";
-import type { KnownBlock } from "@slack/web-api";
 import { render } from "@jsx-email/render";
 import { AutodeployEmail } from "@console/mail/emails/templates/AutodeployEmail";
 
@@ -198,6 +197,12 @@ export module Run {
       "run.created",
       z.object({
         stageID: z.string().min(1),
+      })
+    ),
+    CreateFailed: event(
+      "run.create-failed",
+      z.object({
+        runID: z.string().min(1),
       })
     ),
     Completed: event(
@@ -422,18 +427,22 @@ export module Run {
       if (!error) return;
 
       // Create failed error
-      await useTransaction((tx) =>
-        tx
+      await useTransaction(async (tx) => {
+        const runID = createId();
+        await tx
           .insert(runTable)
           .values({
-            id: createId(),
+            id: runID,
             workspaceID: useWorkspace(),
             appID,
             trigger,
             error,
           })
-          .execute()
-      );
+          .execute();
+        await createTransactionEffect(() =>
+          Event.CreateFailed.publish({ runID })
+        );
+      });
     }
   );
 
@@ -1151,54 +1160,71 @@ export module Run {
         .select({
           ...getTableColumns(runTable),
           appName: app.name,
-          stageName: stage.name,
           workspaceSlug: workspace.slug,
         })
         .from(runTable)
         .innerJoin(workspace, eq(workspace.id, runTable.workspaceID))
         .innerJoin(
-          stage,
-          and(
-            eq(stage.id, runTable.stageID),
-            eq(stage.workspaceID, useWorkspace())
-          )
-        )
-        .innerJoin(
           app,
-          and(eq(app.id, stage.appID), eq(app.workspaceID, useWorkspace()))
+          and(eq(app.id, runTable.appID), eq(app.workspaceID, useWorkspace()))
         )
         .where(
-          and(
-            eq(runTable.workspaceID, useWorkspace()),
-            eq(runTable.id, runID),
-            isNotNull(runTable.stageID)
-          )
+          and(eq(runTable.workspaceID, useWorkspace()), eq(runTable.id, runID))
         )
         .execute()
         .then((x) => x[0])
     );
+    console.log("FOUND RUN!!", run);
     if (!run) return;
 
-    const { appName, stageName, workspaceSlug } = run;
+    const stage =
+      run.stageID === null
+        ? undefined
+        : await useTransaction((tx) =>
+            tx
+              .select()
+              .from(stageTable)
+              .where(
+                and(
+                  eq(stageTable.id, run.stageID!),
+                  eq(stageTable.workspaceID, useWorkspace())
+                )
+              )
+              .execute()
+              .then((x) => x[0])
+          );
+
+    const { appName, workspaceSlug } = run;
+    const stageName = stage?.name;
+
+    // Do not send `skipped` emails
     const status = ERROR_STATUS_MAP(run.error);
-    const message = [
-      { pushed: "Deploy", removed: "Remove" }[run.trigger.action],
-      {
-        succeeded: "succeeded",
-        skipped: "skipped",
-        failed: "failed",
-      }[status],
-    ].join(" ");
-    const context =
-      status === "failed" ? ERROR_MESSAGE_MAP(run.error!) : "View deploy";
-    const trigger =
-      run.trigger.type === "branch"
-        ? `branch ${run.trigger.branch}`
-        : `pr#${run.trigger.number}`;
+    if (status === "skipped") return;
+
+    let subject, message;
+    if (run.trigger.action === "pushed") {
+      if (status === "succeeded") {
+        subject = "Deployed";
+        message = `Deployed successfully to ${stageName}`;
+      } else {
+        subject = "Deploy failed";
+        message = ERROR_MESSAGE_MAP(run.error!);
+      }
+    } else {
+      if (status === "succeeded") {
+        subject = "Removed";
+        message = `Removed ${stageName} successfully`;
+      } else {
+        subject = "Remove failed";
+        message = ERROR_MESSAGE_MAP(run.error!);
+      }
+    }
     const commit = run.trigger.commit.id.slice(0, 7);
     const commitUrl = `https://github.com/${run.trigger.repo.owner}/${run.trigger.repo.repo}/commit/${run.trigger.commit.id}`;
     const consoleUrl = "https://console.sst.dev";
-    const runUrl = `https://console.sst.dev/${workspaceSlug}/${appName}/${stageName}/autodeploy/${runID}`;
+    const runUrl = stageName
+      ? `https://console.sst.dev/${workspaceSlug}/${appName}/${stageName}/autodeploy/${runID}`
+      : `https://console.sst.dev/${workspaceSlug}/${appName}/autodeploy/${runID}`;
 
     const alerts = await Alert.list({
       app: appName,
@@ -1214,7 +1240,7 @@ export module Run {
 
       if (destination.type === "slack") {
         await Alert.sendSlack({
-          stageID: run.stageID!,
+          stageID: run.stageID ?? undefined,
           alertID: alert.id,
           destination,
           blocks: [
@@ -1223,9 +1249,11 @@ export module Run {
               text: {
                 type: "mrkdwn",
                 text: [
+                  `*<${runUrl} | ${subject}>*`,
                   message,
-                  `*<${runUrl} | ${context}>*`,
-                  "_" + [appName, stageName].join(" / ") + "_",
+                  "_" +
+                    [appName, stageName].filter((name) => name).join(" / ") +
+                    "_",
                 ].join("\n"),
               },
             },
@@ -1234,9 +1262,7 @@ export module Run {
               elements: [
                 {
                   type: "mrkdwn",
-                  text: [
-                    `Using ${trigger}, commit <${commitUrl} | ${commit}>`,
-                  ].join("\n"),
+                  text: `Using commit: <${commitUrl} | \`${commit}\`>`,
                 },
               ],
             },
@@ -1254,10 +1280,8 @@ export module Run {
             AutodeployEmail({
               stage: stageName,
               app: appName,
-              subject: message,
+              subject,
               message,
-              context,
-              trigger,
               commit,
               commitUrl,
               assetsUrl: `https://console.sst.dev/email`,
@@ -1268,7 +1292,9 @@ export module Run {
           ),
           plain: message,
           replyToAddress: `alert+autodeploy@${process.env.EMAIL_DOMAIN}`,
-          fromAddress: `${appName}/${stageName} via SST <alert+autodeploy@${process.env.EMAIL_DOMAIN}>`,
+          fromAddress: `${[appName, stageName]
+            .filter((name) => name)
+            .join("/")} via SST <alert+autodeploy@${process.env.EMAIL_DOMAIN}>`,
         });
       }
     }

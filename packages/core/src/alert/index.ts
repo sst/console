@@ -66,7 +66,7 @@ export module Alert {
   export const list = zod(
     z.object({
       app: z.string(),
-      stage: z.string(),
+      stage: z.string().optional(),
       events: z.array(z.enum(Event)),
     }),
     async ({ app, stage, events }) => {
@@ -80,7 +80,9 @@ export module Alert {
       return alerts.filter(
         (alert) =>
           (alert.source.app === "*" || alert.source.app.includes(app)) &&
-          (alert.source.stage === "*" || alert.source.stage.includes(stage)) &&
+          (!stage ||
+            alert.source.stage === "*" ||
+            alert.source.stage.includes(stage)) &&
           events.includes(alert.event ?? "issue")
       );
     }
@@ -135,7 +137,7 @@ export module Alert {
 
   export const sendSlack = zod(
     z.object({
-      stageID: z.string().cuid2(),
+      stageID: z.string().cuid2().optional(),
       alertID: z.string().cuid2(),
       destination: z.custom<SlackDestination>(),
       blocks: z.array(z.custom<KnownBlock>()),
@@ -149,20 +151,22 @@ export module Alert {
           blocks,
           text,
         });
-        await Warning.remove({
-          stageID,
-          type: "issue_alert_slack",
-          target: alertID,
-        });
+        if (stageID)
+          await Warning.remove({
+            stageID,
+            type: "issue_alert_slack",
+            target: alertID,
+          });
       } catch {
-        await Warning.create({
-          stageID,
-          type: "issue_alert_slack",
-          target: alertID,
-          data: {
-            channel: destination.properties.channel,
-          },
-        });
+        if (stageID)
+          await Warning.create({
+            stageID,
+            type: "issue_alert_slack",
+            target: alertID,
+            data: {
+              channel: destination.properties.channel,
+            },
+          });
       }
     }
   );
@@ -218,6 +222,7 @@ export module Alert {
         } catch (ex) {
           console.error(ex);
         }
+        return;
       })
   );
 }
