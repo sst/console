@@ -25,6 +25,8 @@ export async function handler(event, context) {
   if (event.warm && isWarm) return "warmed";
   isWarm = true;
 
+  console.log("[sst.deploy.start]");
+
   let error;
 
   try {
@@ -45,6 +47,7 @@ export async function handler(event, context) {
     error = e.message;
   } finally {
     await publish("runner.completed", { error });
+    console.log("[sst.deploy.end]");
   }
 
   function checkout() {

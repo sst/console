@@ -447,10 +447,10 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
     const trimmedLogs = createMemo(() =>
       pipe(
         logs() || [],
-        dropWhile((r) => !r.message.includes("isWarm")),
+        dropWhile((r) => !r.message.startsWith("[sst.deploy.start]")),
         drop(1),
         filter((r) => r.message.trim() != ""),
-        takeWhile((r) => !r.message.includes(" BUILD State"))
+        takeWhile((r) => !r.message.startsWith("[sst.deploy.end]"))
       )
     );
 
