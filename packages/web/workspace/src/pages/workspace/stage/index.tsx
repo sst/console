@@ -1,8 +1,7 @@
 import { Link, Navigate, Route, Routes, useNavigate } from "@solidjs/router";
-import { JSX, Match, Show, Switch, createMemo, createEffect } from "solid-js";
+import { JSX, Match, Show, Switch, createMemo } from "solid-js";
 import { RunStore, StateUpdateStore } from "$/data/app";
 import { NavigationAction, useCommandBar } from "$/pages/workspace/command-bar";
-import { useFlags } from "$/providers/flags";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import {
   useOutdated,
@@ -15,7 +14,6 @@ import {
   createStageContext,
   StateResourcesProvider,
 } from "./context";
-import { useWorkspace } from "../context";
 import { Logs } from "./logs";
 import { Issues } from "./issues";
 import { Autodeploy } from "./autodeploy";
@@ -51,10 +49,10 @@ export function Stage() {
             </ResourcesProvider>
           </StateResourcesProvider>
         </StageContext.Provider>
-      </Match >
+      </Match>
       <Match when={!stageContext.stage}>
         <NotFound header inset="header" message="Stage not found" />
-      </Match >
+      </Match>
     </Switch>
   );
 }
