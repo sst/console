@@ -75,7 +75,7 @@ export function Autodeploy() {
         <Show
           when={ghInfo.value?.ghOrg}
           fallback={
-            <Link href="../settings#repo">
+            <Link href="../../settings#repo">
               <Button color="github" size="sm">
                 <ButtonIcon size="sm">
                   <IconGitHub />
