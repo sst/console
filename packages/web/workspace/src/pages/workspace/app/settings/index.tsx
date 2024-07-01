@@ -13,7 +13,6 @@ import {
   Text,
   Stack,
   Input,
-  Textarea,
   TabTitle,
   Grower,
   Button,
@@ -38,8 +37,7 @@ import { useAppContext } from "../context";
 import { useWorkspace } from "../../context";
 import { useAuth2 } from "$/providers/auth2";
 import { createId } from "@paralleldrive/cuid2";
-import { IconArrowLongRight, IconEllipsisVertical } from "$/ui/icons";
-import { formatCommit, formatSinceTime } from "$/common/format";
+import { IconEllipsisVertical } from "$/ui/icons";
 import { createEventListener } from "@solid-primitives/event-listener";
 import {
   For,
@@ -51,12 +49,7 @@ import {
   createSignal,
 } from "solid-js";
 import { useReplicache, createSubscription } from "$/providers/replicache";
-import {
-  githubPr,
-  githubRepo,
-  githubBranch,
-  githubCommit,
-} from "$/common/url-builder";
+import { githubRepo } from "$/common/url-builder";
 import {
   insert,
   valiForm,
@@ -122,149 +115,6 @@ const GitRepoLinkSeparator = styled("span", {
   base: {
     fontWeight: theme.font.weight.regular,
     paddingInline: 4,
-  },
-});
-
-const EventRoot = styled("div", {
-  base: {
-    ...utility.row(3),
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderRadius: theme.borderRadius,
-    padding: `${theme.space[4]} ${theme.space[5]}`,
-    background: theme.color.background.surface,
-  },
-});
-
-const EventResult = styled("div", {
-  base: {
-    ...utility.row(0),
-    paddingLeft: 5,
-    gap: 3,
-    alignItems: "center",
-  },
-});
-
-const EventResultIcon = styled("div", {
-  base: {
-    width: 14,
-    height: 14,
-    lineHeight: 1,
-    opacity: theme.iconOpacity,
-  },
-  variants: {
-    status: {
-      success: {
-        color: theme.color.text.dimmed.surface,
-      },
-      skipped: {
-        color: theme.color.text.secondary.surface,
-      },
-      error: {
-        color: `hsla(${theme.color.base.red}, 100%)`,
-      },
-    },
-  },
-});
-
-const EventResultCopy = styled("span", {
-  base: {
-    lineHeight: "normal",
-    fontSize: theme.font.size.sm,
-  },
-  variants: {
-    status: {
-      success: {
-        color: theme.color.text.dimmed.surface,
-      },
-      error: {
-        color: `hsla(${theme.color.base.red}, 100%)`,
-      },
-    },
-  },
-});
-
-const EventRight = styled("div", {
-  base: {
-    ...utility.stack(2.5),
-    alignItems: "flex-end",
-  },
-});
-
-const EventLabel = styled("span", {
-  base: {
-    ...utility.text.label,
-    fontSize: theme.font.size.mono_xs,
-    color: theme.color.text.dimmed.surface,
-  },
-});
-
-const EventTime = styled("span", {
-  base: {
-    color: theme.color.text.dimmed.surface,
-    fontSize: theme.font.size.sm,
-  },
-});
-
-const EventCommit = styled("div", {
-  base: {
-    ...utility.row(2),
-    alignItems: "center",
-  },
-});
-
-const EventCommitLink = styled("a", {
-  base: {
-    lineHeight: "normal",
-    fontFamily: theme.font.family.code,
-    fontSize: theme.font.size.mono_base,
-    color: theme.color.text.secondary.surface,
-    fontWeight: theme.font.weight.medium,
-    ":hover": {
-      color: theme.color.text.primary.surface,
-    },
-  },
-});
-
-const EventCommitIcon = styled("span", {
-  base: {
-    paddingRight: 4,
-    lineHeight: 0,
-    verticalAlign: -3,
-    opacity: theme.iconOpacity,
-    color: theme.color.text.secondary.surface,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    selectors: {
-      [`${EventCommitLink}:hover &`]: {
-        color: theme.color.text.primary.surface,
-      },
-    },
-  },
-});
-
-const EventBranchLink = styled("a", {
-  base: {
-    lineHeight: "normal",
-    fontSize: theme.font.size.sm,
-    color: theme.color.text.dimmed.surface,
-    ":hover": {
-      color: theme.color.text.secondary.surface,
-    },
-  },
-});
-
-const EventBranchIcon = styled("span", {
-  base: {
-    paddingRight: 2,
-    verticalAlign: -2,
-    opacity: theme.iconOpacity,
-    color: theme.color.text.dimmed.surface,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    selectors: {
-      [`${EventBranchLink}:hover &`]: {
-        color: theme.color.text.secondary.surface,
-      },
-    },
   },
 });
 
@@ -370,12 +220,6 @@ const TargetFormHeaderLeft = styled("div", {
   },
 });
 
-const TargetFormHeaderIcon = styled("div", {
-  base: {
-    lineHeight: 0,
-    color: theme.color.text.dimmed.surface,
-  },
-});
 
 const TargetFormHeaderCopy = styled("div", {
   base: {
