@@ -8,6 +8,7 @@ import {
 import {
   theme,
   utility,
+  Tag,
   Row,
   Text,
   Stack,
@@ -37,7 +38,7 @@ import { useAppContext } from "../context";
 import { useWorkspace } from "../../context";
 import { useAuth2 } from "$/providers/auth2";
 import { createId } from "@paralleldrive/cuid2";
-import { IconEllipsisVertical } from "$/ui/icons";
+import { IconArrowLongRight, IconEllipsisVertical } from "$/ui/icons";
 import { formatCommit, formatSinceTime } from "$/common/format";
 import { createEventListener } from "@solid-primitives/event-listener";
 import {
@@ -292,21 +293,37 @@ const TargetHeaderCopy = styled("span", {
 
 const TargetsEmpty = styled("div", {
   base: {
-    height: 180,
+    height: 54,
     display: "flex",
     alignItems: "center",
-    gap: theme.space[8],
-    justifyContent: "center",
-    borderRadius: theme.borderRadius,
-    border: `2px dashed ${theme.color.divider.base}`,
+    justifyContent: "flex-start",
+    backgroundColor: theme.color.background.surface,
+    borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
+    border: `1px solid ${theme.color.divider.surface}`,
+    paddingLeft: theme.space[3],
+    ":first-child": {
+      height: 180,
+      justifyContent: "center",
+      backgroundColor: "transparent",
+      borderTopLeftRadius: theme.borderRadius,
+      borderTopRightRadius: theme.borderRadius,
+      border: `2px dashed ${theme.color.divider.base}`,
+    },
   },
 });
 
 const TargetsEmptyIcon = styled("span", {
   base: {
     lineHeight: 0,
-    paddingRight: 6,
+    paddingRight: 7,
     opacity: theme.iconOpacity,
+  },
+});
+
+const TargetsEmptySeparator = styled("div", {
+  base: {
+    marginInline: `calc(${theme.space[5]} + 3px)`,
+    borderLeft: `1px solid ${theme.color.text.dimmed.base}`,
   },
 });
 
@@ -335,7 +352,7 @@ const TargetFormHeader = styled("div", {
     height: HEADER_HEIGHT,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: `0 ${theme.space[3]} 0 ${theme.space[5]}`,
+    padding: `0 ${theme.space[3]} 0 ${theme.space[3]}`,
     backgroundColor: theme.color.background.surface,
     borderBottom: `1px solid ${theme.color.divider.surface}`,
     selectors: {
@@ -346,9 +363,17 @@ const TargetFormHeader = styled("div", {
   },
 });
 
-const TargetAddIcon = styled("span", {
+const TargetFormHeaderLeft = styled("div", {
   base: {
-    paddingRight: 6,
+    ...utility.row(2.5),
+    alignItems: "center",
+  },
+});
+
+const TargetFormHeaderIcon = styled("div", {
+  base: {
+    lineHeight: 0,
+    color: theme.color.text.dimmed.surface,
   },
 });
 
@@ -503,13 +528,13 @@ const selectRepo = style({
 });
 
 export const EditTargetForm = object({
-  stagePattern: string([minLength(1, "Stage pattern not be empty")]),
-  awsAccount: string([minLength(1, "AWS account ID cannot be empty")]),
+  stagePattern: string([minLength(1, "Set a stage pattern")]),
+  awsAccount: string([minLength(1, "Pick an AWS account")]),
   env: optional(
     array(
       object({
-        key: string([minLength(1, "Key cannot be empty")]),
-        value: string([minLength(1, "Value cannot be empty")]),
+        key: string([minLength(1, "Set the key of the variable")]),
+        value: string([minLength(1, "Set the value of the variable")]),
       }),
     ),
   ),
@@ -605,7 +630,7 @@ export function Settings() {
             <TargetFormFieldLabel>
               <TargetFormFieldLabelCopy>Stage</TargetFormFieldLabelCopy>
               <TargetFormFieldLabelDesc>
-                The stage that's being deployed.
+                The stage that's being deployed. Accepts glob patterns.
               </TargetFormFieldLabelDesc>
             </TargetFormFieldLabel>
             <TargetFormField>
@@ -616,17 +641,17 @@ export function Settings() {
                     hint={
                       field.error ||
                       (field.value?.startsWith("pr-")
-                        ? "By default pull requests are deployed to a stage in the format pr-<number>"
-                        : "Accepts glob patterns.")
+                        ? "By default, pull requests are deployed to a stage `pr-<number>`. "
+                        : "By default, branches are deployed to a stage with the same name.")
                     }
                     class={targetFormFieldFlex}
                   >
                     <Input
                       {...props}
                       autofocus
-                      value={field.value || ""}
-                      placeholder="production"
                       type="text"
+                      placeholder="production"
+                      value={field.value || ""}
                     />
                   </FormField>
                 )}
@@ -788,12 +813,12 @@ export function Settings() {
             <Switch>
               <Match when={props.new}>
                 <Button type="submit" color="primary">
-                  Add Target
+                  Add Environment
                 </Button>
               </Match>
               <Match when={true}>
                 <Button type="submit" color="success">
-                  Update Target
+                  Update
                 </Button>
               </Match>
             </Switch>
@@ -952,36 +977,7 @@ export function Settings() {
                       </GitRepoPanel>
                       <TargetsRoot>
                         <TargetHeader>
-                          <TargetHeaderCopy>Stages</TargetHeaderCopy>
-                          <Show
-                            when={
-                              (!editing.active || editing.id) &&
-                              runConfigs.value.length
-                            }
-                          >
-                            <Row space="4">
-                              <LinkButton onClick={() => addBranchConfig()}>
-                                <TargetAddIcon>
-                                  <IconAdd width="10" height="10" />
-                                </TargetAddIcon>
-                                Deploy a branch
-                              </LinkButton>
-                              <Show
-                                when={
-                                  !runConfigs.value.find((c) =>
-                                    c.stagePattern.startsWith("pr-"),
-                                  )
-                                }
-                              >
-                                <LinkButton onClick={() => addPrConfig()}>
-                                  <TargetAddIcon>
-                                    <IconAdd width="10" height="10" />
-                                  </TargetAddIcon>
-                                  Deploy pull requests
-                                </LinkButton>
-                              </Show>
-                            </Row>
-                          </Show>
+                          <TargetHeaderCopy>Environments</TargetHeaderCopy>
                         </TargetHeader>
                         <div>
                           <For
@@ -994,9 +990,12 @@ export function Settings() {
                               <>
                                 <TargetFormRoot>
                                   <TargetFormHeader>
-                                    <TargetFormHeaderCopy>
-                                      {config.stagePattern}
-                                    </TargetFormHeaderCopy>
+                                    <TargetFormHeaderLeft>
+                                      <Tag>{config.awsAccountExternalID}</Tag>
+                                      <TargetFormHeaderCopy>
+                                        {config.stagePattern}
+                                      </TargetFormHeaderCopy>
+                                    </TargetFormHeaderLeft>
                                     <Dropdown
                                       size="sm"
                                       icon={
@@ -1024,7 +1023,7 @@ export function Settings() {
                                           });
                                         }}
                                       >
-                                        Edit target
+                                        Edit environment
                                       </Dropdown.Item>
                                       {/*
                                       <Dropdown.Item
@@ -1053,7 +1052,7 @@ export function Settings() {
                                         onSelect={() => {
                                           if (
                                             !confirm(
-                                              "Are you sure you want to remove this target?",
+                                              "Are you sure you want to remove this environment?",
                                             )
                                           )
                                             return;
@@ -1062,7 +1061,7 @@ export function Settings() {
                                           );
                                         }}
                                       >
-                                        Remove target
+                                        Remove environment
                                       </Dropdown.Item>
                                     </Dropdown>
                                   </TargetFormHeader>
@@ -1087,33 +1086,39 @@ export function Settings() {
                             </TargetFormRoot>
                             <TargetForm new />
                           </Show>
-                          <Show
-                            when={
-                              (!editing.active || editing.id) &&
-                              runConfigs.value.length === 0
-                            }
-                          >
+                          <Show when={!editing.active || editing.id}>
                             <TargetsEmpty>
-                              <LinkButton
-                                onClick={() => {
-                                  addBranchConfig();
-                                }}
-                              >
-                                <TargetsEmptyIcon>
-                                  <IconAdd width="10" height="10" />
-                                </TargetsEmptyIcon>
-                                Deploy a branch
-                              </LinkButton>
-                              <LinkButton
-                                onClick={() => {
-                                  addPrConfig();
-                                }}
-                              >
-                                <TargetsEmptyIcon>
-                                  <IconAdd width="10" height="10" />
-                                </TargetsEmptyIcon>
-                                Deploy pull requests
-                              </LinkButton>
+                              <Row>
+                                <LinkButton
+                                  onClick={() => {
+                                    addBranchConfig();
+                                  }}
+                                >
+                                  <TargetsEmptyIcon>
+                                    <IconAdd width="10" height="10" />
+                                  </TargetsEmptyIcon>
+                                  Branch environment
+                                </LinkButton>
+                                <Show
+                                  when={
+                                    !runConfigs.value.find((c) =>
+                                      c.stagePattern.startsWith("pr-"),
+                                    )
+                                  }
+                                >
+                                  <TargetsEmptySeparator />
+                                  <LinkButton
+                                    onClick={() => {
+                                      addPrConfig();
+                                    }}
+                                  >
+                                    <TargetsEmptyIcon>
+                                      <IconAdd width="10" height="10" />
+                                    </TargetsEmptyIcon>
+                                    PR environment
+                                  </LinkButton>
+                                </Show>
+                              </Row>
                             </TargetsEmpty>
                           </Show>
                         </div>
