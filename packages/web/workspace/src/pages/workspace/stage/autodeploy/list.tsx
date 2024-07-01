@@ -43,9 +43,9 @@ export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
     case "config_app_name_mismatch":
       return `\`sst.config.ts\` is for app \`${error.properties?.name}\``;
     case "target_not_found":
-      return "Add a target in your app settings";
+      return "Add an envrionment in your app settings";
     case "target_not_matched":
-      return `No matching targets for \`${error.properties?.stage}\` in the app settings`;
+      return `No matching environments for \`${error.properties?.stage}\` in the app settings`;
     case "target_missing_aws_account":
       return `No AWS account for \`${error.properties?.target}\` in the app settings`;
     case "target_missing_workspace":

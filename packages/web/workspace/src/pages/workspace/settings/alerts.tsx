@@ -468,7 +468,7 @@ export function Alerts() {
                     color={field.error ? "danger" : "primary"}
                     hint={
                       getValue(putForm, "destination.type") === "slack" &&
-                      !slackTeam() ? (
+                        !slackTeam() ? (
                         <span>
                           <a href="#slack">Connect your Slack</a> workspace{" "}
                           below.
@@ -711,7 +711,7 @@ export function Alerts() {
                         },
                         {
                           value: "autodeploy",
-                          label: "Autodeploy",
+                          label: "Autodeploys",
                         },
                         {
                           value: "autodeploy.error",
@@ -753,19 +753,19 @@ export function Alerts() {
                 destination:
                   cloned.destination!.type === "slack"
                     ? {
-                        type: "slack",
-                        properties: {
-                          channel: cloned.destination!.slack?.channel!,
-                        },
-                      }
-                    : {
-                        type: "email",
-                        properties: {
-                          users: cloned.destination!.email!.users!.includes("*")
-                            ? "*"
-                            : cloned.destination!.email!.users!,
-                        },
+                      type: "slack",
+                      properties: {
+                        channel: cloned.destination!.slack?.channel!,
                       },
+                    }
+                    : {
+                      type: "email",
+                      properties: {
+                        users: cloned.destination!.email!.users!.includes("*")
+                          ? "*"
+                          : cloned.destination!.email!.users!,
+                      },
+                    },
                 event: cloned.event!,
               });
               setEditing("active", false);
@@ -852,7 +852,7 @@ export function Alerts() {
                               {
                                 {
                                   issue: "Issues",
-                                  autodeploy: "Autodeploy",
+                                  autodeploy: "Autodeploys",
                                   "autodeploy.error": "Autodeploy errors",
                                 }[alert.event]
                               }
@@ -889,7 +889,7 @@ export function Alerts() {
                                     alert.source.stage.join(", ")}
                                 </AlertsPanelFromKeyword>{" "}
                                 {alert.source.app !== "*" &&
-                                alert.source.app.length === 1
+                                  alert.source.app.length === 1
                                   ? "stage"
                                   : "stages"}
                               </>
@@ -915,16 +915,16 @@ export function Alerts() {
                                       {destination().properties.users === "*"
                                         ? "To all users in the workspace"
                                         : (
-                                            destination().properties
-                                              .users as string[]
+                                          destination().properties
+                                            .users as string[]
+                                        )
+                                          .map(
+                                            (id) =>
+                                              users.value.find(
+                                                (u) => u.id === id
+                                              )?.email
                                           )
-                                            .map(
-                                              (id) =>
-                                                users.value.find(
-                                                  (u) => u.id === id
-                                                )?.email
-                                            )
-                                            .join(", ")}
+                                          .join(", ")}
                                     </AlertsPanelToLabel>
                                   </>
                                 )}
