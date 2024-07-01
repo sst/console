@@ -392,7 +392,7 @@ function Integrations() {
   const githubOrg = GithubOrgStore.all.watch(
     rep,
     () => [],
-    (orgs) => orgs.find(org => !org.time.disconnected)
+    (orgs) => orgs.find((org) => !org.time.disconnected),
   );
 
   const [overrideSlack, setOverrideSlack] = createSignal(false);
@@ -408,7 +408,7 @@ function Integrations() {
   );
 
   return (
-    <>
+    <Show when={githubOrg.ready && slackTeam.ready}>
       <Divider />
       <Stack space={PANEL_CONTENT_SPACE}>
         <Stack space={PANEL_HEADER_SPACE}>
@@ -506,6 +506,6 @@ function Integrations() {
           </form>
         </Row>
       </Stack>
-    </>
+    </Show>
   );
 }
