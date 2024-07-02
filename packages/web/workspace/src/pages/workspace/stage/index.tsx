@@ -137,12 +137,7 @@ export function Inner() {
         DateTime.fromISO(b.time.created).toMillis() -
         DateTime.fromISO(a.time.created).toMillis()
     )[0];
-    return (
-      run?.error &&
-      run.error.type !== "config_target_returned_undefined" &&
-      run.error.type !== "config_branch_remove_skipped" &&
-      run.error.type !== "target_not_matched"
-    );
+    return run?.status === "error";
   });
 
   const nav = useNavigate();

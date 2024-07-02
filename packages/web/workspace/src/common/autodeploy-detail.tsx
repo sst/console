@@ -234,41 +234,23 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
     return { run, stage, update };
   });
 
-  const status = createMemo(() => {
-    if (!data.value) return;
-
-    const run = data.value.run;
-
-    return run.time.completed
-      ? run.error
-        ? "error"
-        : "updated"
-      : run.error
-      ? run.error.type === "config_branch_remove_skipped" ||
-        run.error.type === "config_target_returned_undefined" ||
-        run.error.type === "target_not_matched"
-        ? "skipped"
-        : "error"
-      : run.active
-      ? "updating"
-      : "queued";
-  });
-
   function Header() {
     return (
       <Stack space="2.5">
         <PageTitle>
-          <RunStatusIcon status={status()} />
-          <PageTitleCopy>{STATUS_MAP[status()!]}</PageTitleCopy>
+          <RunStatusIcon status={data.value!.run.status} />
+          <PageTitleCopy>{STATUS_MAP[data.value!.run.status]}</PageTitleCopy>
         </PageTitle>
         <Switch>
           <Match when={data.value!.run.error}>
-            <PageTitleMessage error={status() === "error"}>
+            <PageTitleMessage error={data.value!.run.status === "error"}>
               {ERROR_MAP(data.value!.run.error!)}
             </PageTitleMessage>
           </Match>
           <Match when={true}>
-            <PageTitleMessage>{STATUS_DESC_MAP[status()!]}</PageTitleMessage>
+            <PageTitleMessage>
+              {STATUS_DESC_MAP[data.value!.run.status]}
+            </PageTitleMessage>
           </Match>
         </Switch>
       </Stack>

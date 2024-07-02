@@ -401,29 +401,13 @@ function RunItem({ run }: { run: Run.Run }) {
     return { trigger, repoURL, branch, uri };
   });
 
-  const status = createMemo(() =>
-    run.time.completed
-      ? run.error
-        ? "error"
-        : "updated"
-      : run.error
-        ? run.error.type === "config_branch_remove_skipped" ||
-          run.error.type === "config_target_returned_undefined" ||
-          run.error.type === "target_not_matched"
-          ? "skipped"
-          : "error"
-        : run.active
-          ? "updating"
-          : "queued"
-  );
-
   return (
     <RunRoot>
       <RunLeftCol>
         <RunStatus>
-          <RunStatusIcon status={status()} />
-          <RunLink href={run.id} error={status() === "error"}>
-            {STATUS_MAP[status()!]}
+          <RunStatusIcon status={run.status} />
+          <RunLink href={run.id} error={run.status === "error"}>
+            {STATUS_MAP[run.status]}
           </RunLink>
         </RunStatus>
         <RunMessage>
@@ -488,8 +472,9 @@ function RunItem({ run }: { run: Run.Run }) {
             <img
               width="24"
               height="24"
-              src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                }?s=48&v=4`}
+              src={`https://avatars.githubusercontent.com/u/${
+                runInfo()!.trigger.sender.id
+              }?s=48&v=4`}
             />
           </RunSenderAvatar>
         </RunInfo>
@@ -515,8 +500,7 @@ export function List() {
               <li>Connect your app to its GitHub repo</li>
               <li>
                 Add an envrionment for your{" "}
-                <EmptyRunsHintCode>`production`</EmptyRunsHintCode>{" "}
-                branch
+                <EmptyRunsHintCode>`production`</EmptyRunsHintCode> branch
               </li>
               <li>
                 Git push to deploy{" "}

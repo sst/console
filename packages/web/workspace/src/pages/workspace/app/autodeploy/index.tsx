@@ -26,11 +26,7 @@ export function Autodeploy() {
           DateTime.fromISO(b.time.created).toMillis() -
           DateTime.fromISO(a.time.created).toMillis()
       )[0];
-    const latestRunError =
-      run?.error &&
-      run.error.type !== "config_target_returned_undefined" &&
-      run.error.type !== "config_branch_remove_skipped" &&
-      run.error.type !== "target_not_matched";
+    const latestRunError = run?.status === "error";
 
     const appRepo = await AppRepoStore.forApp(tx, ctx.app.id);
     const ghRepo = (await GithubRepoStore.all(tx)).find(

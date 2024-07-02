@@ -414,13 +414,7 @@ export function OverviewNext() {
             DateTime.fromISO(a.time.created).toMillis()
         )[0];
       if (!run) return;
-      return (
-        !run.stageID &&
-        run.error &&
-        run.error.type !== "config_target_returned_undefined" &&
-        run.error.type !== "config_branch_remove_skipped" &&
-        run.error.type !== "target_not_matched"
-      );
+      return !run.stageID && run.status === "error";
     });
     return (
       <Card>
