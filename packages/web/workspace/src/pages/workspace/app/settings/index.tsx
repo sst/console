@@ -32,6 +32,7 @@ import { DateTime } from "luxon";
 import { Header, PageHeader } from "../../header";
 import { Link } from "@solidjs/router";
 import { style } from "@macaron-css/core";
+import type { RunConfig } from "@console/core/run/config";
 import { styled } from "@macaron-css/solid";
 import { useAppContext } from "../context";
 import { useWorkspace } from "../../context";
@@ -72,7 +73,7 @@ import { AWS } from "$/data/aws";
 import { createStore } from "solid-js/store";
 import { fromEntries, map, pipe, sortBy, filter } from "remeda";
 
-const HEADER_HEIGHT = 50;
+const HEADER_HEIGHT = 54;
 const SELECT_REPO_NAME = "select-repo";
 
 const GitRepoRoot = styled("div", {
@@ -143,13 +144,12 @@ const TargetHeaderCopy = styled("span", {
 
 const TargetsEmpty = styled("div", {
   base: {
-    height: 54,
+    height: HEADER_HEIGHT,
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-start",
-    backgroundColor: theme.color.background.surface,
     borderRadius: `0 0 ${theme.borderRadius} ${theme.borderRadius}`,
-    border: `1px solid ${theme.color.divider.surface}`,
+    border: `1px solid ${theme.color.divider.base}`,
     paddingLeft: theme.space[3],
     ":first-child": {
       height: 180,
@@ -196,6 +196,10 @@ const TargetFormRoot = styled("div", {
   },
 });
 
+const targetForm = style({
+  backgroundColor: theme.color.background.surface,
+});
+
 const TargetFormHeader = styled("div", {
   base: {
     ...utility.row(2),
@@ -203,8 +207,7 @@ const TargetFormHeader = styled("div", {
     alignItems: "center",
     justifyContent: "space-between",
     padding: `0 ${theme.space[3]} 0 ${theme.space[3]}`,
-    backgroundColor: theme.color.background.surface,
-    borderBottom: `1px solid ${theme.color.divider.surface}`,
+    borderBottom: `1px solid ${theme.color.divider.base}`,
     selectors: {
       "&:last-child": {
         borderBottomWidth: 0,
@@ -220,6 +223,14 @@ const TargetFormHeaderLeft = styled("div", {
   },
 });
 
+const TargetFormHeaderRight = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+  },
+});
+
+
 const TargetFormHeaderCopy = styled("div", {
   base: {
     fontWeight: theme.font.weight.medium,
@@ -227,7 +238,7 @@ const TargetFormHeaderCopy = styled("div", {
   variants: {
     new: {
       true: {
-        color: theme.color.text.secondary.surface,
+        color: theme.color.text.secondary.base,
       },
     },
   },
@@ -239,7 +250,7 @@ const TargetFormRow = styled("div", {
     alignItems: "flex-start",
     justifyContent: "center",
     padding: `${theme.space[6]} ${theme.space[5]}`,
-    borderBottom: `1px solid ${theme.color.divider.base}`,
+    borderBottom: `1px solid ${theme.color.divider.surface}`,
     ":last-child": {
       borderBottom: "none",
     },
@@ -264,14 +275,14 @@ const TargetFormFieldLabel = styled("div", {
 const TargetFormFieldLabelCopy = styled("span", {
   base: {
     ...utility.text.label,
-    color: theme.color.text.primary.base,
+    color: theme.color.text.primary.surface,
     fontSize: theme.font.size.mono_sm,
   },
 });
 
 const TargetFormFieldLabelDesc = styled("span", {
   base: {
-    color: theme.color.text.dimmed.base,
+    color: theme.color.text.dimmed.surface,
     fontSize: theme.font.size.sm,
     lineHeight: theme.font.lineHeight,
   },
@@ -444,13 +455,97 @@ export function Settings() {
   });
 
   interface TargetProps {
+    config: RunConfig.Info;
+  }
+  function Target(props: TargetProps) {
+    const config = props.config;
+
+    return (
+      <TargetFormRoot>
+        <TargetFormHeader>
+          <TargetFormHeaderLeft>
+            <Tag>{config.awsAccountExternalID}</Tag>
+            <TargetFormHeaderCopy>
+              {config.stagePattern}
+            </TargetFormHeaderCopy>
+          </TargetFormHeaderLeft>
+          <TargetFormHeaderRight>
+            <Button
+              onClick={() => {
+                setEditing("id", config.id);
+                setEditing("active", true);
+                reset(putForm);
+                setValues(putForm, {
+                  stagePattern: config.stagePattern,
+                  awsAccount:
+                    config.awsAccountExternalID,
+                  env: Object.entries(config.env).map(
+                    ([key, value]) => ({
+                      key,
+                      value,
+                    })
+                  ),
+                });
+              }}
+              color="secondary"
+              size="sm"
+            >
+              Edit
+            </Button>
+            <Dropdown size="sm" icon={<IconEllipsisVertical width={18} height={18} />}>
+              {/*
+            <Dropdown.Item
+              onSelect={() => {
+                setEditing("id", undefined);
+                setEditing("active", true);
+                reset(putForm);
+                setValues(putForm, {
+                  stagePattern: config.stagePattern,
+                  awsAccount:
+                    config.awsAccountExternalID,
+                  env: Object.entries(config.env).map(
+                    ([key, value]) => ({
+                      key,
+                      value,
+                    }),
+                  ),
+                });
+              }}
+            >
+              Duplicate target
+            </Dropdown.Item>
+            */}
+              <Dropdown.Item
+                onSelect={() => {
+                  if (
+                    !confirm(
+                      "Are you sure you want to remove this environment?"
+                    )
+                  )
+                    return;
+                  rep().mutate.run_config_remove(
+                    config.id
+                  );
+                }}
+              >
+                Remove environment
+              </Dropdown.Item>
+            </Dropdown>
+          </TargetFormHeaderRight>
+        </TargetFormHeader>
+      </TargetFormRoot>
+    );
+  }
+
+  interface TargetFormProps {
     new?: boolean;
   }
 
-  function TargetForm(props: TargetProps) {
+  function TargetForm(props: TargetFormProps) {
     return (
       <TargetFormRoot>
         <Form
+          class={targetForm}
           onSubmit={(data) => {
             rep().mutate.run_config_put({
               id: editing.id || createId(),
@@ -691,7 +786,7 @@ export function Settings() {
       <PageHeader>
         <Row space="5" vertical="center">
           <Link href="../">
-            <TabTitle size="sm">Environment</TabTitle>
+            <TabTitle size="sm">Stages</TabTitle>
           </Link>
           <Link href="../autodeploy">
             <TabTitle size="sm" count={latestRunError.value ? "•" : ""}>
@@ -826,89 +921,8 @@ export function Settings() {
                           >
                             {(config) => (
                               <>
-                                <TargetFormRoot>
-                                  <TargetFormHeader>
-                                    <TargetFormHeaderLeft>
-                                      <Tag>{config.awsAccountExternalID}</Tag>
-                                      <TargetFormHeaderCopy>
-                                        {config.stagePattern}
-                                      </TargetFormHeaderCopy>
-                                    </TargetFormHeaderLeft>
-                                    <Dropdown
-                                      size="sm"
-                                      icon={
-                                        <IconEllipsisVertical
-                                          width={18}
-                                          height={18}
-                                        />
-                                      }
-                                    >
-                                      <Dropdown.Item
-                                        onSelect={() => {
-                                          setEditing("id", config.id);
-                                          setEditing("active", true);
-                                          reset(putForm);
-                                          setValues(putForm, {
-                                            stagePattern: config.stagePattern,
-                                            awsAccount:
-                                              config.awsAccountExternalID,
-                                            env: Object.entries(config.env).map(
-                                              ([key, value]) => ({
-                                                key,
-                                                value,
-                                              })
-                                            ),
-                                          });
-                                        }}
-                                      >
-                                        Edit environment
-                                      </Dropdown.Item>
-                                      {/*
-                                      <Dropdown.Item
-                                        onSelect={() => {
-                                          setEditing("id", undefined);
-                                          setEditing("active", true);
-                                          reset(putForm);
-                                          setValues(putForm, {
-                                            stagePattern: config.stagePattern,
-                                            awsAccount:
-                                              config.awsAccountExternalID,
-                                            env: Object.entries(config.env).map(
-                                              ([key, value]) => ({
-                                                key,
-                                                value,
-                                              }),
-                                            ),
-                                          });
-                                        }}
-                                      >
-                                        Duplicate target
-                                      </Dropdown.Item>
-                                      */}
-                                      <Dropdown.Seperator />
-                                      <Dropdown.Item
-                                        onSelect={() => {
-                                          if (
-                                            !confirm(
-                                              "Are you sure you want to remove this environment?"
-                                            )
-                                          )
-                                            return;
-                                          rep().mutate.run_config_remove(
-                                            config.id
-                                          );
-                                        }}
-                                      >
-                                        Remove environment
-                                      </Dropdown.Item>
-                                    </Dropdown>
-                                  </TargetFormHeader>
-                                </TargetFormRoot>
-                                <Show
-                                  when={
-                                    editing.active && editing.id === config.id
-                                  }
-                                >
+                                <Target config={config} />
+                                <Show when={editing.active && editing.id === config.id}>
                                   <TargetForm />
                                 </Show>
                               </>
