@@ -1,11 +1,4 @@
-import {
-  For,
-  Show,
-  Match,
-  Switch,
-  createMemo,
-  createSignal,
-} from "solid-js";
+import { For, Show, Match, Switch, createMemo, createSignal } from "solid-js";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Link, useParams } from "@solidjs/router";
 import { RunStore, StateUpdateStore, StateEventStore } from "$/data/app";
@@ -17,14 +10,15 @@ import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
 import { styled } from "@macaron-css/solid";
-import {
-  IconPr,
-  IconGit,
-  IconCommit,
-} from "$/ui/icons/custom";
+import { IconPr, IconGit, IconCommit } from "$/ui/icons/custom";
 import { formatDuration, formatSinceTime } from "$/common/format";
 import { useReplicacheStatus } from "$/providers/replicache-status";
-import { IconCheck, IconXCircle, IconChevronRight, IconEllipsisVertical } from "$/ui/icons";
+import {
+  IconCheck,
+  IconXCircle,
+  IconChevronRight,
+  IconEllipsisVertical,
+} from "$/ui/icons";
 import {
   githubPr,
   githubRepo,
@@ -448,15 +442,19 @@ export function Detail() {
                     <img
                       width={AVATAR_SIZE}
                       height={AVATAR_SIZE}
-                      src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                        }?s=${2 * AVATAR_SIZE}&v=4`}
+                      src={`https://avatars.githubusercontent.com/u/${
+                        runInfo()!.trigger.sender.id
+                      }?s=${2 * AVATAR_SIZE}&v=4`}
                     />
                   </GitAvatar>
                   <Stack space="0.5">
                     <GitLink
                       target="_blank"
                       rel="noreferrer"
-                      href={githubCommit(repoURL(), runInfo()!.trigger.commit.id)}
+                      href={githubCommit(
+                        repoURL(),
+                        runInfo()!.trigger.commit.id
+                      )}
                     >
                       <GitIcon size="md">
                         <IconCommit />
@@ -503,16 +501,16 @@ export function Detail() {
                 title={
                   update.value!.time.started
                     ? DateTime.fromISO(
-                      update.value!.time.started!
-                    ).toLocaleString(DateTime.DATETIME_FULL)
+                        update.value!.time.started!
+                      ).toLocaleString(DateTime.DATETIME_FULL)
                     : undefined
                 }
               >
                 {update.value!.time.started
                   ? formatSinceTime(
-                    DateTime.fromISO(update.value!.time.started!).toSQL()!,
-                    true
-                  )
+                      DateTime.fromISO(update.value!.time.started!).toSQL()!,
+                      true
+                    )
                   : "—"}
               </Text>
             </Stack>
@@ -528,11 +526,11 @@ export function Detail() {
               >
                 {update.value!.time.started && update.value!.time.completed
                   ? formatDuration(
-                    DateTime.fromISO(update.value!.time.completed!)
-                      .diff(DateTime.fromISO(update.value!.time.started!))
-                      .as("milliseconds"),
-                    true
-                  )
+                      DateTime.fromISO(update.value!.time.completed!)
+                        .diff(DateTime.fromISO(update.value!.time.started!))
+                        .as("milliseconds"),
+                      true
+                    )
                   : "—"}
               </Text>
             </Stack>
@@ -644,6 +642,11 @@ export function Detail() {
               <Stack space="5">
                 <Switch>
                   <Match when={!isEmpty()}>{renderResources()}</Match>
+                  <Match
+                    when={status() === "updating" || status() === "queued"}
+                  >
+                    <ResourceEmpty>Updating&hellip;</ResourceEmpty>
+                  </Match>
                   <Match
                     when={status() !== "updating" && status() !== "queued"}
                   >
