@@ -3633,6 +3633,7 @@ function run({
         repo: repoName,
       },
     },
+    status: "updated",
   };
 }
 
