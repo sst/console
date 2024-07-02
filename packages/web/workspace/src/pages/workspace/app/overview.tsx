@@ -1,85 +1,24 @@
-import {
-  Tag,
-  Row,
-  theme,
-  Stack,
-  Button,
-  utility,
-  TabTitle,
-  ButtonIcon,
-} from "$/ui";
+import { Tag, Row, theme, Stack, utility, TabTitle } from "$/ui";
 import { DateTime } from "luxon";
 import { For, Show, Match, Switch } from "solid-js";
-import {
-  AppRepoStore,
-  GithubOrgStore,
-  GithubRepoStore,
-  RunStore,
-  StateUpdateStore,
-} from "$/data/app";
+import { RunStore, StateUpdateStore } from "$/data/app";
 import { Header, PageHeader } from "../header";
 import { Link } from "@solidjs/router";
 import { useAppContext } from "./context";
 import { styled } from "@macaron-css/solid";
 import type { Stage } from "@console/core/app";
-import { IconPr, IconGit, IconCommit, IconGitHub } from "$/ui/icons/custom";
-import { createSubscription, useReplicache } from "$/providers/replicache";
+import { IconPr, IconGit, IconCommit } from "$/ui/icons/custom";
+import { createSubscription } from "$/providers/replicache";
 import { parseTime, formatSinceTime, formatCommit } from "$/common/format";
 import { ActiveStagesForApp } from "$/data/stage";
 import { useLocalContext } from "$/providers/local";
 import { AWS } from "$/data/aws";
 import { githubCommit, githubRepo } from "$/common/url-builder";
-import { filter, pipe, sortBy } from "remeda";
+import { sortBy } from "remeda";
 
 const Root = styled("div", {
   base: {
     padding: theme.space[4],
-  },
-});
-
-const RepoLink = styled("a", {
-  base: {
-    ...utility.row(0),
-    gap: 5,
-    color: theme.color.text.secondary.base,
-    fontSize: theme.font.size.sm,
-    ":hover": {
-      color: theme.color.text.primary.base,
-    },
-  },
-});
-
-const RepoLinkCopy = styled("span", {
-  base: {
-    ...utility.row(0),
-    alignItems: "center",
-  },
-});
-
-const RepoLinkIcon = styled("span", {
-  base: {
-    lineHeight: 0,
-    color: theme.color.icon.secondary,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    selectors: {
-      [`${RepoLink}:hover &`]: {
-        color: theme.color.icon.primary,
-      },
-    },
-  },
-});
-
-const RepoLinkSeparator = styled("span", {
-  base: {
-    color: theme.color.text.dimmed.base,
-    paddingInline: 3,
-    transition: `color ${theme.colorFadeDuration} ease-out`,
-    fontSize: theme.font.size.xs,
-    selectors: {
-      [`${RepoLink}:hover &`]: {
-        color: theme.color.text.secondary.base,
-      },
-    },
   },
 });
 
@@ -265,23 +204,7 @@ const CardGitMessage = styled("div", {
 });
 
 export function Overview() {
-  const rep = useReplicache();
   const app = useAppContext();
-  const appRepo = AppRepoStore.forApp.watch(rep, () => [app.app.id]);
-  const ghRepo = GithubRepoStore.all.watch(
-    rep,
-    () => [],
-    (repos) => repos.find((repo) => repo.id === appRepo()[0]?.repoID)
-  );
-  const ghRepoOrg = GithubOrgStore.all.watch(
-    rep,
-    () => [],
-    (orgs) =>
-      orgs.find(
-        (org) => org.id === ghRepo()?.githubOrgID && !org.time.disconnected
-      )
-  );
-
   const local = useLocalContext();
   const stages = createSubscription(async (tx) => {
     return sortBy(
@@ -454,37 +377,6 @@ export function Overview() {
             <TabTitle size="sm">Settings</TabTitle>
           </Link>
         </Row>
-        <Show
-          when={ghRepoOrg()}
-          fallback={
-            <Link href="settings#repo">
-              <Button color="github" size="sm">
-                <ButtonIcon size="sm">
-                  <IconGitHub />
-                </ButtonIcon>
-                Connect Repo
-              </Button>
-            </Link>
-          }
-        >
-          <Stack space="2" horizontal="end">
-            <RepoLink
-              target="_blank"
-              href={`https://github.com/${ghRepoOrg()?.login}/${
-                ghRepo()?.name
-              }`}
-            >
-              <RepoLinkIcon>
-                <IconGitHub width="16" height="16" />
-              </RepoLinkIcon>
-              <RepoLinkCopy>
-                {ghRepoOrg()?.login}
-                <RepoLinkSeparator>/</RepoLinkSeparator>
-                {ghRepo()?.name}
-              </RepoLinkCopy>
-            </RepoLink>
-          </Stack>
-        </Show>
       </PageHeader>
       <Root>
         <Stages>

@@ -1,7 +1,8 @@
-import { Row, TabTitle } from "$/ui";
+import { Button, ButtonIcon, Row, Stack, TabTitle, theme, utility } from "$/ui";
 import { useAppContext } from "../context";
 import { Show } from "solid-js";
 import { Link, Route, Routes } from "@solidjs/router";
+import { styled } from "@macaron-css/solid";
 import { Header, PageHeader } from "../../header";
 import { NotFound } from "../../../not-found";
 import { Detail } from "./detail";
@@ -14,6 +15,53 @@ import {
   GithubRepoStore,
 } from "$/data/app";
 import { DateTime } from "luxon";
+import { IconGitHub } from "$/ui/icons/custom";
+
+const RepoLink = styled("a", {
+  base: {
+    ...utility.row(0),
+    gap: 5,
+    color: theme.color.text.secondary.base,
+    fontSize: theme.font.size.sm,
+    ":hover": {
+      color: theme.color.text.primary.base,
+    },
+  },
+});
+
+const RepoLinkCopy = styled("span", {
+  base: {
+    ...utility.row(0),
+    alignItems: "center",
+  },
+});
+
+const RepoLinkIcon = styled("span", {
+  base: {
+    lineHeight: 0,
+    color: theme.color.icon.secondary,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    selectors: {
+      [`${RepoLink}:hover &`]: {
+        color: theme.color.icon.primary,
+      },
+    },
+  },
+});
+
+const RepoLinkSeparator = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.base,
+    paddingInline: 3,
+    transition: `color ${theme.colorFadeDuration} ease-out`,
+    fontSize: theme.font.size.xs,
+    selectors: {
+      [`${RepoLink}:hover &`]: {
+        color: theme.color.text.secondary.base,
+      },
+    },
+  },
+});
 
 export function Autodeploy() {
   const ctx = useAppContext();
@@ -63,6 +111,37 @@ export function Autodeploy() {
               <TabTitle size="sm">Settings</TabTitle>
             </Link>
           </Row>
+          <Show
+            when={r.value!.ghRepoOrg}
+            fallback={
+              <Link href="settings#repo">
+                <Button color="github" size="sm">
+                  <ButtonIcon size="sm">
+                    <IconGitHub />
+                  </ButtonIcon>
+                  Connect Repo
+                </Button>
+              </Link>
+            }
+          >
+            <Stack space="2" horizontal="end">
+              <RepoLink
+                target="_blank"
+                href={`https://github.com/${r.value!.ghRepoOrg!.login}/${
+                  r.value!.ghRepo!.name
+                }`}
+              >
+                <RepoLinkIcon>
+                  <IconGitHub width="16" height="16" />
+                </RepoLinkIcon>
+                <RepoLinkCopy>
+                  {r.value!.ghRepoOrg!.login}
+                  <RepoLinkSeparator>/</RepoLinkSeparator>
+                  {r.value!.ghRepo!.name}
+                </RepoLinkCopy>
+              </RepoLink>
+            </Stack>
+          </Show>
         </PageHeader>
         <Routes>
           <Route path="" element={<List />} />
