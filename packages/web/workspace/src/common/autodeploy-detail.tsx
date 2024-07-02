@@ -478,20 +478,30 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
           </For>
           <Show when={trimmedLogs()?.length === 0}>
             <Switch>
-              <Match when={!data.value!.run.log}>
-                <LogsLoading>
-                  <PanelEmptyCopy>No logs available</PanelEmptyCopy>
-                </LogsLoading>
-              </Match>
-              <Match when={true}>
+              <Match
+                when={
+                  data.value!.run.status === "queued" ||
+                  data.value!.run.status === "updating"
+                }
+              >
                 <LogsLoading>
                   <LogsLoadingIcon>
                     <IconArrowPathSpin />
                   </LogsLoadingIcon>
-                  <PanelEmptyCopy>
-                    {data.value!.run.time.completed ? "Loading" : "Running"}
-                    &hellip;
-                  </PanelEmptyCopy>
+                  <PanelEmptyCopy>Running&hellip;</PanelEmptyCopy>
+                </LogsLoading>
+              </Match>
+              <Match when={data.value!.run.log}>
+                <LogsLoading>
+                  <LogsLoadingIcon>
+                    <IconArrowPathSpin />
+                  </LogsLoadingIcon>
+                  <PanelEmptyCopy>Loading&hellip;</PanelEmptyCopy>
+                </LogsLoading>
+              </Match>
+              <Match when={true}>
+                <LogsLoading>
+                  <PanelEmptyCopy>No logs available</PanelEmptyCopy>
                 </LogsLoading>
               </Match>
             </Switch>
