@@ -25,31 +25,31 @@ import { For, Show, Match, Switch, createMemo } from "solid-js";
 export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
   switch (error.type) {
     case "config_not_found":
-      return "`sst.config.ts` was found in the repo root";
+      return "No sst.config.ts was found in the repo root";
     case "config_build_failed":
-      return "Failed to compile `sst.config.ts`";
+      return "Failed to compile sst.config.ts";
     case "config_parse_failed":
-      return "Failed to run `sst.config.ts`";
+      return "Failed to run sst.config.ts";
     case "config_evaluate_failed":
-      return "Error evaluating `sst.config.ts`";
+      return "Error evaluating sst.config.ts";
     case "config_target_returned_undefined":
-      return "`console.autodeploy.target` returned `undefined`";
+      return "\"console.autodeploy.target\" in the config returned \"undefined\"";
     case "config_branch_remove_skipped":
       return "Skipped branch remove";
     case "config_target_no_stage":
-      return "`console.autodeploy.target` did not return a stage";
+      return "\"console.autodeploy.target\" in the config did not return a stage";
     case "config_v2_unsupported":
       return "Autodeploy does not support SST v2 apps";
     case "config_app_name_mismatch":
-      return `\`sst.config.ts\` is for app \`${error.properties?.name}\``;
+      return `sst.config.ts is for app "${error.properties?.name}"`;
     case "target_not_found":
-      return "Add an envrionment in your app settings";
+      return "Add an environment in your app settings";
     case "target_not_matched":
-      return `No matching environments for \`${error.properties?.stage}\` in the app settings`;
+      return `No matching envrionments for "${error.properties?.stage}" in the app settings`;
     case "target_missing_aws_account":
-      return `No AWS account for \`${error.properties?.target}\` in the app settings`;
+      return `No AWS account for "${error.properties?.target}" in the app settings`;
     case "target_missing_workspace":
-      return `AWS account for \`${error.properties?.target}\` is not configured`;
+      return `AWS account for "${error.properties?.target}" is not configured`;
     case "run_failed":
       return error.properties?.message || "Error running `sst deploy`";
     case "unknown":
@@ -472,9 +472,8 @@ function RunItem({ run }: { run: Run.Run }) {
             <img
               width="24"
               height="24"
-              src={`https://avatars.githubusercontent.com/u/${
-                runInfo()!.trigger.sender.id
-              }?s=48&v=4`}
+              src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                }?s=48&v=4`}
             />
           </RunSenderAvatar>
         </RunInfo>

@@ -464,7 +464,7 @@ export function Settings() {
       <TargetFormRoot>
         <TargetFormHeader>
           <TargetFormHeaderLeft>
-            <Tag>{config.awsAccountExternalID}</Tag>
+            <Tag title="AWS Account ID">{config.awsAccountExternalID}</Tag>
             <TargetFormHeaderCopy>
               {config.stagePattern}
             </TargetFormHeaderCopy>
@@ -574,7 +574,7 @@ export function Settings() {
                     hint={
                       field.error ||
                       (field.value?.startsWith("pr-")
-                        ? "By default, pull requests are deployed to a stage `pr-<number>`. "
+                        ? "By default, PRs are deployed to a stage with the name \"pr-<number>\". "
                         : "By default, branches are deployed to a stage with the same name.")
                     }
                     class={targetFormFieldFlex}

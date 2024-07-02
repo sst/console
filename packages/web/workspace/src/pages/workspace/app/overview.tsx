@@ -353,7 +353,7 @@ export function Overview() {
           </Show>
           <Stack space="px">
             <CardRegion>{props.stage.region}</CardRegion>
-            <Tag>{aws.value?.accountID}</Tag>
+            <Tag title="AWS Account ID">{aws.value?.accountID}</Tag>
           </Stack>
         </CardBodyRight>
       </CardRoot>

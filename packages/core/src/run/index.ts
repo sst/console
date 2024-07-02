@@ -82,37 +82,36 @@ export module Run {
   const ERROR_MESSAGE_MAP = (error: RunError) => {
     switch (error.type) {
       case "config_not_found":
-        return "`sst.config.ts` was found in the repo root";
+        return "No sst.config.ts was found in the repo root";
       case "config_build_failed":
-        return "Failed to compile `sst.config.ts`";
+        return "Failed to compile sst.config.ts";
       case "config_parse_failed":
-        return "Failed to run `sst.config.ts`";
+        return "Failed to run sst.config.ts";
       case "config_evaluate_failed":
-        return "Error evaluating `sst.config.ts`";
+        return "Error evaluating sst.config.ts";
       case "config_target_returned_undefined":
-        return "`console.autodeploy.target` returned `undefined`";
+        return "\"console.autodeploy.target\" in the config returned \"undefined\"";
       case "config_branch_remove_skipped":
         return "Skipped branch remove";
       case "config_target_no_stage":
-        return "`console.autodeploy.target` did not return a stage";
+        return "\"console.autodeploy.target\" in the config did not return a stage";
       case "config_v2_unsupported":
         return "Autodeploy does not support SST v2 apps";
       case "config_app_name_mismatch":
-        return `\`sst.config.ts\` is for app \`${error.properties?.name}\``;
+        return `sst.config.ts is for app "${error.properties?.name}"`;
       case "target_not_found":
-        return "Add a envrionment in your app settings";
+        return "Add an environment in your app settings";
       case "target_not_matched":
-        return `No matching envrionments for \`${error.properties?.stage}\` in the app settings`;
+        return `No matching envrionments for "${error.properties?.stage}" in the app settings`;
       case "target_missing_aws_account":
-        return `No AWS account for \`${error.properties?.target}\` in the app settings`;
+        return `No AWS account for "${error.properties?.target}" in the app settings`;
       case "target_missing_workspace":
-        return `AWS account for \`${error.properties?.target}\` is not configured`;
+        return `AWS account for "${error.properties?.target}" is not configured`;
       case "run_failed":
         return error.properties?.message || "Error running `sst deploy`";
       case "unknown":
         return (
-          error.properties?.message ||
-          "Deploy failed before running `sst deploy`"
+          error.properties?.message || "Deploy failed before running `sst deploy`"
         );
       default:
         return "Error running this deploy";
@@ -137,37 +136,37 @@ export module Run {
 
   export type RunnerEvent =
     | {
-        warm: true;
-        cloneUrl: string;
-        buildspec: {
-          version: string;
-          bucket: string;
-        };
-        credentials: {
-          accessKeyId: string;
-          secretAccessKey: string;
-          sessionToken: string;
-        };
-      }
-    | {
-        warm: false;
-        engine: string;
-        runID: string;
-        workspaceID: string;
-        stage: string;
-        env: Record<string, string>;
-        cloneUrl: string;
-        buildspec: {
-          version: string;
-          bucket: string;
-        };
-        credentials: {
-          accessKeyId: string;
-          secretAccessKey: string;
-          sessionToken: string;
-        };
-        trigger: Trigger;
+      warm: true;
+      cloneUrl: string;
+      buildspec: {
+        version: string;
+        bucket: string;
       };
+      credentials: {
+        accessKeyId: string;
+        secretAccessKey: string;
+        sessionToken: string;
+      };
+    }
+    | {
+      warm: false;
+      engine: string;
+      runID: string;
+      workspaceID: string;
+      stage: string;
+      env: Record<string, string>;
+      cloneUrl: string;
+      buildspec: {
+        version: string;
+        bucket: string;
+      };
+      credentials: {
+        accessKeyId: string;
+        secretAccessKey: string;
+        sessionToken: string;
+      };
+      trigger: Trigger;
+    };
 
   export type ConfigParserEvent = {
     content: string;
@@ -274,17 +273,17 @@ export module Run {
         ? input.error
           ? "error"
           : input.timeStarted
-          ? "updated"
-          : "skipped"
+            ? "updated"
+            : "skipped"
         : input.error
-        ? input.error.type === "config_branch_remove_skipped" ||
-          input.error.type === "config_target_returned_undefined" ||
-          input.error.type === "target_not_matched"
-          ? "skipped"
-          : "error"
-        : input.active
-        ? "updating"
-        : "queued",
+          ? input.error.type === "config_branch_remove_skipped" ||
+            input.error.type === "config_target_returned_undefined" ||
+            input.error.type === "target_not_matched"
+            ? "skipped"
+            : "error"
+          : input.active
+            ? "updating"
+            : "queued",
     };
   }
 
@@ -319,10 +318,10 @@ export module Run {
             defaultStage:
               input.trigger.type === "branch"
                 ? input.trigger.branch
-                    .replace(/[^a-zA-Z0-9-]/g, "-")
-                    .replace(/-+/g, "-")
-                    .replace(/^-/g, "")
-                    .replace(/-$/g, "")
+                  .replace(/[^a-zA-Z0-9-]/g, "-")
+                  .replace(/-+/g, "-")
+                  .replace(/^-/g, "")
+                  .replace(/-$/g, "")
                 : `pr-${input.trigger.number}`,
           } satisfies ConfigParserEvent),
         })
@@ -661,11 +660,10 @@ export module Run {
         FlexibleTimeWindow: {
           Mode: "OFF",
         },
-        ScheduleExpression: `at(${
-          new Date(Date.now() + (timeoutInMinutes + 1) * 60000)
-            .toISOString()
-            .split(".")[0]
-        })`,
+        ScheduleExpression: `at(${new Date(Date.now() + (timeoutInMinutes + 1) * 60000)
+          .toISOString()
+          .split(".")[0]
+          })`,
         Target: {
           Arn: process.env.RUN_TIMEOUT_MONITOR_FUNCTION_ARN,
           RoleArn: process.env.RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN,
@@ -712,9 +710,9 @@ export module Run {
               error === undefined
                 ? undefined
                 : {
-                    type: "run_failed" as const,
-                    properties: { message: error },
-                  },
+                  type: "run_failed" as const,
+                  properties: { message: error },
+                },
             active: null,
           })
           .where(
@@ -751,17 +749,17 @@ export module Run {
             log:
               input.engine === "lambda"
                 ? {
-                    engine: "lambda",
-                    requestID: input.awsRequestId!,
-                    logGroup: input.logGroup,
-                    logStream: input.logStream,
-                    timestamp: input.timestamp,
-                  }
+                  engine: "lambda",
+                  requestID: input.awsRequestId!,
+                  logGroup: input.logGroup,
+                  logStream: input.logStream,
+                  timestamp: input.timestamp,
+                }
                 : {
-                    engine: "codebuild",
-                    logGroup: input.logGroup,
-                    logStream: input.logStream,
-                  },
+                  engine: "codebuild",
+                  logGroup: input.logGroup,
+                  logStream: input.logStream,
+                },
           })
           .where(
             and(
@@ -815,10 +813,10 @@ export module Run {
   const useRunner = zod(
     z.enum(Engine),
     (engine) =>
-      ({
-        lambda: LambdaRunner,
-        codebuild: CodebuildRunner,
-      }[engine])
+    ({
+      lambda: LambdaRunner,
+      codebuild: CodebuildRunner,
+    }[engine])
   );
 
   export const setRunnerWarmer = zod(
@@ -1115,9 +1113,8 @@ export module Run {
           FlexibleTimeWindow: {
             Mode: "OFF",
           },
-          ScheduleExpression: `at(${
-            new Date(now + RUNNER_WARMING_INTERVAL).toISOString().split(".")[0]
-          })`,
+          ScheduleExpression: `at(${new Date(now + RUNNER_WARMING_INTERVAL).toISOString().split(".")[0]
+            })`,
           Target: {
             Arn: process.env.RUNNER_WARMER_FUNCTION_ARN,
             RoleArn: process.env.RUNNER_WARMER_SCHEDULE_ROLE_ARN,
@@ -1151,11 +1148,10 @@ export module Run {
           FlexibleTimeWindow: {
             Mode: "OFF",
           },
-          ScheduleExpression: `at(${
-            new Date(now + RUNNER_INACTIVE_TIME + 86400000)
-              .toISOString()
-              .split(".")[0]
-          })`,
+          ScheduleExpression: `at(${new Date(now + RUNNER_INACTIVE_TIME + 86400000)
+            .toISOString()
+            .split(".")[0]
+            })`,
           Target: {
             Arn: process.env.RUNNER_REMOVER_FUNCTION_ARN,
             RoleArn: process.env.RUNNER_REMOVER_SCHEDULE_ROLE_ARN,
@@ -1198,18 +1194,18 @@ export module Run {
       run.stageID === null
         ? undefined
         : await useTransaction((tx) =>
-            tx
-              .select()
-              .from(stageTable)
-              .where(
-                and(
-                  eq(stageTable.id, run.stageID!),
-                  eq(stageTable.workspaceID, useWorkspace())
-                )
+          tx
+            .select()
+            .from(stageTable)
+            .where(
+              and(
+                eq(stageTable.id, run.stageID!),
+                eq(stageTable.workspaceID, useWorkspace())
               )
-              .execute()
-              .then((x) => x[0])
-          );
+            )
+            .execute()
+            .then((x) => x[0])
+        );
 
     const { appName, workspaceSlug } = run;
     const stageName = stage?.name;
@@ -1269,8 +1265,8 @@ export module Run {
                   `*<${runUrl} | ${subject}>*`,
                   message,
                   "_" +
-                    [appName, stageName].filter((name) => name).join(" / ") +
-                    "_",
+                  [appName, stageName].filter((name) => name).join(" / ") +
+                  "_",
                 ].join("\n"),
               },
             },

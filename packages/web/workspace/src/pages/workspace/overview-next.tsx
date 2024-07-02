@@ -1,16 +1,13 @@
 import { DateTime } from "luxon";
 import {
-  AppRepoStore,
   AppStore,
-  GithubRepoStore,
-  RepoFromApp,
-  RunConfigStore,
   RunStore,
+  RepoFromApp,
   StateUpdateStore,
 } from "$/data/app";
 import { UserStore } from "$/data/user";
 import { AccountStore } from "$/data/aws";
-import { StageStore, ActiveStages } from "$/data/stage";
+import { ActiveStages } from "$/data/stage";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import {
   theme,
@@ -869,9 +866,11 @@ function StageCard(props: StageCardProps) {
         </Switch>
       </StageCardLeft>
       <StageCardRight>
-        <Show when={latestUpdate.value}>
-          <Github />
-        </Show>
+        <Switch>
+          <Match when={latestUpdate.value}>
+            <Github />
+          </Match>
+        </Switch>
         <StageRegion>{props.stage.region}</StageRegion>
         <StageUpdatedTime
           title={parseTime(props.stage.timeUpdated).toLocaleString(
