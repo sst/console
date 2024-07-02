@@ -230,6 +230,7 @@ const RunMessage = styled("div", {
     gap: 5,
     alignItems: "center",
     lineHeight: 0,
+    maxWidth: 300,
   },
 });
 
@@ -249,17 +250,11 @@ const RunMessageCopy = styled("p", {
   },
 });
 
-const RunMessageLink = styled(Link, {
-  base: {
-    fontSize: theme.font.size.sm,
-  },
-});
-
 const RunGit = styled("div", {
   base: {
     ...utility.row(2),
     alignItems: "center",
-    width: 420,
+    width: 460,
   },
 });
 
@@ -352,23 +347,10 @@ const RunRightCol = styled("div", {
   },
 });
 
-const RunInfo = styled("div", {
-  base: {
-    ...utility.row(1),
-    minWidth: 0,
-    alignItems: "center",
-  },
-});
-
-const RunSource = styled("div", {
-  base: {
-    ...utility.stack(2.5),
-    width: 120,
-  },
-});
-
 const RunTime = styled("span", {
   base: {
+    width: 120,
+    textAlign: "right",
     fontSize: theme.font.size.sm,
     color: theme.color.text.dimmed.base,
   },
@@ -425,6 +407,14 @@ function RunItem({ run }: { run: Run.Run }) {
       </RunLeftCol>
       <RunRightCol>
         <RunGit>
+          <RunSenderAvatar title={runInfo()!.trigger.sender.username}>
+            <img
+              width="24"
+              height="24"
+              src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                }?s=48&v=4`}
+            />
+          </RunSenderAvatar>
           <RunGitLink
             target="_blank"
             href={githubCommit(
@@ -456,27 +446,15 @@ function RunItem({ run }: { run: Run.Run }) {
             <RunGitMessage>{runInfo()!.trigger.commit.message}</RunGitMessage>
           </Show>
         </RunGit>
-        <RunInfo>
-          <RunSource>
-            <Show when={run.time.created} fallback={<RunTime>—</RunTime>}>
-              <RunTime
-                title={DateTime.fromISO(run.time.created!).toLocaleString(
-                  DateTime.DATETIME_FULL
-                )}
-              >
-                {formatSinceTime(DateTime.fromISO(run.time.created!).toSQL()!)}
-              </RunTime>
-            </Show>
-          </RunSource>
-          <RunSenderAvatar title={runInfo()!.trigger.sender.username}>
-            <img
-              width="24"
-              height="24"
-              src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                }?s=48&v=4`}
-            />
-          </RunSenderAvatar>
-        </RunInfo>
+        <Show when={run.time.created} fallback={<RunTime>—</RunTime>}>
+          <RunTime
+            title={DateTime.fromISO(run.time.created!).toLocaleString(
+              DateTime.DATETIME_FULL
+            )}
+          >
+            {formatSinceTime(DateTime.fromISO(run.time.created!).toSQL()!)}
+          </RunTime>
+        </Show>
       </RunRightCol>
     </RunRoot>
   );

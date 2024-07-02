@@ -161,7 +161,8 @@ const UpdateStatusCopy = styled("p", {
 
 const UpdateGit = styled("div", {
   base: {
-    ...utility.stack(1.5),
+    ...utility.stack(0),
+    gap: 2,
   },
 });
 
@@ -208,7 +209,7 @@ const UpdateGitBranch = styled("span", {
     ...utility.text.line,
     maxWidth: 140,
     lineHeight: "normal",
-    fontSize: theme.font.size.sm,
+    fontSize: theme.font.size.xs,
     color: theme.color.text.dimmed.base,
     transition: `color ${theme.colorFadeDuration} ease-out`,
     selectors: {
@@ -223,7 +224,7 @@ const UpdateGitCommit = styled("span", {
   base: {
     lineHeight: "normal",
     fontFamily: theme.font.family.code,
-    fontSize: theme.font.size.mono_base,
+    fontSize: theme.font.size.mono_sm,
     color: theme.color.text.secondary.base,
     fontWeight: theme.font.weight.medium,
     transition: `color ${theme.colorFadeDuration} ease-out`,
@@ -327,31 +328,17 @@ const ChangeLegendTag = styled("div", {
   },
 });
 
-const UpdateInfo = styled("div", {
-  base: {
-    ...utility.row(1),
-    minWidth: 0,
-    alignItems: "center",
-  },
-});
-
 const UpdateSource = styled("div", {
   base: {
-    ...utility.stack(2.5),
-    width: 120,
-  },
-});
-
-const UpdateSourceType = styled("span", {
-  base: {
-    ...utility.text.label,
-    fontSize: theme.font.size.mono_sm,
-    color: theme.color.text.secondary.base,
+    ...utility.row(2),
+    alignItems: "center",
   },
 });
 
 const UpdateTime = styled("span", {
   base: {
+    width: 120,
+    textAlign: "right",
     fontSize: theme.font.size.sm,
     color: theme.color.text.dimmed.base,
   },
@@ -459,70 +446,7 @@ function Update(props: UpdateProps) {
             </UpdateStatusCopy>
           </Stack>
         </UpdateStatus>
-        <Show when={runInfo()}>
-          <UpdateGit>
-            <Row space="2">
-              <UpdateGitLink
-                target="_blank"
-                href={githubCommit(
-                  runInfo()!.repoURL,
-                  runInfo()!.trigger.commit.id,
-                )}
-              >
-                <UpdateGitIcon size="md">
-                  <IconCommit />
-                </UpdateGitIcon>
-                <UpdateGitCommit>
-                  {formatCommit(runInfo()!.trigger.commit.id)}
-                </UpdateGitCommit>
-              </UpdateGitLink>
-              <UpdateGitLink target="_blank" href={runInfo()!.uri}>
-                <UpdateGitIcon size="sm">
-                  <Switch>
-                    <Match when={runInfo()!.trigger.type === "pull_request"}>
-                      <IconPr />
-                    </Match>
-                    <Match when={true}>
-                      <IconGit />
-                    </Match>
-                  </Switch>
-                </UpdateGitIcon>
-                <UpdateGitBranch>{runInfo()!.branch}</UpdateGitBranch>
-              </UpdateGitLink>
-            </Row>
-            <UpdateGitMessage>
-              <Show when={runInfo()!.trigger.commit.message} fallback="—">
-                {runInfo()!.trigger.commit.message}
-              </Show>
-            </UpdateGitMessage>
-          </UpdateGit>
-        </Show>
-      </UpdateLeftCol>
-      <UpdateRightCol>
-        <Stack space="2.5">
-          <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
-          <ChangeLegend
-            same={props.same}
-            created={props.created}
-            updated={props.updated}
-            deleted={props.deleted}
-          />
-        </Stack>
-        <UpdateInfo>
-          <UpdateSource>
-            <Show
-              when={props.timeStarted}
-              fallback={<UpdateTime>—</UpdateTime>}
-            >
-              <UpdateTime
-                title={DateTime.fromISO(props.timeStarted!).toLocaleString(
-                  DateTime.DATETIME_FULL,
-                )}
-              >
-                {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
-              </UpdateTime>
-            </Show>
-          </UpdateSource>
+        <UpdateSource>
           <Switch>
             <Match when={run.value!}>
               <UpdateSenderAvatar title={runInfo()!.trigger.sender.username}>
@@ -540,7 +464,68 @@ function Update(props: UpdateProps) {
               </UpdateSenderIcon>
             </Match>
           </Switch>
-        </UpdateInfo>
+          <Show when={runInfo()}>
+            <UpdateGit>
+              <Row space="1.5">
+                <UpdateGitLink
+                  target="_blank"
+                  href={githubCommit(
+                    runInfo()!.repoURL,
+                    runInfo()!.trigger.commit.id,
+                  )}
+                >
+                  <UpdateGitIcon size="md">
+                    <IconCommit />
+                  </UpdateGitIcon>
+                  <UpdateGitCommit>
+                    {formatCommit(runInfo()!.trigger.commit.id)}
+                  </UpdateGitCommit>
+                </UpdateGitLink>
+                <UpdateGitLink target="_blank" href={runInfo()!.uri}>
+                  <UpdateGitIcon size="sm">
+                    <Switch>
+                      <Match when={runInfo()!.trigger.type === "pull_request"}>
+                        <IconPr />
+                      </Match>
+                      <Match when={true}>
+                        <IconGit />
+                      </Match>
+                    </Switch>
+                  </UpdateGitIcon>
+                  <UpdateGitBranch>{runInfo()!.branch}</UpdateGitBranch>
+                </UpdateGitLink>
+              </Row>
+              <UpdateGitMessage>
+                <Show when={runInfo()!.trigger.commit.message} fallback="—">
+                  {runInfo()!.trigger.commit.message}
+                </Show>
+              </UpdateGitMessage>
+            </UpdateGit>
+          </Show>
+        </UpdateSource>
+      </UpdateLeftCol>
+      <UpdateRightCol>
+        <Stack space="2.5">
+          <UpdateCmd>{CMD_MAP[props.command]}</UpdateCmd>
+          <ChangeLegend
+            same={props.same}
+            created={props.created}
+            updated={props.updated}
+            deleted={props.deleted}
+          />
+        </Stack>
+        <Show
+          when={props.timeStarted}
+          fallback={<UpdateTime>—</UpdateTime>}
+        >
+          <UpdateTime
+            title={DateTime.fromISO(props.timeStarted!).toLocaleString(
+              DateTime.DATETIME_FULL,
+            )}
+          >
+            {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
+          </UpdateTime>
+        </Show>
       </UpdateRightCol>
     </UpdateRoot>
   );
