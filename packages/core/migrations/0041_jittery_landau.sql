@@ -6,4 +6,5 @@ ALTER TABLE `run` MODIFY COLUMN `app_id` char(24) NOT NULL;--> statement-breakpo
 ALTER TABLE `app_repository` DROP COLUMN `last_event`;--> statement-breakpoint
 ALTER TABLE `app_repository` DROP COLUMN `last_event_id`;--> statement-breakpoint
 ALTER TABLE `app_repository` DROP COLUMN `last_event_status`;--> statement-breakpoint
-ALTER TABLE `app_repository` DROP COLUMN `time_last_event`;
+ALTER TABLE `app_repository` DROP COLUMN `time_last_event`;--> statement-breakpoint
+ALTER TABLE `state_update` DROP COLUMN `source`;
