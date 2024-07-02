@@ -236,7 +236,7 @@ export module Run {
 
   export const Run = z.object({
     id: z.string().cuid2(),
-    appID: z.string().cuid2().optional(),
+    appID: z.string().cuid2(),
     stageID: z.string().cuid2().optional(),
     time: z.object({
       created: z.string(),
@@ -258,7 +258,7 @@ export module Run {
     return {
       id: input.id,
       active: input.active || false,
-      appID: input.appID || undefined,
+      appID: input.appID,
       stageID: input.stageID || undefined,
       time: {
         created: input.timeCreated.toISOString(),

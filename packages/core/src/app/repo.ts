@@ -18,11 +18,7 @@ export module AppRepo {
       created: z.string(),
       deleted: z.string().optional(),
       updated: z.string(),
-      lastEvent: z.string().optional(),
     }),
-    lastEvent: Trigger.optional(),
-    lastEventID: z.string().cuid2().optional(),
-    lastEventStatus: z.string().nonempty().optional(),
   });
   export type Repo = z.infer<typeof Repo>;
 
@@ -48,11 +44,7 @@ export module AppRepo {
         created: input.timeCreated.toISOString(),
         updated: input.timeUpdated.toISOString(),
         deleted: input.timeDeleted?.toISOString(),
-        lastEvent: input.timeLastEvent?.toISOString(),
       },
-      lastEvent: input.lastEvent || undefined,
-      lastEventID: input.lastEventID || undefined,
-      lastEventStatus: input.lastEventStatus || undefined,
     };
   }
 
@@ -129,78 +121,5 @@ export module AppRepo {
         )
         .execute();
     })
-  );
-
-  export const multiSetLastEvent = zod(
-    z.object({
-      workspaceIDs: z.array(z.string().cuid2()),
-      appRepoIDs: z.array(Repo.shape.id),
-      gitContext: Trigger,
-    }),
-    async ({ workspaceIDs, appRepoIDs, gitContext }) => {
-      const lastEventID = createId();
-      await useTransaction((tx) =>
-        tx
-          .update(appRepoTable)
-          .set({
-            lastEvent: gitContext,
-            lastEventID,
-            lastEventStatus: null,
-            timeLastEvent: new Date(),
-          })
-          .where(
-            and(
-              inArray(appRepoTable.workspaceID, workspaceIDs),
-              inArray(appRepoTable.id, appRepoIDs)
-            )
-          )
-      );
-      return lastEventID;
-    }
-  );
-
-  export const setLastEventStatus = zod(
-    z.object({
-      appRepoID: Repo.shape.id,
-      lastEventID: z.string().cuid2(),
-      status: z.string().nonempty(),
-    }),
-    async ({ appRepoID, lastEventID, status }) => {
-      await useTransaction((tx) =>
-        tx
-          .update(appRepoTable)
-          .set({ lastEventStatus: status })
-          .where(
-            and(
-              eq(appRepoTable.workspaceID, useWorkspace()),
-              eq(appRepoTable.id, appRepoID),
-              eq(appRepoTable.lastEventID, lastEventID)
-            )
-          )
-      );
-    }
-  );
-
-  export const multiSetLastEventStatus = zod(
-    z.object({
-      workspaceIDs: z.array(z.string().cuid2()),
-      appRepoIDs: z.array(Repo.shape.id),
-      lastEventID: z.string().cuid2(),
-      status: z.string().nonempty(),
-    }),
-    async ({ workspaceIDs, appRepoIDs, lastEventID, status }) => {
-      await useTransaction((tx) =>
-        tx
-          .update(appRepoTable)
-          .set({ lastEventStatus: status })
-          .where(
-            and(
-              inArray(appRepoTable.workspaceID, workspaceIDs),
-              inArray(appRepoTable.id, appRepoIDs),
-              eq(appRepoTable.lastEventID, lastEventID)
-            )
-          )
-      );
-    }
   );
 }

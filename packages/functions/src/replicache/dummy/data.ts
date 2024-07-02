@@ -3702,8 +3702,5 @@ function appRepo({ id, appID, repoID }: AppRepoProps): DummyData {
       created: DateTime.now().startOf("day").toISO()!,
       updated: DateTime.now().startOf("day").toISO()!,
     },
-    lastEvent: undefined,
-    lastEventID: undefined,
-    lastEventStatus: undefined,
   };
 }

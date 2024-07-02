@@ -203,7 +203,7 @@ export const runTable = mysqlTable(
     ...timestampsNext,
     timeStarted: timestamp("time_started"),
     timeCompleted: timestamp("time_completed"),
-    appID: cuid("app_id"),
+    appID: cuid("app_id").notNull(),
     stageID: cuid("stage_id"),
     log: json("log").$type<Log>(),
     trigger: json("trigger").$type<Trigger>().notNull(),
@@ -249,32 +249,6 @@ export const runConfigTable = mysqlTable(
       table.workspaceID,
       table.appID,
       table.stagePattern
-    ),
-    appID: foreignKey({
-      columns: [table.workspaceID, table.appID],
-      foreignColumns: [app.workspaceID, app.id],
-    }).onDelete("cascade"),
-  })
-);
-
-// TODO REMOVE
-export const runEnvTable_REMOVE = mysqlTable(
-  "run_env",
-  {
-    ...workspaceID,
-    ...timestampsNext,
-    appID: cuid("app_id").notNull(),
-    stageName: varchar("stage_name", { length: 255 }).notNull(),
-    key: varchar("key", { length: 255 }).notNull(),
-    value: text("value").notNull(),
-  },
-  (table) => ({
-    ...workspaceIndexes(table),
-    key: unique("key").on(
-      table.workspaceID,
-      table.appID,
-      table.stageName,
-      table.key
     ),
     appID: foreignKey({
       columns: [table.workspaceID, table.appID],
