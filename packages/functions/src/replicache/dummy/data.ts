@@ -2221,6 +2221,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
   yield run({
     id: RUN_ID,
+    appID: APP_ID,
     stageID: STAGE_ION.id,
     branch: "main",
     commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
@@ -2240,6 +2241,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
   yield run({
     id: RUN_ID,
+    appID: APP_ID,
     stageID: STAGE_ION.id,
     branch: "",
     commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
@@ -2293,6 +2295,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
   yield run({
     id: RUN_ID,
+    appID: APP_ID,
     stageID: STAGE_ION.id,
     branch:
       "a-really-long-branch-name-that-should-overflow-because-its-too-long",
@@ -2309,6 +2312,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
   });
   yield run({
     id: RUN_ID,
+    appID: APP_ID,
     stageID: STAGE_ION.id,
     branch: "main",
     commitID: "3492661dab38cb264be29b7d1b552802bcca32ce",
@@ -3577,6 +3581,7 @@ function stateFunction({
 
 interface RunProps {
   id: number;
+  appID: string;
   stageID: string;
   timeStarted?: string;
   timeCompleted?: string;
@@ -3591,6 +3596,7 @@ interface RunProps {
 }
 function run({
   id,
+  appID,
   stageID,
   timeStarted,
   timeCompleted,
@@ -3607,6 +3613,7 @@ function run({
     _type: "run",
     active: false,
     id: `${id}`,
+    appID,
     stageID,
     time: {
       created: DateTime.now().startOf("day").toISO()!,
