@@ -230,6 +230,7 @@ const RunMessage = styled("div", {
     gap: 5,
     alignItems: "center",
     lineHeight: 0,
+    maxWidth: 300,
   },
 });
 
