@@ -503,7 +503,7 @@ export function OverviewNext() {
         </Match>
         <Match when={true}>
           <>
-            <Show when={DateTime.now() < DateTime.fromISO("2024-03-28")}>
+            <Show when={DateTime.now() < DateTime.fromISO("2024-07-16")}>
               <Announcement>
                 <AnnouncementTag>New</AnnouncementTag>
                 <Text size="sm" on="surface" color="dimmed">
@@ -511,8 +511,8 @@ export function OverviewNext() {
                   —{" "}
                 </Text>
                 <Text size="sm" on="surface" color="secondary">
-                  Want to host the Console in your AWS account?{" "}
-                  <a href="https://forms.gle/iBVtq6zi6biAbZKy7" target="_blank">
+                  Autodeploy your apps with the Console{" "}
+                  <a href="https://ion.sst.dev/docs/console/#autodeploy" target="_blank">
                     Learn more
                     <AnnouncementLinkIcon>
                       <IconChevronRight width="13" height="13" />
