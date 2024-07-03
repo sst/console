@@ -10,7 +10,7 @@ import { Event, alert } from "./alert.sql";
 import { db } from "../drizzle";
 import { user } from "../user/user.sql";
 import { Slack } from "../slack";
-import type { KnownBlock } from "@slack/web-api";
+import type { KnownBlock, MessageAttachment } from "@slack/web-api";
 import { Warning } from "../warning";
 const ses = new SESv2Client({});
 
@@ -141,14 +141,16 @@ export module Alert {
       alertID: z.string().cuid2(),
       destination: z.custom<SlackDestination>(),
       blocks: z.array(z.custom<KnownBlock>()),
+      attachments: z.array(z.custom<MessageAttachment>()).optional(),
       text: z.string().min(1),
     }),
-    async ({ stageID, alertID, destination, blocks, text }) => {
+    async ({ stageID, alertID, destination, blocks, attachments, text }) => {
       try {
         console.log("sending slack");
         await Slack.send({
           channel: destination.properties.channel,
           blocks,
+          attachments,
           text,
         });
         if (stageID)

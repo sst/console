@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { zod } from "../util/zod";
-import { Block, KnownBlock, WebClient } from "@slack/web-api";
+import {
+  Block,
+  KnownBlock,
+  MessageAttachment,
+  WebClient,
+} from "@slack/web-api";
 import { useTransaction } from "../util/transaction";
 import { slackTeam } from "./slack.sql";
 import { useWorkspace } from "../actor";
@@ -52,6 +57,7 @@ export const send = zod(
     channel: z.string().nonempty(),
     text: z.string().nonempty(),
     blocks: z.custom<KnownBlock[]>(),
+    attachments: z.custom<MessageAttachment[]>().optional(),
   }),
   async (input) => {
     const result = await db
@@ -66,6 +72,7 @@ export const send = zod(
     const client = new WebClient(result.accessToken);
     await client.chat.postMessage({
       blocks: input.blocks,
+      attachments: input.attachments,
       unfurl_links: false,
       text: input.text,
       channel: input.channel,
