@@ -96,17 +96,19 @@ export function Content() {
 
   bar.register("stage-switcher", async (input, global) => {
     if (!input && global) return [];
-    return stages().map((stage) => {
-      const app = apps.value.find((item) => item.id === stage.appID)!;
-      return NavigationAction({
-        icon: IconApp,
-        category: "Stage",
-        title: `Go to "${app.name} / ${stage.name}"`,
-        path: `/${params.workspaceSlug}/${app.name}/${stage.name}`,
-        prefix: true,
-        nav,
+    return stages()
+      .filter((stage) => !stage.timeDeleted)
+      .map((stage) => {
+        const app = apps.value.find((item) => item.id === stage.appID)!;
+        return NavigationAction({
+          icon: IconApp,
+          category: "Stage",
+          title: `Go to "${app.name} / ${stage.name}"`,
+          path: `/${params.workspaceSlug}/${app.name}/${stage.name}`,
+          prefix: true,
+          nav,
+        });
       });
-    });
   });
 
   bar.register("app-switcher", async (input, global) => {

@@ -25,7 +25,13 @@ export function App() {
         path: ["", workspace().slug, appContext.app.name, "settings"].join("/"),
       }),
       NavigationAction({
-        title: "Overview",
+        title: "Autodeploy",
+        category: "App",
+        nav,
+        path: ["", workspace().slug, appContext.app.name, "autodeploy"].join("/"),
+      }),
+      NavigationAction({
+        title: "Stages",
         category: "App",
         nav,
         path: ["", workspace().slug, appContext.app.name].join("/"),

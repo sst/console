@@ -145,15 +145,17 @@ export function Inner() {
   bar.register("stage", async () => {
     return [
       NavigationAction({
-        path: "./updates",
-        category: ctx.stage.name,
-        title: "Updates",
-        nav,
-      }),
-      NavigationAction({
+        icon: IconSubRight,
         path: "./issues",
         category: ctx.stage.name,
         title: "Issues",
+        nav,
+      }),
+      NavigationAction({
+        icon: IconSubRight,
+        title: "Autodeploy",
+        path: "./autodeploy",
+        category: ctx.stage.name,
         nav,
       }),
       NavigationAction({
