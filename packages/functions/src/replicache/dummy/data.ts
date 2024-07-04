@@ -57,6 +57,9 @@ export function* generateData(
   INVOCATION_COUNT = 0;
   ALERT_COUNT = 0;
 
+  GITHUB_ORG = 100;
+  GITHUB_REPO = 100;
+
   const modeMap = stringToObject(mode);
 
   yield workspace({
@@ -87,11 +90,11 @@ export function* generateData(
   }
 
   if (modeMap["overview"] === "full") {
+    yield* overviewFull();
+
     for (let i = 0; i < 30; i++) {
       yield user({ email: `dummy${i}@example.com`, active: true });
     }
-
-    yield* overviewFull();
   }
 
   if (modeMap["subscription"]) {
@@ -230,8 +233,8 @@ const APP_ISSUE_9 = "sst-app-issue-9";
 const APP_ALERT_LONG =
   "mysstappissealertlongshouldoverflowbecaseitistoolongandshouldnotfitintheboxbecauseitstoolonganditkeepsgoingandgoing";
 
-const GITHUB_ORG = 100;
-const GITHUB_REPO = 100;
+let GITHUB_ORG = 100;
+let GITHUB_REPO = 100;
 
 const STACK = "stack-base";
 const STACK_LOCAL = "stack-local";
@@ -455,13 +458,7 @@ function* workspaceBase(): Generator<DummyData, void, unknown> {
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
   });
-  yield githubOrg({ id: GITHUB_ORG, name: "jayair" });
-  yield githubRepo({
-    id: GITHUB_REPO,
-    name: "ion-sandbox",
-    githubOrgID: GITHUB_ORG,
-  });
-  yield appRepo({ id: 100, appID: APP_LOCAL, repoID: GITHUB_REPO });
+  yield* createGitHubRepo({ appID: APP_ID, repo: "many-stage-app" });
 }
 
 function* overviewFull(): Generator<DummyData, void, unknown> {
@@ -471,54 +468,28 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
       "invited-dummy-with-long-email-address-that-should-overflow-because-its-too-long@example.com",
   });
   yield user({
+    active: true,
+    email:
+      "dummy-with-long-email-address-that-should-overflow-because-its-too-long@example.com",
+  });
+  yield user({
     email: "deleted-dummy@example.com",
     active: true,
     deleted: true,
   });
 
-  // yield* overviewSortApps();
   yield* overviewLongApps();
 
-  yield app({ id: APP_ID, name: "my-sst-app" });
-  yield account({
-    id: "syncing-empty",
-    accountID: "123456789013",
-    syncing: true,
-  });
-  yield account({
-    id: "failed-empty",
-    accountID: "123456789014",
-    failed: true,
-  });
-  yield account({ id: "empty", accountID: "123456789015" });
-  yield account({
-    id: ACCOUNT_ID_FAILED,
-    accountID: "123456789016",
-    failed: true,
-  });
+  yield app({ id: APP_LOCAL, name: APP_LOCAL_NAME });
   yield stage({
-    id: "stage-account-failed",
-    appID: APP_ID,
-    region: "ap-southeast-1",
-    awsAccountID: ACCOUNT_ID_FAILED,
+    id: STAGE_LOCAL,
+    name: STAGE_LOCAL,
+    appID: APP_LOCAL,
+    awsAccountID: ACCOUNT_ID,
   });
-  yield account({
-    id: ACCOUNT_ID_SYNCING,
-    accountID: "123456789017",
-    syncing: true,
-  });
-  yield account({
-    id: ACCOUNT_ID_SYNCING_FULL,
-    accountID: "123456789019",
-    syncing: true,
-  });
-  yield stage({
-    id: "stage-account-syncing",
-    appID: APP_ID,
-    awsAccountID: ACCOUNT_ID_SYNCING,
-  });
-  yield account({ id: ACCOUNT_ID_FULL, accountID: "123456789018" });
 
+  yield app({ id: APP_ID, name: "my-many-stage-sst-app" });
+  yield account({ id: ACCOUNT_ID_FULL, accountID: "123456789018" });
   for (let i = 0; i < 30; i++) {
     yield stage({
       id: `stage-${i}`,
@@ -527,38 +498,7 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
     });
   }
 
-  for (let i = 0; i < 10; i++) {
-    yield stage({
-      id: `stage-${i}`,
-      appID: APP_ID,
-      awsAccountID: ACCOUNT_ID_SYNCING_FULL,
-    });
-  }
-}
-
-function* overviewSortApps(): Generator<DummyData, void, unknown> {
-  yield stage({
-    id: "b-supported-b",
-    appID: APP_LOCAL,
-    awsAccountID: ACCOUNT_ID,
-  });
-  yield stage({
-    id: "b-supported-a",
-    appID: APP_LOCAL,
-    awsAccountID: ACCOUNT_ID,
-  });
-  yield stage({
-    id: "a-unsupported-b",
-    appID: APP_LOCAL,
-    unsupported: true,
-    awsAccountID: ACCOUNT_ID,
-  });
-  yield stage({
-    id: "a-unsupported-a",
-    appID: APP_LOCAL,
-    unsupported: true,
-    awsAccountID: ACCOUNT_ID,
-  });
+  yield* createGitHubRepo({ appID: APP_ID, repo: "many-stage-app" });
 }
 
 function* overviewLongApps(): Generator<DummyData, void, unknown> {
@@ -569,6 +509,7 @@ function* overviewLongApps(): Generator<DummyData, void, unknown> {
   });
   yield stage({
     id: "stage-long-id-1",
+    unsupported: true,
     appID: APP_ID_LONG,
     awsAccountID: ACCOUNT_ID_LONG_APPS,
   });
@@ -577,6 +518,17 @@ function* overviewLongApps(): Generator<DummyData, void, unknown> {
     appID: APP_ID_LONG,
     region: "ap-southeast-1",
     awsAccountID: ACCOUNT_ID_LONG_APPS,
+  });
+  yield* createGitHubRepo({ appID: APP_ID_LONG });
+  yield run({
+    id: RUN_ID++,
+    appID: APP_ID_LONG,
+    status: "error",
+    branch: "main",
+    commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
+    // error: unknownRunError(),
+    commitMessage: "",
+    ...dummyRepo(),
   });
 }
 
@@ -3319,18 +3271,18 @@ function invocation({
       duration === undefined
         ? duration
         : {
-            duration,
-            memory: 128,
-            size: 2048,
-            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
-          },
+          duration,
+          memory: 128,
+          size: 2048,
+          xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+        },
     start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
-          message,
-          id: `log-${INVOCATION_COUNT}-${i}`,
-          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-        }))
+        message,
+        id: `log-${INVOCATION_COUNT}-${i}`,
+        timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+      }))
       : [],
   };
 }
@@ -3582,7 +3534,7 @@ function stateFunction({
 interface RunProps {
   id: number;
   appID: string;
-  stageID: string;
+  stageID?: string;
   timeStarted?: string;
   timeCompleted?: string;
   branch?: string;
@@ -3593,6 +3545,8 @@ interface RunProps {
   repoID: number;
   repoOwner: string;
   repoName: string;
+  status?: Run.Run["status"];
+  error?: Run.Run["error"];
 }
 function run({
   id,
@@ -3606,7 +3560,9 @@ function run({
   senderID,
   senderUsername,
   repoID,
+  error,
   repoOwner,
+  status,
   repoName,
 }: RunProps): DummyData {
   return {
@@ -3615,6 +3571,8 @@ function run({
     id: `${id}`,
     appID,
     stageID,
+    status: status || "updated",
+    error,
     time: {
       created: DateTime.now().startOf("day").toISO()!,
       updated: DateTime.now().startOf("day").toISO()!,
@@ -3640,7 +3598,6 @@ function run({
         repo: repoName,
       },
     },
-    status: "updated",
   };
 }
 
@@ -3652,6 +3609,15 @@ function dummyRepo(senderID?: number) {
     senderID: senderID || 53023,
     senderUsername: "jayair",
   };
+}
+
+function unknownRunError() {
+  return {
+    type: "unknown",
+    properties: {
+      message: "Unknown run error",
+    },
+  } as Run.Run["error"];
 }
 
 interface GithubOrgProps {
@@ -3710,4 +3676,20 @@ function appRepo({ id, appID, repoID }: AppRepoProps): DummyData {
       updated: DateTime.now().startOf("day").toISO()!,
     },
   };
+}
+
+interface CreateGitHubRepoProps {
+  appID: string;
+  repo?: string;
+  org?: string;
+}
+function* createGitHubRepo({
+  repo, org, appID,
+}: CreateGitHubRepoProps): Generator<DummyData, void, unknown> {
+  const ghRepoID = GITHUB_REPO++;
+  const ghOrgID = GITHUB_ORG++;
+
+  yield appRepo({ id: 100, appID, repoID: ghRepoID });
+  yield githubRepo({ id: ghRepoID, name: repo || "ion-sandbox", githubOrgID: ghOrgID });
+  yield githubOrg({ id: ghOrgID, name: org || "jayair" });
 }

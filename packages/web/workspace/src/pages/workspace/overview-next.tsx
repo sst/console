@@ -146,6 +146,7 @@ const CardHeader = styled("div", {
 const CardTitle = styled(Link, {
   base: {
     ...utility.row(2),
+    overflow: "hidden",
     alignItems: "center",
     fontSize: theme.font.size.base,
     fontWeight: theme.font.weight.medium,
@@ -180,6 +181,12 @@ const CardTitleIcon = styled("span", {
   },
 });
 
+const CardTitleText = styled("span", {
+  base: {
+    ...utility.text.line,
+  },
+});
+
 const RepoLink = styled("a", {
   base: {
     ...utility.row(0),
@@ -198,6 +205,7 @@ const RepoLink = styled("a", {
 
 const RepoLinkCopy = styled("span", {
   base: {
+    ...utility.text.line,
     fontSize: theme.font.size.sm,
     lineHeight: "normal",
   },
@@ -417,10 +425,8 @@ export function OverviewNext() {
       <Card>
         <CardHeader>
           <CardTitle href={props.app.name}>
-            <CardTitleIcon>
-              <IconApp width="20" height="20" />
-            </CardTitleIcon>
-            {props.app.name}
+            <CardTitleIcon><IconApp width="20" height="20" /></CardTitleIcon>
+            <CardTitleText>{props.app.name}</CardTitleText>
           </CardTitle>
           <Show when={repo.value && latestRunError.value}>
             <Link href={`${props.app.name}/autodeploy`}>
@@ -635,6 +641,7 @@ const StageRoot = styled("div", {
 const StageCardLeft = styled("div", {
   base: {
     ...utility.row(3),
+    minWidth: 0,
     alignItems: "center",
     justifyContent: "flex-start",
   },
@@ -643,6 +650,7 @@ const StageCardLeft = styled("div", {
 const StageLink = styled(Link, {
   base: {
     ...utility.row(2.5),
+    minWidth: 0,
     alignItems: "center",
     color: theme.color.text.primary.base,
   },
@@ -658,6 +666,7 @@ const StageLink = styled(Link, {
 
 const StageIcon = styled("div", {
   base: {
+    flex: "0 0 auto",
     marginInline: 5,
     width: 10,
     height: 10,
@@ -689,6 +698,7 @@ const StageIcon = styled("div", {
 const StageLinkText = styled("span", {
   base: {
     ...utility.text.line,
+    minWidth: 0,
     fontSize: theme.font.size.sm,
     lineHeight: "normal",
   },
@@ -839,23 +849,14 @@ function StageCard(props: StageCardProps) {
           <StageLinkText>{props.stage.name}</StageLinkText>
         </StageLink>
         <Switch>
-          <Match
-            when={
-              props.stage.name === local()?.stage &&
-              app()?.name === local()?.app
-            }
-          >
+          <Match when={props.stage.name === local()?.stage && app()?.name === local()?.app}>
             <Link href={`${stageUri()}/local`}>
-              <Tag level="tip" style="outline">
-                Local
-              </Tag>
+              <Tag level="tip" style="outline">Local</Tag>
             </Link>
           </Match>
           <Match when={latestUpdate.value?.errors.length}>
             <Link href={`${stageUri()}/resources/updates/${latestUpdate.value?.id}`}>
-              <Tag style="outline" level="danger">
-                Error
-              </Tag>
+              <Tag style="outline" level="danger">Error</Tag>
             </Link>
           </Match>
           <Match when={props.stage.unsupported}>

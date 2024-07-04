@@ -100,7 +100,6 @@ export function RepoFromApp(id: string) {
     if (!appRepo.length) return;
     const repo = await GithubRepoStore.get(tx, appRepo[0].repoID);
     const org = await GithubOrgStore.get(tx, repo.githubOrgID);
-    console.log(repo, org);
     return { repo, org };
   };
 }
