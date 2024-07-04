@@ -16,6 +16,7 @@ export const GREY_COLOR = [
 ];
 
 export const BLUE_COLOR = "#395C6B";
+export const DANGER_COLOR = "#ED322C";
 export const TEXT_COLOR = GREY_COLOR[0];
 export const SECONDARY_COLOR = GREY_COLOR[5];
 export const DIMMED_COLOR = GREY_COLOR[7];
@@ -30,6 +31,14 @@ export const body = {
 
 export const container = {
   minWidth: "600px",
+};
+
+export const medium = {
+  fontWeight: 500,
+};
+
+export const danger = {
+  color: DANGER_COLOR,
 };
 
 export const frame = {
@@ -83,9 +92,8 @@ export const breadcrumbSeparator = {
 };
 
 export const heading = {
-  ...code,
   fontSize: "22px",
-  fontWeight: 600,
+  fontWeight: 500,
 };
 
 export const sectionLabel = {

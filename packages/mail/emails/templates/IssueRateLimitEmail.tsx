@@ -95,13 +95,13 @@ export const IssueRateLimitEmail = ({
                 <span>{stage}</span>
               </Text>
               <Text style={{ ...heading, ...compactText }}>
-                <Link style={code} href={url}>
+                <Link href={url}>
                   <SplitString text={subject} split={40} />
                 </Link>
               </Text>
             </Section>
             <Section style={{ padding: `${unit}px 0 0 0` }}>
-              <Text style={{ ...compactText, ...code }}>
+              <Text style={{ ...compactText }}>
                 <SplitString text={message} split={63} />
               </Text>
             </Section>

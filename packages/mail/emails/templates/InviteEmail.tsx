@@ -19,6 +19,7 @@ import {
   body,
   code,
   frame,
+  medium,
   heading,
   container,
   headingHr,
@@ -84,19 +85,19 @@ export const InviteEmail = ({
                 <span>{workspace}</span>
               </Text>
               <Text style={{ ...heading, ...compactText }}>
-                <Link style={code} href={url}>
+                <Link href={url}>
                   <SplitString text={subject} split={40} />
                 </Link>
               </Text>
             </Section>
             <Section style={{ padding: `${unit}px 0 0 0` }}>
-              <Text style={{ ...compactText, ...code }}>
+              <Text style={{ ...compactText }}>
                 You've been invited to join the{" "}
-                <Link style={code} href={url}>
+                <Link style={medium} href={url}>
                   {workspace}
                 </Link>{" "}
                 workspace in the{" "}
-                <Link style={code} href={consoleUrl}>
+                <Link style={medium} href={consoleUrl}>
                   SST Console
                 </Link>
                 .

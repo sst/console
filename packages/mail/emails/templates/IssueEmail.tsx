@@ -324,7 +324,7 @@ export const IssueEmail = ({
                 <span>{stage}</span>
               </Text>
               <Text style={{ ...heading, ...compactText }}>
-                <Link style={code} href={url}>
+                <Link href={url}>
                   <SplitString text={issue.error} split={40} />
                 </Link>
               </Text>

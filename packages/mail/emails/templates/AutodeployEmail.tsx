@@ -19,6 +19,8 @@ import {
   body,
   code,
   frame,
+  medium,
+  danger,
   heading,
   container,
   headingHr,
@@ -28,6 +30,7 @@ import {
   buttonPrimary,
   breadcrumbSeparator,
   breadcrumbColonSeparator,
+  DANGER_COLOR,
   SECONDARY_COLOR,
 } from "../styles";
 
@@ -47,17 +50,18 @@ interface AutodeployEmailProps {
   commitUrl: string;
   assetsUrl: string;
   consoleUrl: string;
+  error?: boolean;
   runUrl: string;
 }
 export const AutodeployEmail = ({
+  error = true,
   app = "console",
   workspace = "seed",
   //stage = "production",
   stage = undefined,
-  //subject = "Deploy failed",
-  subject = "Deployed",
-  //message = "Failed to initialize runner",
-  message = "Deployed successfully to production",
+  subject = "Deploy failed",
+  message = "Failed to initialize runner",
+  // message = "Deployed successfully to production",
   commit = "7c14080",
   commitUrl = "https://github.com/fwang/ion-playground/commit/7c14080b5675d2b2e02aeb154a73c098ae764776",
   assetsUrl = LOCAL_ASSETS_URL,
@@ -112,7 +116,7 @@ export const AutodeployEmail = ({
                 )}
               </Text>
               <Text style={{ ...heading, ...compactText }}>
-                <Link style={code} href={runUrl}>
+                <Link style={error && { color: DANGER_COLOR }} href={runUrl}>
                   <SplitString text={subject} split={40} />
                 </Link>
               </Text>
@@ -125,7 +129,7 @@ export const AutodeployEmail = ({
             <Section style={{ padding: `${unit}px 0 0 0` }}>
               <Text style={{ ...compactText, ...contextInfo }}>
                 Using commit:{" "}
-                <Link href={commitUrl} style={code}>
+                <Link href={commitUrl} style={{ ...code, ...medium }}>
                   {commit}
                 </Link>
               </Text>
