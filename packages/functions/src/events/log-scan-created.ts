@@ -36,19 +36,25 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
       let start = search.timeEnd
         ? end.minus({ hours: 1 })
         : await (async () => {
-            const response = await client.send(
-              new DescribeLogStreamsCommand({
-                logGroupIdentifier: search.logGroup,
-                orderBy: "LastEventTime",
-                descending: true,
-                limit: 1,
-              })
-            );
+            const response = await client
+              .send(
+                new DescribeLogStreamsCommand({
+                  logGroupIdentifier: search.logGroup,
+                  orderBy: "LastEventTime",
+                  descending: true,
+                  limit: 1,
+                }),
+              )
+              .catch((ex) => {
+                if (ex.name === "ResourceNotFoundException") return;
+                throw ex;
+              });
+            if (!response) return;
             return DateTime.fromMillis(
-              response.logStreams?.[0]?.lastEventTimestamp! - 30 * 60 * 1000
+              response.logStreams?.[0]?.lastEventTimestamp! - 30 * 60 * 1000,
             ).startOf("hour");
           })();
-
+      if (!start) return;
       console.log("start", start.toLocaleString(DateTime.DATETIME_SHORT));
 
       const processor = Log.createProcessor({
@@ -72,7 +78,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
           "scanning from",
           start.toLocaleString(DateTime.DATETIME_SHORT),
           "to",
-          end.toLocaleString(DateTime.DATETIME_SHORT)
+          end.toLocaleString(DateTime.DATETIME_SHORT),
         );
         const result = await client
           .send(
@@ -81,7 +87,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
               queryString: `fields @timestamp, @message, @logStream | sort @timestamp desc | limit 10000`,
               startTime: start.toMillis() / 1000,
               endTime: end.toMillis() / 1000,
-            })
+            }),
           )
           .catch((ex) => {});
         if (!result) return true;
@@ -91,7 +97,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
           const response = await client.send(
             new GetQueryResultsCommand({
               queryId: result.queryId,
-            })
+            }),
           );
 
           if (response.status === "Complete") {
@@ -106,7 +112,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
                 "flushing invocations",
                 data.length,
                 "flushed so far",
-                flushed
+                flushed,
               );
               if (data.length) {
                 flushed += data.length;
@@ -119,7 +125,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
 
             let now = Date.now();
             for (const result of results.sort((a, b) =>
-              a[0]!.value!.localeCompare(b[0]!.value!)
+              a[0]!.value!.localeCompare(b[0]!.value!),
             )) {
               await processor.process({
                 id: index.toString(),
@@ -157,7 +163,7 @@ export const handler = EventHandler(Log.Search.Events.Created, (evt) =>
       outcome: result ? "completed" : "partial",
     });
     await Replicache.poke(profileID);
-  })
+  }),
 );
 
 function delay(iteration: number) {
