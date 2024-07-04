@@ -442,9 +442,8 @@ export function Detail() {
                     <img
                       width={AVATAR_SIZE}
                       height={AVATAR_SIZE}
-                      src={`https://avatars.githubusercontent.com/u/${
-                        runInfo()!.trigger.sender.id
-                      }?s=${2 * AVATAR_SIZE}&v=4`}
+                      src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                        }?s=${2 * AVATAR_SIZE}&v=4`}
                     />
                   </GitAvatar>
                   <Stack space="0.5">
@@ -501,16 +500,16 @@ export function Detail() {
                 title={
                   update.value!.time.started
                     ? DateTime.fromISO(
-                        update.value!.time.started!
-                      ).toLocaleString(DateTime.DATETIME_FULL)
+                      update.value!.time.started!
+                    ).toLocaleString(DateTime.DATETIME_FULL)
                     : undefined
                 }
               >
                 {update.value!.time.started
                   ? formatSinceTime(
-                      DateTime.fromISO(update.value!.time.started!).toSQL()!,
-                      true
-                    )
+                    DateTime.fromISO(update.value!.time.started!).toSQL()!,
+                    true
+                  )
                   : "—"}
               </Text>
             </Stack>
@@ -526,11 +525,11 @@ export function Detail() {
               >
                 {update.value!.time.started && update.value!.time.completed
                   ? formatDuration(
-                      DateTime.fromISO(update.value!.time.completed!)
-                        .diff(DateTime.fromISO(update.value!.time.started!))
-                        .as("milliseconds"),
-                      true
-                    )
+                    DateTime.fromISO(update.value!.time.completed!)
+                      .diff(DateTime.fromISO(update.value!.time.started!))
+                      .as("milliseconds"),
+                    true
+                  )
                   : "—"}
               </Text>
             </Stack>
@@ -617,7 +616,7 @@ export function Detail() {
                 <Show when={err.urn}>
                   <ErrorTitle>{getResourceName(err.urn)}</ErrorTitle>
                 </Show>
-                <ErrorMessage>{err.message}</ErrorMessage>
+                <ErrorMessage>{err.message.trim()}</ErrorMessage>
               </Stack>
             </Error>
           )}
