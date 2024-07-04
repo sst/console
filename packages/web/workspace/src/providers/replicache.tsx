@@ -206,7 +206,7 @@ function createReplicache(workspaceID: string, token: string) {
       response: result.status === 200 ? await result.json() : undefined,
       httpRequestInfo: {
         httpStatusCode: result.status,
-        errorMessage: result.statusText,
+        errorMessage: result.status !== 200 ? result.statusText : "",
       },
     };
   };
@@ -233,7 +233,7 @@ function createReplicache(workspaceID: string, token: string) {
 }
 
 export function ReplicacheProvider(
-  props: ParentProps<{ workspaceID: string }>
+  props: ParentProps<{ workspaceID: string }>,
 ) {
   const auth = useAuth2();
   const rep = createMemo(() => {
@@ -270,19 +270,19 @@ export function useReplicache() {
 }
 
 export function createSubscription<R>(
-  cb: (tx: ReadTransaction) => Promise<R>
+  cb: (tx: ReadTransaction) => Promise<R>,
 ): {
   value: R | undefined;
 };
 export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial: R
+  initial: R,
 ): {
   value: R;
 };
 export function createSubscription<R>(
   cb: (tx: ReadTransaction) => Promise<R>,
-  initial?: R | undefined
+  initial?: R | undefined,
 ) {
   const [store, setStore] = createStore({
     value: initial,
@@ -303,8 +303,8 @@ export function createSubscription<R>(
             },
             {
               merge: true,
-            }
-          )
+            },
+          ),
         );
       },
     });

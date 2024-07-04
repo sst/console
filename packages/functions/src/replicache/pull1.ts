@@ -52,6 +52,14 @@ import { AppRepo } from "@console/core/app/repo";
 import { Github } from "@console/core/git/github";
 import { alert } from "@console/core/alert/alert.sql";
 import { Alert } from "@console/core/alert";
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { createId } from "@console/core/util/sql";
+import { Bucket } from "sst/node/bucket";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export const TABLES = {
   stateUpdate: stateUpdateTable,
@@ -101,8 +109,8 @@ const TABLE_KEY = {
   run: [runTable.stageID, runTable.id],
   stripe: [],
 } as {
-    [key in TableName]?: MySqlColumn[];
-  };
+  [key in TableName]?: MySqlColumn[];
+};
 
 const TABLE_PROJECTION = {
   alert: (input) => Alert.serialize(input),
@@ -121,8 +129,10 @@ const TABLE_PROJECTION = {
   },
   run: (input) => Run.serializeRun(input),
 } as {
-    [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
-  };
+  [key in TableName]?: (input: (typeof TABLES)[key]["$inferSelect"]) => any;
+};
+
+const s3 = new S3Client({});
 
 export const handler = ApiHandler(
   withApiAuth(async () => {
@@ -175,7 +185,7 @@ export const handler = ApiHandler(
 
         const oldCvr = await Replicache.CVR.get(
           req.clientGroupID,
-          req.cookie as number
+          req.cookie as number,
         );
 
         const cvr = oldCvr ?? {
@@ -202,7 +212,7 @@ export const handler = ApiHandler(
 
         const results: [
           string,
-          { id: string; version: string; key: string }[]
+          { id: string; version: string; key: string }[],
         ][] = [];
 
         if (actor.type === "user") {
@@ -214,15 +224,15 @@ export const handler = ApiHandler(
             .where(
               and(
                 isNotNull(stage.timeDeleted),
-                eq(stage.workspaceID, useWorkspace())
-              )
+                eq(stage.workspaceID, useWorkspace()),
+              ),
             )
             .then((rows) => rows.map((row) => row.id));
           const tableFilters = {
             log_search: eq(log_search.userID, actor.properties.userID),
             usage: gte(
               usage.day,
-              DateTime.now().toUTC().startOf("month").toSQLDate()!
+              DateTime.now().toUTC().startOf("month").toSQLDate()!,
             ),
             issueCount: gte(
               issueCount.hour,
@@ -230,28 +240,28 @@ export const handler = ApiHandler(
                 .toUTC()
                 .startOf("hour")
                 .minus({ day: 1 })
-                .toSQL({ includeOffset: false })!
+                .toSQL({ includeOffset: false })!,
             ),
             issue: isNull(issue.timeDeleted),
             ...(deletedStages.length
               ? {
-                stateEvent: notInArray(
-                  stateEventTable.stageID,
-                  deletedStages
-                ),
-                stateUpdate: notInArray(
-                  stateUpdateTable.stageID,
-                  deletedStages
-                ),
-                stateResource: notInArray(
-                  stateResourceTable.stageID,
-                  deletedStages
-                ),
-              }
+                  stateEvent: notInArray(
+                    stateEventTable.stageID,
+                    deletedStages,
+                  ),
+                  stateUpdate: notInArray(
+                    stateUpdateTable.stageID,
+                    deletedStages,
+                  ),
+                  stateResource: notInArray(
+                    stateResourceTable.stageID,
+                    deletedStages,
+                  ),
+                }
               : {}),
           } satisfies {
-              [key in keyof typeof TABLES]?: SQLWrapper;
-            };
+            [key in keyof typeof TABLES]?: SQLWrapper;
+          };
 
           const workspaceID = useWorkspace();
 
@@ -273,15 +283,13 @@ export const handler = ApiHandler(
                 and(
                   eq(
                     "workspaceID" in table ? table.workspaceID : table.id,
-                    workspaceID
+                    workspaceID,
                   ),
-                  ...(name === "stage"
-                    ? []
-                    : [isNull(table.timeDeleted)]),
+                  ...(name === "stage" ? [] : [isNull(table.timeDeleted)]),
                   ...(name in tableFilters
                     ? [tableFilters[name as keyof typeof tableFilters]]
-                    : [])
-                )
+                    : []),
+                ),
               );
             log("getting updated from", name);
             const rows = await query.execute();
@@ -305,8 +313,8 @@ export const handler = ApiHandler(
                 and(
                   eq(user.email, actor.properties.email),
                   isNull(user.timeDeleted),
-                  isNull(workspace.timeDeleted)
-                )
+                  isNull(workspace.timeDeleted),
+                ),
               )
               .execute(),
           ]);
@@ -324,8 +332,8 @@ export const handler = ApiHandler(
               and(
                 eq(user.email, actor.properties.email),
                 isNull(user.timeDeleted),
-                isNull(workspace.timeDeleted)
-              )
+                isNull(workspace.timeDeleted),
+              ),
             )
             .execute();
           results.push(["workspace", workspaces]);
@@ -346,7 +354,7 @@ export const handler = ApiHandler(
 
         log(
           "toPut",
-          mapValues(toPut, (value) => value.length)
+          mapValues(toPut, (value) => value.length),
         );
 
         log("toDel", cvr.data);
@@ -356,7 +364,7 @@ export const handler = ApiHandler(
           log(name);
           const ids = items.map((item) => item.id);
           const keys = Object.fromEntries(
-            items.map((item) => [item.id, item.key])
+            items.map((item) => [item.id, item.key]),
           );
 
           if (!ids.length) continue;
@@ -372,8 +380,8 @@ export const handler = ApiHandler(
                   "workspaceID" in table && actor.type === "user"
                     ? eq(table.workspaceID, useWorkspace())
                     : undefined,
-                  inArray(table.id, group)
-                )
+                  inArray(table.id, group),
+                ),
               )
               .execute();
             console.log(name, "got", rows.length);
@@ -408,13 +416,13 @@ export const handler = ApiHandler(
           .where(
             and(
               eq(replicache_client.clientGroupID, req.clientGroupID),
-              gt(replicache_client.clientVersion, cvr.clientVersion)
-            )
+              gt(replicache_client.clientVersion, cvr.clientVersion),
+            ),
           )
           .execute();
 
         const lastMutationIDChanges = Object.fromEntries(
-          clients.map((c) => [c.id, c.mutationID] as const)
+          clients.map((c) => [c.id, c.mutationID] as const),
         );
         if (patch.length > 0 || Object.keys(lastMutationIDChanges).length > 0) {
           log("inserting", req.clientGroupID);
@@ -446,7 +454,7 @@ export const handler = ApiHandler(
       },
       {
         isolationLevel: "serializable",
-      }
+      },
     );
 
     const response: APIGatewayProxyStructuredResultV2 = {
@@ -462,11 +470,36 @@ export const handler = ApiHandler(
       log("gzipping");
       response.headers!["content-encoding"] = "gzip";
       const buff = gzipSync(response.body || "");
-      response.body = buff.toString("base64");
+      const body = buff.toString("base64");
+      response.body = body;
       response.isBase64Encoded = true;
+      if (body.length > 5 * 1024 * 1024) {
+        const key =
+          ["temporary", "daily", "pull", req.profileID].join("/") + ".json.gz";
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: Bucket.storage.bucketName,
+            Key: key,
+            ContentEncoding: "gzip",
+            ContentType: "application/json",
+            Body: buff,
+          }),
+        );
+
+        const url = await getSignedUrl(
+          s3,
+          new GetObjectCommand({
+            Bucket: Bucket.storage.bucketName,
+            Key: key,
+          }),
+        );
+        response.body = undefined;
+        response.statusCode = 302;
+        response.headers!["location"] = url;
+      }
       log("done gzip");
     }
 
     return response;
-  })
+  }),
 );

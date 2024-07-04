@@ -7,7 +7,7 @@ export function Storage(ctx: StackContext) {
       bucket: {
         lifecycleRules: [
           {
-            prefix: "temporary/",
+            prefix: "temporary/daily",
             expiration: Duration.days(1),
           },
           {
