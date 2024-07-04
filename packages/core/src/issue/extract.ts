@@ -16,7 +16,7 @@ import {
   createTransactionEffect,
 } from "../util/transaction";
 import { zod } from "../util/zod";
-import { issueCount, issue } from "./issue.sql";
+import { issueCount, issue, issueSubscriber } from "./issue.sql";
 
 export const extract = zod(
   z.custom<(typeof Events.ErrorDetected.$output.records)[number]>(),
@@ -93,18 +93,33 @@ export const extract = zod(
     }
 
     if (count > 10_000) {
+      const limited = await db
+        .select({
+          workspaceID: issueSubscriber.workspaceID,
+          stageID: issueSubscriber.stageID,
+        })
+        .from(issueSubscriber)
+        .where(
+          and(
+            inArray(
+              issueSubscriber.workspaceID,
+              workspaces.map((x) => x.workspaceID),
+            ),
+            eq(issueSubscriber.logGroup, input.logGroup),
+          ),
+        );
       await Promise.all(
-        workspaces.map((workspace) =>
+        limited.map((row) =>
           withActor(
             {
               type: "system",
               properties: {
-                workspaceID: workspace.workspaceID,
+                workspaceID: row.workspaceID,
               },
             },
             () =>
               Events.RateLimited.publish({
-                stageID: workspace.stageID,
+                stageID: row.stageID,
                 logGroup: input.logGroup,
               }),
           ),
