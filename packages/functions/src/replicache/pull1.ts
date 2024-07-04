@@ -371,6 +371,7 @@ export const handler = ApiHandler(
           const table = TABLES[name as keyof typeof TABLES];
 
           for (const group of chunk(ids, 200)) {
+            const now = Date.now();
             log(name, "fetching", group.length);
             const rows = await tx
               .select()
@@ -384,7 +385,7 @@ export const handler = ApiHandler(
                 ),
               )
               .execute();
-            console.log(name, "got", rows.length);
+            log(name, "got", rows.length, "in", Date.now() - now, "ms");
             const projection =
               TABLE_PROJECTION[name as keyof typeof TABLE_PROJECTION];
             for (const row of rows) {
