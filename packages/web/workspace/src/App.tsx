@@ -42,7 +42,6 @@ const Root = styled("div", {
     fontSynthesis: "none",
     textRendering: "geometricPrecision",
     backgroundColor: theme.color.background.base,
-    overflowY: "auto",
   },
 });
 
@@ -211,15 +210,14 @@ export const App: Component = () => {
                                           }
                                         >
                                           <Navigate
-                                            href={`/${
-                                              (
+                                            href={`/${(
                                                 auth.current.workspaces.find(
                                                   (w) =>
                                                     w.id ===
                                                     storage.value.workspace,
                                                 ) || auth.current.workspaces[0]
                                               ).slug
-                                            }`}
+                                              }`}
                                           />
                                         </Match>
                                         <Match when={true}>

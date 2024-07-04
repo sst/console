@@ -34,7 +34,7 @@ import { Alert } from "@console/core/alert";
 import { createStore, unwrap } from "solid-js/store";
 import { MultiSelect, Select } from "$/ui/select";
 import { UserStore } from "$/data/user";
-import { StageStore } from "$/data/stage";
+import { ActiveStages } from "$/data/stage";
 import { filter, map, pipe, unique } from "remeda";
 import { createId } from "@paralleldrive/cuid2";
 import { style } from "@macaron-css/core";
@@ -323,7 +323,9 @@ export function Alerts() {
   });
 
   const apps = AppStore.all.watch(rep, () => []);
-  const stages = StageStore.list.watch(rep, () => []);
+  const activeStages = createSubscription(ActiveStages());
+  const stages = createMemo(() => activeStages.value || []);
+  // const stages = StageStore.list.watch(rep, () => []);
   const selectedApps = createMemo(() =>
     apps()
       .filter((app) => {

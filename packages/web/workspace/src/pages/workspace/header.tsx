@@ -41,7 +41,6 @@ const breadCrumbFirstStyles: CSSProperties = {
 const Root = styled("div", {
   base: {
     top: "0",
-    zIndex: 1,
     position: "sticky",
     display: "flex",
     alignItems: "center",
