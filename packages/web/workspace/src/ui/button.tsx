@@ -570,16 +570,6 @@ export const TabTitleCount = styled("div", {
       },
     },
   },
-  variants: {
-    size: {
-      base: {},
-      sm: {
-        letterSpacing: 1,
-        fontSize: "0.5625rem",
-        padding: "5px 7px",
-      },
-    },
-  },
 });
 
 type TabTitleProps = ComponentProps<typeof TabTitleRoot> & {
@@ -593,7 +583,7 @@ export function TabTitle(props: TabTitleProps) {
       <Row space="2" vertical="center">
         <TabTitleText size={props.size}>{props.children}</TabTitleText>
         <Show when={props.count}>
-          <TabTitleCount size={props.size}>{props.count}</TabTitleCount>
+          <TabTitleCount>{props.count}</TabTitleCount>
         </Show>
       </Row>
     </TabTitleRoot>
