@@ -134,7 +134,7 @@ const Card = styled("div", {
 
 const CardHeader = styled("div", {
   base: {
-    ...utility.row(0.5),
+    ...utility.row(3),
     height: 54,
     alignItems: "center",
     justifyContent: "space-between",
@@ -347,7 +347,6 @@ export function OverviewNext() {
       flatMap(([_, stages]) => stages),
       map((s) => s.id)
     );
-    console.log({ ambiguous: result });
     return new Set(result);
   });
 
@@ -706,7 +705,7 @@ const StageLinkText = styled("span", {
 
 const StageCardRight = styled("div", {
   base: {
-    ...utility.row(1),
+    ...utility.row(3),
     alignItems: "center",
     justifyContent: "flex-end",
     flex: "0 0 auto",
@@ -754,7 +753,7 @@ const StageGitCommit = styled("span", {
 const StageRegion = styled("span", {
   base: {
     letterSpacing: 0.5,
-    minWidth: 84,
+    minWidth: 110,
     textAlign: "right",
     textTransform: "uppercase",
     fontSize: theme.font.size.xs,
@@ -764,7 +763,7 @@ const StageRegion = styled("span", {
 
 const StageUpdatedTime = styled("span", {
   base: {
-    minWidth: 56,
+    minWidth: 44,
     textAlign: "right",
     color: theme.color.text.dimmed.base,
     fontSize: theme.font.size.xs,
@@ -788,14 +787,12 @@ function StageCard(props: StageCardProps) {
 
   function Github() {
     const repoUrl = createSubscription(async (tx) => {
-      console.log("latestUpdate", latestUpdate.value);
       if (!latestUpdate.value?.runID) return;
       const run = await RunStore.get(
         tx,
         props.stage.id,
         latestUpdate.value.runID
       );
-      console.log("run", run);
       if (run.trigger.source !== "github") return;
       const repoUrl = githubRepo(run.trigger.repo.owner, run.trigger.repo.repo);
       return {

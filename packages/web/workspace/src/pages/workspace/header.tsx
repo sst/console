@@ -25,7 +25,7 @@ import { dropAllDatabases } from "replicache";
 
 const breadCrumbStyles: CSSProperties = {
   flexShrink: 0,
-  maxWidth: 400,
+  maxWidth: 240,
   display: "flex",
   justifyContent: "flex-start",
   alignItems: "center",

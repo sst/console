@@ -258,6 +258,10 @@ const STAGE_ION_EMPTY = { id: "1112", name: "ion-empty" };
 const STAGE_ION_NO_OUTPUTS = { id: "1113", name: "ion-no-outputs" };
 const STAGE_ION_EMPTY_INTERNALS = { id: "1114", name: "ion-no-internal-fns" };
 const STAGE_ION_EMPTY_SST_FNS = { id: "1115", name: "ion-no-sst-fns" };
+const STAGE_ION_LONG = {
+  id: "1116",
+  name: "this-stage-name-is-really-long-and-needs-to-be-truncated-because-its-too-long"
+};
 
 const STACK_URN =
   "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair";
@@ -290,6 +294,11 @@ const ISSUE_ID_FULL_STACK_TRACE = "127";
 const ISSUE_ID_MISSING_SOURCEMAP = "128";
 const ISSUE_ID_RESOLVED = "129";
 const ISSUE_ID_IGNORED = "130";
+
+const UPDATE_ERROR = {
+  urn: "urn:pulumi:jayair::ion-sandbox::sst:aws:Function::FunctionA",
+  message: `Invalid component name "FunctionA".\nComponent names must be unique.`,
+};
 
 const STACK_TRACE = [
   {
@@ -478,7 +487,7 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
     deleted: true,
   });
 
-  yield* overviewLongApps();
+  yield* overviewUpdateCasesApp();
 
   yield app({ id: APP_LOCAL, name: APP_LOCAL_NAME });
   yield stage({
@@ -501,25 +510,14 @@ function* overviewFull(): Generator<DummyData, void, unknown> {
   yield* createGitHubRepo({ appID: APP_ID, repo: "many-stage-app" });
 }
 
-function* overviewLongApps(): Generator<DummyData, void, unknown> {
-  yield account({ id: ACCOUNT_ID_LONG_APPS, accountID: "123456789020" });
+function* overviewUpdateCasesApp(): Generator<DummyData, void, unknown> {
   yield app({
     id: APP_ID_LONG,
     name: "my-sst-app-that-has-a-really-long-name-that-should-be-truncated-because-its-too-long",
   });
-  yield stage({
-    id: "stage-long-id-1",
-    unsupported: true,
-    appID: APP_ID_LONG,
-    awsAccountID: ACCOUNT_ID_LONG_APPS,
-  });
-  yield stage({
-    id: "this-stage-name-is-really-long-and-needs-to-be-truncated-because-its-too-long",
-    appID: APP_ID_LONG,
-    region: "ap-southeast-1",
-    awsAccountID: ACCOUNT_ID_LONG_APPS,
-  });
   yield* createGitHubRepo({ appID: APP_ID_LONG });
+
+  // App run error
   yield run({
     id: RUN_ID++,
     appID: APP_ID_LONG,
@@ -527,6 +525,68 @@ function* overviewLongApps(): Generator<DummyData, void, unknown> {
     branch: "main",
     commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
     // error: unknownRunError(),
+    commitMessage: "",
+    ...dummyRepo(),
+  });
+
+  // Stage: Base
+  yield stage({
+    id: STAGE_ION.id,
+    name: STAGE_ION.name,
+    appID: APP_ID_LONG,
+    region: "us-east-1",
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield update({
+    id: 0,
+    stageID: STAGE_ION.id,
+    timeStarted: DateTime.now().minus({ minutes: 20 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 19 }).toISO()!,
+    created: 20,
+    runID: RUN_ID,
+  });
+  yield run({
+    id: RUN_ID++,
+    stageID: STAGE_ION.id,
+    appID: APP_ID_LONG,
+    branch: "main",
+    commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
+    commitMessage: "",
+    ...dummyRepo(),
+  });
+
+  // Stage: Unsupported
+  yield stage({
+    id: "stage-long-id-1",
+    unsupported: true,
+    appID: APP_ID_LONG,
+    awsAccountID: ACCOUNT_ID,
+  });
+
+  // Stage: Run + Update + Error
+  yield stage({
+    id: STAGE_ION_LONG.id,
+    name: STAGE_ION_LONG.name,
+    appID: APP_ID_LONG,
+    region: "ap-southeast-1",
+    awsAccountID: ACCOUNT_ID,
+  });
+  yield update({
+    id: 0,
+    stageID: STAGE_ION_LONG.id,
+    timeStarted: DateTime.now().minus({ minutes: 20 }).toISO()!,
+    timeCompleted: DateTime.now().minus({ minutes: 19 }).toISO()!,
+    created: 20,
+    runID: RUN_ID,
+    errors: [UPDATE_ERROR],
+  });
+  yield run({
+    id: RUN_ID++,
+    stageID: STAGE_ION_LONG.id,
+    appID: APP_ID_LONG,
+    status: "error",
+    branch: "main",
+    commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
     commitMessage: "",
     ...dummyRepo(),
   });
@@ -2169,7 +2229,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     timeStarted: DateTime.now().minus({ minutes: 11 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 9 }).toISO()!,
     same: 20,
-    runID: `${++RUN_ID}`,
+    runID: ++RUN_ID,
   });
   yield run({
     id: RUN_ID,
@@ -2189,7 +2249,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     created: 4,
     deleted: 4,
     same: 16,
-    runID: `${++RUN_ID}`,
+    runID: ++RUN_ID,
   });
   yield run({
     id: RUN_ID,
@@ -2243,7 +2303,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     command: "edit",
     timeStarted: DateTime.now().minus({ minutes: 5 }).toISO()!,
     timeCompleted: DateTime.now().minus({ minutes: 4 }).toISO()!,
-    runID: `${++RUN_ID}`,
+    runID: ++RUN_ID,
   });
   yield run({
     id: RUN_ID,
@@ -2260,7 +2320,7 @@ function* updatesBase(): Generator<DummyData, void, unknown> {
     id: ++UPDATE_ID,
     stageID: STAGE_ION.id,
     timeStarted: DateTime.now().minus({ minutes: 2 }).toISO()!,
-    runID: `${++RUN_ID}`,
+    runID: ++RUN_ID,
   });
   yield run({
     id: RUN_ID,
@@ -3360,7 +3420,7 @@ interface UpdateProps {
   id: number;
   stageID: string;
   errors?: State.Update["errors"];
-  runID?: string;
+  runID?: number;
   timeCreated?: string;
   timeStarted?: string;
   timeCompleted?: string;
@@ -3390,7 +3450,7 @@ function update({
     index: id,
     stageID,
     command: command || "deploy",
-    runID,
+    runID: `${runID}`,
     time: {
       updated: DateTime.now().startOf("day").toISO()!,
       created: timeCreated || DateTime.now().startOf("day").toISO()!,
