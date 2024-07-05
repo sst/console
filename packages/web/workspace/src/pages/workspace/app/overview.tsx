@@ -30,7 +30,7 @@ const Stages = styled("div", {
 
 const CardRoot = styled("div", {
   base: {
-    ...utility.row(0),
+    ...utility.row(10),
     alignItems: "center",
     justifyContent: "space-between",
     borderRadius: theme.borderRadius,
@@ -42,6 +42,7 @@ const CardRoot = styled("div", {
 const CardBodyLeft = styled("div", {
   base: {
     ...utility.stack(2),
+    minWidth: 0,
   },
 });
 
@@ -49,11 +50,13 @@ const CardTitle = styled("div", {
   base: {
     ...utility.row(3),
     alignItems: "center",
+    minWidth: 0,
   },
 });
 
 const CardTitleText = styled(Link, {
   base: {
+    ...utility.text.line,
     lineHeight: "26px",
     color: theme.color.text.primary.base,
     fontWeight: theme.font.weight.medium,
@@ -62,6 +65,7 @@ const CardTitleText = styled(Link, {
 
 const CardIcon = styled("div", {
   base: {
+    flex: "0 0 auto",
     width: 12,
     height: 12,
     borderRadius: "50%",
@@ -105,6 +109,7 @@ const CardBodyRight = styled("div", {
 
 const CardRegion = styled("span", {
   base: {
+    ...utility.text.line,
     letterSpacing: 0.5,
     lineHeight: "26px",
     textAlign: "right",

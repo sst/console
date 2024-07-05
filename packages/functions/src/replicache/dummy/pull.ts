@@ -60,6 +60,7 @@ export const handler = ApiHandler(async () => {
       const keys = {
         run: (item: any) => [item._type, item.stageID, item.id],
         appRepo: (item: any) => [item._type, item.appID, item.id],
+        runConfig: (item: any) => [item._type, item.appID, item.id],
         resource: (item: any) => [item._type, item.stageID, item.id],
         stateUpdate: (item: any) => [item._type, item.stageID, item.id],
         stateResource: (item: any) => [item._type, item.stageID, item.id],

@@ -1,14 +1,14 @@
 import { DateTime } from "luxon";
 import { createHash } from "crypto";
 import { AWS } from "@console/core/aws";
-import { Run } from "@console/core/run";
 import { User } from "@console/core/user";
 import { Issue } from "@console/core/issue";
 import { State } from "@console/core/state";
 import { App, Stage } from "@console/core/app";
+import { Warning } from "@console/core/warning";
 import { AppRepo } from "@console/core/app/repo";
 import { Github } from "@console/core/git/github";
-import { Warning } from "@console/core/warning";
+import { Run, RunConfig } from "@console/core/run";
 import { Workspace } from "@console/core/workspace";
 import { Resource } from "@console/core/app/resource";
 import { Usage, Billing } from "@console/core/billing";
@@ -24,6 +24,14 @@ export type DummyMode =
   | "overview:base"
   // Overview
   | "overview:full"
+
+  // App: Full
+  | "overview:base;apps:full"
+  // App: Disconnected GitHub
+  | "overview:base;apps:no-repos"
+  // App: Disconnected GitHub
+  | "overview:base;apps:disconnected"
+
   // Logs
   | "overview:base;logs:full"
   // Issues
@@ -36,6 +44,7 @@ export type DummyMode =
   | "overview:base;accounts:full"
   // Resources
   | "overview:base;resources:full"
+
   // With billing details
   | "overview:base;usage:overage;subscription:active"
   // Ask for billing details
@@ -51,6 +60,7 @@ export function* generateData(
   // Reset auto-incrementing IDs
   RUN_ID = 0;
   UPDATE_ID = 0;
+  RUNCONFIG_ID = 0;
   STATE_RES_ID = 0;
   STATE_RES_EV_ID = 0;
   WARNING_COUNT = 0;
@@ -59,6 +69,7 @@ export function* generateData(
 
   GITHUB_ORG = 100;
   GITHUB_REPO = 100;
+
 
   const modeMap = stringToObject(mode);
 
@@ -95,6 +106,18 @@ export function* generateData(
     for (let i = 0; i < 30; i++) {
       yield user({ email: `dummy${i}@example.com`, active: true });
     }
+  }
+
+  if (modeMap["apps"] === "full") {
+    yield* appsFull();
+  }
+
+  if (modeMap["apps"] === "no-repos") {
+    yield* appsNoRepos();
+  }
+
+  if (modeMap["apps"] === "disconnected") {
+    yield* appsDisconnectedRepo();
   }
 
   if (modeMap["subscription"]) {
@@ -189,6 +212,7 @@ type DummyData =
   | (Github.Org & { _type: "githubOrg" })
   | (Github.Repo & { _type: "githubRepo" })
   | (DummyConfig & { _type: "dummyConfig" })
+  | (RunConfig.Info & { _type: "runConfig" })
   | (Workspace.Info & { _type: "workspace" })
   | (State.Update & { _type: "stateUpdate" })
   | (State.Resource & { _type: "stateResource" })
@@ -260,13 +284,13 @@ const STAGE_ION_EMPTY_INTERNALS = { id: "1114", name: "ion-no-internal-fns" };
 const STAGE_ION_EMPTY_SST_FNS = { id: "1115", name: "ion-no-sst-fns" };
 const STAGE_ION_LONG = {
   id: "1116",
-  name: "this-stage-name-is-really-long-and-needs-to-be-truncated-because-its-too-long"
+  name: "thisstagenameisreallylongandneedstobetruncatedbecauseitstoolonganditshouldnotfitinthebox",
 };
 
 const STACK_URN =
   "urn:pulumi:jayair::ion-sandbox::pulumi:pulumi:Stack::ion-sandbox-jayair";
 
-const ACCOUNT_ID = "connected";
+const ACCOUNT_ID = "123456789012";
 const ACCOUNT_ID_FULL = "full";
 const ACCOUNT_ID_FAILED = "failed";
 const ACCOUNT_ID_LONG_APPS = "long";
@@ -423,6 +447,7 @@ const LOGS_FN = "my-logs-func";
 // Auto-incrementing IDs
 let RUN_ID = 0;
 let UPDATE_ID = 0;
+let RUNCONFIG_ID = 0;
 let STATE_RES_ID = 0;
 let STATE_RES_EV_ID = 0;
 let WARNING_COUNT = 0;
@@ -457,7 +482,7 @@ function stringToObject(input: string): { [key: string]: string } {
 }
 
 function* workspaceEmpty(): Generator<DummyData, void, unknown> {
-  yield account({ id: ACCOUNT_ID, accountID: "123456789012" });
+  yield account({ id: ACCOUNT_ID, accountID: ACCOUNT_ID });
 }
 
 function* workspaceBase(): Generator<DummyData, void, unknown> {
@@ -467,7 +492,7 @@ function* workspaceBase(): Generator<DummyData, void, unknown> {
     appID: APP_LOCAL,
     awsAccountID: ACCOUNT_ID,
   });
-  yield* createGitHubRepo({ appID: APP_ID, repo: "many-stage-app" });
+  // yield* createGitHubRepo({ appID: APP_ID, repo: "many-stage-app" });
 }
 
 function* overviewFull(): Generator<DummyData, void, unknown> {
@@ -524,7 +549,7 @@ function* overviewUpdateCasesApp(): Generator<DummyData, void, unknown> {
     status: "error",
     branch: "main",
     commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
-    // error: unknownRunError(),
+    error: unknownRunError(),
     commitMessage: "",
     ...dummyRepo(),
   });
@@ -563,7 +588,7 @@ function* overviewUpdateCasesApp(): Generator<DummyData, void, unknown> {
     awsAccountID: ACCOUNT_ID,
   });
 
-  // Stage: Run + Update + Error
+  // Stage: Long + Run + Update + Error
   yield stage({
     id: STAGE_ION_LONG.id,
     name: STAGE_ION_LONG.name,
@@ -585,10 +610,76 @@ function* overviewUpdateCasesApp(): Generator<DummyData, void, unknown> {
     stageID: STAGE_ION_LONG.id,
     appID: APP_ID_LONG,
     status: "error",
+    error: unknownRunError(),
     branch: "main",
     commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
     commitMessage: "",
     ...dummyRepo(),
+  });
+}
+
+function* appsFull(): Generator<DummyData, void, unknown> {
+  yield* createGitHubRepo({ appID: APP_LOCAL, repo: "ion-sandbox" });
+
+  yield* overviewUpdateCasesApp();
+
+  // Run: Error + Long Message
+  yield run({
+    id: RUN_ID++,
+    stageID: STAGE_ION_LONG.id,
+    appID: APP_ID_LONG,
+    status: "error",
+    error: unknownRunError("Areallylongerrormessagethatshouldoverflowbecauseitstoolonganditkeepsongoingandgoinganditshouldoverflowthecontaineritsbeingheldinside"),
+    branch: "main",
+    commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
+    commitMessage: "this is a really long commit message that should overflow because its too long and it keeps on going and going",
+    ...dummyRepo(),
+  });
+
+  // Run: Long Stage
+  yield run({
+    id: RUN_ID++,
+    stageID: STAGE_ION_LONG.id,
+    appID: APP_ID_LONG,
+    branch: "main",
+    commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
+    commitMessage: "this is a really long commit message that should overflow because its too long and it keeps on going and going",
+    ...dummyRepo(),
+  });
+
+  // RunConfig
+  yield runConfig({
+    id: ++RUNCONFIG_ID,
+    appID: APP_ID_LONG,
+    stagePattern: "my-sst-app-that-has-a-really-long-name-that-should-be-truncated-because-its-too-long-*",
+    awsAccountExternalID: ACCOUNT_ID,
+    env: {
+      "ENV_VAR": "value",
+    },
+  });
+  yield runConfig({
+    id: ++RUNCONFIG_ID,
+    appID: APP_ID_LONG,
+    stagePattern: "pr-*",
+    awsAccountExternalID: ACCOUNT_ID,
+    env: {
+      "ENV_VAR": "value",
+    },
+  });
+}
+
+function* appsNoRepos(): Generator<DummyData, void, unknown> {
+  yield githubOrg({
+    id: GITHUB_ORG++,
+    name: "jayair",
+  });
+}
+
+function* appsDisconnectedRepo(): Generator<DummyData, void, unknown> {
+  yield* createGitHubRepo({
+    appID: APP_LOCAL,
+    repo: "disconnected-gh-org",
+    orgDisconnected: true
   });
 }
 
@@ -3671,11 +3762,11 @@ function dummyRepo(senderID?: number) {
   };
 }
 
-function unknownRunError() {
+function unknownRunError(message?: string) {
   return {
     type: "unknown",
     properties: {
-      message: "Unknown run error",
+      message: message || "Unknown run error",
     },
   } as Run.Run["error"];
 }
@@ -3683,15 +3774,16 @@ function unknownRunError() {
 interface GithubOrgProps {
   id: number;
   name: string;
+  timeDisconnected?: string;
 }
-function githubOrg({ id, name }: GithubOrgProps): DummyData {
+function githubOrg({ id, name, timeDisconnected }: GithubOrgProps): DummyData {
   return {
     _type: "githubOrg",
     id: id.toString(),
     login: name,
     time: {
       deleted: undefined,
-      disconnected: undefined,
+      disconnected: timeDisconnected,
       created: DateTime.now().startOf("day").toISO()!,
       updated: DateTime.now().startOf("day").toISO()!,
     },
@@ -3742,14 +3834,43 @@ interface CreateGitHubRepoProps {
   appID: string;
   repo?: string;
   org?: string;
+  orgDisconnected?: boolean;
 }
 function* createGitHubRepo({
-  repo, org, appID,
+  repo, org, appID, orgDisconnected
 }: CreateGitHubRepoProps): Generator<DummyData, void, unknown> {
   const ghRepoID = GITHUB_REPO++;
   const ghOrgID = GITHUB_ORG++;
 
   yield appRepo({ id: 100, appID, repoID: ghRepoID });
   yield githubRepo({ id: ghRepoID, name: repo || "ion-sandbox", githubOrgID: ghOrgID });
-  yield githubOrg({ id: ghOrgID, name: org || "jayair" });
+  yield githubOrg({
+    id: ghOrgID,
+    name: org || "jayair",
+    timeDisconnected: orgDisconnected ? DateTime.now().startOf("day").toISO()! : undefined
+  });
+}
+
+interface RunConfigProps {
+  id: number;
+  appID: string;
+  stagePattern: string;
+  env?: RunConfig.Info["env"];
+  awsAccountExternalID: string;
+}
+function runConfig({
+  id, appID, stagePattern, awsAccountExternalID, env
+}: RunConfigProps): DummyData {
+  return {
+    _type: "runConfig",
+    id: `${id}`,
+    appID,
+    stagePattern,
+    time: {
+      created: DateTime.now().startOf("day").toISO()!,
+      updated: DateTime.now().startOf("day").toISO()!,
+    },
+    awsAccountExternalID,
+    env: env || {},
+  }
 }

@@ -114,7 +114,7 @@ export function Autodeploy() {
           <Show
             when={r.value!.ghRepoOrg}
             fallback={
-              <Link href="settings#repo">
+              <Link href="../settings#repo">
                 <Button color="github" size="sm">
                   <ButtonIcon size="sm">
                     <IconGitHub />
@@ -127,9 +127,8 @@ export function Autodeploy() {
             <Stack space="2" horizontal="end">
               <RepoLink
                 target="_blank"
-                href={`https://github.com/${r.value!.ghRepoOrg!.login}/${
-                  r.value!.ghRepo!.name
-                }`}
+                href={`https://github.com/${r.value!.ghRepoOrg!.login}/${r.value!.ghRepo!.name
+                  }`}
               >
                 <RepoLinkIcon>
                   <IconGitHub width="16" height="16" />

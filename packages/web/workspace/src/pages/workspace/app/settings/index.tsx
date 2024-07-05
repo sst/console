@@ -202,7 +202,7 @@ const targetForm = style({
 
 const TargetFormHeader = styled("div", {
   base: {
-    ...utility.row(2),
+    ...utility.row(5),
     height: HEADER_HEIGHT,
     alignItems: "center",
     justifyContent: "space-between",
@@ -219,6 +219,7 @@ const TargetFormHeader = styled("div", {
 const TargetFormHeaderLeft = styled("div", {
   base: {
     ...utility.row(2.5),
+    minWidth: 0,
     alignItems: "center",
   },
 });
@@ -233,6 +234,7 @@ const TargetFormHeaderRight = styled("div", {
 
 const TargetFormHeaderCopy = styled("div", {
   base: {
+    ...utility.text.line,
     fontWeight: theme.font.weight.medium,
   },
   variants: {
@@ -941,11 +943,7 @@ export function Settings() {
                           <Show when={!editing.active || editing.id}>
                             <TargetsEmpty>
                               <Row>
-                                <LinkButton
-                                  onClick={() => {
-                                    addBranchConfig();
-                                  }}
-                                >
+                                <LinkButton onClick={() => { addBranchConfig() }}>
                                   <TargetsEmptyIcon>
                                     <IconAdd width="10" height="10" />
                                   </TargetsEmptyIcon>
@@ -1011,12 +1009,9 @@ export function Settings() {
                         class={selectRepo}
                         hint={
                           empty() ? (
-                            <>
-                              Try{" "}
-                              <Link href="../../settings#github">
-                                connecting to a different organization
-                              </Link>
-                            </>
+                            <Link href="../../settings#github">
+                              Connect to a different organization
+                            </Link>
                           ) : undefined
                         }
                       >

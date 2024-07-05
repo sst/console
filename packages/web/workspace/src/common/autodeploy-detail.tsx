@@ -95,6 +95,9 @@ const PageTitleMessage = styled("p", {
     marginLeft: `calc(${theme.space[3]} + 12px)`,
     fontSize: theme.font.size.sm,
     color: theme.color.text.secondary.base,
+    lineHeight: theme.font.lineHeight,
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
   },
   variants: {
     error: {
@@ -210,6 +213,14 @@ const PanelTitle = styled("span", {
   },
 });
 
+const PanelValueLink = styled(Link, {
+  base: {
+    lineHeight: theme.font.lineHeight,
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
+  },
+  });
+
 interface AutodeployDetailProps {
   routeType: "app" | "stage";
 }
@@ -236,7 +247,7 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
 
   function Header() {
     return (
-      <Stack space="2.5">
+      <Stack space="2">
         <PageTitle>
           <RunStatusIcon status={data.value!.run.status} />
           <PageTitleCopy>{STATUS_MAP[data.value!.run.status]}</PageTitleCopy>
@@ -317,22 +328,22 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
             </Row>
           </GitInfo>
           <Show when={data.value!.stage}>
-            <Stack space="2">
+            <Stack space="1.5">
               <PanelTitle>Stage</PanelTitle>
-              <Link href={`${appPath}/${data.value!.stage!.name!}`}>
+              <PanelValueLink href={`${appPath}/${data.value!.stage!.name!}`}>
                 {data.value!.stage!.name!}
-              </Link>
+              </PanelValueLink>
             </Stack>
           </Show>
           <Show when={data.value!.update}>
-            <Stack space="2">
+            <Stack space="1.5">
               <PanelTitle>Update</PanelTitle>
-              <Link
+              <PanelValueLink
                 href={`${appPath}/${data.value!.stage!
                   .name!}/resources/updates/${data.value!.update!.id}`}
               >
                 #{data.value!.update!.index}
-              </Link>
+              </PanelValueLink>
             </Stack>
           </Show>
           <Stack space="2">

@@ -61,6 +61,8 @@ import { Alert } from "../alert";
 import { render } from "@jsx-email/render";
 import { AutodeployEmail } from "@console/mail/emails/templates/AutodeployEmail";
 
+export { RunConfig } from "./config";
+
 export module Run {
   const DEFAULT_ENGINE = "codebuild";
   const DEFAULT_ARCHITECTURE = "x86_64";
@@ -662,8 +664,8 @@ export module Run {
           Mode: "OFF",
         },
         ScheduleExpression: `at(${new Date(Date.now() + (timeoutInMinutes + 1) * 60000)
-            .toISOString()
-            .split(".")[0]
+          .toISOString()
+          .split(".")[0]
           })`,
         Target: {
           Arn: process.env.RUN_TIMEOUT_MONITOR_FUNCTION_ARN,
@@ -1150,8 +1152,8 @@ export module Run {
             Mode: "OFF",
           },
           ScheduleExpression: `at(${new Date(now + RUNNER_INACTIVE_TIME + 86400000)
-              .toISOString()
-              .split(".")[0]
+            .toISOString()
+            .split(".")[0]
             })`,
           Target: {
             Arn: process.env.RUNNER_REMOVER_FUNCTION_ARN,

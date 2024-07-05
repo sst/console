@@ -229,13 +229,13 @@ const RunMessage = styled("div", {
     ...utility.row(0),
     gap: 5,
     alignItems: "center",
-    lineHeight: 0,
     maxWidth: 300,
   },
 });
 
 const RunMessageIcon = styled("div", {
   base: {
+    lineHeight: 0,
     opacity: theme.iconOpacity,
     color: theme.color.text.secondary.base,
   },
@@ -252,6 +252,7 @@ const RunMessageCopy = styled("p", {
 
 const RunMessageLink = styled(Link, {
   base: {
+    ...utility.text.line,
     fontSize: theme.font.size.sm,
   },
 });
@@ -405,7 +406,7 @@ function RunItem({ run }: { run: Run.Run }) {
         </RunStatus>
         <RunMessage>
           <Switch>
-            <Match when={run.error}>
+            <Match when={run.status === "error"}>
               <>
                 <RunMessageIcon>
                   <IconExclamationTriangle width="14" height="14" />
