@@ -7,7 +7,7 @@ export const utility = {
       overflow: "hidden",
       whiteSpace: "nowrap",
       textOverflow: "ellipsis",
-    } satisfies CSSProperties;
+    };
   },
   stack(space: keyof (typeof theme)["space"]) {
     return {
@@ -20,7 +20,7 @@ export const utility = {
     return {
       display: "flex",
       gap: theme.space[space],
-    } satisfies CSSProperties;
+    };
   },
 
   text: {
@@ -28,16 +28,16 @@ export const utility = {
       overflow: "hidden",
       whiteSpace: "nowrap",
       textOverflow: "ellipsis",
-    } satisfies CSSProperties,
+    },
     label: {
       fontWeight: 500,
       letterSpacing: 0.5,
       textTransform: "uppercase",
       fontFamily: theme.font.family.code,
-    } satisfies CSSProperties,
+    },
     pre: {
       whiteSpace: "pre-wrap",
       overflowWrap: "anywhere",
-    } satisfies CSSProperties,
+    },
   },
 };
