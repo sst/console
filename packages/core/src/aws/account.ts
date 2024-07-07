@@ -11,7 +11,7 @@ import {
 } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { Credentials } from ".";
 import {
   CloudFormationClient,
@@ -456,6 +456,7 @@ export const integrate = zod(
               eq(stage.awsAccountID, account.id),
               eq(stage.region, region),
               eq(stage.workspaceID, useWorkspace()),
+              isNull(stage.timeDeleted),
             ),
           ),
       ).then(
@@ -643,6 +644,18 @@ export const disconnect = zod(Info.shape.id, (input) =>
         and(
           eq(awsAccount.id, input),
           eq(awsAccount.workspaceID, useWorkspace()),
+        ),
+      );
+
+    await tx
+      .update(stage)
+      .set({
+        timeDeleted: sql`now()`,
+      })
+      .where(
+        and(
+          eq(stage.awsAccountID, input),
+          eq(stage.workspaceID, useWorkspace()),
         ),
       );
   }),
