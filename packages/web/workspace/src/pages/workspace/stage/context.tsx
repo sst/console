@@ -20,7 +20,6 @@ import { IssueStore } from "$/data/issue";
 import { ResourceStore } from "$/data/resource";
 import { UsageStore } from "$/data/usage";
 import { sumBy } from "remeda";
-import type { State } from "@console/core/state";
 
 export const StageContext =
   createContext<ReturnType<typeof createStageContext>>();
@@ -40,6 +39,7 @@ export function createStageContext() {
       items.find(
         (stage) =>
           stage.appID === app()?.id &&
+          !stage.timeDeleted &&
           (stage.name === params.stageName || stage.id === params.stageName),
       ),
   );
@@ -131,10 +131,13 @@ export function ResourcesProvider(props: ParentProps) {
                 title: `${item.route}`,
                 run(control: any) {
                   nav(
-                    `/${params.workspaceSlug
-                    }/${appName}/${stageName}/resources/logs/${fn.id
-                    }?logGroup=${resource.metadata.routes!.logGroupPrefix +
-                    item.logGroupPath
+                    `/${
+                      params.workspaceSlug
+                    }/${appName}/${stageName}/resources/logs/${
+                      fn.id
+                    }?logGroup=${
+                      resource.metadata.routes!.logGroupPrefix +
+                      item.logGroupPath
                     }`,
                   );
                   control.hide();
@@ -146,10 +149,11 @@ export function ResourcesProvider(props: ParentProps) {
               {
                 icon: IconApi,
                 category: "API Routes",
-                title: `${resource.metadata.routes.find(
-                  (r: any) => r.fn?.node === fn.addr,
-                )?.route
-                  }`,
+                title: `${
+                  resource.metadata.routes.find(
+                    (r: any) => r.fn?.node === fn.addr,
+                  )?.route
+                }`,
                 run,
               },
             ];
