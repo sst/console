@@ -70,7 +70,6 @@ export function* generateData(
   GITHUB_ORG = 100;
   GITHUB_REPO = 100;
 
-
   const modeMap = stringToObject(mode);
 
   yield workspace({
@@ -629,10 +628,13 @@ function* appsFull(): Generator<DummyData, void, unknown> {
     stageID: STAGE_ION_LONG.id,
     appID: APP_ID_LONG,
     status: "error",
-    error: unknownRunError("Areallylongerrormessagethatshouldoverflowbecauseitstoolonganditkeepsongoingandgoinganditshouldoverflowthecontaineritsbeingheldinside"),
+    error: unknownRunError(
+      "Areallylongerrormessagethatshouldoverflowbecauseitstoolonganditkeepsongoingandgoinganditshouldoverflowthecontaineritsbeingheldinside"
+    ),
     branch: "main",
     commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
-    commitMessage: "this is a really long commit message that should overflow because its too long and it keeps on going and going",
+    commitMessage:
+      "this is a really long commit message that should overflow because its too long and it keeps on going and going",
     ...dummyRepo(),
   });
 
@@ -643,7 +645,8 @@ function* appsFull(): Generator<DummyData, void, unknown> {
     appID: APP_ID_LONG,
     branch: "main",
     commitID: "11b2661dab38cb264be29b7d1b552802bcca32ce",
-    commitMessage: "this is a really long commit message that should overflow because its too long and it keeps on going and going",
+    commitMessage:
+      "this is a really long commit message that should overflow because its too long and it keeps on going and going",
     ...dummyRepo(),
   });
 
@@ -651,10 +654,11 @@ function* appsFull(): Generator<DummyData, void, unknown> {
   yield runConfig({
     id: ++RUNCONFIG_ID,
     appID: APP_ID_LONG,
-    stagePattern: "my-sst-app-that-has-a-really-long-name-that-should-be-truncated-because-its-too-long-*",
+    stagePattern:
+      "my-sst-app-that-has-a-really-long-name-that-should-be-truncated-because-its-too-long-*",
     awsAccountExternalID: ACCOUNT_ID,
     env: {
-      "ENV_VAR": "value",
+      ENV_VAR: "value",
     },
   });
   yield runConfig({
@@ -663,7 +667,7 @@ function* appsFull(): Generator<DummyData, void, unknown> {
     stagePattern: "pr-*",
     awsAccountExternalID: ACCOUNT_ID,
     env: {
-      "ENV_VAR": "value",
+      ENV_VAR: "value",
     },
   });
 }
@@ -679,7 +683,7 @@ function* appsDisconnectedRepo(): Generator<DummyData, void, unknown> {
   yield* createGitHubRepo({
     appID: APP_LOCAL,
     repo: "disconnected-gh-org",
-    orgDisconnected: true
+    orgDisconnected: true,
   });
 }
 
@@ -3422,18 +3426,18 @@ function invocation({
       duration === undefined
         ? duration
         : {
-          duration,
-          memory: 128,
-          size: 2048,
-          xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
-        },
+            duration,
+            memory: 128,
+            size: 2048,
+            xray: "eb1e33e8a81b697b75855af6bfcdbcbf7cbb",
+          },
     start: startTime.valueOf(),
     logs: messages
       ? messages.map((message, i) => ({
-        message,
-        id: `log-${INVOCATION_COUNT}-${i}`,
-        timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
-      }))
+          message,
+          id: `log-${INVOCATION_COUNT}-${i}`,
+          timestamp: startTime.plus({ seconds: 20 * i }).toMillis(),
+        }))
       : [],
   };
 }
@@ -3823,6 +3827,7 @@ function appRepo({ id, appID, repoID }: AppRepoProps): DummyData {
     appID,
     type: "github",
     repoID: repoID.toString(),
+    path: "/",
     time: {
       created: DateTime.now().startOf("day").toISO()!,
       updated: DateTime.now().startOf("day").toISO()!,
@@ -3837,17 +3842,26 @@ interface CreateGitHubRepoProps {
   orgDisconnected?: boolean;
 }
 function* createGitHubRepo({
-  repo, org, appID, orgDisconnected
+  repo,
+  org,
+  appID,
+  orgDisconnected,
 }: CreateGitHubRepoProps): Generator<DummyData, void, unknown> {
   const ghRepoID = GITHUB_REPO++;
   const ghOrgID = GITHUB_ORG++;
 
   yield appRepo({ id: 100, appID, repoID: ghRepoID });
-  yield githubRepo({ id: ghRepoID, name: repo || "ion-sandbox", githubOrgID: ghOrgID });
+  yield githubRepo({
+    id: ghRepoID,
+    name: repo || "ion-sandbox",
+    githubOrgID: ghOrgID,
+  });
   yield githubOrg({
     id: ghOrgID,
     name: org || "jayair",
-    timeDisconnected: orgDisconnected ? DateTime.now().startOf("day").toISO()! : undefined
+    timeDisconnected: orgDisconnected
+      ? DateTime.now().startOf("day").toISO()!
+      : undefined,
   });
 }
 
@@ -3859,7 +3873,11 @@ interface RunConfigProps {
   awsAccountExternalID: string;
 }
 function runConfig({
-  id, appID, stagePattern, awsAccountExternalID, env
+  id,
+  appID,
+  stagePattern,
+  awsAccountExternalID,
+  env,
 }: RunConfigProps): DummyData {
   return {
     _type: "runConfig",
@@ -3872,5 +3890,5 @@ function runConfig({
     },
     awsAccountExternalID,
     env: env || {},
-  }
+  };
 }
