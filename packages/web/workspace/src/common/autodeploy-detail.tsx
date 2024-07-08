@@ -6,6 +6,7 @@ import {
   createMemo,
   createResource,
   onCleanup,
+  createEffect,
 } from "solid-js";
 import { createSubscription, useReplicache } from "$/providers/replicache";
 import { Link, useParams } from "@solidjs/router";
@@ -219,7 +220,7 @@ const PanelValueLink = styled(Link, {
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
   },
-  });
+});
 
 interface AutodeployDetailProps {
   routeType: "app" | "stage";
@@ -431,21 +432,26 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
               }[]
             >
         );
+        console.log("!! LENGTH AAA", results.length);
         return results;
       },
       {
         initialValue: [],
       }
     );
-    const trimmedLogs = createMemo(() =>
-      pipe(
+    createEffect(() => {
+      console.log("!! EFFECT", logs().length);
+    });
+    const trimmedLogs = createMemo(() => {
+      console.log("!! LENGTH BBB", logs().length);
+      return pipe(
         logs() || [],
         dropWhile((r) => !r.message.startsWith("[sst.deploy.start]")),
         drop(1),
         filter((r) => r.message.trim() != ""),
         takeWhile((r) => !r.message.startsWith("[sst.deploy.end]"))
-      )
-    );
+      );
+    });
 
     const logsPoller = setInterval(() => {
       if (logs()?.findLast((r) => r.message.includes(" BUILD State"))) return;

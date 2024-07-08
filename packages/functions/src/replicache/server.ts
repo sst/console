@@ -110,6 +110,7 @@ export const server = new Server()
   .expose("app_create", App.create)
   .expose("app_repo_connect", AppRepo.connect)
   .expose("app_repo_disconnect", AppRepo.disconnect)
+  .expose("app_repo_path_put", AppRepo.putPath)
   .expose("run_config_put", RunConfig.put)
   .expose("run_config_remove", RunConfig.remove);
 

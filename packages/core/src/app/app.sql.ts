@@ -8,6 +8,7 @@ import {
   varchar,
   foreignKey,
   mysqlEnum,
+  text,
 } from "drizzle-orm/mysql-core";
 import { timestamps, workspaceID, cuid, timestampsNext } from "../util/sql";
 import { workspaceIndexes } from "../workspace/workspace.sql";
@@ -77,6 +78,7 @@ export const appRepoTable = mysqlTable(
     appID: cuid("app_id").notNull(),
     type: mysqlEnum("type", ["github"]).notNull(),
     repoID: cuid("repo_id").notNull(),
+    path: text("path"),
   },
   (table) => ({
     ...workspaceIndexes(table),

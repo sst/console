@@ -144,6 +144,11 @@ const mutators = new Client<ServerType>()
   .mutation("app_repo_disconnect", async (tx, input) => {
     await AppRepoStore.remove(tx, input);
   })
+  .mutation("app_repo_path_put", async (tx, input) => {
+    await AppRepoStore.update(tx, input.id, (item) => {
+      item.path = input.path;
+    });
+  })
   .mutation("run_config_put", async (tx, input) => {
     await RunConfigStore.put(tx, [input.appID, input.id!], {
       id: input.id,

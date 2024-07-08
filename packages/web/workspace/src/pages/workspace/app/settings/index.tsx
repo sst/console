@@ -237,7 +237,6 @@ const TargetFormHeaderRight = styled("div", {
   },
 });
 
-
 const TargetFormHeaderCopy = styled("div", {
   base: {
     ...utility.text.line,
@@ -473,9 +472,7 @@ export function Settings() {
         <TargetFormHeader>
           <TargetFormHeaderLeft>
             <Tag title="AWS Account ID">{config.awsAccountExternalID}</Tag>
-            <TargetFormHeaderCopy>
-              {config.stagePattern}
-            </TargetFormHeaderCopy>
+            <TargetFormHeaderCopy>{config.stagePattern}</TargetFormHeaderCopy>
           </TargetFormHeaderLeft>
           <TargetFormHeaderRight>
             <Button
@@ -485,14 +482,11 @@ export function Settings() {
                 reset(putForm);
                 setValues(putForm, {
                   stagePattern: config.stagePattern,
-                  awsAccount:
-                    config.awsAccountExternalID,
-                  env: Object.entries(config.env).map(
-                    ([key, value]) => ({
-                      key,
-                      value,
-                    })
-                  ),
+                  awsAccount: config.awsAccountExternalID,
+                  env: Object.entries(config.env).map(([key, value]) => ({
+                    key,
+                    value,
+                  })),
                 });
               }}
               color="secondary"
@@ -500,7 +494,10 @@ export function Settings() {
             >
               Edit
             </Button>
-            <Dropdown size="sm" icon={<IconEllipsisVertical width={18} height={18} />}>
+            <Dropdown
+              size="sm"
+              icon={<IconEllipsisVertical width={18} height={18} />}
+            >
               {/*
             <Dropdown.Item
               onSelect={() => {
@@ -531,9 +528,7 @@ export function Settings() {
                     )
                   )
                     return;
-                  rep().mutate.run_config_remove(
-                    config.id
-                  );
+                  rep().mutate.run_config_remove(config.id);
                 }}
               >
                 Remove environment
@@ -582,7 +577,7 @@ export function Settings() {
                     hint={
                       field.error ||
                       (field.value?.startsWith("pr-")
-                        ? "By default, PRs are deployed to a stage with the name \"pr-<number>\". "
+                        ? 'By default, PRs are deployed to a stage with the name "pr-<number>". '
                         : "By default, branches are deployed to a stage with the same name.")
                     }
                     class={targetFormFieldFlex}
@@ -916,6 +911,32 @@ export function Settings() {
                           </Button>
                         </GitRepoPanelRow>
                       </GitRepoPanel>
+                      <Show when={workspace().slug === "sst"}>
+                        <TargetHeader>
+                          <TargetHeaderCopy>Path</TargetHeaderCopy>
+                        </TargetHeader>
+                        Current path: {appRepo.value!.path}
+                        <Button
+                          onClick={() => {
+                            rep().mutate.app_repo_path_put({
+                              id: appRepo.value!.id,
+                              path: "www",
+                            });
+                          }}
+                        >
+                          Set `path` to `www`
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            rep().mutate.app_repo_path_put({
+                              id: appRepo.value!.id,
+                              path: "/",
+                            });
+                          }}
+                        >
+                          Set `path` to `/`
+                        </Button>
+                      </Show>
                       <TargetsRoot>
                         <TargetHeader>
                           <TargetHeaderCopy>Environments</TargetHeaderCopy>
@@ -936,7 +957,11 @@ export function Settings() {
                             {(config) => (
                               <>
                                 <Target config={config} />
-                                <Show when={editing.active && editing.id === config.id}>
+                                <Show
+                                  when={
+                                    editing.active && editing.id === config.id
+                                  }
+                                >
                                   <TargetForm />
                                 </Show>
                               </>

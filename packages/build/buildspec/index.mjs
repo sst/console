@@ -51,16 +51,16 @@ export async function handler(event, context) {
   }
 
   function checkout() {
-    const { warm, cloneUrl, trigger } = event;
+    const { warm, repo, trigger } = event;
 
     // Clone or fetch the repo
     if (fs.existsSync(REPO_PATH)) {
       process.chdir(REPO_PATH);
       shell("git reset --hard");
-      shell(`git remote set-url origin ${cloneUrl}`);
+      shell(`git remote set-url origin ${repo.cloneUrl}`);
     } else {
       process.chdir(ROOT_PATH);
-      shell(`git clone --depth 1 ${cloneUrl} ${REPO_DIR_NAME}`);
+      shell(`git clone --depth 1 ${repo.cloneUrl} ${REPO_DIR_NAME}`);
     }
 
     // Checkout commit
@@ -72,6 +72,8 @@ export async function handler(event, context) {
   }
 
   async function loadSstConfig() {
+    const { repo } = event;
+
     process.chdir(REPO_PATH);
 
     const OUTPUT_PATH = "/tmp/sst.config.mjs";
@@ -83,7 +85,10 @@ export async function handler(event, context) {
       platform: "node",
       sourcemap: "inline",
       stdin: {
-        contents: fs.readFileSync("sst.config.ts", "utf8"),
+        contents: fs.readFileSync(
+          path.join(repo.path ?? "", "sst.config.ts"),
+          "utf8"
+        ),
         sourcefile: "sst.config.ts",
         loader: "ts",
       },
@@ -172,9 +177,9 @@ export async function handler(event, context) {
   }
 
   function deploy() {
-    const { stage, credentials, runID } = event;
+    const { stage, repo, credentials, runID } = event;
 
-    process.chdir(REPO_PATH);
+    process.chdir(path.join(REPO_PATH, repo.path ?? ""));
     shell(`sst deploy --stage ${stage}`, {
       env: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
@@ -187,9 +192,9 @@ export async function handler(event, context) {
   }
 
   function remove() {
-    const { stage, credentials, runID } = event;
+    const { stage, repo, credentials, runID } = event;
 
-    process.chdir(REPO_PATH);
+    process.chdir(path.join(REPO_PATH, repo.path ?? ""));
     shell(`sst remove --stage ${stage}`, {
       env: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,

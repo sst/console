@@ -1,3 +1,4 @@
+import path from "path";
 import { Github } from "@console/core/git/github";
 import { Run } from "@console/core/run";
 import { App, Octokit } from "octokit";
@@ -98,18 +99,6 @@ async function process(octokit: Octokit, trigger: Trigger) {
   const appRepos = await Github.listAppReposByExternalRepoID(repoID);
   if (appRepos.length === 0) return;
 
-  // Get `sst.config.ts` file
-  const file = await octokit.rest.repos.getContent({
-    owner: trigger.repo.owner,
-    repo: trigger.repo.repo,
-    ref: commitID,
-    path: "sst.config.ts",
-  });
-  const sstConfig =
-    "content" in file.data
-      ? await Run.parseSstConfig({ content: file.data.content, trigger })
-      : { error: "config_not_found" as const };
-
   // Loop through all apps connected to the repo
   for (const appRepo of appRepos) {
     await withActor(
@@ -117,12 +106,36 @@ async function process(octokit: Octokit, trigger: Trigger) {
         type: "system",
         properties: { workspaceID: appRepo.workspaceID },
       },
-      () =>
-        Run.create({
+      async () => {
+        console.log("CONFIG!!", {
+          owner: trigger.repo.owner,
+          repo: trigger.repo.repo,
+          ref: commitID,
+          path: path.join(appRepo.path ?? "", "sst.config.ts"),
+        });
+        // Get `sst.config.ts` file
+        let content;
+        try {
+          const file = await octokit.rest.repos.getContent({
+            owner: trigger.repo.owner,
+            repo: trigger.repo.repo,
+            ref: commitID,
+            path: appRepo.path
+              ? path.join(appRepo.path, "sst.config.ts")
+              : "sst.config.ts",
+          });
+          content = file.data?.content;
+        } catch (e: any) {}
+        const sstConfig = content
+          ? await Run.parseSstConfig({ content, trigger })
+          : { error: "config_not_found" as const };
+
+        await Run.create({
           appID: appRepo.appID,
           trigger,
           sstConfig,
-        })
+        });
+      }
     );
   }
 }

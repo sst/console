@@ -1,0 +1,1 @@
+ALTER TABLE `app_repository` ADD `path` text;

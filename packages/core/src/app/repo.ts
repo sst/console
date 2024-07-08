@@ -14,6 +14,7 @@ export module AppRepo {
     appID: z.string().cuid2(),
     type: z.enum(["github"]),
     repoID: z.string().cuid2(),
+    path: z.string().min(1),
     time: z.object({
       created: z.string(),
       deleted: z.string().optional(),
@@ -40,6 +41,7 @@ export module AppRepo {
       appID: input.appID,
       type: input.type,
       repoID: input.repoID,
+      path: input.path ?? "/",
       time: {
         created: input.timeCreated.toISOString(),
         updated: input.timeUpdated.toISOString(),
@@ -121,5 +123,27 @@ export module AppRepo {
         )
         .execute();
     })
+  );
+
+  export const putPath = zod(
+    z.object({ id: z.string().cuid2(), path: z.string().min(1) }),
+    async (input) => {
+      const path = input.path
+        .replace(/\/sst\.config\.ts$/, "")
+        .replace(/\/$/, "")
+        .replace(/^\//, "");
+      await useTransaction((tx) =>
+        tx
+          .update(appRepoTable)
+          .set({ path: path === "" ? null : path })
+          .where(
+            and(
+              eq(appRepoTable.id, input.id),
+              eq(appRepoTable.workspaceID, useWorkspace())
+            )
+          )
+          .execute()
+      );
+    }
   );
 }
