@@ -121,7 +121,7 @@ const GitRepoLinkSeparator = styled("span", {
 
 const TargetsRoot = styled("div", {
   base: {
-    ...utility.stack(4),
+    ...utility.stack(3),
     width: "100%",
   },
 });
@@ -139,6 +139,12 @@ const TargetHeaderCopy = styled("span", {
     ...utility.text.label,
     fontSize: theme.font.size.mono_base,
     color: theme.color.text.secondary.base,
+  },
+});
+
+const TargetHeaderLink = styled("a", {
+  base: {
+    fontSize: theme.font.size.sm,
   },
 });
 
@@ -913,6 +919,12 @@ export function Settings() {
                       <TargetsRoot>
                         <TargetHeader>
                           <TargetHeaderCopy>Environments</TargetHeaderCopy>
+                          <TargetHeaderLink
+                            target="_blank"
+                            href="https://ion.sst.dev/docs/console/#environments"
+                          >
+                            Learn about environments
+                          </TargetHeaderLink>
                         </TargetHeader>
                         <div>
                           <For
