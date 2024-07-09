@@ -135,7 +135,7 @@ export module AppRepo {
       await useTransaction((tx) =>
         tx
           .update(appRepoTable)
-          .set({ path: path === "" ? null : path })
+          .set({ path: path === "" ? null : `/${path}` })
           .where(
             and(
               eq(appRepoTable.id, input.id),

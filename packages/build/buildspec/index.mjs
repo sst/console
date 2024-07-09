@@ -86,7 +86,10 @@ export async function handler(event, context) {
       sourcemap: "inline",
       stdin: {
         contents: fs
-          .readFileSync(path.join(repo.path ?? "", "sst.config.ts"), "utf8")
+          .readFileSync(
+            path.join(REPO_PATH, repo.path ?? "", "sst.config.ts"),
+            "utf8"
+          )
           // remove global imports
           .replace(/^import.*?;?\s*$/gm, ""),
         sourcefile: "sst.config.ts",
