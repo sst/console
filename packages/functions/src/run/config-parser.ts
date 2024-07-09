@@ -5,7 +5,10 @@ import { spawnSync } from "child_process";
 
 export async function handler(evt: Run.ConfigParserEvent) {
   // Decode content
-  const contents = Buffer.from(evt.content, "base64").toString("utf-8");
+  const contents = Buffer.from(evt.content, "base64")
+    .toString("utf-8")
+    // remove global imports
+    .replace(/^import.*?;?\s*$/gm, "");
 
   // Run esbuild
   await fs.rm("/tmp/sst.config.mjs", { force: true });
