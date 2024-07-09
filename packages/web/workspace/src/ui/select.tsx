@@ -102,6 +102,7 @@ const DownIcon = styled(KSelect.Icon, {
 const Content = styled(KSelect.Content, {
   base: {
     marginTop: 0,
+    zIndex: 1,
     padding: `${theme.space[1]} 0`,
     border: `1px solid ${theme.color.divider.base}`,
     borderRadius: theme.borderRadius,
