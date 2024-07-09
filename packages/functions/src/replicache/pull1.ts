@@ -34,7 +34,13 @@ import {
   issueCount,
 } from "@console/core/issue/issue.sql";
 import { MySqlColumn } from "drizzle-orm/mysql-core";
-import { db, isNotNull, notInArray } from "@console/core/drizzle";
+import {
+  SelectedFields,
+  db,
+  getTableColumns,
+  isNotNull,
+  notInArray,
+} from "@console/core/drizzle";
 import { githubOrgTable, githubRepoTable } from "@console/core/git/git.sql";
 import { slackTeam } from "@console/core/slack/slack.sql";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
@@ -110,6 +116,15 @@ const TABLE_KEY = {
   stripe: [],
 } as {
   [key in TableName]?: MySqlColumn[];
+};
+
+const TABLE_SELECT = {
+  stateEvent: (() => {
+    const { inputs, outputs, ...rest } = getTableColumns(stateEventTable);
+    return rest;
+  })(),
+} as {
+  [key in TableName]?: any;
 };
 
 const TABLE_PROJECTION = {
@@ -374,7 +389,10 @@ export const handler = ApiHandler(
             const now = Date.now();
             log(name, "fetching", group.length);
             const rows = await tx
-              .select()
+              .select(
+                TABLE_SELECT[name as keyof typeof TABLE_SELECT] ||
+                  getTableColumns(table),
+              )
               .from(table)
               .where(
                 and(
