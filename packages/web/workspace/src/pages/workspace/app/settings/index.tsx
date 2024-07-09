@@ -1079,7 +1079,6 @@ export function Settings() {
                               </Row>
                               <GitRepoPanelRowRight>
                                 <Button
-                                  size="sm"
                                   color="danger"
                                   onClick={() => {
                                     if (
@@ -1099,7 +1098,6 @@ export function Settings() {
                                   Disconnect
                                 </Button>
                                 <Dropdown
-                                  size="sm"
                                   icon={<IconEllipsisVertical width={18} height={18} />}
                                 >
                                   <Dropdown.Item
@@ -1114,7 +1112,7 @@ export function Settings() {
                                       });
                                     }}
                                   >
-                                    Modify path
+                                    Edit path
                                   </Dropdown.Item>
                                 </Dropdown>
                               </GitRepoPanelRowRight>
