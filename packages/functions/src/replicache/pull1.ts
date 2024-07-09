@@ -454,7 +454,7 @@ export const handler = ApiHandler(
         };
       },
       {
-        isolationLevel: "serializable",
+        isolationLevel: "repeatable read",
       },
     );
 

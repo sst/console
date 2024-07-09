@@ -136,7 +136,7 @@ export const handler = ApiHandler(
             .execute();
         },
         {
-          isolationLevel: "serializable",
+          isolationLevel: "repeatable read",
         },
       );
     }
