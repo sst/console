@@ -1,9 +1,9 @@
 import {
+  RunStore,
   AppRepoStore,
   RunConfigStore,
   GithubOrgStore,
   GithubRepoStore,
-  RunStore,
 } from "$/data/app";
 import {
   theme,
@@ -52,6 +52,7 @@ import {
 import { useReplicache, createSubscription } from "$/providers/replicache";
 import { githubRepo } from "$/common/url-builder";
 import {
+  getValue,
   insert,
   valiForm,
   createForm,
@@ -74,11 +75,10 @@ import { createStore } from "solid-js/store";
 import { fromEntries, map, pipe, sortBy, filter } from "remeda";
 
 const HEADER_HEIGHT = 54;
-const SELECT_REPO_NAME = "select-repo";
 
 const GitRepoRoot = styled("div", {
   base: {
-    ...utility.stack(6),
+    ...utility.stack(7),
     width: "100%",
   },
 });
@@ -98,6 +98,13 @@ const GitRepoPanelRow = styled("div", {
   },
 });
 
+const GitRepoPanelRowRight = styled("div", {
+  base: {
+    ...utility.row(2),
+    alignItems: "center",
+  },
+});
+
 const GitRepoIcon = styled("div", {
   base: {
     opacity: theme.iconOpacity,
@@ -108,7 +115,6 @@ const GitRepoIcon = styled("div", {
 const GitRepoLink = styled("a", {
   base: {
     fontWeight: theme.font.weight.medium,
-    lineHeight: 2,
   },
 });
 
@@ -116,6 +122,13 @@ const GitRepoLinkSeparator = styled("span", {
   base: {
     fontWeight: theme.font.weight.regular,
     paddingInline: 4,
+  },
+});
+
+const GitRepoPath = styled("span", {
+  base: {
+    color: theme.color.text.dimmed.base,
+    fontSize: theme.font.size.sm,
   },
 });
 
@@ -378,9 +391,25 @@ const GitOrgErrorCopy = styled("div", {
 
 const SelectRepoRoot = styled("div", {
   base: {
-    ...utility.row(3.5),
-    maxWidth: 440,
-    alignItems: "flex-start",
+    ...utility.stack(6),
+    padding: theme.space[5],
+    borderRadius: theme.borderRadius,
+    backgroundColor: theme.color.background.surface,
+  },
+});
+
+const SelectRepoFields = styled("div", {
+  base: {
+    ...utility.stack(6),
+    flex: "1 1 auto",
+  },
+});
+
+const SelectRepoControls = styled("div", {
+  base: {
+    ...utility.row(4),
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
 });
 
@@ -399,6 +428,11 @@ export const EditTargetForm = object({
       })
     )
   ),
+});
+
+const EditRepoForm = object({
+  repo: string([minLength(1, "Pick a repo")]),
+  path: optional(string()),
 });
 
 export function Settings() {
@@ -447,6 +481,13 @@ export function Settings() {
     return run?.status === "error";
   });
 
+  const [editingRepo, setEditingRepo] = createStore<{
+    id?: string;
+    active: boolean;
+  }>({
+    active: false,
+  });
+
   const [overrideGithub, setOverrideGithub] = createSignal(false);
 
   createEventListener(
@@ -460,6 +501,14 @@ export function Settings() {
   const [putForm, { Form, Field, FieldArray }] = createForm({
     validate: valiForm(EditTargetForm),
   });
+
+  const [repoForm, { Form: RepoFormForm, Field: RepoFormField }] = createForm({
+    validate: valiForm(EditRepoForm),
+  });
+  const repoFormInitialValues = {
+    repo: "",
+    path: undefined,
+  };
 
   interface TargetProps {
     config: RunConfig.Info;
@@ -748,14 +797,10 @@ export function Settings() {
             </LinkButton>
             <Switch>
               <Match when={props.new}>
-                <Button type="submit" color="primary">
-                  Add Environment
-                </Button>
+                <Button type="submit" color="primary">Add Environment</Button>
               </Match>
               <Match when={true}>
-                <Button type="submit" color="success">
-                  Update
-                </Button>
+                <Button type="submit" color="success">Update</Button>
               </Match>
             </Switch>
           </TargetFormRowControls>
@@ -781,6 +826,141 @@ export function Settings() {
     });
     setEditing("active", true);
     setEditing("id", undefined);
+  }
+
+  interface RepoFormProps {
+    new?: boolean;
+  }
+  function RepoForm(props: RepoFormProps) {
+    const repos = createSubscription(GithubRepoStore.all, []);
+    const orgs = createSubscription(GithubOrgStore.all, []);
+    const activeOrgs = createMemo(
+      () =>
+        new Set(
+          orgs.value
+            .filter((org) => !org.time.disconnected)
+            .map((org) => org.id)
+        )
+    );
+    const sortedRepos = createMemo(() =>
+      pipe(
+        repos.value,
+        filter((repo) => activeOrgs().has(repo.githubOrgID)),
+        map((repo) => ({
+          label: repo.name,
+          value: repo.id,
+        })),
+        sortBy((repo) => repo.label)
+      )
+    );
+    const newRepo = createMemo(() => props.new === true);
+    const empty = createMemo(() => sortedRepos().length === 0);
+    const expanded = createMemo(() =>
+      newRepo()
+        ? !empty() && !!getValue(repoForm, "repo")
+        : true
+    );
+
+    return (
+      <RepoFormForm
+        onSubmit={(data) => {
+          const id = editingRepo.id || createId();
+
+          if (newRepo()) {
+            rep().mutate.app_repo_connect({
+              id,
+              appID: app.app.id,
+              type: "github",
+              repoID: data.repo,
+            });
+          }
+
+          data.path &&
+            rep().mutate.app_repo_path_put({
+              id,
+              path: data.path
+            });
+
+          if (!newRepo()) {
+            setEditingRepo("active", false);
+          }
+        }}
+      >
+        <SelectRepoRoot>
+          <SelectRepoFields>
+            <RepoFormField name="repo">
+              {(field, props) => (
+                <FormField
+                  class={selectRepo}
+                  label={expanded() ? "Repo" : undefined}
+                  hint={
+                    empty() ? (
+                      <Link href="../../settings#github">
+                        Connect to a different organization
+                      </Link>
+                    ) : undefined
+                  }
+                >
+                  <Select
+                    {...props}
+                    disabled={!newRepo()}
+                    value={field.value}
+                    placeholder={
+                      sortedRepos().length === 0
+                        ? "No repos found"
+                        : "Select a repo..."
+                    }
+                    options={sortedRepos()}
+                  />
+                </FormField>
+              )}
+            </RepoFormField>
+            <Show when={expanded()}>
+              <RepoFormField name="path">
+                {(field, props) => (
+                  <FormField
+                    label="Path"
+                    class={selectRepo}
+                    hint={`Path to the "sst.config.ts" in your repo. Defalts to "/".`}
+                  >
+                    <Input
+                      {...props}
+                      type="text"
+                      placeholder={`/`}
+                      value={field.value || ""}
+                    />
+                  </FormField>
+                )}
+              </RepoFormField>
+            </Show>
+          </SelectRepoFields>
+          <Show when={expanded()}>
+            <SelectRepoControls>
+              <LinkButton
+                onClick={() => {
+                  reset(repoForm, {
+                    initialValues: repoFormInitialValues,
+                  });
+                  if (!props.new) {
+                    setEditingRepo("active", false);
+                  }
+                }}
+              >
+                Cancel
+              </LinkButton>
+              <Switch>
+                <Match when={props.new}>
+                  <Button type="submit">Select</Button>
+                </Match>
+                <Match when={true}>
+                  <Button type="submit" color="success">Update</Button>
+                </Match>
+              </Switch>
+            </SelectRepoControls>
+          </Show>
+        </SelectRepoRoot>
+      </RepoFormForm>
+    );
   }
 
   return (
@@ -873,70 +1053,75 @@ export function Settings() {
                   });
                   return (
                     <Show when={info.value}>
-                      <GitRepoPanel>
-                        <GitRepoPanelRow>
-                          <Row space="2">
-                            <GitRepoIcon>
-                              <IconGitHub width="32" height="32" />
-                            </GitRepoIcon>
-                            <Stack space="1">
-                              <GitRepoLink
-                                target="_blank"
-                                href={githubRepo(
-                                  info.value!.org.login,
-                                  info.value!.repo.name
-                                )}
-                              >
-                                {info.value!.org.login}
-                                <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
-                                {info.value!.repo.name}
-                              </GitRepoLink>
-                            </Stack>
-                          </Row>
-                          <Button
-                            color="danger"
-                            onClick={() => {
-                              if (
-                                !confirm(
-                                  "Are you sure you want to disconnect from this repo?"
-                                )
-                              )
-                                return;
-                              rep().mutate.app_repo_disconnect(
-                                appRepo.value!.id
-                              );
-                            }}
-                          >
-                            Disconnect
-                          </Button>
-                        </GitRepoPanelRow>
-                      </GitRepoPanel>
-                      <Show when={workspace().slug === "sst"}>
-                        <TargetHeader>
-                          <TargetHeaderCopy>Path</TargetHeaderCopy>
-                        </TargetHeader>
-                        Current path: {appRepo.value!.path}
-                        <Button
-                          onClick={() => {
-                            rep().mutate.app_repo_path_put({
-                              id: appRepo.value!.id,
-                              path: "www",
-                            });
-                          }}
-                        >
-                          Set `path` to `www`
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            rep().mutate.app_repo_path_put({
-                              id: appRepo.value!.id,
-                              path: "/",
-                            });
-                          }}
-                        >
-                          Set `path` to `/`
-                        </Button>
-                      </Show>
+                      <Switch>
+                        <Match when={editingRepo.active}><RepoForm /></Match>
+                        <Match when={true}>
+                          <GitRepoPanel>
+                            <GitRepoPanelRow>
+                              <Row space="3" vertical="center">
+                                <GitRepoIcon>
+                                  <IconGitHub width="32" height="32" />
+                                </GitRepoIcon>
+                                <Stack space="1.5">
+                                  <GitRepoLink
+                                    target="_blank"
+                                    href={githubRepo(
+                                      info.value!.org.login,
+                                      info.value!.repo.name
+                                    )}
+                                  >
+                                    {info.value!.org.login}
+                                    <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
+                                    {info.value!.repo.name}
+                                  </GitRepoLink>
+                                  <GitRepoPath>Deploying: {appRepo.value!.path}</GitRepoPath>
+                                </Stack>
+                              </Row>
+                              <GitRepoPanelRowRight>
+                                <Button
+                                  size="sm"
+                                  color="danger"
+                                  onClick={() => {
+                                    if (
+                                      !confirm(
+                                        "Are you sure you want to disconnect from this repo?"
+                                      )
+                                    )
+                                      return;
+                                    rep().mutate.app_repo_disconnect(
+                                      appRepo.value!.id
+                                    );
+                                    reset(repoForm, {
+                                      initialValues: repoFormInitialValues,
+                                    });
+                                  }}
+                                >
+                                  Disconnect
+                                </Button>
+                                <Dropdown
+                                  size="sm"
+                                  icon={<IconEllipsisVertical width={18} height={18} />}
+                                >
+                                  <Dropdown.Item
+                                    onSelect={() => {
+                                      setEditingRepo("id", appRepo.value!.id);
+                                      setEditingRepo("active", true);
+                                      reset(repoForm, {
+                                        initialValues: {
+                                          repo: appRepo.value!.repoID,
+                                          path: appRepo.value!.path,
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    Modify path
+                                  </Dropdown.Item>
+                                </Dropdown>
+                              </GitRepoPanelRowRight>
+                            </GitRepoPanelRow>
+                          </GitRepoPanel>
+                        </Match>
+                      </Switch>
                       <TargetsRoot>
                         <TargetHeader>
                           <TargetHeaderCopy>Environments</TargetHeaderCopy>
@@ -1016,70 +1201,7 @@ export function Settings() {
               </Match>
 
               <Match when={true}>
-                {(_val) => {
-                  const [repo, setRepo] = createSignal<string>();
-                  const repos = createSubscription(GithubRepoStore.all, []);
-                  const orgs = createSubscription(GithubOrgStore.all, []);
-                  const activeOrgs = createMemo(
-                    () =>
-                      new Set(
-                        orgs.value
-                          .filter((org) => !org.time.disconnected)
-                          .map((org) => org.id)
-                      )
-                  );
-                  const sortedRepos = createMemo(() =>
-                    pipe(
-                      repos.value,
-                      filter((repo) => activeOrgs().has(repo.githubOrgID)),
-                      map((repo) => ({
-                        label: repo.name,
-                        value: repo.id,
-                      })),
-                      sortBy((repo) => repo.label)
-                    )
-                  );
-                  const empty = createMemo(() => sortedRepos().length === 0);
-                  return (
-                    <SelectRepoRoot>
-                      <FormField
-                        class={selectRepo}
-                        hint={
-                          empty() ? (
-                            <Link href="../../settings#github">
-                              Connect to a different organization
-                            </Link>
-                          ) : undefined
-                        }
-                      >
-                        <Select
-                          name={SELECT_REPO_NAME}
-                          disabled={empty()}
-                          onChange={(e) => setRepo(e.currentTarget.value)}
-                          placeholder={
-                            sortedRepos().length === 0
-                              ? "No repos found"
-                              : "Select a repo..."
-                          }
-                          options={sortedRepos()}
-                        />
-                      </FormField>
-                      <Button
-                        disabled={empty() || !repo()}
-                        onClick={() => {
-                          rep().mutate.app_repo_connect({
-                            id: createId(),
-                            appID: app.app.id,
-                            type: "github",
-                            repoID: repo()!,
-                          });
-                        }}
-                      >
-                        Select
-                      </Button>
-                    </SelectRepoRoot>
-                  );
-                }}
+                <RepoForm new />
               </Match>
             </Switch>
           </GitRepoRoot>
