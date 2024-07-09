@@ -414,7 +414,7 @@ function RunItem({ run }: { run: Run.Run }) {
         </RunStatus>
         <RunMessage>
           <Switch>
-            <Match when={run.status === "error"}>
+            <Match when={run.error}>
               <>
                 <RunMessageIcon>
                   <IconExclamationTriangle width="14" height="14" />
