@@ -704,8 +704,9 @@ export module Run {
           .from(runTable)
           .where(
             and(
+              eq(runTable.id, runID),
               eq(runTable.workspaceID, useWorkspace()),
-              eq(runTable.id, runID)
+              isNull(runTable.timeCompleted)
             )
           )
           .execute()
