@@ -9,6 +9,7 @@ import { useStageContext } from "../../context";
 import { CMD_MAP, STATUS_MAP, errorCountCopy, UpdateStatusIcon } from "./list";
 import { NotFound } from "$/pages/not-found";
 import { inputFocusStyles } from "$/ui/form";
+import { style } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
 import { IconPr, IconGit, IconCommit } from "$/ui/icons/custom";
 import { formatDuration, formatSinceTime } from "$/common/format";
@@ -25,7 +26,7 @@ import {
   githubBranch,
   githubCommit,
 } from "$/common/url-builder";
-import { Row, Text, Stack, theme, utility } from "$/ui";
+import { Row, Text, Stack, Button, theme, utility } from "$/ui";
 import { sortBy } from "remeda";
 
 const AVATAR_SIZE = 36;
@@ -322,22 +323,12 @@ const GitBranch = styled("span", {
   },
 });
 
-const AutodeployLink = styled(Link, {
-  base: {
-    fontSize: theme.font.size.sm,
-    color: theme.color.text.secondary.base,
-    ":hover": {
-      color: theme.color.text.primary.base,
-    },
-  },
-});
-
 const AutodeployLinkIcon = styled("span", {
   base: {
-    verticalAlign: -2,
+    marginLeft: 2,
     lineHeight: 0,
+    verticalAlign: -2,
     opacity: theme.iconOpacity,
-    marginLeft: theme.space[0.5],
   },
 });
 
@@ -484,12 +475,14 @@ export function Detail() {
                   </Stack>
                 </Row>
               </GitInfo>
-              <AutodeployLink href={`../../../autodeploy/${run.value!.id}`}>
-                View logs
-                <AutodeployLinkIcon>
-                  <IconChevronRight width="12" height="12" />
-                </AutodeployLinkIcon>
-              </AutodeployLink>
+              <Link href={`../../../autodeploy/${run.value!.id}`}>
+                <Button size="sm" color="secondary">
+                  View deploy logs
+                  <AutodeployLinkIcon>
+                    <IconChevronRight width="10" height="10" />
+                  </AutodeployLinkIcon>
+                </Button>
+              </Link>
             </AutodeployInfo>
           </Show>
           <Stack space="7">
