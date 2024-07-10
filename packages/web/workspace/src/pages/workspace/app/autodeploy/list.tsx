@@ -152,6 +152,7 @@ const RunRoot = styled("div", {
 const RunLeftCol = styled("div", {
   base: {
     ...utility.row(2),
+    flexShrink: 1,
     minWidth: 0,
     alignItems: "center",
     justifyContent: "space-between",
@@ -161,7 +162,7 @@ const RunLeftCol = styled("div", {
 const RunStatus = styled("div", {
   base: {
     ...utility.row(3),
-    minWidth: 0,
+    flex: "0 0 auto",
     width: 120,
     alignItems: "center",
   },
@@ -229,6 +230,8 @@ const RunLink = styled(Link, {
 const RunMessage = styled("div", {
   base: {
     ...utility.row(0),
+    flex: "1 1 auto",
+    minWidth: 0,
     gap: 5,
     alignItems: "center",
     maxWidth: 300,
@@ -262,8 +265,10 @@ const RunMessageLink = styled(Link, {
 const RunGit = styled("div", {
   base: {
     ...utility.row(2),
+    flex: "1 1 auto",
     alignItems: "center",
     width: 460,
+    minWidth: 0,
   },
 });
 
@@ -350,6 +355,7 @@ const RunGitMessage = styled("p", {
 const RunRightCol = styled("div", {
   base: {
     ...utility.row(10),
+    flexShrink: 1,
     minWidth: 0,
     alignItems: "center",
     justifyContent: "space-between",
@@ -358,6 +364,8 @@ const RunRightCol = styled("div", {
 
 const RunTime = styled("div", {
   base: {
+    ...utility.text.line,
+    flex: "0 0 auto",
     width: 120,
     textAlign: "right",
     fontSize: theme.font.size.sm,
@@ -408,7 +416,7 @@ function RunItem({ run }: { run: Run.Run }) {
         </RunStatus>
         <RunMessage>
           <Switch>
-            <Match when={run.status === "error"}>
+            <Match when={run.error}>
               <>
                 <RunMessageIcon>
                   <IconExclamationTriangle width="14" height="14" />

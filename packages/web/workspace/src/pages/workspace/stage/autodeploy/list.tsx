@@ -152,6 +152,7 @@ const RunRoot = styled("div", {
 const RunLeftCol = styled("div", {
   base: {
     ...utility.row(2),
+    flexShrink: 1,
     minWidth: 0,
     alignItems: "center",
     justifyContent: "space-between",
@@ -161,6 +162,7 @@ const RunLeftCol = styled("div", {
 const RunStatus = styled("div", {
   base: {
     ...utility.row(3),
+    flex: "0 0 auto",
     minWidth: 0,
     width: 120,
     alignItems: "center",
@@ -229,6 +231,8 @@ const RunLink = styled(Link, {
 const RunMessage = styled("div", {
   base: {
     ...utility.row(0),
+    flex: "1 1 auto",
+    minWidth: 0,
     gap: 5,
     alignItems: "center",
     maxWidth: 300,
@@ -255,6 +259,8 @@ const RunMessageCopy = styled("p", {
 const RunGit = styled("div", {
   base: {
     ...utility.row(2),
+    flex: "1 1 auto",
+    minWidth: 0,
     alignItems: "center",
     width: 460,
   },
@@ -343,6 +349,7 @@ const RunGitMessage = styled("p", {
 const RunRightCol = styled("div", {
   base: {
     ...utility.row(20),
+    flexShrink: 1,
     minWidth: 0,
     alignItems: "center",
     justifyContent: "space-between",
@@ -351,6 +358,8 @@ const RunRightCol = styled("div", {
 
 const RunTime = styled("span", {
   base: {
+    ...utility.text.line,
+    flex: "0 0 auto",
     width: 120,
     textAlign: "right",
     fontSize: theme.font.size.sm,
