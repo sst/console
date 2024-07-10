@@ -306,18 +306,25 @@ export module Github {
           .where(
             or(
               ...orgs.map((org) =>
-                and(
-                  eq(githubRepoTable.workspaceID, org.workspaceID),
-                  eq(githubRepoTable.githubOrgID, org.id),
-                  notInArray(
-                    githubRepoTable.externalRepoID,
-                    repos.map(({ id }) => id)
-                  )
-                )
+                repos.length
+                  ? and(
+                      eq(githubRepoTable.workspaceID, org.workspaceID),
+                      eq(githubRepoTable.githubOrgID, org.id),
+                      notInArray(
+                        githubRepoTable.externalRepoID,
+                        repos.map(({ id }) => id)
+                      )
+                    )
+                  : and(
+                      eq(githubRepoTable.workspaceID, org.workspaceID),
+                      eq(githubRepoTable.githubOrgID, org.id)
+                    )
               )
             )
           )
           .execute();
+
+        if (!repos.length) return;
 
         await tx
           .insert(githubRepoTable)
