@@ -291,7 +291,7 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
 
   function Header() {
     return (
-      <Stack space="2">
+      <Stack space={data.value!.update?.errors.length ? "4" : "2"}>
         <PageTitle>
           <RunStatusIcon status={data.value!.run.status} />
           <PageTitleCopy>{STATUS_MAP[data.value!.run.status]}</PageTitleCopy>
@@ -358,9 +358,8 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
                 <img
                   width={AVATAR_SIZE}
                   height={AVATAR_SIZE}
-                  src={`https://avatars.githubusercontent.com/u/${
-                    trigger.sender.id
-                  }?s=${2 * AVATAR_SIZE}&v=4`}
+                  src={`https://avatars.githubusercontent.com/u/${trigger.sender.id
+                    }?s=${2 * AVATAR_SIZE}&v=4`}
                 />
               </GitAvatar>
               <Stack space="0.5">
@@ -416,16 +415,16 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
               title={
                 data.value!.run.time.started
                   ? DateTime.fromISO(
-                      data.value!.run.time.started!
-                    ).toLocaleString(DateTime.DATETIME_FULL)
+                    data.value!.run.time.started!
+                  ).toLocaleString(DateTime.DATETIME_FULL)
                   : undefined
               }
             >
               {data.value!.run.time.started
                 ? formatSinceTime(
-                    DateTime.fromISO(data.value!.run.time.started!).toSQL()!,
-                    true
-                  )
+                  DateTime.fromISO(data.value!.run.time.started!).toSQL()!,
+                  true
+                )
                 : "—"}
             </Text>
           </Stack>
@@ -441,11 +440,11 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
             >
               {data.value!.run.time.started && data.value!.run.time.completed
                 ? formatDuration(
-                    DateTime.fromISO(data.value!.run.time.completed!)
-                      .diff(DateTime.fromISO(data.value!.run.time.started!))
-                      .as("milliseconds"),
-                    true
-                  )
+                  DateTime.fromISO(data.value!.run.time.completed!)
+                    .diff(DateTime.fromISO(data.value!.run.time.started!))
+                    .as("milliseconds"),
+                  true
+                )
                 : "—"}
             </Text>
           </Stack>
@@ -463,22 +462,22 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
         if (!log) return [];
         const results = await fetch(
           import.meta.env.VITE_API_URL +
-            "/rest/log/scan?" +
-            new URLSearchParams(
-              log.engine === "lambda"
-                ? {
-                    stageID: data.value!.stage!.id,
-                    timestamp: log.timestamp.toString(),
-                    logStream: log.logStream,
-                    logGroup: log.logGroup,
-                    requestID: log.requestID,
-                  }
-                : {
-                    stageID: data.value!.stage!.id,
-                    logStream: log.logStream,
-                    logGroup: log.logGroup,
-                  }
-            ).toString(),
+          "/rest/log/scan?" +
+          new URLSearchParams(
+            log.engine === "lambda"
+              ? {
+                stageID: data.value!.stage!.id,
+                timestamp: log.timestamp.toString(),
+                logStream: log.logStream,
+                logGroup: log.logGroup,
+                requestID: log.requestID,
+              }
+              : {
+                stageID: data.value!.stage!.id,
+                logStream: log.logStream,
+                logGroup: log.logGroup,
+              }
+          ).toString(),
           {
             headers: {
               "x-sst-workspace": workspace().id,
