@@ -45,6 +45,7 @@ import { Row, Text, Stack, theme, utility } from "$/ui";
 import { pipe, dropWhile, drop, takeWhile, filter } from "remeda";
 import { useWorkspace } from "../pages/workspace/context";
 import { useAuth2 } from "$/providers/auth2";
+import { IconXCircle } from "$/ui/icons";
 
 const DATETIME_NO_TIME = {
   month: "short",
@@ -106,6 +107,48 @@ const PageTitleMessage = styled("p", {
         color: theme.color.text.danger.base,
       },
     },
+  },
+});
+
+const Errors = styled("div", {
+  base: {
+    ...utility.stack(4),
+    padding: theme.space[4],
+    borderRadius: theme.borderRadius,
+    backgroundColor: theme.color.background.red,
+  },
+});
+
+const Error = styled("div", {
+  base: {
+    ...utility.row(2),
+    color: `hsla(${theme.color.red.l2}, 100%)`,
+  },
+});
+
+const ErrorIcon = styled("div", {
+  base: {
+    flex: 0,
+    marginTop: 2,
+  },
+});
+
+const ErrorTitle = styled("div", {
+  base: {
+    fontSize: theme.font.size.mono_sm,
+    fontFamily: theme.font.family.code,
+    fontWeight: theme.font.weight.bold,
+    lineHeight: theme.font.lineHeight,
+    wordBreak: "break-all",
+  },
+});
+
+const ErrorMessage = styled("div", {
+  base: {
+    fontSize: theme.font.size.sm,
+    lineHeight: theme.font.lineHeight,
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
   },
 });
 
@@ -254,6 +297,25 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
           <PageTitleCopy>{STATUS_MAP[data.value!.run.status]}</PageTitleCopy>
         </PageTitle>
         <Switch>
+          <Match when={data.value!.update?.errors.length}>
+            <Errors>
+              <For each={data.value!.update?.errors}>
+                {(err) => (
+                  <Error>
+                    <ErrorIcon>
+                      <IconXCircle width={16} height={16} />
+                    </ErrorIcon>
+                    <Stack space="0.5">
+                      <Show when={err.urn}>
+                        <ErrorTitle>{getResourceName(err.urn)}</ErrorTitle>
+                      </Show>
+                      <ErrorMessage>{err.message.trim()}</ErrorMessage>
+                    </Stack>
+                  </Error>
+                )}
+              </For>
+            </Errors>
+          </Match>
           <Match when={data.value!.run.error}>
             <PageTitleMessage error={data.value!.run.status === "error"}>
               {ERROR_MAP(data.value!.run.error!)}
@@ -546,4 +608,8 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
       </Match>
     </Switch>
   );
+}
+
+function getResourceName(urn: string) {
+  return urn.split("::").at(-1);
 }
