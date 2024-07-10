@@ -36,7 +36,7 @@ export const Engine = ["lambda", "codebuild"] as const;
 export const Architecture = ["x86_64", "arm64"] as const;
 export const Compute = ["small", "medium", "large", "xlarge"] as const;
 type RunErrors = {
-  config_not_found: {};
+  config_not_found: { path?: string };
   config_build_failed: {};
   config_parse_failed: {};
   config_evaluate_failed: {};

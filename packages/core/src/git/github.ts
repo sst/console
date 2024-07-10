@@ -346,6 +346,7 @@ export module Github {
       owner: z.string().min(1),
       repo: z.string().min(1),
       ref: z.string().min(1).optional(),
+      path: z.string().min(1),
     }),
     async (input) => {
       const client = await useClient(input.installationID);
@@ -354,7 +355,7 @@ export module Github {
           owner: input.owner,
           repo: input.repo,
           ref: input.ref,
-          path: "sst.config.ts",
+          path: input.path,
         });
         return "content" in file.data ? file.data.content : undefined;
       } catch (e: any) {}

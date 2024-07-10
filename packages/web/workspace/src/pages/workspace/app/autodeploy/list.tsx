@@ -25,7 +25,9 @@ import { For, Show, Match, Switch, createMemo } from "solid-js";
 export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
   switch (error.type) {
     case "config_not_found":
-      return "No sst.config.ts was found in the repo root";
+      return error.properties?.path
+        ? `No sst.config.ts was found in ${error.properties.path}`
+        : "No sst.config.ts was found in the repo root";
     case "config_build_failed":
       return "Failed to compile sst.config.ts";
     case "config_parse_failed":
@@ -33,11 +35,11 @@ export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
     case "config_evaluate_failed":
       return "Error evaluating sst.config.ts";
     case "config_target_returned_undefined":
-      return "\"console.autodeploy.target\" in the config returned \"undefined\"";
+      return '"console.autodeploy.target" in the config returned "undefined"';
     case "config_branch_remove_skipped":
       return "Skipped branch remove";
     case "config_target_no_stage":
-      return "\"console.autodeploy.target\" in the config did not return a stage";
+      return '"console.autodeploy.target" in the config did not return a stage';
     case "config_v2_unsupported":
       return "Autodeploy does not support SST v2 apps";
     case "config_app_name_mismatch":
@@ -431,8 +433,9 @@ function RunItem({ run }: { run: Run.Run }) {
             <img
               width="24"
               height="24"
-              src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                }?s=48&v=4`}
+              src={`https://avatars.githubusercontent.com/u/${
+                runInfo()!.trigger.sender.id
+              }?s=48&v=4`}
             />
           </RunSenderAvatar>
           <RunGitLink
