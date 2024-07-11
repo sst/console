@@ -13,3 +13,7 @@ export function githubBranch(repo: string, branch: string) {
 export function githubPr(repo: string, pr: number) {
   return `${repo}/pull/${pr}`;
 }
+
+export function githubTag(repo: string, tag: string) {
+  return `${repo}/tree/${tag}`;
+}

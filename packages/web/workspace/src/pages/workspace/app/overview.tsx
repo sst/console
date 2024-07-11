@@ -15,6 +15,7 @@ import { useLocalContext } from "$/providers/local";
 import { AWS } from "$/data/aws";
 import { githubCommit, githubRepo } from "$/common/url-builder";
 import { sortBy } from "remeda";
+import { IconTag } from "$/ui/icons";
 
 const Root = styled("div", {
   base: {
@@ -338,6 +339,9 @@ export function Overview() {
                         <Match when={v().trigger.type === "pull_request"}>
                           <IconPr />
                         </Match>
+                        <Match when={v().trigger.type === "tag"}>
+                          <IconTag />
+                        </Match>
                         <Match when={v().trigger.type === "branch"}>
                           <IconGit />
                         </Match>
@@ -347,6 +351,7 @@ export function Overview() {
                       {(() => {
                         const trigger = v().trigger;
                         if (trigger.type === "branch") return trigger.branch;
+                        if (trigger.type === "tag") return trigger.tag;
                         return trigger.base;
                       })()}
                     </CardGitBranch>

@@ -19,12 +19,14 @@ import {
   IconXCircle,
   IconChevronRight,
   IconEllipsisVertical,
+  IconTag,
 } from "$/ui/icons";
 import {
   githubPr,
   githubRepo,
   githubBranch,
   githubCommit,
+  githubTag,
 } from "$/common/url-builder";
 import { Row, Text, Stack, Button, theme, utility } from "$/ui";
 import { sortBy } from "remeda";
@@ -413,11 +415,17 @@ export function Detail() {
 
       const trigger = run.value.trigger;
       const branch =
-        trigger.type === "branch" ? trigger.branch : `pr#${trigger.number}`;
+        trigger.type === "pull_request"
+          ? `pr#${trigger.number}`
+          : trigger.type === "tag"
+          ? trigger.tag
+          : trigger.branch;
       const uri =
-        trigger.type === "branch"
-          ? githubBranch(repoURL(), trigger.branch)
-          : githubPr(repoURL(), trigger.number);
+        trigger.type === "pull_request"
+          ? githubPr(repoURL(), trigger.number)
+          : trigger.type === "tag"
+          ? githubTag(repoURL(), trigger.tag)
+          : githubBranch(repoURL(), trigger.branch);
 
       return { trigger, branch, uri };
     });
@@ -433,8 +441,9 @@ export function Detail() {
                     <img
                       width={AVATAR_SIZE}
                       height={AVATAR_SIZE}
-                      src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                        }?s=${2 * AVATAR_SIZE}&v=4`}
+                      src={`https://avatars.githubusercontent.com/u/${
+                        runInfo()!.trigger.sender.id
+                      }?s=${2 * AVATAR_SIZE}&v=4`}
                     />
                   </GitAvatar>
                   <Stack space="0.5">
@@ -465,6 +474,9 @@ export function Detail() {
                           >
                             <IconPr />
                           </Match>
+                          <Match when={runInfo()!.trigger.type === "tag"}>
+                            <IconTag />
+                          </Match>
                           <Match when={true}>
                             <IconGit />
                           </Match>
@@ -493,16 +505,16 @@ export function Detail() {
                 title={
                   update.value!.time.started
                     ? DateTime.fromISO(
-                      update.value!.time.started!
-                    ).toLocaleString(DateTime.DATETIME_FULL)
+                        update.value!.time.started!
+                      ).toLocaleString(DateTime.DATETIME_FULL)
                     : undefined
                 }
               >
                 {update.value!.time.started
                   ? formatSinceTime(
-                    DateTime.fromISO(update.value!.time.started!).toSQL()!,
-                    true
-                  )
+                      DateTime.fromISO(update.value!.time.started!).toSQL()!,
+                      true
+                    )
                   : "—"}
               </Text>
             </Stack>
@@ -518,11 +530,11 @@ export function Detail() {
               >
                 {update.value!.time.started && update.value!.time.completed
                   ? formatDuration(
-                    DateTime.fromISO(update.value!.time.completed!)
-                      .diff(DateTime.fromISO(update.value!.time.started!))
-                      .as("milliseconds"),
-                    true
-                  )
+                      DateTime.fromISO(update.value!.time.completed!)
+                        .diff(DateTime.fromISO(update.value!.time.started!))
+                        .as("milliseconds"),
+                      true
+                    )
                   : "—"}
               </Text>
             </Stack>

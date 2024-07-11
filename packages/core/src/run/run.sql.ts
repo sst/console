@@ -42,6 +42,7 @@ type RunErrors = {
   config_evaluate_failed: {};
   config_target_returned_undefined: {};
   config_branch_remove_skipped: {};
+  config_tag_skipped: {};
   config_target_no_stage: {};
   config_v2_unsupported: {};
   config_app_name_mismatch: { name: string };
@@ -84,6 +85,25 @@ export const Trigger = z.discriminatedUnion("type", [
       repo: z.string().min(1),
     }),
     branch: z.string().min(1),
+    commit: z.object({
+      id: z.string().min(1),
+      message: z.string().max(100).min(1),
+    }),
+    sender: z.object({
+      id: z.number(),
+      username: z.string().min(1),
+    }),
+  }),
+  z.object({
+    type: z.enum(["tag"]),
+    action: z.enum(["pushed", "removed"]),
+    source: z.enum(["github"]),
+    repo: z.object({
+      id: z.number(),
+      owner: z.string().min(1),
+      repo: z.string().min(1),
+    }),
+    tag: z.string().min(1),
     commit: z.object({
       id: z.string().min(1),
       message: z.string().max(100).min(1),

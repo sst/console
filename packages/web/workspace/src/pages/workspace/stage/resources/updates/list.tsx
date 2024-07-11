@@ -5,7 +5,7 @@ import { Link } from "@solidjs/router";
 import { styled } from "@macaron-css/solid";
 import { State } from "@console/core/state";
 import { Stack, theme, utility } from "$/ui";
-import { IconCommandLine } from "$/ui/icons";
+import { IconCommandLine, IconTag } from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
 import { useStageContext } from "../../context";
 import { globalKeyframes } from "@macaron-css/core";
@@ -17,6 +17,7 @@ import {
   githubRepo,
   githubBranch,
   githubCommit,
+  githubTag,
 } from "$/common/url-builder";
 import { RunStore, StateUpdateStore } from "$/data/app";
 import { For, Show, Match, Switch, createMemo } from "solid-js";
@@ -388,7 +389,7 @@ function Update(props: UpdateProps) {
   });
 
   const update = createSubscription((tx) =>
-    StateUpdateStore.get(tx, ctx.stage.id, props.id),
+    StateUpdateStore.get(tx, ctx.stage.id, props.id)
   );
 
   const runInfo = createMemo(() => {
@@ -400,11 +401,17 @@ function Update(props: UpdateProps) {
         ? githubRepo(trigger.repo.owner, trigger.repo.repo)
         : "";
     const branch =
-      trigger.type === "branch" ? trigger.branch : `pr#${trigger.number}`;
+      trigger.type === "pull_request"
+        ? `pr#${trigger.number}`
+        : trigger.type === "tag"
+        ? trigger.tag
+        : trigger.branch;
     const uri =
-      trigger.type === "branch"
-        ? githubBranch(repoURL, trigger.branch)
-        : githubPr(repoURL, trigger.number);
+      trigger.type === "pull_request"
+        ? githubPr(repoURL, trigger.number)
+        : trigger.type === "tag"
+        ? githubTag(repoURL, trigger.tag)
+        : githubBranch(repoURL, trigger.branch);
 
     return { trigger, repoURL, branch, uri };
   });
@@ -453,8 +460,9 @@ function Update(props: UpdateProps) {
                 <img
                   width="24"
                   height="24"
-                  src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
-                    }?s=48&v=4`}
+                  src={`https://avatars.githubusercontent.com/u/${
+                    runInfo()!.trigger.sender.id
+                  }?s=48&v=4`}
                 />
               </UpdateSenderAvatar>
             </Match>
@@ -471,7 +479,7 @@ function Update(props: UpdateProps) {
                   target="_blank"
                   href={githubCommit(
                     runInfo()!.repoURL,
-                    runInfo()!.trigger.commit.id,
+                    runInfo()!.trigger.commit.id
                   )}
                 >
                   <UpdateGitIcon size="md">
@@ -486,6 +494,9 @@ function Update(props: UpdateProps) {
                     <Switch>
                       <Match when={runInfo()!.trigger.type === "pull_request"}>
                         <IconPr />
+                      </Match>
+                      <Match when={runInfo()!.trigger.type === "tag"}>
+                        <IconTag />
                       </Match>
                       <Match when={true}>
                         <IconGit />
@@ -514,13 +525,10 @@ function Update(props: UpdateProps) {
             deleted={props.deleted}
           />
         </Stack>
-        <Show
-          when={props.timeStarted}
-          fallback={<UpdateTime>—</UpdateTime>}
-        >
+        <Show when={props.timeStarted} fallback={<UpdateTime>—</UpdateTime>}>
           <UpdateTime
             title={DateTime.fromISO(props.timeStarted!).toLocaleString(
-              DateTime.DATETIME_FULL,
+              DateTime.DATETIME_FULL
             )}
           >
             {formatSinceTime(DateTime.fromISO(props.timeStarted!).toSQL()!)}
@@ -547,7 +555,7 @@ function ChangeLegend(props: ChangeLegendProps) {
 
   const widths = createMemo(() => {
     const nonZero = [same(), created(), updated(), deleted()].filter(
-      (n) => n !== 0,
+      (n) => n !== 0
     ).length;
 
     let sameWidth =
@@ -571,7 +579,7 @@ function ChangeLegend(props: ChangeLegendProps) {
         sameWidth,
         createdWidth,
         updatedWidth,
-        deletedWidth,
+        deletedWidth
       );
       if (maxWidth === sameWidth) {
         sameWidth += widthDifference;
@@ -632,7 +640,7 @@ export function List() {
   const ctx = useStageContext();
   const updates = createSubscription(
     (tx) => StateUpdateStore.forStage(tx, ctx.stage.id),
-    [],
+    []
   );
 
   return (

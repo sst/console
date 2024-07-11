@@ -60,18 +60,26 @@ app.webhooks.on(
 app.webhooks.on("push", async (event) => {
   const owner = event.payload.repository.owner!.login;
   const repo = event.payload.repository.name;
+  const isTag = event.payload.ref.startsWith("refs/tags/");
   await Run.create({
     octokit: event.octokit,
     trigger: {
       source: "github",
-      type: "branch",
+      ...(isTag
+        ? {
+            type: "tag",
+            tag: event.payload.ref.replace("refs/tags/", ""),
+          }
+        : {
+            type: "branch",
+            branch: event.payload.ref.replace("refs/heads/", ""),
+          }),
       action: event.payload.deleted ? "removed" : "pushed",
       repo: {
         id: event.payload.repository.id,
         owner,
         repo,
       },
-      branch: event.payload.ref.replace("refs/heads/", ""),
       commit: event.payload.deleted
         ? await (() =>
             event.octokit.rest.repos

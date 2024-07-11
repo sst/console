@@ -77,6 +77,7 @@ export module Run {
     switch (error.type) {
       case "config_target_returned_undefined":
       case "config_branch_remove_skipped":
+      case "config_tag_skipped":
       case "target_not_matched":
         return "skipped";
       default:
@@ -99,6 +100,8 @@ export module Run {
         return '"console.autodeploy.target" in the config returned "undefined"';
       case "config_branch_remove_skipped":
         return "Skipped branch remove";
+      case "config_tag_skipped":
+        return "Skipped tag events";
       case "config_target_no_stage":
         return '"console.autodeploy.target" in the config did not return a stage';
       case "config_v2_unsupported":
@@ -290,6 +293,7 @@ export module Run {
           : "skipped"
         : input.error
         ? input.error.type === "config_branch_remove_skipped" ||
+          input.error.type === "config_tag_skipped" ||
           input.error.type === "config_target_returned_undefined" ||
           input.error.type === "target_not_matched"
           ? "skipped"
@@ -331,6 +335,12 @@ export module Run {
             defaultStage:
               input.trigger.type === "branch"
                 ? input.trigger.branch
+                    .replace(/[^a-zA-Z0-9-]/g, "-")
+                    .replace(/-+/g, "-")
+                    .replace(/^-/g, "")
+                    .replace(/-$/g, "")
+                : input.trigger.type === "tag"
+                ? input.trigger.tag
                     .replace(/[^a-zA-Z0-9-]/g, "-")
                     .replace(/-+/g, "-")
                     .replace(/^-/g, "")
@@ -441,12 +451,12 @@ export module Run {
                 };
 
               // Do not remove branches with default `autodeploy` config
-              if (
-                trigger.type === "branch" &&
-                trigger.action === "removed" &&
-                !sstConfig.console.autodeploy.target
-              )
-                return { type: "config_branch_remove_skipped" as const };
+              if (!sstConfig.console.autodeploy.target) {
+                if (trigger.type === "branch" && trigger.action === "removed")
+                  return { type: "config_branch_remove_skipped" as const };
+                if (trigger.type === "tag")
+                  return { type: "config_tag_skipped" as const };
+              }
 
               // Get AWS Account ID from Run Env
               const allEnv = await RunConfig.list(appID);

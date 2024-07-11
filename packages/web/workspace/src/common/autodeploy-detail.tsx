@@ -40,12 +40,13 @@ import {
   githubRepo,
   githubBranch,
   githubCommit,
+  githubTag,
 } from "$/common/url-builder";
 import { Row, Text, Stack, theme, utility } from "$/ui";
 import { pipe, dropWhile, drop, takeWhile, filter } from "remeda";
 import { useWorkspace } from "../pages/workspace/context";
 import { useAuth2 } from "$/providers/auth2";
-import { IconXCircle } from "$/ui/icons";
+import { IconTag, IconXCircle } from "$/ui/icons";
 
 const DATETIME_NO_TIME = {
   month: "short",
@@ -340,11 +341,17 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
     );
     const runInfo = createMemo(() => {
       const branch =
-        trigger.type === "branch" ? trigger.branch : `pr#${trigger.number}`;
+        trigger.type === "pull_request"
+          ? `pr#${trigger.number}`
+          : trigger.type === "tag"
+          ? trigger.tag
+          : trigger.branch;
       const uri =
-        trigger.type === "branch"
-          ? githubBranch(repoURL(), trigger.branch)
-          : githubPr(repoURL(), trigger.number);
+        trigger.type === "pull_request"
+          ? githubPr(repoURL(), trigger.number)
+          : trigger.type === "tag"
+          ? githubTag(repoURL(), trigger.tag)
+          : githubBranch(repoURL(), trigger.branch);
 
       return { trigger, branch, uri };
     });
@@ -358,8 +365,9 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
                 <img
                   width={AVATAR_SIZE}
                   height={AVATAR_SIZE}
-                  src={`https://avatars.githubusercontent.com/u/${trigger.sender.id
-                    }?s=${2 * AVATAR_SIZE}&v=4`}
+                  src={`https://avatars.githubusercontent.com/u/${
+                    trigger.sender.id
+                  }?s=${2 * AVATAR_SIZE}&v=4`}
                 />
               </GitAvatar>
               <Stack space="0.5">
@@ -378,6 +386,9 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
                     <Switch>
                       <Match when={trigger.type === "pull_request"}>
                         <IconPr />
+                      </Match>
+                      <Match when={trigger.type === "tag"}>
+                        <IconTag />
                       </Match>
                       <Match when={true}>
                         <IconGit />
@@ -415,16 +426,16 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
               title={
                 data.value!.run.time.started
                   ? DateTime.fromISO(
-                    data.value!.run.time.started!
-                  ).toLocaleString(DateTime.DATETIME_FULL)
+                      data.value!.run.time.started!
+                    ).toLocaleString(DateTime.DATETIME_FULL)
                   : undefined
               }
             >
               {data.value!.run.time.started
                 ? formatSinceTime(
-                  DateTime.fromISO(data.value!.run.time.started!).toSQL()!,
-                  true
-                )
+                    DateTime.fromISO(data.value!.run.time.started!).toSQL()!,
+                    true
+                  )
                 : "—"}
             </Text>
           </Stack>
@@ -440,11 +451,11 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
             >
               {data.value!.run.time.started && data.value!.run.time.completed
                 ? formatDuration(
-                  DateTime.fromISO(data.value!.run.time.completed!)
-                    .diff(DateTime.fromISO(data.value!.run.time.started!))
-                    .as("milliseconds"),
-                  true
-                )
+                    DateTime.fromISO(data.value!.run.time.completed!)
+                      .diff(DateTime.fromISO(data.value!.run.time.started!))
+                      .as("milliseconds"),
+                    true
+                  )
                 : "—"}
             </Text>
           </Stack>
@@ -462,22 +473,22 @@ export function AutodeployDetail(props: AutodeployDetailProps) {
         if (!log) return [];
         const results = await fetch(
           import.meta.env.VITE_API_URL +
-          "/rest/log/scan?" +
-          new URLSearchParams(
-            log.engine === "lambda"
-              ? {
-                stageID: data.value!.stage!.id,
-                timestamp: log.timestamp.toString(),
-                logStream: log.logStream,
-                logGroup: log.logGroup,
-                requestID: log.requestID,
-              }
-              : {
-                stageID: data.value!.stage!.id,
-                logStream: log.logStream,
-                logGroup: log.logGroup,
-              }
-          ).toString(),
+            "/rest/log/scan?" +
+            new URLSearchParams(
+              log.engine === "lambda"
+                ? {
+                    stageID: data.value!.stage!.id,
+                    timestamp: log.timestamp.toString(),
+                    logStream: log.logStream,
+                    logGroup: log.logGroup,
+                    requestID: log.requestID,
+                  }
+                : {
+                    stageID: data.value!.stage!.id,
+                    logStream: log.logStream,
+                    logGroup: log.logGroup,
+                  }
+            ).toString(),
           {
             headers: {
               "x-sst-workspace": workspace().id,

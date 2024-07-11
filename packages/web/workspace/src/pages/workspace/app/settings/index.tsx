@@ -61,14 +61,7 @@ import {
   remove,
   reset,
 } from "@modular-forms/solid";
-import {
-  IconPr,
-  IconAdd,
-  IconGit,
-  IconCommit,
-  IconGitHub,
-  IconSubRight,
-} from "$/ui/icons/custom";
+import { IconAdd, IconGitHub } from "$/ui/icons/custom";
 import { array, minLength, object, optional, string } from "valibot";
 import { AWS } from "$/data/aws";
 import { createStore } from "solid-js/store";
@@ -797,10 +790,14 @@ export function Settings() {
             </LinkButton>
             <Switch>
               <Match when={props.new}>
-                <Button type="submit" color="primary">Add Environment</Button>
+                <Button type="submit" color="primary">
+                  Add Environment
+                </Button>
               </Match>
               <Match when={true}>
-                <Button type="submit" color="success">Update</Button>
+                <Button type="submit" color="success">
+                  Update
+                </Button>
               </Match>
             </Switch>
           </TargetFormRowControls>
@@ -856,9 +853,7 @@ export function Settings() {
     const newRepo = createMemo(() => props.new === true);
     const empty = createMemo(() => sortedRepos().length === 0);
     const expanded = createMemo(() =>
-      newRepo()
-        ? !empty() && !!getValue(repoForm, "repo")
-        : true
+      newRepo() ? !empty() && !!getValue(repoForm, "repo") : true
     );
 
     return (
@@ -878,7 +873,7 @@ export function Settings() {
           data.path &&
             rep().mutate.app_repo_path_put({
               id,
-              path: data.path
+              path: data.path,
             });
 
           if (!newRepo()) {
@@ -953,7 +948,9 @@ export function Settings() {
                   <Button type="submit">Select</Button>
                 </Match>
                 <Match when={true}>
-                  <Button type="submit" color="success">Update</Button>
+                  <Button type="submit" color="success">
+                    Update
+                  </Button>
                 </Match>
               </Switch>
             </SelectRepoControls>
@@ -1054,7 +1051,9 @@ export function Settings() {
                   return (
                     <Show when={info.value}>
                       <Switch>
-                        <Match when={editingRepo.active}><RepoForm /></Match>
+                        <Match when={editingRepo.active}>
+                          <RepoForm />
+                        </Match>
                         <Match when={true}>
                           <GitRepoPanel>
                             <GitRepoPanelRow>
@@ -1071,10 +1070,14 @@ export function Settings() {
                                     )}
                                   >
                                     {info.value!.org.login}
-                                    <GitRepoLinkSeparator>/</GitRepoLinkSeparator>
+                                    <GitRepoLinkSeparator>
+                                      /
+                                    </GitRepoLinkSeparator>
                                     {info.value!.repo.name}
                                   </GitRepoLink>
-                                  <GitRepoPath>Deploying: {appRepo.value!.path}</GitRepoPath>
+                                  <GitRepoPath>
+                                    Deploying: {appRepo.value!.path}
+                                  </GitRepoPath>
                                 </Stack>
                               </Row>
                               <GitRepoPanelRowRight>
@@ -1098,7 +1101,12 @@ export function Settings() {
                                   Disconnect
                                 </Button>
                                 <Dropdown
-                                  icon={<IconEllipsisVertical width={18} height={18} />}
+                                  icon={
+                                    <IconEllipsisVertical
+                                      width={18}
+                                      height={18}
+                                    />
+                                  }
                                 >
                                   <Dropdown.Item
                                     onSelect={() => {
@@ -1163,7 +1171,11 @@ export function Settings() {
                           <Show when={!editing.active || editing.id}>
                             <TargetsEmpty>
                               <Row>
-                                <LinkButton onClick={() => { addBranchConfig() }}>
+                                <LinkButton
+                                  onClick={() => {
+                                    addBranchConfig();
+                                  }}
+                                >
                                   <TargetsEmptyIcon>
                                     <IconAdd width="10" height="10" />
                                   </TargetsEmptyIcon>

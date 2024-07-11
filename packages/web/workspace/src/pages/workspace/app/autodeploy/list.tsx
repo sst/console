@@ -5,7 +5,11 @@ import { Link } from "@solidjs/router";
 import { styled } from "@macaron-css/solid";
 import { useAppContext } from "../context";
 import { Stack, theme, utility } from "$/ui";
-import { IconArrowLongRight, IconExclamationTriangle } from "$/ui/icons";
+import {
+  IconArrowLongRight,
+  IconExclamationTriangle,
+  IconTag,
+} from "$/ui/icons";
 import { inputFocusStyles } from "$/ui/form";
 import type { Run } from "@console/core/run";
 import { globalKeyframes } from "@macaron-css/core";
@@ -17,6 +21,7 @@ import {
   githubRepo,
   githubBranch,
   githubCommit,
+  githubTag,
 } from "$/common/url-builder";
 import { RunStore } from "$/data/app";
 import { StageStore } from "$/data/stage";
@@ -38,6 +43,8 @@ export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
       return '"console.autodeploy.target" in the config returned "undefined"';
     case "config_branch_remove_skipped":
       return "Skipped branch remove";
+    case "config_tag_skipped":
+      return "Skipped tag events";
     case "config_target_no_stage":
       return '"console.autodeploy.target" in the config did not return a stage';
     case "config_v2_unsupported":
@@ -396,11 +403,17 @@ function RunItem({ run }: { run: Run.Run }) {
         ? githubRepo(trigger.repo.owner, trigger.repo.repo)
         : "";
     const branch =
-      trigger.type === "branch" ? trigger.branch : `pr#${trigger.number}`;
+      trigger.type === "pull_request"
+        ? `pr#${trigger.number}`
+        : trigger.type === "tag"
+        ? trigger.tag
+        : trigger.branch;
     const uri =
-      trigger.type === "branch"
-        ? githubBranch(repoURL, trigger.branch)
-        : githubPr(repoURL, trigger.number);
+      trigger.type === "pull_request"
+        ? githubPr(repoURL, trigger.number)
+        : trigger.type === "tag"
+        ? githubTag(repoURL, trigger.tag)
+        : githubBranch(repoURL, trigger.branch);
 
     return { trigger, repoURL, branch, uri };
   });
@@ -465,6 +478,9 @@ function RunItem({ run }: { run: Run.Run }) {
               <Switch>
                 <Match when={runInfo()!.trigger.type === "pull_request"}>
                   <IconPr />
+                </Match>
+                <Match when={runInfo()!.trigger.type === "tag"}>
+                  <IconTag />
                 </Match>
                 <Match when={true}>
                   <IconGit />
