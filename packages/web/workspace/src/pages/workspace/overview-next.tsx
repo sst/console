@@ -508,7 +508,7 @@ export function OverviewNext() {
         </Match>
         <Match when={true}>
           <>
-            <Show when={DateTime.now() < DateTime.fromISO("2024-07-16")}>
+            <Show when={DateTime.now() < DateTime.fromISO("2024-07-31")}>
               <Announcement>
                 <AnnouncementTag>New</AnnouncementTag>
                 <Text size="sm" on="surface" color="dimmed">
