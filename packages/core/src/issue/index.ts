@@ -503,8 +503,8 @@ export const subscribeIon = zod(
             eq(stateResourceTable.stageID, config.stageID),
           ),
         );
-      const functions = resources.filter((r) =>
-        Boolean(r.outputs?.environment?.variables?.SST_FUNCTION_ID),
+      const functions = resources.filter(
+        (r) => !Boolean(r.outputs?.environment?.variables?.SST_FUNCTION_ID),
       );
       if (!functions.length) {
         console.log("no functions");
