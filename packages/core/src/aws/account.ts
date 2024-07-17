@@ -405,7 +405,7 @@ export const integrate = zod(
               },
             }),
           )
-          .catch((err) => {});
+          .catch((err) => console.error(err));
         if (!result) {
           console.log(region, "failed to update bucket notification");
           continue;
@@ -561,7 +561,7 @@ export const integrate = zod(
         }
       }
       for (const item of stages) {
-        console.log("found", item);
+        console.log("found stage", item);
         await createTransaction(async () => {
           let app = await App.fromName(item.app).then((a) => a?.id);
           if (!app) {
