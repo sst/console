@@ -24,10 +24,13 @@ export async function handler(event, context) {
   console.log("isWarm:", isWarm);
   if (event.warm && isWarm) return "warmed";
   isWarm = true;
+  const APP_PATH = path.join(REPO_PATH, event.repo.path ?? "");
 
   console.log("[sst.deploy.start]");
 
   let error;
+  let packageJson;
+  let sstConfig;
 
   try {
     await publish("runner.started", {
@@ -38,10 +41,12 @@ export async function handler(event, context) {
     });
 
     checkout();
-    const sstConfig = await loadSstConfig();
-    await installSst(sstConfig);
+    packageJson = await loadPackageJson();
+    await installNode();
+    sstConfig = await loadSstConfig();
+    await installSst();
     if (event.warm) return "warmed";
-    await runWorkflow(sstConfig);
+    await runWorkflow();
   } catch (e) {
     console.error(e);
     error = e.message;
@@ -71,10 +76,17 @@ export async function handler(event, context) {
     }
   }
 
-  async function loadSstConfig() {
-    const { repo } = event;
+  async function loadPackageJson() {
+    process.chdir(APP_PATH);
 
-    process.chdir(REPO_PATH);
+    try {
+      return JSON.parse(fs.readFileSync("package.json", "utf8"));
+    } catch (e) {}
+    return {};
+  }
+
+  async function loadSstConfig() {
+    process.chdir(APP_PATH);
 
     const OUTPUT_PATH = "/tmp/sst.config.mjs";
     fs.rmSync(OUTPUT_PATH, { force: true });
@@ -86,10 +98,7 @@ export async function handler(event, context) {
       sourcemap: "inline",
       stdin: {
         contents: fs
-          .readFileSync(
-            path.join(REPO_PATH, repo.path ?? "", "sst.config.ts"),
-            "utf8"
-          )
+          .readFileSync("sst.config.ts", "utf8")
           // remove global imports
           .replace(/^import.*?;?\s*$/gm, ""),
         sourcefile: "sst.config.ts",
@@ -110,7 +119,17 @@ export async function handler(event, context) {
     return (await import(OUTPUT_PATH)).default;
   }
 
-  async function installSst(sstConfig) {
+  async function installNode() {
+    if (
+      fs.existsSync(".n-node-version") ||
+      fs.existsSync(".node-version") ||
+      fs.existsSync(".nvmrc") ||
+      packageJson.engines?.node
+    )
+      shell(`n auto`);
+  }
+
+  async function installSst() {
     const { stage } = event;
     const semverPattern = sstConfig.app({ stage }).version;
     console.log("Required SST version:", semverPattern ?? "Latest");
@@ -144,7 +163,7 @@ export async function handler(event, context) {
     );
   }
 
-  async function runWorkflow(sstConfig) {
+  async function runWorkflow() {
     const { warm, stage, trigger } = event;
     if (warm) return;
 
@@ -167,11 +186,16 @@ export async function handler(event, context) {
   }
 
   function install() {
-    process.chdir(REPO_PATH);
+    process.chdir(APP_PATH);
 
-    if (fs.existsSync("yarn.lock")) shell("yarn install");
-    else if (fs.existsSync("pnpm-lock.yaml")) {
-      shell("npm install -g pnpm");
+    if (fs.existsSync("yarn.lock")) {
+      if (packageJson.packageManager?.startsWith("yarn@"))
+        shell(`npm install -g ${packageJson.packageManager}`);
+      shell("yarn install");
+    } else if (fs.existsSync("pnpm-lock.yaml")) {
+      packageJson.packageManager?.startsWith("pnpm@")
+        ? shell(`npm install -g ${packageJson.packageManager}`)
+        : shell("npm install -g pnpm");
       shell("pnpm install");
     } else if (fs.existsSync("bun.lockb")) {
       shell("npm install -g bun");
@@ -180,9 +204,9 @@ export async function handler(event, context) {
   }
 
   function deploy() {
-    const { stage, repo, credentials, runID } = event;
+    process.chdir(APP_PATH);
 
-    process.chdir(path.join(REPO_PATH, repo.path ?? ""));
+    const { stage, credentials, runID } = event;
     shell(`sst deploy --stage ${stage}`, {
       env: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
@@ -195,9 +219,9 @@ export async function handler(event, context) {
   }
 
   function remove() {
-    const { stage, repo, credentials, runID } = event;
+    process.chdir(APP_PATH);
 
-    process.chdir(path.join(REPO_PATH, repo.path ?? ""));
+    const { stage, credentials, runID } = event;
     shell(`sst remove --stage ${stage}`, {
       env: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
