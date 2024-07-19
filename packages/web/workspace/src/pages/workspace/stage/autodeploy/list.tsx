@@ -54,7 +54,7 @@ export function ERROR_MAP(error: Exclude<Run.Run["error"], undefined>) {
     case "target_not_found":
       return "Add an environment in your app settings";
     case "target_not_matched":
-      return `No matching envrionments for "${error.properties?.stage}" in the app settings`;
+      return `No matching environments for "${error.properties?.stage}" in the app settings`;
     case "target_missing_aws_account":
       return `No AWS account for "${error.properties?.target}" in the app settings`;
     case "target_missing_workspace":
@@ -395,14 +395,14 @@ function RunItem({ run }: { run: Run.Run }) {
       trigger.type === "pull_request"
         ? `pr#${trigger.number}`
         : trigger.type === "tag"
-        ? trigger.tag
-        : trigger.branch;
+          ? trigger.tag
+          : trigger.branch;
     const uri =
       trigger.type === "pull_request"
         ? githubPr(repoURL, trigger.number)
         : trigger.type === "tag"
-        ? githubTag(repoURL, trigger.tag)
-        : githubBranch(repoURL, trigger.branch);
+          ? githubTag(repoURL, trigger.tag)
+          : githubBranch(repoURL, trigger.branch);
 
     return { trigger, repoURL, branch, uri };
   });
@@ -435,9 +435,8 @@ function RunItem({ run }: { run: Run.Run }) {
             <img
               width="24"
               height="24"
-              src={`https://avatars.githubusercontent.com/u/${
-                runInfo()!.trigger.sender.id
-              }?s=48&v=4`}
+              src={`https://avatars.githubusercontent.com/u/${runInfo()!.trigger.sender.id
+                }?s=48&v=4`}
             />
           </RunSenderAvatar>
           <RunGitLink
@@ -504,7 +503,7 @@ export function List() {
             <EmptyRunsHint>
               <li>Connect your app to its GitHub repo</li>
               <li>
-                Add an envrionment for your{" "}
+                Add an environment for your{" "}
                 <EmptyRunsHintCode>`production`</EmptyRunsHintCode> branch
               </li>
               <li>
