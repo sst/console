@@ -121,9 +121,9 @@ export async function handler(event, context) {
 
   async function installNode() {
     if (
-      fs.existsSync(".n-node-version") ||
-      fs.existsSync(".node-version") ||
-      fs.existsSync(".nvmrc") ||
+      findUp(".n-node-version") ||
+      findUp(".node-version") ||
+      findUp(".nvmrc") ||
       packageJson.engines?.node
     )
       shell(`n auto`);
@@ -188,19 +188,19 @@ export async function handler(event, context) {
   function install() {
     process.chdir(APP_PATH);
 
-    if (fs.existsSync("yarn.lock")) {
+    if (findUp("yarn.lock")) {
       if (packageJson.packageManager?.startsWith("yarn@"))
         shell(`npm install -g ${packageJson.packageManager}`);
       shell("yarn install");
-    } else if (fs.existsSync("pnpm-lock.yaml")) {
+    } else if (findUp("pnpm-lock.yaml")) {
       packageJson.packageManager?.startsWith("pnpm@")
         ? shell(`npm install -g ${packageJson.packageManager}`)
         : shell("npm install -g pnpm");
       shell("pnpm install");
-    } else if (fs.existsSync("bun.lockb")) {
+    } else if (findUp("bun.lockb")) {
       shell("npm install -g bun");
       shell("bun install");
-    } else if (fs.existsSync("package.json")) shell("npm install");
+    } else if (findUp("package.json")) shell("npm install");
   }
 
   function deploy() {
@@ -284,5 +284,14 @@ export async function handler(event, context) {
         ],
       })
     );
+  }
+
+  function findUp(filename) {
+    let dir = APP_PATH;
+    while (true) {
+      if (fs.existsSync(path.join(dir, filename))) return dir;
+      if (dir === REPO_PATH) break;
+      dir = path.resolve(dir, "..");
+    }
   }
 }
