@@ -191,16 +191,16 @@ export async function handler(event, context) {
     if (findUp("yarn.lock")) {
       if (packageJson.packageManager?.startsWith("yarn@"))
         shell(`npm install -g ${packageJson.packageManager}`);
-      shell("yarn install");
+      shell("yarn install --frozen-lockfile");
     } else if (findUp("pnpm-lock.yaml")) {
       packageJson.packageManager?.startsWith("pnpm@")
         ? shell(`npm install -g ${packageJson.packageManager}`)
         : shell("npm install -g pnpm");
-      shell("pnpm install");
+      shell("pnpm install --frozen-lockfile");
     } else if (findUp("bun.lockb")) {
       shell("npm install -g bun");
-      shell("bun install");
-    } else if (findUp("package.json")) shell("npm install");
+      shell("bun install --frozen-lockfile");
+    } else if (findUp("package.json")) shell("npm ci");
   }
 
   function deploy() {
