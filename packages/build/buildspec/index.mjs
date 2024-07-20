@@ -44,7 +44,6 @@ export async function handler(event, context) {
     packageJson = await loadPackageJson();
     await installNode();
     sstConfig = await loadSstConfig();
-    await installSst();
     if (event.warm) return "warmed";
     await runWorkflow();
   } catch (e) {
@@ -130,37 +129,16 @@ export async function handler(event, context) {
   }
 
   async function installSst() {
+    process.chdir(APP_PATH);
+
+    // SST installed locally
+    if (fs.existsSync("node_modules/.bin/sst")) return;
+
     const { stage } = event;
     const semverPattern = sstConfig.app({ stage }).version;
     console.log("Required SST version:", semverPattern ?? "Latest");
 
-    const version = await (async () => {
-      // install latest version
-      if (!semverPattern) return;
-
-      // install specific version
-      for (let i = 1; ; i++) {
-        const releases = await fetch(
-          `https://api.github.com/repos/sst/ion/releases?per_page=100&page=${i}`
-        ).then((res) => res.json());
-        if (releases.length === 0) break;
-
-        const release = releases.find((release) =>
-          semver.satisfies(release.tag_name.replace(/^v/, ""), semverPattern)
-        );
-        return release.tag_name.replace(/^v/, "");
-      }
-    })();
-
-    console.log("Installed SST version:", version ?? "Latest");
-    const cmdVersion = version ? `VERSION=${version}` : "";
-    shell(
-      [
-        `touch /root/.bashrc`,
-        `curl -fsSL https://ion.sst.dev/install | ${cmdVersion} bash`,
-        `mv /root/.sst/bin/sst /usr/local/bin/sst`,
-      ].join(" && ")
-    );
+    shell(`npm -g install sst@${semverPattern ?? "ion"}`);
   }
 
   async function runWorkflow() {
@@ -179,6 +157,7 @@ export async function handler(event, context) {
       sstConfig.console?.autodeploy?.workflow ??
       (async (context) => {
         install();
+        await installSst();
         context.trigger.action === "removed" ? remove() : deploy();
       });
 
@@ -200,14 +179,18 @@ export async function handler(event, context) {
     } else if (findUp("bun.lockb")) {
       shell("npm install -g bun");
       shell("bun install --frozen-lockfile");
-    } else if (findUp("package.json")) shell("npm ci");
+    } else if (findUp("package-lock.json")) shell("npm ci");
+    else if (findUp("package.json")) shell("npm install");
   }
 
   function deploy() {
     process.chdir(APP_PATH);
 
+    const binary = fs.existsSync("node_modules/.bin/sst")
+      ? "node_modules/.bin/sst"
+      : "sst";
     const { stage, credentials, runID } = event;
-    shell(`sst deploy --stage ${stage}`, {
+    shell(`${binary} deploy --stage ${stage}`, {
       env: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
         AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
@@ -222,7 +205,7 @@ export async function handler(event, context) {
     process.chdir(APP_PATH);
 
     const { stage, credentials, runID } = event;
-    shell(`sst remove --stage ${stage}`, {
+    shell(`${binary} remove --stage ${stage}`, {
       env: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
         AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
