@@ -186,10 +186,10 @@ export async function handler(event, context) {
   function deploy() {
     process.chdir(APP_PATH);
 
+    const { stage, credentials, runID } = event;
     const binary = fs.existsSync("node_modules/.bin/sst")
       ? "node_modules/.bin/sst"
       : "sst";
-    const { stage, credentials, runID } = event;
     shell(`${binary} deploy --stage ${stage}`, {
       env: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
@@ -205,6 +205,9 @@ export async function handler(event, context) {
     process.chdir(APP_PATH);
 
     const { stage, credentials, runID } = event;
+    const binary = fs.existsSync("node_modules/.bin/sst")
+      ? "node_modules/.bin/sst"
+      : "sst";
     shell(`${binary} remove --stage ${stage}`, {
       env: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
