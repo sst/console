@@ -146,42 +146,42 @@ export module Run {
 
   export type RunnerEvent =
     | {
-      warm: true;
-      repo: {
-        cloneUrl: string;
-      };
-      buildspec: {
-        version: string;
-        bucket: string;
-      };
-      credentials: {
-        accessKeyId: string;
-        secretAccessKey: string;
-        sessionToken: string;
-      };
-    }
+        warm: true;
+        repo: {
+          cloneUrl: string;
+        };
+        buildspec: {
+          version: string;
+          bucket: string;
+        };
+        credentials: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken: string;
+        };
+      }
     | {
-      warm: false;
-      engine: string;
-      runID: string;
-      workspaceID: string;
-      stage: string;
-      env: Record<string, string>;
-      repo: {
-        cloneUrl: string;
-        path?: string;
+        warm: false;
+        engine: string;
+        runID: string;
+        workspaceID: string;
+        stage: string;
+        env: Record<string, string>;
+        repo: {
+          cloneUrl: string;
+          path?: string;
+        };
+        buildspec: {
+          version: string;
+          bucket: string;
+        };
+        credentials: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken: string;
+        };
+        trigger: Trigger;
       };
-      buildspec: {
-        version: string;
-        bucket: string;
-      };
-      credentials: {
-        accessKeyId: string;
-        secretAccessKey: string;
-        sessionToken: string;
-      };
-      trigger: Trigger;
-    };
 
   export type ConfigParserEvent = {
     content: string;
@@ -289,18 +289,18 @@ export module Run {
         ? input.error
           ? "error"
           : input.timeStarted
-            ? "updated"
-            : "skipped"
+          ? "updated"
+          : "skipped"
         : input.error
-          ? input.error.type === "config_branch_remove_skipped" ||
-            input.error.type === "config_tag_skipped" ||
-            input.error.type === "config_target_returned_undefined" ||
-            input.error.type === "target_not_matched"
-            ? "skipped"
-            : "error"
-          : input.active
-            ? "updating"
-            : "queued",
+        ? input.error.type === "config_branch_remove_skipped" ||
+          input.error.type === "config_tag_skipped" ||
+          input.error.type === "config_target_returned_undefined" ||
+          input.error.type === "target_not_matched"
+          ? "skipped"
+          : "error"
+        : input.active
+        ? "updating"
+        : "queued",
     };
   }
 
@@ -335,17 +335,17 @@ export module Run {
             defaultStage:
               input.trigger.type === "branch"
                 ? input.trigger.branch
-                  .replace(/[^a-zA-Z0-9-]/g, "-")
-                  .replace(/-+/g, "-")
-                  .replace(/^-/g, "")
-                  .replace(/-$/g, "")
-                : input.trigger.type === "tag"
-                  ? input.trigger.tag
                     .replace(/[^a-zA-Z0-9-]/g, "-")
                     .replace(/-+/g, "-")
                     .replace(/^-/g, "")
                     .replace(/-$/g, "")
-                  : `pr-${input.trigger.number}`,
+                : input.trigger.type === "tag"
+                ? input.trigger.tag
+                    .replace(/[^a-zA-Z0-9-]/g, "-")
+                    .replace(/-+/g, "-")
+                    .replace(/^-/g, "")
+                    .replace(/-$/g, "")
+                : `pr-${input.trigger.number}`,
           } satisfies ConfigParserEvent),
         })
       );
@@ -420,7 +420,7 @@ export module Run {
                   path: path.join(appRepo.path ?? "", "sst.config.ts"),
                 });
                 content = file.data?.content;
-              } catch (e) { }
+              } catch (e) {}
               // sst.config.ts not found
               if (!content)
                 return {
@@ -649,9 +649,11 @@ export module Run {
 
       // Run runner
       const Runner = useRunner(runner.engine);
-      const timeoutInMinutes =
-        timeoutToMinutes(run.config.target?.runner?.timeout) ??
-        Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
+      // temporarily disable timeout option until we implement credential renewal
+      //const timeoutInMinutes =
+      //  timeoutToMinutes(run.config.target?.runner?.timeout) ??
+      //  Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
+      const timeoutInMinutes = Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
       await Runner.invoke({
         credentials: awsConfig.credentials,
         region: runner.region,
@@ -728,10 +730,11 @@ export module Run {
         FlexibleTimeWindow: {
           Mode: "OFF",
         },
-        ScheduleExpression: `at(${new Date(Date.now() + (timeoutInMinutes + 1) * 60000)
+        ScheduleExpression: `at(${
+          new Date(Date.now() + (timeoutInMinutes + 1) * 60000)
             .toISOString()
             .split(".")[0]
-          })`,
+        })`,
         Target: {
           Arn: process.env.RUN_TIMEOUT_MONITOR_FUNCTION_ARN,
           RoleArn: process.env.RUN_TIMEOUT_MONITOR_SCHEDULE_ROLE_ARN,
@@ -779,9 +782,9 @@ export module Run {
               error === undefined
                 ? undefined
                 : {
-                  type: "run_failed" as const,
-                  properties: { message: error },
-                },
+                    type: "run_failed" as const,
+                    properties: { message: error },
+                  },
             active: null,
           })
           .where(
@@ -818,17 +821,17 @@ export module Run {
             log:
               input.engine === "lambda"
                 ? {
-                  engine: "lambda",
-                  requestID: input.awsRequestId!,
-                  logGroup: input.logGroup,
-                  logStream: input.logStream,
-                  timestamp: input.timestamp,
-                }
+                    engine: "lambda",
+                    requestID: input.awsRequestId!,
+                    logGroup: input.logGroup,
+                    logStream: input.logStream,
+                    timestamp: input.timestamp,
+                  }
                 : {
-                  engine: "codebuild",
-                  logGroup: input.logGroup,
-                  logStream: input.logStream,
-                },
+                    engine: "codebuild",
+                    logGroup: input.logGroup,
+                    logStream: input.logStream,
+                  },
           })
           .where(
             and(
@@ -882,10 +885,10 @@ export module Run {
   const useRunner = zod(
     z.enum(Engine),
     (engine) =>
-    ({
-      lambda: LambdaRunner,
-      codebuild: CodebuildRunner,
-    }[engine])
+      ({
+        lambda: LambdaRunner,
+        codebuild: CodebuildRunner,
+      }[engine])
   );
 
   export const setRunnerWarmer = zod(
@@ -1184,8 +1187,9 @@ export module Run {
           FlexibleTimeWindow: {
             Mode: "OFF",
           },
-          ScheduleExpression: `at(${new Date(now + RUNNER_WARMING_INTERVAL).toISOString().split(".")[0]
-            })`,
+          ScheduleExpression: `at(${
+            new Date(now + RUNNER_WARMING_INTERVAL).toISOString().split(".")[0]
+          })`,
           Target: {
             Arn: process.env.RUNNER_WARMER_FUNCTION_ARN,
             RoleArn: process.env.RUNNER_WARMER_SCHEDULE_ROLE_ARN,
@@ -1219,10 +1223,11 @@ export module Run {
           FlexibleTimeWindow: {
             Mode: "OFF",
           },
-          ScheduleExpression: `at(${new Date(now + RUNNER_INACTIVE_TIME + 86400000)
+          ScheduleExpression: `at(${
+            new Date(now + RUNNER_INACTIVE_TIME + 86400000)
               .toISOString()
               .split(".")[0]
-            })`,
+          })`,
           Target: {
             Arn: process.env.RUNNER_REMOVER_FUNCTION_ARN,
             RoleArn: process.env.RUNNER_REMOVER_SCHEDULE_ROLE_ARN,
@@ -1265,18 +1270,18 @@ export module Run {
       run.stageID === null
         ? undefined
         : await useTransaction((tx) =>
-          tx
-            .select()
-            .from(stageTable)
-            .where(
-              and(
-                eq(stageTable.id, run.stageID!),
-                eq(stageTable.workspaceID, useWorkspace())
+            tx
+              .select()
+              .from(stageTable)
+              .where(
+                and(
+                  eq(stageTable.id, run.stageID!),
+                  eq(stageTable.workspaceID, useWorkspace())
+                )
               )
-            )
-            .execute()
-            .then((x) => x[0])
-        );
+              .execute()
+              .then((x) => x[0])
+          );
 
     const { appName, workspaceSlug } = run;
     const stageName = stage?.name;
