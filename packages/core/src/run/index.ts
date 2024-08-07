@@ -312,8 +312,10 @@ export module Run {
     const countNum = parseInt(count);
     if (isNaN(countNum)) return;
 
-    if (unit === "hour" || unit === "hours") return countNum * 60;
-    if (unit === "minute" || unit === "minutes") return countNum;
+    let minutes;
+    if (unit === "hour" || unit === "hours") minutes = countNum * 60;
+    if (unit === "minute" || unit === "minutes") minutes = countNum;
+    if (minutes) return Math.max(60, minutes);
 
     return;
   };
@@ -649,11 +651,9 @@ export module Run {
 
       // Run runner
       const Runner = useRunner(runner.engine);
-      // temporarily disable timeout option until we implement credential renewal
-      //const timeoutInMinutes =
-      //  timeoutToMinutes(run.config.target?.runner?.timeout) ??
-      //  Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
-      const timeoutInMinutes = Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
+      const timeoutInMinutes =
+        timeoutToMinutes(run.config.target?.runner?.timeout) ??
+        Runner.DEFAULT_BUILD_TIMEOUT_IN_MINUTES;
       await Runner.invoke({
         credentials: awsConfig.credentials,
         region: runner.region,
