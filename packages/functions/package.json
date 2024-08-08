@@ -11,7 +11,7 @@
     "@types/aws-lambda": "^8.10.114",
     "@types/luxon": "^3.3.1",
     "@types/node": "^18.16.0",
-    "sst": "2.43.2",
+    "sst": "2.43.4",
     "typescript": "^5.2.2"
   },
   "dependencies": {

@@ -107,7 +107,7 @@ export function Events({ stack }: StackContext) {
     },
     {
       retries: 0,
-    }
+    },
   );
 
   bus.subscribe(["state.lock.created"], {
@@ -124,6 +124,7 @@ export function Events({ stack }: StackContext) {
 
   bus.subscribe(["state.history.created"], {
     handler: "packages/functions/src/events/state-history-created.handler",
+    timeout: "1 minute",
     bind: [...Object.values(secrets.database), bus],
     permissions: ["sts", "iot"],
   });

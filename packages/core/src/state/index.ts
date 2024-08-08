@@ -277,6 +277,7 @@ export module State {
           .catch(() => ({}));
         console.log("found previous", previousKey);
       }
+      if (!previousState) previousState = {};
       if (!previousState.resources) previousState.resources = [];
 
       const resources = Object.fromEntries(
