@@ -60,7 +60,6 @@ import { workspace } from "../workspace/workspace.sql";
 import { Alert } from "../alert";
 import { render } from "@jsx-email/render";
 import { AutodeployEmail } from "@console/mail/emails/templates/AutodeployEmail";
-import { Octokit } from "octokit";
 import path from "path";
 
 export { RunConfig } from "./config";
@@ -364,7 +363,7 @@ export module Run {
 
   export const create = zod(
     z.object({
-      octokit: z.custom<Octokit>(),
+      octokit: z.custom<any>(),
       trigger: z.custom<Trigger>(),
     }),
     async ({ octokit, trigger }) => {
