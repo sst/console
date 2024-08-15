@@ -38,7 +38,7 @@ export function LocalProvider(props: ParentProps) {
       JSON.stringify({
         type: "log.cleared",
         properties,
-      })
+      }),
     );
   });
 
@@ -46,13 +46,19 @@ export function LocalProvider(props: ParentProps) {
     setStore(properties);
   });
 
-  let ssl = true;
+  let attempt = 0;
+  const urls = [
+    "ws://localhost:13557/socket",
+    "wss://localhost:13557/socket",
+    "wss://localhost:14557/socket",
+  ];
   onMount(() => {
     function connect() {
-      console.log("trying to connect to local ssl:", ssl);
-      ssl = !ssl;
+      const url = urls[attempt % urls.length];
+      console.log("trying to connect to local", url);
+      attempt++;
       clearTimeout(reconnect);
-      ws = new WebSocket(`ws${ssl ? "s" : ""}://localhost:13557/socket`);
+      ws = new WebSocket(url);
       ws.onmessage = (e) => {
         const parsed = JSON.parse(e.data);
         bus.emit(parsed.type, parsed.properties);
