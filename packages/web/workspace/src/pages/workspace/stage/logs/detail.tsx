@@ -223,8 +223,8 @@ export function Detail() {
   const resource = createMemo(
     () =>
       resources().find((x) => x.id === params.resourceID) as
-      | Resource.InfoByType<"Function">
-      | undefined,
+        | Resource.InfoByType<"Function">
+        | undefined,
   );
 
   const stateResources = useStateResources();
@@ -294,9 +294,11 @@ export function Detail() {
         category: "logs",
         disabled: true,
         run: () => {
-          const url = `https://${stage.stage.region
-            }.console.aws.amazon.com/cloudwatch/home?region=${stage.stage.region
-            }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`;
+          const url = `https://${
+            stage.stage.region
+          }.console.aws.amazon.com/cloudwatch/home?region=${
+            stage.stage.region
+          }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`;
           window.open(url, "_blank");
           bar.hide();
         },
@@ -307,7 +309,8 @@ export function Detail() {
 
   const mode = createMemo(() => {
     if (resource()?.enrichment.live) return "live";
-    if (stateResource()?.outputs._live) return "live";
+    if (stateResource()?.outputs?.environment?.variables?.SST_FUNCTION_ID)
+      return "live";
     if (query.view === "tail") return "tail";
     return "search";
   });
@@ -322,6 +325,8 @@ export function Detail() {
       );
   });
 
+  createEffect(() => console.log("mode", stateResource()?.outputs));
+
   const workspace = useWorkspace();
   createEffect(() => {
     const m = mode();
@@ -332,8 +337,10 @@ export function Detail() {
     if (!lg) return;
     console.log(
       view,
-      `https://${stage.stage.region
-      }.console.aws.amazon.com/cloudwatch/home?region=${stage.stage.region
+      `https://${
+        stage.stage.region
+      }.console.aws.amazon.com/cloudwatch/home?region=${
+        stage.stage.region
       }#logsV2:log-groups/log-group/${logGroup().replace(/\//g, "$252F")}`,
     );
 
@@ -392,7 +399,7 @@ export function Detail() {
     const base = logGroup();
     const searchID = id.search;
     const addr = resource()?.addr!;
-    const urn = stateResource()?.urn!;
+    const urn = stateResource()?.parent!;
     if (mode() === "live") return addr || urn;
     if (mode() === "search") return searchID;
     return base + "-tail";
@@ -678,20 +685,20 @@ export function Detail() {
                         function={
                           resource()
                             ? {
-                              id: resource()!.id,
-                              arn: resource()!.metadata.arn,
-                              handler: resource()!.metadata.handler,
-                            }
+                                id: resource()!.id,
+                                arn: resource()!.metadata.arn,
+                                handler: resource()!.metadata.handler,
+                              }
                             : {
-                              id: stateResource()!.id,
-                              arn: stateResources().find(
-                                (child) =>
-                                  child.type ===
-                                  "aws:lambda/function:Function" &&
-                                  child.parent === stateResource()!.urn,
-                              )?.outputs.arn,
-                              handler: stateResource()!.outputs.handler,
-                            }
+                                id: stateResource()!.id,
+                                arn: stateResources().find(
+                                  (child) =>
+                                    child.type ===
+                                      "aws:lambda/function:Function" &&
+                                    child.parent === stateResource()!.urn,
+                                )?.outputs.arn,
+                                handler: stateResource()!.outputs.handler,
+                              }
                         }
                       />
                     )}
