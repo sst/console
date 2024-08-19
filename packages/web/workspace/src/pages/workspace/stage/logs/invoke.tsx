@@ -175,27 +175,27 @@ export interface InvokeControl {
 }
 
 interface Props {
-  resource: Extract<Resource.Info, { type: "Function" }>;
   control: (control: InvokeControl) => void;
   onExpand: () => void;
   source: string;
+  id: string;
+  arn: string;
 }
 
 export function Invoke(props: Props) {
   const bar = useCommandBar();
+  const ctx = useStageContext();
 
   let invokeTextArea!: HTMLTextAreaElement;
   let saveControl!: DialogPayloadSaveControl;
   let manageControl!: DialogPayloadManageControl;
   const rep = useReplicache();
   const stage = useStageContext();
-  const key = createMemo(() =>
-    [stage.app.name, props.resource.cfnID].join("-")
-  );
+  const key = createMemo(() => [stage.app.name, props.id].join("-"));
   const lambdaPayloads = LambdaPayloadStore.list.watch(
     rep,
     () => [],
-    (items) => items.filter((payload) => payload.key === key())
+    (items) => items.filter((payload) => payload.key === key()),
   );
 
   const test = createScan2(() => "/lambdaPayload", rep);
@@ -236,12 +236,12 @@ export function Invoke(props: Props) {
             "content-type": "application/json",
           },
           body: JSON.stringify({
-            stageID: props.resource.stageID,
+            stageID: ctx.stage.id,
             payload,
-            functionARN: props.resource.metadata.arn,
+            functionARN: props.arn,
           }),
           method: "POST",
-        }
+        },
       ).then((r) => r.json());
 
       bus.emit("invocation", [

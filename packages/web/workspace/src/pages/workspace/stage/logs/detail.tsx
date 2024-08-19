@@ -309,7 +309,10 @@ export function Detail() {
 
   const mode = createMemo(() => {
     if (resource()?.enrichment.live) return "live";
-    if (stateResource()?.outputs?.environment?.variables?.SST_FUNCTION_ID)
+    if (
+      stateResource()?.outputs?.environment?.variables?.SST_FUNCTION_ID ||
+      stateResource()?.outputs?._live
+    )
       return "live";
     if (query.view === "tail") return "tail";
     return "search";
@@ -399,7 +402,10 @@ export function Detail() {
     const base = logGroup();
     const searchID = id.search;
     const addr = resource()?.addr!;
-    const urn = stateResource()?.parent!;
+    const urn =
+      stateResource()?.type === "sst:aws:Function"
+        ? stateResource()?.urn!
+        : stateResource()?.parent!;
     if (mode() === "live") return addr || urn;
     if (mode() === "search") return searchID;
     return base + "-tail";
@@ -632,7 +638,7 @@ export function Detail() {
                     mode() === "live" ||
                     mode() === "search" ||
                     query.view === "recent") &&
-                  resource()
+                  (resource() || stateResource())
                 }
               >
                 <Invoke
@@ -649,7 +655,10 @@ export function Detail() {
                     }
                   }}
                   source={logGroupKey()}
-                  resource={resource()!}
+                  id={resource()?.cfnID || stateResource()?.urn!}
+                  arn={
+                    resource()?.metadata.arn || stateResource()?.outputs.arn!
+                  }
                 />
               </Show>
               <Show
