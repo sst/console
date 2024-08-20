@@ -695,6 +695,7 @@ export const subscribeIon = zod(
               try {
                 await connectStage(config);
               } catch (e: any) {
+                console.log(e);
                 if (e.name === "AccessDeniedException") {
                   await Warning.create({
                     stageID: config.stageID,

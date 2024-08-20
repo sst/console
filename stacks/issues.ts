@@ -137,6 +137,10 @@ export function Issues({ stack }: StackContext) {
       "logs:PutDestination",
       "logs:PutDestinationPolicy",
       "logs:PutSubscriptionFilter",
+      new PolicyStatement({
+        actions: ["iam:PassRole"],
+        resources: [kinesisRole.roleArn],
+      }),
     ],
   });
 
