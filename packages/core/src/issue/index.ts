@@ -639,6 +639,7 @@ export const subscribeIon = zod(
 
             break;
           } catch (e: any) {
+            console.log(e);
             // Create log group if the function has never been invoked
             if (
               e instanceof ResourceNotFoundException &&
