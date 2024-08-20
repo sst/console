@@ -171,8 +171,9 @@ export const connectStage = zod(
           targetArn: Config.ISSUES_STREAM_ARN,
         }),
       );
+      console.log("created destination", destination.destination);
 
-      await cw.send(
+      const policy = await cw.send(
         new PutDestinationPolicyCommand({
           destinationName: uniqueIdentifier,
           accessPolicy: JSON.stringify({
@@ -190,6 +191,7 @@ export const connectStage = zod(
           }),
         }),
       );
+      console.log("created policy", policy.$metadata);
     } finally {
       cw.destroy();
     }
