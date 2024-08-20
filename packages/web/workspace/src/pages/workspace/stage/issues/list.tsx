@@ -491,10 +491,7 @@ export function List() {
                                   return "Unknown";
                               }
                             })();
-                            const logInfo = createMemo(() =>
-                              getLogInfo(resources(), item.target),
-                            );
-                            return `${logInfo()?.name}: ${reason}`;
+                            return `${item.target}: ${reason}`;
                           }
                         })
                         .filter(Boolean)}
