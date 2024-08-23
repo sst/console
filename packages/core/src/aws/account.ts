@@ -525,7 +525,10 @@ export const integrate = zod(
                 }),
               )
               .catch((err) => {
-                if (err instanceof NoSuchBucket) return;
+                if (err instanceof NoSuchBucket) {
+                  console.log("couldn't find this bucket");
+                  return;
+                }
                 throw err;
               });
             if (!list) break;
