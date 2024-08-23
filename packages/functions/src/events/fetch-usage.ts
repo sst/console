@@ -29,20 +29,20 @@ export const handler = Handler("sqs", async (event) => {
         },
       },
       async () => {
-        const { workspaceID, stageID } = evt;
+        const { stageID } = evt;
 
         // Check if stage is unsupported
         const stage = await Stage.fromID(stageID);
         if (stage?.unsupported) return;
 
-        await processStage(workspaceID, stageID);
+        await processStage(stageID);
       }
     );
   }
 });
 
-async function processStage(workspaceID: string, stageID: string) {
-  const workspace = await Workspace.fromID(workspaceID);
+async function processStage(stageID: string) {
+  const workspace = await Workspace.fromID(useWorkspace());
   if (!workspace) return;
 
   // Start processing from the greater of
@@ -199,7 +199,6 @@ async function processStage(workspaceID: string, stageID: string) {
   /////////////////
 
   async function reportUsageToStripe() {
-    const workspaceID = useWorkspace();
     const item = await Billing.Stripe.get();
     if (!item?.subscriptionItemID) return;
 
@@ -219,7 +218,7 @@ async function processStage(workspaceID: string, stageID: string) {
           action: "set",
         },
         {
-          idempotencyKey: `${workspaceID}-${stageID}-${timestamp}`,
+          idempotencyKey: `${useWorkspace()}-${stageID}-${timestamp}`,
         }
       );
     } catch (e: any) {
