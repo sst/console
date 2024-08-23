@@ -11,6 +11,10 @@ import { stripe } from "@console/core/stripe";
 import { Warning } from "@console/core/warning";
 import { uniq } from "remeda";
 import { Handler } from "sst/context";
+import { Workspace } from "@console/core/workspace";
+import { usage } from "@console/core/billing/billing.sql";
+import { and, desc, eq } from "drizzle-orm";
+import { useTransaction } from "@console/core/util/transaction";
 
 export const handler = Handler("sqs", async (event) => {
   console.log("got", event.Records.length, "records");
@@ -25,183 +29,214 @@ export const handler = Handler("sqs", async (event) => {
         },
       },
       async () => {
-        const { stageID, daysOffset } = evt;
+        const { workspaceID, stageID } = evt;
 
         // Check if stage is unsupported
         const stage = await Stage.fromID(stageID);
         if (stage?.unsupported) return;
 
-        const startDate = DateTime.now()
-          .toUTC()
-          .startOf("day")
-          .minus({ days: daysOffset });
-        const endDate = startDate.endOf("day");
-        console.log(
-          "STAGE",
-          stageID,
-          startDate.toSQLDate(),
-          endDate.toSQLDate()
-        );
-
-        // Get all function resources
-        const allResources = await Resource.listFromStageID({
-          stageID,
-          types: ["Function"],
-        });
-        const functions = uniq(
-          allResources
-            .flatMap((fn) =>
-              fn.type === "Function" && !fn.enrichment.live ? [fn] : []
-            )
-            .map((resource) => resource.metadata.arn)
-            .map((item) => item.split(":").pop()!)
-        );
-        console.log(`> functions ${functions.length}/${allResources.length}`);
-        if (!functions.length) {
-          await Warning.remove({
-            stageID: evt.stageID,
-            type: "permission_usage",
-            target: evt.stageID,
-          });
-          return;
-        }
-        console.log(functions);
-
-        // Get stage credentials
-        const config = await Stage.assumeRole(stageID);
-        if (!config) {
-          console.log("cannot assume role");
-          await Warning.create({
-            type: "permission_usage",
-            target: evt.stageID,
-            stageID: evt.stageID,
-            data: {},
-          });
-          return;
-        }
-
-        // Get usage
-        let invocations: number;
-        try {
-          invocations = await queryUsageFromAWS();
-          await Warning.remove({
-            stageID: evt.stageID,
-            type: "permission_usage",
-            target: evt.stageID,
-          });
-        } catch (e: any) {
-          if (e.name === "AccessDenied") {
-            console.error(e);
-            await Warning.create({
-              type: "permission_usage",
-              target: evt.stageID,
-              data: {},
-              stageID: evt.stageID,
-            });
-            await Billing.updateGatingStatus();
-            return;
-          }
-          throw e;
-        }
-
-        await Billing.createUsage({
-          stageID,
-          day: startDate.toSQLDate()!,
-          invocations,
-        });
-        await reportUsageToStripe();
-        await Billing.updateGatingStatus();
-
-        /////////////////
-        // Functions
-        /////////////////
-
-        async function queryUsageFromAWS() {
-          const client = new CloudWatchClient(config!);
-
-          const queryBatch = async (batch: typeof functions) => {
-            const metrics = await client.send(
-              new GetMetricDataCommand({
-                MetricDataQueries: batch.map((fn, i) => ({
-                  Id: `m${i}`,
-                  MetricStat: {
-                    Metric: {
-                      Namespace: "AWS/Lambda",
-                      MetricName: "Invocations",
-                      Dimensions: [
-                        {
-                          Name: "FunctionName",
-                          Value: fn,
-                        },
-                      ],
-                    },
-                    Period: 86400,
-                    Stat: "Sum",
-                  },
-                })),
-                StartTime: startDate.toJSDate(),
-                EndTime: endDate.toJSDate(),
-              })
-            );
-            return (metrics.MetricDataResults || [])?.reduce(
-              (acc, result) => acc + (result.Values?.[0] ?? 0),
-              0
-            );
-          };
-
-          // Query in batches
-          let total = 0;
-          const chunkSize = 500;
-          for (let i = 0; i < functions.length; i += chunkSize) {
-            total += await queryBatch(functions.slice(i, i + chunkSize));
-          }
-          console.log("> invocations", total);
-          return total;
-        }
-
-        async function reportUsageToStripe() {
-          if (invocations === 0) return;
-
-          const workspaceID = useWorkspace();
-          const item = await Billing.Stripe.get();
-          if (!item?.subscriptionItemID) return;
-
-          const monthlyInvocations = await Billing.countByStartAndEndDay({
-            startDay: startDate.startOf("month").toSQLDate()!,
-            endDay: startDate.endOf("month").toSQLDate()!,
-          });
-          console.log("> monthly invocations", monthlyInvocations);
-
-          try {
-            const timestamp = endDate.toUnixInteger();
-            await stripe.subscriptionItems.createUsageRecord(
-              item.subscriptionItemID,
-              {
-                quantity: monthlyInvocations,
-                timestamp,
-                action: "set",
-              },
-              {
-                idempotencyKey: `${workspaceID}-${stageID}-${timestamp}`,
-              }
-            );
-          } catch (e: any) {
-            console.log(e.message);
-            // TODO: aren't there instanceof checks we can do
-            if (e.message.startsWith("Keys for idempotent requests")) {
-              return;
-            }
-            if (
-              e.message.startsWith(
-                "Cannot create the usage record with this timestamp"
-              )
-            ) {
-              return;
-            }
-            throw e;
-          }
-        }
+        await processStage(workspaceID, stageID);
       }
     );
   }
 });
+
+async function processStage(workspaceID: string, stageID: string) {
+  const workspace = await Workspace.fromID(workspaceID);
+  if (!workspace) return;
+
+  // Start processing from the greater of
+  // - the last processed day
+  // - the workspace creation date
+  const lastUsage = await useTransaction((tx) =>
+    tx
+      .select()
+      .from(usage)
+      .where(
+        and(eq(usage.workspaceID, useWorkspace()), eq(usage.stageID, stageID))
+      )
+      .orderBy(desc(usage.day))
+      .limit(1)
+      .execute()
+      .then((x) => x[0])
+  );
+
+  // Get stage credentials
+  const config = await Stage.assumeRole(stageID);
+  if (!config) {
+    console.log("cannot assume role");
+    await Warning.create({
+      type: "permission_usage",
+      target: stageID,
+      stageID,
+      data: {},
+    });
+    return;
+  }
+
+  // Get all function resources
+  const allResources = await Resource.listFromStageID({
+    stageID,
+    types: ["Function"],
+  });
+  const functions = uniq(
+    allResources
+      .flatMap((fn) =>
+        fn.type === "Function" && !fn.enrichment.live ? [fn] : []
+      )
+      .map((resource) => resource.metadata.arn)
+      .map((item) => item.split(":").pop()!)
+  );
+  console.log(`> functions ${functions.length}/${allResources.length}`);
+  if (!functions.length) {
+    await Warning.remove({
+      stageID,
+      type: "permission_usage",
+      target: stageID,
+    });
+    return;
+  }
+  console.log(functions);
+
+  // Get AWS usage
+  let startDate = (
+    lastUsage
+      ? DateTime.fromSQL(lastUsage.day).plus({ days: 1 })
+      : DateTime.fromSQL(workspace.timeCreated)
+  )
+    .toUTC()
+    .startOf("day");
+  let endDate = startDate.endOf("day");
+  let hasChanges = false;
+
+  while (true) {
+    if (endDate.diffNow().milliseconds > 0) break;
+
+    console.log("STAGE", stageID, startDate.toSQLDate(), endDate.toSQLDate());
+
+    // Get usage
+    let invocations: number;
+    try {
+      invocations = await queryUsageFromAWS();
+      await Warning.remove({
+        stageID,
+        type: "permission_usage",
+        target: stageID,
+      });
+    } catch (e: any) {
+      if (e.name === "AccessDenied") {
+        console.error(e);
+        await Warning.create({
+          type: "permission_usage",
+          target: stageID,
+          data: {},
+          stageID,
+        });
+        await Billing.updateGatingStatus();
+        return;
+      }
+      throw e;
+    }
+    hasChanges = hasChanges || invocations > 0;
+
+    await Billing.createUsage({
+      stageID,
+      day: startDate.toSQLDate()!,
+      invocations,
+    });
+
+    startDate = startDate.plus({ days: 1 });
+    endDate = startDate.endOf("day");
+
+    async function queryUsageFromAWS() {
+      const client = new CloudWatchClient(config!);
+
+      const queryBatch = async (batch: typeof functions) => {
+        const metrics = await client.send(
+          new GetMetricDataCommand({
+            MetricDataQueries: batch.map((fn, i) => ({
+              Id: `m${i}`,
+              MetricStat: {
+                Metric: {
+                  Namespace: "AWS/Lambda",
+                  MetricName: "Invocations",
+                  Dimensions: [
+                    {
+                      Name: "FunctionName",
+                      Value: fn,
+                    },
+                  ],
+                },
+                Period: 86400,
+                Stat: "Sum",
+              },
+            })),
+            StartTime: startDate.toJSDate(),
+            EndTime: endDate.toJSDate(),
+          })
+        );
+        return (metrics.MetricDataResults || [])?.reduce(
+          (acc, result) => acc + (result.Values?.[0] ?? 0),
+          0
+        );
+      };
+
+      // Query in batches
+      let total = 0;
+      const chunkSize = 500;
+      for (let i = 0; i < functions.length; i += chunkSize) {
+        total += await queryBatch(functions.slice(i, i + chunkSize));
+      }
+      console.log("> invocations", total);
+      return total;
+    }
+  }
+
+  if (hasChanges) await reportUsageToStripe();
+  await Billing.updateGatingStatus();
+
+  /////////////////
+  // Functions
+  /////////////////
+
+  async function reportUsageToStripe() {
+    const workspaceID = useWorkspace();
+    const item = await Billing.Stripe.get();
+    if (!item?.subscriptionItemID) return;
+
+    const monthlyInvocations = await Billing.countByStartAndEndDay({
+      startDay: startDate.startOf("month").toSQLDate()!,
+      endDay: startDate.endOf("month").toSQLDate()!,
+    });
+    console.log("> monthly invocations", monthlyInvocations);
+
+    try {
+      const timestamp = endDate.toUnixInteger();
+      await stripe.subscriptionItems.createUsageRecord(
+        item.subscriptionItemID,
+        {
+          quantity: monthlyInvocations,
+          timestamp,
+          action: "set",
+        },
+        {
+          idempotencyKey: `${workspaceID}-${stageID}-${timestamp}`,
+        }
+      );
+    } catch (e: any) {
+      console.log(e.message);
+      // TODO: aren't there instanceof checks we can do
+      if (e.message.startsWith("Keys for idempotent requests")) {
+        return;
+      }
+      if (
+        e.message.startsWith(
+          "Cannot create the usage record with this timestamp"
+        )
+      ) {
+        return;
+      }
+      throw e;
+    }
+  }
+}
