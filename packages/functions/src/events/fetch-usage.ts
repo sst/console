@@ -101,16 +101,18 @@ async function processStage(workspaceID: string, stageID: string) {
   // Get AWS usage
   let startDate = (
     lastUsage
-      ? DateTime.fromSQL(lastUsage.day).plus({ days: 1 })
-      : DateTime.fromSQL(workspace.timeCreated)
+      ? DateTime.fromSQL(lastUsage.day)
+      : DateTime.fromSQL(workspace.timeCreated).minus({ days: 1 })
   )
     .toUTC()
     .startOf("day");
-  let endDate = startDate.endOf("day");
+  let endDate: DateTime;
   let hasChanges = false;
 
   while (true) {
-    if (endDate.diffNow().milliseconds > 0) break;
+    startDate = startDate.plus({ days: 1 });
+    if (startDate.endOf("day").diffNow().milliseconds > 0) break;
+    endDate = startDate.endOf("day");
 
     console.log("STAGE", stageID, startDate.toSQLDate(), endDate.toSQLDate());
 
@@ -144,9 +146,6 @@ async function processStage(workspaceID: string, stageID: string) {
       day: startDate.toSQLDate()!,
       invocations,
     });
-
-    startDate = startDate.plus({ days: 1 });
-    endDate = startDate.endOf("day");
 
     async function queryUsageFromAWS() {
       const client = new CloudWatchClient(config!);
