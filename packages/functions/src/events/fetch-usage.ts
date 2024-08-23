@@ -20,7 +20,7 @@ export const handler = Handler("sqs", async (event) => {
   console.log("got", event.Records.length, "records");
   for (const record of event.Records) {
     const evt = JSON.parse(record.body);
-    console.log(record);
+    console.log(record.body);
     await withActor(
       {
         type: "system",
@@ -42,6 +42,7 @@ export const handler = Handler("sqs", async (event) => {
 });
 
 async function processStage(stageID: string) {
+  console.log("processStage", "useWorkspace", useWorkspace());
   const workspace = await Workspace.fromID(useWorkspace());
   if (!workspace) return;
 
