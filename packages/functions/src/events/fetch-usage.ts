@@ -42,7 +42,6 @@ export const handler = Handler("sqs", async (event) => {
 });
 
 async function processStage(stageID: string) {
-  console.log("processStage", "useWorkspace", useWorkspace());
   const workspace = await Workspace.fromID(useWorkspace());
   if (!workspace) return;
 

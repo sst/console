@@ -104,7 +104,7 @@ export const list = zod(z.void(), () =>
   )
 );
 
-export const fromID = zod(Info.shape.id, async (id) =>
+export const fromID = zod(z.string().min(1), async (id) =>
   useTransaction(async (tx) => {
     return tx
       .select()
