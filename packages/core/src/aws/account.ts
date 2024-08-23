@@ -471,6 +471,7 @@ export const integrate = zod(
 
       const stages = [] as { app: string; stage: string }[];
       for (const b of bootstrapBuckets) {
+        console.log("scanning", b.bucket);
         while (true) {
           if (b.version === "normal") {
             const list = await s3
@@ -482,7 +483,10 @@ export const integrate = zod(
                 }),
               )
               .catch((err) => {
-                if (err instanceof NoSuchBucket) return;
+                if (err instanceof NoSuchBucket) {
+                  console.log("couldn't find this bucket");
+                  return;
+                }
                 throw err;
               });
             if (!list) break;
