@@ -110,8 +110,9 @@ async function processStage(stageID: string) {
   let hasChanges = false;
 
   while (true) {
+    if (startDate.plus({ days: 1 }).endOf("day").diffNow().milliseconds > 0)
+      break;
     startDate = startDate.plus({ days: 1 });
-    if (startDate.endOf("day").diffNow().milliseconds > 0) break;
     endDate = startDate.endOf("day");
 
     console.log("STAGE", stageID, startDate.toSQLDate(), endDate.toSQLDate());
