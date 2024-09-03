@@ -15,9 +15,8 @@ export const handler = ApiHandler(async (event) => {
 
   console.log(body.type, body);
   if (body.type === "customer.subscription.created") {
-    // @ts-expect-error
     const { id: subscriptionID, customer, items } = body.data.object;
-    const item = await Billing.Stripe.fromCustomerID(customer);
+    const item = await Billing.Stripe.fromCustomerID(customer as string);
     if (!item) {
       throw new Error("Workspace not found for customer");
     }
@@ -33,18 +32,19 @@ export const handler = ApiHandler(async (event) => {
         },
       },
       async () => {
+        if (!items.data[0]) throw new Error("Subscription items is empty");
+
         await Billing.Stripe.setSubscription({
-          subscriptionID: subscriptionID,
+          subscriptionID,
           subscriptionItemID: items.data[0].id,
         });
         await Billing.updateGatingStatus();
       }
     );
   } else if (body.type === "customer.subscription.updated") {
-    // @ts-expect-error
     const { id: subscriptionID, customer, status } = body.data.object;
 
-    const item = await Billing.Stripe.fromCustomerID(customer);
+    const item = await Billing.Stripe.fromCustomerID(customer as string);
     if (!item) {
       throw new Error("Workspace not found for customer");
     }
@@ -76,7 +76,6 @@ export const handler = ApiHandler(async (event) => {
       }
     );
   } else if (body.type === "customer.subscription.deleted") {
-    // @ts-expect-error
     const { id: subscriptionID } = body.data.object;
     await Billing.Stripe.removeSubscription(subscriptionID);
     await Billing.updateGatingStatus();
@@ -85,7 +84,6 @@ export const handler = ApiHandler(async (event) => {
   // Stripe has already retried charging the customer and failed. Stripe
   // will not retry again.
   else if (body.type === "invoice.marked_uncollectible") {
-    // @ts-expect-error
     const { id, created, customer, customer_email, amount_due } =
       body.data.object;
     console.error(

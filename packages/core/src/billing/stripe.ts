@@ -106,7 +106,7 @@ export const grantTrial = zod(z.string().nonempty(), (timeTrialEnded) =>
 );
 
 export const removeSubscription = zod(
-  z.string().nonempty(),
+  z.string().min(1),
   (stripeSubscriptionID) =>
     useTransaction((tx) =>
       tx
