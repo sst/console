@@ -709,7 +709,7 @@ export module Run {
       await complete({
         runID: run.id,
         error:
-          e instanceof CodebuildRunner.CreateResourceError
+          e instanceof CodebuildRunner.RunnerError
             ? e.message
             : `Failed to ${context}`,
       });

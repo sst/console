@@ -23,7 +23,7 @@ import { Run } from ".";
 export module CodebuildRunner {
   export const DEFAULT_BUILD_TIMEOUT_IN_MINUTES = 60; // 60 minutes
 
-  export class CreateResourceError extends Error {}
+  export class RunnerError extends Error {}
 
   export const getImage = zod(z.enum(Architecture), (architecture) =>
     architecture === "x86_64"
@@ -52,7 +52,7 @@ export module CodebuildRunner {
     }): Promise<Resource> => {
       if (architecture === "arm64") {
         if (compute !== "small" && compute !== "large")
-          throw new CreateResourceError(
+          throw new RunnerError(
             `AWS CodeBuild does not support "${compute}" compute size for ARM architecture`
           );
       }
@@ -195,7 +195,7 @@ export module CodebuildRunner {
             e.name === "InvalidInputException" &&
             e.message === `Region ${region} is not supported for ARM_CONTAINER`
           )
-            throw new CreateResourceError(
+            throw new RunnerError(
               `AWS CodeBuild does not support ARM architecture in ${region} region`
             );
           else if (
@@ -287,39 +287,48 @@ export module CodebuildRunner {
         retryStrategy: RETRY_STRATEGY,
       });
       const projectName = resource.properties.project.split("/").pop()!;
-      await codebuild.send(
-        new StartBuildCommand({
-          projectName,
-          buildspecOverride: [
-            "version: 0.2",
-            "phases:",
-            "  build:",
-            "    commands:",
-            "      - rm -rf /tmp/buildspec",
-            "      - mkdir -p /tmp/buildspec",
-            `      - curl -o /tmp/buildspec/index.mjs https://${payload.buildspec.bucket}.s3.amazonaws.com/buildspec/${payload.buildspec.version}/index.mjs`,
-            `      - echo '{"name":"buildspec"}' > /tmp/buildspec/package.json`,
-            `      - cd /tmp/buildspec && npm i @aws-sdk/client-eventbridge semver esbuild`,
-            [
-              `      - node --input-type=module -e "`,
-              `import { handler } from '/tmp/buildspec/index.mjs';`,
-              `const event = JSON.parse(process.env.SST_RUNNER_EVENT);`,
-              `const result = await handler(event, {`,
-              `  logGroupName:'/aws/codebuild/${projectName}',`,
-              `  logStreamName:process.env.CODEBUILD_LOG_PATH,`,
-              `});`,
-              `"`,
-            ].join(""),
-          ].join("\n"),
-          environmentVariablesOverride: [
-            {
-              name: "SST_RUNNER_EVENT",
-              value: JSON.stringify(payload),
-            },
-          ],
-          timeoutInMinutesOverride: timeoutInMinutes,
-        })
-      );
+      try {
+        await codebuild.send(
+          new StartBuildCommand({
+            projectName,
+            buildspecOverride: [
+              "version: 0.2",
+              "phases:",
+              "  build:",
+              "    commands:",
+              "      - rm -rf /tmp/buildspec",
+              "      - mkdir -p /tmp/buildspec",
+              `      - curl -o /tmp/buildspec/index.mjs https://${payload.buildspec.bucket}.s3.amazonaws.com/buildspec/${payload.buildspec.version}/index.mjs`,
+              `      - echo '{"name":"buildspec"}' > /tmp/buildspec/package.json`,
+              `      - cd /tmp/buildspec && npm i @aws-sdk/client-eventbridge semver esbuild`,
+              [
+                `      - node --input-type=module -e "`,
+                `import { handler } from '/tmp/buildspec/index.mjs';`,
+                `const event = JSON.parse(process.env.SST_RUNNER_EVENT);`,
+                `const result = await handler(event, {`,
+                `  logGroupName:'/aws/codebuild/${projectName}',`,
+                `  logStreamName:process.env.CODEBUILD_LOG_PATH,`,
+                `});`,
+                `"`,
+              ].join(""),
+            ].join("\n"),
+            environmentVariablesOverride: [
+              {
+                name: "SST_RUNNER_EVENT",
+                value: JSON.stringify(payload),
+              },
+            ],
+            timeoutInMinutesOverride: timeoutInMinutes,
+          })
+        );
+      } catch (e: any) {
+        if (e.name === "AccountLimitExceededException") {
+          throw new RunnerError(
+            `AWS CodeBuild has reached the limit: ${e.message}. Open an AWS support case to increase the limit.`
+          );
+        }
+        throw e;
+      }
     }
   );
 }
