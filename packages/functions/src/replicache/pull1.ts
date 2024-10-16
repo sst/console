@@ -250,7 +250,7 @@ export const handler = ApiHandler(
             .select({
               id: stateUpdateTable.id,
               rowNumber:
-                sql<string>`ROW_NUMBER() OVER (PARTITION BY ${stateUpdateTable.stageID} ORDER BY ${stateUpdateTable.id} DESC)`.as(
+                sql<string>`ROW_NUMBER() OVER (PARTITION BY ${stateUpdateTable.stageID} ORDER BY ${stateUpdateTable.index} DESC)`.as(
                   "row_number"
                 ),
             })
@@ -260,6 +260,29 @@ export const handler = ApiHandler(
                 eq(stateUpdateTable.workspaceID, useWorkspace()),
                 deletedStages.length
                   ? notInArray(stateUpdateTable.stageID, deletedStages)
+                  : undefined
+              )
+            )
+            .then((rows) =>
+              rows
+                .filter((row) => parseInt(row.rowNumber) < 100)
+                .map((row) => row.id)
+            );
+
+          const runs = await tx
+            .select({
+              id: runTable.id,
+              rowNumber:
+                sql<string>`ROW_NUMBER() OVER (PARTITION BY ${runTable.stageID} ORDER BY ${runTable.timeCompleted} DESC)`.as(
+                  "row_number"
+                ),
+            })
+            .from(runTable)
+            .where(
+              and(
+                eq(runTable.workspaceID, useWorkspace()),
+                deletedStages.length
+                  ? notInArray(runTable.stageID, deletedStages)
                   : undefined
               )
             )
@@ -286,6 +309,7 @@ export const handler = ApiHandler(
             stateEvent: inArray(stateEventTable.updateID, updates),
             stateUpdate: inArray(stateUpdateTable.id, updates),
             stateResource: notInArray(stateResourceTable.updateID, updates),
+            run: inArray(runTable.id, runs),
           } satisfies {
             [key in keyof typeof TABLES]?: SQLWrapper;
           };
