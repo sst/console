@@ -6,3 +6,4 @@ node_modules
 .turbo
 packages/core/src/workflow/
 packages/scripts/src/workflow.ts
+.env

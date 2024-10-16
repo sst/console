@@ -86,7 +86,6 @@ export const TABLES = {
   lambdaPayload,
   warning,
   issue,
-  issueSubscriber,
   issueCount,
   alert,
   githubOrg: githubOrgTable,
