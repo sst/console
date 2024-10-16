@@ -202,7 +202,7 @@ export const handler = ApiHandler(
 
         const oldCvr = await Replicache.CVR.get(
           req.clientGroupID,
-          req.cookie as number
+          req.cookie as number,
         );
 
         const cvr = oldCvr ?? {
@@ -229,7 +229,7 @@ export const handler = ApiHandler(
 
         const results: [
           string,
-          { id: string; version: string; key: string }[]
+          { id: string; version: string; key: string }[],
         ][] = [];
 
         if (actor.type === "user") {
@@ -241,8 +241,8 @@ export const handler = ApiHandler(
             .where(
               and(
                 isNotNull(stage.timeDeleted),
-                eq(stage.workspaceID, useWorkspace())
-              )
+                eq(stage.workspaceID, useWorkspace()),
+              ),
             )
             .then((rows) => rows.map((row) => row.id));
 
@@ -251,7 +251,7 @@ export const handler = ApiHandler(
               id: stateUpdateTable.id,
               rowNumber:
                 sql<string>`ROW_NUMBER() OVER (PARTITION BY ${stateUpdateTable.stageID} ORDER BY ${stateUpdateTable.index} DESC)`.as(
-                  "row_number"
+                  "row_number",
                 ),
             })
             .from(stateUpdateTable)
@@ -260,13 +260,13 @@ export const handler = ApiHandler(
                 eq(stateUpdateTable.workspaceID, useWorkspace()),
                 deletedStages.length
                   ? notInArray(stateUpdateTable.stageID, deletedStages)
-                  : undefined
-              )
+                  : undefined,
+              ),
             )
             .then((rows) =>
               rows
                 .filter((row) => parseInt(row.rowNumber) < 100)
-                .map((row) => row.id)
+                .map((row) => row.id),
             );
 
           const runs = await tx
@@ -274,7 +274,7 @@ export const handler = ApiHandler(
               id: runTable.id,
               rowNumber:
                 sql<string>`ROW_NUMBER() OVER (PARTITION BY ${runTable.stageID} ORDER BY ${runTable.timeCompleted} DESC)`.as(
-                  "row_number"
+                  "row_number",
                 ),
             })
             .from(runTable)
@@ -283,19 +283,19 @@ export const handler = ApiHandler(
                 eq(runTable.workspaceID, useWorkspace()),
                 deletedStages.length
                   ? notInArray(runTable.stageID, deletedStages)
-                  : undefined
-              )
+                  : undefined,
+              ),
             )
             .then((rows) =>
               rows
                 .filter((row) => parseInt(row.rowNumber) < 100)
-                .map((row) => row.id)
+                .map((row) => row.id),
             );
           const tableFilters = {
             log_search: eq(log_search.userID, actor.properties.userID),
             usage: gte(
               usage.day,
-              DateTime.now().toUTC().startOf("month").toSQLDate()!
+              DateTime.now().toUTC().startOf("month").toSQLDate()!,
             ),
             issueCount: gte(
               issueCount.hour,
@@ -303,13 +303,20 @@ export const handler = ApiHandler(
                 .toUTC()
                 .startOf("hour")
                 .minus({ day: 1 })
-                .toSQL({ includeOffset: false })!
+                .toSQL({ includeOffset: false })!,
             ),
             issue: isNull(issue.timeDeleted),
-            stateEvent: inArray(stateEventTable.updateID, updates),
-            stateUpdate: inArray(stateUpdateTable.id, updates),
-            stateResource: notInArray(stateResourceTable.updateID, updates),
-            run: inArray(runTable.id, runs),
+            ...(updates.length
+              ? {
+                  stateEvent: inArray(stateEventTable.updateID, updates),
+                  stateUpdate: inArray(stateUpdateTable.id, updates),
+                  stateResource: notInArray(
+                    stateResourceTable.updateID,
+                    updates,
+                  ),
+                }
+              : {}),
+            run: runs.length ? inArray(runTable.id, runs) : undefined,
           } satisfies {
             [key in keyof typeof TABLES]?: SQLWrapper;
           };
@@ -334,13 +341,13 @@ export const handler = ApiHandler(
                 and(
                   eq(
                     "workspaceID" in table ? table.workspaceID : table.id,
-                    workspaceID
+                    workspaceID,
                   ),
                   ...(name === "stage" ? [] : [isNull(table.timeDeleted)]),
                   ...(name in tableFilters
                     ? [tableFilters[name as keyof typeof tableFilters]]
-                    : [])
-                )
+                    : []),
+                ),
               );
             log("getting updated from", name);
             const rows = await query.execute();
@@ -364,8 +371,8 @@ export const handler = ApiHandler(
                 and(
                   eq(user.email, actor.properties.email),
                   isNull(user.timeDeleted),
-                  isNull(workspace.timeDeleted)
-                )
+                  isNull(workspace.timeDeleted),
+                ),
               )
               .execute(),
           ]);
@@ -383,8 +390,8 @@ export const handler = ApiHandler(
               and(
                 eq(user.email, actor.properties.email),
                 isNull(user.timeDeleted),
-                isNull(workspace.timeDeleted)
-              )
+                isNull(workspace.timeDeleted),
+              ),
             )
             .execute();
           results.push(["workspace", workspaces]);
@@ -405,7 +412,7 @@ export const handler = ApiHandler(
 
         log(
           "toPut",
-          mapValues(toPut, (value) => value.length)
+          mapValues(toPut, (value) => value.length),
         );
 
         log("toDel", cvr.data);
@@ -415,7 +422,7 @@ export const handler = ApiHandler(
           log(name);
           const ids = items.map((item) => item.id);
           const keys = Object.fromEntries(
-            items.map((item) => [item.id, item.key])
+            items.map((item) => [item.id, item.key]),
           );
 
           if (!ids.length) continue;
@@ -427,7 +434,7 @@ export const handler = ApiHandler(
             const rows = await tx
               .select(
                 TABLE_SELECT[name as keyof typeof TABLE_SELECT] ||
-                  getTableColumns(table)
+                  getTableColumns(table),
               )
               .from(table)
               .where(
@@ -435,8 +442,8 @@ export const handler = ApiHandler(
                   "workspaceID" in table && actor.type === "user"
                     ? eq(table.workspaceID, useWorkspace())
                     : undefined,
-                  inArray(table.id, group)
-                )
+                  inArray(table.id, group),
+                ),
               )
               .execute();
             log(name, "got", rows.length, "in", Date.now() - now, "ms");
@@ -471,13 +478,13 @@ export const handler = ApiHandler(
           .where(
             and(
               eq(replicache_client.clientGroupID, req.clientGroupID),
-              gt(replicache_client.clientVersion, cvr.clientVersion)
-            )
+              gt(replicache_client.clientVersion, cvr.clientVersion),
+            ),
           )
           .execute();
 
         const lastMutationIDChanges = Object.fromEntries(
-          clients.map((c) => [c.id, c.mutationID] as const)
+          clients.map((c) => [c.id, c.mutationID] as const),
         );
         if (patch.length > 0 || Object.keys(lastMutationIDChanges).length > 0) {
           log("inserting", req.clientGroupID);
@@ -509,7 +516,7 @@ export const handler = ApiHandler(
       },
       {
         isolationLevel: "repeatable read",
-      }
+      },
     );
 
     const response: APIGatewayProxyStructuredResultV2 = {
@@ -538,7 +545,7 @@ export const handler = ApiHandler(
             ContentEncoding: "gzip",
             ContentType: "application/json",
             Body: buff,
-          })
+          }),
         );
 
         const url = await getSignedUrl(
@@ -546,7 +553,7 @@ export const handler = ApiHandler(
           new GetObjectCommand({
             Bucket: Bucket.storage.bucketName,
             Key: key,
-          })
+          }),
         );
         response.body = undefined;
         response.statusCode = 302;
@@ -556,5 +563,5 @@ export const handler = ApiHandler(
     }
 
     return response;
-  })
+  }),
 );
