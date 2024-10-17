@@ -309,10 +309,7 @@ export const handler = ApiHandler(
               ? {
                   stateEvent: inArray(stateEventTable.updateID, updates),
                   stateUpdate: inArray(stateUpdateTable.id, updates),
-                  stateResource: notInArray(
-                    stateResourceTable.updateID,
-                    updates,
-                  ),
+                  stateResource: inArray(stateResourceTable.updateID, updates),
                 }
               : {}),
             run: runs.length ? inArray(runTable.id, runs) : undefined,
